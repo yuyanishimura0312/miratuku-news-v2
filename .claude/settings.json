@@ -1,0 +1,36 @@
+{
+  "project": "miratuku-news-v2",
+  "description": "Intelligence Pipeline News Platform v2",
+  "teams": {
+    "db-dashboard-team": {
+      "description": "データベースダッシュボード生成・更新チーム",
+      "agents": [
+        {"role": "orchestrator", "type": "process-orchestrator", "model": "opus"},
+        {"role": "sqlite-analyst", "type": "general-purpose", "model": "sonnet", "task": "SQLite DBのスキーマ分析・データ抽出・ダッシュボードHTML生成"},
+        {"role": "json-analyst", "type": "general-purpose", "model": "sonnet", "task": "JSON/非SQLite DBのデータ分析・ダッシュボードHTML生成"},
+        {"role": "qa-reviewer", "type": "qa-code-reviewer", "model": "haiku", "task": "生成されたHTMLの品質チェック・リンク整合性検証"}
+      ],
+      "parallel_groups": [
+        ["sqlite-analyst", "json-analyst"]
+      ]
+    },
+    "content-team": {
+      "description": "アプリコンテンツ改修チーム",
+      "agents": [
+        {"role": "orchestrator", "type": "process-orchestrator", "model": "opus"},
+        {"role": "researcher", "type": "researcher", "model": "haiku", "task": "既存コード・データ構造の調査"},
+        {"role": "engineer", "type": "general-purpose", "model": "sonnet", "task": "HTML/CSS/JS実装"},
+        {"role": "reviewer", "type": "reviewer", "model": "haiku", "task": "コードレビュー・品質チェック"}
+      ]
+    }
+  },
+  "workflows": {
+    "update-dashboards": {
+      "description": "全ダッシュボードの一括再生成",
+      "steps": [
+        "python3 scripts/generate_dashboards.py",
+        "git add dashboards/ && git commit && git push"
+      ]
+    }
+  }
+}
