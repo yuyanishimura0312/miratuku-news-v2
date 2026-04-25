@@ -123,6 +123,12 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 .sample-table tr:hover td { background: var(--surface); }
 .theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; }
 .note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+.detail-card { border: 1px solid var(--border); margin-bottom: 12px; padding: 16px 20px; background: var(--card); }
+.detail-card-label { font-size: 0.7rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.05em; margin-bottom: 6px; }
+.detail-card-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+.detail-card-body { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; }
+.detail-card-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
 """
 
 
@@ -155,6 +161,26 @@ def build_html(db_id, title, subtitle, desc, overview_cards, sections):
 {sections_html}
 </body>
 </html>"""
+
+
+def make_detail_cards(title, cards):
+    """cards: list of {label, title, body, meta}"""
+    if not cards:
+        return ""
+    html = f'<h3>{h(title)}</h3><div class="detail-grid">'
+    for c in cards:
+        html += '<div class="detail-card">'
+        if c.get("label"):
+            html += f'<div class="detail-card-label">{h(c["label"])}</div>'
+        if c.get("title"):
+            html += f'<div class="detail-card-title">{h(c["title"])}</div>'
+        if c.get("body"):
+            html += f'<div class="detail-card-body">{h(c["body"])}</div>'
+        if c.get("meta"):
+            html += f'<div class="detail-card-meta">{h(c["meta"])}</div>'
+        html += '</div>'
+    html += '</div>'
+    return html
 
 
 def make_cat_section(title, cats, translate=None):
@@ -197,28 +223,43 @@ def gen_pe():
     conn = sqlite3.connect(path)
     ts = get_table_stats(conn)
     cats = safe_query(conn, "SELECT pestle_category, COUNT(*) FROM articles GROUP BY pestle_category ORDER BY COUNT(*) DESC")
-    regions = safe_query(conn, "SELECT region, COUNT(*) FROM articles GROUP BY region ORDER BY COUNT(*) DESC LIMIT 5")
     sources = safe_query(conn, "SELECT source, COUNT(*) FROM articles GROUP BY source ORDER BY COUNT(*) DESC LIMIT 10")
     date_range = safe_query(conn, "SELECT MIN(published_date), MAX(published_date) FROM articles WHERE published_date > '1900'")
-    samples = safe_query(conn, "SELECT title, pestle_category, source, published_date FROM articles WHERE lang='ja' ORDER BY published_date DESC LIMIT 10")
-    if not samples:
-        samples = safe_query(conn, "SELECT title, pestle_category, source, published_date FROM articles ORDER BY published_date DESC LIMIT 10")
+    media = safe_query(conn, "SELECT name_ja, region, categories, language FROM media_sources WHERE name_ja IS NOT NULL LIMIT 15")
+    # Get detailed samples with summary
+    detail_rows = safe_query(conn, "SELECT title, summary, pestle_category, source, published_date FROM articles WHERE summary IS NOT NULL AND length(summary)>80 ORDER BY published_date DESC LIMIT 6")
     conn.close()
-    total = sum(t["rows"] for t in ts)
     art_count = next((t["rows"] for t in ts if t["name"] == "articles"), 0)
     src_count = next((t["rows"] for t in ts if t["name"] == "media_sources"), 0)
     dr = date_range[0] if date_range else ("?", "?")
 
+    detail_cards = []
+    for r in detail_rows:
+        detail_cards.append({
+            "label": f"{PESTLE_JA.get(r[2], r[2])} | {r[3]} | {r[4]}",
+            "title": r[0],
+            "body": r[1][:250] + ("..." if len(r[1] or "") > 250 else ""),
+        })
+
+    media_cards = []
+    for m in media[:8]:
+        region = "日本" if m[1] == "japan" else ("グローバル" if m[1] == "global" else m[1])
+        media_cards.append({
+            "label": f"{region} / {m[3]}",
+            "title": m[0],
+            "body": f"カテゴリ: {PESTLE_JA.get(m[2], m[2])}",
+        })
+
     html = build_html("PE", "PESTLEニュースDB",
         "政治・経済・社会・技術・法律・環境の6分野に自動分類されたニュース記事データベース",
-        f"124のRSSフィード（国内57、海外67）から毎日自動収集し、PESTLE分類を行うニュースデータベースです。{art_count:,}件のニュース記事を蓄積しており、{dr[0]}から{dr[1]}までをカバーしています。全記事にPESTLEカテゴリ・関連度スコア・地域タグが付与されています。",
+        f"124のRSSフィード（国内57、海外67）から毎日自動収集し、PESTLE分類を行うニュースデータベースです。{art_count:,}件のニュース記事を蓄積しており、{dr[0]}から{dr[1]}までをカバーしています。各記事には以下のデータが付与されます: タイトル（日英）、要約、PESTLEカテゴリ、関連度スコア（0-1）、ソース名、言語、地域タグ、収集日。",
         [(f"{art_count:,}", "ニュース記事"), (f"{src_count}", "メディアソース"), ("6", "PESTLEカテゴリ"), (f"{dr[0]}〜", "データ期間")],
         [
             make_cat_section("PESTLEカテゴリ別記事数", cats, PESTLE_JA),
-            make_cat_section("主要メディアソース（上位10件）", sources),
+            make_detail_cards("格納データの具体例（最新記事）", detail_cards),
+            make_detail_cards("登録メディアソースの例", media_cards),
+            make_cat_section("主要メディアソース別記事数（上位10件）", sources),
             make_table_section(ts),
-            make_sample_section("最新記事サンプル", ["タイトル", "カテゴリ", "ソース", "日付"],
-                [(r[0], PESTLE_JA.get(r[1], r[1]), r[2], r[3]) for r in samples]),
         ])
     (DASHBOARDS_DIR / "pe.html").write_text(html, encoding="utf-8")
     print("  OK PE")
@@ -230,19 +271,23 @@ def gen_ci():
     ts = get_table_stats(conn)
     cats = safe_query(conn, "SELECT c.name_ja, COUNT(*) FROM article_categories ac JOIN categories c ON ac.category_id=c.id GROUP BY c.name_ja ORDER BY COUNT(*) DESC")
     langs = safe_query(conn, "SELECT CASE lang WHEN 'ja' THEN '日本語' WHEN 'en' THEN '英語' ELSE lang END, COUNT(*) FROM articles GROUP BY lang ORDER BY COUNT(*) DESC")
-    samples = safe_query(conn, "SELECT title, lang FROM articles WHERE lang='ja' ORDER BY published_at DESC LIMIT 10")
+    samples = safe_query(conn, "SELECT a.title, c.name_ja FROM articles a JOIN article_categories ac ON a.id=ac.article_id JOIN categories c ON ac.category_id=c.id WHERE a.lang='ja' ORDER BY a.published_at DESC LIMIT 12")
     conn.close()
     art_count = next((t["rows"] for t in ts if t["name"] == "articles"), 0)
 
+    detail_cards = []
+    for title, cat in samples[:8]:
+        detail_cards.append({"label": cat, "title": title})
+
     html = build_html("CI", "文化インテリジェンスDB",
         "ミラツク独自の21カテゴリ体系で分類された文化ニュースデータベース",
-        f"「国家・民主主義」「人権」「衣食住」「感情」「人知を超えたもの」など、ミラツクの文化構造フレームワークに基づく21のカテゴリで文化関連ニュースを日次収集しています。{art_count:,}件の記事を蓄積し、PESTLE DBでは捉えきれない文化的変化の兆しを検出します。",
+        f"「国家・民主主義」「人権」「衣食住」「感情」「人知を超えたもの」など、ミラツクの文化構造フレームワークに基づく21のカテゴリで文化関連ニュースを日次収集しています。{art_count:,}件の記事を蓄積。各記事にはタイトル・言語・公開日・複数カテゴリが付与され、1記事が複数カテゴリに分類されます。PESTLE DBでは捉えきれない「衣食住」「感情」「人知を超えたもの」等の文化的変化を検出します。",
         [(f"{art_count:,}", "記事数"), ("21", "文化カテゴリ"), (f"{len(langs)}", "言語")],
         [
-            make_cat_section("文化カテゴリ別記事数", cats),
+            make_cat_section("文化カテゴリ別記事数（21カテゴリ）", cats),
+            make_detail_cards("格納データの具体例（日本語記事）", detail_cards),
             make_cat_section("言語別記事数", langs),
             make_table_section(ts),
-            make_sample_section("最新記事サンプル（日本語）", ["タイトル", "言語"], samples),
         ])
     (DASHBOARDS_DIR / "ci.html").write_text(html, encoding="utf-8")
     print("  OK CI")
@@ -253,19 +298,30 @@ def gen_gr():
     conn = sqlite3.connect(path)
     ts = get_table_stats(conn)
     data_types = safe_query(conn, "SELECT 'GPR地政学リスク指数', COUNT(*) FROM gpr_index UNION ALL SELECT 'EPU経済政策不確実性指数', COUNT(*) FROM epu_index UNION ALL SELECT '紛争イベント', COUNT(*) FROM conflict_events UNION ALL SELECT '紛争サマリー', COUNT(*) FROM conflict_summary UNION ALL SELECT '対象国', COUNT(*) FROM countries")
-    gpr_sample = safe_query(conn, "SELECT date, gpr_global, gpr_threats, gpr_acts FROM gpr_index ORDER BY date DESC LIMIT 10")
+    gpr_sample = safe_query(conn, "SELECT date, gpr_global, gpr_threats, gpr_acts FROM gpr_index WHERE gpr_global IS NOT NULL ORDER BY date DESC LIMIT 6")
+    conflicts = safe_query(conn, "SELECT conflict_name, year, country_iso3, intensity_level, region FROM conflict_summary ORDER BY year DESC LIMIT 6")
     conn.close()
     total = sum(t["rows"] for t in ts)
     countries = next((t["rows"] for t in ts if t["name"] == "countries"), 0)
 
+    gpr_cards = []
+    for r in gpr_sample:
+        gpr_cards.append({
+            "label": r[0],
+            "title": f"GPR全体: {r[1]:.1f}",
+            "body": f"脅威指数: {r[2]:.1f} / 行動指数: {r[3]:.1f}",
+        })
+    conflict_cards = [{"label": f"{c[4]} / {c[2]} / {c[1]}年", "title": c[0], "body": f"紛争強度レベル: {c[3]}"} for c in conflicts]
+
     html = build_html("GR", "地政学リスクDB",
         "GPR指数・EPU指数・紛争データを統合した地政学リスク分析データベース",
-        f"Matteo Iacovielloの地政学リスク指数（GPR）、Baker-Bloom-Davisの経済政策不確実性指数（EPU）、UCDPの紛争データを統合しています。{countries}カ国をカバーし、1900年から現在までの月次GPR指数を収録。紛争イベント385,918件の詳細データを含みます。",
+        f"Matteo Iacovielloの地政学リスク指数（GPR）、Baker-Bloom-Davisの経済政策不確実性指数（EPU）、UCDPの紛争データを統合しています。{countries}カ国をカバーし、1900年から現在までの月次GPR指数を収録。各GPRレコードにはGPR全体指数・脅威指数・行動指数の3指標が、紛争データには日付・位置座標・暴力種別・死傷者数が含まれます。",
         [(f"{total:,}", "総レコード"), (f"{countries}", "対象国"), ("1900年〜", "GPRデータ期間"), ("3", "統合データソース")],
         [
             make_cat_section("データ種別", data_types),
+            make_detail_cards("格納データの具体例（GPR指数）", gpr_cards),
+            make_detail_cards("格納データの具体例（紛争サマリー）", conflict_cards),
             make_table_section(ts),
-            make_sample_section("最新GPR指数サンプル", ["年月", "GPR全体", "GPR脅威", "GPR行動"], gpr_sample),
         ])
     (DASHBOARDS_DIR / "gr.html").write_text(html, encoding="utf-8")
     print("  OK GR")
@@ -276,19 +332,28 @@ def gen_cla():
     conn = sqlite3.connect(path)
     ts = get_table_stats(conn)
     period_types = safe_query(conn, "SELECT CASE period_type WHEN 'daily' THEN '日次' WHEN 'quarterly' THEN '四半期' WHEN 'yearly' THEN '年次' ELSE period_type END, COUNT(*) FROM analyses GROUP BY period_type")
-    samples = safe_query(conn, "SELECT period, pestle_category, substr(litany,1,120) FROM analyses ORDER BY period DESC LIMIT 6")
+    # Get full 4-layer CLA examples
+    full_cla = safe_query(conn, "SELECT period, pestle_category, litany, systemic_causes, worldview, myth_metaphor FROM analyses WHERE length(litany)>50 AND myth_metaphor IS NOT NULL ORDER BY period DESC LIMIT 4")
     conn.close()
     total = sum(t["rows"] for t in ts)
 
+    detail_cards = []
+    for r in full_cla:
+        body = f"【リタニー（表層事象）】{(r[2] or '')[:200]}\n\n【社会的原因】{(r[3] or '')[:200]}\n\n【世界観】{(r[4] or '')[:200]}\n\n【神話・メタファー】{(r[5] or '')[:200]}"
+        detail_cards.append({
+            "label": f"{r[0]} / {PESTLE_JA.get(r[1], r[1])}",
+            "title": f"CLA分析: {r[0]} ({PESTLE_JA.get(r[1], r[1])})",
+            "body": body,
+        })
+
     html = build_html("CLA", "因果階層分析DB",
         "リタニー・社会的原因・世界観・神話の4層でニュースを深層分析するCLAデータベース",
-        "因果階層分析（Causal Layered Analysis）は未来学者ソハイル・イナヤトゥラが開発した手法です。表面的なニュース（リタニー）の裏にある社会構造、さらにその背後の世界観や神話を掘り下げます。36年分の年次分析、22四半期分析、日次分析を蓄積し、PESTLEカテゴリごとに深層構造の変化を追跡しています。",
+        "因果階層分析（Causal Layered Analysis）は未来学者ソハイル・イナヤトゥラが開発した手法です。各分析レコードには以下の4層が含まれます: (1) リタニー: メディアで報じられる表層事象、(2) 社会的原因: 事象を生む制度・構造、(3) 世界観: 社会が「当たり前」と見なす前提、(4) 神話・メタファー: 深層にある物語パターン。36年分の年次・22四半期・日次のCLA分析をPESTLE6カテゴリごとに蓄積しています。",
         [(f"{total:,}", "総レコード"), ("36年分", "年次CLA"), ("22", "四半期CLA"), ("4層", "分析深度")],
         [
             make_cat_section("分析期間タイプ", period_types),
+            make_detail_cards("格納データの具体例（4層CLA分析）", detail_cards),
             make_table_section(ts),
-            make_sample_section("最新CLA分析サンプル", ["期間", "PESTLEカテゴリ", "リタニー（表層事象）"],
-                [(r[0], PESTLE_JA.get(r[1], r[1]), r[2]) for r in samples]),
         ])
     (DASHBOARDS_DIR / "cla.html").write_text(html, encoding="utf-8")
     print("  OK CLA")
@@ -300,21 +365,47 @@ def gen_sg():
     ts = get_table_stats(conn)
     type_ja = {"emerging_trend": "新興トレンド", "weak_signal": "ウィークシグナル", "paradigm_shift": "パラダイムシフト", "counter_trend": "カウンタートレンド", "wild_card": "ワイルドカード", "systemic": "システミック", "paradox": "パラドックス"}
     types = safe_query(conn, "SELECT signal_type, COUNT(*) FROM signals GROUP BY signal_type ORDER BY COUNT(*) DESC")
-    samples = safe_query(conn, "SELECT signal_name, signal_type, time_horizon FROM signals ORDER BY id DESC LIMIT 10")
+    # Detailed signal samples
+    sig_details = safe_query(conn, "SELECT signal_name, description, signal_type, potential_impact, time_horizon, counter_trend FROM signals ORDER BY id DESC LIMIT 6")
+    # Alert samples
+    alert_details = safe_query(conn, "SELECT alert_title, level, description, detected_date FROM alerts ORDER BY detected_date DESC LIMIT 3")
     alert_count = safe_query(conn, "SELECT COUNT(*) FROM alerts")[0][0]
     scenario_count = safe_query(conn, "SELECT COUNT(*) FROM scenarios")[0][0]
     conn.close()
     sig_count = next((t["rows"] for t in ts if t["name"] == "signals"), 0)
 
+    sig_cards = []
+    for r in sig_details:
+        body = (r[1] or "")[:250]
+        meta_parts = []
+        if r[3]:
+            meta_parts.append(f"影響: {r[3][:80]}")
+        if r[5]:
+            meta_parts.append(f"カウンタートレンド: {r[5][:80]}")
+        sig_cards.append({
+            "label": f"{type_ja.get(r[2], r[2])} | {r[4] or ''}",
+            "title": r[0],
+            "body": body,
+            "meta": " / ".join(meta_parts) if meta_parts else None,
+        })
+
+    alert_cards = []
+    for r in alert_details:
+        alert_cards.append({
+            "label": f"レベル: {r[1]} | {r[3]}",
+            "title": r[0],
+            "body": (r[2] or "")[:200],
+        })
+
     html = build_html("SG", "シグナルDB",
         "パイプラインの中核出力 ― PESTLEニュースから自動検出された変化の兆し",
-        f"PESTLEニュースと学術論文から、AIが自動的に「変化の兆し（ウィークシグナル）」を検出・分類するデータベースです。{sig_count:,}件のシグナルを蓄積し、各シグナルには影響度・タイムホライズン・シナリオが付与されています。シグナル間の相互影響ネットワークも構築済みです。",
+        f"PESTLEニュースと学術論文から、AIが自動的に「変化の兆し」を検出・分類するデータベースです。{sig_count:,}件のシグナルを蓄積。各シグナルには以下のデータが含まれます: シグナル名、説明文、タイプ（5種）、影響度評価、タイムホライズン（1-3年/3-5年/5-10年）、カウンタートレンド。さらにシグナル間の相互影響スコア（1,806件）とネットワーク構造も分析済みです。",
         [(f"{sig_count:,}", "シグナル"), (f"{alert_count}", "アラート"), (f"{scenario_count}", "シナリオ"), ("5種", "シグナルタイプ")],
         [
             make_cat_section("シグナルタイプ別件数", [(type_ja.get(t, t), c) for t, c in types]),
+            make_detail_cards("格納データの具体例（シグナル）", sig_cards),
+            make_detail_cards("最新アラート", alert_cards),
             make_table_section(ts),
-            make_sample_section("最新シグナルサンプル", ["シグナル名", "タイプ", "タイムホライズン"],
-                [(r[0], type_ja.get(r[1], r[1]), r[2]) for r in samples]),
         ])
     (DASHBOARDS_DIR / "sg.html").write_text(html, encoding="utf-8")
     print("  OK SG")
@@ -326,19 +417,30 @@ def gen_ir():
     ts = get_table_stats(conn)
     cat_ja = {"funding": "資金調達", "other": "その他", "event": "イベント", "accelerator": "アクセラレータ", "exit": "EXIT", "partnership": "提携", "product_launch": "製品発表", "hiring": "採用", "award": "受賞", "expansion": "事業拡大"}
     cats = safe_query(conn, "SELECT category, COUNT(*) FROM funding_releases WHERE category IS NOT NULL GROUP BY category ORDER BY COUNT(*) DESC LIMIT 10")
-    samples = safe_query(conn, "SELECT name, sectors, total_raised_text FROM companies WHERE total_raised_text IS NOT NULL ORDER BY last_seen DESC LIMIT 10")
+    # Detailed funding releases
+    releases = safe_query(conn, "SELECT title, company_name, category, amount_raw, round_type, published_at FROM funding_releases WHERE amount_raw IS NOT NULL ORDER BY published_at DESC LIMIT 6")
     conn.close()
     comp_count = next((t["rows"] for t in ts if t["name"] == "companies"), 0)
     rel_count = next((t["rows"] for t in ts if t["name"] == "funding_releases"), 0)
 
+    round_ja = {"seed": "シード", "series_a": "シリーズA", "series_b": "シリーズB", "series_c": "シリーズC", "pre_series_b": "PreシリーズB", "debt": "デット"}
+    detail_cards = []
+    for r in releases:
+        rt = round_ja.get(r[4], r[4] or "")
+        detail_cards.append({
+            "label": f"{cat_ja.get(r[2], r[2])} | {rt} | {r[5]}",
+            "title": r[0],
+            "body": f"企業: {r[1] or '不明'} / 調達額: {r[3]}",
+        })
+
     html = build_html("IR", "VC投資DB",
         "スタートアップの資金調達動向を追跡するVC投資データベース",
-        f"スタートアップの資金調達プレスリリースを自動収集・分類するデータベースです。{comp_count:,}社の企業プロファイルと{rel_count:,}件の資金調達リリースを蓄積。ラウンド種別・調達額・セクター情報を構造化し、投資トレンドの変化検出に活用しています。",
+        f"スタートアップの資金調達プレスリリースを自動収集・分類するデータベースです。{comp_count:,}社の企業プロファイルと{rel_count:,}件の資金調達リリースを蓄積。各リリースにはタイトル・企業名・カテゴリ・調達額（原文）・調達額（円換算）・ラウンド種別・公開日が構造化されています。",
         [(f"{comp_count:,}", "企業"), (f"{rel_count:,}", "リリース"), ("月次", "更新頻度")],
         [
             make_cat_section("リリースカテゴリ別件数", [(cat_ja.get(c, c), n) for c, n in cats]),
+            make_detail_cards("格納データの具体例（資金調達リリース）", detail_cards),
             make_table_section(ts),
-            make_sample_section("最新企業サンプル", ["企業名", "セクター", "調達額"], samples),
         ])
     (DASHBOARDS_DIR / "ir.html").write_text(html, encoding="utf-8")
     print("  OK IR")
@@ -352,17 +454,36 @@ def gen_pd():
     person_count = safe_query(conn, "SELECT COUNT(*) FROM persons")[0][0]
     org_count = safe_query(conn, "SELECT COUNT(*) FROM organizations")[0][0]
     appt_count = safe_query(conn, "SELECT COUNT(*) FROM appointments")[0][0]
-    samples = safe_query(conn, "SELECT raw_name, role FROM appointments ORDER BY id DESC LIMIT 10")
+    # Top councils
+    top_councils = safe_query(conn, "SELECT c.name, COUNT(cm.id) as cnt FROM councils c LEFT JOIN council_members cm ON c.id=cm.council_id GROUP BY c.id ORDER BY cnt DESC LIMIT 8")
+    # Persons
+    persons = safe_query(conn, "SELECT canonical_name, org_name FROM persons WHERE org_name IS NOT NULL ORDER BY id DESC LIMIT 6")
+    # Projects
+    projects = safe_query(conn, "SELECT name, ministry_name, finalized_amount FROM projects WHERE finalized_amount IS NOT NULL ORDER BY CAST(finalized_amount AS REAL) DESC LIMIT 5")
     conn.close()
-    total = sum(t["rows"] for t in ts)
+
+    council_cards = [{"label": f"委員数: {c[1]}", "title": c[0]} for c in top_councils]
+    person_cards = [{"label": p[1], "title": p[0]} for p in persons]
+    project_cards = []
+    for p in projects:
+        amt = p[2]
+        if amt and amt > 1e12:
+            amt_str = f"{amt/1e12:.1f}兆円"
+        elif amt and amt > 1e8:
+            amt_str = f"{amt/1e8:.0f}億円"
+        else:
+            amt_str = str(amt)
+        project_cards.append({"label": p[1], "title": p[0], "body": f"予算額: {amt_str}"})
 
     html = build_html("PD", "政策DB",
         "23省庁の審議会・委員会・有識者・予算事業を網羅した政策データベース",
-        f"日本政府23省庁の政策決定プロセスを構造化したデータベースです。{council_count:,}の審議会・委員会、{person_count:,}名の有識者、{org_count:,}の関連組織、{appt_count:,}件の委員任命データを収録。「誰が、どの政策に、どのような立場で関わっているか」を可視化し、政策変化の予兆検出に活用します。",
+        f"日本政府23省庁の政策決定プロセスを構造化したデータベースです。{council_count:,}の審議会・委員会、{person_count:,}名の有識者、{org_count:,}の関連組織、{appt_count:,}件の委員任命データを収録。各審議会には委員構成・所管省庁・開催回次が、各有識者には所属組織・肩書・参加審議会が紐付けられています。予算事業データには事業名・省庁・要求額・確定額・執行率が含まれます。",
         [(f"{council_count:,}", "審議会・委員会"), (f"{person_count:,}", "有識者"), (f"{org_count:,}", "組織"), (f"{appt_count:,}", "任命")],
         [
+            make_detail_cards("格納データの具体例（主要審議会）", council_cards),
+            make_detail_cards("格納データの具体例（有識者）", person_cards),
+            make_detail_cards("格納データの具体例（大型予算事業）", project_cards),
             make_table_section(ts),
-            make_sample_section("最新任命サンプル", ["氏名", "役割"], samples),
         ])
     (DASHBOARDS_DIR / "pd.html").write_text(html, encoding="utf-8")
     print("  OK PD")
@@ -378,14 +499,17 @@ def gen_si():
     total = sum(t["rows"] for t in ts)
     prox_count = next((t["rows"] for t in ts if t["name"] == "ambition_taxonomy_proximity"), 0)
 
+    theme_cards = [{"label": t[0], "title": t[1]} for t in theme_samples]
+    comp_count = next((t["rows"] for t in ts if t["name"] == "companies"), 0)
+
     html = build_html("SI", "企業ニーズDB",
         "上場企業のIR文書から抽出した事業志向・技術ニーズのデータベース",
-        f"EDINET有価証券報告書から企業の事業志向を自動抽出し、40のテーマに分類。{prox_count:,}件の企業-テーマ近接度データを保持し、「どの企業がどのテーマに関心を持っているか」を定量化します。産学連携マッチングの基盤データです。",
-        [(f"{total:,}", "総レコード"), ("40", "テーマ"), (f"{prox_count:,}", "企業-テーマ近接度")],
+        f"EDINET有価証券報告書から企業の事業志向を自動抽出し、40のテーマに分類。{comp_count:,}社の企業データと{prox_count:,}件の企業-テーマ近接度データを保持。各企業がどのテーマにどの程度関心を持っているかを0-1の近接度スコアで定量化し、産学連携マッチングの基盤として活用します。",
+        [(f"{comp_count:,}", "企業"), ("40", "志向テーマ"), (f"{prox_count:,}", "企業-テーマ近接度")],
         [
             make_cat_section("大分類別テーマ数", themes),
+            make_detail_cards("格納データの具体例（志向テーマ）", theme_cards),
             make_table_section(ts),
-            make_sample_section("テーマサンプル", ["大分類", "テーマ名"], theme_samples),
         ])
     (DASHBOARDS_DIR / "si.html").write_text(html, encoding="utf-8")
     print("  OK SI")
@@ -419,18 +543,20 @@ def gen_sgpr():
     ts = get_table_stats(conn)
     cat_ja = {"funding": "資金調達", "other": "その他", "partnership": "提携", "hiring": "採用", "product_launch": "製品発表"}
     cats = safe_query(conn, "SELECT category, COUNT(*) FROM press_releases WHERE category IS NOT NULL GROUP BY category ORDER BY COUNT(*) DESC")
-    samples = safe_query(conn, "SELECT title, company_name, published_at FROM press_releases ORDER BY published_at DESC LIMIT 10")
+    samples = safe_query(conn, "SELECT title, company_name, category, published_at FROM press_releases ORDER BY published_at DESC LIMIT 10")
     conn.close()
     pr_count = next((t["rows"] for t in ts if t["name"] == "press_releases"), 0)
 
+    detail_cards = [{"label": f"{cat_ja.get(r[2], r[2] or '')} | {r[3]}", "title": r[0], "body": f"企業: {r[1]}" if r[1] else None} for r in samples[:6]]
+
     html = build_html("SGPR", "産学プレスリリースDB",
         "産学連携に関するプレスリリースを自動分類・蓄積するデータベース",
-        f"産学連携関連のプレスリリース{pr_count:,}件を収集・分類しています。資金調達・提携・採用・製品発表などのカテゴリに自動分類し、産学連携の動向変化を検出します。",
+        f"産学連携関連のプレスリリース{pr_count:,}件を収集・分類しています。各レコードにはタイトル・企業名・カテゴリ・資金調達関連フラグ・公開日が含まれます。",
         [(f"{pr_count:,}", "プレスリリース"), (f"{len(cats)}", "カテゴリ")],
         [
             make_cat_section("カテゴリ別件数", [(cat_ja.get(c, c), n) for c, n in cats]),
+            make_detail_cards("格納データの具体例", detail_cards),
             make_table_section(ts),
-            make_sample_section("最新プレスリリースサンプル", ["タイトル", "企業名", "公開日"], samples),
         ])
     (DASHBOARDS_DIR / "sgpr.html").write_text(html, encoding="utf-8")
     print("  OK SGPR")
@@ -441,20 +567,25 @@ def gen_an():
     conn = sqlite3.connect(path)
     ts = get_table_stats(conn)
     subfields = safe_query(conn, "SELECT subfield, COUNT(*) FROM concepts WHERE subfield IS NOT NULL GROUP BY subfield ORDER BY COUNT(*) DESC LIMIT 15")
-    samples = safe_query(conn, "SELECT name_ja, subfield, school_of_thought FROM concepts WHERE name_ja IS NOT NULL LIMIT 10")
+    concepts = safe_query(conn, "SELECT name_ja, name_en, definition, subfield, school_of_thought FROM concepts WHERE definition IS NOT NULL AND name_ja IS NOT NULL LIMIT 6")
+    researchers = safe_query(conn, "SELECT name_ja, name_full, nationality, primary_institution, research_themes FROM researchers WHERE name_ja IS NOT NULL LIMIT 6")
     researcher_count = safe_query(conn, "SELECT COUNT(*) FROM researchers")[0][0]
     pub_count = safe_query(conn, "SELECT COUNT(*) FROM publications")[0][0]
     concept_count = safe_query(conn, "SELECT COUNT(*) FROM concepts")[0][0]
     conn.close()
 
+    concept_cards = [{"label": f"{c[3] or ''} / {c[4] or ''}", "title": f"{c[0]}（{c[1]}）", "body": (c[2] or "")[:300]} for c in concepts]
+    researcher_cards = [{"label": f"{r[2] or ''} / {r[3] or ''}", "title": f"{r[0]}（{r[1]}）", "body": f"研究テーマ: {r[4] or ''}"} for r in researchers]
+
     html = build_html("AN", "人類学概念DB",
         "人類学の主要概念・研究者・文献を系譜的に構造化したデータベース",
-        f"文化人類学・医療人類学・経済人類学など多領域にわたる{concept_count}の概念を収録。{researcher_count}名の研究者、{pub_count}件の文献との関係性を構造化し、OCM（人類学分類体系）との対応付けも行っています。概念間の影響関係・派生関係のネットワークを通じて、人類学的思考の系譜を辿ることができます。",
+        f"文化人類学・医療人類学・経済人類学など多領域にわたる{concept_count}の概念を収録。各概念には日本語名・英語名・定義・分野・学派が、{researcher_count}名の研究者には氏名・国籍・所属・研究テーマが、{pub_count}件の文献にはタイトル・出版年・DOIが含まれます。概念間の影響関係285件とOCM分類との対応44件も構造化済みです。",
         [(f"{concept_count}", "概念"), (f"{researcher_count}", "研究者"), (f"{pub_count}", "文献"), ("285", "概念間関係")],
         [
             make_cat_section("分野別概念数", subfields),
+            make_detail_cards("格納データの具体例（概念）", concept_cards),
+            make_detail_cards("格納データの具体例（研究者）", researcher_cards),
             make_table_section(ts),
-            make_sample_section("概念サンプル", ["概念名", "分野", "学派"], samples),
         ])
     (DASHBOARDS_DIR / "an.html").write_text(html, encoding="utf-8")
     print("  OK AN")
