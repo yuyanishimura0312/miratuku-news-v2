@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>シグナルDB | Insight News</title>
+<title>Signal Verification Dashboard | Insight News</title>
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -12,54 +12,395 @@
   --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
   --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
   --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+  --green: #16A34A; --blue: #2563EB; --purple: #7C3AED; --orange: #EA580C; --red: #DC2626; --cyan: #0891B2;
 }
 [data-theme="dark"] {
   --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
   --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
   --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+  --green: #22C55E; --blue: #3B82F6; --purple: #8B5CF6; --orange: #F97316; --red: #EF4444; --cyan: #06B6D4;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
 .back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
 .back:hover { color: var(--text); }
 h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
 .db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
-.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.7; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; }
 .desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
-.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 28px; }
-.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
-.overview-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; }
-.overview-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
-h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
-.cat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
-.cat-name { color: var(--text); } .cat-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; }
-.table-list { display: grid; gap: 6px; }
-.table-item { padding: 10px 14px; border: 1px solid var(--border-light); background: var(--surface); display: grid; grid-template-columns: 1fr auto; gap: 4px; }
-.table-name { font-weight: 600; font-size: 0.84rem; } .table-name-en { font-size: 0.72rem; color: var(--text-muted); font-family: monospace; }
-.table-rows { font-size: 0.78rem; color: var(--text-secondary); text-align: right; font-family: monospace; }
-.sample-table-wrap { overflow-x: auto; border: 1px solid var(--border); margin-top: 4px; }
-.sample-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-.sample-table th { background: var(--surface); padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.sample-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sample-table tr:hover td { background: var(--surface); }
-.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; }
-.note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
-.detail-card { border: 1px solid var(--border); margin-bottom: 12px; padding: 16px 20px; background: var(--card); }
-.detail-card-label { font-size: 0.7rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.05em; margin-bottom: 6px; }
-.detail-card-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
-.detail-card-body { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; }
-.detail-card-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; }
-.detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 32px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.kpi { background: var(--surface); border: 1px solid var(--border-light); padding: 16px; text-align: center; }
+.kpi-value { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; }
+.kpi-value.accent { color: var(--accent-warm); }
+.kpi-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.kpi-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Bar */
+.bar-group { margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+.bar-label { width: 160px; flex-shrink: 0; color: var(--text-secondary); font-size: 0.78rem; }
+.bar-track { flex: 1; height: 20px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
+.bar-fill { height: 100%; transition: width 0.6s ease; }
+.bar-val { width: 50px; text-align: right; font-weight: 500; font-family: monospace; font-size: 0.78rem; }
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+.panel { background: var(--card); border: 1px solid var(--border-light); padding: 16px; margin-bottom: 12px; }
+.panel-title { font-size: 0.72rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.05em; margin-bottom: 10px; text-transform: uppercase; }
+
+/* Type cards */
+.type-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; }
+.type-name { font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; }
+.type-stat { font-size: 0.78rem; color: var(--text-secondary); }
+.type-big { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; margin: 4px 0; }
+
+/* Heatmap */
+.hm-wrap { overflow-x: auto; }
+.hm { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+.hm th { padding: 6px 4px; text-align: center; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+.hm td { padding: 4px; text-align: center; border-bottom: 1px solid var(--border-light); min-width: 54px; }
+.hm .rl { text-align: left; font-weight: 500; color: var(--text-secondary); padding-left: 6px; }
+.hm-cell { border-radius: 2px; padding: 3px 4px; font-weight: 500; }
+
+/* Table */
+.sig-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.sig-table th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-weight: 500; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+.sig-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); }
+.sig-table tr:hover td { background: var(--surface); }
+.sig-name { font-weight: 500; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Grade */
+.grade { display: inline-block; padding: 1px 7px; font-weight: 700; font-size: 0.7rem; font-family: monospace; }
+.grade-S { background: var(--accent-muted); color: var(--accent-warm); }
+.grade-A { background: rgba(22,163,74,0.1); color: var(--green); }
+.grade-B { background: rgba(37,99,235,0.1); color: var(--blue); }
+.grade-C { background: rgba(234,88,12,0.1); color: var(--orange); }
+.grade-D { background: rgba(220,38,38,0.1); color: var(--red); }
+
+/* Score bar inline */
+.sb { display: inline-block; width: 50px; height: 5px; background: var(--border-light); vertical-align: middle; margin-right: 4px; }
+.sb-fill { display: block; height: 100%; }
+
+/* Canvas */
+canvas { display: block; width: 100%; }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+.tab { padding: 6px 14px; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent-warm); border-bottom-color: var(--accent-warm); }
+
+/* Filters */
+.filters { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.filters select { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-size: 0.78rem; font-family: var(--font); }
+.filters label { font-size: 0.72rem; color: var(--text-muted); }
 </style>
 </head>
 <body>
 <button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
-<a class="back" href="app.html#section-databases">&larr; データベース一覧に戻る</a>
-<h1><span class="db-id">SG</span>シグナルDB</h1>
-<p class="subtitle">パイプラインの中核出力 ― PESTLEニュースから自動検出された変化の兆し</p>
-<p class="desc">PESTLEニュースと学術論文から、AIが自動的に「変化の兆し」を検出・分類するデータベースです。6,774件のシグナルを蓄積。各シグナルには以下のデータが含まれます: シグナル名、説明文、タイプ（5種）、影響度評価、タイムホライズン（1-3年/3-5年/5-10年）、カウンタートレンド。さらにシグナル間の相互影響スコア（1,806件）とネットワーク構造も分析済みです。</p>
-<div class="overview"><div class="overview-card"><div class="overview-value">6,774</div><div class="overview-label">シグナル</div></div><div class="overview-card"><div class="overview-value">174</div><div class="overview-label">アラート</div></div><div class="overview-card"><div class="overview-value">1</div><div class="overview-label">シナリオ</div></div><div class="overview-card"><div class="overview-value">5種</div><div class="overview-label">シグナルタイプ</div></div></div>
-<h3>シグナルタイプ別件数</h3><div class="cat-grid"><div class="cat-item"><span class="cat-name">新興トレンド</span><span class="cat-count">3,191</span></div><div class="cat-item"><span class="cat-name">ウィークシグナル</span><span class="cat-count">2,307</span></div><div class="cat-item"><span class="cat-name">パラダイムシフト</span><span class="cat-count">569</span></div><div class="cat-item"><span class="cat-name">カウンタートレンド</span><span class="cat-count">370</span></div><div class="cat-item"><span class="cat-name">ワイルドカード</span><span class="cat-count">332</span></div><div class="cat-item"><span class="cat-name">システミック</span><span class="cat-count">3</span></div><div class="cat-item"><span class="cat-name">パラドックス</span><span class="cat-count">1</span></div><div class="cat-item"><span class="cat-name">systemic_emerging_trend</span><span class="cat-count">1</span></div></div><h3>格納データの具体例（シグナル）</h3><div class="detail-grid"><div class="detail-card"><div class="detail-card-label">ウィークシグナル | 3-5年</div><div class="detail-card-title">インドネシアの国家的統合と多民族国家の制度化</div><div class="detail-card-body">インドネシア共産党成長、インドネシア企業国有化、インドネシアサンゴ礁生態系記録、Political・Economic・Environmental記事の複合的増加の中で、独立後のインドネシア国家統合が進行。多民族・多島嶼国家の統合戦略が展開。この時期の動きは、後の1965年クーデターへ向けた準備段階。</div><div class="detail-card-meta">影響: high / カウンタートレンド: なし</div></div><div class="detail-card"><div class="detail-card-label">新興トレンド | 5-10年</div><div class="detail-card-title">ソ連の宇宙ステーション構想と長期宇宙開発戦略の萌芽</div><div class="detail-card-body">ソ連宇宙ステーション構想発表、ソ連自動宇宙探査機軟着陸能力実証、Technological記事-29%減少の中での質的転換。短期的な月面到達競争から、長期的な宇宙開発戦略への転換を示唆。この時期の構想は、後のソユーズ・サリュート計画の基盤形成。</div><div class="detail-card-meta">影響: high / カウンタートレンド: なし</div></div><div class="detail-card"><div class="detail-card-label">新興トレンド | 3-5年</div><div class="detail-card-title">テレビ放送技術の高度化と大衆メディア化の加速</div><div class="detail-card-body">RCA高度なテレビ伝送基準開発、Technological記事-29%減少の中での質的転換。テレビ技術の標準化が進行し、大衆メディアとしての地位が確立。この時期の技術開発は、後の1960年代のテレビの社会的影響力の拡大を示唆。</div><div class="detail-card-meta">影響: high / カウンタートレンド: なし</div></div><div class="detail-card"><div class="detail-card-label">新興トレンド | 3-5年</div><div class="detail-card-title">ラテンアメリカ銅・鉱物資源の開発と経済的重要性の上昇</div><div class="detail-card-body">チリ銅市場課題、ペルー鉱業セクター開発、Economic記事+21%増加の中で、ラテンアメリカの鉱物資源開発が加速。資源ナショナリズムの文脈で、経済的重要性が上昇。この時期の開発は、後の資源依存経済の形成と、資源ナショナリズムの激化を示唆。</div><div class="detail-card-meta">影響: high / カウンタートレンド: なし</div></div><div class="detail-card"><div class="detail-card-label">ウィークシグナル | 5-10年</div><div class="detail-card-title">先進国における通貨危機と国際金融体制の不安定化</div><div class="detail-card-body">フランスフラン切り下げ、トルコ通貨危機、Economic記事+21%増加の中で、ブレットンウッズ体制下における先進国通貨の不安定化が可視化。国際通貨基金年次報告書との対照は、国際金融体制の潜在的危機を示唆。この時期の通貨危機は、後の1971年ニクソン・ショックへ向けた準備段階。</div><div class="detail-card-meta">影響: high / カウンタートレンド: なし</div></div><div class="detail-card"><div class="detail-card-label">ウィークシグナル | 5-10年</div><div class="detail-card-title">中南米統合の初期的試みと地域主義の萌芽</div><div class="detail-card-body">中米統合努力、Social記事+20%増加の中で、地域的統合の試みが開始。チリ選挙接近、グアテマラ政治的緊張、ウルグアイ憲法問題など、政治的不安定性の中での統合努力を示唆。この時期の試みは、後のラテンアメリカ統合の基盤。</div><div class="detail-card-meta">影響: medium / カウンタートレンド: チリ・グアテマラの政治的不安定化</div></div></div><h3>最新アラート</h3><div class="detail-grid"><div class="detail-card"><div class="detail-card-label">レベル: high | 2026-04-24</div><div class="detail-card-title">sam altman</div></div><div class="detail-card"><div class="detail-card-label">レベル: high | 2026-04-24</div><div class="detail-card-title">cindy cohn</div></div><div class="detail-card"><div class="detail-card-label">レベル: high | 2026-04-24</div><div class="detail-card-title">hungary election</div></div></div><h3>テーブル構成</h3><div class="table-list"><div class="table-item"><div><div class="table-name">シグナル</div><div class="table-name-en">signals</div></div><div class="table-rows">6,774 行</div></div><div class="table-item"><div><div class="table-name">シグナル相互影響</div><div class="table-name-en">signal_cross_impact</div></div><div class="table-rows">1,806 行</div></div><div class="table-item"><div><div class="table-name">シグナル-記事リンク</div><div class="table-name-en">signal_article_links</div></div><div class="table-rows">1,483 行</div></div><div class="table-item"><div><div class="table-name">アラート</div><div class="table-name-en">alerts</div></div><div class="table-rows">174 行</div></div><div class="table-item"><div><div class="table-name">ネットワーク指標</div><div class="table-name-en">signal_network_metrics</div></div><div class="table-rows">30 行</div></div><div class="table-item"><div><div class="table-name">メタデータ</div><div class="table-name-en">db_meta</div></div><div class="table-rows">8 行</div></div><div class="table-item"><div><div class="table-name">シナリオバリアント</div><div class="table-name-en">scenario_variants</div></div><div class="table-rows">4 行</div></div><div class="table-item"><div><div class="table-name">シナリオ</div><div class="table-name-en">scenarios</div></div><div class="table-rows">1 行</div></div></div>
+<a class="back" href="../app.html#section-databases">&larr; データベース一覧に戻る</a>
+<h1><span class="db-id">SG</span>シグナル歴史的検証ダッシュボード</h1>
+<p class="subtitle">7,250 Signals (PESTLE 6,774 + Cultural 476) | 1900-2026 | Predictive Power Analysis</p>
+<p class="desc">7,250件のフォーサイトシグナルに対し、Tetlock/Brier Scoreベースの5次元評価（実現度・方向性・時間軸・影響度・信号強度）で予測力スコア（PPS）を算出。各シグナルが検出後何年でメインストリーム化したかの推定値も含む。</p>
+
+<!-- KPI -->
+<div class="kpi-row" id="kpi"></div>
+
+<!-- Era -->
+<h3>時代別予測力</h3>
+<div id="era-chart"></div>
+
+<!-- Grade + Realization -->
+<h3>評価分布</h3>
+<div class="grid-2">
+  <div class="panel"><div class="panel-title">Predictive Power Grade</div><div id="grade-chart"></div></div>
+  <div class="panel"><div class="panel-title">Realization Status</div><div id="real-chart"></div></div>
+</div>
+
+<!-- Mainstream -->
+<h3>メインストリーム化年数</h3>
+<div class="grid-2">
+  <div class="panel">
+    <div class="panel-title">シグナルタイプ別 平均メインストリーム化年数</div>
+    <div id="ms-type"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">メインストリーム化フェーズ分布</div>
+    <div id="ms-phase"></div>
+  </div>
+</div>
+<div class="panel">
+  <div class="panel-title">年代別メインストリーム化年数の変遷</div>
+  <canvas id="ms-canvas" height="240"></canvas>
+</div>
+
+<!-- Signal Type -->
+<h3>シグナルタイプ別精度</h3>
+<div class="grid-3" id="type-cards"></div>
+
+<!-- Heatmap -->
+<h3>年代 x PESTLEカテゴリ ヒートマップ</h3>
+<div class="panel">
+  <div class="tabs" id="hm-tabs">
+    <div class="tab active" data-m="avg_pps">予測力 (PPS)</div>
+    <div class="tab" data-m="realization_rate">実現率 (%)</div>
+    <div class="tab" data-m="count">件数</div>
+  </div>
+  <div class="hm-wrap" id="hm-wrap"></div>
+</div>
+
+<!-- Timeline -->
+<h3>年代別タイムライン</h3>
+<div class="panel"><canvas id="tl-canvas" height="260"></canvas></div>
+
+<!-- Scatter -->
+<h3>散布図: Composite Score vs Predictive Power</h3>
+<div class="filters" id="sc-filters"></div>
+<div class="panel" style="padding:0;overflow:hidden;"><canvas id="sc-canvas" height="360"></canvas></div>
+
+<!-- Top Signals -->
+<h3>トップシグナル <span id="top-n" style="font-size:0.78rem;color:var(--text-muted)"></span></h3>
+<div class="panel" style="overflow-x:auto;padding:0;">
+  <table class="sig-table" id="top-table"></table>
+</div>
+
+<script>
+const DATA = {"overview":{"total_signals":7250,"by_source":{"cultural":476,"pestle":6774},"pps_avg":0.7221,"pps_min":0.3342,"pps_max":0.9391,"realization_dist":[{"status":"fully_realized","count":5602,"pct":77.3},{"status":"pending","count":790,"pct":10.9},{"status":"substantially_realized","count":606,"pct":8.4},{"status":"partially_realized","count":251,"pct":3.5},{"status":"falsified","count":1,"pct":0.0}],"grade_dist":[{"grade":"A","count":5411,"pct":74.6},{"grade":"B","count":866,"pct":11.9},{"grade":"C","count":318,"pct":4.4},{"grade":"D","count":506,"pct":7.0},{"grade":"S","count":149,"pct":2.1}]},"era_summary":[{"era":"cold-war","total_signals":2618,"avg_predictive_power":0.7767,"fully_realized_pct":95.72,"partially_realized_pct":4.28,"pending_pct":0.0,"falsified_pct":0.0,"avg_direction_accuracy":0.9223,"avg_timing_accuracy":0.2709,"avg_impact_accuracy":0.8677,"top_category":null,"top_signal_type":null},{"era":"pre-war","total_signals":446,"avg_predictive_power":0.774,"fully_realized_pct":97.76,"partially_realized_pct":2.24,"pending_pct":0.0,"falsified_pct":0.0,"avg_direction_accuracy":0.9259,"avg_timing_accuracy":0.2617,"avg_impact_accuracy":0.8597,"top_category":null,"top_signal_type":null},{"era":"world-wars","total_signals":1101,"avg_predictive_power":0.7661,"fully_realized_pct":96.28,"partially_realized_pct":3.72,"pending_pct":0.0,"falsified_pct":0.0,"avg_direction_accuracy":0.9229,"avg_timing_accuracy":0.226,"avg_impact_accuracy":0.8593,"top_category":null,"top_signal_type":null},{"era":"digital-revolution","total_signals":1257,"avg_predictive_power":0.7615,"fully_realized_pct":91.96,"partially_realized_pct":8.04,"pending_pct":0.0,"falsified_pct":0.0,"avg_direction_accuracy":0.9062,"avg_timing_accuracy":0.2687,"avg_impact_accuracy":0.8531,"top_category":null,"top_signal_type":null},{"era":"platform-era","total_signals":691,"avg_predictive_power":0.7401,"fully_realized_pct":60.06,"partially_realized_pct":39.94,"pending_pct":0.0,"falsified_pct":0.0,"avg_direction_accuracy":0.8173,"avg_timing_accuracy":0.4799,"avg_impact_accuracy":0.7956,"top_category":null,"top_signal_type":null},{"era":"ai-era","total_signals":525,"avg_predictive_power":0.5834,"fully_realized_pct":5.52,"partially_realized_pct":60.38,"pending_pct":33.9,"falsified_pct":0.19,"avg_direction_accuracy":0.5228,"avg_timing_accuracy":0.6172,"avg_impact_accuracy":0.653,"top_category":null,"top_signal_type":null}],"heatmap":[{"decade":"1900s","category":"Economic","avg_pps":0.7808,"count":107.0,"realization_rate":100.0},{"decade":"1900s","category":"Environmental","avg_pps":0.7757,"count":48.0,"realization_rate":100.0},{"decade":"1900s","category":"Legal","avg_pps":0.7811,"count":75.0,"realization_rate":100.0},{"decade":"1900s","category":"Political","avg_pps":0.7762,"count":153.0,"realization_rate":100.0},{"decade":"1900s","category":"Social","avg_pps":0.7751,"count":100.0,"realization_rate":100.0},{"decade":"1900s","category":"Technological","avg_pps":0.7877,"count":65.0,"realization_rate":100.0},{"decade":"1910s","category":"Economic","avg_pps":0.7673,"count":118.0,"realization_rate":100.0},{"decade":"1910s","category":"Environmental","avg_pps":0.7747,"count":52.0,"realization_rate":100.0},{"decade":"1910s","category":"Legal","avg_pps":0.7666,"count":91.0,"realization_rate":100.0},{"decade":"1910s","category":"Political","avg_pps":0.7552,"count":154.0,"realization_rate":100.0},{"decade":"1910s","category":"Social","avg_pps":0.7643,"count":105.0,"realization_rate":100.0},{"decade":"1910s","category":"Technological","avg_pps":0.7796,"count":76.0,"realization_rate":100.0},{"decade":"1920s","category":"Economic","avg_pps":0.7766,"count":250.0,"realization_rate":100.0},{"decade":"1920s","category":"Environmental","avg_pps":0.7934,"count":87.0,"realization_rate":100.0},{"decade":"1920s","category":"Legal","avg_pps":0.7661,"count":224.0,"realization_rate":100.0},{"decade":"1920s","category":"Political","avg_pps":0.7676,"count":347.0,"realization_rate":100.0},{"decade":"1920s","category":"Social","avg_pps":0.7692,"count":249.0,"realization_rate":100.0},{"decade":"1920s","category":"Technological","avg_pps":0.7909,"count":163.0,"realization_rate":100.0},{"decade":"1930s","category":"Economic","avg_pps":0.7577,"count":123.0,"realization_rate":100.0},{"decade":"1930s","category":"Environmental","avg_pps":0.775,"count":32.0,"realization_rate":100.0},{"decade":"1930s","category":"Legal","avg_pps":0.7401,"count":97.0,"realization_rate":100.0},{"decade":"1930s","category":"Political","avg_pps":0.7454,"count":168.0,"realization_rate":100.0},{"decade":"1930s","category":"Social","avg_pps":0.7429,"count":122.0,"realization_rate":100.0},{"decade":"1930s","category":"Technological","avg_pps":0.7622,"count":70.0,"realization_rate":100.0},{"decade":"1940s","category":"Economic","avg_pps":0.7789,"count":264.0,"realization_rate":100.0},{"decade":"1940s","category":"Environmental","avg_pps":0.7895,"count":83.0,"realization_rate":100.0},{"decade":"1940s","category":"Legal","avg_pps":0.7721,"count":226.0,"realization_rate":100.0},{"decade":"1940s","category":"Political","avg_pps":0.7697,"count":415.0,"realization_rate":100.0},{"decade":"1940s","category":"Social","avg_pps":0.7656,"count":216.0,"realization_rate":100.0},{"decade":"1940s","category":"Technological","avg_pps":0.7824,"count":154.0,"realization_rate":100.0},{"decade":"1950s","category":"Economic","avg_pps":0.786,"count":284.0,"realization_rate":100.0},{"decade":"1950s","category":"Environmental","avg_pps":0.7889,"count":104.0,"realization_rate":100.0},{"decade":"1950s","category":"Legal","avg_pps":0.7724,"count":211.0,"realization_rate":100.0},{"decade":"1950s","category":"Political","avg_pps":0.7716,"count":337.0,"realization_rate":100.0},{"decade":"1950s","category":"Social","avg_pps":0.7677,"count":237.0,"realization_rate":100.0},{"decade":"1950s","category":"Technological","avg_pps":0.7882,"count":180.0,"realization_rate":100.0},{"decade":"1960s","category":"Economic","avg_pps":0.787,"count":261.0,"realization_rate":100.0},{"decade":"1960s","category":"Environmental","avg_pps":0.7911,"count":117.0,"realization_rate":100.0},{"decade":"1960s","category":"Legal","avg_pps":0.7746,"count":207.0,"realization_rate":100.0},{"decade":"1960s","category":"Political","avg_pps":0.7757,"count":318.0,"realization_rate":100.0},{"decade":"1960s","category":"Social","avg_pps":0.7724,"count":267.0,"realization_rate":100.0},{"decade":"1960s","category":"Technological","avg_pps":0.7948,"count":178.0,"realization_rate":100.0},{"decade":"1970s","category":"Economic","avg_pps":0.783,"count":243.0,"realization_rate":100.0},{"decade":"1970s","category":"Environmental","avg_pps":0.7873,"count":122.0,"realization_rate":100.0},{"decade":"1970s","category":"Legal","avg_pps":0.7755,"count":200.0,"realization_rate":100.0},{"decade":"1970s","category":"Political","avg_pps":0.7757,"count":329.0,"realization_rate":100.0},{"decade":"1970s","category":"Social","avg_pps":0.7724,"count":244.0,"realization_rate":100.0},{"decade":"1970s","category":"Technological","avg_pps":0.7871,"count":176.0,"realization_rate":100.0},{"decade":"1980s","category":"Economic","avg_pps":0.776,"count":257.0,"realization_rate":100.0},{"decade":"1980s","category":"Environmental","avg_pps":0.7827,"count":94.0,"realization_rate":100.0},{"decade":"1980s","category":"Legal","avg_pps":0.7696,"count":221.0,"realization_rate":100.0},{"decade":"1980s","category":"Political","avg_pps":0.7689,"count":321.0,"realization_rate":100.0},{"decade":"1980s","category":"Social","avg_pps":0.7622,"count":237.0,"realization_rate":100.0},{"decade":"1980s","category":"Technological","avg_pps":0.7824,"count":150.0,"realization_rate":100.0},{"decade":"1990s","category":"Economic","avg_pps":0.7713,"count":284.0,"realization_rate":100.0},{"decade":"1990s","category":"Environmental","avg_pps":0.7738,"count":100.0,"realization_rate":100.0},{"decade":"1990s","category":"Legal","avg_pps":0.7703,"count":235.0,"realization_rate":100.0},{"decade":"1990s","category":"Political","avg_pps":0.7682,"count":304.0,"realization_rate":100.0},{"decade":"1990s","category":"Social","avg_pps":0.7602,"count":211.0,"realization_rate":100.0},{"decade":"1990s","category":"Technological","avg_pps":0.7798,"count":164.0,"realization_rate":100.0},{"decade":"2000s","category":"Economic","avg_pps":0.7581,"count":269.0,"realization_rate":100.0},{"decade":"2000s","category":"Environmental","avg_pps":0.7425,"count":103.0,"realization_rate":100.0},{"decade":"2000s","category":"Legal","avg_pps":0.748,"count":169.0,"realization_rate":100.0},{"decade":"2000s","category":"Political","avg_pps":0.7513,"count":301.0,"realization_rate":100.0},{"decade":"2000s","category":"Social","avg_pps":0.7501,"count":245.0,"realization_rate":100.0},{"decade":"2000s","category":"Technological","avg_pps":0.7468,"count":226.0,"realization_rate":100.0},{"decade":"2010s","category":"Economic","avg_pps":0.7475,"count":265.0,"realization_rate":98.87},{"decade":"2010s","category":"Environmental","avg_pps":0.7321,"count":95.0,"realization_rate":95.79},{"decade":"2010s","category":"Legal","avg_pps":0.7339,"count":200.0,"realization_rate":93.0},{"decade":"2010s","category":"Political","avg_pps":0.7315,"count":282.0,"realization_rate":95.04},{"decade":"2010s","category":"Social","avg_pps":0.7308,"count":299.0,"realization_rate":91.64},{"decade":"2010s","category":"Technological","avg_pps":0.7307,"count":206.0,"realization_rate":94.66},{"decade":"2020s","category":"Economic","avg_pps":0.6545,"count":136.0,"realization_rate":47.79},{"decade":"2020s","category":"Environmental","avg_pps":0.6177,"count":84.0,"realization_rate":38.1},{"decade":"2020s","category":"Legal","avg_pps":0.6324,"count":133.0,"realization_rate":36.84},{"decade":"2020s","category":"Political","avg_pps":0.6365,"count":199.0,"realization_rate":41.21},{"decade":"2020s","category":"Social","avg_pps":0.6339,"count":185.0,"realization_rate":38.92},{"decade":"2020s","category":"Technological","avg_pps":0.6195,"count":128.0,"realization_rate":33.59},{"decade":"2020s","category":"技術","avg_pps":0.5564,"count":41.0,"realization_rate":0.0},{"decade":"2020s","category":"政治","avg_pps":0.5658,"count":63.0,"realization_rate":0.0},{"decade":"2020s","category":"法律","avg_pps":0.5667,"count":44.0,"realization_rate":0.0},{"decade":"2020s","category":"環境","avg_pps":0.5537,"count":19.0,"realization_rate":0.0},{"decade":"2020s","category":"社会","avg_pps":0.5471,"count":61.0,"realization_rate":0.0},{"decade":"2020s","category":"経済","avg_pps":0.5689,"count":32.0,"realization_rate":0.0}],"type_summary":[{"signal_type":"emerging_trend","total":3399,"avg_pps":0.755,"avg_realization":0.9005,"avg_direction":0.9106,"min_pps":0.3553,"max_pps":0.9391},{"signal_type":"weak_signal","total":2429,"avg_pps":0.7223,"avg_realization":0.8222,"avg_direction":0.7989,"min_pps":0.3379,"max_pps":0.8789},{"signal_type":"paradigm_shift","total":661,"avg_pps":0.6666,"avg_realization":0.7367,"avg_direction":0.7262,"min_pps":0.3488,"max_pps":0.8631},{"signal_type":"counter_trend","total":391,"avg_pps":0.6417,"avg_realization":0.7104,"avg_direction":0.7038,"min_pps":0.3597,"max_pps":0.8074},{"signal_type":"wild_card","total":365,"avg_pps":0.6052,"avg_realization":0.713,"avg_direction":0.6002,"min_pps":0.3342,"max_pps":0.784}],"mainstream":{"by_type":[{"type":"emerging_trend","n":3399,"avg":4.5,"min":0.7,"max":26.6},{"type":"counter_trend","n":391,"avg":6.1,"min":1.3,"max":28.8},{"type":"weak_signal","n":2429,"avg":11.5,"min":1.0,"max":40.0},{"type":"wild_card","n":365,"avg":12.1,"min":1.7,"max":40.0},{"type":"paradigm_shift","n":661,"avg":13.7,"min":1.8,"max":40.0}],"by_decade":[{"decade":"1900s","avg":12.8,"n":220,"ws_avg":19.7,"et_avg":7.2,"ps_avg":30.5},{"decade":"1910s","avg":11.3,"n":250,"ws_avg":16.0,"et_avg":6.5,"ps_avg":21.9},{"decade":"1920s","avg":10.3,"n":554,"ws_avg":15.7,"et_avg":5.7,"ps_avg":17.4},{"decade":"1930s","avg":8.6,"n":247,"ws_avg":15.0,"et_avg":3.3,"ps_avg":6.2},{"decade":"1940s","avg":9.6,"n":554,"ws_avg":12.6,"et_avg":4.7,"ps_avg":16.9},{"decade":"1950s","avg":9.6,"n":544,"ws_avg":13.6,"et_avg":5.3,"ps_avg":22.1},{"decade":"1960s","avg":9.1,"n":558,"ws_avg":12.7,"et_avg":5.1,"ps_avg":18.6},{"decade":"1970s","avg":9.7,"n":562,"ws_avg":13.9,"et_avg":5.2,"ps_avg":18.7},{"decade":"1980s","avg":8.4,"n":553,"ws_avg":12.7,"et_avg":5.1,"ps_avg":16.8},{"decade":"1990s","avg":7.6,"n":690,"ws_avg":10.2,"et_avg":4.7,"ps_avg":14.3},{"decade":"2000s","avg":6.3,"n":690,"ws_avg":8.7,"et_avg":3.4,"ps_avg":10.1},{"decade":"2010s","avg":5.2,"n":691,"ws_avg":7.1,"et_avg":2.6,"ps_avg":9.4},{"decade":"2020s","avg":3.8,"n":525,"ws_avg":5.1,"et_avg":1.9,"ps_avg":6.7}],"by_phase":[{"phase":"immediate","count":768,"pct":10.6,"avg_years":1.6},{"phase":"short-term","count":2353,"pct":32.5,"avg_years":3.5},{"phase":"medium-term","count":2351,"pct":32.4,"avg_years":7.0},{"phase":"long-term","count":1150,"pct":15.9,"avg_years":13.9},{"phase":"generational","count":628,"pct":8.7,"avg_years":27.0}],"histogram":[{"year":0,"count":62},{"year":1,"count":534},{"year":2,"count":870},{"year":3,"count":817},{"year":4,"count":788},{"year":5,"count":861},{"year":6,"count":431},{"year":7,"count":451},{"year":8,"count":275},{"year":9,"count":348},{"year":10,"count":262},{"year":11,"count":142},{"year":12,"count":129},{"year":13,"count":119},{"year":14,"count":148},{"year":15,"count":77},{"year":16,"count":51},{"year":17,"count":129},{"year":18,"count":76},{"year":19,"count":47},{"year":20,"count":62},{"year":21,"count":89},{"year":22,"count":88},{"year":23,"count":44},{"year":24,"count":29},{"year":25,"count":22},{"year":26,"count":46},{"year":27,"count":22},{"year":28,"count":41},{"year":29,"count":22},{"year":30,"count":18},{"year":31,"count":27},{"year":32,"count":24},{"year":33,"count":12},{"year":34,"count":8},{"year":35,"count":4},{"year":36,"count":1},{"year":37,"count":6},{"year":38,"count":13},{"year":39,"count":10},{"year":40,"count":45}]},"timeline":[{"decade":"1900s","total":220,"avg_pps":0.7802,"avg_realization":0.9537,"avg_direction":0.9324,"avg_timing":0.2677,"avg_impact":0.8661,"grade_s":5,"grade_a":200,"grade_b":15,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"1910s","total":250,"avg_pps":0.765,"avg_realization":0.9416,"avg_direction":0.9155,"avg_timing":0.2457,"avg_impact":0.8546,"grade_s":3,"grade_a":221,"grade_b":26,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"1920s","total":554,"avg_pps":0.7737,"avg_realization":0.9473,"avg_direction":0.9243,"avg_timing":0.2591,"avg_impact":0.8621,"grade_s":12,"grade_a":492,"grade_b":50,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"1930s","total":247,"avg_pps":0.7517,"avg_realization":0.9413,"avg_direction":0.9188,"avg_timing":0.1882,"avg_impact":0.8447,"grade_s":0,"grade_a":224,"grade_b":21,"grade_c":2,"grade_d":0,"grade_f":0},{"decade":"1940s","total":554,"avg_pps":0.7723,"avg_realization":0.9456,"avg_direction":0.9187,"avg_timing":0.2519,"avg_impact":0.8664,"grade_s":14,"grade_a":506,"grade_b":33,"grade_c":1,"grade_d":0,"grade_f":0},{"decade":"1950s","total":544,"avg_pps":0.7774,"avg_realization":0.9433,"avg_direction":0.9203,"avg_timing":0.2875,"avg_impact":0.863,"grade_s":19,"grade_a":484,"grade_b":41,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"1960s","total":558,"avg_pps":0.781,"avg_realization":0.9517,"avg_direction":0.9297,"avg_timing":0.2683,"avg_impact":0.8731,"grade_s":21,"grade_a":504,"grade_b":33,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"1970s","total":562,"avg_pps":0.7781,"avg_realization":0.9484,"avg_direction":0.924,"avg_timing":0.2722,"avg_impact":0.8704,"grade_s":17,"grade_a":505,"grade_b":40,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"1980s","total":553,"avg_pps":0.7719,"avg_realization":0.9471,"avg_direction":0.9254,"avg_timing":0.2424,"avg_impact":0.8674,"grade_s":9,"grade_a":497,"grade_b":47,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"1990s","total":690,"avg_pps":0.77,"avg_realization":0.9465,"avg_direction":0.9209,"avg_timing":0.2439,"avg_impact":0.8656,"grade_s":11,"grade_a":620,"grade_b":58,"grade_c":1,"grade_d":0,"grade_f":0},{"decade":"2000s","total":690,"avg_pps":0.7537,"avg_realization":0.9108,"avg_direction":0.8912,"avg_timing":0.2915,"avg_impact":0.8411,"grade_s":12,"grade_a":576,"grade_b":102,"grade_c":0,"grade_d":0,"grade_f":0},{"decade":"2010s","total":691,"avg_pps":0.7401,"avg_realization":0.8194,"avg_direction":0.8173,"avg_timing":0.4799,"avg_impact":0.7956,"grade_s":26,"grade_a":472,"grade_b":187,"grade_c":6,"grade_d":0,"grade_f":0},{"decade":"2020s","total":525,"avg_pps":0.5834,"avg_realization":0.4878,"avg_direction":0.5228,"avg_timing":0.6172,"avg_impact":0.653,"grade_s":0,"grade_a":110,"grade_b":213,"grade_c":127,"grade_d":75,"grade_f":0}],"type_accuracy":[{"signal_type":"counter_trend","decade":"1900s","signal_count":7,"avg_predictive_power":0.6897,"avg_realization_score":0.8207},{"signal_type":"counter_trend","decade":"1910s","signal_count":9,"avg_predictive_power":0.6979,"avg_realization_score":0.8363},{"signal_type":"counter_trend","decade":"1920s","signal_count":35,"avg_predictive_power":0.6931,"avg_realization_score":0.846},{"signal_type":"counter_trend","decade":"1930s","signal_count":9,"avg_predictive_power":0.6969,"avg_realization_score":0.8459},{"signal_type":"counter_trend","decade":"1940s","signal_count":18,"avg_predictive_power":0.7051,"avg_realization_score":0.8326},{"signal_type":"counter_trend","decade":"1950s","signal_count":26,"avg_predictive_power":0.7033,"avg_realization_score":0.8177},{"signal_type":"counter_trend","decade":"1960s","signal_count":21,"avg_predictive_power":0.7,"avg_realization_score":0.8388},{"signal_type":"counter_trend","decade":"1970s","signal_count":25,"avg_predictive_power":0.7102,"avg_realization_score":0.8515},{"signal_type":"counter_trend","decade":"1980s","signal_count":24,"avg_predictive_power":0.6905,"avg_realization_score":0.8401},{"signal_type":"counter_trend","decade":"1990s","signal_count":41,"avg_predictive_power":0.7128,"avg_realization_score":0.8619},{"signal_type":"counter_trend","decade":"2000s","signal_count":53,"avg_predictive_power":0.6869,"avg_realization_score":0.8078},{"signal_type":"counter_trend","decade":"2010s","signal_count":44,"avg_predictive_power":0.6618,"avg_realization_score":0.6964},{"signal_type":"counter_trend","decade":"2020s","signal_count":33,"avg_predictive_power":0.5065,"avg_realization_score":0.3537},{"signal_type":"emerging_trend","decade":"1900s","signal_count":123,"avg_predictive_power":0.7922,"avg_realization_score":0.98},{"signal_type":"emerging_trend","decade":"1910s","signal_count":120,"avg_predictive_power":0.7846,"avg_realization_score":0.9799},{"signal_type":"emerging_trend","decade":"1920s","signal_count":267,"avg_predictive_power":0.7905,"avg_realization_score":0.98},{"signal_type":"emerging_trend","decade":"1930s","signal_count":120,"avg_predictive_power":0.764,"avg_realization_score":0.98},{"signal_type":"emerging_trend","decade":"1940s","signal_count":251,"avg_predictive_power":0.7886,"avg_realization_score":0.98},{"signal_type":"emerging_trend","decade":"1950s","signal_count":269,"avg_predictive_power":0.7959,"avg_realization_score":0.9795},{"signal_type":"emerging_trend","decade":"1960s","signal_count":277,"avg_predictive_power":0.7941,"avg_realization_score":0.9798},{"signal_type":"emerging_trend","decade":"1970s","signal_count":273,"avg_predictive_power":0.7943,"avg_realization_score":0.9789},{"signal_type":"emerging_trend","decade":"1980s","signal_count":293,"avg_predictive_power":0.7893,"avg_realization_score":0.9792},{"signal_type":"emerging_trend","decade":"1990s","signal_count":337,"avg_predictive_power":0.7917,"avg_realization_score":0.98},{"signal_type":"emerging_trend","decade":"2000s","signal_count":289,"avg_predictive_power":0.7897,"avg_realization_score":0.9719},{"signal_type":"emerging_trend","decade":"2010s","signal_count":336,"avg_predictive_power":0.7846,"avg_realization_score":0.9104},{"signal_type":"emerging_trend","decade":"2020s","signal_count":248,"avg_predictive_power":0.6308,"avg_realization_score":0.5736},{"signal_type":"paradigm_shift","decade":"1900s","signal_count":12,"avg_predictive_power":0.7976,"avg_realization_score":0.98},{"signal_type":"paradigm_shift","decade":"1910s","signal_count":10,"avg_predictive_power":0.7807,"avg_realization_score":0.9704},{"signal_type":"paradigm_shift","decade":"1920s","signal_count":45,"avg_predictive_power":0.7851,"avg_realization_score":0.9749},{"signal_type":"paradigm_shift","decade":"1930s","signal_count":13,"avg_predictive_power":0.746,"avg_realization_score":0.9749},{"signal_type":"paradigm_shift","decade":"1940s","signal_count":65,"avg_predictive_power":0.7834,"avg_realization_score":0.9697},{"signal_type":"paradigm_shift","decade":"1950s","signal_count":24,"avg_predictive_power":0.8023,"avg_realization_score":0.9767},{"signal_type":"paradigm_shift","decade":"1960s","signal_count":34,"avg_predictive_power":0.7947,"avg_realization_score":0.9779},{"signal_type":"paradigm_shift","decade":"1970s","signal_count":38,"avg_predictive_power":0.7965,"avg_realization_score":0.9774},{"signal_type":"paradigm_shift","decade":"1980s","signal_count":25,"avg_predictive_power":0.7953,"avg_realization_score":0.9744},{"signal_type":"paradigm_shift","decade":"1990s","signal_count":65,"avg_predictive_power":0.788,"avg_realization_score":0.974},{"signal_type":"paradigm_shift","decade":"2000s","signal_count":55,"avg_predictive_power":0.7669,"avg_realization_score":0.9451},{"signal_type":"paradigm_shift","decade":"2010s","signal_count":56,"avg_predictive_power":0.7388,"avg_realization_score":0.7977},{"signal_type":"paradigm_shift","decade":"2020s","signal_count":65,"avg_predictive_power":0.5511,"avg_realization_score":0.4507},{"signal_type":"weak_signal","decade":"1900s","signal_count":67,"avg_predictive_power":0.7839,"avg_realization_score":0.9302},{"signal_type":"weak_signal","decade":"1910s","signal_count":93,"avg_predictive_power":0.7672,"avg_realization_score":0.9175},{"signal_type":"weak_signal","decade":"1920s","signal_count":184,"avg_predictive_power":0.7788,"avg_realization_score":0.9277},{"signal_type":"weak_signal","decade":"1930s","signal_count":93,"avg_predictive_power":0.7598,"avg_realization_score":0.9155},{"signal_type":"weak_signal","decade":"1940s","signal_count":185,"avg_predictive_power":0.7705,"avg_realization_score":0.9224},{"signal_type":"weak_signal","decade":"1950s","signal_count":197,"avg_predictive_power":0.7769,"avg_realization_score":0.9218},{"signal_type":"weak_signal","decade":"1960s","signal_count":206,"avg_predictive_power":0.7839,"avg_realization_score":0.9374},{"signal_type":"weak_signal","decade":"1970s","signal_count":196,"avg_predictive_power":0.7792,"avg_realization_score":0.9303},{"signal_type":"weak_signal","decade":"1980s","signal_count":183,"avg_predictive_power":0.7693,"avg_realization_score":0.9226},{"signal_type":"weak_signal","decade":"1990s","signal_count":201,"avg_predictive_power":0.7679,"avg_realization_score":0.927},{"signal_type":"weak_signal","decade":"2000s","signal_count":270,"avg_predictive_power":0.7355,"avg_realization_score":0.8677},{"signal_type":"weak_signal","decade":"2010s","signal_count":229,"avg_predictive_power":0.7063,"avg_realization_score":0.7379},{"signal_type":"weak_signal","decade":"2020s","signal_count":152,"avg_predictive_power":0.5559,"avg_realization_score":0.4237},{"signal_type":"wild_card","decade":"1900s","signal_count":11,"avg_predictive_power":0.6616,"avg_realization_score":0.8585},{"signal_type":"wild_card","decade":"1910s","signal_count":18,"avg_predictive_power":0.6481,"avg_realization_score":0.8473},{"signal_type":"wild_card","decade":"1920s","signal_count":23,"avg_predictive_power":0.6385,"avg_realization_score":0.8254},{"signal_type":"wild_card","decade":"1930s","signal_count":12,"avg_predictive_power":0.6141,"avg_realization_score":0.7896},{"signal_type":"wild_card","decade":"1940s","signal_count":35,"avg_predictive_power":0.6786,"avg_realization_score":0.8339},{"signal_type":"wild_card","decade":"1950s","signal_count":28,"avg_predictive_power":0.6493,"avg_realization_score":0.8343},{"signal_type":"wild_card","decade":"1960s","signal_count":20,"avg_predictive_power":0.6319,"avg_realization_score":0.7847},{"signal_type":"wild_card","decade":"1970s","signal_count":30,"avg_predictive_power":0.6571,"avg_realization_score":0.8341},{"signal_type":"wild_card","decade":"1980s","signal_count":28,"avg_predictive_power":0.6552,"avg_realization_score":0.8397},{"signal_type":"wild_card","decade":"1990s","signal_count":46,"avg_predictive_power":0.6466,"avg_realization_score":0.8231},{"signal_type":"wild_card","decade":"2000s","signal_count":23,"avg_predictive_power":0.6377,"avg_realization_score":0.8049},{"signal_type":"wild_card","decade":"2010s","signal_count":26,"avg_predictive_power":0.5988,"avg_realization_score":0.6147},{"signal_type":"wild_card","decade":"2020s","signal_count":27,"avg_predictive_power":0.4748,"avg_realization_score":0.3133}]};
+
+// Utility
+const fmt = (n,d=1) => n==null?'-':Number(n).toFixed(d);
+const pct = n => fmt(n,1)+'%';
+const gradeHTML = g => `<span class="grade grade-${g}">${g}</span>`;
+function sbHTML(v,max=1,color='var(--accent-warm)') {
+  const w = Math.max(0,Math.min(100,(v/max)*100));
+  return `<span class="sb"><span class="sb-fill" style="width:${w}%;background:${color}"></span></span>${fmt(v,3)}`;
+}
+function heatColor(v,min,max) {
+  if(v==null) return 'transparent';
+  const t = max===min?0.5:(v-min)/(max-min);
+  return `rgba(204,20,0,${(0.08+t*0.5).toFixed(2)})`;
+}
+
+// KPI
+function renderKPI() {
+  const o = DATA.overview;
+  const ms = DATA.mainstream;
+  const avgMS = ms.by_type.reduce((s,t)=>s+t.avg*t.n,0)/ms.by_type.reduce((s,t)=>s+t.n,0);
+  const items = [
+    {v:o.total_signals.toLocaleString(), l:'Total Signals', s:`PESTLE ${o.by_source.pestle} + Cultural ${o.by_source.cultural}`},
+    {v:fmt(o.pps_avg,3), l:'Avg PPS', s:`${fmt(o.pps_min,3)} - ${fmt(o.pps_max,3)}`, a:true},
+    {v:pct(o.realization_dist.find(r=>r.status==='fully_realized')?.pct||0), l:'Fully Realized', s:`${(o.realization_dist.find(r=>r.status==='fully_realized')?.count||0).toLocaleString()} signals`},
+    {v:pct(o.grade_dist.filter(g=>g.grade==='S'||g.grade==='A').reduce((s,g)=>s+g.pct,0)), l:'Grade S+A', s:`${o.grade_dist.filter(g=>g.grade==='S'||g.grade==='A').reduce((s,g)=>s+g.count,0).toLocaleString()} signals`},
+    {v:fmt(avgMS,1)+'yr', l:'Avg Mainstream', s:'signal to mainstream', a:true},
+  ];
+  document.getElementById('kpi').innerHTML = items.map(k=>`<div class="kpi"><div class="kpi-value${k.a?' accent':''}">${k.v}</div><div class="kpi-label">${k.l}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+}
+
+// Era
+function renderEra() {
+  const eras = DATA.era_summary;
+  const maxPPS = Math.max(...eras.map(e=>e.avg_predictive_power));
+  const labels = {'pre-war':'戦前 (1900-1913)','world-wars':'世界大戦 (1914-1944)','cold-war':'冷戦 (1945-1990)','digital-revolution':'デジタル革命 (1991-2009)','platform-era':'プラットフォーム (2010-2019)','ai-era':'AI時代 (2020-)'};
+  document.getElementById('era-chart').innerHTML = eras.map(e=>`<div class="bar-group"><div class="bar-label">${labels[e.era]||e.era} (n=${e.total_signals})</div><div class="bar-track"><div class="bar-fill" style="width:${(e.avg_predictive_power/maxPPS*100).toFixed(1)}%;background:var(--accent-warm)"></div></div><div class="bar-val">${fmt(e.avg_predictive_power,3)}</div></div>`).join('');
+}
+
+// Grade + Realization
+function renderGR() {
+  const grades = DATA.overview.grade_dist;
+  const maxG = Math.max(...grades.map(g=>g.count));
+  const gc = {S:'var(--accent-warm)',A:'var(--green)',B:'var(--blue)',C:'var(--orange)',D:'var(--red)'};
+  document.getElementById('grade-chart').innerHTML = grades.map(g=>`<div class="bar-group"><div class="bar-label">${gradeHTML(g.grade)} ${g.count.toLocaleString()}</div><div class="bar-track"><div class="bar-fill" style="width:${(g.count/maxG*100).toFixed(1)}%;background:${gc[g.grade]||'var(--text-muted)'}"></div></div><div class="bar-val">${pct(g.pct)}</div></div>`).join('');
+
+  const reals = DATA.overview.realization_dist;
+  const maxR = Math.max(...reals.map(r=>r.count));
+  const rl = {fully_realized:'Full',substantially_realized:'Substantial',partially_realized:'Partial',pending:'Pending',falsified:'Falsified'};
+  const rc = {fully_realized:'var(--green)',substantially_realized:'var(--cyan)',partially_realized:'var(--orange)',pending:'var(--text-muted)',falsified:'var(--red)'};
+  document.getElementById('real-chart').innerHTML = reals.map(r=>`<div class="bar-group"><div class="bar-label">${rl[r.status]||r.status} (${r.count.toLocaleString()})</div><div class="bar-track"><div class="bar-fill" style="width:${(r.count/maxR*100).toFixed(1)}%;background:${rc[r.status]||'var(--text-muted)'}"></div></div><div class="bar-val">${pct(r.pct)}</div></div>`).join('');
+}
+
+// Mainstream
+function renderMS() {
+  const ms = DATA.mainstream;
+  const maxAvg = Math.max(...ms.by_type.map(t=>t.avg));
+  const tc = {emerging_trend:'var(--green)',weak_signal:'var(--cyan)',paradigm_shift:'var(--purple)',counter_trend:'var(--orange)',wild_card:'var(--red)'};
+  const tl = {emerging_trend:'Emerging Trend',weak_signal:'Weak Signal',paradigm_shift:'Paradigm Shift',counter_trend:'Counter Trend',wild_card:'Wild Card'};
+  document.getElementById('ms-type').innerHTML = ms.by_type.map(t=>`<div class="bar-group"><div class="bar-label">${tl[t.type]||t.type} (n=${t.n})</div><div class="bar-track"><div class="bar-fill" style="width:${(t.avg/maxAvg*100).toFixed(1)}%;background:${tc[t.type]||'var(--text-muted)'}"></div></div><div class="bar-val">${t.avg}yr</div></div>`).join('');
+
+  const maxP = Math.max(...ms.by_phase.map(p=>p.count));
+  const pl = {immediate:'即時 (<2yr)',['short-term']:'短期 (2-5yr)',['medium-term']:'中期 (5-10yr)',['long-term']:'長期 (10-20yr)',generational:'世代 (20yr+)'};
+  document.getElementById('ms-phase').innerHTML = ms.by_phase.map(p=>`<div class="bar-group"><div class="bar-label">${pl[p.phase]||p.phase}</div><div class="bar-track"><div class="bar-fill" style="width:${(p.count/maxP*100).toFixed(1)}%;background:var(--accent-warm)"></div></div><div class="bar-val">${p.count} (${pct(p.pct)})</div></div>`).join('');
+
+  // Decade chart
+  const c = document.getElementById('ms-canvas');
+  c.width = c.parentElement.clientWidth - 32;
+  const ctx = c.getContext('2d');
+  const W=c.width, H=c.height, pad={t:20,r:30,b:36,l:50};
+  const pW=W-pad.l-pad.r, pH=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+
+  const dec = ms.by_decade;
+  const maxY = Math.max(...dec.map(d=>Math.max(d.avg,d.ws_avg||0,d.et_avg||0,d.ps_avg||0)));
+  const gap = pW/dec.length;
+
+  // Grid
+  ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border-light').trim()||'#EEE';
+  for(let i=0;i<=4;i++){const y=pad.t+pH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim()||'#6B6B6B';ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText(fmt(maxY-maxY*i/4,0)+'yr',pad.l-6,y+4);}
+
+  // Lines
+  const lines=[{k:'avg',c:'#CC1400',l:'Total Avg'},{k:'et_avg',c:'#16A34A',l:'Emerging'},{k:'ws_avg',c:'#0891B2',l:'Weak Signal'},{k:'ps_avg',c:'#7C3AED',l:'Paradigm'}];
+  lines.forEach(ln=>{
+    ctx.strokeStyle=ln.c;ctx.lineWidth=2;ctx.beginPath();
+    dec.forEach((d,i)=>{const v=d[ln.k];if(v==null)return;const x=pad.l+i*gap+gap/2;const y=pad.t+pH-(v/maxY)*pH;if(i===0||dec[i-1][ln.k]==null)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+    ctx.stroke();
+    dec.forEach((d,i)=>{const v=d[ln.k];if(v==null)return;const x=pad.l+i*gap+gap/2;const y=pad.t+pH-(v/maxY)*pH;ctx.fillStyle=ln.c;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});
+  });
+
+  // X labels
+  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim()||'#6B6B6B';ctx.font='10px system-ui';ctx.textAlign='center';
+  dec.forEach((d,i)=>{ctx.fillText(d.decade,pad.l+i*gap+gap/2,H-pad.b+16);});
+
+  // Legend
+  lines.forEach((ln,i)=>{const lx=pad.l+i*90;ctx.fillStyle=ln.c;ctx.fillRect(lx,6,12,3);ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-secondary').trim()||'#555';ctx.font='10px system-ui';ctx.textAlign='left';ctx.fillText(ln.l,lx+16,10);});
+}
+
+// Type cards
+function renderTypes() {
+  const types = DATA.type_summary;
+  const tl = {emerging_trend:'Emerging Trend',weak_signal:'Weak Signal',paradigm_shift:'Paradigm Shift',counter_trend:'Counter Trend',wild_card:'Wild Card'};
+  const ms = DATA.mainstream.by_type;
+  document.getElementById('type-cards').innerHTML = types.map(t=>{
+    const m = ms.find(m=>m.type===t.signal_type);
+    return `<div class="type-card"><div class="type-name">${tl[t.signal_type]||t.signal_type}</div><div class="type-stat">${t.total.toLocaleString()} signals</div><div class="type-big">${fmt(t.avg_pps,3)}</div><div class="type-stat">PPS (${fmt(t.min_pps,3)}-${fmt(t.max_pps,3)})</div><div class="type-stat" style="margin-top:6px">Mainstream: ${m?m.avg+'yr':'-'} | Realization: ${fmt(t.avg_realization,3)}</div></div>`;
+  }).join('');
+}
+
+// Heatmap
+function renderHM(metric) {
+  const data = DATA.heatmap;
+  const decades = [...new Set(data.map(d=>d.decade))].sort();
+  const catMap = {'政治':'Political','経済':'Economic','社会':'Social','技術':'Technological','法律':'Legal','環境':'Environmental'};
+  const cats = ['Political','Economic','Social','Technological','Legal','Environmental'];
+  const lookup = {};
+  data.forEach(d=>{const cat=catMap[d.category]||d.category;if(!cats.includes(cat))return;const k=`${d.decade}|${cat}`;if(!lookup[k])lookup[k]=[];lookup[k].push(d[metric]);});
+  Object.keys(lookup).forEach(k=>{const arr=lookup[k].filter(v=>v!=null);lookup[k]=arr.length?arr.reduce((s,v)=>s+v,0)/arr.length:null;});
+  const vals=Object.values(lookup).filter(v=>v!=null&&v>0);
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const fmtV = metric==='count'?v=>Math.round(v):metric==='realization_rate'?v=>pct(v):v=>fmt(v,3);
+
+  let h='<table class="hm"><thead><tr><th></th>';
+  decades.forEach(d=>h+=`<th>${d}</th>`);
+  h+='</tr></thead><tbody>';
+  cats.forEach(cat=>{h+=`<tr><td class="rl">${cat}</td>`;decades.forEach(dec=>{const v=lookup[`${dec}|${cat}`];const bg=v?heatColor(v,mn,mx):'transparent';h+=`<td><div class="hm-cell" style="background:${bg}">${v!=null?fmtV(v):'-'}</div></td>`;});h+='</tr>';});
+  h+='</tbody></table>';
+  document.getElementById('hm-wrap').innerHTML=h;
+}
+
+function setupHMTabs() {
+  document.querySelectorAll('#hm-tabs .tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('#hm-tabs .tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      renderHM(tab.dataset.m);
+    });
+  });
+}
+
+// Timeline
+function renderTL() {
+  const tl = DATA.timeline;
+  const c = document.getElementById('tl-canvas');
+  c.width = c.parentElement.clientWidth - 32;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad={t:24,r:30,b:36,l:50};
+  const pW=W-pad.l-pad.r,pH=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+
+  const maxPPS=Math.max(...tl.map(t=>t.avg_pps));
+  const minPPS=Math.min(...tl.map(t=>t.avg_pps));
+  const range=maxPPS-minPPS||0.1;
+  const gap=pW/tl.length;
+
+  ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--border-light').trim()||'#EEE';
+  for(let i=0;i<=4;i++){const y=pad.t+pH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText(fmt(maxPPS-range*i/4,3),pad.l-6,y+4);}
+
+  const metrics=[{k:'avg_pps',c:'#CC1400',l:'PPS'},{k:'avg_realization',c:'#16A34A',l:'Realization'},{k:'avg_direction',c:'#0891B2',l:'Direction'},{k:'avg_timing',c:'#EA580C',l:'Timing'}];
+  metrics.forEach(m=>{
+    ctx.strokeStyle=m.c;ctx.lineWidth=2;ctx.beginPath();
+    tl.forEach((t,i)=>{const x=pad.l+i*gap+gap/2;const y=pad.t+pH-((t[m.k]-minPPS)/range)*pH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+    ctx.stroke();
+    tl.forEach((t,i)=>{const x=pad.l+i*gap+gap/2;const y=pad.t+pH-((t[m.k]-minPPS)/range)*pH;ctx.fillStyle=m.c;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});
+  });
+  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='center';
+  tl.forEach((t,i)=>ctx.fillText(t.decade,pad.l+i*gap+gap/2,H-pad.b+16));
+  metrics.forEach((m,i)=>{const lx=pad.l+i*80;ctx.fillStyle=m.c;ctx.fillRect(lx,8,12,3);ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-secondary').trim();ctx.font='10px system-ui';ctx.textAlign='left';ctx.fillText(m.l,lx+16,12);});
+}
+
+// Scatter
+let allSignals = null;
+async function renderScatter() {
+  if(!allSignals){
+    try{const r=await fetch('data/sg_all_signals.json');allSignals=await r.json();}catch(e){allSignals=[];console.error('Failed to load scatter data');}
+  }
+  const c=document.getElementById('sc-canvas');
+  c.width=c.parentElement.clientWidth;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad={t:16,r:20,b:36,l:50};
+  const pW=W-pad.l-pad.r,pH=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+
+  const tf=document.getElementById('f-type')?.value||'all';
+  const sf=document.getElementById('f-src')?.value||'all';
+  const filtered=allSignals.filter(s=>{if(tf!=='all'&&s.signal_type!==tf)return false;if(sf!=='all'&&s.source!==sf)return false;return true;});
+
+  const xMin=2,xMax=10,yMin=0.2,yMax=1.0;
+  ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--border-light').trim()||'#EEE';
+  for(let i=0;i<=5;i++){const y=pad.t+pH*i/5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText(fmt(yMax-(yMax-yMin)*i/5,2),pad.l-6,y+4);}
+
+  const gc={S:'#CC1400',A:'#16A34A',B:'#2563EB',C:'#EA580C',D:'#DC2626',F:'#6B6B6B'};
+  filtered.forEach(s=>{
+    const x=pad.l+((s.composite_score-xMin)/(xMax-xMin))*pW;
+    const y=pad.t+((yMax-s.predictive_power_score)/(yMax-yMin))*pH;
+    if(x<pad.l||x>W-pad.r||y<pad.t||y>H-pad.b)return;
+    ctx.fillStyle=gc[s.predictive_power_grade]||'#666';ctx.globalAlpha=0.45;
+    ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='center';
+  ctx.fillText('Composite Score',pad.l+pW/2,H-4);
+  ctx.textAlign='right';ctx.fillText(`${filtered.length.toLocaleString()} signals`,W-pad.r,H-pad.b+28);
+
+  if(!document.getElementById('f-type')){
+    const types=[...new Set(allSignals.map(s=>s.signal_type))].filter(t=>allSignals.filter(s=>s.signal_type===t).length>5).sort();
+    document.getElementById('sc-filters').innerHTML=`<div><label>Type</label> <select id="f-type"><option value="all">All</option>${types.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div><div><label>Source</label> <select id="f-src"><option value="all">All</option><option value="pestle">PESTLE</option><option value="cultural">Cultural</option></select></div>`;
+    document.getElementById('f-type').addEventListener('change',renderScatter);
+    document.getElementById('f-src').addEventListener('change',renderScatter);
+  }
+}
+
+// Top table
+async function renderTop() {
+  let signals;
+  try{const r=await fetch('data/sg_top_signals.json');signals=await r.json();}catch(e){signals=[];console.error('Failed to load top signals');}
+  signals=signals.slice(0,50);
+  document.getElementById('top-n').textContent=`Top ${signals.length}`;
+  const tl={emerging_trend:'ET',weak_signal:'WS',paradigm_shift:'PS',counter_trend:'CT',wild_card:'WC'};
+  const rl={fully_realized:'Full',substantially_realized:'Subst.',partially_realized:'Partial',pending:'Pending',falsified:'False'};
+  let h='<thead><tr><th>#</th><th>Grade</th><th>Signal</th><th>Type</th><th>Decade</th><th>PPS</th><th>Realization</th><th>Direction</th><th>Timing</th></tr></thead><tbody>';
+  signals.forEach((s,i)=>{
+    h+=`<tr><td>${i+1}</td><td>${gradeHTML(s.predictive_power_grade)}</td><td class="sig-name" title="${s.signal_name}">${s.signal_name}</td><td>${tl[s.signal_type]||s.signal_type}</td><td>${s.decade||'-'}</td><td>${sbHTML(s.predictive_power_score,1,'var(--accent-warm)')}</td><td>${rl[s.realization_status]||s.realization_status}</td><td>${fmt(s.direction_accuracy,3)}</td><td>${fmt(s.timing_accuracy,3)}</td></tr>`;
+  });
+  h+='</tbody>';
+  document.getElementById('top-table').innerHTML=h;
+}
+
+// Init
+renderKPI(); renderEra(); renderGR(); renderMS(); renderTypes(); renderHM('avg_pps'); setupHMTabs(); renderTL(); renderScatter(); renderTop();
+window.addEventListener('resize',()=>{renderMS();renderTL();renderScatter();});
+</script>
 </body>
 </html>
