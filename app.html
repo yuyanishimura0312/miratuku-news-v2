@@ -7613,6 +7613,71 @@
     };
 
     // ==============================================================
+    // DATABASE REGISTRY
+    // ==============================================================
+    let dbRegistryLoaded = false;
+    window.loadDatabaseRegistry = async function() {
+      if (dbRegistryLoaded) return;
+      try {
+        const res = await fetch('data/db-registry.json');
+        const data = await res.json();
+        renderDatabaseRegistry(data);
+        dbRegistryLoaded = true;
+      } catch (err) {
+        console.error('DB registry load error:', err);
+        document.getElementById('dbLayersContent').innerHTML =
+          '<p style="color:var(--text-muted)">データベース情報の読み込みに失敗しました。</p>';
+      }
+    };
+
+    function renderDatabaseRegistry(data) {
+      const overview = document.getElementById('dbOverview');
+      const stats = data.totalStats;
+      overview.innerHTML =
+        '<div class="db-overview-card"><div class="db-overview-value">' + stats.totalDatabases + '</div><div class="db-overview-label">データベース</div></div>' +
+        '<div class="db-overview-card"><div class="db-overview-value">' + stats.totalRecords + '</div><div class="db-overview-label">総レコード数</div></div>' +
+        '<div class="db-overview-card"><div class="db-overview-value">' + stats.layers + '</div><div class="db-overview-label">アーキテクチャ層</div></div>' +
+        '<div class="db-overview-card"><div class="db-overview-value">' + stats.updateFrequency + '</div><div class="db-overview-label">更新頻度</div></div>';
+
+      const container = document.getElementById('dbLayersContent');
+      let html = '';
+      data.layers.forEach(function(layer) {
+        html += '<div class="db-layer"><div class="db-layer-header">' +
+          '<div class="db-layer-title">' + layer.name + '</div>' +
+          '<div class="db-layer-desc">' + layer.description + '</div></div>' +
+          '<div class="db-layer-grid">';
+        layer.databases.forEach(function(db) { html += renderDbEntry(db); });
+        html += '</div></div>';
+      });
+      if (data.supplementary && data.supplementary.length > 0) {
+        html += '<div class="db-supplementary"><div class="db-supplementary-title">補助データベース</div><div class="db-supplementary-grid">';
+        data.supplementary.forEach(function(db) {
+          html += '<div class="db-supplementary-item"><strong>' + db.id + ': ' + db.nameJa + '</strong>' +
+            '<div>' + db.stat + '</div>' +
+            '<div style="color:var(--text-muted);margin-top:2px">' + db.description + '</div></div>';
+        });
+        html += '</div></div>';
+      }
+      container.innerHTML = html;
+    }
+
+    function renderDbEntry(db) {
+      var meta = '';
+      if (db.storage) meta += '<span>' + db.storage + '</span>';
+      if (db.update) meta += '<span>' + db.update + '</span>';
+      if (db.tables) meta += '<span>' + db.tables + 'テーブル</span>';
+      if (db.rows) meta += '<span>' + db.rows.toLocaleString() + '行</span>';
+      if (db.sizeMB) meta += '<span>' + db.sizeMB + 'MB</span>';
+      var link = db.url ? ' <a href="' + db.url + '" target="_blank" rel="noopener" style="font-size:0.7rem;color:var(--accent-warm)">開く</a>' : '';
+      return '<div class="db-entry"><div class="db-entry-header">' +
+        '<span class="db-entry-id">' + db.id + '</span>' +
+        '<span class="db-entry-name">' + db.nameJa + link + '</span></div>' +
+        '<div class="db-entry-stat">' + db.stat + '</div>' +
+        '<div class="db-entry-desc">' + db.description + '</div>' +
+        (meta ? '<div class="db-entry-meta">' + meta + '</div>' : '') + '</div>';
+    }
+
+    // ==============================================================
     // SECTION ROUTING
     // ==============================================================
     const VALID_SECTIONS = ['section-home', 'section-signals', 'section-reports', 'section-user-reports', 'section-papers', 'section-cla', 'section-foresight', 'section-foresight-history', 'section-media', 'section-themes', 'section-bookmarks', 'section-databases', 'section-guide'];
@@ -8146,113 +8211,6 @@
   })();
   </script>
 
-  <!-- DATABASE REGISTRY -->
-  <script>
-  (function() {
-    let dbRegistryLoaded = false;
-    let dbRegistryData = null;
-
-    window.loadDatabaseRegistry = async function() {
-      if (dbRegistryLoaded) return;
-      try {
-        const res = await fetch('data/db-registry.json');
-        dbRegistryData = await res.json();
-        renderDatabaseRegistry(dbRegistryData);
-        dbRegistryLoaded = true;
-      } catch (err) {
-        console.error('DB registry load error:', err);
-        document.getElementById('dbLayersContent').innerHTML =
-          '<p style="color:var(--text-muted)">データベース情報の読み込みに失敗しました。</p>';
-      }
-    };
-
-    function renderDatabaseRegistry(data) {
-      // Overview cards
-      const overview = document.getElementById('dbOverview');
-      const stats = data.totalStats;
-      overview.innerHTML = `
-        <div class="db-overview-card">
-          <div class="db-overview-value">${stats.totalDatabases}</div>
-          <div class="db-overview-label">データベース</div>
-        </div>
-        <div class="db-overview-card">
-          <div class="db-overview-value">${stats.totalRecords}</div>
-          <div class="db-overview-label">総レコード数</div>
-        </div>
-        <div class="db-overview-card">
-          <div class="db-overview-value">${stats.layers}</div>
-          <div class="db-overview-label">アーキテクチャ層</div>
-        </div>
-        <div class="db-overview-card">
-          <div class="db-overview-value">${stats.updateFrequency}</div>
-          <div class="db-overview-label">更新頻度</div>
-        </div>
-      `;
-
-      // Layer blocks
-      const container = document.getElementById('dbLayersContent');
-      let html = '';
-
-      data.layers.forEach(layer => {
-        html += `<div class="db-layer">`;
-        html += `<div class="db-layer-header">`;
-        html += `<div class="db-layer-title">${layer.name}</div>`;
-        html += `<div class="db-layer-desc">${layer.description}</div>`;
-        html += `</div>`;
-        html += `<div class="db-layer-grid">`;
-
-        layer.databases.forEach(db => {
-          html += renderDbEntry(db);
-        });
-
-        html += `</div></div>`;
-      });
-
-      // Supplementary
-      if (data.supplementary && data.supplementary.length > 0) {
-        html += `<div class="db-supplementary">`;
-        html += `<div class="db-supplementary-title">補助データベース</div>`;
-        html += `<div class="db-supplementary-grid">`;
-        data.supplementary.forEach(db => {
-          html += `<div class="db-supplementary-item">`;
-          html += `<strong>${db.id}: ${db.nameJa}</strong>`;
-          html += `<div>${db.stat}</div>`;
-          html += `<div style="color:var(--text-muted);margin-top:2px">${db.description}</div>`;
-          html += `</div>`;
-        });
-        html += `</div></div>`;
-      }
-
-      container.innerHTML = html;
-    }
-
-    function renderDbEntry(db) {
-      let meta = '';
-      if (db.storage) meta += `<span>${db.storage}</span>`;
-      if (db.update) meta += `<span>${db.update}</span>`;
-      if (db.tables) meta += `<span>${db.tables}テーブル</span>`;
-      if (db.rows) meta += `<span>${db.rows.toLocaleString()}行</span>`;
-      if (db.sizeMB) meta += `<span>${db.sizeMB}MB</span>`;
-
-      let link = '';
-      if (db.url) {
-        link = ` <a href="${db.url}" target="_blank" rel="noopener" style="font-size:0.7rem;color:var(--accent-warm)">開く</a>`;
-      }
-
-      return `
-        <div class="db-entry">
-          <div class="db-entry-header">
-            <span class="db-entry-id">${db.id}</span>
-            <span class="db-entry-name">${db.nameJa}${link}</span>
-          </div>
-          <div class="db-entry-stat">${db.stat}</div>
-          <div class="db-entry-desc">${db.description}</div>
-          ${meta ? `<div class="db-entry-meta">${meta}</div>` : ''}
-        </div>
-      `;
-    }
-  })();
-  </script>
 
 </body>
 </html>
