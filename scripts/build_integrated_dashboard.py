@@ -15,7 +15,9 @@ def h(t):
 def load_all():
     patterns = json.load(open(PROJECT / "data" / "gf_novel_patterns.json"))
     crossref = json.load(open(PROJECT / "data" / "gf_crossref_analysis.json"))
-    return patterns, crossref
+    pattern_names_data = json.load(open(PROJECT / "data" / "gf_pattern_names.json"))
+    pattern_names = pattern_names_data.get("pattern_names", {})
+    return patterns, crossref, pattern_names
 
 def build_crossref_map(crossref):
     """Map pattern name -> crossref data."""
@@ -137,7 +139,7 @@ h3{font-family:var(--font-serif);font-size:.95rem;font-weight:700;margin:20px 0 
 """
 
 
-def build_html(patterns_data, crossref_data):
+def build_html(patterns_data, crossref_data, pattern_names):
     crossref_map = build_crossref_map(crossref_data)
     patterns = patterns_data["patterns"]
 
@@ -193,6 +195,20 @@ def build_html(patterns_data, crossref_data):
         cr = crossref_map.get(pname, {})
         pred = PREDICTIONS.get(pname, DEFAULT_PRED)
 
+        # Look up intuitive name from pattern_names
+        pname_info = pattern_names.get(pname, {})
+        intuitive_name = pname_info.get("name", "")
+        intuitive_name_en = pname_info.get("name_en", "")
+        pname_description = pname_info.get("description", "")
+
+        # Build display title: intuitive name if available, else dimension combo
+        if intuitive_name:
+            card_title = f'{h(intuitive_name)} ({h(intuitive_name_en)})'
+            card_subtitle = f'<div style="font-size:.78rem;color:var(--text-muted);margin-top:3px">{h(pname)}</div>'
+        else:
+            card_title = h(pname)
+            card_subtitle = ""
+
         # Badges
         novelty = '<span class="badge b-novel">新規発見</span>' if p["is_novel"] else f'<span class="badge b-known">既知: {h(p["known_match"])}</span>'
         dim_badges = " ".join(f'<span class="badge b-dim">{h(DIMENSIONS.get(d, d))}</span>' for d in p["combo"])
@@ -241,13 +257,20 @@ def build_html(patterns_data, crossref_data):
 <div class="pred-hist">歴史的参照: {h(pred["historical"])}</div>
 </div>'''
 
+        # Pattern description block (shown after badges if available)
+        desc_html = f'<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px;line-height:1.7">{h(pname_description)}</div>' if pname_description else ""
+
         cards_html += f'''<div class="pcard">
 <div class="pcard-h">
-<div class="pcard-name">{h(pname)}</div>
+<div>
+<div class="pcard-name">{card_title}</div>
+{card_subtitle}
+</div>
 <div class="pcard-meta">{novelty} {trend_badge} {cnt_badge}</div>
 </div>
 <div class="pcard-b">
 <div style="margin-bottom:8px">{dim_badges}</div>
+{desc_html}
 {pred_html}
 {trend_html}
 <h3 style="font-size:.82rem">歴史的証拠</h3>
@@ -289,10 +312,10 @@ def build_html(patterns_data, crossref_data):
 
 def main():
     print("Loading data...")
-    patterns, crossref = load_all()
+    patterns, crossref, pattern_names = load_all()
 
     print("Building integrated dashboard...")
-    html = build_html(patterns, crossref)
+    html = build_html(patterns, crossref, pattern_names)
     (PROJECT / "dashboards" / "gf.html").write_text(html, encoding="utf-8")
     print(f"  Dashboard: dashboards/gf.html")
     print("Done!")
