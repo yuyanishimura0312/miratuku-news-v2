@@ -38,12 +38,25 @@ def load_data():
     with open(DATA_PATH) as f:
         data = json.load(f)
 
+    # Build link explanations index: person -> list of explanation_ja
+    link_explanations = defaultdict(list)
+    for l in data.get("links", []):
+        person = l.get("person_name_en", "")
+        expl = l.get("explanation_ja", "")
+        if person and expl:
+            link_explanations[person].append(expl)
+
+    # Load structures (176 decision analyses)
     structures = []
     for s in data.get("structures", []):
-        # Normalize two schemas
+        person = s.get("person_name_en") or s.get("figure_name_en", "")
         rec = {
-            "person": s.get("person_name_en") or s.get("figure_name_en", ""),
+            "person": person,
             "event": s.get("event_title_en") or s.get("reform_name_en", ""),
+            "source": "structure",
+            "event_type": "decision",
+            "event_year": None,
+            "importance": 5,
             "situation": s.get("situation_ja", ""),
             "options": s.get("options_ja", ""),
             "chosen": s.get("chosen_action_ja") or s.get("selected_option", ""),
@@ -53,11 +66,43 @@ def load_data():
             "period": s.get("period", ""),
             "region": s.get("region", ""),
         }
-        rec["all_text"] = " ".join([
+        rec["all_text"] = " ".join(filter(None, [
             rec["situation"], rec["reasoning"],
             rec["counterfactual"], rec["constraints"]
-        ])
+        ]))
         structures.append(rec)
+
+    # Load events (1,314 historical events) - enrich with link explanations
+    for e in data.get("events", []):
+        person = e.get("person_name_en", "")
+        title_ja = e.get("title_ja", "")
+        desc_ja = e.get("description_ja", "")
+        outcome_ja = e.get("outcome_ja", "")
+        # Combine with link explanations for this person (adds conceptual context)
+        person_links = " ".join(link_explanations.get(person, []))
+
+        rec = {
+            "person": person,
+            "event": e.get("title_en", ""),
+            "source": "event",
+            "event_type": e.get("event_type", "unknown"),
+            "event_year": e.get("event_year"),
+            "importance": e.get("importance", 3),
+            "situation": desc_ja,
+            "options": "",
+            "chosen": "",
+            "reasoning": person_links,  # Link explanations as reasoning context
+            "counterfactual": "",
+            "constraints": "",
+            "period": "",
+            "region": e.get("location_en", ""),
+        }
+        rec["all_text"] = " ".join(filter(None, [
+            title_ja, desc_ja, outcome_ja, person_links
+        ]))
+        # Only include if text is substantial enough
+        if len(rec["all_text"]) >= 30:
+            structures.append(rec)
 
     return {
         "structures": structures,
@@ -163,7 +208,7 @@ def build_mechanism_vocabulary(structures):
     total_structures = len(structures)
     for gram, causal_freq in causal_context_ngrams.items():
         global_freq = global_ngrams.get(gram, 0)
-        if global_freq >= 5 and causal_freq >= 3:
+        if global_freq >= 3 and causal_freq >= 2:
             # Document frequency: in how many structures does this appear?
             doc_freq = sum(1 for s in structures if gram in s["all_text"])
             # Penalize terms that appear in >70% of documents (too generic)
@@ -179,8 +224,8 @@ def build_mechanism_vocabulary(structures):
                 "doc_freq": doc_freq,
             }
 
-    # Sort by score and take top 80
-    sorted_vocab = sorted(mechanism_vocab.items(), key=lambda x: -x[1]["score"])[:80]
+    # Sort by score and take top 150
+    sorted_vocab = sorted(mechanism_vocab.items(), key=lambda x: -x[1]["score"])[:150]
     return dict(sorted_vocab)
 
 
@@ -206,20 +251,28 @@ def jaccard_similarity(v1, v2):
 
 
 def hierarchical_cluster(vectors, threshold=0.25):
-    """Simple agglomerative clustering with Jaccard similarity."""
+    """Scalable agglomerative clustering with Jaccard similarity.
+
+    For large datasets (>200), uses a two-phase approach:
+    1. Pre-filter: only compute similarities for pairs sharing >2 features
+    2. Merge greedily using single-linkage for speed
+    """
     n = len(vectors)
-    # Each item starts as its own cluster
+    if n > 500:
+        return _fast_cluster(vectors, threshold)
+
+    # Original approach for small datasets
     clusters = {i: [i] for i in range(n)}
     active = set(range(n))
 
-    # Precompute similarity matrix (upper triangle)
     sim_cache = {}
     for i in range(n):
         for j in range(i + 1, n):
-            sim_cache[(i, j)] = jaccard_similarity(vectors[i], vectors[j])
+            sim = jaccard_similarity(vectors[i], vectors[j])
+            if sim >= threshold * 0.8:  # Only cache relevant pairs
+                sim_cache[(i, j)] = sim
 
     def cluster_sim(c1, c2):
-        """Average linkage."""
         total = 0
         count = 0
         for i in clusters[c1]:
@@ -230,7 +283,6 @@ def hierarchical_cluster(vectors, threshold=0.25):
         return total / count if count > 0 else 0
 
     while len(active) > 1:
-        # Find most similar pair
         best_sim = -1
         best_pair = None
         active_list = sorted(active)
@@ -241,17 +293,92 @@ def hierarchical_cluster(vectors, threshold=0.25):
                 if sim > best_sim:
                     best_sim = sim
                     best_pair = (a, b)
-
         if best_sim < threshold:
             break
-
-        # Merge
         a, b = best_pair
         clusters[a] = clusters[a] + clusters[b]
         del clusters[b]
         active.remove(b)
 
-    return {k: v for k, v in clusters.items() if len(v) >= 2}
+    return {k: v for k, v in clusters.items() if len(v) >= 3}
+
+
+def _fast_cluster(vectors, threshold):
+    """K-medoids-inspired clustering for large datasets.
+
+    Uses feature-based grouping instead of pairwise similarity.
+    Groups documents by their dominant feature combination.
+    """
+    n = len(vectors)
+    num_features = len(vectors[0]) if vectors else 0
+
+    # Strategy: group by top-N active features (signature-based clustering)
+    # Each document's "signature" = its top features sorted by IDF importance
+    # Documents sharing the same signature form a cluster
+
+    # Compute feature rarity (IDF-like)
+    feat_doc_count = [0] * num_features
+    for vec in vectors:
+        for j, v in enumerate(vec):
+            if v:
+                feat_doc_count[j] += 1
+
+    # Build signature for each document: top 5 rarest features
+    signatures = {}
+    for i, vec in enumerate(vectors):
+        active = [(j, feat_doc_count[j]) for j, v in enumerate(vec) if v and feat_doc_count[j] < n * 0.5]
+        active.sort(key=lambda x: x[1])  # Sort by rarity
+        # Signature = tuple of top 3 rarest features
+        sig_size = min(3, len(active))
+        if sig_size >= 2:
+            sig = tuple(sorted(a[0] for a in active[:sig_size]))
+            signatures[i] = sig
+
+    # Group by signature
+    sig_groups = defaultdict(list)
+    for i, sig in signatures.items():
+        sig_groups[sig].append(i)
+
+    # Also merge signatures that share 2+ features
+    sig_list = list(sig_groups.keys())
+    merged = {}
+    for idx, sig in enumerate(sig_list):
+        merged[sig] = sig  # self
+
+    for i in range(len(sig_list)):
+        for j in range(i + 1, len(sig_list)):
+            s1, s2 = sig_list[i], sig_list[j]
+            overlap = len(set(s1) & set(s2))
+            if overlap >= 2:
+                # Merge into the larger group
+                root_i = merged[s1]
+                while merged[root_i] != root_i:
+                    root_i = merged[root_i]
+                root_j = merged[s2]
+                while merged[root_j] != root_j:
+                    root_j = merged[root_j]
+                if root_i != root_j:
+                    if len(sig_groups.get(root_i, [])) >= len(sig_groups.get(root_j, [])):
+                        merged[root_j] = root_i
+                    else:
+                        merged[root_i] = root_j
+
+    # Collect final clusters
+    final_groups = defaultdict(list)
+    for sig, members in sig_groups.items():
+        root = sig
+        while merged[root] != root:
+            root = merged[root]
+        final_groups[root].extend(members)
+
+    # De-duplicate and filter
+    clusters = {}
+    for root, members in final_groups.items():
+        unique = sorted(set(members))
+        if len(unique) >= 3:
+            clusters[root] = unique
+
+    return clusters
 
 
 # ============================================================
@@ -701,13 +828,16 @@ def main():
 
     print("Phase 2: Building feature vectors & clustering...")
     vectors, vocab_list = build_feature_vectors(structures, vocab)
-    clusters = hierarchical_cluster(vectors, threshold=0.25)
-    print(f"  {len(clusters)} clusters found (threshold=0.25)")
+    # Adaptive threshold based on dataset size
+    th = 0.15 if len(structures) > 500 else 0.25
+    clusters = hierarchical_cluster(vectors, threshold=th)
+    print(f"  {len(clusters)} clusters found (threshold={th})")
 
-    # If too few clusters, lower threshold
-    if len(clusters) < 5:
-        clusters = hierarchical_cluster(vectors, threshold=0.20)
-        print(f"  Retry with 0.20: {len(clusters)} clusters")
+    # If too few clusters, lower threshold further
+    while len(clusters) < 8 and th > 0.08:
+        th -= 0.03
+        clusters = hierarchical_cluster(vectors, threshold=th)
+        print(f"  Retry with {th:.2f}: {len(clusters)} clusters")
 
     print("Phase 3: Characterizing patterns...")
     patterns = []
