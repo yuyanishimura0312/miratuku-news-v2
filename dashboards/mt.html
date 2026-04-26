@@ -148,6 +148,13 @@ canvas { display: block; width: 100%; }
 </div>
 <div class="panel"><canvas id="overlay-canvas" height="360"></canvas></div>
 
+<!-- Predictive Power (2017 predictions vs 2018-2026 reality) -->
+<h3>予測力検証: 2017年の予測 vs 2018-2026年の現実</h3>
+<p class="desc" style="margin-top:-8px;margin-bottom:16px;">18領域は2017年に作成された。2017年以前（2010-2016）と以後（2018-2026）のニュース出現率を比較し、「2017年時点の予測が実際にトレンドとして加速したか」を評価。加速率・持続性・ソース横断確認・予測の具体性・時間軸の整合性の5次元で採点。</p>
+<div class="kpi-row" id="pp-kpi"></div>
+<div id="pp-bars"></div>
+<div id="pp-cards"></div>
+
 <!-- Chu detail -->
 <h3>中項目 (48項目) 時系列</h3>
 <div id="chu-list"></div>
@@ -496,27 +503,149 @@ function drawChuChart(canvas, items, minYear, mode) {
   });
 }
 
+// Predictive Power
+let PP = null;
+
+function renderPP() {
+  if (!PP) return;
+  const high = PP.filter(t => t.verdict === 'High Predictive Power').length;
+  const mod = PP.filter(t => t.verdict === 'Moderate Predictive Power').length;
+  const low = PP.filter(t => t.verdict === 'Low Predictive Power').length;
+  const nc = PP.filter(t => t.verdict === 'Not Confirmed').length;
+  const avg = PP.reduce((s,t) => s + t.predictive_score, 0) / PP.length;
+
+  document.getElementById('pp-kpi').innerHTML = [
+    {v: fmt(avg,1), l: 'Avg Score /10', a: true},
+    {v: high.toString(), l: 'High', s: 'predictive power'},
+    {v: mod.toString(), l: 'Moderate', s: ''},
+    {v: (low + nc).toString(), l: 'Low / N/A', s: ''},
+  ].map(k => `<div class="kpi"><div class="kpi-value${k.a?' accent':''}">${k.v}</div><div class="kpi-label">${k.l}</div>${k.s?`<div class="kpi-sub">${k.s}</div>`:''}</div>`).join('');
+
+  // Bar chart
+  const maxScore = 10;
+  const vc = {'High Predictive Power':'var(--accent-warm)', 'Moderate Predictive Power':'var(--blue)', 'Low Predictive Power':'var(--orange)', 'Not Confirmed':'var(--text-muted)'};
+  const vj = {'High Predictive Power':'高い予測力', 'Moderate Predictive Power':'中程度', 'Low Predictive Power':'低い', 'Not Confirmed':'確認できず'};
+  document.getElementById('pp-bars').innerHTML = PP.map(t => {
+    const color = THEME_COLORS[(t.no-1) % THEME_COLORS.length];
+    const accel = t.acceleration.average;
+    return `<div class="bar-group">
+      <div class="bar-label"><span style="color:${color};font-weight:700">#${t.no}</span> ${t.name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(t.predictive_score/maxScore*100).toFixed(1)}%;background:${vc[t.verdict]||color}"></div></div>
+      <div class="bar-val">${fmt(t.predictive_score,1)}</div>
+    </div>`;
+  }).join('');
+
+  // Detail cards
+  document.getElementById('pp-cards').innerHTML = PP.map(t => {
+    const color = THEME_COLORS[(t.no-1) % THEME_COLORS.length];
+    const pre = t.pre_2017.pestle + t.pre_2017.cultural;
+    const post = t.post_2017.pestle + t.post_2017.cultural;
+    const accel = t.acceleration.average;
+    const preds = (t.predictions_sample || []).slice(0, 3);
+    const predsHtml = preds.length ? `<div style="margin-top:8px;font-size:0.76rem;color:var(--text-secondary);line-height:1.6">${preds.map(p => `<div style="margin-bottom:3px;padding-left:10px;border-left:2px solid var(--border-light)">${p}</div>`).join('')}</div>` : '';
+
+    return `<div class="theme-card">
+      <div class="theme-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <div class="theme-no" style="color:${color}">#${t.no}</div>
+        <div class="theme-name">${t.name}</div>
+        <span class="verdict ${t.predictive_score >= 7 ? 'verdict-strong' : t.predictive_score >= 5 ? 'verdict-moderate' : 'verdict-weak'}">${t.verdict_ja}</span>
+        <span class="score-pill" style="color:${color}">${fmt(t.predictive_score,1)}</span>
+        <div class="theme-meta">x${fmt(accel,1)}</div>
+      </div>
+      <div class="theme-body">
+        <div class="theme-stats">
+          <div class="theme-stat"><div class="theme-stat-value">${pre.toLocaleString()}</div><div class="theme-stat-label">2010-2016</div></div>
+          <div class="theme-stat"><div class="theme-stat-value">${post.toLocaleString()}</div><div class="theme-stat-label">2018-2026</div></div>
+          <div class="theme-stat"><div class="theme-stat-value">x${fmt(accel,1)}</div><div class="theme-stat-label">Acceleration</div></div>
+          <div class="theme-stat"><div class="theme-stat-value">${t.card_count}</div><div class="theme-stat-label">Prediction Cards</div></div>
+        </div>
+        <div class="theme-reasons" style="font-size:0.76rem">${(t.reasons||[]).join(' / ')}</div>
+        ${predsHtml}
+        <canvas id="pp-ts-${t.no}" height="140"></canvas>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function drawPPChart(theme) {
+  const canvas = document.getElementById(`pp-ts-${theme.no}`);
+  if (!canvas || !theme.yearly) return;
+  canvas.width = canvas.parentElement.clientWidth - 36;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = {t:12,r:10,b:24,l:40};
+  const pW = W-pad.l-pad.r, pH = H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const c = colors();
+  const color = THEME_COLORS[(theme.no-1) % THEME_COLORS.length];
+  const ts = theme.yearly;
+  const maxV = Math.max(...ts.map(t => t.pr + t.cr), 1);
+  const gap = pW / (ts.length - 1 || 1);
+
+  // Grid
+  ctx.strokeStyle = c.grid; ctx.lineWidth = 0.5;
+  for (let i=0;i<=3;i++){const y=pad.t+pH*i/3;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();}
+
+  // 2017 divider line
+  const idx2017 = ts.findIndex(t => t.y === 2017);
+  if (idx2017 >= 0) {
+    const x2017 = pad.l + idx2017 * gap;
+    ctx.strokeStyle = 'var(--accent-warm)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(x2017, pad.t); ctx.lineTo(x2017, pad.t + pH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = c.muted; ctx.font = '9px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('2017', x2017, pad.t - 2);
+  }
+
+  // Pre-2017 area
+  ctx.beginPath();
+  ts.forEach((t,i) => {if (t.y > 2017) return; const x=pad.l+i*gap; const y=pad.t+pH-((t.pr+t.cr)/maxV)*pH; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  const lastPre = ts.filter(t => t.y <= 2017);
+  if (lastPre.length) {const li=lastPre.length-1; ctx.lineTo(pad.l+li*gap, pad.t+pH); ctx.lineTo(pad.l, pad.t+pH); ctx.closePath(); ctx.fillStyle=c.muted+'15'; ctx.fill();}
+
+  // Post-2017 area
+  ctx.beginPath(); let started = false;
+  ts.forEach((t,i) => {if (t.y < 2018) return; const x=pad.l+i*gap; const y=pad.t+pH-((t.pr+t.cr)/maxV)*pH; if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);});
+  if (started) {ctx.lineTo(pad.l+(ts.length-1)*gap, pad.t+pH); const firstPost=ts.findIndex(t=>t.y>=2018); ctx.lineTo(pad.l+firstPost*gap, pad.t+pH); ctx.closePath(); ctx.fillStyle=color+'20'; ctx.fill();}
+
+  // Full line
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath();
+  ts.forEach((t,i) => {const x=pad.l+i*gap; const y=pad.t+pH-((t.pr+t.cr)/maxV)*pH; if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+  ctx.stroke();
+
+  // X labels
+  ctx.fillStyle=c.muted; ctx.font='9px system-ui'; ctx.textAlign='center';
+  ts.forEach((t,i) => {if(i%2===0||i===ts.length-1)ctx.fillText(t.y,pad.l+i*gap,H-4);});
+
+  // Y labels
+  ctx.textAlign='right';
+  ctx.fillText(maxV>=100?Math.round(maxV).toString():fmt(maxV,1),pad.l-4,pad.t+8);
+}
+
 // Init
 async function init() {
-  const [themeRes, chuRes] = await Promise.all([
+  const [themeRes, chuRes, ppRes] = await Promise.all([
     fetch('data/mt_themes.json'),
-    fetch('data/mt_chu.json')
+    fetch('data/mt_chu.json'),
+    fetch('data/mt_predictive.json')
   ]);
   THEMES = await themeRes.json();
   CHU = await chuRes.json();
+  PP = await ppRes.json();
 
   renderKPI();
   renderOverviewBars();
   renderThemeList();
   renderOverlay();
   renderChuList();
+  renderPP();
 
   document.getElementById('sort-by').addEventListener('change', () => { renderOverviewBars(); renderThemeList(); });
   document.getElementById('filter-verdict').addEventListener('change', () => { renderOverviewBars(); renderThemeList(); });
   document.getElementById('ts-mode').addEventListener('change', () => { renderOverlay(); renderChuList(); });
   document.getElementById('ts-range').addEventListener('change', () => { renderOverlay(); renderChuList(); });
 
-  // Redraw open theme charts on card open
+  // Redraw charts on card open
   document.addEventListener('click', (e) => {
     const header = e.target.closest('.theme-header');
     if (!header) return;
@@ -526,6 +655,8 @@ async function init() {
         const no = parseInt(header.querySelector('.theme-no').textContent.replace('#',''));
         const theme = THEMES.find(t => t.no === no);
         if (theme) drawThemeTS(theme);
+        const ppTheme = PP ? PP.find(t => t.no === no) : null;
+        if (ppTheme) drawPPChart(ppTheme);
       }
     }, 50);
   });
