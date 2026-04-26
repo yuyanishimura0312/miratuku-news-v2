@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLA 位置づけ分析 | 未来洞察における相補性</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAFA; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F3F3F1; --accent: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --accent-blue: #1a5276; --accent-blue-muted: rgba(26,82,118,0.06);
+  --accent-green: #1e7e34; --accent-green-muted: rgba(30,126,52,0.06);
+  --accent-purple: #6c3483; --accent-purple-muted: rgba(108,52,131,0.06);
+  --accent-orange: #d35400; --accent-orange-muted: rgba(211,84,0,0.06);
+  --font: "Noto Sans JP", system-ui, sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333; --border-light: #2A2A2A;
+  --surface: #1E1E1E; --accent: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+  --accent-blue: #5dade2; --accent-blue-muted: rgba(93,173,226,0.1);
+  --accent-green: #58d68d; --accent-green-muted: rgba(88,214,141,0.1);
+  --accent-purple: #bb8fce; --accent-purple-muted: rgba(187,143,206,0.1);
+  --accent-orange: #f0b27a; --accent-orange-muted: rgba(240,178,122,0.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; }
+.back { display: inline-block; margin-bottom: 16px; font-size: 0.8rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+
+/* Header */
+.report-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 2px solid var(--text); }
+.report-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 10px; }
+.report-title { font-family: var(--font-serif); font-size: 1.7rem; font-weight: 700; line-height: 1.4; margin-bottom: 12px; }
+.report-subtitle { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.8; }
+.report-meta { margin-top: 16px; font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 20px; flex-wrap: wrap; }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 28px 0; }
+.stat-card { padding: 14px 16px; background: var(--surface); border: 1px solid var(--border-light); text-align: center; }
+.stat-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Headings */
+h2 { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; margin: 48px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+h3 { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 700; margin: 28px 0 10px; color: var(--text); }
+h4 { font-size: 0.86rem; font-weight: 600; margin: 20px 0 8px; color: var(--text); }
+
+/* Prose */
+p { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.9; margin-bottom: 14px; }
+p.lead { font-size: 0.92rem; line-height: 2.0; color: var(--text); }
+
+/* Executive summary box */
+.exec-summary { padding: 24px 28px; background: var(--surface); border-left: 3px solid var(--accent); margin: 24px 0 36px; }
+.exec-summary p { font-size: 0.88rem; line-height: 2.0; color: var(--text); margin-bottom: 0; }
+
+/* Evidence inline */
+.evidence { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 1px 7px; background: var(--accent-muted); color: var(--accent); margin-left: 4px; vertical-align: middle; }
+
+/* Complementarity map grid */
+.comp-map { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+@media (max-width: 640px) { .comp-map { grid-template-columns: 1fr; } }
+.comp-card { border: 1px solid var(--border-light); background: var(--card); padding: 0; }
+.comp-card-header { padding: 14px 18px; background: var(--surface); border-bottom: 1px solid var(--border-light); }
+.comp-card-name { font-family: var(--font-serif); font-size: 0.88rem; font-weight: 700; }
+.comp-card-records { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.comp-card-body { padding: 14px 18px; }
+.comp-card-body p { font-size: 0.8rem; margin-bottom: 8px; }
+.comp-badge { display: inline-block; font-size: 0.66rem; font-weight: 700; padding: 2px 8px; letter-spacing: 0.04em; margin-right: 4px; margin-bottom: 4px; }
+.badge-high { background: var(--accent-muted); color: var(--accent); }
+.badge-medium { background: var(--accent-blue-muted); color: var(--accent-blue); }
+.badge-low { background: var(--accent-green-muted); color: var(--accent-green); }
+.badge-integrated { background: var(--accent-purple-muted); color: var(--accent-purple); }
+
+/* Relationship indicator */
+.rel-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.74rem; color: var(--text-muted); }
+.rel-arrow { font-weight: 700; color: var(--accent); font-size: 0.9rem; }
+
+/* Blind spots grid */
+.blind-grid { display: grid; gap: 20px; margin: 24px 0; }
+.blind-item { border: 1px solid var(--border-light); background: var(--card); }
+.blind-header { padding: 14px 18px; background: var(--surface); border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+.blind-title { font-family: var(--font-serif); font-size: 0.88rem; font-weight: 700; }
+.blind-severity { font-size: 0.66rem; font-weight: 700; padding: 2px 8px; }
+.sev-high { background: var(--accent-muted); color: var(--accent); }
+.sev-medium { background: var(--accent-orange-muted); color: var(--accent-orange); }
+.blind-body { padding: 14px 18px; }
+.blind-body p { font-size: 0.82rem; }
+
+/* Framework layers */
+.fw-layers { display: grid; gap: 0; margin: 28px 0; }
+.fw-layer { border: 1px solid var(--border-light); border-bottom: none; background: var(--card); display: grid; grid-template-columns: 200px 1fr; min-height: 0; }
+.fw-layer:last-child { border-bottom: 1px solid var(--border-light); }
+.fw-layer-label { padding: 18px 20px; background: var(--surface); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; justify-content: center; }
+.fw-layer-name { font-family: var(--font-serif); font-size: 0.86rem; font-weight: 700; }
+.fw-layer-fn { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+.fw-layer-content { padding: 18px 20px; }
+.fw-layer-content p { font-size: 0.8rem; margin-bottom: 6px; }
+.fw-db-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.fw-db-list li { font-size: 0.78rem; color: var(--text-secondary); padding: 3px 0; border-bottom: 1px solid var(--border-light); }
+.fw-db-list li:last-child { border-bottom: none; }
+.fw-db-list .db-name { font-weight: 600; color: var(--text); }
+.fw-db-list .db-count { font-family: monospace; font-size: 0.72rem; color: var(--text-muted); margin-left: 6px; }
+@media (max-width: 640px) {
+  .fw-layer { grid-template-columns: 1fr; }
+  .fw-layer-label { border-right: none; border-bottom: 1px solid var(--border-light); }
+}
+
+/* Data flow */
+.flow-diagram { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 24px 0; text-align: center; }
+.flow-step { padding: 16px 12px; border: 1px solid var(--border-light); background: var(--card); position: relative; }
+.flow-step::after { content: ""; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 8px solid var(--border); z-index: 1; }
+.flow-step:last-child::after { display: none; }
+.flow-step-label { font-size: 0.72rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.flow-step-desc { font-size: 0.7rem; color: var(--text-muted); }
+@media (max-width: 640px) {
+  .flow-diagram { grid-template-columns: 1fr; }
+  .flow-step::after { display: none; }
+}
+
+/* Integration points */
+.int-grid { display: grid; gap: 12px; margin: 20px 0; }
+.int-item { display: grid; grid-template-columns: 200px 1fr 80px; gap: 12px; padding: 14px 18px; border: 1px solid var(--border-light); background: var(--card); align-items: center; font-size: 0.8rem; }
+.int-conn { font-weight: 600; color: var(--text); }
+.int-status { font-size: 0.74rem; color: var(--text-secondary); }
+.int-priority { font-size: 0.68rem; font-weight: 700; padding: 3px 8px; text-align: center; }
+@media (max-width: 640px) {
+  .int-item { grid-template-columns: 1fr; }
+}
+
+/* Action list */
+.action-list { display: grid; gap: 12px; margin: 20px 0; counter-reset: action; }
+.action-item { display: grid; grid-template-columns: 40px 1fr; gap: 0; border: 1px solid var(--border-light); background: var(--card); }
+.action-num { display: flex; align-items: center; justify-content: center; background: var(--surface); border-right: 1px solid var(--border-light); font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+.action-body { padding: 14px 18px; }
+.action-title { font-size: 0.86rem; font-weight: 600; margin-bottom: 4px; }
+.action-detail { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.7; }
+.action-tags { display: flex; gap: 6px; margin-top: 6px; }
+
+/* Footer */
+.report-footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--text-muted); line-height: 1.8; }
+.report-footer a { color: var(--text-muted); }
+
+/* Concentric framework diagram */
+.concentric { position: relative; width: 100%; max-width: 520px; margin: 32px auto; aspect-ratio: 1; }
+.ring { position: absolute; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; text-align: center; }
+.ring-4 { inset: 0; background: var(--accent-muted); }
+.ring-3 { inset: 12%; background: var(--accent-blue-muted); }
+.ring-2 { inset: 24%; background: var(--accent-green-muted); }
+.ring-1 { inset: 36%; background: var(--accent-purple-muted); }
+.ring-label { font-size: 0.7rem; font-weight: 700; line-height: 1.4; padding: 4px; }
+.ring-1 .ring-label { color: var(--accent-purple); }
+.ring-2 .ring-label { color: var(--accent-green); }
+.ring-3 .ring-label { color: var(--accent-blue); }
+.ring-4 .ring-label { color: var(--accent); }
+.ring-corner { position: absolute; font-size: 0.62rem; color: var(--text-muted); line-height: 1.4; max-width: 110px; }
+.ring-corner.tl { top: 4px; left: 4px; }
+.ring-corner.tr { top: 4px; right: 4px; text-align: right; }
+.ring-corner.bl { bottom: 4px; left: 4px; }
+.ring-corner.br { bottom: 4px; right: 4px; text-align: right; }
+
+/* Key findings box */
+.key-finding { padding: 16px 20px; background: var(--surface); border-left: 3px solid var(--accent-blue); margin: 16px 0; }
+.key-finding p { font-size: 0.84rem; color: var(--text); margin-bottom: 0; }
+.key-finding .kf-title { font-weight: 700; font-size: 0.82rem; margin-bottom: 6px; color: var(--accent-blue); }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+
+<a class="back" href="cla.html">&larr; CLA ダッシュボードに戻る</a>
+
+<div class="report-header">
+  <div class="report-kicker">POSITIONING ANALYSIS</div>
+  <h1 class="report-title">因果階層分析の未来洞察における位置づけ<br>データベース横断による相補性分析</h1>
+  <p class="report-subtitle">
+    CLA（因果階層分析）の強みと限界を、ミラツクが保有する8つのデータベース群との相補性から分析し、
+    統合的未来洞察システム「MIFS」の設計図を提示する。
+  </p>
+  <div class="report-meta">
+    <span>分析対象: 8+ データベース</span>
+    <span>CLA分析: 930件（127年間）</span>
+    <span>総レコード: 1,200,000+</span>
+    <span>生成: 2026年4月26日</span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-value">930</div><div class="stat-label">CLA分析件数</div></div>
+  <div class="stat-card"><div class="stat-value">127</div><div class="stat-label">統合CLA</div></div>
+  <div class="stat-card"><div class="stat-value">96.9%</div><div class="stat-label">実現率</div></div>
+  <div class="stat-card"><div class="stat-value">57.5%</div><div class="stat-label">H1化率</div></div>
+  <div class="stat-card"><div class="stat-value">8</div><div class="stat-label">補完DB数</div></div>
+  <div class="stat-card"><div class="stat-value">126年</div><div class="stat-label">分析期間</div></div>
+</div>
+
+<!-- Section 1: Executive Summary -->
+<h2>1. エグゼクティブサマリー</h2>
+
+<div class="exec-summary">
+<p>
+因果階層分析（CLA）は、126年間にわたる深層構造の追跡と96.9%の方向性実現率という圧倒的な強みを持つ。しかし、その予測は「何が起きるか」の方向性に限定され、「いつ」「どの程度」「どこで」という実務的な問いには答えられない。ミラツクが保有する8つのデータベース群――PESTLE DB（29万件）、Signal DB（7,564件）、Cultural Intelligence DB（57万件）、Geopolitical Risk DB（38万件）、Investment Signal Radar（4,180組織）など――は、CLAのこの限界を構造的に補完する。本レポートでは、CLAを認識論的コアとし、定量データでタイミングを、投資データで実行性を評価する四層構造「ミラツク統合未来洞察システム（MIFS）」を提案する。最優先の統合機会は、Signal DBとCLAの双方向リンク（signal_cla_links、現在0件）の実装であり、これによりCLAの深層洞察にシグナルの定量スコア、Three Horizons分類、cross_impactネットワークが接続され、予測力が飛躍的に向上する。
+</p>
+</div>
+
+<!-- Section 2: CLA Strengths -->
+<h2>2. CLAの強み――何が見えるか</h2>
+
+<h3>126年間の時代精神の連続的追跡</h3>
+<p>
+CLAの最も際立った強みは、1900年から2026年までの126年間を途切れることなく分析していることにある。930件のCLA分析レコードがPESTLE 6カテゴリ（Political, Economic, Social, Technological, Legal, Environmental）の各年次について、表層事象から深層神話までの4層構造を記録している。これは他のどのデータベースも持たない資産だ。歴史的パターンの反復と変異を捉えることで、現在の変化が「本当に新しいもの」なのか、それとも「過去のパターンの変奏」なのかを識別する基盤を提供している。
+</p>
+
+<h3>emerging narrativeの実証された予測力</h3>
+<p>
+CLAの深層分析から浮上する「萌芽するナラティブ（emerging narrative）」は、単なる推測ではなく、実証的に検証された予測力を持つ。検証済みの360件のうち、完全に実現したものが55.8%、部分的に実現したものが40.0%で、合計実現率は96.9%に達する。<span class="evidence">実現率 96.9%</span> Three Horizonsフレームワークによる分析では、emerging narrativeがH1（支配的システム）として定着する「H1化率」は57.5%であり、その平均移行期間は10.5年だ。<span class="evidence">H1化率 57.5%</span>
+</p>
+<p>
+ただし、この高い実現率は「方向性の予測」に対するものであることに留意が必要だ。5年的中率は23.7%、10年的中率は30.6%であり、これはキーワード重複率による厳密な定量検証の結果だ。<span class="evidence">5yr 23.7% / 10yr 30.6%</span> CLAは「何が起きるか」について驚くべき精度を示すが、「いつ」「どの程度」については別のデータソースとの統合が必要になる。
+</p>
+
+<h3>4層構造による深層洞察</h3>
+<p>
+CLAの分析は、Sohail Inayatullahが提唱した4層構造に基づいている。litany（表層事象）からsystemic_causes（構造的原因）、worldview（世界観）、そしてmyth_metaphor（神話・メタファー）へと深掘りすることで、表層のニュースからでは見えない「なぜその変化が起きるのか」の深層構造を露出させる。この方法論は、表面的な事象の裏に横たわる構造的力学を明らかにし、一見無関係に見える出来事の間に深層的なつながりを発見することを可能にする。
+</p>
+
+<h3>クロスカテゴリの統合分析と深層データの裏付け</h3>
+<p>
+127件の統合版CLA（integrated_cla）は、6つのPESTLEカテゴリを横断して、各時代の「時代精神（zeitgeist）」を抽出する。これにより、政治・経済・社会・技術・法律・環境の相互作用から、時代を貫く底流が可視化される。さらに、Thompson Motif Index 45,496件、UNESCO ICH（無形文化遺産）849件、Google Ngram 1,460件といった深層データが、世界観・神話層の分析を実証的に裏付けている。CLAは主観的な質的分析に見えるが、実際にはこうした大規模データセットに支えられた構造的分析なのだ。
+</p>
+
+<h3>ラグ分析による予測タイミングの精緻化</h3>
+<p>
+CLAはまた、新しい物語が表層化するまでの時間差（ラグ）を定量的に把握する機能も持つ。1900年代から1980年代までの各10年において、emerging narrativeが表層のリタニーとして顕在化するまでの平均ラグは6年から17.5年だ。このラグ分析は、CLAの予測に「いつ頃表面化するか」という時間的な見通しを付与し、実務的な意思決定への接続を可能にしている。
+</p>
+
+<!-- Section 3: CLA Limitations -->
+<h2>3. CLAの限界――何が見えないか</h2>
+
+<p class="lead">
+CLAが強力な分析手法であることは間違いないが、その設計上の特性ゆえに、原理的に捉えることのできない領域がある。以下では、CLAの7つの限界を構造的に説明する。これらは「欠点」ではなく「設計の射程外」であり、だからこそ他のデータベースとの補完が本質的に重要になる。
+</p>
+
+<h3>定量的トレンドの欠如</h3>
+<p>
+CLAは質的分析である。それは「世界がどの方向に動いているか」の物語を解読するが、GDP成長率、人口動態、技術採用率といった定量指標を内包しない。その結果、「どの程度」「いつまでに」という数値的な予測ができない。例えば、CLAは「再生可能エネルギーへの構造的移行」という深層的方向性を検出できるが、「2030年までに再エネ比率が何%になるか」という問いには答えられない。この限界は、マクロ経済データや投資フローデータとの統合によってはじめて克服される。
+</p>
+
+<h3>技術的ブレークスルーの予測困難</h3>
+<p>
+CLAの世界観層は社会的価値観の変化を捉えるが、具体的な技術発明や科学的発見を予測する設計にはなっていない。CLAは「AIが社会をどう変えるかの物語」を見事に読み解くが、「次にどの技術が突破するか」は射程外だ。これは質的分析の原理的限界であり、特許出願データ、学術論文の引用ネットワーク、R&D投資額といった技術固有のデータソースが必要になる。
+</p>
+
+<h3>地理的・地域的粒度の粗さ</h3>
+<p>
+CLAの分析はPESTLE 6カテゴリの年次粒度で行われ、地理的にはjapan/globalの2区分が基本である。132カ国の個別分析や、都市レベル、地域ブロックレベルでの精緻な予測は想定されていない。世界は均一に変化するわけではなく、同じemerging narrativeでも地域によって発現の速度と形態が大きく異なる。この粒度の粗さは、132カ国をカバーするGeopolitical Risk DBのようなデータベースとの接続によって補われる。
+</p>
+
+<h3>短期的変動への非対応</h3>
+<p>
+CLAの基本単位は年次・四半期である。週次や日次で起こる急激な変動――市場の暴落、政変、パンデミックの発生――を捉える設計にはなっていない。CLAは「構造的な方向性」を読むための道具であり、「今起きていること」のリアルタイム把握には、PESTLEニュースの日次収集やSignal DBのアラート機能が不可欠だ。
+</p>
+
+<h3>ネットワーク効果・カスケードの構造化不足</h3>
+<p>
+CLAはカテゴリ別に分析を行うため、カテゴリ間の相互影響は統合分析で触れられるものの、因果ネットワークとして体系的に構造化されていない。ある領域の変化が別領域にどのような経路で波及するか――いわゆるカスケード効果――の予測が構造的に弱い。この限界は、Signal DBの1,806件のcross_impactリンクによって直接的に補完可能だが、現在のところsignal_cla_linksテーブルは0件のまま未接続の状態にある。
+</p>
+
+<h3>投資・資金フローの可視化不足</h3>
+<p>
+CLAは世界観と物語を扱う。しかし、どこに資金が集中しているかという「実行力の指標」を持たない。これはCLAの最も実務的に重要な限界だ。emerging narrativeとして語られていても、実際には資源が投入されていない変化と、語られていないが巨額の投資が動いている変化がある。この「物語と実行のギャップ」を識別する能力は、Investment Signal Radarの4,180組織・1,927ラウンドのデータによってはじめて獲得できる。
+</p>
+
+<h3>ブラックスワンの原理的限界</h3>
+<p>
+最後に、CLAは深層パターンの延長線上の変化を予測するため、パターン外の予測不能事象（ブラックスワン）には対応できない。9.11、COVID-19、チェルノブイリ――これらの発生自体を予測することはCLAの射程外であり、それは全ての予測手法に共通する限界でもある。ただし、CLAはこうした事象の「深層的影響」――社会の世界観がどう変容するか――を事後的に分析する能力には長けている。
+</p>
+
+<!-- Section 4: Complementarity Map -->
+<h2>4. 補完データベースの相補性マップ</h2>
+
+<p class="lead">
+ミラツクが保有する8つのデータベース群は、それぞれがCLAの異なる限界を補完する固有の役割を持っている。以下に、各データベースとCLAの関係を示す。
+</p>
+
+<div class="comp-map">
+
+  <!-- PESTLE DB -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">PESTLE Signal DB</div>
+      <div class="comp-card-records">293,638件 / 131メディアソース / 日次収集</div>
+    </div>
+    <div class="comp-card-body">
+      <p>PESTLE DBはCLAの「入力データそのもの」だ。131のメディアソースから日次で収集されるニュース記事は、CLAの最上層であるリタニー（表層事象）のリアルタイムフィードを提供する。CLAがこのデータを深層に掘り下げ、構造的原因、世界観、神話の層を抽出する。quarterly_stats 882件による量的変化の追跡が、CLAの層横断分析に接続されている。</p>
+      <span class="comp-badge badge-integrated">統合済み</span>
+      <div class="rel-row"><span class="rel-arrow">&rarr;</span> 入力-処理関係（パイプライン完全統合）</div>
+    </div>
+  </div>
+
+  <!-- Signal DB -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">Signal DB</div>
+      <div class="comp-card-records">7,564件 / H2 4,218件 / cross_impact 1,806件</div>
+    </div>
+    <div class="comp-card-body">
+      <p>Signal DBは、CLAの深層分析を「いつ・どの強度で」表層化するかの予測に変換する。7,564件のシグナルはThree Horizons（H1/H2/H3）で分類され、CLA depthとの交差分析で変化の成熟度を評価できる。特に1,806件のcross_impactリンクは、CLAが弱い「カスケード効果」の予測を直接補う。signal_cla_linksテーブルは存在するが現在0件。ここが最大の統合機会だ。</p>
+      <span class="comp-badge badge-high">最優先</span>
+      <div class="rel-row"><span class="rel-arrow">&harr;</span> 相互補完（部分統合、深化の余地大）</div>
+    </div>
+  </div>
+
+  <!-- Cultural Intelligence DB -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">Cultural Intelligence DB</div>
+      <div class="comp-card-records">576,434件 / 12,047ソース / 21カテゴリ</div>
+    </div>
+    <div class="comp-card-body">
+      <p>Cultural Intelligence DBは、CLAの世界観層・神話層を「現在進行形」の文化的表現から裏付けるリアルタイムセンサーだ。CLAが歴史的パターンとして記録する世界観の変化が、今まさに文化的発現としてどう表れているかを576,434件の記事データから検出する。21カテゴリの記事量変動は、CLAのemerging narrativeの「表層化兆候」の定量指標として機能する。</p>
+      <span class="comp-badge badge-high">高優先度</span>
+      <div class="rel-row"><span class="rel-arrow">&harr;</span> 深い補完（世界観層のリアルタイム検証）</div>
+    </div>
+  </div>
+
+  <!-- Geopolitical Risk DB -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">Geopolitical Risk DB</div>
+      <div class="comp-card-records">GPR 24,810件 / 紛争 385,918件 / 132カ国</div>
+    </div>
+    <div class="comp-card-body">
+      <p>Geopolitical Risk DBは、CLAの「地理的粒度の粗さ」と「定量的トレンドの欠如」を直接補完する。132カ国のGPR/EPU指数でCLAの政治・法律層を定量化し、385,918件の紛争データで安全保障関連のCLA分析を実証する。特筆すべきは、GPR指数が1900年から2026年までCLAと完全に同じ126年間をカバーしている点だ。これは世界的にもユニークなデータ資産である。</p>
+      <span class="comp-badge badge-high">高優先度</span>
+      <div class="rel-row"><span class="rel-arrow">&harr;</span> 深い補完（126年同期、定量化レイヤー）</div>
+    </div>
+  </div>
+
+  <!-- Investment Signal Radar -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">Investment Signal Radar</div>
+      <div class="comp-card-records">4,180組織 / 1,927ラウンド / NEDO 160件</div>
+    </div>
+    <div class="comp-card-body">
+      <p>Investment Signal Radarは、CLAの最大の弱点である「投資・資金フローの可視化不足」を直接埋める。CLAが検出するemerging narrativeが、実際にVC投資やスタートアップとして実体化しているかを検証する。「語られているが投資されていない変化」と「語られていないが投資されている変化」のギャップ分析は、CLAの実務的応用価値を大幅に高める。</p>
+      <span class="comp-badge badge-high">最優先</span>
+      <div class="rel-row"><span class="rel-arrow">&rarr;</span> 強い補完（実行力指標、物語vs実行のギャップ）</div>
+    </div>
+  </div>
+
+  <!-- Future Insight DB -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">Future Insight DB</div>
+      <div class="comp-card-records">291,451件 / 論文 898件 / トレンド 2,147件</div>
+    </div>
+    <div class="comp-card-body">
+      <p>Future Insight DBは、PESTLEニュースと学術論文を統合した分析ハブだ。898件の学術論文がCLAの深層分析に学術的裏付けを提供し、2,147件のトレンドキーワードの出現頻度変化がemerging narrative実現の先行指標として機能する。CLAの質的分析と学術研究の知見を橋渡しする「学術-ニュースブリッジ」としての役割を担う。</p>
+      <span class="comp-badge badge-medium">中優先度</span>
+      <div class="rel-row"><span class="rel-arrow">&rarr;</span> 補完（学術的裏付けの提供）</div>
+    </div>
+  </div>
+
+  <!-- Cultural Structure DB -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">Cultural Structure DB</div>
+      <div class="comp-card-records">144項目 / CLA mapping 94件 / PESTLE mapping 107件</div>
+    </div>
+    <div class="comp-card-body">
+      <p>Cultural Structure DBは、CLAの分析フレームワークそのもののメタ構造を提供する。21カテゴリ・4軸のミラツク独自分類体系が、CLAの6つのPESTLEカテゴリを21の人間生活領域に展開する。CLA mapping 94件でCLA層との対応が定義済みであり、メガトレンド113件との接続でCLA分析をより広い未来予測文脈に位置づけるオントロジーとして機能する。</p>
+      <span class="comp-badge badge-high">高優先度</span>
+      <div class="rel-row"><span class="rel-arrow">&rarr;</span> メタフレームワーク（分析を生活領域に展開）</div>
+    </div>
+  </div>
+
+  <!-- Foresight Radar -->
+  <div class="comp-card">
+    <div class="comp-card-header">
+      <div class="comp-card-name">Foresight Radar</div>
+      <div class="comp-card-records">6ソース統合 / TOP30ランキング</div>
+    </div>
+    <div class="comp-card-body">
+      <p>Foresight Radarは、FK+PE+IR+SI+IC+PDの6データベースを統合した複合スコアリングで有望領域を特定する。CLAの質的分析に対して定量的な優先度を提供する「統合出力」だ。CLAで検出されているがRadarでは低スコアの領域は「見逃されている深層変化」の候補であり、逆にRadarで高スコアだがCLAで言及のない領域は「深層的文脈を欠くトレンド」の候補だ。</p>
+      <span class="comp-badge badge-medium">中優先度</span>
+      <div class="rel-row"><span class="rel-arrow">&rarr;</span> 統合出力（CLAの知見をランキングに変換）</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Section 5: Blind Spots -->
+<h2>5. CLAでは掴めない未来とその補完</h2>
+
+<p class="lead">
+CLAの限界を具体的なブラインドスポットとして6つ特定した。各ブラインドスポットについて、なぜCLAでは捉えられないのかの構造的理由、現在の保有データによるカバー状況、そして補完のために何が必要かを示す。
+</p>
+
+<div class="blind-grid">
+
+  <div class="blind-item">
+    <div class="blind-header">
+      <div class="blind-title">技術的ブレークスルーの具体的予測</div>
+      <span class="blind-severity sev-high">重大度: 高</span>
+    </div>
+    <div class="blind-body">
+      <p>CLAは「技術が社会をどう変えるかの物語」を読み解くが、「次にどの技術が突破するか」は予測できない。これは質的分析の原理的限界だ。技術の進歩は物理法則、エンジニアリングの制約、偶然の発見に依存しており、世界観の変化とは異なる論理で動く。</p>
+      <h4>現在のカバー状況</h4>
+      <p>Future Insight DBの論文898件とInvestment Signal RadarのNEDO 160件が部分的にカバーしているが、特許出願データは未収集だ。学術論文の引用ネットワーク分析も実装されていない。</p>
+      <h4>補完の方向性</h4>
+      <p>OpenAlexの引用ネットワークデータを導入し、急成長する研究領域を自動検出する仕組みが必要だ。NEDO/JSPS採択テーマの時系列分析と組み合わせることで、「学術的に急成長中かつ公的資金が投入されている技術領域」を特定し、CLAのemerging narrativeと照合するパイプラインが実現できる。</p>
+    </div>
+  </div>
+
+  <div class="blind-item">
+    <div class="blind-header">
+      <div class="blind-title">カスケード効果・ドミノ連鎖の予測</div>
+      <span class="blind-severity sev-high">重大度: 高</span>
+    </div>
+    <div class="blind-body">
+      <p>CLAはカテゴリ別に分析するため、あるカテゴリの変化が別カテゴリに波及するメカニズムの構造化が弱い。例えば、技術的変化が法制度に波及し、それが経済構造を変え、社会の世界観に影響するといった連鎖反応は、統合版CLA（integrated_cla）で記述的に触れられるものの、因果ネットワークとして定量的に構造化されていない。</p>
+      <h4>現在のカバー状況</h4>
+      <p>Signal DBの1,806件のcross_impactリンクが因果連鎖を持っているが、CLAとの接続（signal_cla_links）は0件のまま未実装だ。これは技術的には容易に実装可能であり、最もコストパフォーマンスの高い統合機会である。</p>
+      <h4>補完の方向性</h4>
+      <p>signal_cla_linksを実装し、7,564シグナルと930のCLA分析を自動リンクする。シグナル間のcross_impactネットワークとCLA層を接続することで、「深層構造の変化がどのような経路で波及するか」を可視化できるようになる。</p>
+    </div>
+  </div>
+
+  <div class="blind-item">
+    <div class="blind-header">
+      <div class="blind-title">人口動態・労働市場の構造変化</div>
+      <span class="blind-severity sev-medium">重大度: 中</span>
+    </div>
+    <div class="blind-body">
+      <p>CLAのSocial層で人口減少や高齢化は言及されるが、定量的な人口推計や労働力需給データとの統合がない。少子高齢化が「物語」として語られることと、具体的にいつ・どの地域で・どの産業で労働力不足が顕在化するかは異なる問題だ。</p>
+      <h4>補完の方向性</h4>
+      <p>World Bank APIからの人口動態指標をcla.dbのsocial_indicatorsに追加統合することが有効だ。国連人口推計、ILO労働統計、移民フローデータとの接続で、CLAの質的分析に定量的な裏付けが加わる。</p>
+    </div>
+  </div>
+
+  <div class="blind-item">
+    <div class="blind-header">
+      <div class="blind-title">環境・気候変動の物理的インパクト</div>
+      <span class="blind-severity sev-medium">重大度: 中</span>
+    </div>
+    <div class="blind-body">
+      <p>CLAのEnvironmental層は気候変動に関する社会的言説を分析するが、気温上昇予測、海面上昇シミュレーション、生態系変動といった物理データとは接続されていない。環境変化の「物語」と「物理的現実」のギャップは、予測の精度に直結する。</p>
+      <h4>補完の方向性</h4>
+      <p>IPCC AR6のSSP（共有社会経済経路）シナリオデータをCLAのEnvironmental emerging narrativeと接続することで、「物語として語られている環境変化」と「物理モデルが予測する環境変化」の整合性を検証できる。</p>
+    </div>
+  </div>
+
+  <div class="blind-item">
+    <div class="blind-header">
+      <div class="blind-title">消費者行動・市場動態のリアルタイム変化</div>
+      <span class="blind-severity sev-medium">重大度: 中</span>
+    </div>
+    <div class="blind-body">
+      <p>CLAは世界観の変化を捉えるが、それが実際の消費行動やマーケットシェアにどう反映されているかの追跡がない。世界観が変わっても消費行動が追いつかない場合や、逆に消費行動が世界観に先行する場合がある。</p>
+      <h4>補完の方向性</h4>
+      <p>World Values Surveyデータ（worldview_dataに1,460件あるが拡張余地大）の定期更新が最も直接的だ。またEC市場データやSNSセンチメント分析との統合で、「世界観の変化が消費に反映されるまでのラグ」を定量化できる。</p>
+    </div>
+  </div>
+
+  <div class="blind-item">
+    <div class="blind-header">
+      <div class="blind-title">規制・法制度変化の先行検出</div>
+      <span class="blind-severity sev-medium">重大度: 中</span>
+    </div>
+    <div class="blind-body">
+      <p>CLAのLegal層は事後的な法制度分析が主で、法案の起草段階や規制議論の先行検出は弱い。法制度の変化は政治的プロセスの中で「シグナル→議論→法案→施行」というパイプラインを経るが、CLAが捉えるのは主に施行後の構造的影響だ。</p>
+      <h4>補完の方向性</h4>
+      <p>Regulatory DB Japan（1,332法令、e-Gov法令API）が日本の法令をカバーしている。CLAのLegal emerging narrativeと法改正実績の突合で、「CLAが予測した法的方向性が実際に法制化された割合」を検証できる。グローバル規制については未対応であり、WTO・WHO等の国際機関決議データとの統合が今後の課題だ。</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Section 6: Integration Framework -->
+<h2>6. 統合フレームワークの提案――MIFS</h2>
+
+<p class="lead">
+以上の分析を踏まえ、CLAを認識論的コアに据えた多層的な未来洞察システム「ミラツク統合未来洞察システム（Miratuku Integrated Foresight System: MIFS）」を提案する。MIFSは4つの層からなり、各層が固有の問いに答える。
+</p>
+
+<h3>設計思想</h3>
+<p>
+MIFSの基本思想は、CLAの圧倒的な「方向性予測力」（実現率96.9%）を活かしつつ、その弱点であるタイミング・定量性・実行性を補完データベース群で埋めることにある。定量データでタイミングと規模を精緻化し、投資データで実行性を評価する三位一体の予測を実現する。
+</p>
+
+<!-- Concentric diagram -->
+<div class="concentric">
+  <div class="ring ring-4">
+    <div class="ring-corner tl">PESTLE DB<br>293,638件</div>
+    <div class="ring-corner tr">CI DB<br>576,434件</div>
+    <div class="ring-corner bl">Signal alerts<br>174件</div>
+    <div class="ring-corner br">日次/週次<br>フィード</div>
+  </div>
+  <div class="ring ring-3">
+    <div class="ring-corner tl">Signal DB 7,564</div>
+    <div class="ring-corner tr">GR DB 385,918</div>
+    <div class="ring-corner bl">CS DB 625</div>
+    <div class="ring-corner br">構造的因果</div>
+  </div>
+  <div class="ring ring-2">
+    <div class="ring-corner tl">統合CLA 127</div>
+    <div class="ring-corner tr">神話 46,345</div>
+    <div class="ring-corner bl">検証 360</div>
+    <div class="ring-corner br">方向性+確信度</div>
+  </div>
+  <div class="ring ring-1">
+    <div class="ring-label">Layer 1<br>CLA<br>深層洞察<br>（コア）</div>
+  </div>
+</div>
+<p style="text-align: center; font-size: 0.74rem; color: var(--text-muted); margin-top: 8px;">
+  同心円構造: 内側ほど深層の分析。外側のデータが内側のコア分析に向かって流れる。
+</p>
+
+<h3>四層構造</h3>
+
+<div class="fw-layers">
+
+  <div class="fw-layer">
+    <div class="fw-layer-label">
+      <div class="fw-layer-name">Layer 1: 表層検知</div>
+      <div class="fw-layer-fn">Surface Detection<br>「今何が起きているか」</div>
+    </div>
+    <div class="fw-layer-content">
+      <p>リアルタイムのニュース収集と異常値検知を行う最外層。CLAのリタニー層への入力データを生成し、日次・週次でシグナルフィードを提供する。</p>
+      <ul class="fw-db-list">
+        <li><span class="db-name">PESTLE DB</span> <span class="db-count">293,638件</span> ― 日次ニュースの構造化収集</li>
+        <li><span class="db-name">Cultural Intelligence DB</span> <span class="db-count">576,434件</span> ― 文化的表現の広域センシング</li>
+        <li><span class="db-name">Signal DB alerts</span> <span class="db-count">174件</span> ― 異常値・急増の自動検知</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="fw-layer">
+    <div class="fw-layer-label">
+      <div class="fw-layer-name">Layer 2: 構造分析</div>
+      <div class="fw-layer-fn">Structural Analysis<br>「なぜ起きているか」</div>
+    </div>
+    <div class="fw-layer-content">
+      <p>表層の事象を構造的に分析し、因果マップを構築する。CLAのsystemic_causes・worldview層が中心的役割を担い、地政学データと文化構造データで多角的に裏付ける。</p>
+      <ul class="fw-db-list">
+        <li><span class="db-name">CLA DB</span> <span class="db-count">930件</span> ― 4層深層分析（コア）</li>
+        <li><span class="db-name">Signal DB</span> <span class="db-count">7,564件</span> ― シグナルのThree Horizons分類</li>
+        <li><span class="db-name">Geopolitical Risk DB</span> <span class="db-count">385,918件</span> ― 政治的構造変動の定量化</li>
+        <li><span class="db-name">Cultural Structure DB</span> <span class="db-count">625件</span> ― 人間生活21領域への展開</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="fw-layer">
+    <div class="fw-layer-label">
+      <div class="fw-layer-name">Layer 3: 深層洞察</div>
+      <div class="fw-layer-fn">Deep Insight<br>「世界はどこへ向かうか」</div>
+    </div>
+    <div class="fw-layer-content">
+      <p>CLAのmyth_metaphor・emerging_narrative層が中心となり、文明的パターンの参照と予測精度の実証的裏付けから、方向性と確信度を導出する。MIFSの知的核心にあたる層だ。</p>
+      <ul class="fw-db-list">
+        <li><span class="db-name">CLA integrated</span> <span class="db-count">127件</span> ― 時代精神（zeitgeist）の抽出</li>
+        <li><span class="db-name">CLA 神話・メタファーデータ</span> <span class="db-count">46,345件</span> ― 文明的パターンの参照</li>
+        <li><span class="db-name">CLA 検証データ</span> <span class="db-count">360件</span> ― 予測精度の実証的裏付け</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="fw-layer">
+    <div class="fw-layer-label">
+      <div class="fw-layer-name">Layer 4: 実行性評価</div>
+      <div class="fw-layer-fn">Actionability Assessment<br>「実際に資源はどこへ」</div>
+    </div>
+    <div class="fw-layer-content">
+      <p>CLAのemerging narrativeが「実行」に移されているかを検証する層。投資フロー、複合スコア、学術的関心の方向性から、変化の実行確率とタイムラインを評価する。</p>
+      <ul class="fw-db-list">
+        <li><span class="db-name">Investment Signal Radar</span> <span class="db-count">4,180組織</span> ― VC/スタートアップの資金フロー</li>
+        <li><span class="db-name">Foresight Radar</span> <span class="db-count">TOP30</span> ― 複合スコアによる優先度</li>
+        <li><span class="db-name">Future Insight DB 論文</span> <span class="db-count">898件</span> ― 学術的関心の方向性</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<h3>データフロー</h3>
+
+<div class="flow-diagram">
+  <div class="flow-step">
+    <div class="flow-step-label">Layer 1</div>
+    <div class="flow-step-desc">日次<br>表層検知</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-step-label">Layer 2</div>
+    <div class="flow-step-desc">月次<br>構造分析</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-step-label">Layer 3</div>
+    <div class="flow-step-desc">四半期<br>深層洞察</div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-step-label">Layer 4</div>
+    <div class="flow-step-desc">随時<br>実行性評価</div>
+  </div>
+</div>
+
+<p>
+データは外側から内側へ、表層から深層へと流れる。Layer 1の日次表層検知がLayer 2の月次構造分析に供給され、Layer 2の構造的パターンがLayer 3の四半期深層洞察を更新し、Layer 4が随時実行性を検証する。重要なのは、このフローが一方向ではなく循環構造を持つことだ。Layer 3の深層洞察がLayer 1のセンシング感度を調整する。つまり、CLAが「何に注目すべきか」を決定し、PESTLEやCIがそれを集中的にモニタリングするというフィードバックループが設計されている。
+</p>
+
+<h3>重要な統合ポイント</h3>
+
+<div class="int-grid">
+  <div class="int-item">
+    <div class="int-conn">Signal DB &harr; CLA DB</div>
+    <div class="int-status">signal_cla_linksテーブルが存在するが0件。7,564シグナルと930のCLA分析を自動リンクし、Three HorizonsとCLA depthの交差分析を実装する。</div>
+    <span class="int-priority badge-high">最優先</span>
+  </div>
+  <div class="int-item">
+    <div class="int-conn">IR &harr; CLA narrative</div>
+    <div class="int-status">未接続。CLAのemerging narrativeキーワードとIRのセクター分類をマッピングし、「物語vs実行」ギャップを検出する。</div>
+    <span class="int-priority badge-high">高</span>
+  </div>
+  <div class="int-item">
+    <div class="int-conn">GR DB &harr; CLA P/L層</div>
+    <div class="int-status">未接続だが同じ1900-2026年をカバー。GPR指数の時系列変化とCLAの分析の126年同期対応付けを行う。</div>
+    <span class="int-priority badge-high">高</span>
+  </div>
+  <div class="int-item">
+    <div class="int-conn">CI DB &harr; CLA worldview</div>
+    <div class="int-status">未接続。CIの21カテゴリ記事量の変動をCLAの世界観変化の「表面張力」指標として活用する。</div>
+    <span class="int-priority badge-medium">中</span>
+  </div>
+</div>
+
+<div class="key-finding">
+  <div class="kf-title">統合による新しい能力</div>
+  <p>
+    全統合が実現した場合、現在のCLA単体の「方向性予測（精度96.9%だがラグ6-17年）」に加え、以下の能力が獲得できる。(1) 方向性予測（CLA深層）＋タイミング予測（Signal DB + GPR指数）＋実行性評価（IR投資データ）の三位一体予測。(2) カスケード効果の予測（Signal cross_impact 1,806リンク + CLA層横断分析）。(3) 126年の歴史パターンと現在のシグナルの共鳴検出（GPR 126年 x CLA 126年の同期分析）。(4) 文化的変化の早期検知（CI 576K件のセンシングからCLA世界観層の変化予兆を検出）。
+  </p>
+</div>
+
+<!-- Section 7: Action Proposals -->
+<h2>7. アクション提案</h2>
+
+<p class="lead">
+MIFSの実現に向けて、以下の4つのアクションを優先度順に提案する。いずれも既存のデータベースとテーブル構造を活用するため、新規のデータ収集は不要であり、主にリンク生成と可視化の実装が中心となる。
+</p>
+
+<div class="action-list">
+
+  <div class="action-item">
+    <div class="action-num">1</div>
+    <div class="action-body">
+      <div class="action-title">signal_cla_linksの自動生成を実装</div>
+      <div class="action-detail">
+        既存のsignal_cla_linksテーブル（現在0件）に、7,564シグナルと930のCLA分析のリンクを自動生成する。キーワードマッチング、時系列の近接性、PESTLEカテゴリの一致を条件として自動リンクし、Three HorizonsとCLA depthの交差分析ダッシュボードを構築する。これにより、CLAの深層洞察にシグナルの定量スコアが接続され、予測のタイミング精度が飛躍的に向上する。
+      </div>
+      <div class="action-tags">
+        <span class="comp-badge badge-high">最優先</span>
+        <span class="comp-badge badge-medium">工数: 中</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-num">2</div>
+    <div class="action-body">
+      <div class="action-title">GPR指数とCLA分析の126年同期分析</div>
+      <div class="action-detail">
+        Geopolitical Risk DBのGPR指数（1900-2026年）とCLA分析（1900-2026年）を日付ベースで結合し、126年間の「深層構造の変化が地政学的リスクにどう発現するか」の長期パターンを可視化する。GPR指数のスパイクとCLAのparadigm_shifts予測の照合、EPU指数の長期トレンドとCLAの世界観変動の相関分析を行う。この126年同期データセットは、世界的にもユニークな研究資産となりうる。
+      </div>
+      <div class="action-tags">
+        <span class="comp-badge badge-high">高優先度</span>
+        <span class="comp-badge badge-medium">工数: 中</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-num">3</div>
+    <div class="action-body">
+      <div class="action-title">Investment Signal Radarとemerging narrativeのギャップ分析</div>
+      <div class="action-detail">
+        CLAのemerging narrativeキーワードとInvestment Signal Radarのセクター分類をマッピングし、「語られているが投資されていない変化」と「語られていないが投資されている変化」を自動検出する。このギャップ分析は、CLAの予測を「実行可能性」の観点から評価する初めてのフレームワークとなる。特にVC投資トレンド（1,927ラウンド）との照合で、emerging narrativeの「実現確率」の推定が可能になる。
+      </div>
+      <div class="action-tags">
+        <span class="comp-badge badge-high">高優先度</span>
+        <span class="comp-badge badge-medium">工数: 中</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-item">
+    <div class="action-num">4</div>
+    <div class="action-body">
+      <div class="action-title">Cultural Intelligence DBの世界観変動指標の構築</div>
+      <div class="action-detail">
+        Cultural Intelligence DBの21カテゴリ別記事量の時系列変動を集計し、CLAの世界観変動の「中間モニタリング指標」として位置づける。年次のCLA分析を待たずに、月次・週次で世界観の変化予兆を検出できるようにする。CLAの年次分析と月次CI変動を突合することで、「CLA分析サイクルの間に起きた世界観変化」を補足する。
+      </div>
+      <div class="action-tags">
+        <span class="comp-badge badge-medium">中優先度</span>
+        <span class="comp-badge badge-low">工数: 小</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Section 8: Footer -->
+<div class="report-footer">
+  <p>
+    <strong>生成日:</strong> 2026年4月26日<br>
+    <strong>分析者:</strong> ミラツク未来洞察チーム<br>
+    <strong>データソース:</strong> CLA DB (930件), PESTLE DB (293,638件), Signal DB (7,564件), Cultural Intelligence DB (576,434件), Geopolitical Risk DB (385,918+件), Investment Signal Radar (4,180組織), Future Insight DB (291,451件), Cultural Structure DB (625件), Foresight Radar (TOP30)<br>
+    <strong>手法:</strong> 8データベースの横断的スキーマ・レコード・カバー期間の調査に基づく構造的相補性分析<br><br>
+    <strong>関連ページ:</strong>
+    <a href="cla.html">CLA ダッシュボード</a> |
+    <a href="cla-report.html">CLA メタレポート</a> |
+    <a href="cla-verification.html">予測精度検証</a> |
+    <a href="cla-three-horizons.html">Three Horizons検証</a> |
+    <a href="cla-integrated.html">統合版CLA</a> |
+    <a href="sg.html">Signal DB</a> |
+    <a href="pe.html">PESTLE DB</a> |
+    <a href="ci.html">Cultural Intelligence</a> |
+    <a href="gr.html">Geopolitical Risk</a> |
+    <a href="ir.html">Investment Signal Radar</a> |
+    <a href="fk.html">Foresight Knowledge Base</a>
+  </p>
+</div>
+
+</body>
+</html>
