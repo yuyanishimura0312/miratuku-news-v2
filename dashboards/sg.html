@@ -175,7 +175,7 @@ canvas { display: block; width: 100%; }
 </div>
 <div id="mt-list"></div>
 
-<h3>18テーマ時系列グラフ <span style="font-size:0.78rem;color:var(--text-muted)">年次記事数推移 (PESTLE + Cultural)</span></h3>
+<h3>18テーマ x 中項目 時系列グラフ <span style="font-size:0.78rem;color:var(--text-muted)">48中項目の年次記事数推移</span></h3>
 <div class="filters" id="ts-filters">
   <div><label>表示モード</label>
     <select id="ts-mode">
@@ -191,11 +191,7 @@ canvas { display: block; width: 100%; }
     </select>
   </div>
 </div>
-<div id="ts-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;"></div>
-<div class="panel" style="margin-bottom:24px;">
-  <div class="panel-title">全テーマ重ね合わせ (出現率)</div>
-  <canvas id="ts-overlay" height="320"></canvas>
-</div>
+<div id="ts-dai-list"></div>
 
 <!-- Top Signals -->
 <h3>トップシグナル <span id="top-n" style="font-size:0.78rem;color:var(--text-muted)"></span></h3>
@@ -490,255 +486,190 @@ function renderMT() {
 }
 renderMT();
 
-// 18 Theme Timeseries Charts
-let THEME_TS = null;
+// 18 Theme x Chu-Item Timeseries Charts
+let CHU_TS = null;
 const THEME_COLORS = [
   '#CC1400','#2563EB','#16A34A','#EA580C','#7C3AED','#0891B2',
   '#DC2626','#CA8A04','#4F46E5','#059669','#D97706','#9333EA',
   '#0D9488','#E11D48','#6366F1','#15803D','#C2410C','#7C3AED'
 ];
+const CHU_COLORS = ['#CC1400','#2563EB','#16A34A','#EA580C','#7C3AED','#0891B2','#DC2626','#CA8A04'];
 
-async function loadThemeTS() {
-  if (THEME_TS) return;
+async function loadChuTS() {
+  if (CHU_TS) return;
   try {
-    const r = await fetch('data/sg_theme_ts.json');
-    THEME_TS = await r.json();
-    THEME_TS.sort((a,b) => a.no - b.no);
-    renderThemeCharts();
-    renderOverlayChart();
-    document.getElementById('ts-mode').addEventListener('change', () => { renderThemeCharts(); renderOverlayChart(); });
-    document.getElementById('ts-range').addEventListener('change', () => { renderThemeCharts(); renderOverlayChart(); });
-  } catch(e) { console.error('Failed to load theme timeseries', e); }
+    const r = await fetch('data/sg_chu_ts.json');
+    CHU_TS = await r.json();
+    renderDaiList();
+    document.getElementById('ts-mode').addEventListener('change', renderDaiList);
+    document.getElementById('ts-range').addEventListener('change', renderDaiList);
+  } catch(e) { console.error('Failed to load chu timeseries', e); }
 }
 
-function getFilteredTS(ts) {
+function getFilteredChu(ts) {
   const range = document.getElementById('ts-range')?.value || 'all';
   const minYear = range === 'all' ? 1900 : parseInt(range);
   return ts.filter(t => t.y >= minYear);
 }
 
-function drawThemeChart(canvas, theme, idx) {
+function drawChuChart(canvas, items, daiColor) {
   const mode = document.getElementById('ts-mode')?.value || 'absolute';
-  const ts = getFilteredTS(theme.ts);
-  if (!ts.length) return;
-
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-  const pad = { t: 8, r: 6, b: 22, l: 32 };
+  const pad = { t: 14, r: 10, b: 24, l: 36 };
   const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
-
   ctx.clearRect(0, 0, W, H);
 
-  const vals = ts.map(t => mode === 'rate' ? t.pr + t.cr : t.p + t.c);
-  const maxV = Math.max(...vals, 1);
-  const gap = pW / (ts.length - 1 || 1);
-
-  // Grid
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const gridColor = isDark ? '#2A2A2A' : '#EEEEEE';
   const mutedColor = isDark ? '#8A8A8A' : '#6B6B6B';
-  const textColor = isDark ? '#E0E0E0' : '#121212';
 
-  ctx.strokeStyle = gridColor;
-  ctx.lineWidth = 0.5;
+  // Collect all years
+  const allYears = new Set();
+  items.forEach(it => {
+    const ts = getFilteredChu(it.ts);
+    ts.forEach(t => allYears.add(t.y));
+  });
+  const years = [...allYears].sort((a,b) => a - b);
+  if (!years.length) return;
+
+  // Max value across all items
+  let maxV = 1;
+  items.forEach(it => {
+    const ts = getFilteredChu(it.ts);
+    ts.forEach(t => {
+      const v = mode === 'rate' ? t.pr + t.cr : t.p + t.c;
+      if (v > maxV) maxV = v;
+    });
+  });
+
+  const gap = pW / (years.length - 1 || 1);
+
+  // Grid
+  ctx.strokeStyle = gridColor; ctx.lineWidth = 0.5;
   for (let i = 0; i <= 3; i++) {
     const y = pad.t + pH * i / 3;
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
   }
-
-  // Area fill (PESTLE)
-  const color = THEME_COLORS[idx % THEME_COLORS.length];
-  ctx.beginPath();
-  ts.forEach((t, i) => {
-    const x = pad.l + i * gap;
-    const pVal = mode === 'rate' ? t.pr : t.p;
-    const y = pad.t + pH - (pVal / maxV) * pH;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  // Close area
-  ctx.lineTo(pad.l + (ts.length - 1) * gap, pad.t + pH);
-  ctx.lineTo(pad.l, pad.t + pH);
-  ctx.closePath();
-  ctx.fillStyle = color + '18';
-  ctx.fill();
-
-  // PESTLE line
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ts.forEach((t, i) => {
-    const x = pad.l + i * gap;
-    const pVal = mode === 'rate' ? t.pr : t.p;
-    const y = pad.t + pH - (pVal / maxV) * pH;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-
-  // Cultural line (dashed)
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
-  ctx.setLineDash([3, 3]);
-  ctx.globalAlpha = 0.5;
-  ctx.beginPath();
-  ts.forEach((t, i) => {
-    const x = pad.l + i * gap;
-    const cVal = mode === 'rate' ? t.cr : t.c;
-    const y = pad.t + pH - (cVal / maxV) * pH;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.globalAlpha = 1;
-
-  // X axis labels (sparse)
-  ctx.fillStyle = mutedColor;
-  ctx.font = '9px system-ui';
-  ctx.textAlign = 'center';
-  const labelInterval = Math.max(1, Math.floor(ts.length / 4));
-  ts.forEach((t, i) => {
-    if (i % labelInterval === 0 || i === ts.length - 1) {
-      ctx.fillText(t.y, pad.l + i * gap, H - 4);
-    }
-  });
-
-  // Y max label
-  ctx.textAlign = 'right';
+  ctx.fillStyle = mutedColor; ctx.font = '9px system-ui'; ctx.textAlign = 'right';
   ctx.fillText(maxV >= 1000 ? (maxV/1000).toFixed(1)+'K' : maxV.toString(), pad.l - 3, pad.t + 8);
+  ctx.fillText('0', pad.l - 3, pad.t + pH + 4);
 
-  // Title
-  ctx.fillStyle = textColor;
-  ctx.font = 'bold 10px system-ui';
-  ctx.textAlign = 'left';
-  const verdictMark = theme.verdict === 'Strong Trend' ? '' : theme.verdict === 'Moderate Trend' ? '' : '';
-  ctx.fillText(`#${theme.no} ${theme.name.substring(0, 16)}`, pad.l, pad.t + pH + 18);
-}
+  // Draw each chu item line
+  items.forEach((it, idx) => {
+    const ts = getFilteredChu(it.ts);
+    const tsMap = {};
+    ts.forEach(t => tsMap[t.y] = mode === 'rate' ? t.pr + t.cr : t.p + t.c);
+    const color = CHU_COLORS[idx % CHU_COLORS.length];
 
-function renderThemeCharts() {
-  if (!THEME_TS) return;
-  const grid = document.getElementById('ts-grid');
-  const isMobile = window.innerWidth < 768;
-  grid.style.gridTemplateColumns = isMobile ? '1fr' : 'repeat(3, 1fr)';
-
-  // Create canvases if not exist
-  if (!grid.querySelector('canvas')) {
-    grid.innerHTML = THEME_TS.map((t, i) =>
-      `<div class="panel" style="padding:8px;"><canvas id="tc-${i}" width="${isMobile ? 340 : 320}" height="140"></canvas></div>`
-    ).join('');
-  }
-
-  THEME_TS.forEach((theme, i) => {
-    const canvas = document.getElementById(`tc-${i}`);
-    if (!canvas) return;
-    canvas.width = canvas.parentElement.clientWidth - 16;
-    drawThemeChart(canvas, theme, i);
-  });
-}
-
-function renderOverlayChart() {
-  if (!THEME_TS) return;
-  const canvas = document.getElementById('ts-overlay');
-  canvas.width = canvas.parentElement.clientWidth - 32;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const pad = { t: 20, r: 20, b: 32, l: 50 };
-  const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridColor = isDark ? '#2A2A2A' : '#EEEEEE';
-  const mutedColor = isDark ? '#8A8A8A' : '#6B6B6B';
-
-  // Determine year range
-  const range = document.getElementById('ts-range')?.value || 'all';
-  const minYear = range === 'all' ? 1900 : parseInt(range);
-
-  // Collect all years across themes
-  const allYears = new Set();
-  THEME_TS.forEach(t => t.ts.forEach(d => { if (d.y >= minYear) allYears.add(d.y); }));
-  const years = [...allYears].sort((a, b) => a - b);
-  if (!years.length) return;
-
-  // Build rate data for each theme
-  const themeRates = THEME_TS.map(theme => {
-    const map = {};
-    theme.ts.forEach(d => { if (d.y >= minYear) map[d.y] = d.pr + d.cr; });
-    return { no: theme.no, name: theme.name, score: theme.score, data: map };
-  });
-
-  const maxRate = Math.max(...themeRates.flatMap(t => Object.values(t.data)), 1);
-  const gap = pW / (years.length - 1 || 1);
-
-  // Grid
-  ctx.strokeStyle = gridColor;
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.t + pH * i / 4;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-    ctx.fillStyle = mutedColor; ctx.font = '10px system-ui'; ctx.textAlign = 'right';
-    const val = maxRate - maxRate * i / 4;
-    ctx.fillText(val.toFixed(1), pad.l - 6, y + 4);
-  }
-
-  // Draw each theme line
-  themeRates.forEach((theme, idx) => {
-    const color = THEME_COLORS[idx % THEME_COLORS.length];
-    ctx.strokeStyle = color;
-    ctx.lineWidth = theme.score >= 7 ? 2 : 1;
-    ctx.globalAlpha = theme.score >= 7 ? 0.8 : 0.35;
+    // Area
     ctx.beginPath();
     let started = false;
+    let lastX = pad.l;
     years.forEach((yr, i) => {
-      const v = theme.data[yr];
-      if (v == null) return;
+      const v = tsMap[yr] || 0;
       const x = pad.l + i * gap;
-      const y = pad.t + pH - (v / maxRate) * pH;
+      const y = pad.t + pH - (v / maxV) * pH;
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+      lastX = x;
+    });
+    ctx.lineTo(lastX, pad.t + pH);
+    ctx.lineTo(pad.l, pad.t + pH);
+    ctx.closePath();
+    ctx.fillStyle = color + '0D';
+    ctx.fill();
+
+    // Line
+    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.8;
+    ctx.beginPath(); started = false;
+    years.forEach((yr, i) => {
+      const v = tsMap[yr] || 0;
+      const x = pad.l + i * gap;
+      const y = pad.t + pH - (v / maxV) * pH;
       if (!started) { ctx.moveTo(x, y); started = true; }
       else ctx.lineTo(x, y);
     });
     ctx.stroke();
+    ctx.globalAlpha = 1;
   });
-  ctx.globalAlpha = 1;
 
   // X labels
-  ctx.fillStyle = mutedColor; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
-  const labelStep = Math.max(1, Math.floor(years.length / 10));
+  ctx.fillStyle = mutedColor; ctx.font = '9px system-ui'; ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(years.length / 6));
   years.forEach((yr, i) => {
-    if (i % labelStep === 0 || i === years.length - 1) {
-      ctx.fillText(yr, pad.l + i * gap, H - pad.b + 16);
-    }
+    if (i % step === 0 || i === years.length - 1) ctx.fillText(yr, pad.l + i * gap, H - 4);
   });
 
-  // Legend (top themes by score)
-  const topThemes = [...themeRates].sort((a, b) => b.score - a.score).slice(0, 9);
-  ctx.font = '9px system-ui';
-  ctx.textAlign = 'left';
-  topThemes.forEach((t, i) => {
-    const col = i < 5 ? 0 : 1;
-    const row = i < 5 ? i : i - 5;
-    const lx = pad.l + col * (pW / 2 + 20);
-    const ly = 8 + row * 13;
-    const color = THEME_COLORS[THEME_TS.findIndex(th => th.no === t.no) % THEME_COLORS.length];
+  // Legend
+  ctx.font = '9px system-ui'; ctx.textAlign = 'left';
+  items.forEach((it, idx) => {
+    const color = CHU_COLORS[idx % CHU_COLORS.length];
+    const lx = pad.l + 4;
+    const ly = pad.t + 4 + idx * 12;
     ctx.fillStyle = color;
-    ctx.fillRect(lx, ly - 1, 10, 3);
+    ctx.fillRect(lx, ly, 8, 3);
     ctx.fillStyle = mutedColor;
-    ctx.fillText(`#${t.no} ${t.name.substring(0, 14)}`, lx + 14, ly + 4);
+    const total = it.pestle_total + it.cultural_total;
+    ctx.fillText(`${it.label}: ${it.chu_name.substring(0,18)} (${total.toLocaleString()})`, lx + 12, ly + 4);
   });
-
-  // Y axis label
-  ctx.save();
-  ctx.translate(12, pad.t + pH / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillStyle = mutedColor;
-  ctx.font = '10px system-ui';
-  ctx.textAlign = 'center';
-  ctx.fillText('per 1000 articles', 0, 0);
-  ctx.restore();
 }
 
-loadThemeTS();
+function renderDaiList() {
+  if (!CHU_TS) return;
+  const container = document.getElementById('ts-dai-list');
 
-window.addEventListener('resize',()=>{renderMS();renderTL();renderScatter();renderThemeCharts();renderOverlayChart();});
+  // Group by dai_no
+  const grouped = {};
+  CHU_TS.forEach(item => {
+    if (!grouped[item.dai_no]) grouped[item.dai_no] = { name: item.dai_name, items: [] };
+    if (item.chu_name === 'Delete') return;
+    grouped[item.dai_no].items.push(item);
+  });
+
+  let html = '';
+  Object.keys(grouped).sort((a,b) => parseInt(a) - parseInt(b)).forEach(daiNo => {
+    const g = grouped[daiNo];
+    const items = g.items;
+    const daiTotal = items.reduce((s, it) => s + it.pestle_total + it.cultural_total, 0);
+    const color = THEME_COLORS[(parseInt(daiNo) - 1) % THEME_COLORS.length];
+
+    // Chu item summary
+    const chuSummary = items.map((it, idx) => {
+      const t = it.pestle_total + it.cultural_total;
+      const c = CHU_COLORS[idx % CHU_COLORS.length];
+      return `<span style="color:${c};font-weight:500">${it.label}</span> ${it.chu_name.substring(0,20)} <span style="font-family:monospace;font-size:0.72rem">(${t.toLocaleString()})</span>`;
+    }).join(' / ');
+
+    html += `<div class="panel" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+          <span style="font-weight:700;color:${color};font-family:monospace;font-size:0.82rem;">#${daiNo}</span>
+          <span style="font-weight:600;font-size:0.88rem;margin-left:6px;">${g.name}</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);margin-left:8px;">${daiTotal.toLocaleString()} articles</span>
+        </div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:8px;">${chuSummary}</div>
+      <canvas id="dai-c-${daiNo}" height="${Math.max(160, 120 + items.length * 12)}"></canvas>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Draw charts
+  Object.keys(grouped).forEach(daiNo => {
+    const canvas = document.getElementById(`dai-c-${daiNo}`);
+    if (!canvas) return;
+    canvas.width = canvas.parentElement.clientWidth - 32;
+    const items = grouped[daiNo].items;
+    const color = THEME_COLORS[(parseInt(daiNo) - 1) % THEME_COLORS.length];
+    drawChuChart(canvas, items, color);
+  });
+}
+
+loadChuTS();
+
+window.addEventListener('resize',()=>{renderMS();renderTL();renderScatter();renderDaiList();});
 </script>
 </body>
 </html>
