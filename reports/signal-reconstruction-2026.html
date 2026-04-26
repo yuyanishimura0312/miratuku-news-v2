@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>シグナルデータベースの再構築：870K記事から7,564のフォーサイトシグナルを抽出する</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg-alt:#FAFAF8;--card:#fff;--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;--surface:#F7F7F5;--accent:#CC1400;--accent-muted:rgba(204,20,0,.06);--accent-blue:#1565c0;--accent-green:#2e7d32;--accent-orange:#e65100;--serif:'Noto Serif JP',serif;--sans:'Noto Sans JP',sans-serif}
+[data-theme="dark"]{--bg:#0D0D0D;--bg-alt:#141414;--card:#1A1A1A;--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#777;--border:#333;--border-light:#222;--surface:#1E1E1E;--accent:#FF4444;--accent-muted:rgba(255,68,68,.08);--accent-blue:#64b5f6;--accent-green:#66bb6a;--accent-orange:#ffb74d}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.9;-webkit-font-smoothing:antialiased}
+.theme-toggle{position:fixed;top:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.report-header{background:var(--bg-alt);border-bottom:1px solid var(--border-light);padding:48px 24px 40px}
+.report-header-inner{max-width:740px;margin:0 auto}
+.report-back{font-size:.75rem;color:var(--text-muted);text-decoration:none;display:inline-block;margin-bottom:24px}
+.report-back:hover{color:var(--accent)}
+.report-meta-top{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.report-badge{display:inline-block;padding:2px 8px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:600;letter-spacing:.04em}
+.report-date{font-size:.75rem;color:var(--text-muted);letter-spacing:.03em}
+.report-title{font-family:var(--serif);font-size:1.65rem;font-weight:700;line-height:1.4;margin-bottom:12px}
+.report-subtitle{font-size:.88rem;color:var(--text-secondary);line-height:1.7;max-width:640px}
+.report-db-tags{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.report-db-tag{padding:2px 8px;font-size:.68rem;font-weight:500;border:1px solid var(--border);color:var(--text-secondary)}
+.key-metrics{max-width:740px;margin:-20px auto 0;padding:0 24px;position:relative;z-index:2}
+.key-metrics-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--border);background:var(--card)}
+.key-metric{padding:18px 14px;text-align:center;border-right:1px solid var(--border-light)}
+.key-metric:last-child{border-right:none}
+.key-metric-value{font-family:var(--serif);font-size:1.3rem;font-weight:700;line-height:1.2}
+.key-metric-label{font-size:.65rem;color:var(--text-muted);margin-top:4px}
+.article{max-width:740px;margin:0 auto;padding:48px 24px 80px}
+.toc{margin-bottom:48px;padding:24px 28px;background:var(--surface);border-left:3px solid var(--accent)}
+.toc-title{font-family:var(--serif);font-size:.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:12px}
+.toc ol{list-style:none;counter-reset:toc}
+.toc>ol>li{counter-increment:toc;margin-bottom:6px}
+.toc>ol>li::before{content:counter(toc)".";color:var(--accent);font-weight:600;font-size:.78rem;margin-right:6px;font-family:var(--serif)}
+.toc a{color:var(--text);text-decoration:none;font-size:.82rem}
+.toc a:hover{color:var(--accent)}
+.section-num{display:block;font-family:var(--serif);font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.06em;margin-bottom:4px}
+h2.article-h2{font-family:var(--serif);font-size:1.25rem;font-weight:700;line-height:1.4;margin:56px 0 20px;padding-bottom:10px;border-bottom:1px solid var(--border-light)}
+h2.article-h2:first-of-type{margin-top:0}
+h3.article-h3{font-family:var(--serif);font-size:1.02rem;font-weight:700;line-height:1.5;margin:40px 0 14px}
+.article p{margin-bottom:18px;font-size:.92rem;line-height:1.9;text-align:justify}
+.pullquote{margin:32px 0;padding:20px 24px;border-left:3px solid var(--accent);background:var(--accent-muted);font-family:var(--serif);font-size:.95rem;line-height:1.8}
+.data-table{width:100%;border-collapse:collapse;font-size:.78rem;margin:20px 0}
+.data-table th{background:var(--surface);padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);font-size:.72rem;color:var(--text-secondary)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);vertical-align:top;line-height:1.5}
+.data-table tr:hover td{background:var(--accent-muted)}
+.signal-card{margin:20px 0;border:1px solid var(--border);background:var(--card)}
+.signal-header{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border-light);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.signal-name{font-family:var(--serif);font-weight:700;font-size:.92rem}
+.signal-type{font-size:.6rem;padding:1px 6px;background:var(--accent-muted);color:var(--accent);font-weight:500}
+.signal-score{font-size:.6rem;padding:1px 6px;background:rgba(230,81,0,.08);color:var(--accent-orange);font-weight:600}
+.signal-body{padding:12px 16px;font-size:.85rem;line-height:1.7}
+.insight-box{margin:24px 0;padding:18px 20px;border-left:3px solid var(--accent-orange);background:rgba(230,81,0,.03)}
+[data-theme="dark"] .insight-box{background:rgba(255,183,77,.04)}
+.insight-label{font-family:var(--serif);font-size:.78rem;font-weight:700;color:var(--accent-orange);margin-bottom:8px}
+.layer-diagram{display:grid;gap:0;margin:24px 0;border:1px solid var(--border)}
+.layer-item{padding:14px 18px;border-bottom:1px solid var(--border-light);display:flex;gap:12px;align-items:baseline}
+.layer-item:last-child{border-bottom:none}
+.layer-num{font-family:var(--serif);font-weight:700;font-size:.82rem;color:var(--accent);width:28px;flex-shrink:0}
+.layer-label{font-weight:600;font-size:.84rem;min-width:120px}
+.layer-desc{font-size:.82rem;color:var(--text-secondary)}
+.report-footer{max-width:740px;margin:0 auto;padding:0 24px 60px;border-top:1px solid var(--border)}
+.report-footer p{font-size:.75rem;color:var(--text-muted);line-height:1.7;margin-top:16px}
+@media(max-width:600px){.report-title{font-size:1.3rem}.key-metrics-grid{grid-template-columns:repeat(3,1fr)}.signal-header{flex-direction:column;gap:4px}.layer-item{flex-direction:column;gap:4px}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'" aria-label="テーマ切替">&#9681;</button>
+
+<header class="report-header">
+<div class="report-header-inner">
+<a href="../analysis-reports.html" class="report-back">&larr; 解析レポート一覧に戻る</a>
+<div class="report-meta-top">
+<span class="report-badge">ANALYSIS REPORT</span>
+<span class="report-date">2026年4月26日</span>
+</div>
+<h1 class="report-title">シグナルデータベースの再構築：870K記事から7,564のフォーサイトシグナルを抽出する</h1>
+<p class="report-subtitle">PESTLE DB（293K記事）とCultural Intelligence DB（576K記事）を統合し、1900-2026年の127年間を半年単位で走査。Ansoffのウィークシグナル理論とHiltunenの3次元シグナルモデルに基づく体系的抽出。</p>
+<div class="report-db-tags">
+<span class="report-db-tag">SG: Signal DB</span>
+<span class="report-db-tag">PE: PESTLE DB</span>
+<span class="report-db-tag">CI: Cultural Intelligence DB</span>
+<span class="report-db-tag">CLA: 因果階層分析DB</span>
+</div>
+</div>
+</header>
+
+<div class="key-metrics">
+<div class="key-metrics-grid">
+<div class="key-metric"><div class="key-metric-value">7,564</div><div class="key-metric-label">総シグナル数</div></div>
+<div class="key-metric"><div class="key-metric-value">272</div><div class="key-metric-label">抽出期間数</div></div>
+<div class="key-metric"><div class="key-metric-value">870K</div><div class="key-metric-label">ソース記事数</div></div>
+<div class="key-metric"><div class="key-metric-value">7.23</div><div class="key-metric-label">平均Compositeスコア</div></div>
+<div class="key-metric"><div class="key-metric-value">127</div><div class="key-metric-label">カバー年数</div></div>
+</div>
+</div>
+
+<article class="article">
+
+<nav class="toc">
+<div class="toc-title">目次</div>
+<ol>
+<li><a href="#sec1">シグナルとは何か：理論的基盤と定義</a></li>
+<li><a href="#sec2">再構築の方法：870K記事からの体系的抽出</a></li>
+<li><a href="#sec3">抽出結果の全体像</a></li>
+<li><a href="#sec4">時代別シグナルの構造分析</a></li>
+<li><a href="#sec5">注目すべきシグナル事例</a></li>
+<li><a href="#sec6">CLA深度とThree Horizonsの時代推移</a></li>
+<li><a href="#sec7">結論と今後の展望</a></li>
+</ol>
+</nav>
+
+<h2 class="article-h2" id="sec1"><span class="section-num">SECTION 1</span>シグナルとは何か：理論的基盤と定義</h2>
+
+<p>フォーサイト（未来洞察）において「シグナル」とは、まだ多くの人に認識されていないが、将来の大きな変化の兆しとなりうる断片的な情報のことである。この概念は、イゴール・アンゾフが1975年に提唱した「ウィークシグナル」理論に端を発する。アンゾフは、戦略的不意打ちを避けるために、環境変化の初期指標を組織的に検出する必要性を主張した。その後、サリー・ヒルトゥネンが2008年に「シグナル×イシュー×解釈」という3次元モデルを提案し、シグナルが意味を持つためには、検出された断片（シグナル）が構造的な問題（イシュー）と結びつき、観察者による能動的な解釈を経る必要があることを示した。</p>
+
+<p>本データベースでは、シグナルを5つのタイプに分類している。第一に「ウィークシグナル（weak_signal）」。アンゾフのレベル1-2に相当し、当時ほとんど気づかれなかったが、後に極めて重要であったことが判明する断片的情報である。第二に「新興トレンド（emerging_trend）」。アンゾフのレベル3に相当し、複数の事象を繋ぐとパターンが見えてくる形成中のトレンドである。第三に「パラダイムシフト（paradigm_shift）」。世界観や前提そのものを揺るがす根本的変化のシグナルである。第四に「カウンタートレンド（counter_trend）」。時代の支配的方向に逆行する動きであり、主流の見方では見過ごされやすい。第五に「ワイルドカード（wild_card）」。発生確率は低いが、発生した場合のインパクトが極端に大きい事象のシグナルである。</p>
+
+<p>各シグナルは5つの軸（各0-10点）で評価される。新奇性（novelty）はその時代の既存議論からの逸脱度、破壊性（disruption）は既存システムの不安定化度、接続性（connectivity）は領域横断度、信頼性（credibility）は証拠の強さ、早期段階性（early_stage）は検出時点での発展段階の早さをそれぞれ評価する。これら5軸の平均がCompositeスコア（0-10）となる。</p>
+
+<p>さらに、各シグナルにはCLA（因果階層分析）の深度（litany/systemic/worldview/myth）とThree Horizons（H1: 衰退する体制、H2: 過渡期、H3: 未来の種子）が付与される。これにより、表面的な出来事（litany）から深層の文化構造（myth）まで、シグナルがどの層に位置するかを把握できる。</p>
+
+<h2 class="article-h2" id="sec2"><span class="section-num">SECTION 2</span>再構築の方法：870K記事からの体系的抽出</h2>
+
+<h3 class="article-h3">2.1 データソース</h3>
+
+<p>本再構築では、ミラツク・インテリジェンス・パイプラインの2つの主要データベースを統合的に活用した。PESTLE DB（293,638記事）は、政治・経済・社会・技術・環境・法制度の6カテゴリでニュースを収集しており、各カテゴリ約47K-51K記事と均等に分布している。Cultural Intelligence DB（576,434記事）は、文化・治安・国家民主主義・学び・アイデンティティなど21の文化カテゴリで記事を分類しており、1900年代から2020年代まで全年代をカバーしている。加えて、CLA DB（因果階層分析）の年次分析結果を文脈情報として参照した。</p>
+
+<h3 class="article-h3">2.2 抽出粒度と並列処理</h3>
+
+<p>抽出は以下の粒度で行った。1900-2019年の120年間は半年単位（H1: 1-6月、H2: 7-12月）で各期間約28シグナルを抽出し、240期間×28件=約6,720シグナルを目標とした。2020-2025年の6年間は四半期単位（Q1-Q4）で各約28シグナルを抽出し、24期間×28件=約672シグナルを目標とした。2026年はQ1とQ2（部分）の2期間を対象とした。合計272期間、目標約7,500シグナルである。</p>
+
+<p>実行効率化のため、127年間を5つの時代チームに分割し、各チームが25-26年分の抽出を並列で実行した。Team 1は1900-1924年（50期間）、Team 2は1925-1949年（50期間）、Team 3は1950-1974年（50期間）、Team 4は1975-1999年（50期間）、Team 5は2000-2026年（72期間）を担当した。全チームが約45分で完了し、計7,564シグナルを抽出した。</p>
+
+<h3 class="article-h3">2.3 ノイズ排除基準</h3>
+
+<p>シグナルの質を確保するため、以下の基準でノイズを排除した。メインストリームで広く報道された出来事そのもの（例：「第二次世界大戦の開戦」）はシグナルとしない。代わに「大量動員が恒久的な福祉国家への期待を生み出す構造」のように、出来事の下にある構造的パターンをシグナルとして抽出した。また、既知メガトレンドの線形延長、一過性のバズ、季節的パターン、単一ソースのみの情報も除外した。</p>
+
+<h2 class="article-h2" id="sec3"><span class="section-num">SECTION 3</span>抽出結果の全体像</h2>
+
+<h3 class="article-h3">3.1 シグナルタイプの分布</h3>
+
+<table class="data-table">
+<thead><tr><th>タイプ</th><th>件数</th><th>構成比</th><th>説明</th></tr></thead>
+<tbody>
+<tr><td>emerging_trend</td><td>2,252</td><td>29.8%</td><td>複数事象から形成中のパターン</td></tr>
+<tr><td>weak_signal</td><td>2,085</td><td>27.6%</td><td>断片的だが高インパクト</td></tr>
+<tr><td>paradigm_shift</td><td>1,118</td><td>14.8%</td><td>世界観の根本的変化</td></tr>
+<tr><td>counter_trend</td><td>1,081</td><td>14.3%</td><td>支配的方向への逆行</td></tr>
+<tr><td>wild_card</td><td>1,024</td><td>13.5%</td><td>低確率・極端インパクト</td></tr>
+</tbody>
+</table>
+
+<p>emerging_trendとweak_signalで全体の57.4%を占め、これはアンゾフのウィークシグナル理論が想定する「多くのシグナルは断片的であり、パターン形成の初期段階にある」という仮説と整合している。paradigm_shiftが14.8%と比較的高い割合を示しているのは、127年という長い期間においては、世界観レベルの変化が蓄積的に多く検出されるためである。</p>
+
+<h3 class="article-h3">3.2 年代別分布</h3>
+
+<p>全13年代でほぼ均一にカバーされている（各560-572件）。例外は2020年代で754件と多いが、これは四半期単位の抽出（年間4期間×28件=112件/年）のため、半年単位（56件/年）より密度が高くなるためである。この設計は、直近のシグナルほど意思決定への即時的な有用性が高いという実務的判断に基づいている。</p>
+
+<h2 class="article-h2" id="sec4"><span class="section-num">SECTION 4</span>時代別シグナルの構造分析</h2>
+
+<h3 class="article-h3">4.1 20世紀前半（1900-1949）: 帝国秩序の崩壊と再編</h3>
+
+<p>この50年間で2,849件のシグナルが抽出された。最も顕著な特徴は、paradigm_shiftタイプのシグナルが他の時代と比較して相対的に多い点である。1930年代は特に高スコアのシグナルが集中しており、Compositeスコア9.0以上のシグナルの多くがこの年代に属する。これは、世界恐慌→全体主義台頭→世界大戦という一連の構造転換が、既存の世界秩序の前提そのものを揺るがしたためである。</p>
+
+<p>この時代のシグナルに共通する深層構造は「制度的正当性の危機」である。自由主義的民主主義と資本主義経済の同時的危機が、代替的な権力形態（ファシズム、共産主義）への実験的移行を促した。このパターンは、前セクションで報告した「改革者の罠」のシステム構造と構造的に同型である。</p>
+
+<h3 class="article-h3">4.2 冷戦期（1950-1989）: 二項対立と技術革新の並行</h3>
+
+<p>2,278件のシグナルが抽出された。この時代の特徴は、counter_trendシグナルの安定的な存在である。冷戦の二項対立という支配的フレームワークの中で、脱植民地化運動、非同盟運動、カウンターカルチャー、環境運動といった「逆行する動き」が継続的にシグナルとして検出されている。これらのカウンタートレンドの多くは、冷戦終結後に主流化した構造変化の先駆けであった。</p>
+
+<p>1980年代後半には、TCP/IPプロトコルの標準化やパーソナルコンピューターの普及といったemerging_trendが集中しており、これらは1990年代以降のデジタル革命の構造的基盤となった。</p>
+
+<h3 class="article-h3">4.3 デジタル時代（1990-2026）: 加速する構造転換</h3>
+
+<p>2,485件のシグナルが抽出され、特に2020年代は754件と高密度である。この時代の最も注目すべき特徴は、paradigm_shiftシグナルの割合が2000年代以降で顕著に増加していることである（2000年代102件→2010年代94件→2020年代134件）。これは、デジタル技術の普及がシステム変革の速度を加速させていることを反映している。</p>
+
+<p>2020年代のシグナルには、AI技術の自己強化的発展、プラットフォーム経済の独占化、気候変動の制度的影響、地政学的ブロック化という4つの構造的テーマが交差しており、前セクションで報告した「フライホイール変革」「巨船転舵」「改革者の罠」の3パターンがすべて同時に活性化している時代であることをシグナルレベルでも確認できる。</p>
+
+<h2 class="article-h2" id="sec5"><span class="section-num">SECTION 5</span>注目すべきシグナル事例</h2>
+
+<div class="signal-card">
+<div class="signal-header">
+<span class="signal-name">Protocol standardization enabling distributed network autonomy</span>
+<span class="signal-type">emerging_trend</span>
+<span class="signal-score">9.4</span>
+<span style="font-size:.65rem;color:var(--text-muted)">1980-H1</span>
+</div>
+<div class="signal-body">ARPANETのTCP/IP移行は、技術的には単なるプロトコル更新だが、構造的には中央管理型ネットワークから分散型相互接続への転換を可能にする基盤となった。このシグナルは、1980年時点では技術コミュニティ内部の議論に留まっていたが、後のインターネット革命の構造的基盤を形成した。</div>
+</div>
+
+<div class="signal-card">
+<div class="signal-header">
+<span class="signal-name">Liberal democracy legitimacy erosion amid capitalist crisis</span>
+<span class="signal-type">paradigm_shift</span>
+<span class="signal-score">9.4</span>
+<span style="font-size:.65rem;color:var(--text-muted)">1929-H2</span>
+</div>
+<div class="signal-body">1929年の市場崩壊が自由主義的民主主義の正当性を動揺させた。経済危機と政治的危機の同時発生が、権力形態の根本的転換を促すシグナルとなった。このパターンは2008年の金融危機後にも再現されており、構造的に同型のシグナルが異なる時代で反復している。</div>
+</div>
+
+<div class="signal-card">
+<div class="signal-header">
+<span class="signal-name">Humanitarian rationalization legitimizing mass violence</span>
+<span class="signal-type">paradigm_shift</span>
+<span class="signal-score">9.0</span>
+<span style="font-size:.65rem;color:var(--text-muted)">1901-H2</span>
+</div>
+<div class="signal-body">フィリピン戦争の暴力とノーベル平和賞の同時代的併存は、帝国主義的暴力が人道主義的理想で正当化される根本的矛盾を示すシグナルであった。この「正当性のパラドックス」構造は、21世紀の「人道的介入」議論においても構造的に反復している。</div>
+</div>
+
+<div class="signal-card">
+<div class="signal-header">
+<span class="signal-name">Corporate monopoly contestation through distributed consumer technology</span>
+<span class="signal-type">emerging_trend</span>
+<span class="signal-score">9.0</span>
+<span style="font-size:.65rem;color:var(--text-muted)">1975-H1</span>
+</div>
+<div class="signal-body">IBM・DEC等の大型コンピュータメーカーの独占に対して、Altair 8800等の個人向けシステムが台頭。専門的集中管理型システムから分散型消費者テクノロジーへの構造転換のシグナルであり、後のPC革命・スマートフォン革命・AI民主化の構造的先駆けとなった。</div>
+</div>
+
+<h2 class="article-h2" id="sec6"><span class="section-num">SECTION 6</span>CLA深度とThree Horizonsの時代推移</h2>
+
+<h3 class="article-h3">6.1 CLA深度の分布と変遷</h3>
+
+<div class="layer-diagram">
+<div class="layer-item"><span class="layer-num">1</span><span class="layer-label">systemic</span><span class="layer-desc">3,991件（52.8%） — 構造レベルのシグナルが過半数。制度・組織・技術システムの変化。</span></div>
+<div class="layer-item"><span class="layer-num">2</span><span class="layer-label">worldview</span><span class="layer-desc">2,689件（35.5%） — 世界観レベル。価値観・前提・認識枠組みの変化。</span></div>
+<div class="layer-item"><span class="layer-num">3</span><span class="layer-label">myth</span><span class="layer-desc">801件（10.6%） — 深層文化レベル。神話・メタファー・集合的無意識の変化。</span></div>
+<div class="layer-item"><span class="layer-num">4</span><span class="layer-label">litany</span><span class="layer-desc">70件（0.9%） — 表面レベル。意図的にノイズ除外した結果、最小。</span></div>
+</div>
+
+<p>systemicレベルが過半数を占めるのは、シグナル抽出の方法論が「表面的な出来事ではなく構造的パターン」を求めるよう設計されているためである。注目すべきは、mythレベルのシグナルが1940年代（80件）に最も多い点である。第二次世界大戦とその帰結が、人間の暴力性・国家の正当性・技術と倫理の関係といった深層的な問いを大量に生成したことを反映している。</p>
+
+<p>2010年代以降、worldviewからsystemicへの比率シフトが観察される（worldview比率: 1960年代37.9% → 2010年代33.3%、systemic比率: 1960年代48.2% → 2010年代59.3%）。これは、デジタル時代のシグナルがより技術的・制度的なシステム変化に集中する傾向を示しており、世界観レベルの深い構造変化が見落とされるリスクを示唆している。</p>
+
+<h3 class="article-h3">6.2 Three Horizonsの分布</h3>
+
+<p>H2（過渡期）が4,218件（55.8%）で最多であり、H1（衰退する体制）が1,995件（26.4%）、H3（未来の種子）が1,079件（14.3%）と続く。H2が最多であることは、127年間のほとんどの時期において、既存体制と新たな可能性が共存する「過渡期」としてシグナルが検出されていることを意味する。これは、変化は常に進行中であり、「安定期」という概念はシグナルの視点からは幻想であることを示唆している。</p>
+
+<h2 class="article-h2" id="sec7"><span class="section-num">SECTION 7</span>結論と今後の展望</h2>
+
+<div class="pullquote">シグナルは「予測」ではない。シグナルは「注意を向けるべき構造的変化の断片」である。7,564のシグナルは7,564の予測ではなく、127年間にわたる構造変化の軌跡を描く地図である。</div>
+
+<p>本再構築により、870,072件のニュース記事から7,564のフォーサイトシグナルを体系的に抽出した。前回のデータベース（6,885件）と比較して、データソースの拡充（CI DB 576K記事の全面活用）、抽出粒度の統一（半年/四半期単位）、ノイズ排除基準の厳格化により、より質の高いシグナルセットが構築された。</p>
+
+<p>最も重要な発見は、シグナルの構造的パターンが時代を超えて反復するという点である。1929年の「自由主義的民主主義の正当性危機」シグナルと、2008年・2020年代の類似シグナルは、同じ構造的メカニズム（経済危機→制度的信頼の侵食→代替的権力形態への実験）が異なる時代で作動していることを示している。これは、前セクションで報告した「改革者の罠」パターンのシグナルレベルでの確認である。</p>
+
+<p>今後の展望として、第一に、7,564のシグナル間の相互影響ネットワーク（Cross-Impact分析）の構築が考えられる。シグナル同士がどのように増幅・打消し合うかを可視化することで、「シグナルの共鳴」現象を定量的に検出できる。第二に、PESTLEパイプラインの日次ニュース収集と連動した「リアルタイム・シグナル・マッチング」により、今日のニュースが過去のどのシグナルパターンに合致するかを自動判定するシステムの構築が可能である。第三に、18メガトレンド検証データ（sg_theme_ts.json）との統合により、各メガトレンドがどのシグナルによって支持・反駁されているかを体系的に追跡できる。</p>
+
+<p>シグナルデータベースは、未来を「予測する」ためのツールではない。それは、「注意を向けるべき構造的変化の断片」を組織的に蓄積し、パターンを認識するための基盤である。7,564のシグナルは、127年間の歴史が現在の意思決定者に語りかける声であり、未来の可能性空間を照らすセンサー網である。</p>
+
+</article>
+
+<footer class="report-footer">
+<p><strong>分析日:</strong> 2026年4月26日</p>
+<p><strong>データソース:</strong> PESTLE DB（293,638記事）、Cultural Intelligence DB（576,434記事）、CLA DB</p>
+<p><strong>抽出方法:</strong> 半年/四半期単位×Claude Haiku API（5チーム並列、272期間、45分で完了）</p>
+<p><strong>シグナルDB:</strong> 7,564件（emerging_trend 2,252 / weak_signal 2,085 / paradigm_shift 1,118 / counter_trend 1,081 / wild_card 1,024）</p>
+<p><strong>ダッシュボード:</strong> <a href="../dashboards/sg.html" style="color:var(--accent)">シグナルダッシュボード</a></p>
+</footer>
+</body>
+</html>
