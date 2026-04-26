@@ -148,6 +148,20 @@ canvas { display: block; width: 100%; }
 </div>
 <div class="panel"><canvas id="overlay-canvas" height="360"></canvas></div>
 
+<!-- Thick Trend Verification (6-dimension) -->
+<h3>太いトレンド検証: 6次元評価</h3>
+<p class="desc" style="margin-top:-8px;margin-bottom:16px;">「太いトレンド」= 持続性 + 構造的広がり + 勢い + 深さ + 密度 + 不可逆性の6次元で評価（各0-2点、計12点満点）。単純な記事量ではなく、数十年の持続性、PESTLEカテゴリの分散度、PESTLE/Cultural双方での確認、直近の出現率密度などを総合的に判定。</p>
+<div class="kpi-row" id="tt-kpi"></div>
+
+<!-- Radar-style dimension comparison -->
+<div id="tt-bars"></div>
+
+<!-- Dimension detail table -->
+<div class="panel" style="overflow-x:auto;padding:0;">
+  <table class="sig-table" id="tt-table" style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+  </table>
+</div>
+
 <!-- Predictive Power (2017 predictions vs 2018-2026 reality) -->
 <h3>予測力検証: 2017年の予測 vs 2018-2026年の現実</h3>
 <p class="desc" style="margin-top:-8px;margin-bottom:16px;">18領域は2017年に作成された。2017年以前（2010-2016）と以後（2018-2026）のニュース出現率を比較し、「2017年時点の予測が実際にトレンドとして加速したか」を評価。加速率・持続性・ソース横断確認・予測の具体性・時間軸の整合性の5次元で採点。</p>
@@ -503,6 +517,63 @@ function drawChuChart(canvas, items, minYear, mode) {
   });
 }
 
+// Thick Trend
+let TT = null;
+
+function renderTT() {
+  if (!TT) return;
+  const thick = TT.filter(t => t.verdict === 'Thick Trend').length;
+  const emerging = TT.filter(t => t.verdict === 'Emerging/Thin Trend').length;
+  const avg = TT.reduce((s,t) => s + t.total_score, 0) / TT.length;
+
+  document.getElementById('tt-kpi').innerHTML = [
+    {v: fmt(avg,1)+'/12', l: 'Avg Score', a: true},
+    {v: thick.toString(), l: 'Thick Trend', s: `${fmt(thick/18*100,0)}%`},
+    {v: emerging.toString(), l: 'Emerging/Thin', s: ''},
+    {v: '0', l: 'Episodic', s: 'none'},
+  ].map(k => `<div class="kpi"><div class="kpi-value${k.a?' accent':''}">${k.v}</div><div class="kpi-label">${k.l}</div>${k.s?`<div class="kpi-sub">${k.s}</div>`:''}</div>`).join('');
+
+  // Bar chart with dimension breakdown
+  const dims = ['persistence','breadth','momentum','depth','density','irreversibility'];
+  const dimLabels = {persistence:'Persist',breadth:'Breadth',momentum:'Moment',depth:'Depth',density:'Density',irreversibility:'Irrever'};
+  const dimColors = {persistence:'var(--accent-warm)',breadth:'var(--blue)',momentum:'var(--green)',depth:'var(--purple)',density:'var(--orange)',irreversibility:'var(--cyan)'};
+
+  document.getElementById('tt-bars').innerHTML = TT.map(t => {
+    const color = THEME_COLORS[(t.no-1) % THEME_COLORS.length];
+    const segs = dims.map(d => {
+      const s = t.dimensions[d].score;
+      const w = (s / 12 * 100).toFixed(1);
+      return `<div style="width:${w}%;height:100%;background:${dimColors[d]}" title="${dimLabels[d]}: ${s}/2"></div>`;
+    }).join('');
+    return `<div class="bar-group">
+      <div class="bar-label"><span style="color:${color};font-weight:700">#${t.no}</span> ${t.name}</div>
+      <div class="bar-track" style="display:flex">${segs}</div>
+      <div class="bar-val">${fmt(t.total_score,1)}</div>
+    </div>`;
+  }).join('') + `<div style="display:flex;gap:10px;margin-top:8px;font-size:0.68rem;color:var(--text-muted)">${dims.map(d => `<span><span style="display:inline-block;width:8px;height:8px;background:${dimColors[d]};vertical-align:middle;margin-right:2px"></span>${dimLabels[d]}</span>`).join('')}</div>`;
+
+  // Detail table
+  let h = '<thead><tr><th>#</th><th>Theme</th><th>Total</th><th>Verdict</th>';
+  dims.forEach(d => h += `<th>${dimLabels[d]}</th>`);
+  h += '<th>Key Weakness</th></tr></thead><tbody>';
+  TT.forEach(t => {
+    const isThick = t.verdict === 'Thick Trend';
+    const minDim = dims.reduce((a, b) => t.dimensions[a].score <= t.dimensions[b].score ? a : b);
+    h += `<tr><td style="font-weight:700;color:${THEME_COLORS[(t.no-1)%THEME_COLORS.length]}">#${t.no}</td>`;
+    h += `<td style="font-weight:500;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</td>`;
+    h += `<td style="font-weight:700">${fmt(t.total_score,1)}</td>`;
+    h += `<td><span class="verdict ${isThick?'verdict-strong':'verdict-moderate'}">${t.verdict_ja}</span></td>`;
+    dims.forEach(d => {
+      const s = t.dimensions[d].score;
+      const bg = s >= 1.5 ? 'rgba(22,163,74,0.08)' : s >= 1 ? 'rgba(37,99,235,0.06)' : s >= 0.5 ? 'rgba(234,88,12,0.06)' : 'rgba(220,38,38,0.06)';
+      h += `<td style="text-align:center;background:${bg};font-weight:500">${fmt(s,1)}</td>`;
+    });
+    h += `<td style="font-size:0.72rem;color:var(--text-muted)">${t.dimensions[minDim].reason}</td></tr>`;
+  });
+  h += '</tbody>';
+  document.getElementById('tt-table').innerHTML = h;
+}
+
 // Predictive Power
 let PP = null;
 
@@ -624,20 +695,23 @@ function drawPPChart(theme) {
 
 // Init
 async function init() {
-  const [themeRes, chuRes, ppRes] = await Promise.all([
+  const [themeRes, chuRes, ppRes, ttRes] = await Promise.all([
     fetch('data/mt_themes.json'),
     fetch('data/mt_chu.json'),
-    fetch('data/mt_predictive.json')
+    fetch('data/mt_predictive.json'),
+    fetch('data/mt_thick.json')
   ]);
   THEMES = await themeRes.json();
   CHU = await chuRes.json();
   PP = await ppRes.json();
+  TT = await ttRes.json();
 
   renderKPI();
   renderOverviewBars();
   renderThemeList();
   renderOverlay();
   renderChuList();
+  renderTT();
   renderPP();
 
   document.getElementById('sort-by').addEventListener('change', () => { renderOverviewBars(); renderThemeList(); });
