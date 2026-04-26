@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>付録A: データベーススキーマ全体図 | 技術の未来</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/book.css">
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">🌙</button>
+
+<header class="book-header">
+  <div class="book-header-inner">
+    <a class="book-nav" href="../index.html">← 技術の未来</a>
+    <div>
+      <span class="ch-badge">APP.A</span>
+    </div>
+    <h1>付録A: データベーススキーマ全体図</h1>
+    <p class="ch-subtitle">tech-acceleration-dbを構成する13テーブルの定義、各テーブルの主要カラム、テーブル間の関係（ER図）を記す。このスキーマはGitHubリポジトリの最新版で確認できる。</p>
+  </div>
+</header>
+
+<main class="book-body">
+
+  <p class="lead">tech-acceleration-dbは13のテーブルから構成されている。中核となるのは技術と科学の記録を持つ2つのコアテーブル（technologies・sciences）と、それらを結ぶ3つのリレーションテーブル（tech_to_tech・science_to_tech・quantitative_metrics）だ。さらに8つの外部データテーブルが、ノーベル賞・Ngramn頻度・技術普及・特許・R&D・論文数・Seshat政体技術・博物館アーティファクトのデータを格納する。以下に各テーブルの定義と関係を記す。</p>
+
+  <h2>1. コアテーブル</h2>
+
+  <h3>technologies（技術マイルストーン）</h3>
+  <div class="schema-box">
+    <table class="schema-table">
+      <thead>
+        <tr><th>カラム名</th><th>型</th><th>説明</th><th>制約</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td>INTEGER</td><td>主キー</td><td>PRIMARY KEY AUTOINCREMENT</td></tr>
+        <tr><td class="col-name">name</td><td>TEXT</td><td>技術名称（英語）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">name_ja</td><td>TEXT</td><td>技術名称（日本語）</td><td></td></tr>
+        <tr><td class="col-name">year</td><td>INTEGER</td><td>技術実証年（負数=BC）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">year_uncertainty</td><td>INTEGER</td><td>年代の不確実性（±年数）</td><td>DEFAULT 0</td></tr>
+        <tr><td class="col-name">domain</td><td>TEXT</td><td>ドメイン（digital/communication/energy/agriculture/medical/finance/transport）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">era</td><td>TEXT</td><td>時代区分（prehistoric/ancient/medieval/early_modern/industrial/modern）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">description</td><td>TEXT</td><td>技術の説明（200字程度）</td><td></td></tr>
+        <tr><td class="col-name">key_inventors</td><td>TEXT</td><td>主要発明者（JSON配列）</td><td></td></tr>
+        <tr><td class="col-name">geographic_origin</td><td>TEXT</td><td>地理的起源（国・地域）</td><td></td></tr>
+        <tr><td class="col-name">performance_metric</td><td>TEXT</td><td>定量的性能指標の名称</td><td></td></tr>
+        <tr><td class="col-name">performance_value</td><td>REAL</td><td>性能指標の値</td><td></td></tr>
+        <tr><td class="col-name">performance_unit</td><td>TEXT</td><td>性能指標の単位</td><td></td></tr>
+        <tr><td class="col-name">data_source</td><td>TEXT</td><td>データの出典</td><td></td></tr>
+        <tr><td class="col-name">ai_generated</td><td>INTEGER</td><td>AI生成フラグ（0=検証済み、1=AI生成）</td><td>DEFAULT 0</td></tr>
+        <tr><td class="col-name">confidence_score</td><td>REAL</td><td>信頼度スコア（0.0〜1.0）</td><td>DEFAULT 0.5</td></tr>
+        <tr><td class="col-name">created_at</td><td>TEXT</td><td>レコード作成日時</td><td></td></tr>
+        <tr><td class="col-name">updated_at</td><td>TEXT</td><td>レコード更新日時</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>sciences（科学的発見）</h3>
+  <div class="schema-box">
+    <table class="schema-table">
+      <thead>
+        <tr><th>カラム名</th><th>型</th><th>説明</th><th>制約</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td>INTEGER</td><td>主キー</td><td>PRIMARY KEY AUTOINCREMENT</td></tr>
+        <tr><td class="col-name">name</td><td>TEXT</td><td>発見・理論名称（英語）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">name_ja</td><td>TEXT</td><td>発見・理論名称（日本語）</td><td></td></tr>
+        <tr><td class="col-name">year</td><td>INTEGER</td><td>発見・発表年</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">field</td><td>TEXT</td><td>科学分野（mathematics/physics/chemistry/biology/information_science/medicine/earth_science/astronomy）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">description</td><td>TEXT</td><td>発見の説明（200字程度）</td><td></td></tr>
+        <tr><td class="col-name">key_scientists</td><td>TEXT</td><td>主要科学者（JSON配列）</td><td></td></tr>
+        <tr><td class="col-name">publication_ref</td><td>TEXT</td><td>主要論文・著作の参照</td><td></td></tr>
+        <tr><td class="col-name">data_source</td><td>TEXT</td><td>データの出典</td><td></td></tr>
+        <tr><td class="col-name">ai_generated</td><td>INTEGER</td><td>AI生成フラグ</td><td>DEFAULT 0</td></tr>
+        <tr><td class="col-name">confidence_score</td><td>REAL</td><td>信頼度スコア</td><td>DEFAULT 0.5</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>tech_to_tech（技術間リンク）</h3>
+  <div class="schema-box">
+    <table class="schema-table">
+      <thead>
+        <tr><th>カラム名</th><th>型</th><th>説明</th><th>制約</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td>INTEGER</td><td>主キー</td><td>PRIMARY KEY AUTOINCREMENT</td></tr>
+        <tr><td class="col-name">source_tech_id</td><td>INTEGER</td><td>起点技術ID</td><td>FOREIGN KEY → technologies.id</td></tr>
+        <tr><td class="col-name">target_tech_id</td><td>INTEGER</td><td>派生技術ID</td><td>FOREIGN KEY → technologies.id</td></tr>
+        <tr><td class="col-name">relation_type</td><td>TEXT</td><td>関係の種類（enables/combines/improves/replaces）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">strength</td><td>REAL</td><td>関係の強度（0.0〜1.0）</td><td>DEFAULT 0.5</td></tr>
+        <tr><td class="col-name">description</td><td>TEXT</td><td>関係の説明</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>science_to_tech（科学→技術リンク）</h3>
+  <div class="schema-box">
+    <table class="schema-table">
+      <thead>
+        <tr><th>カラム名</th><th>型</th><th>説明</th><th>制約</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td>INTEGER</td><td>主キー</td><td>PRIMARY KEY AUTOINCREMENT</td></tr>
+        <tr><td class="col-name">science_id</td><td>INTEGER</td><td>科学的発見ID</td><td>FOREIGN KEY → sciences.id</td></tr>
+        <tr><td class="col-name">tech_id</td><td>INTEGER</td><td>派生技術ID</td><td>FOREIGN KEY → technologies.id</td></tr>
+        <tr><td class="col-name">timelag_years</td><td>INTEGER</td><td>タイムラグ（年数）</td><td></td></tr>
+        <tr><td class="col-name">relation_type</td><td>TEXT</td><td>関係の種類（direct/indirect/catalytic）</td><td></td></tr>
+        <tr><td class="col-name">description</td><td>TEXT</td><td>関係の説明</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>quantitative_metrics（定量的成長指標）</h3>
+  <div class="schema-box">
+    <table class="schema-table">
+      <thead>
+        <tr><th>カラム名</th><th>型</th><th>説明</th><th>制約</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td>INTEGER</td><td>主キー</td><td>PRIMARY KEY AUTOINCREMENT</td></tr>
+        <tr><td class="col-name">tech_id</td><td>INTEGER</td><td>技術ID</td><td>FOREIGN KEY → technologies.id</td></tr>
+        <tr><td class="col-name">metric_name</td><td>TEXT</td><td>指標名（transistors_per_chip等）</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">year</td><td>INTEGER</td><td>測定年</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">value</td><td>REAL</td><td>測定値</td><td>NOT NULL</td></tr>
+        <tr><td class="col-name">unit</td><td>TEXT</td><td>単位</td><td></td></tr>
+        <tr><td class="col-name">source</td><td>TEXT</td><td>データソース</td><td></td></tr>
+        <tr><td class="col-name">growth_model</td><td>TEXT</td><td>フィッティングモデル（exponential/logistic/linear）</td><td></td></tr>
+        <tr><td class="col-name">cagr</td><td>REAL</td><td>CAGR（年率成長率）</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>2. 外部データテーブル（8テーブル）</h2>
+
+  <p>以下の8テーブルは、外部の既存データベース・研究成果から取得したデータを格納するためのテーブルだ。各テーブルはコアテーブルとの外部キー関係を持つ場合と、独立して分析可能な状態で格納される場合がある。</p>
+
+  <div class="schema-box">
+    <table class="schema-table">
+      <thead>
+        <tr><th>テーブル名</th><th>件数</th><th>主な内容</th><th>出典</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-name">nobel_prizes</td>
+          <td>約950件</td>
+          <td>ノーベル賞受賞者・受賞分野・受賞年・受賞研究の概要。科学分野別のカウント分析に使用</td>
+          <td>Nobel Prize API (Nobel Foundation)</td>
+        </tr>
+        <tr>
+          <td class="col-name">ngram_frequencies</td>
+          <td>約15,000件</td>
+          <td>Google BooksのNgramデータから抽出した技術・科学用語の年次出現頻度。技術の「文化的浸透」の代理指標</td>
+          <td>Google Books Ngram Viewer API</td>
+        </tr>
+        <tr>
+          <td class="col-name">technology_adoption</td>
+          <td>約320件</td>
+          <td>主要技術の普及率時系列データ（Our World in Data）。電話・自動車・インターネット・スマートフォン等</td>
+          <td>Our World in Data</td>
+        </tr>
+        <tr>
+          <td class="col-name">patent_counts</td>
+          <td>約8,000件</td>
+          <td>主要技術分野のIPC分類別特許出願件数の年次推移（1970〜2024年）</td>
+          <td>WIPO PATENTSCOPE, USPTO</td>
+        </tr>
+        <tr>
+          <td class="col-name">rd_indicators</td>
+          <td>約4,200件</td>
+          <td>主要国のR&D投資額・GDP比・分野別内訳（1960〜2023年）</td>
+          <td>OECD Main Science and Technology Indicators</td>
+        </tr>
+        <tr>
+          <td class="col-name">publication_counts</td>
+          <td>約12,000件</td>
+          <td>科学分野別の年間論文数・被引用数（1960〜2024年）。OpenAlexから取得</td>
+          <td>OpenAlex (https://openalex.org)</td>
+        </tr>
+        <tr>
+          <td class="col-name">seshat_polity_tech</td>
+          <td>約2,800件</td>
+          <td>Seshat歴史データベースの政体別技術スコア（農業・冶金・建設・交通等）。紀元前3000年〜近代</td>
+          <td>Seshat Global History Databank</td>
+        </tr>
+        <tr>
+          <td class="col-name">museum_artifacts</td>
+          <td>約6,500件</td>
+          <td>世界主要博物館の技術的アーティファクトの年代・分類データ。大英博物館・スミソニアン・国立科学博物館等</td>
+          <td>各博物館オープンデータAPI</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>3. ER図 — テーブル間の関係</h2>
+
+  <p>13テーブルの関係を以下のER図（実体関連図）で示す。コアテーブル（technologies・sciences）を中心に、リレーションテーブルと外部データテーブルが接続する構造だ。</p>
+
+  <div class="figure">
+    <div class="er-diagram">
+      <!-- Core tables -->
+      <div class="er-core">
+        <div class="er-table er-table-primary" id="ert-tech">
+          <div class="er-table-header">technologies</div>
+          <div class="er-table-body">
+            <div class="er-col er-pk">id PK</div>
+            <div class="er-col">name</div>
+            <div class="er-col">year</div>
+            <div class="er-col">domain</div>
+            <div class="er-col">era</div>
+            <div class="er-col">performance_value</div>
+            <div class="er-col er-dim">ai_generated, confidence_score...</div>
+          </div>
+        </div>
+        <div class="er-relation-center">
+          <div class="er-table er-table-relation" id="ert-t2t">
+            <div class="er-table-header">tech_to_tech</div>
+            <div class="er-table-body">
+              <div class="er-col er-fk">source_tech_id FK</div>
+              <div class="er-col er-fk">target_tech_id FK</div>
+              <div class="er-col">relation_type</div>
+              <div class="er-col">strength</div>
+            </div>
+          </div>
+          <div class="er-table er-table-relation" id="ert-s2t">
+            <div class="er-table-header">science_to_tech</div>
+            <div class="er-table-body">
+              <div class="er-col er-fk">science_id FK</div>
+              <div class="er-col er-fk">tech_id FK</div>
+              <div class="er-col">timelag_years</div>
+              <div class="er-col">relation_type</div>
+            </div>
+          </div>
+          <div class="er-table er-table-relation" id="ert-qm">
+            <div class="er-table-header">quantitative_metrics</div>
+            <div class="er-table-body">
+              <div class="er-col er-fk">tech_id FK</div>
+              <div class="er-col">metric_name</div>
+              <div class="er-col">year, value</div>
+              <div class="er-col">cagr, growth_model</div>
+            </div>
+          </div>
+        </div>
+        <div class="er-table er-table-primary" id="ert-sci">
+          <div class="er-table-header">sciences</div>
+          <div class="er-table-body">
+            <div class="er-col er-pk">id PK</div>
+            <div class="er-col">name</div>
+            <div class="er-col">year</div>
+            <div class="er-col">field</div>
+            <div class="er-col">publication_ref</div>
+            <div class="er-col er-dim">ai_generated, confidence_score...</div>
+          </div>
+        </div>
+      </div>
+      <!-- External tables -->
+      <div class="er-external-label">外部データテーブル（独立格納）</div>
+      <div class="er-external">
+        <div class="er-table er-table-external">
+          <div class="er-table-header">nobel_prizes</div>
+        </div>
+        <div class="er-table er-table-external">
+          <div class="er-table-header">ngram_frequencies</div>
+        </div>
+        <div class="er-table er-table-external">
+          <div class="er-table-header">technology_adoption</div>
+        </div>
+        <div class="er-table er-table-external">
+          <div class="er-table-header">patent_counts</div>
+        </div>
+        <div class="er-table er-table-external">
+          <div class="er-table-header">rd_indicators</div>
+        </div>
+        <div class="er-table er-table-external">
+          <div class="er-table-header">publication_counts</div>
+        </div>
+        <div class="er-table er-table-external">
+          <div class="er-table-header">seshat_polity_tech</div>
+        </div>
+        <div class="er-table er-table-external">
+          <div class="er-table-header">museum_artifacts</div>
+        </div>
+      </div>
+    </div>
+    <p class="figure-caption">ER図: tech-acceleration-dbの13テーブル構成。青=コアテーブル、橙=リレーションテーブル、灰=外部データテーブル。</p>
+  </div>
+
+  <h2>4. 主要インデックスとパフォーマンス</h2>
+
+  <p>本データベースは分析クエリのパフォーマンスを最適化するために以下のインデックスを設定している。technologies.domain・technologies.era・technologies.year（単体および複合）、sciences.field・sciences.year、tech_to_tech.source_tech_id・tech_to_tech.target_tech_id、science_to_tech.science_id・science_to_tech.tech_id、quantitative_metrics.tech_id・quantitative_metrics.year。</p>
+
+  <p>データベースファイルの現在のサイズは約45MB（圧縮前）であり、SQLiteで高速なクエリが実行可能だ。最も重いクエリ（技術ネットワークの最短経路分析）でも、通常のノートパソコンで2〜5秒で完了する。全データをPandasのDataFrameに読み込んだ場合のメモリ使用量は約200MBが目安だ。</p>
+
+  <nav class="ch-nav">
+    <a href="ch20-open-db.html">← 第20章: オープンデータベースとしての展望</a>
+    <a href="appendix-b.html">付録B: 分析手法の詳細 →</a>
+  </nav>
+
+</main>
+
+<style>
+.schema-box {
+  overflow-x: auto;
+  margin: 1.2rem 0 2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.schema-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.schema-table thead th {
+  background: #2c3e50;
+  color: #fff;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  white-space: nowrap;
+}
+.schema-table tbody td {
+  padding: 0.45rem 0.8rem;
+  border-bottom: 1px solid #e8e8e8;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.schema-table tbody tr:nth-child(even) td { background: #f9f9f9; }
+.col-name {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+  font-weight: 600;
+  color: #2c7be5;
+  white-space: nowrap;
+}
+.er-diagram {
+  background: var(--bg-secondary, #f5f7fa);
+  border-radius: 12px;
+  padding: 2rem;
+}
+.er-core {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.er-relation-center {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.er-table {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #ccc;
+  min-width: 180px;
+}
+.er-table-primary { border-color: #3b9eff; }
+.er-table-relation { border-color: #f0a040; }
+.er-table-external { border-color: #aaa; min-width: 140px; }
+.er-table-header {
+  padding: 0.4rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.er-table-primary .er-table-header { background: #3b9eff; color: #fff; }
+.er-table-relation .er-table-header { background: #f0a040; color: #fff; }
+.er-table-external .er-table-header { background: #bbb; color: #fff; }
+.er-table-body { background: #fff; padding: 0.4rem 0.5rem; }
+.er-col {
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0.15rem 0.25rem;
+  color: #444;
+}
+.er-pk { color: #e84040; font-weight: 700; }
+.er-fk { color: #f0a040; font-weight: 700; }
+.er-dim { color: #aaa; font-style: italic; }
+.er-external-label {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #888;
+  margin: 1.5rem 0 0.75rem;
+  letter-spacing: 0.05em;
+}
+.er-external {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+</style>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+    toggle.textContent = isDark ? '🌙' : '☀️';
+  });
+</script>
+</body>
+</html>

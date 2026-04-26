@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>付録B: 分析手法の詳細 | 技術の未来</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/book.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">🌙</button>
+
+<header class="book-header">
+  <div class="book-header-inner">
+    <a class="book-nav" href="../index.html">← 技術の未来</a>
+    <div>
+      <span class="ch-badge">APP.B</span>
+    </div>
+    <h1>付録B: 分析手法の詳細</h1>
+    <p class="ch-subtitle">本書の定量的分析で使用した統計手法・フィッティング手法・ネットワーク分析手法の詳細を記す。本書の発見を再現・検証したい読者のための技術的リファレンス。</p>
+  </div>
+</header>
+
+<main class="book-body">
+
+  <p class="lead">本書の定量的な発見はすべて、再現可能な統計・数理的手法に基づいている。本付録では、技術の成長モデルフィッティング・CAGR算出・ネットワーク分析・統計検定の各手法を数式と実装コードとともに解説する。GitHubリポジトリには、各章の主要な分析を再現するためのPythonスクリプトが用意されている。</p>
+
+  <h2>1. 指数関数フィッティング</h2>
+
+  <p>技術の性能指標が指数成長するかどうかを検定するために、以下のモデルを使用した。</p>
+
+  <div class="math-block">
+    <div class="math-formula">y = a · exp(b · x)</div>
+    <div class="math-desc">
+      ここで y は技術の性能指標値、x は時間（年）、a は初期値スケール定数、b は成長率定数（b > 0 の場合、指数成長）。
+    </div>
+  </div>
+
+  <p>フィッティングには scipy.optimize.curve_fit（Levenberg-Marquardt法）を使用した。初期パラメータの推定は対数変換後の線形回帰で行い、収束を安定させた。</p>
+
+  <div class="code-block">
+    <div class="code-lang">Python</div>
+    <pre><code>import numpy as np
+from scipy.optimize import curve_fit
+from scipy.stats import pearsonr
+
+def exponential_model(x, a, b):
+    return a * np.exp(b * x)
+
+def fit_exponential(years, values):
+    """
+    指数関数フィッティングを実行し、パラメータとR²を返す
+    """
+    years_arr = np.array(years, dtype=float)
+    values_arr = np.array(values, dtype=float)
+
+    # 対数変換で初期パラメータ推定
+    log_vals = np.log(values_arr)
+    b_init = np.polyfit(years_arr, log_vals, 1)[0]
+    a_init = np.exp(np.polyfit(years_arr, log_vals, 1)[1])
+
+    try:
+        popt, pcov = curve_fit(
+            exponential_model, years_arr, values_arr,
+            p0=[a_init, b_init],
+            maxfev=5000
+        )
+        a, b = popt
+
+        # R² (決定係数) の算出
+        residuals = values_arr - exponential_model(years_arr, *popt)
+        ss_res = np.sum(residuals**2)
+        ss_tot = np.sum((values_arr - np.mean(values_arr))**2)
+        r_squared = 1 - ss_res / ss_tot
+
+        # CAGR (年率成長率) = exp(b) - 1
+        cagr = np.exp(b) - 1
+
+        return {'a': a, 'b': b, 'r_squared': r_squared, 'cagr': cagr}
+    except RuntimeError:
+        return None</code></pre>
+  </div>
+
+  <p>R²（決定係数）が0.90以上の場合に「指数成長モデルが適合する」と判定した。デジタル技術（半導体・CPU速度・ストレージ密度）はR²が0.95〜0.99と極めて高い適合を示した。</p>
+
+  <h2>2. ロジスティック関数フィッティング</h2>
+
+  <p>S字成長（ロジスティック成長）のモデルは以下の式を使用した。</p>
+
+  <div class="math-block">
+    <div class="math-formula">y = L / (1 + exp(−k · (x − x₀)))</div>
+    <div class="math-desc">
+      ここで L は成長の上限値（飽和値）、k は成長の急峻さを示すパラメータ、x₀ は変曲点（成長率が最大になる時点）。変曲点における値は L/2。
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">Python</div>
+    <pre><code>def logistic_model(x, L, k, x0):
+    return L / (1 + np.exp(-k * (x - x0)))
+
+def fit_logistic(years, values):
+    """
+    ロジスティック関数フィッティングを実行する
+    """
+    years_arr = np.array(years, dtype=float)
+    values_arr = np.array(values, dtype=float)
+
+    # 初期パラメータ推定
+    L_init = max(values_arr) * 1.1  # 上限は観測最大値の110%
+    x0_init = years_arr[len(years_arr) // 2]  # 中点を変曲点初期値に
+    k_init = 0.1
+
+    try:
+        popt, pcov = curve_fit(
+            logistic_model, years_arr, values_arr,
+            p0=[L_init, k_init, x0_init],
+            bounds=([0, 0, min(years_arr)], [np.inf, 10, max(years_arr)]),
+            maxfev=10000
+        )
+        L, k, x0 = popt
+
+        residuals = values_arr - logistic_model(years_arr, *popt)
+        ss_res = np.sum(residuals**2)
+        ss_tot = np.sum((values_arr - np.mean(values_arr))**2)
+        r_squared = 1 - ss_res / ss_tot
+
+        return {
+            'L': L,        # 上限値
+            'k': k,        # 成長率パラメータ
+            'x0': x0,      # 変曲点（年）
+            'r_squared': r_squared,
+            'inflection_value': L / 2  # 変曲点での値
+        }
+    except RuntimeError:
+        return None</code></pre>
+  </div>
+
+  <p>ロジスティックモデルの適合判定には、指数モデルとのAIC（赤池情報量基準）比較を行った。AICが小さいモデルをより適切なモデルとして採用した。通信技術（電話・インターネット普及率）・医療技術の多くはロジスティックモデルのAICが低く、S字成長への適合が確認された。</p>
+
+  <h2>3. CAGR（年率成長率）の算出</h2>
+
+  <p>CAGR（Compound Annual Growth Rate）は以下の式で算出した。</p>
+
+  <div class="math-block">
+    <div class="math-formula">CAGR = (V<sub>final</sub> / V<sub>initial</sub>)<sup>1/n</sup> − 1</div>
+    <div class="math-desc">
+      ここで V<sub>final</sub> は終点の値、V<sub>initial</sub> は起点の値、n は年数（= 終点年 − 起点年）。CAGRは時点の選択に敏感であるため、本書では起点・終点の両方について±5年の感度分析を実施し、値の安定性を確認した。
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-lang">Python</div>
+    <pre><code>def calculate_cagr(v_initial, v_final, years):
+    """
+    CAGR（年率成長率）を算出する
+    v_initial: 起点の値
+    v_final: 終点の値
+    years: 期間（年数）
+    """
+    if v_initial <= 0 or v_final <= 0 or years <= 0:
+        raise ValueError("Values and years must be positive")
+
+    cagr = (v_final / v_initial) ** (1 / years) - 1
+    return cagr
+
+def sensitivity_analysis_cagr(data_dict, window=5):
+    """
+    起点・終点を±window年変化させてCAGRの感度分析を行う
+    data_dict: {year: value} 形式の辞書
+    """
+    years = sorted(data_dict.keys())
+    cagr_variants = []
+
+    base_start = years[0]
+    base_end = years[-1]
+
+    for s_offset in range(-window, window + 1):
+        for e_offset in range(-window, window + 1):
+            s_year = base_start + s_offset
+            e_year = base_end + e_offset
+
+            if s_year in data_dict and e_year in data_dict:
+                c = calculate_cagr(
+                    data_dict[s_year],
+                    data_dict[e_year],
+                    e_year - s_year
+                )
+                cagr_variants.append(c)
+
+    return {
+        'mean': np.mean(cagr_variants),
+        'std': np.std(cagr_variants),
+        'min': np.min(cagr_variants),
+        'max': np.max(cagr_variants)
+    }</code></pre>
+  </div>
+
+  <p>本書で提示した技術別CAGRはすべて、感度分析の標準偏差が平均値の20%未満であることを確認した。デジタル技術の高CAGR（半導体密度：年率41%）は±5年の変動に対しても頑健だった。</p>
+
+  <h2>4. ネットワーク分析</h2>
+
+  <p>技術間・科学-技術間のリンクデータを使ったネットワーク分析には、NetworkXライブラリを使用した。主要な分析指標は以下の通りだ。</p>
+
+  <h3>次数分布（Degree Distribution）</h3>
+  <p>各ノード（技術・科学）が持つエッジ（リンク）の数（次数）の分布を分析した。次数分布がべき乗則（power law）に従う場合、ネットワークはスケールフリーの特性を持ち、「ハブ技術」が存在することを示す。</p>
+
+  <h3>クラスタリング係数（Clustering Coefficient）</h3>
+  <div class="math-block">
+    <div class="math-formula">C<sub>i</sub> = 2t<sub>i</sub> / (k<sub>i</sub>(k<sub>i</sub>−1))</div>
+    <div class="math-desc">
+      ここで t<sub>i</sub> はノード i の近傍ノード間のエッジ数（三角形の数）、k<sub>i</sub> はノード i の次数。クラスタリング係数は「技術クラスター（密接に組み合わせられる技術群）」の存在を定量化する。
+    </div>
+  </div>
+
+  <h3>ハブ技術の検出</h3>
+  <div class="code-block">
+    <div class="code-lang">Python</div>
+    <pre><code>import networkx as nx
+import sqlite3
+
+def build_tech_network(db_path):
+    """
+    SQLiteデータベースから技術ネットワークを構築する
+    """
+    conn = sqlite3.connect(db_path)
+
+    G = nx.DiGraph()
+
+    # ノード追加
+    techs = conn.execute(
+        "SELECT id, name, domain, year FROM technologies"
+    ).fetchall()
+    for tech_id, name, domain, year in techs:
+        G.add_node(tech_id, name=name, domain=domain, year=year)
+
+    # エッジ追加（tech_to_tech）
+    links = conn.execute(
+        "SELECT source_tech_id, target_tech_id, strength FROM tech_to_tech"
+    ).fetchall()
+    for src, tgt, strength in links:
+        G.add_edge(src, tgt, weight=strength)
+
+    conn.close()
+    return G
+
+def identify_hub_technologies(G, top_n=20):
+    """
+    ハブ技術を次数中心性・媒介中心性で識別する
+    """
+    # 次数中心性（in + out）
+    degree_centrality = nx.degree_centrality(G)
+
+    # 媒介中心性（他のノードを結ぶ最短経路上に存在する頻度）
+    betweenness_centrality = nx.betweenness_centrality(G, weight='weight')
+
+    # 固有ベクトル中心性（重要なノードに接続されているほど高い）
+    try:
+        eigenvector_centrality = nx.eigenvector_centrality(
+            G, weight='weight', max_iter=500
+        )
+    except nx.PowerIterationFailedConvergence:
+        eigenvector_centrality = {n: 0 for n in G.nodes()}
+
+    # 総合スコア（3指標の正規化・加重平均）
+    hub_scores = {}
+    for node in G.nodes():
+        hub_scores[node] = (
+            degree_centrality.get(node, 0) * 0.4 +
+            betweenness_centrality.get(node, 0) * 0.4 +
+            eigenvector_centrality.get(node, 0) * 0.2
+        )
+
+    # 上位N件を返す
+    top_hubs = sorted(hub_scores.items(), key=lambda x: -x[1])[:top_n]
+    return [
+        {
+            'tech_id': node,
+            'name': G.nodes[node]['name'],
+            'domain': G.nodes[node]['domain'],
+            'hub_score': score,
+            'degree': G.degree(node)
+        }
+        for node, score in top_hubs
+    ]</code></pre>
+  </div>
+
+  <h2>5. 対数正規分布検定</h2>
+
+  <p>技術のタイムラグ（科学→技術の転化に要する年数）の分布が対数正規分布に従うかどうかを検定した。対数正規分布の仮定は、タイムラグの平均が幾何平均で算出すべきことを示唆し、算術平均による過大評価を防ぐ。</p>
+
+  <div class="code-block">
+    <div class="code-lang">Python</div>
+    <pre><code>from scipy import stats
+import numpy as np
+
+def test_log_normal(timelag_data):
+    """
+    タイムラグデータが対数正規分布に従うかShapiro-Wilk検定で確認する
+    """
+    data = np.array(timelag_data)
+    data_positive = data[data > 0]  # 正の値のみ
+
+    # 対数変換
+    log_data = np.log(data_positive)
+
+    # Shapiro-Wilk検定（正規性の検定。対数変換後のデータに適用）
+    stat, p_value = stats.shapiro(log_data)
+
+    # Anderson-Darling検定（大サンプルサイズ向け）
+    ad_result = stats.anderson(log_data, dist='norm')
+
+    # 記述統計
+    geometric_mean = np.exp(np.mean(log_data))
+    arithmetic_mean = np.mean(data_positive)
+    median = np.median(data_positive)
+
+    return {
+        'n': len(data_positive),
+        'shapiro_stat': stat,
+        'shapiro_p': p_value,
+        'is_log_normal': p_value > 0.05,
+        'geometric_mean': geometric_mean,
+        'arithmetic_mean': arithmetic_mean,
+        'median': median,
+        'log_std': np.std(log_data)
+    }</code></pre>
+  </div>
+
+  <p>分野別タイムラグデータのShapiro-Wilk検定の結果、情報科学・生物学・化学では対数正規分布の棄却ができなかった（p > 0.05）が、数学は正規分布も対数正規分布も棄却された（p &lt; 0.01）。数学のタイムラグは少数の極端に長いケースに引っ張られた特殊な分布を持つ。本書で数学のタイムラグ平均として「278年」を示したが、これは算術平均であり、中央値は93年だ。この差が数学タイムラグ分布の非対称性を示している。</p>
+
+  <h2>6. 使用ツールとバージョン</h2>
+
+  <div class="schema-box">
+    <table class="schema-table">
+      <thead>
+        <tr><th>ツール/ライブラリ</th><th>バージョン</th><th>用途</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-name">Python</td><td>3.11.x</td><td>すべての分析スクリプトの実行環境</td></tr>
+        <tr><td class="col-name">SQLite3</td><td>3.42.x</td><td>データベースエンジン（Python標準ライブラリのsqlite3モジュール経由）</td></tr>
+        <tr><td class="col-name">NumPy</td><td>1.26.x</td><td>数値計算・配列操作</td></tr>
+        <tr><td class="col-name">SciPy</td><td>1.12.x</td><td>curve_fit（最小二乗フィッティング）・stats（統計検定）</td></tr>
+        <tr><td class="col-name">Pandas</td><td>2.2.x</td><td>データフレーム操作・集計</td></tr>
+        <tr><td class="col-name">NetworkX</td><td>3.2.x</td><td>技術ネットワーク構築・中心性分析</td></tr>
+        <tr><td class="col-name">Matplotlib</td><td>3.8.x</td><td>静的グラフ生成（論文用図版）</td></tr>
+        <tr><td class="col-name">Chart.js</td><td>4.x (CDN)</td><td>本書HTMLのインタラクティブグラフ</td></tr>
+        <tr><td class="col-name">Statsmodels</td><td>0.14.x</td><td>回帰分析・AIC比較</td></tr>
+        <tr><td class="col-name">Scikit-learn</td><td>1.4.x</td><td>クラスタリング分析（技術クラスターの識別）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>7. モデル選択の基準</h2>
+
+  <p>各技術ドメインの成長モデル（指数・ロジスティック・線形）の選択は、以下の手順で実施した。第一ステップとして、データを対数スケールでプロットし、視覚的に成長パターンを確認する。第二ステップとして、3種類のモデルをすべてフィッティングし、それぞれのAIC・BIC・R²を算出する。第三ステップとして、AICが最小のモデルを第一候補とし、第二候補との差が4以上の場合に第一候補を採択する。差が4未満の場合はより単純なモデル（線形＜ロジスティック＜指数）を優先する（オッカムの剃刀）。第四ステップとして、ドメイン内の複数の性能指標に対して同じ手順を繰り返し、過半数が同じモデルを示す場合にそのドメインのモデルとして採択する。</p>
+
+  <p>この手順により、デジタル技術（CPU速度・半導体密度・ストレージ密度・通信速度）はすべてで指数モデルが最低AICを示した。通信普及率（電話・インターネット・スマートフォン）はロジスティックモデルが適合した。農業生産性・エネルギー効率は線形モデルが最も適合した。</p>
+
+  <nav class="ch-nav">
+    <a href="appendix-a.html">← 付録A: データベーススキーマ全体図</a>
+    <a href="appendix-c.html">付録C: 全技術マイルストーン一覧（抜粋100件）→</a>
+  </nav>
+
+</main>
+
+<style>
+.math-block {
+  background: #f0f4ff;
+  border-left: 4px solid #3b9eff;
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.5rem;
+  margin: 1.2rem 0;
+}
+.math-formula {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a4fa0;
+  margin-bottom: 0.5rem;
+}
+.math-desc {
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.6;
+}
+.code-block {
+  background: #1e2433;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1rem 0 1.5rem;
+}
+.code-lang {
+  background: #2d3448;
+  color: #8b9cbf;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+}
+.code-block pre {
+  margin: 0;
+  padding: 1.2rem 1.4rem;
+  overflow-x: auto;
+}
+.code-block code {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: #c0cce0;
+  white-space: pre;
+}
+.schema-box { overflow-x: auto; margin: 1.2rem 0 2rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.schema-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+.schema-table thead th { background: #2c3e50; color: #fff; padding: 0.6rem 0.8rem; text-align: left; }
+.schema-table tbody td { padding: 0.45rem 0.8rem; border-bottom: 1px solid #e8e8e8; vertical-align: top; line-height: 1.5; }
+.schema-table tbody tr:nth-child(even) td { background: #f9f9f9; }
+.col-name { font-family: 'JetBrains Mono', 'Courier New', monospace !important; font-weight: 600; color: #2c7be5; white-space: nowrap; }
+</style>
+
+<script>
+  const toggle = document.getElementById('themeToggle');
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+    toggle.textContent = isDark ? '🌙' : '☀️';
+  });
+</script>
+</body>
+</html>
