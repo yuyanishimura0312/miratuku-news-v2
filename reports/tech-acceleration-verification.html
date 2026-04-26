@@ -3,428 +3,894 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>技術発展加速度検証データベース構築に向けた基盤リサーチ報告</title>
+<title>技術発展加速度のボトムアップ検証 -- 227Kレコードが語る加速と停滞の実像</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg: #FFFFFF; --bg-alt: #FAFAF8; --card: #FFFFFF;
-  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
-  --border: #D9D9D9; --border-light: #EEEEEE; --surface: #F7F7F5;
-  --accent: #CC1400; --accent-muted: rgba(204,20,0,0.06);
-  --accent-blue: #1565c0; --accent-green: #2e7d32; --accent-orange: #e65100;
-  --serif: 'Noto Serif JP', serif; --sans: 'Noto Sans JP', sans-serif;
+  --bg: #FFFFFF;
+  --bg-alt: #FAFAF8;
+  --card: #FFFFFF;
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --surface: #F7F7F5;
+  --accent: #CC1400;
+  --accent-muted: rgba(204,20,0,0.06);
+  --accent-blue: #1565c0;
+  --accent-green: #2e7d32;
+  --accent-orange: #e65100;
+  --serif: 'Noto Serif JP', serif;
+  --sans: 'Noto Sans JP', sans-serif;
 }
 [data-theme="dark"] {
-  --bg: #0D0D0D; --bg-alt: #141414; --card: #1A1A1A;
-  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #777777;
-  --border: #333333; --border-light: #222222; --surface: #1E1E1E;
-  --accent: #FF4444; --accent-muted: rgba(255,68,68,0.08);
-  --accent-blue: #64b5f6; --accent-green: #66bb6a; --accent-orange: #ffb74d;
+  --bg: #0D0D0D;
+  --bg-alt: #141414;
+  --card: #1A1A1A;
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #777777;
+  --border: #333333;
+  --border-light: #222222;
+  --surface: #1E1E1E;
+  --accent: #FF4444;
+  --accent-muted: rgba(255,68,68,0.08);
+  --accent-blue: #64b5f6;
+  --accent-green: #66bb6a;
+  --accent-orange: #ffb74d;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.9; font-weight: 400; -webkit-font-smoothing: antialiased; }
-.theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 100; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: opacity .2s; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.9;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Theme toggle ---- */
+.theme-toggle {
+  position: fixed; top: 16px; right: 16px; z-index: 100;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: opacity .2s;
+}
 .theme-toggle:hover { opacity: .7; }
-.report-header { background: var(--bg-alt); border-bottom: 1px solid var(--border-light); padding: 48px 24px 40px; }
-.report-header-inner { max-width: 740px; margin: 0 auto; }
-.report-back { font-size: 0.75rem; color: var(--text-muted); text-decoration: none; display: inline-block; margin-bottom: 24px; letter-spacing: 0.02em; }
+
+/* ---- Header ---- */
+.report-header {
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border-light);
+  padding: 48px 24px 40px;
+}
+.report-header-inner {
+  max-width: 740px;
+  margin: 0 auto;
+}
+.report-back {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+}
 .report-back:hover { color: var(--accent); }
-.report-meta-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-.report-badge { display: inline-block; padding: 2px 8px; background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.04em; }
-.report-date { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.03em; }
-.report-title { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; line-height: 1.4; letter-spacing: -0.01em; margin-bottom: 12px; }
-.report-subtitle { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; max-width: 640px; }
-.report-db-tags { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; }
-.report-db-tag { padding: 2px 8px; font-size: 0.68rem; font-weight: 500; border: 1px solid var(--border); color: var(--text-secondary); letter-spacing: 0.02em; }
-.key-metrics { max-width: 740px; margin: -20px auto 0; padding: 0 24px; position: relative; z-index: 2; }
-.key-metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--border); background: var(--card); }
-.key-metric { padding: 18px 16px; text-align: center; border-right: 1px solid var(--border-light); }
+.report-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.report-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.report-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--sans);
+  letter-spacing: 0.03em;
+}
+.report-title {
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.report-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 640px;
+}
+.report-db-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.report-db-tag {
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* ---- Key metrics ---- */
+.key-metrics {
+  max-width: 740px;
+  margin: -20px auto 0;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+.key-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.key-metric {
+  padding: 18px 16px;
+  text-align: center;
+  border-right: 1px solid var(--border-light);
+}
 .key-metric:last-child { border-right: none; }
-.key-metric-value { font-family: var(--serif); font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
-.key-metric-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.02em; }
-.article { max-width: 740px; margin: 0 auto; padding: 48px 24px 80px; }
-.toc { margin-bottom: 48px; padding: 24px 28px; background: var(--surface); border-left: 3px solid var(--accent); }
-.toc-title { font-family: var(--serif); font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px; letter-spacing: 0.04em; }
-.toc ol { list-style: none; counter-reset: toc; }
-.toc > ol > li { counter-increment: toc; margin-bottom: 6px; }
-.toc > ol > li::before { content: counter(toc) "."; color: var(--accent); font-weight: 600; font-size: 0.78rem; margin-right: 6px; font-family: var(--serif); }
-.toc a { color: var(--text); text-decoration: none; font-size: 0.82rem; line-height: 1.6; }
+.key-metric-value {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.key-metric-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Article body ---- */
+.article {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ---- TOC ---- */
+.toc {
+  margin-bottom: 48px;
+  padding: 24px 28px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+}
+.toc-title {
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+}
+.toc > ol > li {
+  counter-increment: toc;
+  margin-bottom: 6px;
+}
+.toc > ol > li::before {
+  content: counter(toc) ".";
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.78rem;
+  margin-right: 6px;
+  font-family: var(--serif);
+}
+.toc a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
 .toc a:hover { color: var(--accent); }
-.section-num { display: block; font-family: var(--serif); font-size: 0.72rem; color: var(--accent); font-weight: 700; letter-spacing: 0.06em; margin-bottom: 4px; }
-h2.article-h2 { font-family: var(--serif); font-size: 1.25rem; font-weight: 700; line-height: 1.4; margin: 56px 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
-h3.article-h3 { font-family: var(--serif); font-size: 1.02rem; font-weight: 700; line-height: 1.5; margin: 40px 0 14px; }
+
+/* ---- Section headings ---- */
+.section-num {
+  display: block;
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+h2.article-h2 {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 56px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+}
+h3.article-h3 {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 40px 0 14px;
+  color: var(--text);
+}
 h2.article-h2:first-of-type { margin-top: 0; }
-.article p { margin-bottom: 18px; font-size: 0.92rem; line-height: 1.9; text-align: justify; letter-spacing: 0.01em; }
-.pullquote { margin: 32px 0; padding: 20px 24px; border-left: 3px solid var(--accent); background: var(--accent-muted); font-family: var(--serif); font-size: 0.95rem; line-height: 1.8; }
-.prediction-box { margin: 24px 0; padding: 18px 20px; border-left: 3px solid var(--accent-orange); background: rgba(230,81,0,0.03); }
-[data-theme="dark"] .prediction-box { background: rgba(255,183,77,0.04); }
-.prediction-label { font-family: var(--serif); font-size: 0.78rem; font-weight: 700; color: var(--accent-orange); margin-bottom: 8px; letter-spacing: 0.02em; }
-.prediction-box p { font-size: 0.88rem; margin-bottom: 12px; }
-.finding-box { margin: 24px 0; padding: 18px 20px; border-left: 3px solid var(--accent-green); background: rgba(46,125,50,0.03); }
-[data-theme="dark"] .finding-box { background: rgba(102,187,106,0.04); }
-.finding-label { font-family: var(--serif); font-size: 0.78rem; font-weight: 700; color: var(--accent-green); margin-bottom: 8px; letter-spacing: 0.02em; }
-.finding-box p { font-size: 0.88rem; margin-bottom: 12px; }
-.appendix-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin: 20px 0; }
-.appendix-table th { background: var(--surface); padding: 8px 10px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); font-size: 0.72rem; color: var(--text-secondary); letter-spacing: 0.03em; }
-.appendix-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); vertical-align: top; line-height: 1.5; }
-.appendix-table tr:hover td { background: var(--accent-muted); }
-.verdict-yes { color: var(--accent-green); font-weight: 700; }
-.verdict-partial { color: var(--accent-blue); font-weight: 700; }
-.verdict-no { color: var(--accent-orange); font-weight: 700; }
-.layer-diagram { display: grid; grid-template-columns: 1fr; gap: 0; margin: 24px 0; border: 1px solid var(--border); }
-.layer-item { padding: 14px 18px; border-bottom: 1px solid var(--border-light); display: flex; gap: 12px; align-items: baseline; }
-.layer-item:last-child { border-bottom: none; }
-.layer-num { font-family: var(--serif); font-weight: 700; font-size: 0.82rem; color: var(--accent); flex-shrink: 0; width: 28px; }
-.layer-label { font-weight: 600; font-size: 0.84rem; min-width: 200px; }
-.layer-desc { font-size: 0.82rem; color: var(--text-secondary); }
-.report-footer { max-width: 740px; margin: 0 auto; padding: 0 24px 60px; border-top: 1px solid var(--border); }
-.report-footer p { font-size: 0.75rem; color: var(--text-muted); line-height: 1.7; margin-top: 16px; }
+
+/* ---- Body text ---- */
+.article p {
+  margin-bottom: 18px;
+  font-size: 0.92rem;
+  line-height: 1.9;
+  color: var(--text);
+  text-align: justify;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Callout box ---- */
+.callout-box {
+  margin: 24px 0;
+  padding: 18px 20px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-muted);
+}
+.callout-box p {
+  font-size: 0.88rem;
+  margin-bottom: 8px;
+}
+.callout-box p:last-child { margin-bottom: 0; }
+
+/* ---- Insight box ---- */
+.insight-box {
+  margin: 24px 0;
+  padding: 18px 20px;
+  border-left: 3px solid var(--accent-orange);
+  background: rgba(230, 81, 0, 0.03);
+}
+[data-theme="dark"] .insight-box {
+  background: rgba(255, 183, 77, 0.04);
+}
+.insight-label {
+  font-family: var(--serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-orange);
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+.insight-box p {
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
+.insight-box p:last-child { margin-bottom: 0; }
+
+/* ---- Data table ---- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin: 20px 0;
+}
+.data-table th {
+  background: var(--surface);
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+.data-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.data-table tr:hover td {
+  background: var(--accent-muted);
+}
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- Chart container ---- */
+.chart-container {
+  margin: 28px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.chart-container canvas {
+  max-height: 340px;
+}
+.chart-title {
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.chart-caption {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* ---- Footnotes ---- */
+.report-footer {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+  border-top: 1px solid var(--border);
+}
+.report-footer p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-top: 8px;
+}
+.report-footer a { color: var(--accent); }
+
+/* ---- Responsive ---- */
 @media (max-width: 600px) {
-  .report-title { font-size: 1.35rem; }
   .key-metrics-grid { grid-template-columns: repeat(2, 1fr); }
-  .key-metric:nth-child(2) { border-right: none; }
-  .key-metric:nth-child(1), .key-metric:nth-child(2) { border-bottom: 1px solid var(--border-light); }
-  .layer-item { flex-direction: column; gap: 4px; }
-  .layer-label { min-width: auto; }
-  .appendix-table { font-size: 0.7rem; }
-  .appendix-table th, .appendix-table td { padding: 6px; }
+  .key-metric { border-bottom: 1px solid var(--border-light); }
+  .report-title { font-size: 1.35rem; }
 }
 </style>
 </head>
 <body>
-<button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? '' : 'dark'" aria-label="theme">&#9681;</button>
 
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'" aria-label="Toggle theme">A</button>
+
+<!-- ======== HEADER ======== -->
 <header class="report-header">
-  <div class="report-header-inner">
-    <a href="../app.html#section-analysis-reports" class="report-back">&larr; 解析レポート一覧に戻る</a>
-    <div class="report-meta-top">
-      <span class="report-badge">ANALYSIS REPORT</span>
-      <span class="report-date">2026年4月26日</span>
-    </div>
-    <h1 class="report-title">技術発展加速度検証データベース構築に向けた基盤リサーチ報告</h1>
-    <p class="report-subtitle">カーツワイルの「収穫加速の法則」を中心に、技術の指数関数的発展を歴史的データから検証するためのデータベース設計と初期分析</p>
-    <div class="report-db-tags">
-      <span class="report-db-tag">TA: tech-acceleration-db</span>
-      <span class="report-db-tag">技術加速</span>
-      <span class="report-db-tag">収穫加速の法則</span>
-      <span class="report-db-tag">指数関数的成長</span>
-      <span class="report-db-tag">S曲線</span>
-      <span class="report-db-tag">技術史</span>
-    </div>
+<div class="report-header-inner">
+  <a href="../analysis-reports.html" class="report-back">Analysis Reports</a>
+  <div class="report-meta-top">
+    <span class="report-badge">BOTTOM-UP ANALYSIS</span>
+    <span class="report-date">2026-04-26</span>
   </div>
+  <h1 class="report-title">技術発展加速度のボトムアップ検証<br>227Kレコードが語る加速と停滞の実像</h1>
+  <p class="report-subtitle">カーツワイルの「収穫加速の法則」を仮説ありきでなくデータから検証する。700万年の技術史を44テーブル・13外部ソースで定量分析した結果、一様な指数関数的加速は否定され、「波状の段階的加速」という新たな像が浮かび上がった。</p>
+  <div class="report-db-tags">
+    <span class="report-db-tag">tech-acceleration-db</span>
+    <span class="report-db-tag">225,921 records</span>
+    <span class="report-db-tag">44 tables</span>
+    <span class="report-db-tag">13 sources</span>
+  </div>
+</div>
 </header>
 
+<!-- ======== KEY METRICS ======== -->
 <div class="key-metrics">
-  <div class="key-metrics-grid">
-    <div class="key-metric"><div class="key-metric-value">123</div><div class="key-metric-label">技術マイルストーン</div></div>
-    <div class="key-metric"><div class="key-metric-value">39</div><div class="key-metric-label">科学的発見</div></div>
-    <div class="key-metric"><div class="key-metric-value">65</div><div class="key-metric-label">技術系譜関係</div></div>
-    <div class="key-metric"><div class="key-metric-value">28</div><div class="key-metric-label">科学-技術因果</div></div>
+<div class="key-metrics-grid">
+  <div class="key-metric">
+    <div class="key-metric-value">225,921</div>
+    <div class="key-metric-label">Total Records</div>
+  </div>
+  <div class="key-metric">
+    <div class="key-metric-value">1,191</div>
+    <div class="key-metric-label">Technologies</div>
+  </div>
+  <div class="key-metric">
+    <div class="key-metric-value">768</div>
+    <div class="key-metric-label">Sciences</div>
+  </div>
+  <div class="key-metric">
+    <div class="key-metric-value">7</div>
+    <div class="key-metric-label">Key Findings</div>
   </div>
 </div>
+</div>
 
-<div class="article">
+<!-- ======== BODY ======== -->
+<article class="article">
 
+<!-- TOC -->
 <nav class="toc">
-  <div class="toc-title">目次</div>
-  <ol>
-    <li><a href="#s1">プロジェクト概要と研究目的</a></li>
-    <li><a href="#s2">理論的フレームワーク：加速を主張する諸理論</a></li>
-    <li><a href="#s3">批判的視点：加速は本当か</a></li>
-    <li><a href="#s4">技術発展速度の定量化手法</a></li>
-    <li><a href="#s5">主要データソース</a></li>
-    <li><a href="#s6">科学と技術の連関モデル</a></li>
-    <li><a href="#s7">既存参考データベース</a></li>
-    <li><a href="#s8">データベーススキーマ設計</a></li>
-    <li><a href="#s9">初期分析結果：3つの仮説の検証</a></li>
-    <li><a href="#s10">主要参考文献</a></li>
-  </ol>
+<div class="toc-title">CONTENTS</div>
+<ol>
+  <li><a href="#s1">序論 -- 加速論争の系譜と本分析の位置づけ</a></li>
+  <li><a href="#s2">データベースの概要</a></li>
+  <li><a href="#s3">発見1: 技術密度の加速は実在するが一様ではない</a></li>
+  <li><a href="#s4">発見2: 技術間隔は対数正規分布に従う</a></li>
+  <li><a href="#s5">発見3: 産業革命が最大の変曲点</a></li>
+  <li><a href="#s6">発見4: 科学から技術へのタイムラグは分野限定的に縮小</a></li>
+  <li><a href="#s7">発見5: 成長パターンは3群に分離する</a></li>
+  <li><a href="#s8">発見6: 技術ネットワークのスケールフリー構造</a></li>
+  <li><a href="#s9">発見7: 技術の文化的ライフサイクル</a></li>
+  <li><a href="#s10">各理論の評価と統合的解釈</a></li>
+  <li><a href="#s11">結論と限界</a></li>
+</ol>
 </nav>
 
-<!-- Section 1 -->
-<span class="section-num" id="s1">SECTION 01</span>
-<h2 class="article-h2">プロジェクト概要と研究目的</h2>
+<!-- ======== 1. INTRODUCTION ======== -->
+<h2 class="article-h2" id="s1"><span class="section-num">SECTION 01</span>序論 -- 加速論争の系譜と本分析の位置づけ</h2>
 
-<p>レイ・カーツワイルが1999年に提唱し、2005年の著書『The Singularity Is Near』で完成形を見た「収穫加速の法則」（Law of Accelerating Returns）は、技術の進歩が指数関数的に加速するという大胆な主張である。一つの重要な発明が他の発明と組み合わさることで次の重要な発明の登場までの期間が短縮され、イノベーションの速度が自己強化的に高まっていくという論理は、直感的には説得力を持つ。しかし、この主張はどこまで実データによって裏付けられるのか。</p>
+<p>技術の進歩は加速しているのか。この問いは、単なる好奇心の対象ではなく、経済政策、投資戦略、教育制度の設計、さらには人類文明の将来予測に直結する根本的な問題である。そしてこの問いに対して、過去30年間、互いに対立する複数の有力な理論が提出されてきた。</p>
 
-<p>本プロジェクト「技術発展加速度検証データベース（tech-acceleration-db）」は、この問いに正面から向き合うための大規模データベース構築を目指す。先史時代の石器から最新の大規模言語モデルに至る700万年以上の技術史を、統一されたスキーマのもとに格納し、技術発展の速度変化を定量的に検証することが目標である。本報告書は、その基盤となる理論的フレームワーク、主要データソース、スキーマ設計の方向性、および初期データ（123件の技術マイルストーン、39件の科学的発見、65件の技術系譜関係、28件の科学-技術因果リンク）を用いた予備分析の結果をまとめたものである。</p>
+<p>最も影響力のある加速論を展開したのはレイ・カーツワイルである。彼が2001年の論文、そして2005年の著書『The Singularity Is Near』で提唱した「収穫加速の法則（The Law of Accelerating Returns）」は、技術進歩の速度それ自体が指数関数的に増大し、やがて人間の知性を超えるAIが出現する「シンギュラリティ」に至ると主張した。カーツワイルは、ムーアの法則をその一事例に過ぎないと位置づけ、生命の進化から技術文明までを貫く普遍的な加速パターンの存在を主張した。彼の議論の特徴は、対数グラフ上に並ぶ複数のデータ系列を重ね合わせ、直線的なトレンドとして提示する視覚的説得力にあった。</p>
 
-<div class="finding-box">
-<div class="finding-label">検証の核心：3つの仮説</div>
-<p>H1：連続する重要技術の登場間隔は時代が進むにつれて短縮しているか。H2：技術間の組み合わせ関係の密度（TechToTech関係数/技術数）は時代とともに増加しているか。H3：科学的発見から技術応用までのタイムラグは縮小しているか。初期分析では3つの仮説すべてが「YES」という結果を示しており、データ拡充による検証の強化が次のステップとなる。</p>
+<p>これに対して、技術進歩を既存技術の「組み合わせ」として理解する枠組みを提唱したのがブライアン・アーサーである。アーサーの2009年の著書『The Nature of Technology』は、新技術は無から生まれるのではなく、既存の技術要素の新たな組み合わせから創発すると論じた。この「組み合わせ進化（Combinatorial Evolution）」の観点からすれば、技術のプールが拡大するにつれて可能な組み合わせの数は組み合わせ爆発的に増大するため、結果として技術誕生の速度は上昇する。しかしその加速は、カーツワイルが描くような滑らかな指数関数ではなく、組み合わせの「豊かさ」に依存する不連続なプロセスとなるはずである。</p>
+
+<p>減速論の旗手として最も著名なのはロバート・ゴードンである。ゴードンは2016年の大著『The Rise and Fall of American Growth』において、1870年から1970年の100年間を「特別な世紀（Special Century）」と呼び、電力・内燃機関・通信という三大汎用技術が生活水準を根本的に変えたことを実証した。そして彼は、その後の50年間にはそれに匹敵するイノベーションは起こっておらず、今後もTFP（全要素生産性）の成長率は鈍化し続けると予測した。さらに物理学者ジョナサン・ヒューブナーは2005年の論文で、人口あたりの重要な技術イノベーション数が1873年をピークに低下し続けていることを示し、技術進歩は減速段階にあると主張した。</p>
+
+<p>もうひとりの重要な論者がカルロタ・ペレスである。ペレスの2002年の著書『Technological Revolutions and Financial Capital』は、産業革命以降の技術発展を約50年周期の「技術経済パラダイム」の波として捉えた。各波は導入期と展開期からなり、その間に金融バブルと崩壊を挟む。ペレスの枠組みでは、加速と減速は二項対立ではなく、周期的に交替するものである。</p>
+
+<p>この論争が重要であるのは、単に知的好奇心の問題にとどまらないからである。もしカーツワイルが正しければ、2030年代には汎用人工知能（AGI）が出現し、社会制度の根本的再設計が急務となる。もしゴードンが正しければ、先進国の経済成長は構造的に鈍化し、分配政策の重要性が増す。もしペレスが正しければ、現在はデジタルパラダイムの展開期に入りつつあり、次の10年は前回のバブル崩壊（2000年のドットコム、2008年の金融危機）を経た後の安定的成長期として設計すべきである。理論の選択は政策の選択に直結する。</p>
+
+<p>しかし、これまでの論争の多くは特定のデータ系列を選択的に引用する「確証バイアス」の問題を抱えてきた。カーツワイルは対数グラフ上に都合のよい点をプロットし、ゴードンは生活水準の変化率という特定の指標に依拠し、ヒューブナーは「重要なイノベーション」の選定基準に恣意性を残した。いずれの論者も、自説を支持するデータを前面に出し、反証を無視または過小評価する傾向があった。</p>
+
+<p>本レポートの目的は、これらの理論のいずれが正しいかを演繹的に論じることではない。代わりに、225,921レコード・44テーブル・13の外部データソースから構成される「技術発展加速度検証データベース」のボトムアップ分析を通じて、データそのものが語る技術発展の実像を描き出すことを試みる。仮説ありきではなく、700万年にわたる技術と科学の記録から、加速・停滞・波動の実態を定量的に明らかにしたい。分析の方法論としては、技術密度の時系列分析、間隔分布の統計的検定、変曲点の検出、科学-技術タイムラグの分野別分析、指数関数フィッティングによる倍増時間の推定、ネットワーク構造の次数分布分析、そしてNgramデータによる文化的ライフサイクルの追跡という7つのアプローチを用いる。</p>
+
+
+<!-- ======== 2. DATABASE OVERVIEW ======== -->
+<h2 class="article-h2" id="s2"><span class="section-num">SECTION 02</span>データベースの概要</h2>
+
+<p>本分析の基盤となるのは、SQLiteデータベースとして構築された「tech-acceleration-db」である。このデータベースは44のテーブルに225,921件のレコードを格納しており、先史時代から2024年までの技術と科学の発展を多角的に記録している。データは13の外部ソースから取得された実データで構成され、人手による補完やAI支援による整理を経て統合されている。</p>
+
+<p>中核をなすのは、technologies（1,191件）とsciences（768件）の2つのマスターテーブルである。technologiesテーブルには700万年前の二足歩行から2024年の自律AIエージェントまで、19のドメイン（石器、農業、冶金、エネルギー、情報、輸送、通信、医学、建設、軍事、繊維、化学、光学、原子力、デジタル、AI、製造、金融、宇宙）にわたる技術マイルストーンが、8つの時代区分（旧石器、新石器、古代、中世、近世、産業革命期、近代、デジタル）とともに記録されている。sciencesテーブルには、ピタゴラスの定理から拡散モデルまで、8分野にまたがる科学的発見が収められている。</p>
+
+<p>これらのマスターテーブルを結ぶ関係テーブルとして、tech_to_tech（354件の技術間系譜関係）とscience_to_tech（133件の科学-技術因果関係）がある。前者は「蒸気機関が蒸気機関車を可能にした」といった系譜を、後者は「電磁誘導の発見が発電機を生んだ」といった科学から技術への橋渡しを記録している。</p>
+
+<p>外部データとしては、Seshatの歴史データベースから25,895件の文明・技術記録、Our World in Dataから73,643件のエネルギー・CO2データ、ノーベル賞受賞者1,075件、Google Ngramから18,374件の用語頻度データ、OECDの科学技術指標64,890件、Wikidataから10,722件の発明・特許・科学発見データ、さらにOpenAlex、Semantic Scholar、DBpedia、各種博物館データベースなどが統合されている。定量指標テーブルには、トランジスタ数、FLOPS/ドル、太陽光発電コスト、DNA解読コスト、AI学習計算量など591件の時系列データが格納されている。</p>
+
+<p>データソースのカバー率は、当初計画した27ソースのうち14ソース（52%）から実データを取得済みであり、残りはAPI制限や有料壁により未取得のまま課題として残されている。特に、USPTO（米国特許商標庁）の個別特許データ、EPO（欧州特許庁）のPATSTAT、そしてCrunchBaseのスタートアップ投資データは重要な補完ソースであるが、いずれも大規模APIアクセスに課金が発生するため未取得である。</p>
+
+<p>データベースの設計思想として重要なのは、「多層的な証拠の三角測量」を可能にする構造である。technologiesテーブルの個別技術記録は、Seshatの歴史的文明データ、OWIDのマクロ指標、Ngramの文化的指標、OECDの科学技術政策指標と、それぞれ異なる角度から交差検証できる。たとえば「産業革命期の技術加速」という命題は、technologiesテーブルの技術密度、OECDの特許データ、Ngramの用語頻度、Seshatの文明複雑性指標から多角的に評価できる。以下の分析は、この多層的データベースに対するボトムアップ分析の結果である。</p>
+
+
+<!-- ======== 3. FINDING 1 ======== -->
+<h2 class="article-h2" id="s3"><span class="section-num">SECTION 03</span>発見1: 技術密度の加速は実在するが一様ではない</h2>
+
+<p>最初の分析は、technologiesテーブルに記録された1,191件の技術を時間軸上に並べ、各時代区間における「技術登場密度」（単位時間あたりの技術誕生数）を算出するものである。もし「収穫加速の法則」が正しければ、この密度は滑らかな指数関数を描くはずである。</p>
+
+<p>結果は、加速の存在を確認しつつも、その形状が一様な指数関数からは大きく逸脱することを示した。分析で設定した22の時間区間を横断すると、最古の区間（700万年前〜260万年前）における技術登場密度は年間約0.0000016件であるのに対し、最新の区間（2000年〜2024年）では年間約6.27件に達する。この差は約400万倍であり、長期的な加速の存在は疑いようがない。</p>
+
+<div class="chart-container">
+<div class="chart-title">Fig.1 時代別技術登場密度（対数スケール）</div>
+<canvas id="chartDensity"></canvas>
+<div class="chart-caption">technologiesテーブル1,191件を8時代区分で集計。縦軸は1年あたりの技術誕生数（対数）。旧石器→新石器の飛躍、産業革命期の急増、デジタル時代の再加速が確認できる。</div>
 </div>
 
-<!-- Section 2 -->
-<span class="section-num" id="s2">SECTION 02</span>
-<h2 class="article-h2">理論的フレームワーク：加速を主張する諸理論</h2>
+<p>しかし注目すべきは、この加速が3つの明確な停滞期を伴っていることである。第一は中世後期（1000年〜1500年）で、前の区間に比べた密度変化率がそれぞれ×0.93、×0.88と低下している。ユーラシア大陸ではペストの大流行やモンゴル帝国の征服による社会的混乱がイノベーション活動を抑制した時期に対応する。第二は産業革命直後（1850年〜1920年頃）で、密度変化率が×0.68まで落ち込んでいる。これは産業革命期に爆発的に増加した技術が普及・定着する「消化期間」として解釈できる。第三は冷戦後期から世紀末にかけて（1960年〜2000年）で、×0.92から×1.00とほぼ横ばいになっている。</p>
 
-<h3 class="article-h3">レイ・カーツワイル — 収穫加速の法則</h3>
+<p>この第三の停滞期は、ヒューブナーが指摘した「1873年以降のイノベーション率低下」やゴードンの「特別な世紀の後の停滞」と時期的に重なる。冷戦期の軍事研究への資源集中、石油危機によるエネルギーイノベーションの方向転換、そして半導体産業がまだ成熟していなかった時期の移行コストが重なった結果と考えられる。しかし重要なのは、これが不可逆的な低下ではなく、2000年以降にデジタル時代の技術が密度を再び押し上げていることである。デジタル時代（2000年〜2024年）の技術登場密度は、近代区間（1920年〜2000年）と比較して明確に上昇している。</p>
 
-<p>カーツワイルの核心的主張は、「一つの重要な発明が他の発明と結合することで、次の重要な発明の登場までの期間が短縮され、イノベーションの速度が加速する」というものである。彼が提示した実証的根拠の中で最も印象的なのは、コンピュータの1ドルあたり演算能力の推移だ。1939年から現在にかけて20京倍という空前の増加を記録しており、演算コスト・パフォーマンスの倍増周期は20世紀初頭の3年から現在の約1年へと圧縮されている。カーツワイルはこの指数成長が機械式計算機→リレー→真空管→トランジスタ→集積回路という5つのパラダイムを貫いて持続してきた点を強調する。ムーアの法則はその「第5パラダイム」に過ぎず、より大きな指数関数的軌跡の一部であるという解釈は、2024年の新著『The Singularity Is Nearer』でも維持されている。</p>
+<p>時代別の組み合わせ関係密度（tech_to_techの関係数/技術数）もこのパターンを裏付けている。旧石器時代の0.30から新石器時代の0.68、古代の0.60、中世の0.65、近世の0.82と緩やかに上昇し、産業革命期に0.96に跳ね上がる。近代には0.70にいったん低下するが、デジタル時代には1.08に回復し、初めて「1技術あたり1つ以上の組み合わせ関係」を超えた。つまり技術の密度だけでなく、技術間の結合密度も同様の「停滞を挟む段階的上昇」を示しているのである。この結合密度の上昇は、アーサーの組み合わせ進化理論が予測する「技術プールの拡大が次の組み合わせの確率を高める」メカニズムの直接的な証拠となる。</p>
 
-<p>ただし批判的論点もある。石器や冶金など重要技術が対象から除外されている一方、コンピュータとPCのように質的差が小さい近年の技術を別の「パラダイム」として恣意的に選択しているという指摘は根強い。ケヴィン・ケリーは「指数関数的グラフだからこそ特異点に到達できない」と逆説的に批判している。</p>
-
-<h3 class="article-h3">W. ブライアン・アーサー — 組み合わせ進化と収穫逓増</h3>
-
-<p>アーサーの理論はカーツワイルとは異なるメカニズムで技術加速を説明する。組み合わせ進化（Combinatorial Evolution）の論理によれば、技術は既存技術の組み合わせから生まれ、ダーウィン的進化（変異と選択）とは根本的に異なるメカニズムで発展する。「新しい技術は必ず既存技術の組み合わせから生じる」という命題は、利用可能な技術の総数が増えるほど組み合わせの可能性が指数関数的に膨張するという数学的含意を持つ。サンタフェ研究所での計算機実験——論理回路をランダムに組み合わせ、有用なものを次の組み合わせの部品として保存すると複雑な回路が次々と出現する——は、この理論の可視化として説得力がある。</p>
-
-<p>収穫逓増（Increasing Returns）の概念も重要である。ハイテク市場ではネットワーク効果により、先行者がさらに優位を拡大する正のフィードバックが働く。Google、Facebook、Amazonの成功の根底にあるこの原理は、1989年の論文 "Competing Technologies, Increasing Returns, and Lock-In by Historical Events" によって経済学的に定式化された。</p>
-
-<h3 class="article-h3">ケヴィン・ケリー — テクニウム</h3>
-
-<p>ケリーは技術の総体を「テクニウム」（Technium）と名づけ、技術が生物的進化と同様の「必然性」を持つと主張する。技術の活動空間を複雑性・多様性・自由度・美・感受性・構造といった概念で定義し、その発展方向性はダーウィンの『種の起源』に匹敵する重要性を持つと評価する。技術は単なる人間の道具ではなく、自律的な発展論理を持つ存在だという視点は、加速論の形而上学的基盤を提供している。</p>
-
-<h3 class="article-h3">カルロータ・ペレス — 技術革命と金融資本</h3>
-
-<p>ペレスは産業革命以降の5つの「技術革命の波」を特定した：産業革命（1771〜）、蒸気・鉄道（1829〜）、鉄鋼・電気・重工業（1875〜）、石油・自動車・大量生産（1908〜）、情報技術（1971〜）。各革命は「導入期→バブル→動揺期→展開期→黄金時代」のパターンを繰り返す。技術経済パラダイム（Techno-Economic Paradigm）の概念は、技術変化が経済・社会制度の変革を引き起こすメカニズムを説明するものであり、単純な直線的加速論とは一線を画す。波の間隔が60〜80年から徐々に縮まりつつあるかどうかは、本プロジェクトの検証対象のひとつである。</p>
-
-<h3 class="article-h3">ロビン・ハンソンとシュンペーター成長理論</h3>
-
-<p>ハンソンのモデルでは、世界生産高を「生存単位」で測定し、歴史を複数の指数関数的成長モードの連鎖として記述する。技術変化により世界生産高の倍増周期が15年から2週間へ短縮される可能性を論じ、脳エミュレーションがその経路になると予測する点は大胆だが、その理論的枠組みは本プロジェクトの「指数モードの連鎖」という時代区分と親和性が高い。シュンペーター成長理論の核心にある「創造的破壊」は、現在のイノベーターが次世代に正の知識スピルオーバーをもたらしながら既存技術を駆逐するプロセスであり、技術間の継承と断絶の双方をデータとして捉えることの重要性を示している。</p>
-
-<!-- Section 3 -->
-<span class="section-num" id="s3">SECTION 03</span>
-<h2 class="article-h2">批判的視点：加速は本当か</h2>
-
-<p>技術の加速論は魅力的だが、対抗する実証的議論も無視できない。技術史研究者の間では、加速の証拠と停滞・減速の証拠が今も論争中である。</p>
-
-<h3 class="article-h3">ジョナサン・ヒューブナー — イノベーション速度の低下</h3>
-
-<p>2005年の論文 "A Possible Declining Trend for Worldwide Innovation"（Technological Forecasting & Social Change）でヒューブナーは7,198件の重要な技術発展を分析し、イノベーション速度は1873年にピークを迎え、以降一貫して低下していると主張した。技術の経済的限界の85%に到達済みと推計し（2018年に90%、2038年に95%）、1人あたり重要技術イノベーション数は19世紀後半から減少しているという。使用データソースへの選択バイアス批判はあるものの、人口増加を考慮した指標化という方法論は本プロジェクトが学ぶべき点を含む。</p>
-
-<h3 class="article-h3">ロバート・ゴードン — アメリカ成長の興亡</h3>
-
-<p>『The Rise and Fall of American Growth』（2016）でゴードンは1870〜1970年を「特別な世紀」と位置づけ、この時期の技術革新の規模は再現不可能と主張した。全要素生産性（TFP）を主要指標として使用し、1970年以降の技術革新は幅も深さも「特別な世紀」に及ばないと論じる。電気・自動車・上下水道がもたらした生活変革の一回性を強調するゴードンの視点は、「デジタル技術は思ったほど生産性を高めていない」というソロー・パラドックスの問い直しとして、今日的な意義を持つ。</p>
-
-<h3 class="article-h3">セオドア・モディス — ロジスティック成長の限界</h3>
-
-<p>モディスは技術革新速度が実際に低下していると主張し、ロジスティック成長モデル（S曲線）の方が指数成長モデルより実データへの適合度が高いと論証した。コンピュータのクロックレート上昇の鈍化はその証拠の一つである（もっともムーアの法則の回路密度予測自体は維持されているという反論もある）。個別技術はS曲線に従い成熟していくが、次のS曲線が始まることで全体として持続的成長が続くという「Sカーブの積み重ね」モデルは、純粋な指数成長論と純粋な成熟論を調停する視点として重要である。</p>
-
-<h3 class="article-h3">最新の学術的検証（2025年）</h3>
-
-<p>2025年にarXivに掲載された研究では、AI発展をマルチロジスティック成長過程でモデリングし、「3つの山と2つの谷」を持つ歴史的パターンから、AI発展は指数成長に従わないと結論づけた。2024年が現在のAI波の最速地点であり、根本的な技術革新がなければ2035〜2040年頃に深層学習ベースのAI技術は衰退すると予測する。この研究は、一つの技術ドメイン内の動態が「収穫加速」の単純なナラティブに収まらないことを示している。</p>
-
-<div class="pullquote">加速論と停滞論の対立は、測定対象と指標の選択の問題でもある。「何を技術と数えるか」「1人あたりかアブソリュートか」「どの時間軸をとるか」という設計決定が、まったく異なる結論を生む。本プロジェクトは、この測定の複数性を明示的に扱うことを目指す。</div>
-
-<!-- Section 4 -->
-<span class="section-num" id="s4">SECTION 04</span>
-<h2 class="article-h2">技術発展速度の定量化手法</h2>
-
-<p>技術の「速度」を測るためには、何らかの操作的定義が必要である。本節では、既存研究で使用されている主要な定量化手法を整理し、それぞれの強みと限界を示す。</p>
-
-<h3 class="article-h3">ライトの法則（Wright's Law）</h3>
-
-<p>1936年にセオドア・ライトが航空機製造で発見した「累積生産量が倍増するごとに、コストが一定割合で低下する」という法則は、技術の成熟度を生産コストの推移で測る手法として広く使われている。太陽光パネル（累積設置容量倍増ごとに20%のコスト低下）やフォードT型（生産台数倍増ごとに一定比率でコスト低下）など、多数の技術で確認されている。産業間の進歩率は0.75〜0.9（10〜25%の学習率）と報告されており、IEEE Spectrumの分析では、技術発展予測においてムーアの法則よりライトの法則の方が予測精度が高いという結論も出ている。ただし、規制や建設集約型産業（原子力等）には適用困難な点が限界である。</p>
-
-<h3 class="article-h3">S曲線（ロジスティック成長）分析</h3>
-
-<p>技術普及は導入→成長→成熟のS字型曲線に従う。数理モデルは y = L/(1 + e^(-k(x-x₀))) と表現され、L（市場潜在力）、k（成長率）、x₀（変曲点）の3パラメータで技術の普及軌道を特徴付けられる。電報、自動車、スマートフォン、AIなど多様な技術で一貫して確認されており、近年のAI普及速度は歴史的な技術普及速度を大幅に上回るという分析もある。tech-acceleration-dbのスキーマにはadoption_s_curveフィールドを設け、各技術のS曲線パラメータを格納することで、時代ごとの普及速度の変化を比較できるよう設計している。</p>
-
-<h3 class="article-h3">全要素生産性（TFP）</h3>
-
-<p>TFP（Total Factor Productivity）は、産出量を労働投入と資本投入では説明できない残差として技術変化を測定する指標で、TFP = 産出量 ÷ (労働投入の0.7乗 × 資本投入の0.3乗) として計算される。マルムクイスト指数により技術変化と効率変化に分解可能な点が強みだが、「実際に何が測定されているか」についての論争が続いており、ゴードンはこの指標を用いてアメリカの長期的技術減速を実証した。本プロジェクトでは、TFP時系列との比較参照用データとしてNCES/NBERの既存データセットを活用する予定である。</p>
-
-<h3 class="article-h3">特許データ分析とその他の指標</h3>
-
-<p>特許引用ネットワーク分析は、技術の系統発展を追跡するための有力な手法である。100万件の米国特許と800万件の引用を用いた主経路分析（半導体製造の技術軌道）では、技術ドメインの特許情報とそのドメインの技術進歩率が強い相関を示す。ただし人口増加を考慮しないと、イノベーション速度の見せかけの変化が生じうるという注意点はヒューブナーの議論から学ぶべきだ。その他、イアン・モリスの社会発展指数の1要素であるエネルギー捕獲量/人、FLOPS/ドルで測定される情報処理能力の時系列、Google Ngramを用いた技術用語の文化的普及タイミングなども、多面的な技術速度測定に活用できる。</p>
-
-<!-- Section 5 -->
-<span class="section-num" id="s5">SECTION 05</span>
-<h2 class="article-h2">主要データソース</h2>
-
-<p>700万年以上の技術史を網羅するデータベースを構築するためには、時代ごとに異なるデータソースを組み合わせる必要がある。年代精度は時代によって大きく異なり（先史時代は±数万年〜数十万年、現代は日単位）、この不確実性を明示的に扱う設計が不可欠である。以下では優先度順に主要ソースを整理する。</p>
-
-<h3 class="article-h3">先史時代（260万年前〜BC3000）</h3>
-
-<p>先史時代の技術マイルストーンを年代付けするためには、放射性炭素年代測定（C14）や熱ルミネセンス（TL）などの物理的年代測定法に依拠する。XRONOSは35万件以上の放射性炭素年代測定値を統合したデータベースで、基盤的データソースとして機能する。Radiocarbon Palaeolithic Europe DBは欧州旧石器時代に特化した14,277サイト・20,665年代測定のデータを提供する。tDAR（Digital Archaeological Record）やARIADNE Plus（200万件以上の欧州考古学統合基盤）も重要な補完ソースとなる。年代測定の精度は時代が遡るほど落ちるが（旧石器時代は±数万年、新石器時代は±数千年）、year_confidence フィールドを設けることで分析時にフィルタリングできる。</p>
-
-<h3 class="article-h3">古代〜中世（BC3000〜AD1500）</h3>
-
-<p>文字記録が残る古代以降は、Seshat Global History Databank（新石器革命〜産業革命の政体データ、1,500以上の時系列変数）やWikipedia "Timeline of Historic Inventions"（DBpedia/Wikidataからの構造化データ抽出）が主力ソースとなる。Seshatには3400BCE〜2024CEの地理空間データセット「Cliopatria」が含まれており、技術と政治・社会構造の連関分析にも使える。Europeana（欧州文化遺産200万件以上）やGetty Provenance Indexも工芸品・技術遺物の時代特定に役立つ。</p>
-
-<h3 class="article-h3">近世〜近代（1500〜1900）</h3>
-
-<p>この時代は特許データが主力となる。USPTO Historical Patent Files（1840〜2014年・220万件）とPatentsView（1976年〜、WIPO分類付き）は技術の系統発展を追跡するための最も整備されたデータソースだ。HistPat（1836〜1975年USPTO地理分布）はScientific Dataに掲載された学術的に検証済みのデータセットである。Science Museum Group（英国技術史遺物38万点以上）も物的証拠として活用できる。</p>
-
-<h3 class="article-h3">現代（1900〜現在）と科学史データ</h3>
-
-<p>Our World in Dataの技術普及率・進歩指標（170年以上）とHCCTA Dataset（NBER、14カ国・135技術の250年間の採用パターン）は、技術の普及速度を国際比較するための基盤データを提供する。科学史データとしては、ノーベル賞データベース（990人・28組織の受賞記録）が科学的発見から認知までのタイムラグ分析に直接使える（平均25年のラグが報告されている）。OpenAlex（学術メタデータ2億900万件）、Semantic Scholar、Wikidataは引用ネットワーク分析と知識グラフ構築の基盤となる。</p>
-
-<!-- Section 6 -->
-<span class="section-num" id="s6">SECTION 06</span>
-<h2 class="article-h2">科学と技術の連関モデル</h2>
-
-<p>技術史において「科学が技術を生む」という常識的理解は、実際には複雑な双方向関係を単純化したものに過ぎない。本プロジェクトでは科学→技術の因果方向だけでなく、技術→科学というフィードバックの方向も明示的にモデル化する。</p>
-
-<h3 class="article-h3">代表的な因果連鎖</h3>
-
-<p>科学から技術への連鎖の代表例として、ファラデーの電磁誘導（1831年）が約50年後に発電機・モーター・送電を実現した例、マクスウェルの電磁理論（1860年代）が30年後に無線通信を生んだ例、量子力学（1920年代）が30年後のトランジスタ（1947年）につながった例などがある。一方、DNA二重螺旋構造の解明（1953年）からCRISPR遺伝子編集（2012年）まで約60年かかった例は、基礎科学と技術応用の間の長いタイムラグを示している。これが21世紀に入るとトランスフォーマーアーキテクチャ（2017年）からGPT（2018年）まで1年という劇的な短縮が起きており、このタイムラグの縮小傾向が本プロジェクトの検証仮説H3の核心だ。</p>
-
-<p>技術から科学へのフィードバックも豊富な事例がある。望遠鏡（1609年）はガリレオの天文学的発見を通じて地動説の実証を可能にし、顕微鏡は微生物学の成立を促し、蒸気機関は熱力学の理論化を引き起こした——「蒸気機関が熱力学を生んだ」という逆転の構図は示唆的だ。粒子加速器が素粒子物理学を生み、コンピュータが計算科学（「第3のパラダイム」）を生み、AIがAlphaFoldによるタンパク質構造予測（2024年ノーベル化学賞）を可能にした流れは、この技術→科学フィードバックが加速していることを示している。</p>
-
-<h3 class="article-h3">科学-技術関係の理論モデル</h3>
-
-<p>科学と技術の関係についてはいくつかの理論的フレームワークが存在する。ブッシュ（1945年）の「リニアモデル」（基礎研究→応用研究→開発→生産）は冷戦期に大成功を収めたが、後に批判された。ストークス（1997年）の「パストゥールの象限」は基礎研究と応用研究が対立でなく直交するという視点で、「用途に触発された基礎研究」の存在を示した。エツコウィッツ&レイデスドルフの「トリプルヘリックス」は大学・産業・政府の三者間相互作用を、国家イノベーションシステム（NIS）は人・企業・制度間の技術・情報の流れを記述する。本プロジェクトのScienceToTechテーブルに格納するdirectionフィールドは、これら複数のモデルを統一的に扱えるよう設計されている。</p>
-
-<!-- Section 7 -->
-<span class="section-num" id="s7">SECTION 07</span>
-<h2 class="article-h2">既存参考データベース</h2>
-
-<p>tech-acceleration-dbはゼロから構築するのではなく、既存の大規模歴史データベースの構造と知見を参照・活用して設計する。特に以下の4つは設計上の重要な参照先である。</p>
-
-<h3 class="article-h3">Seshat: Global History Databank</h3>
-
-<p>2011年設立、Evolution Institute主導のSeshatは、新石器革命から産業革命にかけての政体に関する定量データを集積する野心的なプロジェクトだ。1,500以上の時系列変数、OWL ontology、Django+PostgreSQLという技術スタック、Linked Data技術による他DBとの連携可能な設計は、tech-acceleration-dbが参考にすべき多くの示唆を含む。分析単位としてpolities（政体）、NGA（自然地理地域）、cities（都市）、interest groups（利益集団）を設定し、多次元的な歴史分析を可能にする構造は、本プロジェクトのtechnology・science・erといったエンティティ設計にも影響を与えた。Cliopatriaコンポーネントは3400BCE〜2024CEの世界の国家・政治団体・イベント・支配者の地理空間データセットであり、技術発展と地政学的変化の相関分析に活用できる。</p>
-
-<h3 class="article-h3">D-PLACEとCHIA</h3>
-
-<p>D-PLACEはPostgreSQLリレーショナルDBで、Society table（ID、名称、主要年代、座標）、LanguageFamily table、LanguageTree table（Newick形式）を外部キーによる正規化テーブル構造で実装している。このシンプルかつ拡張性のある設計は、tech-acceleration-dbのスキーマ設計に直接参考になった。CHIA（2011年設立、ピッツバーグ大学拠点）は過去400年の社会・経済・政治・気候・健康データを収録し、World-Historical DataverseとHuman Systems Data Archiveの2アーカイブ構成を採る。技術変化と社会・環境変数の相関分析への橋渡しとして有用だ。</p>
-
-<h3 class="article-h3">イアン・モリスの社会発展指数（SDI）</h3>
-
-<p>モリスのSDIは4要素——1人あたりエネルギー捕獲量、組織能力（最大都市人口）、情報技術（文字→印刷→電子通信）、戦争遂行能力——で15,000年間の社会発展を数値化する。西洋と東アジアを比較し、紀元550〜1750年は東アジアが優位だったが18世紀後半の化石燃料活用で西洋が逆転したという知見は、技術史の地理的差異を考察する上で重要な文脈を提供する。本プロジェクトのQuantitativeMetricテーブルにSDIデータを格納することで、技術マイルストーンと社会発展指数の相関分析が可能になる。</p>
-
-<!-- Section 8 -->
-<span class="section-num" id="s8">SECTION 08</span>
-<h2 class="article-h2">データベーススキーマ設計</h2>
-
-<p>tech-acceleration-dbの中核となるエンティティとその関係は以下の通りである。設計の基本方針は、先史時代から現代までの時間的多様性に対応すること、科学と技術の双方向連関を明示的に扱うこと、定量指標（S曲線パラメータ、コスト推移など）を格納できること、の3点だ。</p>
-
-<div class="layer-diagram">
-  <div class="layer-item"><div class="layer-num">T</div><div class="layer-label">Technology</div><div class="layer-desc">技術マイルストーン。year_earliest/latest で時代幅を表現。year_confidenceフィールドでexact/decade/century/millennium/geologicalの精度を明示。adoption_s_curveフィールドにS曲線パラメータ{L, k, x0}をJSON格納。</div></div>
-  <div class="layer-item"><div class="layer-num">S</div><div class="layer-label">Science</div><div class="layer-desc">科学的発見。field（physics/chemistry/biology等）、type（principle/law/theory/discovery/method）で分類。</div></div>
-  <div class="layer-item"><div class="layer-num">TT</div><div class="layer-label">TechToTech</div><div class="layer-desc">技術系譜関係。relationship（enables/improves/combines_with/replaces）とstrength（0-1の実数）で関係の種類と強度を表現。組み合わせ密度分析の基盤。</div></div>
-  <div class="layer-item"><div class="layer-num">ST</div><div class="layer-label">ScienceToTech</div><div class="layer-desc">科学-技術因果リンク。direction（science_enables_tech/tech_enables_science/bidirectional）とtime_lag_yearsフィールドでタイムラグを格納。H3仮説検証の核。</div></div>
-  <div class="layer-item"><div class="layer-num">Q</div><div class="layer-label">QuantitativeMetric</div><div class="layer-desc">定量指標時系列。tech_idに紐付けてtransistors_per_chip、cost_per_flop、adoption_rate_percentなどを年次格納。Wright's Law、ムーアの法則の検証に使用。</div></div>
-  <div class="layer-item"><div class="layer-num">R</div><div class="layer-label">Reference</div><div class="layer-desc">出典管理。type（book/paper/database/archaeological_record）とreliability（primary/secondary/estimate）で証拠の種類と信頼性を明示。</div></div>
+<div class="insight-box">
+<div class="insight-label">FINDING 1</div>
+<p>技術密度の400万倍の上昇は「加速」の存在を確認する。しかしその軌跡は滑らかな指数関数ではなく、中世後期、産業革命直後、冷戦後期という3回の停滞を挟む「段階的加速」のパターンを示す。カーツワイルの「一貫した指数関数的加速」は、長期トレンドとしては支持されるが、中期的な解像度では修正を要する。</p>
 </div>
 
-<p>時間解像度の問題は設計上の最大の課題の一つである。700万年前の二足歩行は±50万年の精度でしか年代特定できないが、2018年のGPTは特定の論文出版日として特定できる。これを同一テーブルで扱うために、year_earliestとyear_latestによる範囲表現、year_confidenceによる精度ラベルの組み合わせで対応する。分析時にはyear_confidence = 'exact'または'decade'のみをフィルタするなど、精度要件に応じてサブセットを選択できる。</p>
 
-<p>カーツワイルのグラフが採用する対数時間軸（現在に近いほどスケールが密になる）は、DBには通常の年数（西暦、負数でBCE）として格納し、可視化レイヤーで log₁₀(|year - 2026|) に変換する。このアプローチにより、先史時代と現代を同一グラフ上に示す「指数関数的加速」の可視化が可能になる。</p>
+<!-- ======== 4. FINDING 2 ======== -->
+<h2 class="article-h2" id="s4"><span class="section-num">SECTION 04</span>発見2: 技術間隔は対数正規分布に従う</h2>
 
-<!-- Section 9 -->
-<span class="section-num" id="s9">SECTION 09</span>
-<h2 class="article-h2">初期分析結果：3つの仮説の検証</h2>
+<p>次に、連続する技術の登場間隔（年単位）の統計的分布を分析した。technologiesテーブルの全技術を年代順にソートし、隣接するペア間の間隔を算出すると、正の値をとる463件の間隔データが得られる。この分布の形状は、技術進歩の背後にあるメカニズムに関する重要な手がかりを提供する。</p>
 
-<p>123件の技術マイルストーン、39件の科学的発見、65件の技術系譜関係（TechToTech）、28件の科学-技術因果リンク（ScienceToTech）を用いた予備分析の結果を報告する。現時点のデータは「証明」ではなく「初期示唆」であることを強調しておく。</p>
+<p>間隔データの基本統計量を見ると、中央値は2年、算術平均は15,139年という極端な乖離が生じている。最小値は0年（同年に複数技術が登場）、最大値は440万年（最初期の石器時代における間隔）である。この分布は、そのままでは分析不能なほど偏っているが、対数変換を施すと明瞭なパターンが現れる。</p>
 
-<h3 class="article-h3">H1：技術間隔の短縮（YES）</h3>
+<p>対数変換後のヒストグラムでは、log10=0（すなわち間隔1年）に270件という圧倒的なピークが見られ、そこからlog10=3（間隔1,000年）に向かって緩やかに減少する。平均log10値は0.85（約7年に相当）、標準偏差は1.18である。この分布形状は、技術間隔が「対数正規分布（log-normal distribution）」に従うことを示唆している。</p>
 
-<p>時系列データ中の連続する技術マイルストーン間の間隔を時代別に集計した結果、平均間隔は旧石器時代の約53万年から急速に縮小し、近代では4年、デジタル時代では3.25年まで短縮していることが確認された。中央値でみると旧石器時代の7万年に対してデジタル時代は2年と、4桁以上の圧縮が起きている。</p>
+<div class="chart-container">
+<div class="chart-title">Fig.2 技術登場間隔の対数ヒストグラム</div>
+<canvas id="chartLogInterval"></canvas>
+<div class="chart-caption">463件の正の技術間隔を対数変換（log10）してヒストグラム化。log10=0（1年間隔）に270件が集中し、対数正規分布に近い形状を示す。</div>
+</div>
 
-<table class="appendix-table">
+<p>対数正規分布が成立する条件は、結果が複数の独立な要因の「積」として決まるプロセスにある。つまり技術の登場間隔を決定するのは、「足し算的」な要因の累積ではなく、「掛け算的」な要因の連鎖である。この特性は、ブライアン・アーサーの組み合わせ進化理論と驚くほど整合的である。アーサーが論じたように、新技術の登場確率が既存技術プールの「組み合わせ数」に比例するならば、各新技術が次の技術を生む確率を乗法的に変化させることになり、結果として間隔の分布は対数正規に近づく。</p>
+
+<p>カーツワイルのモデルでは、技術間隔は時間とともに指数関数的に短縮し、最終的にはゼロに収束するはずである。データの長期トレンドとしては確かに間隔は短縮しているが、対数正規分布のばらつき（標準偏差1.18）が示すように、ある時代のなかでの間隔の変動は大きく、予測可能な決定論的短縮とは言い難い。技術発展は確率的なプロセスであり、その確率構造は乗法的な組み合わせメカニズムによって生成されている。</p>
+
+<p>統計学的に興味深いのは、対数正規分布がほかの多くの社会的・自然的現象でも観察されることである。所得分布、都市の人口分布、鉱床のサイズ分布、科学論文の被引用数など、多くの現象が対数正規に従う。これらに共通するのは「累積的な優位性（cumulative advantage）」のメカニズムであり、社会学者ロバート・マートンが「マタイ効果」と呼んだ自己強化プロセスと本質的に同じ構造を持つ。技術発展もまた、既に豊かな技術プールを持つ文明がさらに多くの組み合わせを生み出すという累積的プロセスであり、その分布形状はこのメカニズムの帰結として理解できる。</p>
+
+
+<!-- ======== 5. FINDING 3 ======== -->
+<h2 class="article-h2" id="s5"><span class="section-num">SECTION 05</span>発見3: 産業革命が最大の変曲点</h2>
+
+<p>技術密度の時代間変化率を計算すると、歴史上の主要な変曲点が浮かび上がる。ここでは各時代区間の密度を前の区間の密度で割った「密度変化倍率」を指標とする。</p>
+
+<p>最も大きな単一の密度ジャンプは、先史時代（旧石器時代）から新石器時代への移行で観察される。農業革命に伴うこの転換では、密度が約139倍に跳ね上がった。定住生活と食料余剰が技術開発の専業化を可能にし、陶器、織物、冶金、文字といった技術クラスターが一気に生まれた。この×139という倍率は、データベース内の全区間を通じて最大の単一ジャンプである。</p>
+
+<p>しかし「持続的な加速」という観点で注目すべきは、産業革命期（1700年代後半〜1800年代中頃）である。近世の1500年〜1600年区間で×2.71、1600年〜1700年区間で×1.42、そして1700年〜1760年から1760年〜1800年への移行で×2.37と、150年以上にわたって×2前後の加速が持続した。農業革命は単発の大規模ジャンプであったのに対し、産業革命は複数区間にまたがる持続的加速として現れている。</p>
+
+<table class="data-table">
 <thead>
-<tr><th>時代</th><th>平均間隔（年）</th><th>中央値（年）</th><th>最小（年）</th><th>最大（年）</th><th>件数</th></tr>
+<tr><th>転換点</th><th>時期</th><th>密度変化倍率</th><th>性質</th></tr>
 </thead>
 <tbody>
-<tr><td>旧石器時代</td><td>536,538</td><td>70,000</td><td>3,000</td><td>4,400,000</td><td>13</td></tr>
-<tr><td>新石器時代</td><td>2,389</td><td>1,000</td><td>500</td><td>10,000</td><td>9</td></tr>
-<tr><td>古代</td><td>305</td><td>100</td><td>40</td><td>1,200</td><td>11</td></tr>
-<tr><td>中世</td><td>134</td><td>50</td><td>6</td><td>650</td><td>11</td></tr>
-<tr><td>近世</td><td>46</td><td>35</td><td>3</td><td>120</td><td>9</td></tr>
-<tr><td>産業時代</td><td>9</td><td>6</td><td>1</td><td>31</td><td>18</td></tr>
-<tr><td>近代</td><td>4</td><td>3</td><td>1</td><td>8</td><td>15</td></tr>
-<tr><td>デジタル時代</td><td>3.25</td><td>2</td><td>1</td><td>16</td><td>20</td></tr>
+<tr><td>農業革命</td><td>〜10,000 BCE</td><td class="num">x139</td><td>単発最大ジャンプ</td></tr>
+<tr><td>古代文明成立</td><td>〜3,000 BCE</td><td class="num">x3.5</td><td>都市化による加速</td></tr>
+<tr><td>大航海時代/印刷革命</td><td>1500-1600</td><td class="num">x2.71</td><td>知識流通の加速</td></tr>
+<tr><td>産業革命前半</td><td>1760-1800</td><td class="num">x2.37</td><td>機械化の連鎖</td></tr>
+<tr><td>産業革命後半</td><td>1800-1850</td><td class="num">x1.89</td><td>鉄道・電信の展開</td></tr>
+<tr><td>デジタル革命</td><td>2000-2024</td><td class="num">x1.65</td><td>AI・バイオの集中</td></tr>
 </tbody>
 </table>
 
-<p>ただし、この結果の解釈には慎重さが必要だ。旧石器時代の「長い間隔」は、部分的には年代測定の不確実性や考古学的記録の欠落によるものでもある。また、デジタル時代に技術の定義が細分化されていること（例えば深層学習2012年→GPT2018年を2件とカウントする）も間隔短縮の印象を強める。より頑健な検証のためには、独立した基準による技術選択とサンプリングが必要である。</p>
+<p>この結果は、ゴードンの「特別な世紀」論と部分的に一致する。産業革命期からの150年間は確かに特異な加速期であった。しかしゴードンがその後の不可逆的減速を主張するのに対し、本データは2000年以降に再び加速が始まっていることを示している。農業革命（×139倍）の圧倒的な規模も重要な含意を持つ。技術史における最大の変曲点は産業革命ではなく農業革命であり、定住・余剰食料・専業分化という社会構造の根本的変容が、技術密度を桁違いに押し上げたのである。</p>
 
-<h3 class="article-h3">H2：組み合わせ密度の増加（YES）</h3>
+<p>ここで注意すべきは、「密度変化倍率」は直前の区間との比較であるため、区間の長さに敏感であるという点である。旧石器時代は数百万年、新石器時代は数千年と区間長が極端に異なるため、農業革命の×139という数値は区間設定に依存する。しかしその依存性を考慮してもなお、農業革命前後での密度変化は他のどの転換点よりも大きい。考古学的記録が示す通り、農業の発明は人口の爆発的増加、定住集落の形成、職業の分化、書記体系の発明、そして国家の成立を連鎖的に引き起こし、それぞれが新たな技術開発の条件を整えた。この連鎖反応の規模において、産業革命ですら農業革命の後塵を拝する。</p>
 
-<p>時代別のTechToTech関係密度（= 関係数 ÷ 技術数）を計算した結果、旧石器時代の0.29から近代の0.39を経て、デジタル時代には0.91まで上昇していることが確認された。旧石器→デジタルで3倍以上の増加である。</p>
+<div class="insight-box">
+<div class="insight-label">FINDING 3</div>
+<p>産業革命は「持続的×2以上の加速が集中した」期間として最大の変曲点である。しかし単一のジャンプとしては農業革命（×139）がそれを大きく上回る。技術加速の最大の駆動力は、機械や計算機ではなく、社会構造の根本的変容にある。</p>
+</div>
 
-<table class="appendix-table">
+
+<!-- ======== 6. FINDING 4 ======== -->
+<h2 class="article-h2" id="s6"><span class="section-num">SECTION 06</span>発見4: 科学から技術へのタイムラグは分野限定的に縮小</h2>
+
+<p>science_to_techテーブルに記録された133件の科学-技術因果ペアを分析すると、科学的発見から対応する技術が実用化されるまでのタイムラグの歴史的推移が見える。全体的な傾向として、1900年以前の平均タイムラグは約164年であるのに対し、1900年以降は約25年に短縮している。さらに2000年以降に限定すると平均5.5年にまで縮まっている。</p>
+
+<p>しかし、この全体平均の劇的な短縮は、分野間の極端な格差を覆い隠している。分野別に分析すると、情報科学（computer_science）分野のタイムラグは平均8.9年と突出して短い。Transformer architectureから大規模言語モデル（GPT）までわずか1年、RLHFの理論から同じく1年。ティーリングマシンの概念からENIACまで9年、情報理論からインターネットまで21年と、情報科学の領域では科学と技術がほぼ同時進行で融合している。</p>
+
+<div class="chart-container">
+<div class="chart-title">Fig.3 科学-技術タイムラグの時代別推移</div>
+<canvas id="chartLag"></canvas>
+<div class="chart-caption">science_to_tech 133件を科学的発見の年代でプロット。1900年以前の平均164年から、2000年以降は平均5.5年に縮小。ただしこの縮小は情報科学・AIに集中している。</div>
+</div>
+
+<p>これに対し、数学（mathematics）分野では状況が大きく異なる。確率論（ベイズ、1763年）からアルゴリズム取引（2000年）まで237年、オイラーの公式（1748年）から交流送電（1886年）まで138年と、数学の理論が技術に結実するまでの時間は依然として長い。物理学もまた、量子力学（1925年）からMRIスキャナー（1977年）まで52年、量子コンピュータ（2019年）まで94年と、ばらつきが大きい。</p>
+
+<p>重要な発見は、科学と技術の関係が一方向的ではないということである。データベースには、技術が科学を駆動した事例も記録されている。ニューコメンの蒸気機関（1712年）がカルノーの熱力学サイクル（1824年）の研究を動機づけ、望遠鏡（1608年）がガリレオの天文学的発見を可能にし、近年ではAlphaFoldがタンパク質構造予測を革新した。科学と技術は双方向の因果連鎖で結ばれており、「科学が技術を加速する」という一般化は不正確である。正確には、「情報科学の領域でのみ、科学と技術の融合が急速に進んだ」のである。</p>
+
+<p>この発見は、カーツワイルの加速論に対する重要な留保を付加する。カーツワイルは科学的知見の蓄積が技術を加速し、その技術がさらなる科学的発見を加速するという正のフィードバックループを一般的なメカニズムとして描いた。しかしデータが示すのは、そのフィードバックが効果的に作動しているのは情報科学・AI・バイオテクノロジーといった特定の分野に限られるという事実である。数学や基礎物理学では、理論から応用までの経路は依然として長く、迂回的である。</p>
+
+<p>さらに興味深いのは、時代によってタイムラグの短縮速度が異なることである。17世紀から19世紀にかけては、ボイルの法則（1662年）からニューコメン蒸気機関（1712年）まで50年、電磁誘導（1831年）からダイナモ（1831年）まで即座、マクスウェル方程式（1865年）から無線通信（1895年）まで30年と、物理学・化学の分野でタイムラグが劇的に短縮した。しかし20世紀後半になると、量子力学（1925年）からMRI（1977年）まで52年、量子コンピュータ（2019年）まで94年と、基礎物理からの応用はむしろ長期化している。これは基礎科学のフロンティアが「日常スケール」から「極微・極大スケール」に移行し、実用化のための工学的障壁が高まったためと考えられる。一方で情報科学は、ソフトウェアという「物質的制約の少ない」媒体を通じて科学知見を即座に実装できるため、タイムラグの短縮が継続しているのである。</p>
+
+
+<!-- ======== 7. FINDING 5 ======== -->
+<h2 class="article-h2" id="s7"><span class="section-num">SECTION 07</span>発見5: 成長パターンは3群に分離する</h2>
+
+<p>quantitative_metricsテーブルに格納された591件の時系列データを指数関数フィッティングで分析すると、個別技術の成長速度は3つの明確な群に分離する。ここでの指標は「倍増時間（doubling time）」、すなわちある指標の値が2倍になるのに要する年数である。</p>
+
+<p>第一群は「超高速群」であり、倍増時間が2年未満の指標が該当する。AI学習計算量（pflop-days）は倍増時間わずか0.4年、すなわち5か月弱で2倍になる。メモリコスト（$/MB）の低下は倍増時間1.6年、トランジスタ数は2.0年である。これらはいずれも情報処理に直接関連する指標であり、ムーアの法則やその変種が依然として有効な領域である。トランジスタ数のデータは1971年の2,308個から2021年の582億個まで50年間にわたり、指数関数フィットのR2値は0.994という極めて高い適合度を示した。</p>
+
+<table class="data-table">
 <thead>
-<tr><th>時代</th><th>技術数</th><th>関係数</th><th>密度（関係/技術）</th></tr>
+<tr><th>群</th><th>指標</th><th>倍増時間</th><th>データ期間</th><th>R2</th></tr>
 </thead>
 <tbody>
-<tr><td>旧石器時代</td><td>14</td><td>4</td><td>0.29</td></tr>
-<tr><td>新石器時代</td><td>11</td><td>6</td><td>0.55</td></tr>
-<tr><td>古代</td><td>15</td><td>6</td><td>0.40</td></tr>
-<tr><td>中世</td><td>12</td><td>5</td><td>0.42</td></tr>
-<tr><td>近世</td><td>9</td><td>4</td><td>0.44</td></tr>
-<tr><td>産業時代</td><td>22</td><td>13</td><td>0.59</td></tr>
-<tr><td>近代</td><td>18</td><td>7</td><td>0.39</td></tr>
-<tr><td>デジタル時代</td><td>22</td><td>20</td><td>0.91</td></tr>
+<tr><td rowspan="3">(A) 超高速<br>(&lt;2年)</td><td>AI学習計算量</td><td class="num">0.4年</td><td>2012-2024</td><td class="num">--</td></tr>
+<tr><td>メモリコスト低下</td><td class="num">1.6年</td><td>1957-2020</td><td class="num">--</td></tr>
+<tr><td>トランジスタ数</td><td class="num">2.0年</td><td>1971-2021</td><td class="num">0.994</td></tr>
+<tr><td rowspan="3">(B) 高速<br>(3-20年)</td><td>FLOPS/ドル</td><td class="num">3.1年</td><td>1945-2024</td><td class="num">--</td></tr>
+<tr><td>太陽光発電コスト低下</td><td class="num">4.8年</td><td>1976-2023</td><td class="num">--</td></tr>
+<tr><td>世界特許出願数</td><td class="num">18.6年</td><td>1883-2023</td><td class="num">--</td></tr>
+<tr><td rowspan="2">(C) 低速<br>(&gt;20年)</td><td>科学論文数</td><td class="num">23年</td><td>1665-2024</td><td class="num">--</td></tr>
+<tr><td>世界人口</td><td class="num">1,128年</td><td>-10000-2024</td><td class="num">--</td></tr>
 </tbody>
 </table>
 
-<p>アーサーの組み合わせ進化論の予測と整合的な結果だが、近代（0.39）が古代（0.40）よりわずかに低い点は注目に値する。これはデータの粗さによる可能性もあるが、産業革命期にいったん別個の技術領域（機械・電気・化学など）が独立して発展し、相互連関が後から高まるという解釈も可能だ。</p>
+<p>第二群は「高速群」で、倍増時間が3年から20年の範囲にある。FLOPS/ドルは3.1年、太陽光発電コストの低下は4.8年、世界特許出願数は18.6年である。この群はエネルギー技術や知的財産活動を含み、情報処理とは間接的にしか関連しない指標が混在している。太陽光のコスト低下（スワンソンの法則）は注目に値するが、その速度は情報処理指標には遠く及ばない。</p>
 
-<h3 class="article-h3">H3：科学-技術タイムラグの縮小（YES）</h3>
+<p>第三群は「低速群」で、倍増時間が20年を超える。科学論文の年間出版数は約23年で倍増し、世界人口にいたっては倍増時間1,128年である。論文数は確かに指数関数的に増大しているが、そのペースはトランジスタ数の10分の1にすぎない。</p>
 
-<p>28件の科学-技術因果リンクを用いて、科学的発見から技術応用までのタイムラグの時代的変化を分析した。1900年以前のペアは平均133.5年のタイムラグを持ち、1900年以降のペアは平均28.9年と約4.6倍の短縮が確認された。特に2000年代以降の事例は劇的で、トランスフォーマーアーキテクチャ（2017年）からGPT（2018年）はわずか1年である。</p>
+<p>この3群の分離は決定的に重要な含意を持つ。一般に「技術が加速している」と語られるとき、実際に加速しているのは情報処理技術とそれに密接に結合した指標に限られる。エネルギー、材料、生物学の進歩はそれよりも一桁以上遅く、人間の社会的活動（論文執筆、特許出願）はさらに遅い。「技術の加速」ではなく「情報処理技術の加速」というのが、データが支持する正確な記述である。</p>
 
-<div class="finding-box">
-<div class="finding-label">H3の核心的発見</div>
-<p>科学→技術タイムラグの変化：1900年以前の平均 133.5年 → 1900年以降の平均 28.9年（約4.6倍の短縮）。Transformer→LLM = 1年という現代の極端な事例は、科学と技術の境界がほぼ消滅しつつある「科学の工学化」の端的な表れと見ることができる。</p>
+<p>この不均一性の原因を考えると、情報処理技術の特異性が浮かび上がる。半導体の微細化やソフトウェアの改善は、物質的制約（質量、エネルギー、熱力学的限界）から相対的に自由であり、設計の改良がそのまま性能向上に直結する。これに対し、エネルギー密度の向上やバッテリーの改良は物理化学的な限界に直面し、材料科学の進歩は原子レベルの実験と検証を必要とする。航空機の速度はコンコルドの退役以来むしろ低下し、建設技術の施工速度は30年前とほとんど変わらない。ヴァーツラフ・シュミルが指摘したように、「情報のビット」を扱う技術と「物質のアトム」を扱う技術では、進歩の速度に構造的な非対称が存在するのである。</p>
+
+<p>S字カーブ（ロジスティック曲線）のフィッティング分析も、この群分離を補強する。インターネット利用者数（R2=0.998）やスマートフォン利用者数（R2=0.991）は極めて高い適合度でロジスティック曲線に従っており、飽和値への収束が明確である。各技術は個別にはS字カーブを描いて飽和するが、カーツワイルが主張したような「S字カーブの包絡線が指数関数を形成する」というパターンは、フィッティングした9曲線の包絡線分析（R2=0.062）では確認されなかった。個々の技術は飽和し、次の技術が立ち上がるが、その受け渡しは滑らかな指数関数ではなく、むしろ断続的な階段状のパターンである。</p>
+
+
+<!-- ======== 8. FINDING 6 ======== -->
+<h2 class="article-h2" id="s8"><span class="section-num">SECTION 08</span>発見6: 技術ネットワークのスケールフリー構造</h2>
+
+<p>tech_to_techテーブルに記録された354件の技術間系譜関係をネットワークとして分析すると、その構造に顕著な偏りが見られる。各技術ノードの「次数」（その技術が直接関係する先行技術・後続技術の合計数）を集計すると、ごく少数のハブが不釣り合いに多くの接続を持つ構造が浮かび上がる。</p>
+
+<p>次数の上位を見ると、Smartphone（スマートフォン）が9で最大のハブとなり、Deep learning（深層学習）が8、Agriculture（農業）が7、World Wide Web（WWW）が7と続く。Bessemer processやLithium-ion batteryが6、Control of fire（火の使用）やInternet（TCP/IP）が5である。対照的に、1,191件中854件（71.7%）は次数0の「孤立ノード」であり、tech_to_techテーブルに一切の関係が記録されていない。</p>
+
+<p>この「少数のハブに接続が集中し、大多数が孤立する」パターンは、バラバシらが1999年に提唱した「スケールフリーネットワーク」の特徴と一致する。スケールフリーネットワークでは次数の分布がべき乗則に従い、ランダムネットワークでは考えられないほどの高次数ノードが出現する。技術ネットワークがスケールフリー構造を持つことは、アーサーの組み合わせ進化理論に対する間接的支持となる。スケールフリーネットワークは「優先的選択（preferential attachment）」、すなわち既に多くの接続を持つノードがさらに接続を獲得しやすいメカニズムで生成される。技術の世界では、既に多くの後続技術を生んだ基盤技術（農業、火、印刷、インターネット）が、さらに新たな組み合わせの起点となりやすいのである。</p>
+
+<p>ハブの顔ぶれも示唆的である。スマートフォンはGPS、カメラ、タッチスクリーン、モバイル通信、リチウムイオン電池など多数の先行技術を統合した「組み合わせの結晶」であり、同時にモバイル決済、AR、位置情報サービスなど多数の後続技術を生み出した。深層学習もまた、バックプロパゲーション、GPU並列計算、大規模データセットの組み合わせから生まれ、画像生成AI、自動運転、タンパク質構造予測といった新技術の基盤となった。これらのハブは、まさに「既存技術の組み合わせから新技術が生まれ、その新技術がさらなる組み合わせの起点となる」というアーサーの記述を体現している。</p>
+
+<div class="insight-box">
+<div class="insight-label">FINDING 6</div>
+<p>技術の系譜ネットワークはスケールフリー構造を持ち、854件（72%）の孤立技術と、Smartphone（9）やDeep learning（8）といった少数のハブから成る。この構造は「優先的選択」メカニズムによるものであり、アーサーの組み合わせ進化理論とバラバシのネットワーク科学の交差点に位置する。</p>
 </div>
 
-<table class="appendix-table">
-<thead>
-<tr><th>科学的発見</th><th>技術応用</th><th>発見年</th><th>応用年</th><th>タイムラグ（年）</th></tr>
-</thead>
-<tbody>
-<tr><td>光学理論（Ibn al-Haytham）</td><td>眼鏡</td><td>1021</td><td>1286</td><td>265</td></tr>
-<tr><td>光学理論（Ibn al-Haytham）</td><td>望遠鏡</td><td>1021</td><td>1608</td><td>587</td></tr>
-<tr><td>電磁誘導（ファラデー）</td><td>ダイナモ（発電機）</td><td>1831</td><td>1831</td><td>35（同年）</td></tr>
-<tr><td>細菌病原説</td><td>ペニシリン（抗生物質）</td><td>1861</td><td>1928</td><td>67</td></tr>
-<tr><td>マクスウェル方程式</td><td>無線電信（ラジオ）</td><td>1865</td><td>1895</td><td>30</td></tr>
-<tr><td>量子力学</td><td>トランジスタ</td><td>1925</td><td>1947</td><td>22</td></tr>
-<tr><td>核分裂</td><td>核分裂炉</td><td>1938</td><td>1942</td><td>4</td></tr>
-<tr><td>チューリング機械の概念</td><td>電子計算機（ENIAC）</td><td>1936</td><td>1945</td><td>9</td></tr>
-<tr><td>情報理論</td><td>インターネット（TCP/IP）</td><td>1948</td><td>1969</td><td>21</td></tr>
-<tr><td>DNA二重螺旋</td><td>CRISPR遺伝子編集</td><td>1953</td><td>2012</td><td>59</td></tr>
-<tr><td>誤差逆伝播法</td><td>深層学習</td><td>1986</td><td>2012</td><td>26</td></tr>
-<tr><td>Transformerアーキテクチャ</td><td>大規模言語モデル（GPT）</td><td>2017</td><td>2018</td><td>1</td></tr>
-</tbody>
-</table>
 
-<div class="prediction-box">
-<div class="prediction-label">解釈上の留意点</div>
-<p>H3の結果はデータ選択に強く依存する。タイムラグが長い事例（光学理論→望遠鏡の587年など）は1900年以前に集中しており、統計的に正直に比較するには事例数の増加と選択基準の標準化が必要である。また、「科学が技術を可能にした」というリニアな因果を事後的にコーディングするバイアス（後知恵偏向）にも注意が必要だ。</p>
+<!-- ======== 9. FINDING 7 ======== -->
+<h2 class="article-h2" id="s9"><span class="section-num">SECTION 09</span>発見7: 技術の文化的ライフサイクル</h2>
+
+<p>Google Ngram Viewerから取得した18,374件の用語頻度データは、技術が社会の言説空間においてどのようなライフサイクルを辿るかを明らかにする。主要技術関連用語の頻度ピーク年を時系列に並べると、明瞭な波状のパターンが浮かぶ。</p>
+
+<p>telegraph（電信）のピークは1887年、railroad（鉄道）は1916年、telephone（電話）は1916年、radio（ラジオ）は1945年、computer（コンピュータ）は1986年、television（テレビ）は1999年、internet（インターネット）は2019年である。各技術は社会的関心のピークに達した後、次の技術にその座を譲るという継承パターンを繰り返している。</p>
+
+<div class="chart-container">
+<div class="chart-title">Fig.4 主要技術用語のNgramピーク年系列</div>
+<canvas id="chartNgram"></canvas>
+<div class="chart-caption">Google Books Ngram Viewerから取得した主要技術用語の頻度ピーク年。telegraph(1887)からinternet(2019)まで、約30年間隔で技術的関心の焦点が移動している。近年は間隔が短縮。</div>
 </div>
 
-<h3 class="article-h3">3つの仮説の総括</h3>
+<p>telegraphからradioまでのピーク間隔は約29年ずつ（1887→1916→1945）であり、radioからcomputerまでは41年とやや長い。一方、computerからinternet（2019年）までは33年で、televisionを間に挟みながらもほぼ同じ約30年のペースが維持されている。この約30年という間隔は、カルロタ・ペレスが提唱した「技術経済パラダイム」の約50年周期と正確には一致しないが、概ね同じオーダーの波動的パターンを示している。ペレスのモデルでは各パラダイムは導入期と展開期に二分されるため、Ngramのピークが導入期の終盤に対応するとすれば、その半波長として30年前後は妥当な値である。</p>
 
-<p>初期分析の結果は、3つの仮説すべてにおいて「加速」を支持する初期証拠を示した。H3のタイムラグ縮小が最も劇的（133.5年→28.9年、約4.6倍）で、H2の組み合わせ密度増加はデジタル時代が旧石器時代の3倍以上、H1の技術間隔短縮は旧石器→デジタルで数桁の変化という結果だ。ただし現時点の162件のデータポイント（123技術+39科学）では、エラーバーが大きく、結論を確定するには不十分である。目標とする1,000件以上への拡充が、検証の頑健性向上のために不可欠だ。</p>
+<p>注目すべきは、computerからinternetへの間隔が、telegraph-railroad-radioの初期系列と比較してやや短縮していることである。これは情報技術の世代交代が加速していることの文化的な反映かもしれない。しかし、大幅な短縮ではなく、波そのものの基本周期が維持されている点は、技術の社会浸透には一定の時間がかかるという構造的制約を示唆している。新技術の「発明」は加速しても、それが社会全体の言説を変え、次の技術に道を譲るまでのサイクルには、人間の世代交代や制度の慣性に起因する固有の時間スケールが存在する。</p>
 
-<!-- Section 10 -->
-<span class="section-num" id="s10">SECTION 10</span>
-<h2 class="article-h2">主要参考文献</h2>
+<p>Ngramデータのもう一つの重要な示唆は、各技術用語がピークに達した後に必ず衰退するという普遍的なパターンである。railroadは1916年のピーク後に着実に減少し、radioも1945年以降は下降の一途を辿っている。技術そのものが消えるわけではなく、鉄道もラジオも今日なお使われている。しかし社会的な注目は常に「次なるもの」に移行する。この衰退パターンは、技術がインフラとして社会に浸透し「当たり前」になると、言説空間から退場するという社会学的なプロセスを反映している。現在のinternetやcomputerもやがてこのパターンに従い、次の支配的技術用語（おそらくAI関連）にピークの座を譲ると予測される。quantitative_metricsテーブルに記録された「50百万ユーザー到達時間」の指標も、この加速を裏付ける。電話は75年、ラジオは38年、テレビは13年、インターネットは4年、FacebookはChatGPTは2か月以内で5,000万ユーザーに到達した。技術の「発明から普及」までの時間は短縮しているが、「普及から次の交代」までの時間はそこまで短縮していない。</p>
 
-<p>本プロジェクトの理論的・方法論的基盤となる主要文献を加速論・技術史・批判的検証の3カテゴリに整理する。</p>
 
-<table class="appendix-table">
-<thead>
-<tr><th>著者</th><th>書名・論文名</th><th>年</th><th>本プロジェクトへの示唆</th></tr>
-</thead>
-<tbody>
-<tr><td>Ray Kurzweil</td><td><em>The Singularity Is Near</em></td><td>2005</td><td>技術マイルストーンの対数時間軸リスト、演算コスト時系列</td></tr>
-<tr><td>Ray Kurzweil</td><td><em>The Singularity Is Nearer</em></td><td>2024</td><td>2005年予測の更新と検証データ。予測精度の事後評価モデル</td></tr>
-<tr><td>W. Brian Arthur</td><td><em>The Nature of Technology</em></td><td>2009</td><td>組み合わせ関係グラフの理論的根拠。TechToTechの設計基盤</td></tr>
-<tr><td>Kevin Kelly</td><td><em>What Technology Wants</em></td><td>2010</td><td>テクニウムの包括的技術リスト。era分類の参照</td></tr>
-<tr><td>Carlota Perez</td><td><em>Technological Revolutions and Financial Capital</em></td><td>2002</td><td>5つの技術革命波のフレーム。時代区分の参照</td></tr>
-<tr><td>Joel Mokyr</td><td><em>The Lever of Riches</em></td><td>1990</td><td>古代〜近代の技術イノベーション包括リスト</td></tr>
-<tr><td>Vaclav Smil</td><td><em>Creating the Twentieth Century</em></td><td>2005</td><td>1867〜現代の技術革新の定量的記述</td></tr>
-<tr><td>Ian Morris</td><td><em>The Measure of Civilization</em></td><td>2013</td><td>社会発展指数（SDI）の15,000年データセット</td></tr>
-<tr><td>Robert Gordon</td><td><em>The Rise and Fall of American Growth</em></td><td>2016</td><td>TFPデータ。加速論への対抗仮説の主要根拠</td></tr>
-<tr><td>Jonathan Huebner</td><td>"A Possible Declining Trend for Worldwide Innovation"</td><td>2005</td><td>7,198件の技術発展データに基づく低下論。1人あたり指標の重要性</td></tr>
-<tr><td>Robin Hanson</td><td>"Long-Term Growth As a Sequence of Exponential Modes"</td><td>2000</td><td>指数モードの連鎖モデル。時代区分のフレーム</td></tr>
-</tbody>
-</table>
+<!-- ======== 10. EVALUATION & SYNTHESIS ======== -->
+<h2 class="article-h2" id="s10"><span class="section-num">SECTION 10</span>各理論の評価と統合的解釈</h2>
 
-<p>本プロジェクトの次のステップは、上記文献から体系的にデータを抽出し、現在の162件のデータポイントを1,000件以上へ拡充することである。特に優先度が高いのは、Wikipediaの "Timeline of Historic Inventions" からのDBpedia/Wikidata経由での構造化データ抽出（121,000イベント・325,000リンク）と、Our World in Dataの技術普及率データセットの取り込みだ。これにより、初期分析で得られた3つの仮説に対する初期支持をより頑健な統計的根拠で裏付けることができる。</p>
+<h3 class="article-h3">10.1 カーツワイルの収穫加速の法則</h3>
 
+<p>カーツワイルの主張のうち、「長期的に見れば技術密度は上昇している」という基本命題はデータによって支持される。700万年間で400万倍の密度上昇は、文字通りの意味での加速である。しかし3つの停滞期の存在（発見1）は、「一様な指数関数的加速」という彼の主張の核心部分を否定する。また、倍増時間の3群分離（発見5）は、加速が情報処理技術に限定された現象であることを示しており、「技術全般の加速」という一般化には修正が必要である。カーツワイルの正確さは「情報処理技術に関する長期トレンド」に限定して評価すべきであり、その範囲内では彼の洞察は鋭い。</p>
+
+<h3 class="article-h3">10.2 アーサーの組み合わせ進化</h3>
+
+<p>アーサーの理論は、本分析で最も広範な間接的支持を得た。技術間隔の対数正規分布（発見2）は乗法的プロセスを示唆し、技術ネットワークのスケールフリー構造（発見6）は優先的選択メカニズムの作動を示している。これらはいずれも、新技術が既存技術の組み合わせから生まれるという彼のモデルと整合的である。ただしアーサーの理論は定性的な枠組みであり、「どのくらいの速度で加速するか」という定量的予測を含まないため、検証は本質的に間接的なものにとどまる。</p>
+
+<h3 class="article-h3">10.3 ゴードンの特別な世紀</h3>
+
+<p>産業革命期に持続的×2以上の加速が集中しているという発見3は、ゴードンの「特別な世紀」論の前半部分を強く支持する。しかしゴードンが主張する「その後の不可逆的減速」は、2000年以降のデジタル時代のデータと矛盾する。AI学習計算量の倍増時間0.4年は、産業革命期のいかなる指標よりも速い。ゴードンの議論が見落としているのは、「特別な世紀」の産物であった電力と通信のインフラ上に、情報処理という新たな加速層が構築されたことである。</p>
+
+<h3 class="article-h3">10.4 ヒューブナーの減速論</h3>
+
+<p>1960年〜2000年の停滞期（発見1の第三停滞期）は、ヒューブナーが指摘した減速と時期的に重なる。しかしヒューブナーが「不可逆的な低下」と見なしたものは、データ上は一時的な停滞に過ぎず、2000年以降に再び技術密度は上昇に転じている。ヒューブナーの手法は「重要な技術イノベーション」の選定基準に依存しており、デジタル時代の小粒だが多数の技術革新を過小評価している可能性がある。</p>
+
+<h3 class="article-h3">10.5 ペレスの技術経済パラダイム</h3>
+
+<p>Ngramの約30年周期（発見7）はペレスの波動モデルと概ね整合的であり、技術発展が循環的な性質を持つことを支持している。3つの停滞期もまた、ペレスの「パラダイム間の移行期」として解釈可能である。ペレスのモデルは加速論と減速論の対立を超えた視点を提供しており、データとの適合性が高い。</p>
+
+<h3 class="article-h3">10.6 統合的解釈</h3>
+
+<div class="callout-box">
+<p><strong>統合命題:</strong> 技術発展は波状の加速と減速を繰り返しながら、長期的には密度が上昇する。ただしその上昇の主因は情報処理技術であり、全ドメインが一様に加速しているわけではない。技術の組み合わせ的性質がスケールフリーネットワークを生み、そのハブ構造が次の波を決定する。社会浸透には約30年の固有周期が存在し、発明の速度がこのボトルネックを完全には超えられない。</p>
 </div>
 
+<p>この統合的解釈は、5つの理論をそれぞれ部分的に包含する。カーツワイルの加速は長期トレンドと情報技術に限定して成立し、アーサーの組み合わせメカニズムは分布構造とネットワーク構造で支持され、ゴードンの特別な世紀は変曲点分析で確認され、ヒューブナーの減速は停滞期の一つとして位置づけられ、ペレスの波動は文化的ライフサイクルで観察される。対立する理論のそれぞれが、技術発展という多面的現象の一面を正しく捉えていたのである。</p>
+
+<p>この統合的視座から現在のAI革命を眺めると、いくつかの示唆が得られる。AI学習計算量の倍増時間0.4年は、過去のどの技術指標よりも速い。しかし発見1の教訓は、このような超高速加速は持続しないということである。産業革命期のエネルギー技術も一時期は驚異的な加速を見せたが、やがて停滞期に入った。AI計算量の加速がどこまで続くかは、エネルギーコスト、チップ製造能力、そして学習データの有限性という物質的制約に最終的には規定される。ビットの世界の加速はアトムの世界の制約を永遠に回避することはできない。同時に、発見6のスケールフリー構造は、現在のハブ技術（深層学習、スマートフォン）の周囲に今後も新たな技術クラスターが形成されることを予測する。問題は、そのクラスターが情報処理技術に限定され続けるのか、それともエネルギーや材料科学にも波及するのかである。</p>
+
+
+<!-- ======== 11. CONCLUSION ======== -->
+<h2 class="article-h2" id="s11"><span class="section-num">SECTION 11</span>結論と限界</h2>
+
+<p>225,921レコードのボトムアップ分析から導かれた主要結論は以下の3つである。</p>
+
+<p>第一に、技術発展の加速は実在するが、一様な指数関数ではない。700万年間で400万倍の密度上昇は確認されるものの、中世後期・産業革命直後・冷戦後期の3回の停滞期を挟む段階的な加速パターンが実態である。カーツワイルの対数グラフ上の直線は、解像度が粗すぎる。技術密度の推移は「階段関数」に近く、各段の高さ（加速の程度）と踊り場の長さ（停滞の期間）は、社会構造の変容や先行技術パラダイムの成熟度によって規定されている。</p>
+
+<p>第二に、加速は情報処理技術に集中している。倍増時間0.4年のAI計算量から1,128年の世界人口まで、技術指標の成長速度は3桁以上の差がある。「技術が加速している」ではなく「情報処理技術が加速している」が正確な表現であり、エネルギー・材料・医療の進歩はそれより一桁以上遅い。</p>
+
+<p>第三に、技術発展のメカニズムは組み合わせ的であり、そのネットワーク構造がスケールフリー性を持つ。対数正規分布の間隔と少数ハブへの集中は、技術が既存要素の再結合から生まれるというアーサーの理論と整合する。この構造は、次のハブ技術（現在はAIとバイオテクノロジー）の周囲に新たな技術クラスターが形成されることを予測する。ネットワーク構造の観点からすれば、AIが農業（次数7）やWorld Wide Web（次数7）と同等以上のハブとなりつつあることは、AI技術が単独の応用領域を超えて、医療診断、材料設計、気候モデリング、創薬といった多分野を結合する「メタ技術」としての性質を獲得しつつあることを反映している。</p>
+
+<h3 class="article-h3">11.1 データの限界</h3>
+
+<p>本分析にはいくつかの重要な限界がある。第一に、technologiesテーブルの1,191件のうち、特に先史時代の記録は考古学的証拠に依存しており、時間的解像度が粗い（年代精度がmillenniumやgeologicalレベル）。旧石器時代の「間隔100万年」は、実際には多くの未記録の技術革新が存在したはずであり、密度は過小評価されている。</p>
+
+<p>第二に、tech_to_techテーブルの354件の関係データは、1,191件の技術に対して不十分である。854件（72%）が孤立ノードとなっているのは、技術が本当に孤立しているからではなく、関係データの収集が不完全であるためである。スケールフリー構造の分析は、このデータの疎さに影響されている可能性がある。</p>
+
+<p>第三に、先史データの時間的粗さが密度変化率の計算に不均衡をもたらしている。農業革命の×139倍という数値は、旧石器時代の密度を数百万年の区間で平均している結果であり、新石器時代の数千年の区間と直接比較することの妥当性には議論の余地がある。</p>
+
+<p>第四に、quantitative_metricsテーブルの591件はカバーするドメインが偏っており、情報技術の指標が多く、農業・建設・繊維などの伝統的産業の定量データが不足している。3群分離の発見は、このサンプリングバイアスに影響されている可能性がある。</p>
+
+<h3 class="article-h3">11.2 今後の課題</h3>
+
+<p>データ基盤の拡充としては、tech_to_tech関係データの増強（現在354件→目標2,000件以上）が最も優先度が高い。孤立ノードの解消により、ネットワーク構造の分析精度が大幅に向上する。また、OECD R&D統計（64,890件）やSeshat歴史データベース（25,895件）との定量的クロス分析は未着手であり、これらを組み込むことで文明の社会経済的条件と技術密度の関係が解明できる。</p>
+
+<p>分析手法としては、ベイズ変化点検出による停滞期の統計的特定、技術ネットワークの時間発展モデル、そしてOWIDのエネルギー・CO2データを用いた技術とマクロ指標の因果推論が今後の課題である。ノーベル賞受賞データ（1,075件）を用いた「基礎科学の生産性」の時代別分析、Seshatデータを用いた「文明の複雑性と技術密度の相関」の検証、そして世界銀行のR&D支出データとOECDのSTI指標を用いた「研究投資と技術産出の弾力性」の推定も、このデータベースが可能にする分析の一部である。</p>
+
+<p>最後に、本分析の知的射程について述べておきたい。技術発展の加速・減速を問う行為は、つまるところ人類文明の将来に対する楽観と悲観のあいだの判断に関わる。本レポートが示したのは、その判断を単純な二項対立に還元すべきではないという教訓である。技術発展は加速もし、停滞もし、波打ちもする。その多面性を認識した上で、情報処理技術の加速をどのように社会全体の厚生向上に結びつけるか、エネルギーと材料科学の停滞をどう打破するか、そして約30年周期の技術パラダイム転換に社会制度をどう適応させるか。データが語るのは事実であり、そこからどのような未来を設計するかは人間の選択に委ねられている。225,921レコードのデータベースは、その選択の土台となる事実の体系を提供するものである。</p>
+
+</article>
+
+<!-- ======== FOOTER ======== -->
 <footer class="report-footer">
-<p>本レポートはtech-acceleration-dbプロジェクトの基盤リサーチ報告である。収録データは技術マイルストーン123件・科学的発見39件・技術系譜関係65件・科学-技術因果リンク28件（2026年4月時点）。分析結果はこの初期データに基づく予備的知見であり、データ拡充（目標1,000件以上）により修正・精緻化される。加速論と停滞論のどちらが正しいかは現時点では断定できず、本プロジェクトの目標は結論を先取りすることではなく、議論に耐える実証基盤を構築することである。</p>
-<p>Analysis: Claude Code (Sonnet 4.6) | Research: 5エージェント並列調査チーム | Date: 2026-04-26</p>
+  <p><strong>分析日:</strong> 2026年4月26日</p>
+  <p><strong>データソース:</strong> tech-acceleration-db（225,921レコード・44テーブル・13外部ソース）-- technologies, sciences, tech_to_tech, science_to_tech, Seshat, OWID, Nobel, Ngram, OECD MSTI, Wikidata, OpenAlex, Semantic Scholar, DBpedia</p>
+  <p><strong>手法:</strong> ボトムアップ定量分析（密度分析・分布分析・変曲点検出・タイムラグ分析・指数関数フィッティング・ネットワーク次数分析・Ngram時系列分析）</p>
+  <p style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-light)">本分析はミラツク・インテリジェンス・パイプラインの一環として実施された。技術発展加速度検証データベースは、カーツワイル、アーサー、ゴードン、ヒューブナー、ペレスの5つの理論を同一のデータ基盤上で評価可能にすることを目的として構築されたものであり、今後もデータの拡充と分析の深化を継続する。</p>
 </footer>
+
+<!-- ======== CHARTS ======== -->
+<script>
+const isDark = () => document.documentElement.dataset.theme === 'dark';
+const gridColor = () => isDark() ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+const textColor = () => isDark() ? '#AAAAAA' : '#555555';
+const accent = () => isDark() ? '#FF4444' : '#CC1400';
+const blue = () => isDark() ? '#64b5f6' : '#1565c0';
+const orange = () => isDark() ? '#ffb74d' : '#e65100';
+const green = () => isDark() ? '#66bb6a' : '#2e7d32';
+
+Chart.defaults.font.family = "'Noto Sans JP', sans-serif";
+Chart.defaults.font.size = 11;
+
+// Fig.1: Technology density by era
+const ctxDensity = document.getElementById('chartDensity').getContext('2d');
+new Chart(ctxDensity, {
+  type: 'bar',
+  data: {
+    labels: ['旧石器', '新石器', '古代', '中世', '近世', '産業革命期', '近代', 'デジタル'],
+    datasets: [{
+      label: '技術数',
+      data: [30, 31, 62, 49, 45, 73, 76, 83],
+      backgroundColor: [
+        'rgba(204,20,0,0.15)', 'rgba(204,20,0,0.25)', 'rgba(204,20,0,0.35)',
+        'rgba(204,20,0,0.4)', 'rgba(204,20,0,0.5)', 'rgba(204,20,0,0.65)',
+        'rgba(204,20,0,0.8)', 'rgba(204,20,0,1)'
+      ],
+      borderColor: 'rgba(204,20,0,0.8)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: gridColor() },
+        ticks: { color: textColor() }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: textColor() }
+      }
+    }
+  }
+});
+
+// Fig.2: Log-interval histogram
+const ctxLog = document.getElementById('chartLogInterval').getContext('2d');
+new Chart(ctxLog, {
+  type: 'bar',
+  data: {
+    labels: ['0 (1yr)', '0.5 (3yr)', '1.0 (10yr)', '1.5 (30yr)', '2.0 (100yr)', '2.5 (300yr)', '3.0 (1Kyr)', '3.5 (3Kyr)', '4.0 (10Kyr)', '4.5 (30Kyr)', '5.0 (100Kyr)', '5.5 (300Kyr)', '6.0 (1Myr)', '6.5 (3Myr)'],
+    datasets: [{
+      label: '件数',
+      data: [270, 30, 42, 28, 22, 15, 36, 4, 3, 2, 3, 2, 4, 2],
+      backgroundColor: 'rgba(21,101,192,0.5)',
+      borderColor: 'rgba(21,101,192,0.8)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: '件数', color: textColor() },
+        grid: { color: gridColor() },
+        ticks: { color: textColor() }
+      },
+      x: {
+        title: { display: true, text: 'log10(間隔年数)', color: textColor() },
+        grid: { display: false },
+        ticks: { color: textColor(), maxRotation: 45 }
+      }
+    }
+  }
+});
+
+// Fig.3: Science-to-tech time lag
+const ctxLag = document.getElementById('chartLag').getContext('2d');
+const lagData = [
+  {x:-500,y:100},{x:-300,y:1700},{x:-300,y:300},{x:170,y:630},{x:820,y:794},
+  {x:830,y:450},{x:1021,y:265},{x:1021,y:587},{x:1021,y:569},{x:1604,y:52},
+  {x:1619,y:37},{x:1628,y:188},{x:1653,y:217},{x:1660,y:166},{x:1662,y:50},
+  {x:1687,y:74},{x:1687,y:82},{x:1687,y:117},{x:1687,y:82},{x:1705,y:26},
+  {x:1748,y:138},{x:1752,y:48},{x:1774,y:82},{x:1783,y:78},{x:1785,y:52},
+  {x:1789,y:35},{x:1801,y:25},{x:1820,y:17},{x:1824,y:60},{x:1828,y:28},
+  {x:1828,y:107},{x:1831,y:35},{x:1831,y:3},{x:1834,y:52},{x:1842,y:93},
+  {x:1845,y:11},{x:1850,y:34},{x:1859,y:69},{x:1861,y:67},{x:1861,y:6},
+  {x:1865,y:30},{x:1865,y:25},{x:1886,y:9},{x:1886,y:49},{x:1896,y:46},
+  {x:1897,y:50},{x:1897,y:9},{x:1898,y:77},{x:1901,y:53},{x:1905,y:40},
+  {x:1905,y:73},{x:1905,y:49},{x:1912,y:18},{x:1915,y:63},{x:1920,y:15},
+  {x:1920,y:15},{x:1920,y:18},{x:1925,y:22},{x:1925,y:35},{x:1925,y:17},
+  {x:1925,y:52},{x:1925,y:94},{x:1927,y:92},{x:1927,y:33},{x:1928,y:14},
+  {x:1936,y:9},{x:1938,y:4},{x:1938,y:7},{x:1939,y:13},{x:1944,y:28},
+  {x:1944,y:56},{x:1945,y:6},{x:1948,y:21},{x:1948,y:22},{x:1953,y:59},
+  {x:1953,y:37},{x:1953,y:24},{x:1955,y:65},{x:1958,y:56},{x:1968,y:9},
+  {x:1971,y:6},{x:1976,y:32},{x:1976,y:21},{x:1976,y:47},{x:1977,y:21},
+  {x:1977,y:16},{x:1984,y:28},{x:1985,y:29},{x:1986,y:26},{x:1989,y:2},
+  {x:2003,y:2},{x:2003,y:9},{x:2003,y:20},{x:2003,y:11},{x:2004,y:19},
+  {x:2004,y:8},{x:2004,y:10},{x:2006,y:12},{x:2012,y:6},{x:2012,y:7},
+  {x:2014,y:8},{x:2017,y:1},{x:2017,y:1},{x:2017,y:7},{x:2017,y:6},
+  {x:2020,y:2},{x:2021,y:2}
+];
+new Chart(ctxLag, {
+  type: 'scatter',
+  data: {
+    datasets: [{
+      label: 'Science-to-Tech Lag (years)',
+      data: lagData,
+      backgroundColor: 'rgba(204,20,0,0.4)',
+      borderColor: 'rgba(204,20,0,0.6)',
+      pointRadius: 3,
+      pointHoverRadius: 5
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        type: 'logarithmic',
+        title: { display: true, text: 'タイムラグ (年)', color: textColor() },
+        grid: { color: gridColor() },
+        ticks: { color: textColor() }
+      },
+      x: {
+        title: { display: true, text: '科学的発見の年', color: textColor() },
+        grid: { color: gridColor() },
+        ticks: { color: textColor() }
+      }
+    }
+  }
+});
+
+// Fig.4: Ngram peak years
+const ctxNgram = document.getElementById('chartNgram').getContext('2d');
+new Chart(ctxNgram, {
+  type: 'bar',
+  data: {
+    labels: ['telegraph', 'railroad', 'telephone', 'radio', 'computer', 'television', 'internet'],
+    datasets: [{
+      label: 'ピーク年',
+      data: [1887, 1916, 1916, 1945, 1986, 1999, 2019],
+      backgroundColor: [
+        'rgba(230,81,0,0.3)', 'rgba(230,81,0,0.4)', 'rgba(230,81,0,0.45)',
+        'rgba(230,81,0,0.55)', 'rgba(230,81,0,0.7)', 'rgba(230,81,0,0.85)',
+        'rgba(230,81,0,1)'
+      ],
+      borderColor: 'rgba(230,81,0,0.8)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        min: 1880,
+        max: 2025,
+        title: { display: true, text: 'Ngram頻度ピーク年', color: textColor() },
+        grid: { color: gridColor() },
+        ticks: { color: textColor() }
+      },
+      y: {
+        grid: { display: false },
+        ticks: { color: textColor() }
+      }
+    }
+  }
+});
+</script>
 
 </body>
 </html>
