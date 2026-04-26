@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLA タイムラインダッシュボード | 1990-2025</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+
+  /* CLA layer colors */
+  --layer-litany: #1565C0;
+  --layer-systemic: #2E7D32;
+  --layer-worldview: #6A1B9A;
+  --layer-myth: #BF360C;
+  --layer-litany-bg: rgba(21,101,192,0.06);
+  --layer-systemic-bg: rgba(46,125,50,0.06);
+  --layer-worldview-bg: rgba(106,27,154,0.06);
+  --layer-myth-bg: rgba(191,54,12,0.06);
+
+  /* PESTLE colors */
+  --p-color: #1565C0; --e-color: #2E7D32; --s-color: #E65100;
+  --t-color: #4527A0; --l-color: #AD1457; --env-color: #00695C;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333; --border-light: #2A2A2A;
+  --surface: #1E1E1E; --accent: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+  --layer-litany: #64B5F6; --layer-systemic: #81C784; --layer-worldview: #CE93D8; --layer-myth: #FF8A65;
+  --layer-litany-bg: rgba(100,181,246,0.08); --layer-systemic-bg: rgba(129,199,132,0.08);
+  --layer-worldview-bg: rgba(206,147,216,0.08); --layer-myth-bg: rgba(255,138,101,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; }
+.layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  border-right: 1px solid var(--border); background: var(--surface);
+  padding: 20px 0;
+}
+.sidebar-header { padding: 0 16px 16px; border-bottom: 1px solid var(--border-light); }
+.sidebar-title { font-family: var(--font-serif); font-size: 0.9rem; font-weight: 700; }
+.sidebar-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.decade-group { padding: 12px 0 4px; }
+.decade-label {
+  padding: 4px 16px; font-size: 0.68rem; font-weight: 700;
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.year-list { list-style: none; }
+.year-item a {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 16px; font-size: 0.82rem; color: var(--text-secondary);
+  text-decoration: none; transition: background 0.15s;
+}
+.year-item a:hover { background: var(--border-light); color: var(--text); }
+.year-item a.active { background: var(--accent-muted); color: var(--accent); font-weight: 600; }
+.year-badge {
+  font-size: 0.64rem; font-family: monospace; background: var(--border-light);
+  padding: 1px 5px; color: var(--text-muted);
+}
+.year-item a.active .year-badge { background: var(--accent-muted); color: var(--accent); }
+
+/* Main content */
+.main { padding: 28px 32px; max-width: 900px; }
+.page-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.back { display: inline-block; margin-bottom: 12px; font-size: 0.8rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+.page-title { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; }
+.page-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; line-height: 1.7; }
+
+/* Stats bar */
+.stats-bar {
+  display: flex; gap: 20px; margin-bottom: 24px;
+  padding: 14px 18px; background: var(--surface); border: 1px solid var(--border-light);
+}
+.stat { text-align: center; }
+.stat-value { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 1px; }
+
+/* Year selector for mobile */
+.year-selector-bar { display: none; margin-bottom: 20px; }
+.year-select { width: 100%; padding: 8px 12px; font-size: 0.9rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+
+/* Year header */
+.year-display {
+  display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px;
+}
+.year-num { font-family: var(--font-serif); font-size: 2.8rem; font-weight: 700; line-height: 1; }
+.year-nav { display: flex; gap: 8px; align-items: center; }
+.year-nav-btn {
+  padding: 4px 12px; font-size: 0.78rem; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); cursor: pointer;
+  text-decoration: none; display: inline-block;
+}
+.year-nav-btn:hover { background: var(--border-light); }
+
+/* Supernode banner */
+.supernode-banner {
+  padding: 12px 16px; margin-bottom: 20px;
+  background: var(--accent-muted); border-left: 3px solid var(--accent);
+  font-size: 0.82rem; line-height: 1.7;
+}
+.supernode-type { font-size: 0.68rem; font-weight: 700; color: var(--accent); letter-spacing: 0.06em; margin-bottom: 4px; }
+
+/* Synthesis section */
+.synthesis-section { margin-bottom: 24px; }
+.synthesis-body {
+  padding: 14px 16px; border: 1px solid var(--border-light);
+  background: var(--card); font-size: 0.84rem; line-height: 1.85; color: var(--text-secondary);
+}
+
+/* PESTLE tabs */
+.pestle-tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+.pestle-tab {
+  padding: 5px 12px; font-size: 0.78rem; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary);
+  cursor: pointer; letter-spacing: 0.02em;
+}
+.pestle-tab.active { border-color: transparent; color: white; }
+.pestle-tab[data-cat="Political"].active { background: var(--p-color); }
+.pestle-tab[data-cat="Economic"].active { background: var(--e-color); }
+.pestle-tab[data-cat="Social"].active { background: var(--s-color); }
+.pestle-tab[data-cat="Technological"].active { background: var(--t-color); }
+.pestle-tab[data-cat="Legal"].active { background: var(--l-color); }
+.pestle-tab[data-cat="Environmental"].active { background: var(--env-color); }
+.pestle-tab-all.active { background: var(--accent); }
+
+/* CLA grid: all 6 categories */
+.cla-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.cla-grid.single { grid-template-columns: 1fr; }
+
+/* CLA card */
+.cla-card { border: 1px solid var(--border-light); background: var(--card); }
+.cla-card-header {
+  padding: 10px 14px; display: flex; justify-content: space-between;
+  align-items: center; border-bottom: 1px solid var(--border-light);
+}
+.cat-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; }
+.cat-label[data-cat="Political"] { color: var(--p-color); }
+.cat-label[data-cat="Economic"] { color: var(--e-color); }
+.cat-label[data-cat="Social"] { color: var(--s-color); }
+.cat-label[data-cat="Technological"] { color: var(--t-color); }
+.cat-label[data-cat="Legal"] { color: var(--l-color); }
+.cat-label[data-cat="Environmental"] { color: var(--env-color); }
+.cat-badge {
+  font-size: 0.62rem; padding: 1px 6px; background: var(--surface);
+  color: var(--text-muted); font-family: monospace;
+}
+
+/* CLA layers */
+.cla-layers { padding: 14px; display: grid; gap: 10px; }
+.layer { padding: 10px 12px; border-radius: 2px; }
+.layer-litany { background: var(--layer-litany-bg); border-left: 2px solid var(--layer-litany); }
+.layer-systemic { background: var(--layer-systemic-bg); border-left: 2px solid var(--layer-systemic); }
+.layer-worldview { background: var(--layer-worldview-bg); border-left: 2px solid var(--layer-worldview); }
+.layer-myth { background: var(--layer-myth-bg); border-left: 2px solid var(--layer-myth); }
+.layer-label {
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 4px;
+}
+.layer-litany .layer-label { color: var(--layer-litany); }
+.layer-systemic .layer-label { color: var(--layer-systemic); }
+.layer-worldview .layer-label { color: var(--layer-worldview); }
+.layer-myth .layer-label { color: var(--layer-myth); }
+.layer-text { font-size: 0.8rem; line-height: 1.75; color: var(--text-secondary); }
+
+/* Tension & emerging */
+.layer-tension { background: var(--surface); border-left: 2px solid var(--border); }
+.layer-tension .layer-label { color: var(--text-muted); }
+.layer-emerging { background: var(--surface); border-left: 2px dashed var(--accent); }
+.layer-emerging .layer-label { color: var(--accent); }
+
+/* Evidence toggle */
+.evidence-toggle {
+  font-size: 0.68rem; color: var(--text-muted); cursor: pointer;
+  margin-top: 4px; display: inline-block; text-decoration: underline;
+}
+.evidence-content { display: none; margin-top: 6px; font-size: 0.72rem; color: var(--text-muted); line-height: 1.65; }
+.evidence-content.open { display: block; }
+
+/* Loading state */
+.loading { text-align: center; padding: 60px; color: var(--text-muted); font-size: 0.9rem; }
+
+/* Layer legend */
+.legend {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+  padding: 10px 14px; background: var(--surface); border: 1px solid var(--border-light);
+  font-size: 0.72rem;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 8px; height: 8px; flex-shrink: 0; }
+
+/* Theme toggle */
+.theme-toggle {
+  position: fixed; top: 16px; right: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100;
+}
+
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .year-selector-bar { display: block; }
+  .main { padding: 16px; }
+  .cla-grid { grid-template-columns: 1fr; }
+  .stats-bar { flex-wrap: wrap; gap: 12px; }
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+
+<div class="layout">
+  <!-- Sidebar: year navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">CLA タイムライン</div>
+      <div class="sidebar-sub" id="sidebar-sub">読み込み中...</div>
+    </div>
+    <div id="sidebar-years"></div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+    <a class="back" href="cla.html">&larr; CLA DB概要</a>
+    <div class="page-header">
+      <h1 class="page-title">因果階層分析 タイムラインダッシュボード</h1>
+      <p class="page-desc">
+        CLA（Causal Layered Analysis）による年次深層分析。リタニー・システム的原因・世界観・神話メタファーの4層で、各年の構造的変化を読み解く。
+      </p>
+    </div>
+
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat"><div class="stat-value" id="stat-years">-</div><div class="stat-label">分析年数</div></div>
+      <div class="stat"><div class="stat-value" id="stat-range">-</div><div class="stat-label">期間</div></div>
+      <div class="stat"><div class="stat-value">6</div><div class="stat-label">PESTLEカテゴリ</div></div>
+      <div class="stat"><div class="stat-value">4</div><div class="stat-label">分析層</div></div>
+    </div>
+
+    <!-- Mobile year select -->
+    <div class="year-selector-bar">
+      <select class="year-select" id="year-select-mobile" onchange="selectYear(this.value)">
+        <option value="">年を選択...</option>
+      </select>
+    </div>
+
+    <!-- Year view -->
+    <div id="year-view">
+      <div class="loading">年を選択してください</div>
+    </div>
+  </main>
+</div>
+
+<script>
+let DATA = [];
+let currentYear = null;
+const CATS = ['Political','Economic','Social','Technological','Legal','Environmental'];
+const CAT_JA = {
+  Political:'政治', Economic:'経済', Social:'社会',
+  Technological:'技術', Legal:'法律', Environmental:'環境'
+};
+const CAT_SHORT = {
+  Political:'P', Economic:'E', Social:'S',
+  Technological:'T', Legal:'L', Environmental:'Env'
+};
+let currentCat = 'all';
+
+async function loadData() {
+  try {
+    const res = await fetch('../data/cla_126years.json');
+    DATA = await res.json();
+    init();
+  } catch(e) {
+    document.getElementById('year-view').innerHTML = '<div class="loading">データの読み込みに失敗しました</div>';
+  }
+}
+
+function init() {
+  if (!DATA.length) return;
+
+  const years = DATA.map(d => d.period).sort();
+  const firstYear = years[0];
+  const lastYear = years[years.length - 1];
+
+  document.getElementById('stat-years').textContent = DATA.length;
+  document.getElementById('stat-range').textContent = `${firstYear}–${lastYear}`;
+  document.getElementById('sidebar-sub').textContent = `${DATA.length}年分`;
+
+  buildSidebar(years);
+  buildMobileSelect(years);
+
+  // URL hash or latest year
+  const hash = location.hash.replace('#', '');
+  if (hash && years.includes(hash)) {
+    selectYear(hash);
+  } else {
+    selectYear(lastYear);
+  }
+}
+
+function buildSidebar(years) {
+  const container = document.getElementById('sidebar-years');
+  const decades = {};
+  years.forEach(y => {
+    const dec = Math.floor(parseInt(y) / 10) * 10;
+    if (!decades[dec]) decades[dec] = [];
+    decades[dec].push(y);
+  });
+
+  let html = '';
+  Object.keys(decades).sort((a,b) => b-a).forEach(dec => {
+    html += `<div class="decade-group">
+      <div class="decade-label">${dec}s</div>
+      <ul class="year-list">`;
+    decades[dec].sort((a,b) => b-a).forEach(y => {
+      const d = DATA.find(x => x.period === y);
+      const sn = d && d.supernode_type ? d.supernode_type.slice(0,12) : '';
+      html += `<li class="year-item" id="sidebar-${y}">
+        <a href="#${y}" onclick="selectYear('${y}');return false;">
+          <span>${y}</span>
+          ${sn ? `<span class="year-badge">${sn}</span>` : ''}
+        </a>
+      </li>`;
+    });
+    html += '</ul></div>';
+  });
+  container.innerHTML = html;
+}
+
+function buildMobileSelect(years) {
+  const sel = document.getElementById('year-select-mobile');
+  years.slice().sort((a,b) => b-a).forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    sel.appendChild(opt);
+  });
+}
+
+function selectYear(year) {
+  if (!year) return;
+  currentYear = year;
+  location.hash = year;
+
+  // Sidebar active state
+  document.querySelectorAll('.year-item a').forEach(a => a.classList.remove('active'));
+  const sidebarItem = document.querySelector(`#sidebar-${year} a`);
+  if (sidebarItem) {
+    sidebarItem.classList.add('active');
+    sidebarItem.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Mobile select
+  const msel = document.getElementById('year-select-mobile');
+  if (msel) msel.value = year;
+
+  const entry = DATA.find(d => d.period === year);
+  if (!entry) return;
+
+  currentCat = 'all';
+  renderYearView(entry);
+}
+
+function renderYearView(entry) {
+  const year = entry.period;
+  const idx = DATA.findIndex(d => d.period === year);
+  const years = DATA.map(d => d.period).sort();
+  const yearIdx = years.indexOf(year);
+  const prevYear = yearIdx > 0 ? years[yearIdx - 1] : null;
+  const nextYear = yearIdx < years.length - 1 ? years[yearIdx + 1] : null;
+
+  let html = '';
+
+  // Year header
+  html += `<div class="year-display">
+    <div class="year-num">${year}</div>
+    <div class="year-nav">
+      ${prevYear ? `<a class="year-nav-btn" href="#${prevYear}" onclick="selectYear('${prevYear}');return false;">&larr; ${prevYear}</a>` : ''}
+      ${nextYear ? `<a class="year-nav-btn" href="#${nextYear}" onclick="selectYear('${nextYear}');return false;">${nextYear} &rarr;</a>` : ''}
+    </div>
+  </div>`;
+
+  // Supernode banner
+  if (entry.supernode_type || entry.cross_category_synthesis) {
+    const sn = entry.supernode_type || '';
+    const desc = entry.cross_category_synthesis || '';
+    html += `<div class="supernode-banner">
+      ${sn ? `<div class="supernode-type">${sn}</div>` : ''}
+      <div>${desc}</div>
+    </div>`;
+  }
+
+  // Layer legend
+  html += `<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--layer-litany)"></div>リタニー（表層事象）</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--layer-systemic)"></div>システム的原因</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--layer-worldview)"></div>世界観・前提</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--layer-myth)"></div>神話・メタファー</div>
+  </div>`;
+
+  // PESTLE tabs
+  html += `<div class="pestle-tabs">
+    <button class="pestle-tab pestle-tab-all ${currentCat==='all'?'active':''}" onclick="switchCat('all')">全カテゴリ</button>`;
+  CATS.forEach(cat => {
+    const hasCat = entry.categories && entry.categories[cat];
+    html += `<button class="pestle-tab ${currentCat===cat?'active':''}" data-cat="${cat}"
+      onclick="switchCat('${cat}')" ${hasCat?'':'disabled'}>${CAT_SHORT[cat]} ${CAT_JA[cat]}</button>`;
+  });
+  html += '</div>';
+
+  // CLA cards
+  const catsToShow = currentCat === 'all' ? CATS : [currentCat];
+  html += `<div class="cla-grid ${currentCat!=='all'?'single':''}">`;
+  catsToShow.forEach(cat => {
+    const c = entry.categories && entry.categories[cat];
+    if (!c) return;
+    html += renderCLACard(cat, c, year);
+  });
+  html += '</div>';
+
+  document.getElementById('year-view').innerHTML = html;
+}
+
+function renderCLACard(cat, c, year) {
+  const uid = `${year}-${cat}`;
+  return `<div class="cla-card">
+    <div class="cla-card-header">
+      <span class="cat-label" data-cat="${cat}">${CAT_JA[cat]}</span>
+      <span class="cat-badge">${cat}</span>
+    </div>
+    <div class="cla-layers">
+      ${c.litany ? `<div class="layer layer-litany">
+        <div class="layer-label">リタニー（表層事象）</div>
+        <div class="layer-text">${c.litany}</div>
+      </div>` : ''}
+      ${c.systemic_causes ? `<div class="layer layer-systemic">
+        <div class="layer-label">システム的原因</div>
+        <div class="layer-text">${c.systemic_causes}</div>
+      </div>` : ''}
+      ${c.worldview ? `<div class="layer layer-worldview">
+        <div class="layer-label">世界観・前提</div>
+        <div class="layer-text">${c.worldview}</div>
+        ${c.worldview_evidence ? `
+        <span class="evidence-toggle" onclick="toggleEvidence('${uid}-wv')">証拠データを見る</span>
+        <div class="evidence-content" id="${uid}-wv">${c.worldview_evidence}</div>` : ''}
+      </div>` : ''}
+      ${c.myth_metaphor ? `<div class="layer layer-myth">
+        <div class="layer-label">神話・メタファー</div>
+        <div class="layer-text">${c.myth_metaphor}</div>
+        ${c.myth_thompson_refs ? `
+        <span class="evidence-toggle" onclick="toggleEvidence('${uid}-myth')">神話参照を見る</span>
+        <div class="evidence-content" id="${uid}-myth">${c.myth_thompson_refs}</div>` : ''}
+      </div>` : ''}
+      ${c.key_tension ? `<div class="layer layer-tension">
+        <div class="layer-label">主要緊張</div>
+        <div class="layer-text">${c.key_tension}</div>
+        ${c.tension_supernode ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">${c.tension_supernode}</div>` : ''}
+      </div>` : ''}
+      ${c.emerging_narrative ? `<div class="layer layer-emerging">
+        <div class="layer-label">創発的ナラティブ</div>
+        <div class="layer-text">${c.emerging_narrative}</div>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+function switchCat(cat) {
+  currentCat = cat;
+  const entry = DATA.find(d => d.period === currentYear);
+  if (entry) renderYearView(entry);
+}
+
+function toggleEvidence(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+loadData();
+</script>
+</body>
+</html>
