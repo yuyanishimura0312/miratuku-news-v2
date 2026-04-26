@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>因果階層分析 | Insight News</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/shared/firebase-config.js"></script>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <main class="container">
+    <section class="app-section">
+      <div class="section-header">
+        <h2 class="section-title">因果階層分析</h2>
+        <span class="section-subtitle">Causal Layered Analysis</span>
+      </div>
+
+      <div id="claDownloadBar" class="fs-body-sm" style="margin-bottom:1rem;padding:12px 16px;background:var(--cla-1);border:1px solid var(--border-light);border-radius:var(--radius-xs);display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <div style="flex:1;min-width:200px;color:var(--text-secondary)">
+          <strong style="color:var(--text)">36ヵ年分のCLA分析をダウンロード</strong><br>
+          <span class="fs-caption">1990-2026 / 年次31件 + 四半期22件 / 日本・グローバルのメタ分析付き</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="data/cla_36years_analysis.txt" download="cla_36years_analysis.txt" class="cla-download-btn fs-meta" style="padding:8px 14px;background:var(--accent);color:#fff;text-decoration:none;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
+            <span>テキスト</span>
+            <span class="fs-caption" style="opacity:0.8">.txt</span>
+          </a>
+          <button type="button" onclick="downloadCLALiveText()" class="cla-download-btn fs-meta" style="padding:8px 14px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-light);border-radius:6px;font-weight:600;cursor:pointer">
+            最新データで生成
+          </button>
+          <button type="button" onclick="downloadCLALiveJSON()" class="cla-download-btn fs-meta" style="padding:8px 14px;background:transparent;color:var(--text-secondary);border:1px solid var(--border-light);border-radius:6px;font-weight:600;cursor:pointer">
+            JSON
+          </button>
+        </div>
+      </div>
+
+      <div id="claMetaContent"></div>
+
+      <div id="claContent" style="margin-top:1.5rem">
+        <div class="loading-indicator"><div class="loading-spinner"></div><div>CLA分析を読み込み中...</div></div>
+      </div>
+
+      <!-- CLA Deep Layer Enhancement -->
+      <div id="claDeepLayer" style="margin-top:1.5rem">
+        <details class="report-card" id="claDeepDetails">
+          <summary class="report-summary">
+            <span class="report-chevron">&#9654;</span>
+            <span class="report-label">CLA深層データ分析</span>
+            <span class="report-count">Ngram・スーパーノード・社会指標・神話</span>
+          </summary>
+          <div class="report-body">
+            <!-- Tab navigation -->
+            <div id="claDeepTabBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;border-bottom:1px solid var(--border-light);padding-bottom:10px">
+              <button class="cla-deep-tab active" data-tab="ngram" style="padding:6px 14px;border:1px solid var(--border-light);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:13px;font-weight:600">概念トレンド</button>
+              <button class="cla-deep-tab" data-tab="network" style="padding:6px 14px;border:1px solid var(--border-light);border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:13px">スーパーノード</button>
+              <button class="cla-deep-tab" data-tab="evidence" style="padding:6px 14px;border:1px solid var(--border-light);border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:13px">社会指標</button>
+              <button class="cla-deep-tab" data-tab="myth" style="padding:6px 14px;border:1px solid var(--border-light);border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:13px">神話マッピング</button>
+            </div>
+            <div id="claDeepNgram" class="cla-deep-panel"></div>
+            <div id="claDeepNetwork" class="cla-deep-panel" style="display:none"></div>
+            <div id="claDeepEvidence" class="cla-deep-panel" style="display:none"></div>
+            <div id="claDeepMyth" class="cla-deep-panel" style="display:none"></div>
+          </div>
+        </details>
+      </div>
+
+      <div id="claArchive" style="margin-top:1.5rem">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+          <h2 class="section-title" style="margin:0">CLA 変遷アーカイブ</h2>
+          <div id="claVersionToggle" style="display:flex;gap:4px;margin-left:auto">
+            <button data-claver="v1" id="claVerV1" style="padding:5px 14px;border:1px solid var(--border-light);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600">v1 従来版</button>
+            <button data-claver="v2" id="claVerV2" style="padding:5px 14px;border:1px solid var(--border-light);border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;font-size:12px">v2 神話学的深層強化版</button>
+          </div>
+        </div>
+        <div id="claArchiveView">
+          <div class="loading-indicator"><div class="loading-spinner loading-spinner-sm"></div><div>読み込み中...</div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/shared/utilities.js"></script>
+  <script src="js/shared/data-cache.js"></script>
+  <script src="js/shared/auth-guard.js"></script>
+  <script src="js/shared/nav.js"></script>
+  <script src="js/shared/article-modal.js"></script>
+  <script src="js/pages/cla.js"></script>
+</body>
+</html>
