@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>因果階層分析 1900-2026 | CLA Dashboard</title>
+<title>因果階層分析 1900-2026 | CLA Dashboard — 統合版</title>
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -31,6 +31,10 @@
   /* PESTLE colors */
   --p-color: #1565C0; --e-color: #2E7D32; --s-color: #E65100;
   --t-color: #4527A0; --l-color: #AD1457; --env-color: #00695C;
+
+  /* Integrated mode */
+  --integrated-accent: #6D28D9;
+  --integrated-bg: rgba(109,40,217,0.06);
 }
 [data-theme="dark"] {
   --bg: #1a1a2e; --card: #16213e; --text: #E0E0E0; --text-secondary: #AAAAAA;
@@ -260,6 +264,63 @@ mark { background: rgba(245,158,11,0.3); color: inherit; border-radius: 1px; }
   padding: 5px 9px; cursor: pointer; font-size: 0.95rem; z-index: 200; border-radius: 3px;
 }
 
+/* View mode tabs */
+.view-mode-bar {
+  display: flex; gap: 4px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-light); padding-bottom: 0;
+}
+.view-mode-tab {
+  padding: 7px 16px; font-size: 0.78rem; font-weight: 600;
+  border: 1px solid var(--border); border-bottom: none;
+  background: var(--surface); color: var(--text-secondary);
+  cursor: pointer; letter-spacing: 0.02em; transition: all 0.12s;
+  margin-bottom: -1px; position: relative;
+}
+.view-mode-tab:hover { background: var(--border-light); color: var(--text); }
+.view-mode-tab.active {
+  background: var(--card); color: var(--text);
+  border-bottom: 1px solid var(--card);
+  z-index: 1;
+}
+.view-mode-tab.integrated-tab.active {
+  color: var(--integrated-accent); border-top: 2px solid var(--integrated-accent);
+}
+
+/* Integrated view: zeitgeist banner */
+.zeitgeist-banner {
+  background: var(--integrated-bg); border: 1px solid rgba(109,40,217,0.2);
+  border-left: 4px solid var(--integrated-accent);
+  padding: 14px 18px; margin-bottom: 18px; border-radius: 2px;
+}
+.zeitgeist-label {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--integrated-accent); margin-bottom: 5px;
+}
+.zeitgeist-text {
+  font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700;
+  color: var(--text); line-height: 1.5;
+}
+
+/* Integrated view: single column full-width cards */
+.integrated-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.integrated-card {
+  border: 1px solid var(--border-light); background: var(--card);
+  border-radius: 4px; overflow: hidden;
+}
+.integrated-card-header {
+  padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--integrated-bg);
+}
+.integrated-layer-label {
+  font-size: 0.70rem; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--integrated-accent);
+}
+.integrated-card-body {
+  padding: 14px 16px; font-size: 0.82rem; line-height: 1.8;
+  color: var(--text-secondary);
+}
+
 /* Search mode: year list */
 .search-year-section { margin-bottom: 28px; }
 .search-year-heading {
@@ -310,7 +371,8 @@ mark { background: rgba(245,158,11,0.3); color: inherit; border-radius: 1px; }
         </div>
       </div>
       <p class="page-desc">
-        CLA（Causal Layered Analysis）による127年分の構造的分析。リタニー・システム的原因・世界観・神話メタファー・核心的緊張・萌芽するナラティブの6層でPESTLEカテゴリを読み解く。
+        CLA（Causal Layered Analysis）による127年分の構造的分析。リタニー・システム的原因・世界観・神話メタファー・核心的緊張・萌芽するナラティブの6層でPESTLEカテゴリを読み解く。<br>
+        <strong style="color:var(--integrated-accent)">統合版</strong>ではPESTLE 6カテゴリを横断合成した「時代の精神（Zeitgeist）」を表示します。
       </p>
     </div>
 
@@ -319,6 +381,12 @@ mark { background: rgba(245,158,11,0.3); color: inherit; border-radius: 1px; }
       <div class="stat"><div class="stat-value" id="stat-range">–</div><div class="stat-label">期間</div></div>
       <div class="stat"><div class="stat-value">6</div><div class="stat-label">PESTLEカテゴリ</div></div>
       <div class="stat"><div class="stat-value">6</div><div class="stat-label">分析層</div></div>
+    </div>
+
+    <!-- View mode tabs -->
+    <div class="view-mode-bar">
+      <button class="view-mode-tab active" id="tab-pestle" onclick="setViewMode('pestle')">PESTLEカテゴリ別</button>
+      <button class="view-mode-tab integrated-tab" id="tab-integrated" onclick="setViewMode('integrated')">統合版（Zeitgeist）</button>
     </div>
 
     <!-- Global search -->
@@ -344,9 +412,11 @@ mark { background: rgba(245,158,11,0.3); color: inherit; border-radius: 1px; }
 
 <script>
 let DATA = [];
+let INTEGRATED_DATA = [];
 let currentYear = null;
 let currentCat = 'all';
 let searchQuery = '';
+let viewMode = 'pestle'; // 'pestle' or 'integrated'
 
 const CATS = ['Political','Economic','Social','Technological','Legal','Environmental'];
 const CAT_JA = {
@@ -378,8 +448,12 @@ function toggleTheme() {
 
 async function loadData() {
   try {
-    const res = await fetch('../data/cla_126years.json');
-    DATA = await res.json();
+    const [res1, res2] = await Promise.allSettled([
+      fetch('../data/cla_126years.json'),
+      fetch('../data/cla_integrated_127years.json')
+    ]);
+    if (res1.status === 'fulfilled') DATA = await res1.value.json();
+    if (res2.status === 'fulfilled') INTEGRATED_DATA = await res2.value.json();
     init();
   } catch(e) {
     document.getElementById('content-area').innerHTML = '<div class="loading">データの読み込みに失敗しました</div>';
@@ -387,14 +461,17 @@ async function loadData() {
 }
 
 function init() {
-  if (!DATA.length) return;
-  const years = DATA.map(d => d.period).sort();
+  // Use integrated data for sidebar if available, else fall back to PESTLE data
+  const baseData = INTEGRATED_DATA.length ? INTEGRATED_DATA : DATA;
+  if (!baseData.length) return;
+  const years = baseData.map(d => d.period).sort();
   const firstYear = years[0];
   const lastYear = years[years.length - 1];
 
-  document.getElementById('stat-years').textContent = DATA.length;
+  const totalYears = Math.max(DATA.length, INTEGRATED_DATA.length);
+  document.getElementById('stat-years').textContent = totalYears;
   document.getElementById('stat-range').textContent = `${firstYear}–${lastYear}`;
-  document.getElementById('sidebar-sub').textContent = `${DATA.length}年分`;
+  document.getElementById('sidebar-sub').textContent = `${totalYears}年分`;
 
   buildSidebar(years);
   buildMobileSelect(years);
@@ -404,6 +481,22 @@ function init() {
     selectYear(hash);
   } else {
     selectYear(lastYear);
+  }
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.getElementById('tab-pestle').classList.toggle('active', mode === 'pestle');
+  document.getElementById('tab-integrated').classList.toggle('active', mode === 'integrated');
+  if (currentYear && !searchQuery) {
+    if (mode === 'integrated') {
+      const entry = INTEGRATED_DATA.find(d => d.period === currentYear);
+      if (entry) renderIntegratedView(entry);
+      else document.getElementById('content-area').innerHTML = '<div class="loading">統合版データなし</div>';
+    } else {
+      const entry = DATA.find(d => d.period === currentYear);
+      if (entry) { currentCat = 'all'; renderYearView(entry); }
+    }
   }
 }
 
@@ -469,6 +562,16 @@ function selectYear(year) {
   const msel = document.getElementById('year-select-mobile');
   if (msel) msel.value = year;
 
+  if (viewMode === 'integrated') {
+    const entry = INTEGRATED_DATA.find(d => d.period === year);
+    if (entry) renderIntegratedView(entry);
+    else {
+      // Fallback to PESTLE view
+      const fallback = DATA.find(d => d.period === year);
+      if (fallback) { currentCat = 'all'; renderYearView(fallback); }
+    }
+    return;
+  }
   const entry = DATA.find(d => d.period === year);
   if (!entry) return;
   currentCat = 'all';
@@ -577,8 +680,62 @@ function renderCLACard(cat, c, year, highlight) {
   </div>`;
 }
 
+function renderIntegratedView(entry) {
+  const year = entry.period;
+  const years = INTEGRATED_DATA.map(d => d.period).sort();
+  const yearIdx = years.indexOf(year);
+  const prevYear = yearIdx > 0 ? years[yearIdx - 1] : null;
+  const nextYear = yearIdx < years.length - 1 ? years[yearIdx + 1] : null;
+
+  let html = '';
+
+  // Year header + navigation
+  html += `<div class="year-display">
+    <div class="year-num">${year}</div>
+    <div class="year-nav">
+      ${prevYear ? `<a class="year-nav-btn" href="#${prevYear}" onclick="selectYear('${prevYear}');return false;">&larr; ${prevYear}</a>` : ''}
+      ${nextYear ? `<a class="year-nav-btn" href="#${nextYear}" onclick="selectYear('${nextYear}');return false;">${nextYear} &rarr;</a>` : ''}
+    </div>
+    <div style="font-size:0.72rem;color:var(--text-muted);margin-left:auto;">統合版 — PESTLE 6カテゴリ横断合成</div>
+  </div>`;
+
+  // Zeitgeist banner
+  if (entry.zeitgeist) {
+    html += `<div class="zeitgeist-banner">
+      <div class="zeitgeist-label">時代の精神 — Zeitgeist ${year}</div>
+      <div class="zeitgeist-text">${escapeHtml(entry.zeitgeist)}</div>
+    </div>`;
+  }
+
+  // 6-layer cards
+  const layers = [
+    { key: 'litany',            label: LAYER_LABELS.litany,            cls: 'layer-litany',    color: 'var(--layer-litany)' },
+    { key: 'systemic_causes',   label: LAYER_LABELS.systemic_causes,   cls: 'layer-systemic',  color: 'var(--layer-systemic)' },
+    { key: 'worldview',         label: LAYER_LABELS.worldview,         cls: 'layer-worldview', color: 'var(--layer-worldview)' },
+    { key: 'myth_metaphor',     label: LAYER_LABELS.myth_metaphor,     cls: 'layer-myth',      color: 'var(--layer-myth)' },
+    { key: 'key_tension',       label: LAYER_LABELS.key_tension,       cls: 'layer-tension',   color: 'var(--layer-tension)' },
+    { key: 'emerging_narrative',label: LAYER_LABELS.emerging_narrative,cls: 'layer-emerging',  color: 'var(--layer-emerging)' },
+  ];
+
+  html += `<div class="integrated-grid">`;
+  layers.forEach(lyr => {
+    const text = entry[lyr.key];
+    if (!text) return;
+    html += `<div class="integrated-card">
+      <div class="integrated-card-header">
+        <div class="legend-dot" style="background:${lyr.color};width:10px;height:10px;border-radius:1px;flex-shrink:0;"></div>
+        <div class="integrated-layer-label" style="color:${lyr.color}">${lyr.label}</div>
+      </div>
+      <div class="integrated-card-body">${escapeHtml(text)}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  document.getElementById('content-area').innerHTML = html;
+}
+
 function switchCat(cat) {
-  if (searchQuery) return;
+  if (searchQuery || viewMode === 'integrated') return;
   currentCat = cat;
   const entry = DATA.find(d => d.period === currentYear);
   if (entry) renderYearView(entry);
