@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歴史に埋め込まれたシステム構造の発見と現代への投射</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --bg-alt: #FAFAF8;
+  --card: #FFFFFF;
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --surface: #F7F7F5;
+  --accent: #CC1400;
+  --accent-muted: rgba(204,20,0,0.06);
+  --accent-blue: #1565c0;
+  --accent-green: #2e7d32;
+  --accent-orange: #e65100;
+  --serif: 'Noto Serif JP', serif;
+  --sans: 'Noto Sans JP', sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #0D0D0D;
+  --bg-alt: #141414;
+  --card: #1A1A1A;
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #777777;
+  --border: #333333;
+  --border-light: #222222;
+  --surface: #1E1E1E;
+  --accent: #FF4444;
+  --accent-muted: rgba(255,68,68,0.08);
+  --accent-blue: #64b5f6;
+  --accent-green: #66bb6a;
+  --accent-orange: #ffb74d;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.9;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Theme toggle ---- */
+.theme-toggle {
+  position: fixed; top: 16px; right: 16px; z-index: 100;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: opacity .2s;
+}
+.theme-toggle:hover { opacity: .7; }
+
+/* ---- Header ---- */
+.report-header {
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border-light);
+  padding: 48px 24px 40px;
+}
+.report-header-inner {
+  max-width: 740px;
+  margin: 0 auto;
+}
+.report-back {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+}
+.report-back:hover { color: var(--accent); }
+.report-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.report-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.report-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--sans);
+  letter-spacing: 0.03em;
+}
+.report-title {
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.report-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 640px;
+}
+.report-db-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.report-db-tag {
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* ---- Key metrics ---- */
+.key-metrics {
+  max-width: 740px;
+  margin: -20px auto 0;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+.key-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.key-metric {
+  padding: 18px 16px;
+  text-align: center;
+  border-right: 1px solid var(--border-light);
+}
+.key-metric:last-child { border-right: none; }
+.key-metric-value {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.key-metric-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Article body ---- */
+.article {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ---- TOC ---- */
+.toc {
+  margin-bottom: 48px;
+  padding: 24px 28px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+}
+.toc-title {
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+}
+.toc > ol > li {
+  counter-increment: toc;
+  margin-bottom: 6px;
+}
+.toc > ol > li::before {
+  content: counter(toc) ".";
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.78rem;
+  margin-right: 6px;
+  font-family: var(--serif);
+}
+.toc a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.toc a:hover { color: var(--accent); }
+
+/* ---- Section headings ---- */
+.section-num {
+  display: block;
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+h2.article-h2 {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 56px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+}
+h3.article-h3 {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 40px 0 14px;
+  color: var(--text);
+}
+h2.article-h2:first-of-type { margin-top: 0; }
+
+/* ---- Body text ---- */
+.article p {
+  margin-bottom: 18px;
+  font-size: 0.92rem;
+  line-height: 1.9;
+  color: var(--text);
+  text-align: justify;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Pattern card ---- */
+.pattern-card {
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.pattern-header {
+  padding: 14px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pattern-name-ja {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--text);
+}
+.pattern-name-en {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.pattern-dims {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.pattern-dim {
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.pattern-trend {
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  font-weight: 600;
+}
+.pattern-trend-up {
+  background: rgba(230, 81, 0, 0.08);
+  color: var(--accent-orange);
+}
+.pattern-trend-stable {
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+}
+.pattern-trend-fluctuate {
+  background: rgba(21, 101, 192, 0.06);
+  color: var(--accent-blue);
+}
+.pattern-body {
+  padding: 16px 18px;
+}
+.pattern-body p {
+  margin-bottom: 14px;
+  font-size: 0.88rem;
+}
+.pattern-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+  margin-top: 10px;
+}
+
+/* ---- Prediction box ---- */
+.prediction-box {
+  margin: 24px 0;
+  padding: 18px 20px;
+  border-left: 3px solid var(--accent-orange);
+  background: rgba(230, 81, 0, 0.03);
+}
+[data-theme="dark"] .prediction-box {
+  background: rgba(255, 183, 77, 0.04);
+}
+.prediction-label {
+  font-family: var(--serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-orange);
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+.prediction-box p {
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
+
+/* ---- Appendix table ---- */
+.appendix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin: 20px 0;
+}
+.appendix-table th {
+  background: var(--surface);
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+.appendix-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.appendix-table tr:hover td {
+  background: var(--accent-muted);
+}
+
+/* ---- Footnotes ---- */
+.report-footer {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+  border-top: 1px solid var(--border);
+}
+.report-footer p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-top: 16px;
+}
+
+/* ---- Pull quote ---- */
+.pullquote {
+  margin: 32px 0;
+  padding: 20px 24px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-muted);
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+/* ---- Three-layer diagram ---- */
+.layer-diagram {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 24px 0;
+  border: 1px solid var(--border);
+}
+.layer-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+.layer-item:last-child { border-bottom: none; }
+.layer-num {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  width: 28px;
+}
+.layer-label {
+  font-weight: 600;
+  font-size: 0.84rem;
+  color: var(--text);
+  min-width: 160px;
+}
+.layer-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 600px) {
+  .report-title { font-size: 1.35rem; }
+  .key-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .key-metric:nth-child(2) { border-right: none; }
+  .key-metric:nth-child(1), .key-metric:nth-child(2) { border-bottom: 1px solid var(--border-light); }
+  .pattern-header { flex-direction: column; gap: 6px; }
+  .layer-item { flex-direction: column; gap: 4px; }
+  .layer-label { min-width: auto; }
+  .appendix-table { font-size: 0.7rem; }
+  .appendix-table th, .appendix-table td { padding: 6px; }
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? '' : 'dark'" aria-label="テーマ切替">&#9681;</button>
+
+<!-- ======== HEADER ======== -->
+<header class="report-header">
+  <div class="report-header-inner">
+    <a href="app.html#section-analysis-reports" class="report-back">&larr; 解析レポート一覧に戻る</a>
+    <div class="report-meta-top">
+      <span class="report-badge">ANALYSIS REPORT</span>
+      <span class="report-date">2026年4月26日</span>
+    </div>
+    <h1 class="report-title">歴史に埋め込まれたシステム構造の発見と現代への投射</h1>
+    <p class="report-subtitle">176の歴史的意思決定から20のシステムパターンをボトムアップに抽出し、1990-2026年のニュースデータと照合する</p>
+    <div class="report-db-tags">
+      <span class="report-db-tag">GF: Great Figures DB</span>
+      <span class="report-db-tag">PE: PESTLE DB</span>
+      <span class="report-db-tag">CI: Cultural Intelligence DB</span>
+    </div>
+  </div>
+</header>
+
+<!-- ======== KEY METRICS ======== -->
+<div class="key-metrics">
+  <div class="key-metrics-grid">
+    <div class="key-metric">
+      <div class="key-metric-value">20</div>
+      <div class="key-metric-label">発見パターン</div>
+    </div>
+    <div class="key-metric">
+      <div class="key-metric-value">19</div>
+      <div class="key-metric-label">新規構造</div>
+    </div>
+    <div class="key-metric">
+      <div class="key-metric-value">+63%</div>
+      <div class="key-metric-label">構造転換トレンド</div>
+    </div>
+    <div class="key-metric">
+      <div class="key-metric-value">517K</div>
+      <div class="key-metric-label">照合ニュース記事</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== ARTICLE ======== -->
+<article class="article">
+
+<!-- TOC -->
+<nav class="toc">
+  <div class="toc-title">目次</div>
+  <ol>
+    <li><a href="#sec1">はじめに：なぜ歴史をシステムとして読むのか</a></li>
+    <li><a href="#sec2">分析手法：12次元の構造空間</a></li>
+    <li><a href="#sec3">発見されたシステムパターン</a></li>
+    <li><a href="#sec4">現代ニュースとの照合：1990-2026年のシステム構造</a></li>
+    <li><a href="#sec5">方法論的考察</a></li>
+    <li><a href="#sec6">結論：歴史のシステム構造が現在に語りかけるもの</a></li>
+    <li><a href="#sec7">今後の展望：歴史構造分析の発展可能性</a></li>
+  </ol>
+</nav>
+
+<!-- ======== SECTION 1 ======== -->
+<h2 class="article-h2" id="sec1"><span class="section-num">SECTION 1</span>はじめに：なぜ歴史をシステムとして読むのか</h2>
+
+<p>歴史は「過去に起きた出来事の記録」ではない。そこには、繰り返し現れる構造——原因と結果の連鎖、フィードバックループ、臨界点における相転移——が埋め込まれている。この構造は、表面的な出来事（リタニー）の下に隠れており、個別の事象を追うだけでは見えてこない。</p>
+
+<p>本レポートは、歴史構造DB（Great Figures DB）に蓄積された176件の歴史的意思決定分析と1,053件の概念リンク説明文から、システム思考のアプローチでパターンをボトムアップに抽出した結果を報告する。従来のシステム思考では、ピーター・センゲが『学習する組織』（1990）で体系化した10のシステム原型（成長の限界、負担の転嫁、エスカレーション等）が分析の出発点となることが多い。しかし本分析では、これらの既知原型に当てはめるのではなく、データ自体から構造を浮かび上がらせるボトムアップ手法を採用した。</p>
+
+<p>その結果、20のシステムパターンを発見し、そのうち19が既知のシステム原型には直接対応しない新規構造であった。さらに、これらのパターンをPESTLE DB（276,000記事）およびCultural Intelligence DB（241,000記事）のニュースデータと照合することで、各パターンが1990年代から2020年代にかけてどのように出現頻度を変化させているかを計測した。この照合により、「歴史的に繰り返されてきた構造が、現在どのような形で再現されているか」という問いに対する定量的な手がかりを得た。</p>
+
+<p>分析対象は、アレクサンダー大王、秦始皇帝、アウグストゥスといった帝国建設者から、渋沢栄一、ヘンリー・フォード、スティーブ・ジョブズといった産業変革者、さらにガリレオ、ダーウィン、アインシュタインといった知の革命者まで、約2,500年にわたる歴史上の重要人物の意思決定を含む。各レコードには状況記述、選択肢分析、推論過程、反実仮想（「もし別の選択をしていたら」）、制約条件が日英両言語で記述されており、単なる出来事の記録を超えた構造的分析の基盤を提供する。</p>
+
+<p>加えて、1,053件の概念リンク説明文は、歴史的事象と現代の経営概念（BPR、プラットフォーム戦略、破壊的イノベーション等）を接続する豊富なテキストを含んでおり、時代横断的な構造抽出の材料として極めて有用であった。</p>
+
+<p>本分析の理論的背景には、ドネラ・メドウズのレバレッジポイント理論（1999）がある。メドウズは、システムに介入するポイントを12段階に分類し、パラメータの変更（最も浅い介入）からパラダイムの超越（最も深い介入）まで階層化した。歴史上の重要な意思決定は、この階層のどの水準に介入したかによって、その影響の持続性と範囲が決まる。本分析で発見されたパターンの多くは、メドウズの分類でいう「ルールの変更」（Level 5）や「情報フローの構造」（Level 6）に相当する介入を含んでおり、単なるパラメータ調整を超えた構造的介入が歴史を動かしてきたことを示している。</p>
+
+<!-- ======== SECTION 2 ======== -->
+<h2 class="article-h2" id="sec2"><span class="section-num">SECTION 2</span>分析手法：12次元の構造空間</h2>
+
+<h3 class="article-h3">2.1 構造次元の設定</h3>
+
+<p>本分析では、システム思考の基本概念と歴史的テキストの語彙分析に基づき、以下の12の構造次元を設定した。</p>
+
+<p><strong>動態的次元（システムの振る舞いに関する次元）</strong></p>
+
+<p>第一に「自己強化」。成功が成功を呼ぶ正帰還ループである。拡大、強化、加速、促進、好循環といったキーワードで検出される。第二に「均衡・抑制」。システムの恒常性を維持する負帰還ループであり、抵抗、制約、限界、衰退、崩壊がマーカーとなる。第三に「非線形・臨界点」。漸進的変化が突然の相転移に至る構造で、臨界、閾値、爆発的、連鎖がキーワードである。第四に「時間遅延」。原因と結果の間に時間差が存在する構造であり、遅延、タイムラグ、数十年、徐々にで検出される。</p>
+
+<p><strong>構造的次元（システムの形態に関する次元）</strong></p>
+
+<p>第五に「スケール効果」。帝国、全体、規模、波及といった語で、システムの規模がその振る舞いを変える構造を捉える。第六に「資源変換」。ある種の資源を別の種に転換する能力であり、変換、転用、資本、技術がマーカーとなる。第七に「情報の非対称性」。情報、不確実、可視化、透明性といった語で、情報の偏在がシステムの力学を規定する構造を捉える。第八に「経路依存性」。初期条件がシステムの発展経路を不可逆的に制約する構造で、ロックイン、慣性、固定化が検出語となる。</p>
+
+<p><strong>認識的次元（システムの意味構造に関する次元）</strong></p>
+
+<p>第九に「逆説・矛盾」。しかし、同時に、矛盾、ジレンマ、皮肉といった語で、システム内の本質的な矛盾構造を検出する。第十に「構造転換」。転換、変革、再定義、創造的破壊など、システムのルール自体が変わる変化を捉える。第十一に「正当性の構築」。正当、権威、信頼、大義といった語で、システムの正当性基盤がどう構築・維持・崩壊するかを見る。第十二に「創発・自己組織化」。自律、自己組織、進化、適応がマーカーとなり、設計されていない秩序がシステム内から自然に生まれる構造を捉える。</p>
+
+<h3 class="article-h3">2.2 多次元組合せによるパターン発見</h3>
+
+<p>単一の次元ではなく、2つ以上の次元が同時に出現するテキストを「構造的に興味深い」と判定した。たとえば、「自己強化」と「均衡」が同時に出現する文は、正帰還と負帰還の拮抗という動態的緊張を含んでおり、単一次元のパターンよりも構造的に豊かな知見を含む。</p>
+
+<p>176件の構造分析テキスト（状況記述、推論、反実仮想、制約条件）と1,053件のリンク説明文から、合計363のレコードを対象に12次元のタグ付けを行った。その結果、最も頻繁に検出された次元は「スケール効果」（191レコード）、「資源変換」（182）、「逆説・矛盾」（163）、「均衡・抑制」（161）、「自己強化」（159）であった。歴史上の重要な意思決定が、大規模なシステムにおける矛盾と自己強化の相互作用の中で行われてきたことを示している。</p>
+
+<p>2次元以上の組合せが3件以上のレコードで出現するパターンを「システムパターン」として採用した結果、36のパターンが発見され、そのうち上位20パターンを本分析の対象とした。20パターン中、ピーター・センゲの10のシステム原型に直接対応するものは1パターン（「成長の限界」）のみであり、残る19パターンは既知のシステム思考文献には明示的に記述されていない新規構造であった。</p>
+
+<!-- ======== SECTION 3 ======== -->
+<h2 class="article-h2" id="sec3"><span class="section-num">SECTION 3</span>発見されたシステムパターン</h2>
+
+<h3 class="article-h3">3.1 増加トレンドを示す3パターン</h3>
+
+<p>PESTLE DBおよびCultural Intelligence DBのニュースデータ（1990-2026年）との照合により、3つのパターンが1990年代から2020年代にかけて一貫した増加トレンドを示していることが判明した。この3パターンはすべて「構造転換」次元を含んでおり、現在のグローバルシステムが構造的な変容の只中にあることを示唆している。</p>
+
+<!-- Pattern: 巨船転舵 -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">巨船転舵</span>
+    <span class="pattern-name-en">Turning the Supertanker</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">均衡・抑制</span>
+      <span class="pattern-dim">スケール効果</span>
+      <span class="pattern-dim">構造転換</span>
+    </div>
+    <span class="pattern-trend pattern-trend-up">+65%</span>
+  </div>
+  <div class="pattern-body">
+    <p>最多のニュース出現数（1990年代514件→2020年代852件、65%増）を示すパターンである。巨大システムの構造転換が必要だが、その規模と慣性が変革を制約するという構造を描く。</p>
+    <p>歴史的には、クビライ・ハンが遊牧帝国から定住帝国への転換を試み、部分的に成功したが後継者の代で挫折した事例、アタテュルクがオスマン帝国崩壊後のトルコで急進的な世俗化改革を実施した事例が代表的である。アタテュルクの場合、独立戦争直後の軍事的権威が「非常時の革命的権限」を与えたが、これは永続的な政治的基盤ではなかった。疲弊した経済の中で急進的な制度変革を実施するという構造的矛盾を抱えながら、わずか15年で国家の根本的な転換を成し遂げたことは、このパターンの最も劇的な歴史的事例である。</p>
+    <p>現在、このパターンはグローバルサプライチェーンの再編、AI規制の国際的枠組み構築、地政学的ブロック化において同時に観察される。</p>
+    <div class="pattern-meta">
+      <span>歴史事例: 5件</span>
+      <span>ニュース: 2,724件</span>
+      <span>1990s→2020s: 514→852</span>
+    </div>
+  </div>
+</div>
+
+<!-- Pattern: 改革者の罠 -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">改革者の罠</span>
+    <span class="pattern-name-en">Reformer's Trap</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">均衡・抑制</span>
+      <span class="pattern-dim">逆説・矛盾</span>
+      <span class="pattern-dim">構造転換</span>
+    </div>
+    <span class="pattern-trend pattern-trend-up">+68%</span>
+  </div>
+  <div class="pattern-body">
+    <p>体制内から変革を試みるほど、体制の抵抗と変革の矛盾が深化し、改革が体制崩壊か挫折のいずれかに至るという構造である。</p>
+    <p>このパターンの最も象徴的な事例はゴルバチョフのペレストロイカである。共産党保守派の組織的抵抗、民族自決原則と連邦維持の原則的矛盾、石油価格暴落による財政悪化が同時に作用し、「既存の共産党体制を守りながら、その体制を内部から変革する」という目標が構造的に不可能な矛盾を内包していた。</p>
+    <p>一方、ネットフリックスのリード・ヘイスティングスは、DVDレンタル事業を自ら破壊してストリーミングに転換するという「自己カニバリゼーション」を成功させた。改革者は体制の「内部」にいると同時に「外部」の視点を保持しており、「両利きの経営」の実践として改革者の罠を回避した稀有な事例である。</p>
+    <p>現在、気候変動対策と経済成長の構造的矛盾、AI技術の急速な発展に伴う生産性向上と雇用破壊の矛盾が、このパターンの現代的発現として観察される。</p>
+    <div class="pattern-meta">
+      <span>歴史事例: 7件</span>
+      <span>ニュース: 2,389件</span>
+      <span>1990s→2020s: 454→765</span>
+    </div>
+  </div>
+</div>
+
+<!-- Pattern: フライホイール変革 -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">フライホイール変革</span>
+    <span class="pattern-name-en">Flywheel Transformation</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">自己強化</span>
+      <span class="pattern-dim">スケール効果</span>
+      <span class="pattern-dim">構造転換</span>
+    </div>
+    <span class="pattern-trend pattern-trend-up">+61%</span>
+  </div>
+  <div class="pattern-body">
+    <p>自己強化ループが臨界質量に達し、システム全体の構造転換を不可逆的に駆動する構造である。</p>
+    <p>ヘンリー・フォードの日給5ドル決定は、このパターンの典型例である。フォードは労働者に通常の2倍以上の賃金を支払うことで、労働者自身を自社製品の消費者に変換した。高賃金→消費力向上→大量販売→大量生産→コスト低下→さらなる賃金上昇という正帰還ループが、自動車産業にとどまらず大衆消費社会全体の構造転換を駆動した。</p>
+    <p>現在、AI領域でこのパターンが最も顕著に観察される。AIモデルの性能向上→利用拡大→データ蓄積→さらなる性能向上という自己強化的構造転換が進行中であり、この正帰還ループの速度と規模はフォードの時代とは比較にならない。</p>
+    <div class="pattern-meta">
+      <span>歴史事例: 7件</span>
+      <span>ニュース: 1,317件</span>
+      <span>1990s→2020s: 259→418</span>
+    </div>
+  </div>
+</div>
+
+<h3 class="article-h3">3.2 安定・変動パターン</h3>
+
+<p>増加トレンドとは異なり、安定的あるいは変動的な出現頻度を示すパターンも重要な知見を提供する。これらのパターンは、特定の時代に固有ではなく、人間のシステム構築行為に普遍的に内在する構造を反映している可能性がある。</p>
+
+<!-- Pattern: 矛盾の増幅器 -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">矛盾の増幅器</span>
+    <span class="pattern-name-en">Paradox Amplifier</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">均衡・抑制</span>
+      <span class="pattern-dim">逆説・矛盾</span>
+      <span class="pattern-dim">自己強化</span>
+    </div>
+    <span class="pattern-trend pattern-trend-fluctuate">変動</span>
+  </div>
+  <div class="pattern-body">
+    <p>矛盾を内包したまま自己強化が進む構造である。最多の歴史事例数（14件）を持ち、最も基本的なシステムパターンの一つといえる。</p>
+    <p>武則天が既存の科挙制度を拡大して貴族層の権力を削ぐという「体制のツールで体制を変革する」逆説的戦略は、この構造の古典的事例である。SNSの普及が民主主義を「強化」すると同時に「弱体化」させるという現代の逆説は、このパターンの典型的な発現である。</p>
+    <div class="pattern-meta">
+      <span>歴史事例: 14件</span>
+      <span>ニュース: 1,531件</span>
+    </div>
+  </div>
+</div>
+
+<!-- Pattern: 遅延の武器化 -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">遅延の武器化</span>
+    <span class="pattern-name-en">Weaponized Delay</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">逆説・矛盾</span>
+      <span class="pattern-dim">自己強化</span>
+      <span class="pattern-dim">資源変換</span>
+    </div>
+    <span class="pattern-trend pattern-trend-stable">安定</span>
+  </div>
+  <div class="pattern-body">
+    <p>一見不利な遅延や制約が、逆説的に資源蓄積と自己強化の機会に転換される構造である。本分析で最も独創的な構造の一つ。</p>
+    <p>チャールズ・ダーウィンは進化論の発表を20年間「遅延」させたが、この遅延期間に膨大な証拠を蓄積し、反論に対する防御力を構築した。豊田佐吉が自動織機の特許を売却して自動車事業に転換した事例は、織機技術という「旧い」資源を「新しい」産業の基盤に変換するという逆説的な資源転換であった。</p>
+    <div class="pattern-meta">
+      <span>歴史事例: 7件</span>
+      <span>ニュース: 121件</span>
+    </div>
+  </div>
+</div>
+
+<h3 class="article-h3">3.3 新規性の高いパターン</h3>
+
+<!-- Pattern: 情報帝国 -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">情報帝国</span>
+    <span class="pattern-name-en">Information Empire</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">情報非対称</span>
+      <span class="pattern-dim">自己強化</span>
+      <span class="pattern-dim">スケール効果</span>
+    </div>
+  </div>
+  <div class="pattern-body">
+    <p>情報優位が権力を増幅し、権力がさらなる情報収集能力を生むという自己増幅構造。徳川家康の情報集中管理から、マーク・ザッカーバーグのFacebook/Metaまで、デジタル時代において歴史上のどの時代よりも強力に作動している。</p>
+    <div class="pattern-meta"><span>歴史事例: 4件</span></div>
+  </div>
+</div>
+
+<!-- Pattern: 制約からの創発 -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">制約からの創発</span>
+    <span class="pattern-name-en">Emergent Innovation from Constraint</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">創発・自己組織化</span>
+      <span class="pattern-dim">逆説・矛盾</span>
+      <span class="pattern-dim">スケール効果</span>
+    </div>
+  </div>
+  <div class="pattern-body">
+    <p>大野耐一のトヨタ生産方式が最も象徴的な事例である。部品在庫の制約に対して在庫ゼロという逆説的目標を設定したことで、ジャスト・イン・タイム方式という創発的イノベーションが生まれた。制約は破壊ではなく、創発の触媒となりうる。</p>
+    <div class="pattern-meta"><span>歴史事例: 4件</span></div>
+  </div>
+</div>
+
+<!-- Pattern: 放棄されたプラットフォーム -->
+<div class="pattern-card">
+  <div class="pattern-header">
+    <span class="pattern-name-ja">放棄されたプラットフォーム</span>
+    <span class="pattern-name-en">Abandoned Platform</span>
+    <div class="pattern-dims">
+      <span class="pattern-dim">逆説・矛盾</span>
+      <span class="pattern-dim">資源変換</span>
+      <span class="pattern-dim">スケール効果</span>
+    </div>
+  </div>
+  <div class="pattern-body">
+    <p>構築した基盤を放棄した結果、後発者がそのプラットフォームを活用して逆転する構造。鄭和の大航海で明朝が構築した海上ネットワークを放棄し、ポルトガル・オランダが同じルートで商業帝国を構築した事例が最も劇的である。</p>
+    <div class="pattern-meta"><span>歴史事例: 5件</span></div>
+  </div>
+</div>
+
+<!-- ======== SECTION 4 ======== -->
+<h2 class="article-h2" id="sec4"><span class="section-num">SECTION 4</span>現代ニュースとの照合：1990-2026年のシステム構造</h2>
+
+<h3 class="article-h3">4.1 定量分析の結果</h3>
+
+<p>全パターンの合計ニュース出現数は、1990年代の2,668件から2020年代の4,371件へと63%増加した。特筆すべきは、増加トレンドを示す3パターンがすべて「構造転換」次元を含んでいる点である。2020年代のグローバルシステムが歴史的な構造転換期にあることを示唆している。</p>
+
+<h3 class="article-h3">4.2 現在進行中のシステム構造</h3>
+
+<p>ニュースデータの照合から浮かび上がる現在のシステム構造は、以下の3つの層で記述できる。</p>
+
+<div class="layer-diagram">
+  <div class="layer-item">
+    <span class="layer-num">I</span>
+    <span class="layer-label">技術的自己強化</span>
+    <span class="layer-desc">AIの自己改善ループ、プラットフォームのネットワーク効果、デジタル通貨の普及。正帰還ループが支配的で変化は加速的。</span>
+  </div>
+  <div class="layer-item">
+    <span class="layer-num">II</span>
+    <span class="layer-label">制度的矛盾の深化</span>
+    <span class="layer-desc">気候変動と経済成長、AI規制とイノベーション促進、グローバル化とナショナリズム。矛盾の解決が新たな矛盾を生む自己参照的構造。</span>
+  </div>
+  <div class="layer-item">
+    <span class="layer-num">III</span>
+    <span class="layer-label">巨大システムの慣性</span>
+    <span class="layer-desc">グローバル金融、国際安全保障、エネルギーインフラ。規模と相互依存性が変革を制約。出現頻度2,724件で最大の構造的圧力。</span>
+  </div>
+</div>
+
+<p>これら3つの層は独立に作用するのではなく、相互に影響し合っている。第一層（技術的自己強化）が第二層（制度的矛盾）を深化させ、第二層の矛盾が第三層（巨大システムの慣性）を突破する圧力として蓄積される。この三層構造の相互作用こそが、2020年代のグローバルシステムを構造的に特異な時代にしている要因である。</p>
+
+<h3 class="article-h3">4.3 予測的解釈：2026年以降に起こりうるシステム構造</h3>
+
+<div class="prediction-box">
+  <div class="prediction-label">予測 1</div>
+  <p><strong>「構造転換」パターンのさらなる加速（2026-2030年）</strong></p>
+  <p>過去30年間の増加トレンドに加速の兆候はあっても減速の兆候は見られない。特にAI技術の進展が「フライホイール変革」パターンを加速させ、その波及効果が「巨船転舵」と「改革者の罠」を連鎖的に活性化させる。歴史的類推として最も参考になるのは15世紀の印刷革命だが、AIの場合は70年の遅延が数年に圧縮される可能性がある。</p>
+</div>
+
+<div class="prediction-box">
+  <div class="prediction-label">予測 2</div>
+  <p><strong>パターンの共鳴による「構造的連鎖反応」</strong></p>
+  <p>フランス革命（1789年）は「改革者の罠」「矛盾の増幅器」「フライホイール変革」が同時に作動した事例である。現在のグローバルシステムにおいても、気候変動×AI×地政学的再編×人口動態変化という複数のシステム的圧力が同時に作用しており、構造的条件としてはフランス革命前夜に類似する複雑性を持つ。</p>
+</div>
+
+<div class="prediction-box">
+  <div class="prediction-label">予測 3</div>
+  <p><strong>「遅延爆弾」パターンの潜在的リスク</strong></p>
+  <p>気候変動の物理的ティッピングポイント、先進国の人口動態変化、技術的負債の蓄積。漸進的に進行する変化が閾値を超えた時点で急速な構造転換を引き起こす。ローマ帝国の衰退がこのパターンの最大規模の事例であり、2世紀の「繁栄の絶頂」の内部で数世紀の構造変化が進行していた。</p>
+</div>
+
+<div class="prediction-box">
+  <div class="prediction-label">予測 4</div>
+  <p><strong>「情報帝国」パターンの拡大と抵抗</strong></p>
+  <p>デジタルプラットフォーム企業の「情報帝国」構造は強化されるが、「正当性のパラドックス」が同時に作動する。AI生成コンテンツの普及は、情報の希少性に基づく権力構造を根本的に変容させる。情報のプラットフォームが「放棄」ではなく「氾濫」によって価値を失うという新たな構造を生みうる。</p>
+</div>
+
+<div class="prediction-box">
+  <div class="prediction-label">予測 5</div>
+  <p><strong>「制約からの創発」の機会</strong></p>
+  <p>循環経済モデル、分散型エネルギーシステム、リジェネラティブ農業は、制約を「問題」ではなく「設計条件」として捉え直すアプローチであり、歴史が教える最も建設的なパターンの現代的発現である。このパターンは「改革者の罠」が顕在化した後に最も強力に作動する。</p>
+</div>
+
+<!-- ======== SECTION 5 ======== -->
+<h2 class="article-h2" id="sec5"><span class="section-num">SECTION 5</span>方法論的考察</h2>
+
+<h3 class="article-h3">5.1 ボトムアップ分析の意義と限界</h3>
+
+<p>本分析の最大の意義は、既知のシステム原型に囚われない新しい構造の発見にある。ピーター・センゲが『学習する組織』（1990年）で体系化した10のシステム原型は優れたツールであったが、30年以上にわたって原型の数は実質的に更新されておらず、フレームワーク自体が「ロックイン」されている可能性がある。</p>
+
+<p>ジェイ・フォレスターがMITでシステム・ダイナミクスを創始した1960年代以降、歴史的データへの体系的適用は限定的であった。本分析はこの空白を埋める試みであり、歴史的テキストから構造を「読む」ための方法論的フレームワークを提案するものでもある。</p>
+
+<p>12の構造次元は、メドウズのレバレッジポイント（システムの「どこに」介入するか）とは異なる軸——すなわち「どのような構造的力学が作用しているか」——を捉える。両者は相補的であり、構造次元でパターンを発見し、レバレッジポイントで介入点を特定するという二段階の分析が可能になる。</p>
+
+<p>一方、限界も明確である。第一に、構造次元のキーワード設定には分析者の主観が入り込んでいる。第二に、日本語テキストのN-gramベースの分析は、意味的な文脈を完全には捉えられない。第三に、176件の構造分析と1,053件のリンク説明文というサンプルサイズは、統計的な一般化には十分とは言えない。しかしこれらの限界は、LLMによるセマンティック分析やデータの拡大によって克服可能である。</p>
+
+<h3 class="article-h3">5.2 クロスリファレンスの解釈上の注意</h3>
+
+<p>PESTLE DBおよびCultural Intelligence DBとの照合はキーワードベースのSQL検索で行われており、出現頻度の絶対値よりも年代間の相対的な変化（トレンド）に解釈の重点を置くべきである。それでもなお、「構造転換」を含む3パターンがすべて増加トレンドを示すという結果は、キーワードの選定に依存しない堅牢な知見であると考えられる。</p>
+
+<p>照合における注意点として、PESTLE DBの276,360件の記事のうち99%が英語であり、非英語圏に固有のシステム構造は過小評価されている可能性がある。Cultural Intelligence DB（日本語80,056件、英語161,610件）がこの偏りを部分的に補完している。</p>
+
+<h3 class="article-h3">5.3 歴史データの認識論的位置づけ</h3>
+
+<p>本分析で用いた歴史的テキストは、事実の記録ではなく事実の「解釈」である。この認識論的限界を踏まえたうえで有用な知見が得られるのは、パターンの発見が個別の解釈の正確さではなく解釈の構造的共通性に基づいていること、反実仮想を含むことで構造空間のより広い範囲をカバーしていること、リンク説明文が時代横断的な構造の抽出に特に適していることによる。</p>
+
+<!-- ======== SECTION 6 ======== -->
+<h2 class="article-h2" id="sec6"><span class="section-num">SECTION 6</span>結論：歴史のシステム構造が現在に語りかけるもの</h2>
+
+<div class="pullquote">歴史は「繰り返す」のではなく「韻を踏む」。同じ構造が異なる時代、異なる文脈で再現されるが、その具体的な発現形態は文脈に依存する。帰結が異なりうるからこそ、構造の認識が重要なのである。</div>
+
+<p>本分析は、2,500年にわたる歴史的意思決定のデータから、20のシステムパターンをボトムアップに発見し、そのうち19が既知のシステム原型には対応しない新規構造であることを示した。さらに、「構造転換」を含むパターンが過去30年間で63%増加しているという定量的知見を得た。</p>
+
+<p>「巨船転舵」「改革者の罠」「フライホイール変革」という増加トレンドの3パターンが同時に活性化している現在の状況は、歴史的に見ても稀な構造的条件である。この三重構造に対して、歴史は二つの典型的な帰結を示している。一つは構造的矛盾が暴力的に解消されるシナリオ（フランス革命、秦帝国の崩壊、ソ連の解体）。もう一つは矛盾を内包したまま新たな均衡に移行するシナリオ（アウグストゥスのプリンキパトゥス、明治維新、ネットフリックスの自己変革）である。</p>
+
+<p>ドネラ・メドウズは「パラダイムの超越」を最も強力な介入点として位置づけた。本分析が提供するパターンの地図は、まさにこの超越のためのツールである。自分がいま「改革者の罠」の中にいることを認識し、「フライホイール変革」のエネルギーをどう方向づけるかを構想し、「遅延爆弾」の存在に注意を払う——このメタ認知的な構造把握が、パラダイムの超越の実践的な第一歩となる。</p>
+
+<p>本分析が最終的に提起する問いは、「私たちは現在、どのパターンの中にいるのか」である。おそらく答えは、複数のパターンの中に同時にいるということである。そして、その複数性こそが、現在のグローバルシステムの構造的特質である。歴史は過去のためにあるのではない。現在のシステム構造を照らすための光源であり、未来の構造的可能性を探るための実験場である。</p>
+
+<!-- ======== SECTION 7 ======== -->
+<h2 class="article-h2" id="sec7"><span class="section-num">SECTION 7</span>今後の展望：歴史構造分析の発展可能性</h2>
+
+<h3 class="article-h3">7.1 リアルタイム・パターン・マッチング</h3>
+
+<p>20のシステムパターンをPESTLEパイプラインの日次ニュース収集と連動させることで、「今日のニュースがどの歴史的パターンの中にあるか」をリアルタイムで判定するシステムの構築が可能である。シグナルDB（6,326件）と接続すれば、ウィークシグナルが歴史的パターンのどの段階に位置するかを判定する「構造的シグナル評価」も実現できる。</p>
+
+<h3 class="article-h3">7.2 構造のシミュレーション</h3>
+
+<p>発見されたパターンをストック・フロー図やシステム・ダイナミクスモデルとして定式化することで、パターンの帰結をシミュレーションする可能性が開かれる。「この改革を進めた場合、歴史的な改革者の罠パターンに陥る可能性はどの程度か」という問いに対して、定量的な評価を提供できる。</p>
+
+<h3 class="article-h3">7.3 CLA（因果階層分析）との統合</h3>
+
+<p>CLAの4層（リタニー、社会的原因、世界観、神話・メタファー）とシステムパターンを重ね合わせることで、「表面的なニュースの下にどのシステムパターンが作動しているか」を体系的に分析できる。さらにCLAの第4層は、Thompson民話モチーフ索引（45,496件）と接続することで深層構造分析が可能になる。</p>
+
+<h3 class="article-h3">7.4 異分野への応用可能性</h3>
+
+<p>12次元の構造分析フレームワークは、組織論、政策分析、国際関係論、テクノロジー戦略など多様な領域に適用可能である。特にミラツクの文化構造DB（21カテゴリ）との接続により、「文化的変化がどのシステム構造の中で起こっているか」という新たな分析次元が開かれる。</p>
+
+</article>
+
+<!-- ======== APPENDIX ======== -->
+<div class="article" style="padding-top:0">
+<h2 class="article-h2"><span class="section-num">APPENDIX</span>20のシステムパターン一覧</h2>
+
+<table class="appendix-table">
+<thead>
+<tr><th>#</th><th>パターン名</th><th>英語名</th><th>次元</th><th>事例</th><th>トレンド</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>巨象のジレンマ</td><td>Giant's Dilemma</td><td>均衡 × 自己強化 × スケール</td><td>14</td><td>―</td></tr>
+<tr><td>2</td><td>矛盾の増幅器</td><td>Paradox Amplifier</td><td>均衡 × 逆説 × 自己強化</td><td>14</td><td>変動</td></tr>
+<tr><td>3</td><td>資源の錬金術</td><td>Resource Alchemy</td><td>均衡 × 資源変換 × スケール</td><td>9</td><td>変動</td></tr>
+<tr><td>4</td><td>越境する資本</td><td>Capital Migration</td><td>均衡 × 自己強化 × 資源変換</td><td>9</td><td>変動</td></tr>
+<tr><td>5</td><td>転換増殖エンジン</td><td>Conversion Engine</td><td>自己強化 × 資源変換 × スケール</td><td>9</td><td>安定</td></tr>
+<tr><td>6</td><td>帝国の逆説</td><td>Imperial Paradox</td><td>逆説 × 自己強化 × スケール</td><td>7</td><td>安定</td></tr>
+<tr><td style="color:var(--accent-orange);font-weight:600">7</td><td style="font-weight:600">フライホイール変革</td><td>Flywheel Transformation</td><td>自己強化 × スケール × 構造転換</td><td>7</td><td style="color:var(--accent-orange);font-weight:600">+61%</td></tr>
+<tr><td>8</td><td>遅延の武器化</td><td>Weaponized Delay</td><td>逆説 × 自己強化 × 資源変換</td><td>7</td><td>安定</td></tr>
+<tr><td style="color:var(--accent-orange);font-weight:600">9</td><td style="font-weight:600">改革者の罠</td><td>Reformer's Trap</td><td>均衡 × 逆説 × 構造転換</td><td>7</td><td style="color:var(--accent-orange);font-weight:600">+68%</td></tr>
+<tr><td style="color:var(--accent-orange);font-weight:600">10</td><td style="font-weight:600">巨船転舵</td><td>Turning the Supertanker</td><td>均衡 × スケール × 構造転換</td><td>5</td><td style="color:var(--accent-orange);font-weight:600">+65%</td></tr>
+<tr><td>11</td><td>統一の代償</td><td>Price of Unity</td><td>均衡 × 逆説 × スケール</td><td>5</td><td>変動</td></tr>
+<tr><td>12</td><td>正当性のパラドックス</td><td>Legitimacy Paradox</td><td>均衡 × 正当性 × 逆説</td><td>5</td><td>―</td></tr>
+<tr><td>13</td><td>放棄されたプラットフォーム</td><td>Abandoned Platform</td><td>逆説 × 資源変換 × スケール</td><td>5</td><td>―</td></tr>
+<tr><td>14</td><td>情報帝国</td><td>Information Empire</td><td>情報非対称 × 自己強化 × スケール</td><td>4</td><td>―</td></tr>
+<tr><td>15</td><td>創造的破壊の摩擦</td><td>Creative Destruction Friction</td><td>均衡 × 自己強化 × 構造転換</td><td>4</td><td>―</td></tr>
+<tr><td>16</td><td>失敗の錬金術</td><td>Failure Alchemy</td><td>均衡 × 資源変換 × 構造転換</td><td>4</td><td>―</td></tr>
+<tr><td>17</td><td>制約からの創造</td><td>Constraint-Born Creation</td><td>均衡 × 逆説 × 資源変換</td><td>4</td><td>―</td></tr>
+<tr><td>18</td><td>制約からの創発</td><td>Emergent Innovation</td><td>創発 × 逆説 × スケール</td><td>4</td><td>―</td></tr>
+<tr><td>19</td><td>遅延爆弾</td><td>Time Bomb Transformation</td><td>時間遅延 × スケール × 構造転換</td><td>3</td><td>―</td></tr>
+<tr><td>20</td><td>帝国の時間軸</td><td>Imperial Timescale</td><td>均衡 × 時間遅延 × スケール</td><td>3</td><td>―</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ======== FOOTER ======== -->
+<footer class="report-footer">
+  <p><strong>分析日:</strong> 2026年4月26日</p>
+  <p><strong>データソース:</strong> 歴史構造DB（176構造分析・671概念・33,569イベント・1,053リンク）、PESTLE DB（276,360記事）、Cultural Intelligence DB（241,103記事）</p>
+  <p><strong>手法:</strong> 12次元多次元組合せ分析 + PESTLE/CIクロスリファレンス + 歴史的予測解釈</p>
+  <p><strong>ダッシュボード:</strong> <a href="dashboards/gf.html" style="color:var(--accent)">歴史構造DB ダッシュボード</a></p>
+  <p style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-light)">本分析はミラツク・インテリジェンス・パイプラインのデータ基盤に依拠している。PESTLE DBの日次ニュース収集システム、Cultural Intelligence DBの文化ニュース分類体系、CLA分析の4層構造、そしてシグナルDBのウィークシグナル検出機能が、歴史的パターンと現代的文脈を接続する基盤を提供した。</p>
+</footer>
+
+</body>
+</html>
