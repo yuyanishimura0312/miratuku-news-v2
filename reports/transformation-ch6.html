@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第6章 MY分析 — 神話が語る変革の原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --bg-alt: #FAFAF8;
+  --card: #FFFFFF;
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --surface: #F7F7F5;
+  --accent: #CC1400;
+  --accent-muted: rgba(204,20,0,0.06);
+  --accent-blue: #1565c0;
+  --accent-green: #2e7d32;
+  --accent-orange: #e65100;
+  --accent-purple: #7C3AED;
+  --accent-cyan: #0891B2;
+  --serif: 'Noto Serif JP', serif;
+  --sans: 'Noto Sans JP', sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #0D0D0D;
+  --bg-alt: #141414;
+  --card: #1A1A1A;
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #777777;
+  --border: #333333;
+  --border-light: #222222;
+  --surface: #1E1E1E;
+  --accent: #FF4444;
+  --accent-muted: rgba(255,68,68,0.08);
+  --accent-blue: #64b5f6;
+  --accent-green: #66bb6a;
+  --accent-orange: #ffb74d;
+  --accent-purple: #8B5CF6;
+  --accent-cyan: #06B6D4;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.9;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+.theme-toggle {
+  position: fixed; top: 16px; right: 16px; z-index: 100;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: opacity .2s;
+}
+.theme-toggle:hover { opacity: .7; }
+
+.report-header {
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border-light);
+  padding: 48px 24px 40px;
+}
+.report-header-inner {
+  max-width: 740px;
+  margin: 0 auto;
+}
+.report-back {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+}
+.report-back:hover { color: var(--accent); }
+.report-meta-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.report-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.report-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--sans);
+  letter-spacing: 0.03em;
+}
+.report-title {
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.report-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 640px;
+}
+.report-db-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.report-db-tag {
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* Key metrics */
+.key-metrics {
+  max-width: 740px;
+  margin: -20px auto 0;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+.key-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+@media (max-width: 600px) { .key-metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+.key-metric {
+  padding: 18px 16px;
+  text-align: center;
+  border-right: 1px solid var(--border-light);
+}
+.key-metric:last-child { border-right: none; }
+.key-metric-value {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.key-metric-value.accent { color: var(--accent); }
+.key-metric-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Article body */
+.article {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* TOC */
+.toc {
+  margin-bottom: 48px;
+  padding: 24px 28px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+}
+.toc-title {
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  letter-spacing: 0.04em;
+}
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+}
+.toc > ol > li {
+  counter-increment: toc;
+  margin-bottom: 6px;
+}
+.toc > ol > li::before {
+  content: "6." counter(toc);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.78rem;
+  margin-right: 6px;
+  font-family: var(--serif);
+}
+.toc a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.toc a:hover { color: var(--accent); }
+
+/* Section headings */
+.section-num {
+  display: block;
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+h2.article-h2 {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 56px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+}
+h3.article-h3 {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 40px 0 14px;
+  color: var(--text);
+}
+h2.article-h2:first-of-type { margin-top: 0; }
+
+/* Body text */
+.article p {
+  margin-bottom: 18px;
+  font-size: 0.92rem;
+  line-height: 1.9;
+  color: var(--text);
+  text-align: justify;
+  letter-spacing: 0.01em;
+}
+
+/* Figure / diagram containers */
+.figure-box {
+  margin: 32px 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.figure-header {
+  padding: 10px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+.figure-body {
+  padding: 24px 18px;
+}
+.figure-caption {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Bar chart */
+.bar-group { margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+.bar-label { width: 200px; flex-shrink: 0; color: var(--text-secondary); font-size: 0.78rem; }
+.bar-track { flex: 1; height: 22px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
+.bar-fill { height: 100%; transition: width 0.6s ease; }
+.bar-val { width: 60px; text-align: right; font-weight: 500; font-family: monospace; font-size: 0.78rem; }
+
+/* Correspondence diagram */
+.corr-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 4px 12px;
+  font-size: 0.78rem;
+  align-items: center;
+}
+.corr-left { text-align: right; padding: 6px 0; color: var(--text); }
+.corr-arrow { color: var(--accent); font-weight: 700; font-size: 0.72rem; }
+.corr-right { text-align: left; padding: 6px 0; color: var(--text-secondary); }
+
+/* Circle diagram for hero's journey */
+.circle-diagram {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  margin: 0 auto;
+}
+.circle-ring {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+}
+.circle-label {
+  position: absolute;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  text-align: center;
+  width: 80px;
+  margin-left: -40px;
+  margin-top: -10px;
+}
+.circle-phase {
+  position: absolute;
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.phase-departure { color: var(--accent-blue); }
+.phase-initiation { color: var(--accent); }
+.phase-return { color: var(--accent-green); }
+.circle-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: var(--serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 120px;
+}
+
+/* Framework correspondence */
+.fw-corr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin-top: 8px;
+}
+.fw-corr-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+  letter-spacing: 0.04em;
+}
+.fw-corr-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+.fw-corr-table tr:hover td { background: var(--accent-muted); }
+
+/* Insight card */
+.insight-card {
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.insight-header {
+  padding: 12px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.insight-id {
+  font-family: monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-muted);
+  padding: 1px 6px;
+}
+.insight-title {
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+.insight-body {
+  padding: 16px 18px;
+}
+.insight-body p {
+  margin-bottom: 12px;
+  font-size: 0.84rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+.insight-body p:last-child { margin-bottom: 0; }
+
+/* Section divider */
+.section-divider {
+  text-align: center;
+  margin: 48px 0;
+  color: var(--border);
+  font-size: 0.72rem;
+  letter-spacing: 1em;
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+
+<header class="report-header">
+  <div class="report-header-inner">
+    <a class="report-back" href="../index.html">&larr; レポート一覧に戻る</a>
+    <div class="report-meta-top">
+      <span class="report-badge">CHAPTER 6</span>
+      <span class="report-date">50,000字学術レポート | 2026-04-26</span>
+    </div>
+    <h1 class="report-title">MY分析 -- 神話が語る変革の原型</h1>
+    <p class="report-subtitle">52,703件の神話エントリと362,578件のフレームワーク注釈が明らかにする、人類が変革を語り・理解し・受容してきた物語的構造の定量分析</p>
+    <div class="report-db-tags">
+      <span class="report-db-tag">MY (Myth Function DB)</span>
+      <span class="report-db-tag">CLA Layer 4</span>
+      <span class="report-db-tag">GF (Great Figures DB)</span>
+      <span class="report-db-tag">SIF (Signal DB)</span>
+    </div>
+  </div>
+</header>
+
+<div class="key-metrics">
+  <div class="key-metrics-grid">
+    <div class="key-metric">
+      <div class="key-metric-value accent">52,703</div>
+      <div class="key-metric-label">Myth Entries</div>
+    </div>
+    <div class="key-metric">
+      <div class="key-metric-value">362,578</div>
+      <div class="key-metric-label">Framework Annotations</div>
+    </div>
+    <div class="key-metric">
+      <div class="key-metric-value">93,457</div>
+      <div class="key-metric-label">Function Assignments</div>
+    </div>
+    <div class="key-metric">
+      <div class="key-metric-value">6</div>
+      <div class="key-metric-label">Theoretical Frameworks</div>
+    </div>
+  </div>
+</div>
+
+<div class="article">
+
+<nav class="toc">
+  <div class="toc-title">目次</div>
+  <ol>
+    <li><a href="#sec61">52,703件の神話の機能分布</a></li>
+    <li><a href="#sec62">Campbellの英雄の旅と変革の段階構造</a></li>
+    <li><a href="#sec63">Proppの31機能とSIFのPRRRCの構造的対応</a></li>
+    <li><a href="#sec64">Levi-Straussの二項対立とGFの「逆説・矛盾」次元</a></li>
+    <li><a href="#sec65">Jungの元型とCLA第4層</a></li>
+    <li><a href="#sec66">MYが照射する変革の特質</a></li>
+  </ol>
+</nav>
+
+<!-- ========== 6.1 ========== -->
+<h2 class="article-h2" id="sec61"><span class="section-num">SECTION 6.1</span>52,703件の神話の機能分布</h2>
+
+<p>Myth Function Database（MY）は、世界の神話・民話52,703件を7つのデータソースから収集し、10の社会的機能と6つの理論フレームワーク（88要素）で構造化したデータベースである。ここでいう「社会的機能」とは、ジョゼフ・キャンベルが『千の顔をもつ英雄』（1949）で示し、マリノフスキーが機能主義人類学として定式化した、神話が社会において果たす役割の類型を指す。52,703件の神話エントリに対して付与された93,457件の機能分類アサインメントの分布は、人類が物語を通じて何を処理してきたかの定量的地図を描き出す。</p>
+
+<p>最も多くの神話に割り当てられた機能はNAR（ストーリー機能、27,713件）であり、全アサインメントの29.7%を占める。これは自明に見えるが、重要な含意を持つ。神話の第一義的な存在理由は「語ること」それ自体にあり、教訓や世界観の伝達はその副次的産物であるという構造を示している。第二位のMOR（道徳的指導、16,364件、17.5%）と第三位のPSY（心理的癒し、13,421件、14.4%）は、物語が社会規範の内面化と心理的統合の双方に奉仕してきたことを裏づける。WV（世界観機能、11,454件、12.3%）は宇宙論・起源譚・終末論を含み、集団の現実認識の枠組みを形成する機能を果たす。</p>
+
+<!-- Fig.12: 10機能の分布 -->
+<div class="figure-box">
+  <div class="figure-header">FIG. 12 -- 10の社会的機能の分布（93,457 assignments）</div>
+  <div class="figure-body">
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#CC1400">NAR</strong> ストーリー機能</div>
+      <div class="bar-track"><div class="bar-fill" style="width:100%;background:#CC1400"></div></div>
+      <div class="bar-val">27,713</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#2563EB">MOR</strong> 道徳的指導</div>
+      <div class="bar-track"><div class="bar-fill" style="width:59.1%;background:#2563EB"></div></div>
+      <div class="bar-val">16,364</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#7C3AED">PSY</strong> 心理的癒し</div>
+      <div class="bar-track"><div class="bar-fill" style="width:48.4%;background:#7C3AED"></div></div>
+      <div class="bar-val">13,421</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#EA580C">WV</strong> 世界観機能</div>
+      <div class="bar-track"><div class="bar-fill" style="width:41.3%;background:#EA580C"></div></div>
+      <div class="bar-val">11,454</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#16A34A">EDU</strong> 教育的機能</div>
+      <div class="bar-track"><div class="bar-fill" style="width:25.3%;background:#16A34A"></div></div>
+      <div class="bar-val">7,002</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#0891B2">RIT</strong> 儀礼的機能</div>
+      <div class="bar-track"><div class="bar-fill" style="width:19.6%;background:#0891B2"></div></div>
+      <div class="bar-val">5,430</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#CA8A04">SOC</strong> 社会的結束</div>
+      <div class="bar-track"><div class="bar-fill" style="width:17.0%;background:#CA8A04"></div></div>
+      <div class="bar-val">4,703</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#059669">ECO</strong> 生態的知識</div>
+      <div class="bar-track"><div class="bar-fill" style="width:11.7%;background:#059669"></div></div>
+      <div class="bar-val">3,230</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#DC2626">POL</strong> 政治的正当化</div>
+      <div class="bar-track"><div class="bar-fill" style="width:8.1%;background:#DC2626"></div></div>
+      <div class="bar-val">2,258</div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><strong style="color:#4F46E5">IDN</strong> アイデンティティ形成</div>
+      <div class="bar-track"><div class="bar-fill" style="width:6.8%;background:#4F46E5"></div></div>
+      <div class="bar-val">1,882</div>
+    </div>
+  </div>
+  <div class="figure-caption">Fig. 12: 52,703件の神話エントリに対する93,457件の機能分類アサインメント。1件の神話に複数の機能が割り当てられるため、合計はエントリ数を超える。NAR（ストーリー機能）が全体の29.7%を占め、物語としての伝達それ自体が神話の一次的機能であることを示す。</div>
+</div>
+
+<p>本章の分析において特に注目すべきは、「変容」に関わる3つの機能 -- PSY（心理的癒し）、WV（世界観）、IDN（アイデンティティ形成） -- の位置づけである。この3機能の合計は26,757件（全体の28.6%）に達し、NARに匹敵する規模を持つ。PSYは個人の内的変容（心理的危機の物語的処理、喪失からの回復、アイデンティティの再統合）を、WVは集団の認識枠組みの変容（宇宙観の転換、新たな秩序の物語的正当化）を、IDNは共同体の自己認識の変容（起源譚による集団的同一性の構築と再構築）を、それぞれ担う。三者は「個人-認識-集団」の軸に沿って変容の異なる層を覆っており、神話が変革を単なる外的事象としてではなく、人間存在の根底に触れる内的経験として処理してきたことを示唆する。</p>
+
+<p>Thompson Motif Indexの45,496件に目を転じると、最大カテゴリはD（魔法・変容、7,149件）であり、次いでA（神話的モチーフ、5,779件）、F（異界・驚異、5,349件）が続く。DカテゴリがThompson分類の最大項目であることは、変容（transformation）が世界の民話の最も普遍的な主題であることを意味する。人が動物に変わり、動物が人に変わり、貧者が王に変わり、死者が生者に変わる。変容の物語は単なるファンタジーではなく、現実世界における社会的変革の原型的イメージを提供してきた。CLAのキーワードマッピングにおいて「変容」がD・Eに、「変革」がD・Lに対応するのは、変容の物語が死と復活（E、2,186件）および運命の逆転（L、316件）と不可分に結びついていることを示している。</p>
+
+<div class="section-divider">* * *</div>
+
+<!-- ========== 6.2 ========== -->
+<h2 class="article-h2" id="sec62"><span class="section-num">SECTION 6.2</span>Campbellの英雄の旅と変革の段階構造</h2>
+
+<p>ジョゼフ・キャンベルの「英雄の旅」（The Hero's Journey）は、MY内で52,505件の注釈を持つ。17の段階から構成されるこの物語構造は、「出立」（Departure）、「イニシエーション」（Initiation）、「帰還」（Return）の3部構造に大別される。キャンベル自身はこれを「モノミス」（単一神話）と呼び、世界中の神話に普遍的に見られる物語の基本構造と位置づけた。本節では、この17段階が社会変革のプロセスとどのような構造的対応関係にあるかを検討する。</p>
+
+<p>「出立」の段階は、英雄が日常世界から冒険の世界へと踏み出す過程を描く。「冒険への召命」（Call to Adventure）は、既存の秩序に亀裂が入る瞬間 -- すなわち変革の端緒 -- に対応する。「召命の拒否」（Refusal of the Call）は、変革に対する初期的抵抗を物語化したものであり、GF分析で観察された「改革者の罠」パターンの初期段階 -- 体制内から変革を試みる者が最初に経験する逡巡と抵抗 -- と構造的に同型である。「超自然的助力」（Supernatural Aid）は、変革を可能にする外部からの資源・知識・技術の流入に対応し、Signal DBにおけるシグナル検出の機能的等価物として読むことができる。「最初の閾の通過」（Crossing the First Threshold）は不可逆点の通過であり、CLA分析で「リタニー」から「社会的原因」の層へ分析が深化する瞬間を物語的に表現している。</p>
+
+<p>「イニシエーション」は、変革の核心的経験を構成する。「試練の道」（The Road of Trials）は、変革過程における連続的な困難と学習を描き、GFの「巨船転舵」パターン -- 巨大システムの構造転換に伴う持続的な抵抗と調整 -- と対応する。「女神との遭遇」（Meeting with the Goddess）と「誘惑者としての女性」（Woman as Temptress）は、変革者が遭遇する根本的な選択の瞬間を表しており、前者は変革のビジョンとの出会い、後者は旧来の秩序への回帰の誘惑である。そして「父との和解」（Atonement with the Father）は、既存の権威構造との和解あるいは超克を意味し、制度変革における正当性の移転プロセスを物語化している。「神格化」（Apotheosis）と「究極の恵み」（The Ultimate Boon）は、変革の成就 -- 新たな秩序の確立 -- に対応する。</p>
+
+<!-- Fig.11: Campbellの英雄の旅とGF3パターン -->
+<div class="figure-box">
+  <div class="figure-header">FIG. 11 -- Campbellの英雄の旅（3部構造）とGFシステムパターンの対応</div>
+  <div class="figure-body" style="overflow-x:auto;">
+    <table class="fw-corr-table">
+      <thead>
+        <tr>
+          <th>Campbell段階</th>
+          <th>英雄の旅</th>
+          <th>GFパターン対応</th>
+          <th>変革プロセスの位相</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:rgba(21,101,192,0.04)">
+          <td colspan="4" style="font-weight:700;color:var(--accent-blue);font-size:0.72rem;letter-spacing:0.06em;padding:10px">DEPARTURE -- 出立</td>
+        </tr>
+        <tr>
+          <td>1-2</td>
+          <td>冒険への召命 / 召命の拒否</td>
+          <td>改革者の罠（初期段階）</td>
+          <td>変革の端緒と初期抵抗</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>超自然的助力</td>
+          <td>シグナル検出</td>
+          <td>外部資源の流入</td>
+        </tr>
+        <tr>
+          <td>4-5</td>
+          <td>閾の通過 / 鯨の腹</td>
+          <td>フライホイール変革（着火点）</td>
+          <td>不可逆点の通過</td>
+        </tr>
+        <tr style="background:rgba(204,20,0,0.03)">
+          <td colspan="4" style="font-weight:700;color:var(--accent);font-size:0.72rem;letter-spacing:0.06em;padding:10px">INITIATION -- イニシエーション</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>試練の道</td>
+          <td>巨船転舵</td>
+          <td>持続的な困難と学習</td>
+        </tr>
+        <tr>
+          <td>7-8</td>
+          <td>女神との遭遇 / 誘惑者</td>
+          <td>矛盾の増幅器</td>
+          <td>ビジョンと回帰の相克</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td>父との和解</td>
+          <td>正当性の移転</td>
+          <td>権威構造の超克</td>
+        </tr>
+        <tr>
+          <td>10-11</td>
+          <td>神格化 / 究極の恵み</td>
+          <td>フライホイール変革（加速期）</td>
+          <td>新秩序の確立</td>
+        </tr>
+        <tr style="background:rgba(46,125,50,0.04)">
+          <td colspan="4" style="font-weight:700;color:var(--accent-green);font-size:0.72rem;letter-spacing:0.06em;padding:10px">RETURN -- 帰還</td>
+        </tr>
+        <tr>
+          <td>12-13</td>
+          <td>帰還の拒絶 / 魔法の逃走</td>
+          <td>改革者の罠（後期段階）</td>
+          <td>制度化への抵抗</td>
+        </tr>
+        <tr>
+          <td>14-15</td>
+          <td>外部からの救出 / 帰還の閾</td>
+          <td>遅延の逆転利用</td>
+          <td>知見の社会的翻訳</td>
+        </tr>
+        <tr>
+          <td>16-17</td>
+          <td>二つの世界の導師 / 生の自由</td>
+          <td>構造的創発</td>
+          <td>変革の恒常化</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="figure-caption">Fig. 11: Campbellの英雄の旅17段階（3部構造）とGFシステムパターンの構造的対応。「出立」は変革の端緒、「イニシエーション」は変革の核心的経験、「帰還」は変革の社会的定着に対応する。円環構造は、帰還が新たな出立の準備であるという変革の再帰性を表す。</div>
+</div>
+
+<p>「帰還」は、変革の果実を共同体に持ち帰る過程である。ここに現れる「帰還の拒絶」（Refusal of the Return）は、変革者が変革後の世界にとどまろうとする衝動 -- すなわち変革の制度化・社会化を拒む抵抗 -- を物語化したものであり、多くの革命家が革命後の統治に失敗する構造的原因を先取りしている。「二つの世界の導師」（Master of Two Worlds）は、旧秩序と新秩序の双方を統合する能力を意味し、GFにおける「両利きの経営」 -- ネットフリックスのリード・ヘイスティングスがDVD事業とストリーミング事業を同時に運営した構造 -- の神話的原型である。そして「生の自由」（Freedom to Live）は、変革が日常に統合され、もはや「変革」として意識されない状態 -- すなわち新たな常態の確立 -- を描く。</p>
+
+<p>ここで注目すべきは、キャンベルの英雄の旅が円環構造をとることである。「生の自由」は「冒険への召命」の前提条件であり、帰還は次の出立の準備にほかならない。この円環性は、変革が一回的な事象ではなく、反復的な過程であるという本レポート全体の主張を物語構造の水準で支持する。GFで観察された20のシステムパターンのうち、「フライホイール変革」が持つ自己強化的な循環構造は、英雄の旅の円環性と構造的に同型であり、変革の終点が次の変革の起点になるという動態を共有している。</p>
+
+<div class="section-divider">* * *</div>
+
+<!-- ========== 6.3 ========== -->
+<h2 class="article-h2" id="sec63"><span class="section-num">SECTION 6.3</span>Proppの31機能とSIFのPRRRCの構造的対応</h2>
+
+<p>ウラジーミル・プロップが『昔話の形態学』（1928）で定式化した31の物語機能は、MY内で77,411件の注釈を持ち、6つのフレームワーク中で第二位の規模を誇る。プロップの機能とは、物語の登場人物の「行為」を、その物語上の意味に基づいて分類した単位である。プロップはロシアの魔法昔話100編を分析し、表面的には異なる物語が共通の機能連鎖 -- 「欠如」から始まり「結婚」あるいは「即位」で終わる -- によって構成されていることを発見した。この発見は構造主義言語学に先立つ構造分析の先駆であり、レヴィ=ストロースの神話分析にも直接的な影響を与えた。</p>
+
+<p>本節では、プロップの31機能がSignal Intelligence Framework（SIF）のPRRRC分類 -- Power（権力）、Resources（資源）、Rules（規則）、Relationships（関係）、Culture（文化） -- とどのような構造的対応関係にあるかを検討する。SIFのPRRRC分類は、社会変革のシグナルを5つの次元で捉える枠組みであり、プロップの物語機能は、この5次元に対応する物語的行為の原型を提供する。</p>
+
+<div class="insight-card">
+  <div class="insight-header">
+    <span class="insight-id">CORR-1</span>
+    <span class="insight-title">「欠如」= Resources不足</span>
+  </div>
+  <div class="insight-body">
+    <p>プロップの第8a機能「欠如」（Lack）は、物語の推進力の根源である。何かが欠けていること -- 王女の誘拐、魔法の道具の喪失、収穫の失敗 -- が英雄の行動を動機づける。SIFのResources次元において、資源の不足・偏在・枯渇がシグナルとして検出される構造は、プロップの「欠如」と機能的に等価である。52,703件の神話エントリのうち、「欠如」の注釈を持つ神話は最も出現頻度の高い機能の一つであり、人類の物語の根底にある「何かが足りない」という認識が、変革を駆動する原初的なエネルギーであることを示している。Thompson Motif Indexにおいて「D（魔法・変容）」が最大カテゴリである事実は、欠如の認識が変容への欲求と不可分であることを裏づける。</p>
+  </div>
+</div>
+
+<div class="insight-card">
+  <div class="insight-header">
+    <span class="insight-id">CORR-2</span>
+    <span class="insight-title">「派遣」= Power移転</span>
+  </div>
+  <div class="insight-body">
+    <p>第9機能「派遣・仲介」（Mediation）は、英雄が任務を委託される瞬間である。王が英雄を派遣し、村が若者に使命を与え、神が人間に試練を課す。ここで起きているのは、権力（Power）の委譲・移転・再配分である。派遣者から被派遣者へ、権限と責任が移転される。SIFのPower次元は、まさにこの権力の移転・集中・分散をシグナルとして追跡する。GFの「情報帝国」パターン -- 情報優位が権力を増幅し、権力がさらなる情報収集能力を生む自己増幅構造 -- は、プロップの「派遣」が繰り返し重層化した現代的形態として理解できる。デジタルプラットフォームの台頭は、「誰が誰を派遣するか」の構造を根本的に変容させた。</p>
+  </div>
+</div>
+
+<div class="insight-card">
+  <div class="insight-header">
+    <span class="insight-id">CORR-3</span>
+    <span class="insight-title">「闘争」= Rules変更</span>
+  </div>
+  <div class="insight-body">
+    <p>第16機能「闘争」（Struggle）は、英雄と敵対者の直接的な対決である。しかしプロップが明らかにしたように、闘争は単なる物理的衝突ではなく、物語のルール -- 誰が勝つべきか、何が正義か、いかなる秩序が最終的に確立されるか -- を決定する構造的転換点である。SIFのRules次元は、法制度・規範・基準の変更をシグナルとして検出するが、プロップの「闘争」はこの制度変革の物語的原型を提供する。闘争の結末が新たなルールを確立するという構造は、GFにおいて観察された「構造転換」パターンの物語的表現にほかならない。注目すべきは、プロップの物語において闘争の後に必ず「偽りの英雄の暴露」（第28機能）が続く点である。これは新秩序の正当性検証プロセスであり、変革後の制度が真に正当なものかを物語が自己検証する構造を内包している。</p>
+  </div>
+</div>
+
+<p>プロップの残りの機能についても、SIFの5次元との対応を概観しておく。「禁止」（第2機能）と「違反」（第3機能）はRules次元の変革の前奏曲であり、規則の存在とその逸脱が物語を動態化する。「贈与者の試練」（第12機能）と「魔法の手段の獲得」（第14機能）はResources次元に対応し、変革に必要な手段の獲得過程を描く。「婚姻」あるいは「即位」（第31機能）は、Relationships次元とPower次元の双方に関わる統合的結末であり、変革の社会的承認と新たな関係構造の確立を同時に達成する。文化（Culture）次元に直接対応するのは、「烙印」（第17機能）と「変身」（第29機能）であり、英雄の外見的・象徴的変容が文化的意味体系の変容と連動する構造を示している。</p>
+
+<p>プロップの31機能の連鎖が持つもう一つの重要な性質は、その不可逆性である。機能は常に同じ順序で出現し、逆行しない。この不可逆性は、社会変革の経路依存性 -- ある段階を通過した後には、それ以前の状態に回帰できないという構造 -- と構造的に同型である。GFにおいて「経路依存性」が12の構造次元の一つとして設定されたのは、まさにこの不可逆性が歴史的変革の基本的性質であることを反映している。プロップが1928年にロシアの民話100編から抽出した構造は、変革の不可逆性という社会科学の基本命題を、物語の形式的分析を通じて先取りしていたのである。</p>
+
+<div class="section-divider">* * *</div>
+
+<!-- ========== 6.4 ========== -->
+<h2 class="article-h2" id="sec64"><span class="section-num">SECTION 6.4</span>Levi-Straussの二項対立とGFの「逆説・矛盾」次元</h2>
+
+<p>クロード・レヴィ=ストロースの二項対立分析は、MY内で最大の注釈数を誇り、85,114件に達する。レヴィ=ストロースは『神話論理』（Mythologiques、1964-1971）の4巻を通じて、神話が「自然と文化」「生と死」「秩序と混沌」といった根本的な対立を物語の形式を通じて「仲介」（mediate）する装置であると論じた。MYでは15の二項対立が定義されており、それぞれが数千件の注釈を持つ。</p>
+
+<p>15の二項対立のうち、変革の分析において特に重要なのは、「自然/文化」「秩序/混沌」「個人/集団」の3対立である。「自然/文化」の対立は、技術革新を通じた人間の自然への介入 -- プロメテウスが火を盗んで人間に与えた物語から、AI技術の発展まで -- を構造化する枠組みを提供する。CLAのキーワードマッピングにおいて「技術」がD（魔法・変容）とF（異界・驚異）に対応するのは、技術が自然と文化の境界を攪乱する変容の媒介物として位置づけられてきたことの反映である。「秩序/混沌」の対立は、GFにおける「構造転換」パターンの物語的基盤を形成する。あらゆる構造転換は既存の秩序を解体し、一時的な混沌を経て新たな秩序を構築する過程であり、この過程を物語として処理する装置が「秩序/混沌」の二項対立である。</p>
+
+<p>ここで注目すべきは、レヴィ=ストロースの二項対立構造とGF分析における「逆説・矛盾」次元との構造的共鳴である。GFの12の構造次元のうち「逆説・矛盾」は163レコードに検出され、第三位の出現頻度を持つ。「矛盾の増幅器」パターン -- 矛盾を内包したまま自己強化が進む構造 -- は、最多の歴史事例数（14件）を持ち、最も基本的なシステムパターンの一つであった。この「矛盾の増幅器」は、レヴィ=ストロースが記述した神話の機能 -- 根本的に解決不可能な対立を物語の形式を通じて「仲介」すること -- の社会的実践形態として読むことができる。</p>
+
+<!-- Fig.10: 6フレームワーク間の構造対応図 -->
+<div class="figure-box">
+  <div class="figure-header">FIG. 10 -- 6フレームワーク間の構造対応とGF/SIF次元への接続</div>
+  <div class="figure-body" style="overflow-x:auto;">
+    <table class="fw-corr-table">
+      <thead>
+        <tr>
+          <th>理論フレームワーク</th>
+          <th style="text-align:right">注釈数</th>
+          <th>核心概念</th>
+          <th>GF次元への対応</th>
+          <th>SIF次元への対応</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600">Levi-Strauss</td>
+          <td style="text-align:right;font-family:monospace">85,114</td>
+          <td>15の二項対立</td>
+          <td>逆説・矛盾</td>
+          <td>Culture</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Propp</td>
+          <td style="text-align:right;font-family:monospace">77,411</td>
+          <td>31の物語機能</td>
+          <td>構造転換 / 経路依存性</td>
+          <td>Power / Resources / Rules</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Jung</td>
+          <td style="text-align:right;font-family:monospace">57,517</td>
+          <td>12の元型</td>
+          <td>正当性の構築 / 創発</td>
+          <td>Culture / Relationships</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Campbell</td>
+          <td style="text-align:right;font-family:monospace">52,505</td>
+          <td>17の英雄の旅段階</td>
+          <td>巨船転舵 / 改革者の罠</td>
+          <td>Power / Rules</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Booker</td>
+          <td style="text-align:right;font-family:monospace">49,200</td>
+          <td>7つの基本プロット</td>
+          <td>フライホイール変革</td>
+          <td>Relationships / Culture</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">Greimas</td>
+          <td style="text-align:right;font-family:monospace">40,831</td>
+          <td>6つの行為項</td>
+          <td>情報帝国 / 資源変換</td>
+          <td>Power / Resources</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="figure-caption">Fig. 10: MY内の6つの理論フレームワーク（合計362,578注釈）とGFシステムパターン、SIF次元の構造的対応。レヴィ=ストロースの二項対立がGFの「逆説・矛盾」次元と、プロップの物語機能がSIFのPRRRC分類と、ユングの元型がCLA第4層と、それぞれ最も密な接続関係にある。</div>
+</div>
+
+<p>具体的に見てみよう。GFにおいてアタテュルクのトルコ共和国建設が「巨船転舵」パターンとして分析された際、その構造の核心にあったのは「イスラームと世俗主義」「帝国と共和制」「東洋と西洋」という二項対立の急進的な解消であった。武則天が科挙制度を利用して貴族層の権力を削いだ事例は、「体制のツールで体制を変革する」という「矛盾の増幅器」パターンであったが、これはレヴィ=ストロースの用語でいえば「秩序/混沌」の対立を秩序の内部から攪乱する仲介行為にほかならない。現代のAI技術の台頭がCLAマッピングにおいて「技術的救世主」と「技術的黙示録」の並存として検出されるのは、「救済/破壊」「進歩/回帰」という二項対立が未解決のまま共存している状態の反映であり、レヴィ=ストロースの理論が予測する通り、神話的思考が依然としてこれらの対立を仲介しようと試みていることを示す。</p>
+
+<p>さらに注目すべきは、レヴィ=ストロースが指摘した「神話は矛盾を解決するのではなく、矛盾の両項の間を振動し続ける」という性質である。GFで観察された「帝国の逆説」パターン -- 帝国が拡大すればするほど統治コストが増大し、拡大を止めれば正当性が失われるという構造的矛盾 -- は、この「解決なき振動」の歴史的実践形態である。ローマ帝国、モンゴル帝国、大英帝国がすべてこの矛盾に直面したという事実は、帝国という社会形態そのものが「個人/集団」「中心/周縁」「統一/多様性」の二項対立を内包しているためであり、レヴィ=ストロースの構造分析がこの普遍的な政治的矛盾の深層構造を正確に記述していることを意味する。85,114件の注釈がMY内で最大の規模を持つのは、二項対立が神話の最も根本的な作動原理であり、したがって人間の社会的現実の認知における最も根本的な構造化原理であることの定量的裏づけである。</p>
+
+<div class="section-divider">* * *</div>
+
+<!-- ========== 6.5 ========== -->
+<h2 class="article-h2" id="sec65"><span class="section-num">SECTION 6.5</span>Jungの元型とCLA第4層</h2>
+
+<p>カール・ユングの12の元型は、MY内で57,517件の注釈を持つ。ユングが提唱した「集合的無意識」とその元型的表現 -- Hero（英雄）、Shadow（影）、Trickster（トリックスター）、Self（自己）、Anima/Animus、Great Mother（太母）、Wise Old Man（老賢者）、Child（子供）、Persona（仮面）、Ruler（支配者）、Creator（創造者）、Destroyer（破壊者） -- は、CLA（因果階層分析）の第4層「神話・メタファー」（myth/metaphor）と最も直接的に接続するフレームワークである。CLA第4層は、社会現象の最深層にある無意識的な物語・メタファー・原型を分析する層であり、ユングの元型はこの層の主要な分析概念を提供する。</p>
+
+<p>Hero（英雄）元型は、キャンベルの英雄の旅と直接的に連動しつつも、ユング心理学においてはより深い意味を持つ。英雄とは意識が無意識に立ち向かう力であり、既知の秩序から未知の領域へ踏み出す勇気の象徴である。変革の文脈では、英雄元型の活性化が社会的変革の初期段階 -- 既存の秩序に疑問を呈し、新たな可能性を追求する個人または集団の出現 -- を駆動する。GFにおいてガリレオ、ダーウィン、アインシュタインといった知の革命者が分析されたが、彼らの行為は英雄元型の知的次元における発現として理解できる。</p>
+
+<p>Shadow（影）元型は、変革の分析において特に重要な位置を占める。影とは、意識が抑圧した要素の集合体であり、個人レベルでは否認された欲望や恐怖、集団レベルでは社会が認めたくない構造的矛盾を表す。GFの「矛盾の増幅器」パターンにおいて、SNSが民主主義を「強化」すると同時に「弱体化」させるという逆説が観察されたが、これは民主主義の「影」 -- 情報の自由が偽情報の自由でもあるという抑圧された認識 -- が表面化した事例として解釈できる。CLAの日々の分析において、ニュースの「リタニー」層（表面的な出来事）の背後に潜む「神話・メタファー」層を解読する作業は、本質的に集団的な影の認識プロセスである。レヴィ=ストロースの二項対立分析が85,114件で最大の注釈数を持つのに対し、ユングの元型が57,517件で第三位にとどまる理由は、二項対立がすべての神話に遍在する形式的構造であるのに対し、元型は特定の物語類型においてのみ明瞭に現れる内容的構造であることによる。</p>
+
+<p>Trickster（トリックスター）元型は、変革の触媒としての独特な位置を占める。トリックスターは秩序を攪乱する存在であり、規則を破り、境界を越え、禁忌を犯す。しかしその攪乱は単なる破壊ではなく、硬直した秩序に柔軟性を回復させ、新たな可能性を開く創造的な攪乱である。Thompson Motif IndexにおいてK（欺き、3,767件）とJ（賢者と愚者、3,517件）が上位に位置するのは、トリックスター的な知恵 -- ずる賢さと叡智の混合 -- が物語の主要な推進力であることを示している。GFにおける「制約が創発の触媒になる」パターン -- 大野耐一のトヨタ生産方式に代表される -- は、トリックスター元型の産業的発現である。制約を逆手にとって革新を生む行為は、トリックスターが禁忌を犯すことで新たな秩序を産出する物語構造と同型である。</p>
+
+<p>Self（自己）元型は、ユング心理学における個性化（individuation）の目標 -- 意識と無意識の統合 -- を象徴する。社会変革の文脈では、Self元型は変革の最終段階 -- 新旧の秩序が統合され、変革が「変革」として意識されなくなる状態 -- に対応する。キャンベルの「二つの世界の導師」がこの段階の物語的表現であり、GFのネットフリックスの事例 -- DVD事業とストリーミング事業の統合 -- がその現代的実践形態であった。CLA第4層の分析において、あるニュースが複数の元型を同時に活性化させていると検出された場合、それは社会の集合的無意識において複合的な心理的処理が進行していることを示唆する。AI技術の台頭が同時にHero（技術的救世主）、Shadow（技術的脅威）、Trickster（予測不可能な攪乱者）の元型を活性化させている現在の状況は、この技術が社会の深層心理において極めて多義的な位置を占めていることの証左である。</p>
+
+<div class="section-divider">* * *</div>
+
+<!-- ========== 6.6 ========== -->
+<h2 class="article-h2" id="sec66"><span class="section-num">SECTION 6.6</span>MYが照射する変革の特質</h2>
+
+<p>以上の分析を統合すると、MY（神話機能データベース）が照射する変革の特質は、「集合的心理の物語的処理」という概念に集約される。人間は変革を、統計データや政策文書としてではなく、物語として経験し、理解し、受容する。52,703件の神話エントリと362,578件のフレームワーク注釈が描き出す構造は、この物語的処理がいかに精緻であり、いかに体系的であるかを示している。</p>
+
+<p>第一に、変革は「欠如の認識」から始まる。プロップの「欠如」機能、キャンベルの「冒険への召命」、ユングの英雄元型の活性化 -- いずれも現状に対する根本的な不充足感が変革のエネルギーを供給する。Thompson Motif Indexにおいて変容カテゴリ（D）が最大の7,149件を持つのは、変わりたいという欲求が人間の物語的想像力の最も強力な源泉であることを意味する。SIFのシグナル検出は、この「欠如の認識」の社会的表現を定量的に追跡する作業にほかならない。</p>
+
+<p>第二に、変革は「対立の仲介」を通じて進行する。レヴィ=ストロースの85,114件の注釈が示すように、二項対立は神話の最も基本的な構造原理であり、変革の物語は必ず何らかの対立を含む。しかし神話は対立を解決するのではなく、対立の両項を物語の中で共存させ、聴衆が両者の間を想像的に往復することを可能にする。GFの「矛盾の増幅器」パターンが最多の歴史事例を持つのは、歴史上の変革が例外なく何らかの構造的矛盾を内包しており、その矛盾を「解決」するのではなく「増幅」しながら前進するという逆説的な動態を持っていたからである。現代のAI倫理をめぐる議論が「技術的救世主」と「技術的黙示録」の間で振動し続けるのは、この議論がレヴィ=ストロースが記述した神話的思考の構造をそのまま再現しているためである。</p>
+
+<p>第三に、変革は「円環的な物語」として構造化される。キャンベルの英雄の旅の円環構造、プロップの物語機能の不可逆的連鎖、ユングの個性化プロセスの螺旋的深化 -- いずれも変革を一直線の「進歩」ではなく、繰り返しと深化を含む反復的プロセスとして描く。GFのシステムパターンが1990年代から2020年代にかけて「構造転換」パターンの一貫した増加を示しつつも、「矛盾の増幅器」が安定的に存在し続けるのは、変革が「完了」することなく、常に新たな矛盾を生みながら次の周期に入るという円環構造を持っているためである。</p>
+
+<p>第四に、変革は「個人の内的経験」と「集団の社会的経験」の両層で同時に処理される。機能分類においてPSY（心理的癒し、13,421件）とSOC（社会的結束、4,703件）が共存するのは、変革の物語が個人の心理的統合と社会の結束維持の双方に奉仕しているためである。ユングのSelf元型が変革の最終段階 -- 個人レベルでの意識と無意識の統合 -- を象徴するのに対し、ブッカーの7つの基本プロット（49,200注釈）が変革の社会的受容を物語類型として構造化する。変革を物語として語ることの核心的な機能は、まさにこの個人-集団の二重の処理を同時に遂行する点にある。</p>
+
+<p>最後に、MYの分析は、データ駆動型未来学における神話の位置づけを明確にする。CLA第4層（神話・メタファー）は、リタニー、社会的原因、世界観/ディスコースの下に位置する最深層であり、ここに沈澱した物語構造が上位3層の変化の方向性を規定する。52,703件の神話エントリは、この最深層の構造地図を提供する。「変容」のモチーフが最大カテゴリであること、二項対立が最多の注釈を持つこと、英雄の旅が円環構造をとること -- これらの構造的事実は、現在進行中の社会変革を「物語としてどう語るか」が変革の帰趨を左右しうることを示唆する。AI技術、気候変動、地政学的再編といった現代のメガトレンドが最終的にどのような形で社会に統合されるかは、それらが「プロメテウスの火」として語られるか「パンドラの箱」として語られるか -- すなわち、どの神話的原型が活性化されるか -- に依存する部分が少なくない。MYは、この「物語の深層構造」をデータとして可視化し、未来洞察の概念基盤として機能する装置なのである。</p>
+
+</div><!-- /.article -->
+
+</body>
+</html>

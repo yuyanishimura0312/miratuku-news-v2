@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第5章: SIF分析 — ソーシャルイノベーションの構造的条件</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --bg-alt: #FAFAF8;
+  --card: #FFFFFF;
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --surface: #F7F7F5;
+  --accent: #CC1400;
+  --accent-muted: rgba(204,20,0,0.06);
+  --accent-blue: #1565c0;
+  --accent-green: #2e7d32;
+  --accent-orange: #e65100;
+  --accent-purple: #7C3AED;
+  --accent-teal: #0D9488;
+  --serif: 'Noto Serif JP', serif;
+  --sans: 'Noto Sans JP', sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #0D0D0D;
+  --bg-alt: #141414;
+  --card: #1A1A1A;
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #777777;
+  --border: #333333;
+  --border-light: #222222;
+  --surface: #1E1E1E;
+  --accent: #FF4444;
+  --accent-muted: rgba(255,68,68,0.08);
+  --accent-blue: #64b5f6;
+  --accent-green: #66bb6a;
+  --accent-orange: #ffb74d;
+  --accent-purple: #b39ddb;
+  --accent-teal: #4db6ac;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.9;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+.theme-toggle {
+  position: fixed; top: 16px; right: 16px; z-index: 100;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: opacity .2s;
+}
+.theme-toggle:hover { opacity: .7; }
+.report-header {
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border-light);
+  padding: 48px 24px 40px;
+}
+.report-header-inner { max-width: 740px; margin: 0 auto; }
+.report-back {
+  font-size: 0.75rem; color: var(--text-muted); text-decoration: none;
+  display: inline-block; margin-bottom: 24px; letter-spacing: 0.02em;
+}
+.report-back:hover { color: var(--accent); }
+.report-meta-top {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.report-badge {
+  display: inline-block; padding: 2px 8px; background: var(--accent);
+  color: #fff; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.04em;
+}
+.report-date {
+  font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.03em;
+}
+.report-title {
+  font-family: var(--serif); font-size: 1.75rem; font-weight: 700;
+  line-height: 1.4; letter-spacing: -0.01em; margin-bottom: 12px;
+}
+.report-subtitle {
+  font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; max-width: 640px;
+}
+.report-db-tags { display: flex; gap: 6px; margin-top: 16px; flex-wrap: wrap; }
+.report-db-tag {
+  padding: 2px 8px; font-size: 0.68rem; font-weight: 500;
+  border: 1px solid var(--border); color: var(--text-secondary);
+}
+.key-metrics { max-width: 740px; margin: -20px auto 0; padding: 0 24px; position: relative; z-index: 2; }
+.key-metrics-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  border: 1px solid var(--border); background: var(--card);
+}
+.key-metric {
+  padding: 18px 16px; text-align: center; border-right: 1px solid var(--border-light);
+}
+.key-metric:last-child { border-right: none; }
+.key-metric-value {
+  font-family: var(--serif); font-size: 1.4rem; font-weight: 700; line-height: 1.2;
+}
+.key-metric-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 4px; }
+.article { max-width: 740px; margin: 0 auto; padding: 48px 24px 80px; }
+
+/* TOC */
+.toc {
+  background: var(--surface); border: 1px solid var(--border-light);
+  padding: 24px 28px; margin-bottom: 40px;
+}
+.toc-title { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.06em; }
+.toc-list { list-style: none; }
+.toc-list li { margin-bottom: 6px; }
+.toc-list a { font-size: 0.84rem; color: var(--text-secondary); text-decoration: none; }
+.toc-list a:hover { color: var(--accent); }
+
+/* Sections */
+h2.section-title {
+  font-family: var(--serif); font-size: 1.2rem; font-weight: 700;
+  margin: 48px 0 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);
+  letter-spacing: -0.01em;
+}
+h3.sub-title {
+  font-family: var(--serif); font-size: 1rem; font-weight: 700;
+  margin: 32px 0 8px; color: var(--text);
+}
+p { margin-bottom: 18px; text-align: justify; }
+.section-lead {
+  font-size: 0.92rem; color: var(--text-secondary); line-height: 1.8;
+  margin-bottom: 24px; padding-left: 12px; border-left: 2px solid var(--accent);
+}
+
+/* Fig: Heatmap */
+.fig-container {
+  margin: 32px 0; padding: 24px; background: var(--surface);
+  border: 1px solid var(--border-light);
+}
+.fig-caption {
+  font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+  margin-bottom: 16px; letter-spacing: 0.04em;
+}
+.heatmap { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+.heatmap th, .heatmap td {
+  border: 1px solid var(--border-light); padding: 6px 4px; text-align: center;
+}
+.heatmap th {
+  background: var(--card); font-weight: 500; font-size: 0.68rem; color: var(--text-secondary);
+}
+.heatmap .era-label {
+  text-align: left; font-weight: 500; font-size: 0.72rem; background: var(--card); white-space: nowrap;
+}
+.heatmap .total-row td, .heatmap .total-row th { background: var(--card); font-weight: 700; }
+.hm-0 { background: var(--surface); color: var(--text-muted); }
+.hm-low { background: #f0fdf4; color: var(--accent-green); font-weight: 600; }
+.hm-mid { background: #eff6ff; color: var(--accent-blue); font-weight: 600; }
+.hm-high { background: #faf5ff; color: var(--accent-purple); font-weight: 700; }
+.hm-vhigh { background: var(--accent-muted); color: var(--accent); font-weight: 700; }
+[data-theme="dark"] .hm-low { background: rgba(46,125,50,.12); }
+[data-theme="dark"] .hm-mid { background: rgba(21,101,192,.12); }
+[data-theme="dark"] .hm-high { background: rgba(124,58,237,.12); }
+[data-theme="dark"] .hm-vhigh { background: rgba(204,20,0,.12); }
+
+/* Fig: PRRRC comparison table */
+.prrrc-compare { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.prrrc-compare th, .prrrc-compare td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border-light); text-align: center;
+}
+.prrrc-compare th { background: var(--surface); font-weight: 500; font-size: 0.72rem; }
+.prrrc-compare .dim-label { text-align: left; font-weight: 600; }
+.prrrc-bar {
+  display: inline-block; height: 16px; border-radius: 2px; vertical-align: middle;
+}
+.prrrc-diff { font-weight: 700; }
+.diff-high { color: var(--accent); }
+.diff-mid { color: var(--accent-orange); }
+.diff-low { color: var(--accent-green); }
+
+/* Fig: Genealogy */
+.genealogy { position: relative; padding: 0; margin: 16px 0; }
+.gen-chain {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0;
+  margin-bottom: 12px;
+}
+.gen-node {
+  padding: 6px 12px; font-size: 0.76rem; font-weight: 500;
+  background: var(--card); border: 1px solid var(--border); white-space: nowrap;
+}
+.gen-node-year { font-size: 0.64rem; color: var(--text-muted); display: block; }
+.gen-arrow {
+  font-size: 0.76rem; color: var(--text-muted); padding: 0 4px; flex-shrink: 0;
+}
+.hub-card {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; background: var(--surface); border: 1px solid var(--border-light);
+  margin-bottom: 6px;
+}
+.hub-name { font-size: 0.84rem; font-weight: 500; }
+.hub-meta { font-size: 0.7rem; color: var(--text-muted); }
+.hub-degree {
+  font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--accent);
+}
+
+/* Blockquote */
+blockquote {
+  margin: 24px 0; padding: 16px 20px; background: var(--surface);
+  border-left: 3px solid var(--accent); font-size: 0.88rem;
+  color: var(--text-secondary); line-height: 1.8;
+}
+.footnote {
+  font-size: 0.72rem; color: var(--text-muted); margin-top: 48px;
+  padding-top: 16px; border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 600px) {
+  .key-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .heatmap { font-size: 0.64rem; }
+  .heatmap th, .heatmap td { padding: 4px 2px; }
+  .gen-chain { flex-direction: column; align-items: flex-start; }
+  .gen-arrow { transform: rotate(90deg); padding: 2px 0; }
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+
+<header class="report-header">
+<div class="report-header-inner">
+  <a class="report-back" href="../reports.html">&larr; レポート一覧に戻る</a>
+  <div class="report-meta-top">
+    <span class="report-badge">CHAPTER 5</span>
+    <span class="report-date">2026-04-26</span>
+  </div>
+  <h1 class="report-title">SIF分析 &mdash; ソーシャルイノベーションの構造的条件</h1>
+  <p class="report-subtitle">1,096件のソーシャルイノベーション事象と232件の事象間関係から浮かび上がる、社会構造変革の時空的パターンと成功条件。5,000年の歴史データによるボトムアップ分析。</p>
+  <div class="report-db-tags">
+    <span class="report-db-tag">SIF</span>
+    <span class="report-db-tag">si_events: 1,096件</span>
+    <span class="report-db-tag">event_relations: 232件</span>
+    <span class="report-db-tag">PRRRCモデル</span>
+  </div>
+</div>
+</header>
+
+<div class="key-metrics">
+<div class="key-metrics-grid">
+  <div class="key-metric">
+    <div class="key-metric-value">1,096</div>
+    <div class="key-metric-label">SI事象</div>
+  </div>
+  <div class="key-metric">
+    <div class="key-metric-value">10</div>
+    <div class="key-metric-label">文明圏</div>
+  </div>
+  <div class="key-metric">
+    <div class="key-metric-value">59</div>
+    <div class="key-metric-label">失敗SI</div>
+  </div>
+  <div class="key-metric">
+    <div class="key-metric-value">232</div>
+    <div class="key-metric-label">事象間関係</div>
+  </div>
+</div>
+</div>
+
+<article class="article">
+
+<nav class="toc">
+  <div class="toc-title">CONTENTS</div>
+  <ol class="toc-list">
+    <li><a href="#s51">5.1 1,096件の時空分布 &mdash; 10文明圏 &times; 5時代のマトリクス分析</a></li>
+    <li><a href="#s52">5.2 PRRRCモデルによる5次元プロファイリング</a></li>
+    <li><a href="#s53">5.3 232件の事象間関係と10システム法則</a></li>
+    <li><a href="#s54">5.4 SIFが照射する変革の特質</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<!-- 5.1 -->
+<!-- ============================================================ -->
+<h2 class="section-title" id="s51">5.1 1,096件の時空分布 &mdash; 10文明圏 &times; 5時代のマトリクス分析</h2>
+
+<p class="section-lead">SIF（Social Innovation Framework）データベースは、BCE3000年のメソポタミア灌漑制度から2020年代のデジタル民主主義にいたるまで、約5,000年にわたる1,096件のソーシャルイノベーション事象を収録している。本節ではまず、この膨大な事象群を時代と文明圏の二軸で俯瞰し、社会構造変革がどのような時空的パターンで生起してきたかを明らかにする。</p>
+
+<p>データベースの時代区分は、（1）古代〜中世（BCE3000〜1500年頃）、（2）近代成立期（1500〜1760年頃）、（3）産業革命期（1760〜1914年）、（4）短い20世紀（1914〜1991年）、（5）グローバル期（1991年〜現在）の5区分である。文明圏は、西洋、イスラム、南アジア、東アジア、アフリカ、アメリカス、東南アジア、中央アジア、太平洋、文明横断の10区分を設定している。この区分は、Huntingtonの文明論をベースとしながらも、より細かな地域的差異を反映するために独自に調整したものである。</p>
+
+<div class="fig-container">
+  <div class="fig-caption">Fig. 7 &mdash; 10文明圏 &times; 5時代 SI事象数ヒートマップ（N=1,096）</div>
+  <table class="heatmap">
+    <tr>
+      <th></th><th>西洋</th><th>イスラム</th><th>南アジア</th><th>東アジア</th><th>アフリカ</th><th>アメリカス</th><th>東南アジア</th><th>中央アジア</th><th>太平洋</th><th>横断</th><th>計</th>
+    </tr>
+    <tr>
+      <td class="era-label">古代〜中世</td>
+      <td class="hm-mid">24</td><td class="hm-mid">25</td><td class="hm-mid">18</td><td class="hm-mid">30</td><td class="hm-mid">30</td><td class="hm-mid">24</td><td class="hm-low">11</td><td class="hm-mid">18</td><td class="hm-low">4</td><td class="hm-0">3</td><td><b>187</b></td>
+    </tr>
+    <tr>
+      <td class="era-label">近代成立期</td>
+      <td class="hm-mid">19</td><td class="hm-low">12</td><td class="hm-low">8</td><td class="hm-mid">25</td><td class="hm-mid">24</td><td class="hm-low">14</td><td class="hm-low">8</td><td class="hm-low">6</td><td class="hm-0">1</td><td class="hm-0">2</td><td><b>119</b></td>
+    </tr>
+    <tr>
+      <td class="era-label">産業革命期</td>
+      <td class="hm-high">39</td><td class="hm-mid">25</td><td class="hm-mid">21</td><td class="hm-high">41</td><td class="hm-mid">20</td><td class="hm-mid">27</td><td class="hm-low">9</td><td class="hm-low">4</td><td class="hm-low">5</td><td class="hm-0">3</td><td><b>194</b></td>
+    </tr>
+    <tr>
+      <td class="era-label">短い20世紀</td>
+      <td class="hm-mid">29</td><td class="hm-mid">18</td><td class="hm-mid">20</td><td class="hm-mid">26</td><td class="hm-mid">26</td><td class="hm-mid">30</td><td class="hm-mid">27</td><td class="hm-low">11</td><td class="hm-low">7</td><td class="hm-low">8</td><td><b>202</b></td>
+    </tr>
+    <tr>
+      <td class="era-label">グローバル期</td>
+      <td class="hm-vhigh">51</td><td class="hm-vhigh">47</td><td class="hm-vhigh">46</td><td class="hm-high">34</td><td class="hm-vhigh">53</td><td class="hm-vhigh">46</td><td class="hm-high">31</td><td class="hm-low">14</td><td class="hm-mid">16</td><td class="hm-vhigh">56</td><td><b>394</b></td>
+    </tr>
+    <tr class="total-row">
+      <td class="era-label"><b>合計</b></td>
+      <td><b>162</b></td><td><b>127</b></td><td><b>113</b></td><td><b>156</b></td><td><b>153</b></td><td><b>141</b></td><td><b>86</b></td><td><b>53</b></td><td><b>33</b></td><td><b>72</b></td><td><b>1,096</b></td>
+    </tr>
+  </table>
+</div>
+
+<p>Fig. 7のヒートマップが示す最も顕著なパターンは、グローバル期における事象数の爆発的増加である。全1,096件のうち394件（35.9%）がグローバル期に集中しており、これはBCE3000年から1991年までの約5,000年間に蓄積された702件をわずか35年で半数以上に押し上げる密度で社会構造変革が生起していることを意味する。この密度の変化を数値化すれば、古代〜中世の0.84件/世紀からグローバル期の746件/世紀へと、約890倍の加速が確認できる。</p>
+
+<h3 class="sub-title">古代〜中世：多元的起源</h3>
+
+<p>古代〜中世期の187件は、東アジア（30件）とアフリカ（30件）が最多であり、イスラム圏（25件）、西洋・アメリカス（各24件）がこれに続く。ここで注目すべきは、社会構造変革が西洋に偏在していないという事実である。アテナイ民主政（BCE508年）やローマ法の成文化（BCE451年）といった西洋の事象と同時代に、インドのパンチャーヤト自治（BCE500年頃）、孔子思想に基づく道徳的統治（BCE551年）、アフリカのウブントゥ互助倫理の制度化（500年頃）が並行的に発展していた。古代の社会構造変革は、特定の文明圏が「発明」し他へ伝播したのではなく、各文明圏が独自の社会的課題に対して固有の制度的解を創出する多元的プロセスであった。</p>
+
+<h3 class="sub-title">近代成立期：東アジアの沈黙と西洋の台頭</h3>
+
+<p>近代成立期（119件）は全時代で最も事象数が少なく、社会構造変革の「谷」にあたる。東アジアが25件で最多であるが、これは科挙制度の成熟や郷紳公議といった既存制度の精緻化が主であり、質的に新しい制度的革新は限られている。西洋は19件にとどまるものの、宗教改革（1517年）やエリザベス救貧法（1601年）といった後世への波及効果が極めて大きい事象を含んでいる。この時代の特徴は、量的な変革密度の低さと質的インパクトの高さの乖離にある。</p>
+
+<h3 class="sub-title">産業革命期：西洋と東アジアの二極構造</h3>
+
+<p>産業革命期（194件）になると、東アジア（41件）と西洋（39件）が突出する二極構造が明確になる。西洋では奴隷制廃止運動、労働組合の合法化、ビスマルク社会保険といった近代社会制度の骨格が次々と形成された。東アジアでは、明治維新や五四運動に象徴される近代化と伝統との激しい葛藤が、密度の高い制度変革を引き起こした。アメリカス（27件）も、ハイチ革命（1804年）から始まる脱植民地化の動きによって存在感を増している。一方、中央アジア（4件）や太平洋（5件）は依然として低密度であり、近代世界システムの周縁に位置づけられていたことがわかる。</p>
+
+<h3 class="sub-title">短い20世紀：グローバル・サウスの台頭</h3>
+
+<p>短い20世紀（202件）の最も重要な変化は、アメリカス（30件）、東南アジア（27件）、アフリカ（26件）の事象数増加である。二度の世界大戦と冷戦による地政学的再編が、グローバル・サウスにおける構造変革を促した。東南アジアは前時代の9件から27件へと3倍に増加しており、植民地解放と国民国家建設が社会制度の大規模な組み替えを必然化したことが読み取れる。文明横断型の事象も8件と増加し、世界人権宣言（1948年）やILO設立（1919年）に見られるように、国際制度を通じた「文明横断的」な構造変革が新たな類型として登場した。</p>
+
+<h3 class="sub-title">グローバル期：文明横断型の爆発</h3>
+
+<p>グローバル期（394件）では、文明横断型が56件に急増し、アフリカ（53件）、西洋（51件）、イスラム圏（47件）、南アジア・アメリカス（各46件）と各文明圏がおおむね均等に高い密度を示すようになった。この均等化は、「文明的収束」と呼ぶべき現象を示唆している。SDGs（2015年）が11もの被影響関係を持つ最大の収束点となっていることは、多極的に発展した社会構造変革が共通の国際的フレームワークに統合されつつあることの表れである。同時に、東アジアが34件と相対的に低いのは、中国の体制固定化により制度的革新が限定されていることを反映している可能性がある。</p>
+
+<!-- ============================================================ -->
+<!-- 5.2 -->
+<!-- ============================================================ -->
+<h2 class="section-title" id="s52">5.2 PRRRCモデルによる5次元プロファイリング</h2>
+
+<p class="section-lead">SIFデータベースは各事象をPRRRCモデル、すなわち権力構造（Power）、制度的ルール（Rules）、資源配分（Resources）、社会的関係性（Relations）、認知的枠組み（Cognition）の5次元で0〜2点の3段階評価している。本節では、成功SIと失敗SI（59件）を比較することで、社会構造変革の成否を分ける構造的条件を明らかにする。</p>
+
+<div class="fig-container">
+  <div class="fig-caption">Fig. 8 &mdash; PRRRCモデル5次元比較: 成功SI（n=1,037）vs 失敗SI（n=59）</div>
+  <table class="prrrc-compare">
+    <tr>
+      <th style="text-align:left">次元</th>
+      <th>成功SI<br><span style="font-weight:300;font-size:.68rem">平均スコア</span></th>
+      <th>失敗SI<br><span style="font-weight:300;font-size:.68rem">平均スコア</span></th>
+      <th>差分</th>
+      <th>視覚化</th>
+    </tr>
+    <tr>
+      <td class="dim-label">P: 権力構造</td>
+      <td>1.62</td>
+      <td>1.41</td>
+      <td class="prrrc-diff diff-low">-0.21</td>
+      <td><span class="prrrc-bar" style="width:81%;background:var(--accent)"></span> <span class="prrrc-bar" style="width:71%;background:var(--accent);opacity:.4"></span></td>
+    </tr>
+    <tr>
+      <td class="dim-label">R: 制度的ルール</td>
+      <td>1.88</td>
+      <td>1.68</td>
+      <td class="prrrc-diff diff-low">-0.20</td>
+      <td><span class="prrrc-bar" style="width:94%;background:var(--accent-blue)"></span> <span class="prrrc-bar" style="width:84%;background:var(--accent-blue);opacity:.4"></span></td>
+    </tr>
+    <tr>
+      <td class="dim-label">R: 資源配分</td>
+      <td>1.65</td>
+      <td>0.88</td>
+      <td class="prrrc-diff diff-high">-0.77</td>
+      <td><span class="prrrc-bar" style="width:83%;background:var(--accent-green)"></span> <span class="prrrc-bar" style="width:44%;background:var(--accent-green);opacity:.4"></span></td>
+    </tr>
+    <tr>
+      <td class="dim-label">R: 社会的関係性</td>
+      <td>1.83</td>
+      <td>0.88</td>
+      <td class="prrrc-diff diff-high">-0.95</td>
+      <td><span class="prrrc-bar" style="width:92%;background:var(--accent-purple)"></span> <span class="prrrc-bar" style="width:44%;background:var(--accent-purple);opacity:.4"></span></td>
+    </tr>
+    <tr>
+      <td class="dim-label">C: 認知的枠組み</td>
+      <td>1.85</td>
+      <td>1.19</td>
+      <td class="prrrc-diff diff-mid">-0.66</td>
+      <td><span class="prrrc-bar" style="width:93%;background:var(--accent-orange)"></span> <span class="prrrc-bar" style="width:60%;background:var(--accent-orange);opacity:.4"></span></td>
+    </tr>
+  </table>
+</div>
+
+<p>Fig. 8は、社会構造変革の成否を決定づける要因が5次元で均等ではないことを明瞭に示している。最大の差異は社会的関係性の次元に現れた（差分0.95）。成功SIの関係性スコア平均1.83に対し、失敗SIは0.88と半分以下に沈む。次いで資源配分（差分0.77）、認知的枠組み（差分0.66）が大きな差を示す一方、権力構造（差分0.21）と制度的ルール（差分0.20）の差は相対的に小さい。</p>
+
+<p>この非対称性は重要な含意を持つ。権力構造の変革やルールの制定は、失敗したSIにおいても比較的高いスコアを示している。つまり、失敗SI事象もまた権力構造の転換やルールの導入には一定程度成功しているのである。フランス二月革命後のロシア臨時政府（1917年）は帝政の打倒と民主的制度の導入には成功したが、わずか8か月で崩壊した。ワイマール共和国もまた民主的憲法を制定したが、経済危機と内部分裂によりナチズムへの道を開いた。これらの事例が示すのは、権力とルールの次元だけでは変革は持続しないという構造的事実である。</p>
+
+<h3 class="sub-title">関係性の次元 &mdash; 最大の分岐点</h3>
+
+<p>社会的関係性において0.95という最大の差分が生じる背景には、失敗SIに共通する「同盟構築の失敗」がある。59件の失敗事象を個別に分析すると、25件（42%）が軍事的鎮圧によって終焉しているが、その多くは鎮圧される以前に社会的連帯の基盤を十分に構築できていなかった。パリ・コミューン（1871年）は経済的変革への踏み込みを避けたことで労働者層の広範な結集に失敗し、ドイツ農民戦争（1524年）はルター自身の反革命支持によって宗教改革勢力との同盟を失った。逆に、成功SIの代表例であるインド独立運動は、ガンディーの非暴力不服従がヒンドゥー教徒からムスリム、知識層から農民層にいたる広範な連帯を形成し、関係性スコアで最大値を獲得している。</p>
+
+<h3 class="sub-title">資源配分の次元 &mdash; 持続可能性の要件</h3>
+
+<p>資源配分における0.77の差分は、変革の持続可能性に関わる。失敗SIの0.88という低スコアは、変革が新たな資源循環メカニズムを構築できなかったことを意味する。ベネズエラのチャベス改革は石油収入への一元的依存から脱却できず、原油価格の下落とともに社会プログラムの成果が消滅した。ニュー・ハーモニー共同体（1825年）は農業生産性の確保に失敗し、わずか2年で解散に追い込まれた。対照的に、グラミン銀行（1976年）はマイクロクレジットという新たな資源循環の仕組みを構築することで自律的な持続を可能にし、6つの他事象に影響を与えるハブノードとなっている。</p>
+
+<h3 class="sub-title">認知的枠組み &mdash; 変革の前提条件</h3>
+
+<p>認知的枠組みの差分0.66もまた見過ごせない。成功SIの認知スコア1.85は、構造変革には「問題の再定義」という認知的転換が先行することを示唆している。奴隷制廃止運動は「奴隷は財産である」という認知を「奴隷は人間である」へと転換することなしには成立しなかった。ナイチンゲール看護改革は「看護は低賤な仕事」という認知を「科学的専門職」へと再定義した。失敗SIにおける認知スコアの低さ（1.19）は、権力やルールの変更が認知的転換を伴わない場合、旧来の価値体系が制度変革を侵食することを意味している。</p>
+
+<h3 class="sub-title">類型別プロファイルの差異</h3>
+
+<p>SIFが設定する6つの類型ごとにPRRRCプロファイルを見ると、市民権拡張型（183件、平均スコア19.6）が最高の平均スコアを示し、民主的意思決定型（129件、平均スコア18.3）が最低となる。複合型（320件）が最多であり平均スコア19.2と高いのは、多次元の変革を同時に実現するSIほど高い制度的インパクトを持つことを反映している。知識民主化型（119件、平均スコア19.0）は、ナーランダー大学からウィキペディアにいたる系譜に見られるように、認知的枠組みの変革スコアが特に高い傾向を示す。</p>
+
+<!-- ============================================================ -->
+<!-- 5.3 -->
+<!-- ============================================================ -->
+<h2 class="section-title" id="s53">5.3 232件の事象間関係と10システム法則</h2>
+
+<p class="section-lead">SIFデータベースは、1,096件の事象のうち関連性が確認できる対を232件の関係レコードとして記録している。関係タイプは、influenced（影響：122件）、preceded（先駆：44件）、evolved_from（発展：34件）、parallel（並行：32件）の4種である。この関係ネットワークの分析から、社会構造変革の「系譜学」が浮かび上がる。</p>
+
+<div class="fig-container">
+  <div class="fig-caption">Fig. 9 &mdash; 最長の影響連鎖: アテナイ民主政からSDGsへ（2,500年の制度的系譜）</div>
+  <div class="genealogy">
+    <div class="gen-chain">
+      <div class="gen-node"><span class="gen-node-year">BCE 508</span>アテナイ民主政</div>
+      <div class="gen-arrow">&rarr;</div>
+      <div class="gen-node"><span class="gen-node-year">1215</span>マグナ・カルタ</div>
+      <div class="gen-arrow">&rarr;</div>
+      <div class="gen-node"><span class="gen-node-year">1689</span>権利章典</div>
+      <div class="gen-arrow">&rarr;</div>
+      <div class="gen-node"><span class="gen-node-year">1789</span>フランス革命</div>
+      <div class="gen-arrow">&rarr;</div>
+      <div class="gen-node"><span class="gen-node-year">1948</span>世界人権宣言</div>
+      <div class="gen-arrow">&rarr;</div>
+      <div class="gen-node"><span class="gen-node-year">2015</span>SDGs</div>
+    </div>
+  </div>
+
+  <div style="margin-top:24px">
+    <div class="fig-caption" style="margin-bottom:8px">上位ハブノード（接続数順）</div>
+    <div class="hub-card"><div><div class="hub-name">持続可能な開発目標（SDGs）</div><div class="hub-meta">2015 / 文明横断 / 受信 11</div></div><div class="hub-degree">11</div></div>
+    <div class="hub-card"><div><div class="hub-name">フランス革命と人権宣言</div><div class="hub-meta">1789 / 西洋 / 発信 4 + 受信 5</div></div><div class="hub-degree">9</div></div>
+    <div class="hub-card"><div><div class="hub-name">韓国民主化運動</div><div class="hub-meta">1980 / 東アジア / 発信 3 + 受信 6</div></div><div class="hub-degree">9</div></div>
+    <div class="hub-card"><div><div class="hub-name">世界人権宣言</div><div class="hub-meta">1948 / 文明横断 / 発信 3 + 受信 5</div></div><div class="hub-degree">8</div></div>
+    <div class="hub-card"><div><div class="hub-name">グラミン銀行</div><div class="hub-meta">1976 / 南アジア / 発信 6 + 受信 2</div></div><div class="hub-degree">8</div></div>
+    <div class="hub-card"><div><div class="hub-name">台湾デジタル民主主義</div><div class="hub-meta">2012 / 東アジア / 発信 2 + 受信 6</div></div><div class="hub-degree">8</div></div>
+  </div>
+</div>
+
+<p>Fig. 9に示した最長の影響連鎖は、アテナイ民主政（BCE508年）からSDGs（2015年）にいたる約2,500年の系譜である。この連鎖は、市民の政治参加という原理がギリシアで制度化され、中世イングランドの封建的枠組みのなかで貴族と王権の契約（マグナ・カルタ）として変形され、名誉革命後の権利章典で議会主権として再定式化され、フランス革命で普遍的人権として宣言され、第二次世界大戦後に国際規範化し、最終的に193か国が合意する持続可能な発展の枠組みに統合されていった過程を映し出している。注目すべきは、この系譜が単線的な「進歩」ではなく、各段階で異なる社会的文脈に適応しながら変形していったことである。</p>
+
+<h3 class="sub-title">フランス革命 &mdash; 最大のハブノード</h3>
+
+<p>ネットワーク分析において、フランス革命は発信4件・受信5件の計9接続を持つ最大のハブノードの一つである。その受信側にはアテナイ民主政、イロコイ連邦、権利章典が含まれ、発信側には世界人権宣言、ハイチ革命、ラテンアメリカ独立運動への波及が確認できる。フランス革命がハブとなりうるのは、それが「権利」の概念を特定の身分や民族から切り離し、普遍的な原理として定式化したからである。この抽象化によって、フランス革命の「影響」は具体的な制度の模倣ではなく、概念的フレームワークの移植として機能した。</p>
+
+<h3 class="sub-title">SDGs &mdash; 最大の収束点</h3>
+
+<p>SDGsは受信11件という突出した収束度を持ち、事象間ネットワークにおける最大の「シンク（受信ノード）」である。SDGsへの影響線は、グラミン銀行（マイクロファイナンス）、参加型予算（民主的意思決定）、台湾デジタル民主主義（デジタルガバナンス）など、異なる文明圏・異なる類型のSI事象から集束している。これは、個別の社会的実験の蓄積が国際的な合意形成の基盤となっていること、すなわち「ボトムアップの制度的蓄積がトップダウンの国際規範を生成する」というメカニズムを示している。</p>
+
+<h3 class="sub-title">グラミン銀行 &mdash; 最大の発信源</h3>
+
+<p>グラミン銀行は発信6件を持つ最大の「ソース（発信ノード）」であり、そのモデルがケニアのM-PESA、ブラジルのバンコ・パルマス、さらには先進国の社会的企業セクターに広がったことが確認できる。グラミン銀行が高い発信力を持つのは、「貧困層は信用に値しない」という認知を「貧困層こそ最良の借り手である」と転換し、その転換を持続可能な事業モデルとして実証したからである。認知変革と資源循環の双方を同時に達成したことが、波及力の源泉となっている。</p>
+
+<h3 class="sub-title">10のシステム法則</h3>
+
+<p>1,096件のボトムアップ分析から導出された10のシステム法則は、社会構造変革に関する経験的一般化である。ここでは特に重要な3法則を論じる。</p>
+
+<p>第一に、「制度化の法則」は、制度化の深度がインパクトを決定するという命題である。規範的制度化（「こうすべき」という価値の共有）から認知的制度化（「これが当たり前」という前提の共有）、さらに規制的制度化（法律・規則による強制）、組織的制度化（専門機関の設置）へと進むにつれ、変革の不可逆性が高まる。DiMaggioとPowellの制度同型論を裏付ける形で、本データベースは、組織的制度化に達した事象の可逆性スコアが顕著に低い（不可逆性が高い）ことを示している。</p>
+
+<p>第二に、「関係性・資源の閾値法則」は、5.2節の分析と直接対応する。成功SIと失敗SIの最大差異は関係性変革（0.95差）と資源変革（0.77差）に現れ、権力変革だけでは不十分であるという経験的法則である。この法則は、革命理論における「権力奪取」への過度な焦点化に対する重要な修正を提供する。権力構造を転換しても、社会的関係性の再編と資源循環の再構築が伴わなければ、変革は持続しない。</p>
+
+<p>第三に、「認知変革の前提法則」は、構造的変革には「問題の再定義」という認知的転換が先行するという命題である。1,096件の事象のうち、認知スコアが0の事象で高い総合スコアを獲得しているものは極めて稀である。これは、制度変革が「技術的な調整」ではなく「意味の組み替え」を含むプロセスであることを示しており、Meadowsのシステムレバレッジ理論における「パラダイム」レベルの介入に相当する。</p>
+
+<!-- ============================================================ -->
+<!-- 5.4 -->
+<!-- ============================================================ -->
+<h2 class="section-title" id="s54">5.4 SIFが照射する変革の特質</h2>
+
+<p class="section-lead">以上の分析を統合すると、SIFデータベースは「社会構造変革」を従来の研究が見落としてきた複数の角度から照射する。本節では、SIF分析が導き出す変革の本質的特質を整理し、理論的含意を論じる。</p>
+
+<h3 class="sub-title">「制度的構造の組み替え」としての変革</h3>
+
+<p>SIFの1,096件が示す変革像は、個人のイノベーションや技術的発明とは質的に異なる。ここでの変革は、ある社会における権力の配分、ルールの体系、資源の循環、人々の関係のあり方、そして何が「当たり前」とされるかという認知の枠組みが組み替わるプロセスである。宗教改革は印刷術という技術的革新を含むが、その本質は「教会の権威を介さずに個人が神と向き合いうる」という認知的転換にあった。ビスマルク社会保険は国家財政の技術的操作を含むが、その本質は「労働者の生活保障は国家の責任である」という関係性の再定義にあった。</p>
+
+<p>この「制度的構造の組み替え」という視点は、ソーシャルイノベーション研究に対して二つの修正を迫る。第一に、個別の社会的課題に対する「解決策」としてSIを捉える立場に対し、SIFはSIを「社会の構成原理の変更」として捉えることを求める。第二に、SIを「良いこと」と暗黙に前提する規範的立場に対し、SIFは59件の失敗SIを含むことで、同じ構造変革の試みが成功にも失敗にもなりうるという分析的立場を可能にする。</p>
+
+<h3 class="sub-title">変革の成功条件 &mdash; 5次元の閾値</h3>
+
+<p>PRRRCモデルの分析が示す最も重要な知見は、変革の成功が「5次元すべてにおける一定水準以上の変革」を要求するということである。成功SIの5次元平均は、P=1.62、R=1.88、R=1.65、R=1.83、C=1.85であり、いずれも1.5を超えている。これに対し失敗SIは、P=1.41、R=1.68と権力・ルールでは比較的高いものの、資源配分0.88、関係性0.88、認知1.19と、少なくとも2次元で「閾値」を下回っている。</p>
+
+<p>この知見は、変革戦略に対する実践的示唆を持つ。革命や制度改革が「権力の奪取」や「法律の制定」に焦点を当てる傾向があるのは、権力とルールが最も可視的で直接的に操作可能な変数だからであろう。しかし、データは、権力とルールの変革だけでは不十分であり、資源循環メカニズムの構築、社会的関係性の再編、そして認知的枠組みの転換を同時に達成する必要があることを示している。フランス革命が成功し（総合スコア22/22）パリ・コミューンが失敗したのは、前者が5次元すべてで高い変革を実現したのに対し、後者が経済的変革（資源配分）への踏み込みを欠いたことにある。</p>
+
+<h3 class="sub-title">変革の失敗条件 &mdash; 4つのパターン</h3>
+
+<p>59件の失敗SIの分析から、4つの主要な失敗パターンが浮かび上がる。第一は軍事的鎮圧（25件、42%）であり、制度化前の変革が暴力に最も脆弱であることを示す。ドイツ農民戦争、光州事件、パリ・コミューンがこの類型に該当する。第二はトップダウン設計の欠陥（10件、17%）であり、当事者参加なき制度設計が長期的に失敗する確率の高さを示す。ソ連の農業集団化、大躍進政策がその典型である。第三は経済的崩壊（8件、14%）であり、資源循環メカニズムの欠如が変革を持続不能にする。ベネズエラのチャベス改革、ジンバブエの農地改革がこれに該当する。第四は変革の変質・腐敗（5件、8%）であり、初期の理念が権力の腐敗によって内部から侵食される。</p>
+
+<p>これらの失敗パターンに共通するのは、5次元のうち1つ以上の次元における決定的な欠落である。軍事的鎮圧は関係性（外部勢力との同盟を含む広範な連帯）の不足と関連し、トップダウン設計は関係性と認知の双方の不足と関連し、経済的崩壊は資源配分の不足と直接対応する。変革の変質は認知的枠組みの脆弱性、すなわち変革の目的と手段を区別する自己省察的な認知が制度化されなかったことと関連している。</p>
+
+<h3 class="sub-title">890倍の加速と文明的収束 &mdash; 現在地の含意</h3>
+
+<p>最後に、5.1節で確認したSI密度の890倍加速と文明的収束という二つのマクロトレンドが持つ含意を論じる。加速は、社会構造変革が「稀な事件」から「恒常的なプロセス」へと変容していることを意味する。グローバル期の394件は、年間約11件のペースで新たな構造変革が生起していることになる。この密度においては、個々の変革を独立した「事件」として分析する従来のケーススタディ的アプローチは限界に達し、変革の相互連関と蓄積効果を捉えるシステミックな分析枠組みが不可欠となる。</p>
+
+<p>文明的収束は、多元的に起源した社会構造変革が、SDGsに代表される共通の国際フレームワークに統合されつつあるという現象である。しかし、これを無条件の「進歩」と見なすことは早計である。SIFのネットワーク分析が示すように、SDGsは11もの事象から影響を受ける最大の収束点であるが、同時にミレニアム開発目標（MDGs）はトップダウン設計の限界から失敗SIとして記録されている。収束と画一化、統合と抑圧は紙一重であり、文明横断型のSIが成功するためには、多元的な知恵の系譜（アテナイ民主政とインドのパンチャーヤト、イスラムのワクフ制度とアフリカのウブントゥ）を内包する「厚い」統合が求められる。</p>
+
+<blockquote>
+  SIF分析の帰結は明快である。社会構造変革は、権力の奪取でもルールの制定でもなく、社会を構成する5つの次元 &mdash; 権力、ルール、資源、関係性、認知 &mdash; の同時的な組み替えである。そしてこの組み替えは、2,500年の影響連鎖が示すように、一回限りの事件ではなく、蓄積的な制度的系譜のなかで成熟するプロセスである。1,096件のデータベースは、「どのように社会は変わるか」という問いに対して、「5次元の閾値を同時に超えることによって」という経験的な回答を提出する。
+</blockquote>
+
+<div class="footnote">
+  <p>本章の分析は、SIF（Social Innovation Framework）データベース（si_events: 1,096件、event_relations: 232件）に基づく。データベースの理論的基盤は、Skocpol（歴史社会学）、Ostrom（制度理論）、Geels（トランジション理論）、Phills・Moulaert・Westley（SI理論）を統合した操作的定義による。各事象は11項目のコーディングスキーム（PRRRC 5次元 + スケール + 持続性 + 制度化 + 可逆性 + 影響範囲 + 影響深度）で評価し、最大22点の総合スコアで構造変革の度合いを測定している。</p>
+</div>
+
+</article>
+</body>
+</html>
