@@ -60,7 +60,11 @@
             <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">20章 / 200,000字</div>
             <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Futures Studies Knowledge DB（350研究者・99手法・17学派）に基づく未来学入門書。</p>
             <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>教科書</span><span>93冊調査</span></div>
-            <a href="textbook.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="textbook.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <button onclick="downloadFsTextPDF()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">PDF</button>
+              <button onclick="downloadFsTextTXT()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">TXT</button>
+            </div>
           </div>
 
           <!-- 神話の構造と10の社会的機能 -->
@@ -139,5 +143,80 @@
   <script src="js/shared/auth-guard.js"></script>
   <script src="js/shared/nav.js"></script>
   <script src="js/pages/databases.js"></script>
+  <script>
+  // Download full textbook as TXT (fetch all 20 chapters, extract text, concatenate)
+  async function downloadFsTextTXT() {
+    var btn = event.target; btn.textContent = '...'; btn.disabled = true;
+    try {
+      var fullText = '未来を読む力 — 現代未来学の理論と実践\nNPO法人ミラツク 編\n\n';
+      var base = 'https://yuyanishimura0312.github.io/futures-textbook/chapters/';
+      for (var i = 1; i <= 20; i++) {
+        var num = i < 10 ? '0' + i : '' + i;
+        try {
+          var res = await fetch(base + 'ch' + num + '.html');
+          var html = await res.text();
+          // Extract title
+          var titleMatch = html.match(/<h1[^>]*class="report-title"[^>]*>(.*?)<\/h1>/);
+          var title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '') : '第' + i + '章';
+          // Extract article content
+          var artMatch = html.match(/<div class="article">([\s\S]*?)<\/div>\s*<div class="chapter-nav">/);
+          var content = artMatch ? artMatch[1] : '';
+          // Strip HTML tags
+          content = content.replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
+          content = content.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+          content = content.replace(/<svg[^>]*>[\s\S]*?<\/svg>/g, '[図]');
+          content = content.replace(/<h2[^>]*>(.*?)<\/h2>/g, '\n\n== $1 ==\n\n');
+          content = content.replace(/<h3[^>]*>(.*?)<\/h3>/g, '\n--- $1 ---\n\n');
+          content = content.replace(/<br\s*\/?>/g, '\n');
+          content = content.replace(/<\/p>/g, '\n\n');
+          content = content.replace(/<[^>]+>/g, '');
+          content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&mdash;/g, '—').replace(/&rarr;/g, '→').replace(/&larr;/g, '←');
+          content = content.replace(/\n{3,}/g, '\n\n').trim();
+          fullText += '\n\n' + '='.repeat(60) + '\n第' + i + '章 ' + title + '\n' + '='.repeat(60) + '\n\n' + content;
+        } catch(e) { fullText += '\n\n[第' + i + '章: 取得エラー]\n'; }
+      }
+      var blob = new Blob([fullText], { type: 'text/plain; charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.download = 'miratuku-futures-textbook.txt'; a.href = url; a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) { alert('ダウンロードに失敗しました: ' + e.message); }
+    btn.textContent = 'TXT'; btn.disabled = false;
+  }
+
+  // Open printable combined view for PDF
+  function downloadFsTextPDF() {
+    var w = window.open('', '_blank');
+    w.document.write('<html><head><meta charset="UTF-8"><title>未来を読む力 — 全文</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">' +
+      '<style>body{font-family:"Noto Serif JP",serif;max-width:800px;margin:40px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#121212}' +
+      'h1{font-size:1.8rem;text-align:center;margin:40px 0 10px}h2{font-size:1.3rem;margin:40px 0 16px;border-bottom:1px solid #ddd;padding-bottom:8px}' +
+      'h3{font-size:1.05rem;margin:30px 0 12px}p{margin-bottom:16px;text-align:justify}' +
+      '.loading{text-align:center;padding:60px;color:#999}</style></head>' +
+      '<body><h1>未来を読む力</h1><p style="text-align:center;color:#666">現代未来学の理論と実践<br>NPO法人ミラツク 編</p>' +
+      '<p class="loading">全20章を読み込み中...</p></body></html>');
+    w.document.close();
+    // Load chapters sequentially
+    (async function() {
+      var body = w.document.body;
+      var base = 'https://yuyanishimura0312.github.io/futures-textbook/chapters/';
+      var content = '';
+      for (var i = 1; i <= 20; i++) {
+        var num = i < 10 ? '0' + i : '' + i;
+        try {
+          var res = await fetch(base + 'ch' + num + '.html');
+          var html = await res.text();
+          var artMatch = html.match(/<div class="article">([\s\S]*?)<\/div>\s*<div class="chapter-nav">/);
+          if (artMatch) {
+            var art = artMatch[1].replace(/<style[^>]*>[\s\S]*?<\/style>/g, '').replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+            content += '<div style="page-break-before:always"><h2>第' + i + '章</h2>' + art + '</div>';
+          }
+        } catch(e) { content += '<p>[第' + i + '章: 取得エラー]</p>'; }
+      }
+      body.querySelector('.loading').remove();
+      body.insertAdjacentHTML('beforeend', content + '<p style="text-align:center;color:#999;margin-top:60px;border-top:1px solid #ddd;padding-top:20px">&copy; 2026 NPO法人ミラツク</p>');
+      setTimeout(function() { w.print(); }, 1000);
+    })();
+  }
+  </script>
 </body>
 </html>
