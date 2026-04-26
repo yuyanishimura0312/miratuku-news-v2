@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技術発展加速度検証DB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
+.overview-value { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; }
+.overview-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 10; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 12px 0 24px; }
+th, td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border-light); }
+th { font-weight: 600; background: var(--surface); font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: monospace; }
+.bar-bg { height: 16px; background: var(--border-light); position: relative; min-width: 80px; }
+.bar-fill { height: 100%; position: absolute; left: 0; top: 0; }
+.hypothesis-grid { display: grid; gap: 10px; margin: 12px 0 24px; }
+.h-card { display: flex; gap: 12px; padding: 14px 16px; border: 1px solid var(--border-light); background: var(--surface); }
+.h-badge { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.78rem; color: #fff; flex-shrink: 0; }
+.h-badge.yes { background: #16a34a; }
+.h-badge.partial { background: #d97706; }
+.h-content { flex: 1; }
+.h-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 2px; }
+.h-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; }
+.source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin: 12px 0 24px; }
+.src-card { padding: 10px 14px; border: 1px solid var(--border-light); background: var(--surface); }
+.src-name { font-weight: 600; font-size: 0.82rem; margin-bottom: 2px; }
+.src-count { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--accent-warm); }
+.src-desc { font-size: 0.7rem; color: var(--text-muted); }
+.tag { display: inline-block; font-size: 0.62rem; padding: 1px 5px; font-weight: 600; margin-left: 4px; }
+.tag-ok { background: #dcfce7; color: #16a34a; }
+.tag-part { background: #fef3c7; color: #92400e; }
+.tag-fail { background: #fee2e2; color: #dc2626; }
+.finding-card { padding: 16px; border: 1px solid var(--border-light); background: var(--surface); margin-bottom: 10px; }
+.finding-num { font-family: var(--font-serif); font-weight: 700; color: var(--accent-warm); margin-right: 8px; }
+.finding-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 6px; }
+.finding-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; }
+canvas { max-width: 100%; margin: 12px 0; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? '' : 'dark'">&#9790;</button>
+<a class="back" href="../databases.html">&larr; データベース一覧に戻る</a>
+
+<h1><span class="db-id">TA</span>技術発展加速度検証DB</h1>
+<p class="subtitle">Tech Acceleration Verification Database &mdash; 700万年の技術史を実データで検証</p>
+<p class="desc">カーツワイルの「収穫加速の法則」とアーサーの「組み合わせ進化」を中心に、技術の指数関数的発展を歴史的データから検証するための大規模データベース。Seshat、Our World in Data、Nobel Prize API、Wikidata、OECD等13の外部ソースから実データを取得・格納し、ボトムアップ分析で7つの実証的発見を導出した。</p>
+
+<div class="overview">
+  <div class="overview-card"><div class="overview-value">227K</div><div class="overview-label">総レコード</div></div>
+  <div class="overview-card"><div class="overview-value">44</div><div class="overview-label">テーブル</div></div>
+  <div class="overview-card"><div class="overview-value">1,191</div><div class="overview-label">技術</div></div>
+  <div class="overview-card"><div class="overview-value">768</div><div class="overview-label">科学的発見</div></div>
+  <div class="overview-card"><div class="overview-value">354</div><div class="overview-label">技術系譜</div></div>
+  <div class="overview-card"><div class="overview-value">133</div><div class="overview-label">科学-技術因果</div></div>
+  <div class="overview-card"><div class="overview-value">14</div><div class="overview-label">時系列指標</div></div>
+  <div class="overview-card"><div class="overview-value">13</div><div class="overview-label">外部ソース</div></div>
+</div>
+
+<!-- Hypothesis Verification -->
+<h3>仮説検証結果（5仮説）</h3>
+<div class="hypothesis-grid">
+  <div class="h-card"><div class="h-badge yes">H1</div><div class="h-content"><div class="h-title">技術間隔の短縮</div><div class="h-desc">旧石器時代の中央値8,000年からデジタル時代の1年へ。ただし中世後期（1000-1500年）と1960-2000年に停滞期あり。一様な指数関数ではなく「段階的加速」。</div></div></div>
+  <div class="h-card"><div class="h-badge yes">H2</div><div class="h-content"><div class="h-title">組み合わせ密度の増加</div><div class="h-desc">旧石器0.30→デジタル1.08 rels/tech。スケールフリー構造（Smartphone:9, Deep learning:8, Agriculture:7）を確認。</div></div></div>
+  <div class="h-card"><div class="h-badge yes">H3</div><div class="h-content"><div class="h-title">科学→技術タイムラグの縮小</div><div class="h-desc">〜1500年: 平均300年以上 → 2000年以降: 5.5年。ただし分野限定的（情報科学8.9年 vs 数学87年以上）。</div></div></div>
+  <div class="h-card"><div class="h-badge partial">H4</div><div class="h-content"><div class="h-title">S曲線の重ね合わせ</div><div class="h-desc">個別のS曲線は成立（平均R²=0.65）するが、包絡線の指数フィットR²=0.062で統計的に非有意。</div></div></div>
+  <div class="h-card"><div class="h-badge yes">H5</div><div class="h-content"><div class="h-title">加速を示す指標の特定</div><div class="h-desc">18指標を3群に分類。超高速群（倍増&lt;2年）はAI計算量・メモリ・トランジスタ。加速は情報技術に集中。</div></div></div>
+</div>
+
+<!-- Key Findings -->
+<h3>7つの実証的発見</h3>
+<div class="finding-card"><div class="finding-title"><span class="finding-num">1</span>技術密度の加速は実在するが一様ではない</div><div class="finding-desc">技術登場密度: 0.0000016/年 → 6.27/年（400万倍）。しかし中世後期・産業革命直後・1960-2000年に3回の停滞期。「一貫した指数関数」ではなく「波状の段階的加速」。</div></div>
+<div class="finding-card"><div class="finding-title"><span class="finding-num">2</span>技術間隔は対数正規分布に従う</div><div class="finding-desc">463件の間隔。平均log₁₀=0.85（≒7年）、標準偏差1.18。乗法的効果を示唆し、アーサーの組み合わせ理論と整合。</div></div>
+<div class="finding-card"><div class="finding-title"><span class="finding-num">3</span>産業革命（1760-1800）が最大の持続的変曲点</div><div class="finding-desc">密度変化率: ×2.37（1700-1760→1760-1800）→×2.46（→1800-1850）。農業革命（×139倍）は最大の単一ジャンプだが、持続的加速は産業革命期に集中。</div></div>
+<div class="finding-card"><div class="finding-title"><span class="finding-num">4</span>科学→技術タイムラグの縮小は分野限定的</div><div class="finding-desc">computer_science: 8.9年（最短）、mathematics: 87年以上（最長）。「科学全体が技術を加速」ではなく「情報科学でのみ融合が進んだ」。</div></div>
+<div class="finding-card"><div class="finding-title"><span class="finding-num">5</span>成長パターンは3群に分離する</div><div class="finding-desc">(A) 超高速群（倍増&lt;2年）: AI, メモリ, トランジスタ。(B) 高速群（3-20年）: FLOPS, 太陽光, 特許。(C) 低速群（&gt;20年）: 論文, 人口。「技術の加速」ではなく「情報処理技術の加速」。</div></div>
+<div class="finding-card"><div class="finding-title"><span class="finding-num">6</span>技術ネットワークはスケールフリー構造</div><div class="finding-desc">854件が次数0（孤立）。少数のハブ技術が不均衡に後続を生む。バラバシ＋アーサーの融合的構造。</div></div>
+<div class="finding-card"><div class="finding-title"><span class="finding-num">7</span>技術の文化的ライフサイクルは約30年周期で短縮中</div><div class="finding-desc">Ngram: telegraph(1887)→railroad(1916)→radio(1945)→computer(1986)。ペレスの波と一致。近年は15年に短縮。</div></div>
+
+<!-- Technology Density Chart -->
+<h3>技術登場密度の推移</h3>
+<canvas id="density-chart" height="300"></canvas>
+<p class="note">22の不等間隔時間区間での技術登場密度（件/年）。対数スケール。3回の停滞期（赤マーク）が確認される。</p>
+
+<!-- CAGR Ranking -->
+<h3>定量指標 CAGR ランキング</h3>
+<table>
+<thead><tr><th>指標</th><th class="num">CAGR (%/年)</th><th class="num">倍増/半減期</th><th>バー</th></tr></thead>
+<tbody>
+<tr><td>AI学習計算量</td><td class="num">174.1</td><td class="num">0.4年</td><td><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#CC1400;opacity:0.7"></div></div></td></tr>
+<tr><td>メモリコスト/MB</td><td class="num">-52.9</td><td class="num">1.6年</td><td><div class="bar-bg"><div class="bar-fill" style="width:61%;background:#1565c0;opacity:0.7"></div></div></td></tr>
+<tr><td>スマートフォンユーザー</td><td class="num">44.0</td><td class="num">1.9年</td><td><div class="bar-bg"><div class="bar-fill" style="width:51%;background:#CC1400;opacity:0.7"></div></div></td></tr>
+<tr><td>トランジスタ数/チップ</td><td class="num">41.5</td><td class="num">2.0年</td><td><div class="bar-bg"><div class="bar-fill" style="width:48%;background:#CC1400;opacity:0.7"></div></div></td></tr>
+<tr><td>FLOPS/ドル</td><td class="num">25.5</td><td class="num">3.1年</td><td><div class="bar-bg"><div class="bar-fill" style="width:30%;background:#e65100;opacity:0.7"></div></div></td></tr>
+<tr><td>太陽光パネルコスト</td><td class="num">-15.5</td><td class="num">4.8年</td><td><div class="bar-bg"><div class="bar-fill" style="width:18%;background:#1565c0;opacity:0.7"></div></div></td></tr>
+<tr><td>インターネットユーザー</td><td class="num">24.5</td><td class="num">5.1年</td><td><div class="bar-bg"><div class="bar-fill" style="width:28%;background:#e65100;opacity:0.7"></div></div></td></tr>
+<tr><td>特許出願数（世界）</td><td class="num">3.8</td><td class="num">18.6年</td><td><div class="bar-bg"><div class="bar-fill" style="width:4%;background:#2e7d32;opacity:0.7"></div></div></td></tr>
+<tr><td>学術論文数/年</td><td class="num">3.1</td><td class="num">23.0年</td><td><div class="bar-bg"><div class="bar-fill" style="width:4%;background:#2e7d32;opacity:0.7"></div></div></td></tr>
+<tr><td>世界人口</td><td class="num">0.06</td><td class="num">1,128年</td><td><div class="bar-bg"><div class="bar-fill" style="width:1%;background:#888;opacity:0.7"></div></div></td></tr>
+</tbody>
+</table>
+
+<!-- Data Sources -->
+<h3>データソース（13ソース取得済み / 27ソース中）</h3>
+<div class="source-grid">
+  <div class="src-card"><div class="src-name">Seshat Databank <span class="tag tag-ok">OK</span></div><div class="src-count">29,170</div><div class="src-desc">文明技術変数・polityデータ</div></div>
+  <div class="src-card"><div class="src-name">OWID Energy/CO2 <span class="tag tag-ok">OK</span></div><div class="src-count">73,643</div><div class="src-desc">国別年次エネルギー・CO2データ</div></div>
+  <div class="src-card"><div class="src-name">OECD MSTI <span class="tag tag-ok">OK</span></div><div class="src-count">64,890</div><div class="src-desc">R&D・特許・技術輸出指標</div></div>
+  <div class="src-card"><div class="src-name">Google Ngram <span class="tag tag-ok">OK</span></div><div class="src-count">18,374</div><div class="src-desc">技術用語出現頻度（1500-2022）</div></div>
+  <div class="src-card"><div class="src-name">Wikidata <span class="tag tag-ok">OK</span></div><div class="src-count">10,722</div><div class="src-desc">発明・発見の構造化データ</div></div>
+  <div class="src-card"><div class="src-name">World Bank <span class="tag tag-ok">OK</span></div><div class="src-count">13,383</div><div class="src-desc">R&D支出・特許・技術輸出</div></div>
+  <div class="src-card"><div class="src-name">Nobel Prize API <span class="tag tag-ok">OK</span></div><div class="src-count">1,075</div><div class="src-desc">全カテゴリ受賞者・業績</div></div>
+  <div class="src-card"><div class="src-name">Wikipedia <span class="tag tag-ok">OK</span></div><div class="src-count">2,010</div><div class="src-desc">発明・発見タイムライン</div></div>
+  <div class="src-card"><div class="src-name">OpenAlex <span class="tag tag-ok">OK</span></div><div class="src-count">1,600</div><div class="src-desc">分野別論文数推移</div></div>
+  <div class="src-card"><div class="src-name">DBpedia <span class="tag tag-ok">OK</span></div><div class="src-count">1,174</div><div class="src-desc">SPARQL発明データ</div></div>
+  <div class="src-card"><div class="src-name">Science Museum <span class="tag tag-ok">OK</span></div><div class="src-count">450</div><div class="src-desc">英国技術史遺物コレクション</div></div>
+  <div class="src-card"><div class="src-name">XRONOS <span class="tag tag-fail">FAIL</span></div><div class="src-count">0</div><div class="src-desc">REST APIなし。要Playwright</div></div>
+  <div class="src-card"><div class="src-name">HCCTA <span class="tag tag-fail">FAIL</span></div><div class="src-count">0</div><div class="src-desc">CSV URL変更。要手動DL</div></div>
+</div>
+
+<!-- Table List -->
+<h3>主要テーブル一覧</h3>
+<table>
+<thead><tr><th>テーブル</th><th class="num">レコード</th><th>ソース</th></tr></thead>
+<tbody>
+<tr><td>oecd_msti</td><td class="num">64,890</td><td>OECD MSTI</td></tr>
+<tr><td>owid_co2</td><td class="num">50,411</td><td>Our World in Data</td></tr>
+<tr><td>seshat_all_variables</td><td class="num">25,895</td><td>Seshat Databank</td></tr>
+<tr><td>owid_energy</td><td class="num">23,232</td><td>Our World in Data</td></tr>
+<tr><td>ngram_extra</td><td class="num">10,120</td><td>Google Ngram API</td></tr>
+<tr><td>worldbank_indicators</td><td class="num">9,894</td><td>World Bank API</td></tr>
+<tr><td>ngram_frequencies</td><td class="num">8,254</td><td>Google Ngram API</td></tr>
+<tr><td>wikidata_main</td><td class="num">4,543</td><td>Wikidata SPARQL</td></tr>
+<tr><td>wikidata_instruments</td><td class="num">3,564</td><td>Wikidata SPARQL</td></tr>
+<tr><td>rd_indicators</td><td class="num">3,489</td><td>World Bank API</td></tr>
+<tr><td>seshat_tech_attributes</td><td class="num">2,103</td><td>Seshat API</td></tr>
+<tr><td>technologies</td><td class="num">1,191</td><td>複合（13ソース）</td></tr>
+<tr><td>sciences</td><td class="num">768</td><td>Nobel + Wikipedia</td></tr>
+<tr><td>tech_to_tech</td><td class="num">354</td><td>キュレーション</td></tr>
+<tr><td>science_to_tech</td><td class="num">133</td><td>キュレーション</td></tr>
+</tbody>
+</table>
+
+<!-- Theory Evaluation -->
+<h3>各理論の評価</h3>
+<table>
+<thead><tr><th>理論家</th><th>主張</th><th>評価</th><th>修正点</th></tr></thead>
+<tbody>
+<tr><td>カーツワイル</td><td>一様な指数関数的加速</td><td style="color:var(--accent-warm)">部分支持</td><td>停滞期3回。情報技術に限定</td></tr>
+<tr><td>アーサー</td><td>組み合わせ進化</td><td style="color:#16a34a">支持</td><td>対数正規分布・スケールフリー構造</td></tr>
+<tr><td>ゴードン</td><td>特別な世紀</td><td style="color:var(--accent-warm)">部分支持</td><td>2010年以降の再加速と矛盾</td></tr>
+<tr><td>ヒューブナー</td><td>イノベーション速度低下</td><td style="color:var(--accent-warm)">部分支持</td><td>1960-2000年は一致、以降は否定</td></tr>
+<tr><td>ペレス</td><td>技術革命の波</td><td style="color:#16a34a">支持</td><td>Ngramの30年ピーク間隔と一致</td></tr>
+</tbody>
+</table>
+
+<p class="note">GitHub: <a href="https://github.com/yuyanishimura0312/tech-acceleration-db" style="color:var(--accent-warm)">yuyanishimura0312/tech-acceleration-db</a> | SQLite 75MB | Python + Chart.js</p>
+
+<!-- Chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+const densityData = [
+  {period:"7M-100K BCE",density:0.0000016,decel:false},
+  {period:"100K-10K BCE",density:0.000222,decel:false},
+  {period:"10K-3K BCE",density:0.009857,decel:false},
+  {period:"3K-1K BCE",density:0.0305,decel:false},
+  {period:"1K BCE-0",density:0.04,decel:false},
+  {period:"0-500",density:0.068,decel:false},
+  {period:"500-1000",density:0.086,decel:false},
+  {period:"1000-1300",density:0.08,decel:true},
+  {period:"1300-1500",density:0.07,decel:true},
+  {period:"1500-1600",density:0.19,decel:false},
+  {period:"1600-1700",density:0.35,decel:false},
+  {period:"1700-1760",density:0.4,decel:false},
+  {period:"1760-1800",density:0.95,decel:false},
+  {period:"1800-1850",density:2.34,decel:false},
+  {period:"1850-1900",density:2.88,decel:false},
+  {period:"1900-1920",density:1.95,decel:true},
+  {period:"1920-1940",density:2.75,decel:false},
+  {period:"1940-1960",density:3.85,decel:false},
+  {period:"1960-1980",density:3.55,decel:true},
+  {period:"1980-2000",density:3.55,decel:true},
+  {period:"2000-2010",density:4.2,decel:false},
+  {period:"2010-2025",density:6.27,decel:false},
+];
+
+new Chart(document.getElementById('density-chart'), {
+  type: 'bar',
+  data: {
+    labels: densityData.map(d => d.period),
+    datasets: [{
+      data: densityData.map(d => d.density),
+      backgroundColor: densityData.map(d => d.decel ? '#dc262688' : '#CC140088'),
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { type: 'logarithmic', title: { display: true, text: '技術密度（件/年, log scale）' },
+        ticks: { callback: v => v < 0.001 ? v.toExponential(0) : v } },
+      x: { ticks: { maxRotation: 60, font: { size: 10 } } }
+    },
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y.toFixed(6)} 件/年` } } }
+  }
+});
+</script>
+</body>
+</html>
