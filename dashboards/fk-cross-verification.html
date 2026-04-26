@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FK予測 x シグナル x CLA x 18メガトレンド 三者比較 | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+  --fk: #1A5276; --sg: #CC1400; --cla: #6E2C2C; --mt: #2C3E50;
+  --confirmed: #27AE60; --partial: #F39C12; --disconfirmed: #E74C3C;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+  --fk: #5DADE2; --sg: #FF6B6B; --cla: #D4A08A; --mt: #85C1E9;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.8; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 6px; }
+.meta { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 24px; }
+h2 { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; margin: 36px 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
+h3 { font-family: var(--font-serif); font-size: 0.96rem; font-weight: 700; margin: 24px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-light); }
+p { font-size: 0.84rem; line-height: 1.9; margin-bottom: 14px; }
+.note { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 10; }
+
+/* Source badges */
+.src { display: inline-block; padding: 2px 8px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.03em; }
+.src-fk { background: rgba(26,82,118,0.1); color: var(--fk); }
+.src-sg { background: var(--accent-muted); color: var(--sg); }
+.src-cla { background: rgba(110,44,44,0.1); color: var(--cla); }
+.src-mt { background: rgba(44,62,80,0.1); color: var(--mt); }
+
+/* Overview */
+.overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; border-top: 3px solid var(--border); }
+.overview-card.fk { border-top-color: var(--fk); }
+.overview-card.sg { border-top-color: var(--sg); }
+.overview-card.cla { border-top-color: var(--cla); }
+.overview-card.mt { border-top-color: var(--mt); }
+.overview-value { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; }
+.overview-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+/* Comparison table */
+.table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+th { background: var(--surface); font-weight: 600; text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: top; line-height: 1.6; }
+tr:hover { background: var(--surface); }
+
+/* Horizon comparison bars */
+.hz-compare { margin: 16px 0 28px; }
+.hz-row { display: flex; align-items: center; margin-bottom: 6px; }
+.hz-label { width: 72px; font-size: 0.72rem; font-weight: 600; text-align: right; padding-right: 10px; }
+.hz-bar-wrap { flex: 1; display: flex; height: 22px; }
+.hz-seg { display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 600; color: #fff; min-width: 20px; }
+.hz-h1 { background: var(--fk); }
+.hz-h2 { background: var(--cla); }
+.hz-h3 { background: var(--mt); }
+
+/* Finding */
+.finding { padding: 16px 20px; border: 1px solid var(--border-light); background: var(--surface); margin-bottom: 10px; }
+.finding-title { font-size: 0.86rem; font-weight: 600; margin-bottom: 6px; }
+.finding-body { font-size: 0.80rem; color: var(--text-secondary); line-height: 1.8; }
+
+/* Convergence cards */
+.conv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin: 16px 0 28px; }
+.conv-card { padding: 16px; border: 1px solid var(--border-light); background: var(--surface); }
+.conv-theme { font-size: 0.86rem; font-weight: 700; margin-bottom: 8px; }
+.conv-sources { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.conv-detail { font-size: 0.76rem; color: var(--text-secondary); line-height: 1.7; }
+.conv-verdict { font-size: 0.72rem; font-weight: 600; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-light); }
+.verdict-strong { color: var(--confirmed); }
+.verdict-moderate { color: var(--partial); }
+.verdict-weak { color: var(--disconfirmed); }
+
+@media (max-width: 768px) {
+  .overview { grid-template-columns: repeat(2, 1fr); }
+  table { font-size: 0.72rem; }
+  th, td { padding: 8px; }
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+<a class="back" href="fk-verification.html">&larr; FK予測力検証レポートに戻る</a>
+
+<h1>FK予測 x シグナル x CLA x 18メガトレンド</h1>
+<p class="subtitle">4つのインテリジェンス・レイヤーはどこで収束し、どこで乖離しているか</p>
+<p class="meta">比較日: 2026年4月26日 | FK予測 353件 x シグナル 7,564件 x CLA 36年分 x 18メガトレンド</p>
+
+<div class="overview">
+  <div class="overview-card fk"><div class="overview-value">353</div><div class="overview-label"><span class="src src-fk">FK</span> 検証可能予測</div></div>
+  <div class="overview-card sg"><div class="overview-value">7,564</div><div class="overview-label"><span class="src src-sg">SG</span> シグナル</div></div>
+  <div class="overview-card cla"><div class="overview-value">36年</div><div class="overview-label"><span class="src src-cla">CLA</span> 年次分析</div></div>
+  <div class="overview-card mt"><div class="overview-value">18</div><div class="overview-label"><span class="src src-mt">MT</span> メガトレンド</div></div>
+</div>
+
+<h2>1. Three Horizons分布の劇的な違い</h2>
+<p>4つのデータソースをThree Horizonsで比較すると、それぞれが異なる「時間的視野」を持っていることが明確になる。この違いは欠陥ではなく、パイプライン設計上の補完関係である。</p>
+
+<div class="hz-compare">
+  <div class="hz-row"><span class="hz-label"><span class="src src-fk">FK予測</span></span><div class="hz-bar-wrap"><div class="hz-seg hz-h1" style="width:78%">H1: 78%</div><div class="hz-seg hz-h2" style="width:3%"></div><div class="hz-seg hz-h3" style="width:19%">H3: 19%</div></div></div>
+  <div class="hz-row"><span class="hz-label"><span class="src src-sg">シグナル</span></span><div class="hz-bar-wrap"><div class="hz-seg hz-h1" style="width:26%">H1: 26%</div><div class="hz-seg hz-h2" style="width:56%">H2: 56%</div><div class="hz-seg hz-h3" style="width:18%">H3: 18%</div></div></div>
+  <div class="hz-row"><span class="hz-label"><span class="src src-cla">CLA</span></span><div class="hz-bar-wrap"><div class="hz-seg hz-h1" style="width:15%">表層</div><div class="hz-seg hz-h2" style="width:35%">構造</div><div class="hz-seg hz-h3" style="width:50%">深層</div></div></div>
+  <div class="hz-row"><span class="hz-label"><span class="src src-mt">18MT</span></span><div class="hz-bar-wrap"><div class="hz-seg hz-h1" style="width:10%"></div><div class="hz-seg hz-h2" style="width:30%">H2</div><div class="hz-seg hz-h3" style="width:60%">H3: 60%</div></div></div>
+</div>
+<p class="note">FK予測のH1偏重（78%）とシグナルDBのH2集中（56%）、CLA/18メガトレンドのH3偏重は、相互補完的な時間的視野を形成している。</p>
+
+<p>FK予測は短期定量予測（H1）に偏重し、Three Horizonsの「H2空洞」を抱えている。しかしシグナルDBは56%がH2に分布しており、FKのH2空洞をほぼ完全に補完している。CLAと18メガトレンドはさらに長期的な構造変化（H3）に焦点を当て、深層の世界観・神話レベルの変化を捕捉している。</p>
+<p>つまり、4つのレイヤーを統合すると、H1（FK予測）→ H2（シグナル）→ H3（CLA・18メガトレンド）という時間軸上の「リレー」が成立し、短期から長期までの連続的な未来洞察カバレッジが実現する。この構造はパイプライン設計として合理的であり、個別に見た「偏り」は全体では「分業」として機能している。</p>
+
+<h2>2. データソース間の構造比較</h2>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>属性</th><th><span class="src src-fk">FK予測</span></th><th><span class="src src-sg">シグナル</span></th><th><span class="src src-cla">CLA</span></th><th><span class="src src-mt">18メガトレンド</span></th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>データ量</td><td>23,274予測</td><td>7,564シグナル</td><td>930分析（36年）</td><td>18テーマ</td>
+</tr>
+<tr>
+  <td>時間的焦点</td><td>H1偏重（78%）</td><td>H2中心（56%）</td><td>H3・深層構造</td><td>H3・長期ビジョン</td>
+</tr>
+<tr>
+  <td>認識論的アプローチ</td><td>投射型（Projected 65%）</td><td>兆候検出（Emerging 30%）</td><td>因果階層（4層）</td><td>トレンド外挿+シナリオ</td>
+</tr>
+<tr>
+  <td>情報源</td><td>463機関のレポート</td><td>PESTLE DB + 学術論文</td><td>ニュース深層分析</td><td>約30冊の未来予測書籍</td>
+</tr>
+<tr>
+  <td>検証率</td><td>13%（46/353件）</td><td>ノイズ排除済み</td><td>realized 56%</td><td>PESTLE/CI検証済み</td>
+</tr>
+<tr>
+  <td>検証結果</td><td>的中81.5%</td><td>critical 38%</td><td>的中率56%（realized）+ 40%（partial）</td><td>Strong 10件 / Moderate 5件</td>
+</tr>
+<tr>
+  <td>平均タイムラグ</td><td>（未計算）</td><td>即時</td><td>realized: 4.3年、partial: 7.1年</td><td>N/A</td>
+</tr>
+<tr>
+  <td>主要な弱点</td><td>H2空洞、economy偏重</td><td>歴史的シグナルが多い</td><td>定性的、検証の客観性</td><td>書籍ベースで更新頻度低い</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2>3. テーマ別の収束・乖離マッピング</h2>
+<p class="note">4つのデータソースが同一テーマについて何を語っているかを比較。3つ以上が収束しているテーマを「高信頼テーマ」、1つだけが捕捉しているものを「盲点テーマ」とする。</p>
+
+<h3>高信頼テーマ（3-4ソースが収束）</h3>
+
+<div class="conv-grid">
+<div class="conv-card">
+  <div class="conv-theme">AI統治・規制の分裂</div>
+  <div class="conv-sources"><span class="src src-fk">FK</span><span class="src src-sg">SG</span><span class="src src-cla">CLA</span><span class="src src-mt">MT</span></div>
+  <div class="conv-detail">
+    <strong>FK</strong>: AI偽情報が2025年主要リスク（的中）<br>
+    <strong>SG</strong>: 「AI加速 vs 規制」が最高スコア9.0のシグナル<br>
+    <strong>CLA</strong>: 2023-25年全PESTLEカテゴリでAI統治が出現。「技術主権」が新たな政治概念として浮上<br>
+    <strong>MT</strong>: #3 テクノロジーの非人間的活用（score 8.0, growth 7.01x）、#6 ロボット自動化（score 9.0）
+  </div>
+  <div class="conv-verdict verdict-strong">4ソース完全収束 — 最高信頼テーマ</div>
+</div>
+
+<div class="conv-card">
+  <div class="conv-theme">気候変動と生存圏の縮小</div>
+  <div class="conv-sources"><span class="src src-fk">FK</span><span class="src src-sg">SG</span><span class="src src-cla">CLA</span><span class="src src-mt">MT</span></div>
+  <div class="conv-detail">
+    <strong>FK</strong>: 異常気象が2025年最大リスク（的中）。太陽光が「電力の王」（的中）<br>
+    <strong>SG</strong>: 「気候災害が大規模人口移動を引き起こす」がcriticalシグナル<br>
+    <strong>CLA</strong>: 「人間中心主義的環境主義の終焉」が新物語として出現（2025年）<br>
+    <strong>MT</strong>: #8 気候変動と生存圏の縮小（score 7.5, pestle 19,211記事）
+  </div>
+  <div class="conv-verdict verdict-strong">4ソース完全収束</div>
+</div>
+
+<div class="conv-card">
+  <div class="conv-theme">格差拡大と社会分断</div>
+  <div class="conv-sources"><span class="src src-fk">FK</span><span class="src src-sg">SG</span><span class="src src-cla">CLA</span><span class="src src-mt">MT</span></div>
+  <div class="conv-detail">
+    <strong>FK</strong>: BRICS+ vs G7逆転（的中）、生活費危機が最大リスク（的中）<br>
+    <strong>SG</strong>: 「地政学的分断が並行物流ネットワークを生む」がcritical<br>
+    <strong>CLA</strong>: 「成長 vs 持続可能性を超えた再生型経済への移行」が出現<br>
+    <strong>MT</strong>: #11 拡大する格差と新たな紛争（score 9.0, pestle 43,319記事 — 最大）
+  </div>
+  <div class="conv-verdict verdict-strong">4ソース完全収束 — ニュース量でも最大テーマ</div>
+</div>
+
+<div class="conv-card">
+  <div class="conv-theme">民主主義の正統性危機</div>
+  <div class="conv-sources"><span class="src src-sg">SG</span><span class="src src-cla">CLA</span><span class="src src-mt">MT</span></div>
+  <div class="conv-detail">
+    <strong>SG</strong>: 「選挙形態と民主主義機能の乖離」がcritical、「法治制度の劣化」シグナル多数<br>
+    <strong>CLA</strong>: 2024年「制度 vs 人民」、2025年「法の終焉」という物語が浮上。法治主義の根本的動揺を記録<br>
+    <strong>MT</strong>: #17 閉じる国家と停滞する社会（score 7.0）
+  </div>
+  <div class="conv-verdict verdict-moderate">3ソース収束（FKでは捕捉不足 — ガバナンス予測11件のみ）</div>
+</div>
+
+<div class="conv-card">
+  <div class="conv-theme">暮らしの多様化と新しい価値</div>
+  <div class="conv-sources"><span class="src src-cla">CLA</span><span class="src src-mt">MT</span><span class="src src-sg">SG</span></div>
+  <div class="conv-detail">
+    <strong>CLA</strong>: 「賢明な愚者」「集合的直観」「相互扶助ネットワーク」の創発を記録<br>
+    <strong>MT</strong>: #18 暮らしの基盤自体の多様化（score 9.5 — 最高スコア）、#9 経済以外の新たな価値（score 6.5）<br>
+    <strong>SG</strong>: 「専門能力のアンバンドリング」がemerging trend
+  </div>
+  <div class="conv-verdict verdict-moderate">3ソース収束（FKの定量予測では捉えにくいテーマ）</div>
+</div>
+</div>
+
+<h3>盲点テーマ（1-2ソースのみ）</h3>
+
+<div class="conv-grid">
+<div class="conv-card">
+  <div class="conv-theme">宇宙進出</div>
+  <div class="conv-sources"><span class="src src-fk">FK</span><span class="src src-mt">MT</span></div>
+  <div class="conv-detail">
+    <strong>FK</strong>: 宇宙打ち上げ頻度が28時間に1回（2025年）と予測<br>
+    <strong>MT</strong>: #7 宇宙に進出する人類（score 8.5, pestle 13,729記事）<br>
+    シグナルDB・CLAでは捕捉が薄い。ニュース量は多いがシグナルとしての「変化の兆し」は乏しく、すでに主流化したトレンドとして扱われている可能性。
+  </div>
+  <div class="conv-verdict verdict-weak">2ソースのみ — SG/CLAでの深層分析が不足</div>
+</div>
+
+<div class="conv-card">
+  <div class="conv-theme">脳科学・神経技術</div>
+  <div class="conv-sources"><span class="src src-mt">MT</span></div>
+  <div class="conv-detail">
+    <strong>MT</strong>: #16 脳の解明と再現（score 6.5, growth 14.73x — 成長率最大）<br>
+    FK予測・シグナル・CLAのいずれでも独立したテーマとして捕捉されていない。成長率14.73倍というPESTLE/CI比は全18テーマ中最大で、「まだ主流になっていないが急速に拡大中」の典型的パターン。
+  </div>
+  <div class="conv-verdict verdict-weak">MTのみ — 他3ソースの盲点。次サイクルで重点監視推奨</div>
+</div>
+
+<div class="conv-card">
+  <div class="conv-theme">人とロボットの接近</div>
+  <div class="conv-sources"><span class="src src-mt">MT</span></div>
+  <div class="conv-detail">
+    <strong>MT</strong>: #13 人とロボットの接近（score 5.0, growth 16.89x — 成長率第2位）<br>
+    18メガトレンド中でスコアは低い（Moderate Trend）だが、PESTLE/CI比での成長率は16.89倍と#16に次ぐ。FK・SG・CLAでの捕捉が極めて薄い。
+  </div>
+  <div class="conv-verdict verdict-weak">MTのみ — 急成長中だが他ソースで未捕捉</div>
+</div>
+</div>
+
+<h2>4. CLA物語検証との対照</h2>
+<p>CLAの物語検証（cla_narrative_verification）は、36年分の「出現する物語」がその後どうなったかを追跡している。FKの予測検証と比較すると、認識論的に異なるレベルで検証を行っていることがわかる。</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th></th><th><span class="src src-fk">FK予測検証</span></th><th><span class="src src-cla">CLA物語検証</span></th></tr>
+</thead>
+<tbody>
+<tr><td>検証対象</td><td>具体的予測文（「GDPが-3%」等）</td><td>出現する物語（「技術主権という政治概念」等）</td></tr>
+<tr><td>検証レベル</td><td>表層・事実レベル（Litany）</td><td>深層・世界観レベル（Worldview/Myth）</td></tr>
+<tr><td>的中率</td><td>81.5%（加重）</td><td>realized 56% + partial 40% = 96%の何らかの実現</td></tr>
+<tr><td>タイムラグ</td><td>（未計算）</td><td>realized 4.3年、partial 7.1年</td></tr>
+<tr><td>完全外れ</td><td>disconfirmed 3件（6.5%）</td><td>unrealized 9件（2.5%）、平均ラグ26.8年</td></tr>
+<tr><td>含意</td><td>短期定量予測は精度が高い</td><td>深層の物語はほぼ必ず何らかの形で実現するが、時間がかかる</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>注目すべきは、CLAの「外れ」（unrealized）の平均ラグが26.8年であることだ。FK予測の「外れ」（EV普及、遺伝子治療など）が10-20年のタイムラグを持つことと整合している。つまり、「外れた」ように見える予測や物語の多くは、実際には「まだ実現していないだけ」であり、CLA物語のunrealized 9件もまだ「dormant（休眠中）」の軌道にある。</p>
+<p>この発見は、フォーサイトの「精度」を評価する際の重要な示唆を提供する。短期（H1）では「当たる/外れる」の二値評価が有効だが、長期（H3）では「いつ実現するか」「どのメカニズムで実現するか」という多次元評価が必要となる。CLAの物語検証はこの多次元評価を「trajectory（軌道）」という概念で捉えており、accelerating / cyclical / dormant / transformed の4類型を用いている。</p>
+
+<h2>5. 18メガトレンドのシグナル・FK整合性</h2>
+<p class="note">18メガトレンドの各テーマについて、FK予測とシグナルDBの対応状況を評価。</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>#</th><th>メガトレンド</th><th>MT Score</th><th>FK予測</th><th>SG整合</th><th>CLA深度</th><th>総合評価</th></tr>
+</thead>
+<tbody>
+<tr><td>3</td><td>テクノロジーの非人間的活用</td><td>8.0</td><td>AI偽情報予測的中</td><td>最高スコア帯</td><td>全カテゴリで出現</td><td class="verdict-strong">完全収束</td></tr>
+<tr><td>6</td><td>ロボットによる自動化</td><td>9.0</td><td>EV・自動化予測あり</td><td>専門能力アンバンドリング</td><td>労働変革の物語</td><td class="verdict-strong">完全収束</td></tr>
+<tr><td>8</td><td>気候変動と生存圏の縮小</td><td>7.5</td><td>異常気象・太陽光的中</td><td>気候移住critical</td><td>環境主義の転換</td><td class="verdict-strong">完全収束</td></tr>
+<tr><td>11</td><td>拡大する格差と新たな紛争</td><td>9.0</td><td>BRICS逆転・生活費的中</td><td>地政学分断critical</td><td>再生型経済の萌芽</td><td class="verdict-strong">完全収束</td></tr>
+<tr><td>18</td><td>暮らしの基盤自体の多様化</td><td>9.5</td><td>直接対応なし</td><td>部分的</td><td>相互扶助の創発</td><td class="verdict-moderate">CLA/MT中心</td></tr>
+<tr><td>4</td><td>資源のスマートコントロール</td><td>7.5</td><td>エネルギー予測14件</td><td>水素経済加速</td><td>エネルギー安全保障</td><td class="verdict-strong">ほぼ収束</td></tr>
+<tr><td>7</td><td>宇宙に進出する人類</td><td>8.5</td><td>打ち上げ頻度予測</td><td>弱い</td><td>弱い</td><td class="verdict-moderate">FK/MTのみ</td></tr>
+<tr><td>12</td><td>身体的健康と長寿社会</td><td>7.5</td><td>遺伝子治療（部分的中）</td><td>中程度</td><td>生命の物語</td><td class="verdict-moderate">部分的収束</td></tr>
+<tr><td>14</td><td>高度な専門技術の一般化</td><td>7.5</td><td>EdTech関連</td><td>AI民主化</td><td>知識変革</td><td class="verdict-strong">ほぼ収束</td></tr>
+<tr><td>15</td><td>多様性と共にある発展</td><td>7.5</td><td>弱い</td><td>中程度</td><td>複雑さの知恵</td><td class="verdict-moderate">CLA中心</td></tr>
+<tr><td>16</td><td>脳の解明と再現</td><td>6.5</td><td>なし</td><td>量子+脳（弱い）</td><td>なし</td><td class="verdict-weak">MT盲点</td></tr>
+<tr><td>13</td><td>人とロボットの接近</td><td>5.0</td><td>なし</td><td>弱い</td><td>なし</td><td class="verdict-weak">MT盲点</td></tr>
+<tr><td>2</td><td>理想的身体機能の拡張</td><td>4.0</td><td>なし</td><td>なし</td><td>なし</td><td class="verdict-weak">全ソース弱い</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>6. 統合的発見</h2>
+
+<div class="finding">
+  <div class="finding-title">発見1: パイプラインの「時間的リレー」は設計通りに機能している</div>
+  <div class="finding-body">FK予測（H1中心）→ シグナルDB（H2中心）→ CLA/18メガトレンド（H3中心）という時間軸上の分業は、個別に見ると偏りだが、統合すると連続的カバレッジを実現している。FKのH2空洞はシグナルDBが完全に補完しており、これはパイプライン・アーキテクチャとしての健全性を示している。</div>
+</div>
+
+<div class="finding">
+  <div class="finding-title">発見2: 「深層ほど当たる」という逆説</div>
+  <div class="finding-body">FK予測の表層的的中率81.5%に対し、CLAの物語検証は96%が何らかの形で実現している。表層の定量予測は「精密だが脆い」（数値がずれると外れ判定）のに対し、深層の物語は「曖昧だが堅牢」（方向性が合えば実現判定）という構造がある。フォーサイトの真の価値は「正確な数値予測」ではなく「変化の方向性の先読み」にあることを、この対照が示している。</div>
+</div>
+
+<div class="finding">
+  <div class="finding-title">発見3: 全ソースで完全収束した3テーマが「今」の構造的変化</div>
+  <div class="finding-body">AI統治の分裂、気候変動、格差拡大の3テーマは、FK予測（的中）・シグナル（critical）・CLA（深層物語出現）・18メガトレンド（Strong Trend）の全てで高スコアを記録した。これらは「予測」ではなく「現在進行中の構造的変化」であり、Three HorizonsのH1/H2境界に位置している。</div>
+</div>
+
+<div class="finding">
+  <div class="finding-title">発見4: 18メガトレンド固有の「成長率急騰テーマ」が次のシグナル候補</div>
+  <div class="finding-body">#16 脳の解明（growth 14.73x）と #13 人とロボットの接近（growth 16.89x）は、スコア自体は低いが成長率が異常に高い。他の3ソースではまだ捕捉されていないこれらのテーマは、「まだシグナルになっていないが急速に拡大中」であり、次サイクルのシグナルスキャンで重点監視すべき候補である。</div>
+</div>
+
+<div class="finding">
+  <div class="finding-title">発見5: CLAの「出現する物語」がFKの「メカニズム誤推定」を補正できる</div>
+  <div class="finding-body">FK予測の弱点として「何が起きるかは当てるが、なぜ起きるかのメカニズムが異なる」（水素経済の例）が判明している。CLAの2025年分析では「戦略的協調経済」「技術主権」「ポスト人間的環境倫理」など、変化のメカニズムに関する深層的な物語が記録されている。FKの定量予測にCLAの物語を紐付けることで、「なぜ当たったか/外れたか」の因果的理解が可能になる。</div>
+</div>
+
+<h2>7. 提言: パイプライン最適化</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>課題</th><th>現状</th><th>改善策</th><th>優先度</th></tr></thead>
+<tbody>
+<tr><td>FKのH2空洞</td><td>H2が3%</td><td>シグナルDBとの自動リンクでH2カバレッジを補完</td><td>P1</td></tr>
+<tr><td>MTの盲点テーマ</td><td>#16, #13が未捕捉</td><td>成長率上位テーマをシグナルスキャンの重点キーワードに追加</td><td>P1</td></tr>
+<tr><td>FK-CLA紐付け</td><td>未接続</td><td>FK予測のdomainとCLAのemerging_narrativeをクロスリファレンス</td><td>P2</td></tr>
+<tr><td>統合ダッシュボード</td><td>個別表示</td><td>4ソースの収束度を可視化するクロスDB照合ビュー</td><td>P2</td></tr>
+<tr><td>CLAの物語trajectory活用</td><td>参照のみ</td><td>FK予測のaccuracy_notesにCLA trajectoryタイプを記録</td><td>P3</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="margin-top:40px; padding-top:16px; border-top:1px solid var(--border); font-size:0.72rem; color:var(--text-muted);">
+  FK予測 x シグナル x CLA x 18メガトレンド 三者比較 v1.0 | 2026年4月26日 | Miratuku Intelligence Pipeline
+</div>
+</body>
+</html>
