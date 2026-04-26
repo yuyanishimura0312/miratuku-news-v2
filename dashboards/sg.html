@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signal Verification Dashboard | Insight News</title>
+<title>シグナル予測力検証ダッシュボード | Insight News</title>
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -12,13 +12,15 @@
   --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
   --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
   --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
-  --green: #16A34A; --blue: #2563EB; --purple: #7C3AED; --orange: #EA580C; --red: #DC2626; --cyan: #0891B2;
+  --green: #16A34A; --blue: #2563EB; --orange: #EA580C; --red: #DC2626; --cyan: #0891B2;
+  --invalid: #DC2626; --valid: #16A34A;
 }
 [data-theme="dark"] {
   --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
   --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
   --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
-  --green: #22C55E; --blue: #3B82F6; --purple: #8B5CF6; --orange: #F97316; --red: #EF4444; --cyan: #06B6D4;
+  --green: #22C55E; --blue: #3B82F6; --orange: #F97316; --red: #EF4444; --cyan: #06B6D4;
+  --invalid: #EF4444; --valid: #22C55E;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
@@ -26,672 +28,757 @@ body { font-family: var(--font); color: var(--text); background: var(--bg); line
 .back:hover { color: var(--text); }
 h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
 .db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
-.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; }
-.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
-h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 32px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 24px; }
+h2 { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
+h3 { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 700; margin: 24px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border-light); }
 .theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; }
 
 /* KPI */
-.kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 24px; }
-.kpi { background: var(--surface); border: 1px solid var(--border-light); padding: 16px; text-align: center; }
-.kpi-value { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; }
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 28px; }
+.kpi { background: var(--surface); border: 1px solid var(--border-light); padding: 18px 14px; text-align: center; }
+.kpi-value { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
 .kpi-value.accent { color: var(--accent-warm); }
-.kpi-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
-.kpi-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+.kpi-value.green { color: var(--green); }
+.kpi-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
+.kpi-sub { font-size: 0.64rem; color: var(--text-muted); margin-top: 2px; }
 
-/* Bar */
-.bar-group { margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
-.bar-label { width: 160px; flex-shrink: 0; color: var(--text-secondary); font-size: 0.78rem; }
-.bar-track { flex: 1; height: 20px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
-.bar-fill { height: 100%; transition: width 0.6s ease; }
-.bar-val { width: 50px; text-align: right; font-weight: 500; font-family: monospace; font-size: 0.78rem; }
+/* Method cards */
+.method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 8px; }
+.method-card { border: 1px solid var(--border-light); padding: 18px; }
+.method-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 6px; }
+.method-badge { display: inline-block; padding: 2px 8px; font-size: 0.68rem; font-weight: 700; margin-bottom: 10px; }
+.badge-invalid { background: rgba(220,38,38,0.1); color: var(--invalid); }
+.badge-valid { background: rgba(22,163,74,0.1); color: var(--valid); }
+.method-stat { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; }
+.method-stat.red { color: var(--accent-warm); }
+.method-stat.green { color: var(--green); }
+.method-desc { font-size: 0.74rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.6; }
 
-/* Grid */
+/* Grid layouts */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-@media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } #ts-grid { grid-template-columns: 1fr !important; } }
-.panel { background: var(--card); border: 1px solid var(--border-light); padding: 16px; margin-bottom: 12px; }
-.panel-title { font-size: 0.72rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.05em; margin-bottom: 10px; text-transform: uppercase; }
 
-/* Type cards */
-.type-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; }
-.type-name { font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; }
-.type-stat { font-size: 0.78rem; color: var(--text-secondary); }
-.type-big { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; margin: 4px 0; }
-
-/* Heatmap */
-.hm-wrap { overflow-x: auto; }
-.hm { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
-.hm th { padding: 6px 4px; text-align: center; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border); }
-.hm td { padding: 4px; text-align: center; border-bottom: 1px solid var(--border-light); min-width: 54px; }
-.hm .rl { text-align: left; font-weight: 500; color: var(--text-secondary); padding-left: 6px; }
-.hm-cell { border-radius: 2px; padding: 3px 4px; font-weight: 500; }
-
-/* Table */
-.sig-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-.sig-table th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-weight: 500; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
-.sig-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); }
-.sig-table tr:hover td { background: var(--surface); }
-.sig-name { font-weight: 500; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Grade */
-.grade { display: inline-block; padding: 1px 7px; font-weight: 700; font-size: 0.7rem; font-family: monospace; }
-.grade-S { background: var(--accent-muted); color: var(--accent-warm); }
-.grade-A { background: rgba(22,163,74,0.1); color: var(--green); }
-.grade-B { background: rgba(37,99,235,0.1); color: var(--blue); }
-.grade-C { background: rgba(234,88,12,0.1); color: var(--orange); }
-.grade-D { background: rgba(220,38,38,0.1); color: var(--red); }
-
-/* Score bar inline */
-.sb { display: inline-block; width: 50px; height: 5px; background: var(--border-light); vertical-align: middle; margin-right: 4px; }
-.sb-fill { display: block; height: 100%; }
+/* Panel */
+.panel { background: var(--card); border: 1px solid var(--border-light); padding: 16px; margin-bottom: 16px; }
+.panel-title { font-size: 0.7rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px; }
 
 /* Canvas */
 canvas { display: block; width: 100%; }
 
-/* Tabs */
-.tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
-.tab { padding: 6px 14px; font-size: 0.78rem; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.tab:hover { color: var(--text); }
-.tab.active { color: var(--accent-warm); border-bottom-color: var(--accent-warm); }
+/* Bar */
+.bar-group { margin-bottom: 7px; display: flex; align-items: center; gap: 8px; }
+.bar-label { width: 150px; flex-shrink: 0; color: var(--text-secondary); font-size: 0.76rem; }
+.bar-track { flex: 1; height: 18px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
+.bar-fill { height: 100%; }
+.bar-val { width: 58px; text-align: right; font-weight: 500; font-family: monospace; font-size: 0.76rem; }
 
-/* Filters */
-.filters { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-.filters select { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-size: 0.78rem; font-family: var(--font); }
-.filters label { font-size: 0.72rem; color: var(--text-muted); }
+/* Semantic table */
+.sem-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.sem-table th { text-align: left; padding: 8px 12px; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+.sem-table td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); }
+.sem-table tr:last-child td { border-bottom: none; }
+.dim-bar { display: inline-block; height: 8px; vertical-align: middle; margin-right: 6px; }
+.score-sig { color: var(--accent-warm); font-weight: 700; font-family: monospace; }
+.score-bl { font-family: monospace; color: var(--text-muted); }
+.score-diff { font-family: monospace; font-size: 0.74rem; }
+.score-diff.pos { color: var(--green); }
+.score-diff.neg { color: var(--red); }
+
+/* Status distribution */
+.status-row { display: flex; gap: 0; height: 28px; margin: 12px 0 8px; overflow: hidden; border: 1px solid var(--border-light); }
+.status-seg { display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; color: #fff; transition: opacity 0.15s; overflow: hidden; white-space: nowrap; }
+.status-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.72rem; color: var(--text-secondary); }
+.status-legend span { display: flex; align-items: center; gap: 4px; }
+.status-dot { width: 10px; height: 10px; flex-shrink: 0; }
+
+/* Type cards */
+.type-card { border: 1px solid var(--border-light); padding: 14px; background: var(--surface); }
+.type-name { font-weight: 700; font-size: 0.84rem; margin-bottom: 2px; }
+.type-count { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; }
+.type-big { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--accent-warm); }
+.type-row { display: flex; gap: 12px; margin-top: 6px; }
+.type-metric { font-size: 0.7rem; color: var(--text-secondary); }
+.type-metric strong { display: block; font-family: monospace; font-size: 0.84rem; color: var(--text); }
+
+/* Heatmap */
+.hm-wrap { overflow-x: auto; margin-top: 8px; }
+.hm { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+.hm th { padding: 6px 8px; text-align: center; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.hm td { padding: 5px 4px; text-align: center; }
+.hm .rl { text-align: left; font-weight: 500; padding-left: 6px; color: var(--text-secondary); white-space: nowrap; }
+.hm-cell { padding: 4px 6px; font-weight: 600; font-family: monospace; font-size: 0.72rem; }
+
+/* Top signals table */
+.sig-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.sig-table th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-weight: 500; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+.sig-table th:hover { color: var(--text); }
+.sig-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); }
+.sig-table tr:hover td { background: var(--surface); }
+.sig-name { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.type-pill { display: inline-block; padding: 1px 6px; font-size: 0.66rem; font-weight: 600; font-family: monospace; background: var(--accent-muted); color: var(--accent-warm); }
+.score-bar { display: inline-flex; align-items: center; gap: 4px; }
+.score-track { display: inline-block; width: 42px; height: 5px; background: var(--border-light); vertical-align: middle; }
+.score-fill { display: block; height: 100%; background: var(--accent-warm); }
+
+/* Distribution donut-like bars */
+.dist-label { font-size: 0.74rem; color: var(--text-secondary); }
+.dist-value { font-family: monospace; font-size: 0.74rem; }
+
+/* Pie-like bar for type distribution */
+.type-dist-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.type-dist-label { width: 130px; font-size: 0.76rem; color: var(--text-secondary); flex-shrink: 0; }
+.type-dist-track { flex: 1; height: 18px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
+.type-dist-fill { height: 100%; }
+.type-dist-val { width: 80px; text-align: right; font-size: 0.74rem; font-family: monospace; color: var(--text-muted); }
+
+/* Conclusion box */
+.conclusion { background: var(--accent-muted); border: 1px solid var(--accent-warm); padding: 20px 24px; margin-top: 8px; }
+.conclusion-title { font-family: var(--font-serif); font-size: 1.0rem; font-weight: 700; color: var(--accent-warm); margin-bottom: 14px; }
+.conclusion-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; font-size: 0.84rem; line-height: 1.7; }
+.conclusion-item:last-child { margin-bottom: 0; }
+.conclusion-item::before { content: ''; display: block; width: 3px; height: 3px; border-radius: 50%; background: var(--accent-warm); flex-shrink: 0; margin-top: 11px; }
+
+/* Load more */
+.load-more { display: block; width: 100%; padding: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 0.78rem; color: var(--text-secondary); cursor: pointer; text-align: center; margin-top: 8px; font-family: var(--font); }
+.load-more:hover { background: var(--border-light); color: var(--text); }
+
+/* Footer */
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border-light); font-size: 0.72rem; color: var(--text-muted); line-height: 1.8; }
+footer a { color: var(--text-muted); text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .method-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
-<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+<button class="theme-toggle" onclick="toggleTheme()">&#9789;</button>
 <a class="back" href="../databases.html">&larr; データベース一覧に戻る</a>
-<h1><span class="db-id">SG</span>シグナル歴史的検証ダッシュボード</h1>
-<p class="subtitle" id="sg-subtitle">Loading...</p>
-<p class="desc">7,250件のフォーサイトシグナルに対し、Tetlock/Brier Scoreベースの5次元評価（実現度・方向性・時間軸・影響度・信号強度）で予測力スコア（PPS）を算出。各シグナルが検出後何年でメインストリーム化したかの推定値も含む。</p>
 
-<!-- KPI -->
-<div class="kpi-row" id="kpi"></div>
+<!-- Header -->
+<h1><span class="db-id">SG</span>シグナル予測力検証ダッシュボード</h1>
+<p class="subtitle">7,564 Signals &nbsp;|&nbsp; 1900–2026 &nbsp;|&nbsp; 3-Method Verification</p>
 
-<!-- Era -->
-<h3>時代別予測力</h3>
-<div id="era-chart"></div>
-
-<!-- Grade + Realization -->
-<h3>評価分布</h3>
-<div class="grid-2">
-  <div class="panel"><div class="panel-title">Predictive Power Grade</div><div id="grade-chart"></div></div>
-  <div class="panel"><div class="panel-title">Realization Status</div><div id="real-chart"></div></div>
-</div>
-
-<!-- Mainstream -->
-<h3>メインストリーム化年数</h3>
-<div class="grid-2">
-  <div class="panel">
-    <div class="panel-title">シグナルタイプ別 平均メインストリーム化年数</div>
-    <div id="ms-type"></div>
-  </div>
-  <div class="panel">
-    <div class="panel-title">メインストリーム化フェーズ分布</div>
-    <div id="ms-phase"></div>
-  </div>
-</div>
-<div class="panel">
-  <div class="panel-title">年代別メインストリーム化年数の変遷</div>
-  <canvas id="ms-canvas" height="240"></canvas>
-</div>
-
-<!-- Signal Type -->
-<h3>シグナルタイプ別精度</h3>
-<div class="grid-3" id="type-cards"></div>
-
-<!-- Heatmap -->
-<h3>年代 x PESTLEカテゴリ ヒートマップ</h3>
-<div class="panel">
-  <div class="tabs" id="hm-tabs">
-    <div class="tab active" data-m="avg_pps">予測力 (PPS)</div>
-    <div class="tab" data-m="realization_rate">実現率 (%)</div>
-    <div class="tab" data-m="count">件数</div>
-  </div>
-  <div class="hm-wrap" id="hm-wrap"></div>
-</div>
-
-<!-- Timeline -->
-<h3>年代別タイムライン</h3>
-<div class="panel"><canvas id="tl-canvas" height="260"></canvas></div>
-
-<!-- Scatter -->
-<h3>散布図: Composite Score vs Predictive Power</h3>
-<div class="filters" id="sc-filters"></div>
-<div class="panel" style="padding:0;overflow:hidden;"><canvas id="sc-canvas" height="360"></canvas></div>
-
-
-<!-- Megatrend Verification -->
-<h3>18テーマ検証 <span style="font-size:0.78rem;color:var(--text-muted)">PESTLE 284,954記事 + Cultural 246,999記事で検証</span></h3>
-<p class="desc">ミラツクの18フューチャロジーテーマが、531,953件のニュース時系列データに裏付けられた「太いトレンド」かどうかを検証。各テーマのキーワード群でタイトル・要約を全文検索し、年次記事数推移・成長率・連続性を分析した。</p>
+<!-- KPI Row -->
 <div class="kpi-row">
-  <div class="kpi"><div class="kpi-value accent">12/18</div><div class="kpi-label">Strong Trend</div><div class="kpi-sub">太いトレンド</div></div>
-  <div class="kpi"><div class="kpi-value">5/18</div><div class="kpi-label">Moderate</div><div class="kpi-sub">中程度のトレンド</div></div>
-  <div class="kpi"><div class="kpi-value">1/18</div><div class="kpi-label">Weak</div><div class="kpi-sub">弱いトレンド</div></div>
-  <div class="kpi"><div class="kpi-value">0/18</div><div class="kpi-label">No Trend</div><div class="kpi-sub">該当なし</div></div>
+  <div class="kpi"><div class="kpi-value">7,564</div><div class="kpi-label">総シグナル数</div><div class="kpi-sub">SG データベース</div></div>
+  <div class="kpi"><div class="kpi-value accent">+16.9%</div><div class="kpi-label">頻度差 (H2)</div><div class="kpi-sub">シグナル vs ベースライン</div></div>
+  <div class="kpi"><div class="kpi-value green">2.0x</div><div class="kpi-label">セマンティック実現度</div><div class="kpi-sub">4ホライズン平均</div></div>
+  <div class="kpi"><div class="kpi-value">15.5%</div><div class="kpi-label">部分実現率</div><div class="kpi-sub">partially + substantially</div></div>
+  <div class="kpi"><div class="kpi-value">3方式</div><div class="kpi-label">検証手法</div><div class="kpi-sub">KOR / Semantic / Frequency</div></div>
 </div>
-<div id="mt-list"></div>
 
-<h3>18テーマ x 中項目 時系列グラフ <span style="font-size:0.78rem;color:var(--text-muted)">48中項目の年次記事数推移</span></h3>
-<div class="filters" id="ts-filters">
-  <div><label>表示モード</label>
-    <select id="ts-mode">
-      <option value="absolute">記事数（絶対値）</option>
-      <option value="rate">1000記事あたり出現率</option>
-    </select>
+<!-- Section 1: Method Overview -->
+<h2>検証方式の概要</h2>
+<div class="method-grid">
+  <div class="method-card">
+    <div class="method-name">KOR法</div>
+    <div><span class="method-badge badge-invalid">無効</span></div>
+    <div class="method-stat red">0.97倍</div>
+    <div class="method-desc">ランダムシャッフル比較。シグナルとランダム文書の実現スコア差がほぼゼロ（0.97倍）。単一スコアのランキング優位性は確認されなかった。</div>
   </div>
-  <div><label>期間</label>
-    <select id="ts-range">
-      <option value="all">全期間 (1900-2026)</option>
-      <option value="2000">2000年以降</option>
-      <option value="2015">2015年以降</option>
-    </select>
+  <div class="method-card">
+    <div class="method-name">セマンティック照合</div>
+    <div><span class="method-badge badge-valid">有効</span></div>
+    <div class="method-stat green">2.0x</div>
+    <div class="method-desc">4ホライズン（H1〜Ultra）での意味的実現度を測定。シグナルはベースライン文書の約2倍の実現スコアを示す。方向性・特異性で特に顕著な差。</div>
+  </div>
+  <div class="method-card">
+    <div class="method-name">頻度増加率</div>
+    <div><span class="method-badge badge-valid">有効</span></div>
+    <div class="method-stat green">+16.9pt</div>
+    <div class="method-desc">H2（10年後）での頻度成長率差。シグナル+14.8% vs ベースライン−2.1%。H3・Ultraでも持続的な正の差を確認。</div>
   </div>
 </div>
-<div id="ts-dai-list"></div>
 
-<!-- Top Signals -->
-<h3>トップシグナル <span id="top-n" style="font-size:0.78rem;color:var(--text-muted)"></span></h3>
-<div class="panel" style="overflow-x:auto;padding:0;">
-  <table class="sig-table" id="top-table"></table>
+<!-- Section 2: Horizon Chart -->
+<h2>4ホライズン実現度推移</h2>
+<div class="panel">
+  <div class="panel-title">シグナル vs ベースライン — セマンティック実現スコア</div>
+  <canvas id="horizon-canvas" height="240"></canvas>
+  <div style="display:flex;gap:20px;margin-top:10px;font-size:0.72rem;color:var(--text-secondary);">
+    <span><span style="display:inline-block;width:12px;height:12px;background:#CC1400;vertical-align:middle;margin-right:4px;"></span>シグナル</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:#D9D9D9;vertical-align:middle;margin-right:4px;"></span>ベースライン</span>
+  </div>
 </div>
+
+<!-- Section 3: Frequency Growth -->
+<h2>頻度増加率比較</h2>
+<div class="panel">
+  <div class="panel-title">各ホライズンでの頻度成長率 (%) — シグナル vs ベースライン</div>
+  <canvas id="freq-canvas" height="220"></canvas>
+  <div style="display:flex;gap:20px;margin-top:10px;font-size:0.72rem;color:var(--text-secondary);">
+    <span><span style="display:inline-block;width:12px;height:12px;background:#CC1400;vertical-align:middle;margin-right:4px;"></span>シグナル</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:#2563EB;vertical-align:middle;margin-right:4px;"></span>ベースライン</span>
+  </div>
+</div>
+
+<!-- Section 4: Semantic 6-Dimension -->
+<h2>セマンティック6次元分析</h2>
+<div class="panel">
+  <div class="panel-title">シグナル vs ベースライン — 6次元スコア比較</div>
+  <table class="sem-table">
+    <thead>
+      <tr>
+        <th>次元</th>
+        <th>シグナル</th>
+        <th>ベースライン</th>
+        <th>差分</th>
+        <th>比較バー</th>
+        <th>評価</th>
+      </tr>
+    </thead>
+    <tbody id="sem-tbody"></tbody>
+  </table>
+</div>
+
+<!-- Section 5: Realization Status -->
+<h2>実現ステータス分布</h2>
+<div class="grid-2">
+  <div class="panel">
+    <div class="panel-title">シグナル (n=650)</div>
+    <div class="status-row" id="status-sig"></div>
+    <div class="status-legend" id="status-sig-legend"></div>
+    <div style="margin-top:12px;" id="status-sig-bars"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">ベースライン (n=100)</div>
+    <div class="status-row" id="status-bl"></div>
+    <div class="status-legend" id="status-bl-legend"></div>
+    <div style="margin-top:12px;" id="status-bl-bars"></div>
+  </div>
+</div>
+
+<!-- Section 6: Type Analysis -->
+<h2>タイプ別予測力</h2>
+<div class="grid-3" id="type-cards" style="margin-bottom:16px;"></div>
+
+<!-- Section 7: Decade Heatmap -->
+<h2>年代別実現度ヒートマップ</h2>
+<div class="panel">
+  <div class="panel-title">年代 × ホライズン — セマンティック実現スコア</div>
+  <div class="hm-wrap"><table class="hm" id="hm-table"></table></div>
+  <div style="font-size:0.68rem;color:var(--text-muted);margin-top:8px;">濃い赤ほど高い実現スコアを示す。白〜薄赤は低実現。</div>
+</div>
+
+<!-- Section 8: Top Signals -->
+<h2>トップシグナル</h2>
+<div style="overflow-x:auto;border:1px solid var(--border-light);">
+  <table class="sig-table" id="top-table">
+    <thead><tr>
+      <th>#</th>
+      <th data-sort="year">Year</th>
+      <th>シグナル名</th>
+      <th data-sort="type">タイプ</th>
+      <th data-sort="score">Composite</th>
+      <th data-sort="realization">Realization</th>
+    </tr></thead>
+    <tbody id="top-tbody"><tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted);font-size:0.8rem;">データを読み込み中...</td></tr></tbody>
+  </table>
+</div>
+<button class="load-more" id="load-more-btn" style="display:none;" onclick="showMoreSignals()">さらに表示（+50件）</button>
+
+<!-- Section 9: Type Distribution -->
+<h2>シグナルタイプ分布</h2>
+<div class="panel">
+  <div class="panel-title">タイプ別シグナル件数 (総計 7,564件)</div>
+  <div id="type-dist"></div>
+</div>
+
+<!-- Section 10: Conclusion -->
+<h2>結論</h2>
+<div class="conclusion">
+  <div class="conclusion-title">検証サマリー — シグナルは何を教えてくれるか</div>
+  <div class="conclusion-item">シグナルは<strong>方向感知器</strong>として機能する。タイミング予測はできない。セマンティック次元の「timing」では逆にベースラインが上回り（3.01 vs 4.04）、タイミング精度の限界が明確に示された。</div>
+  <div class="conclusion-item"><strong>H2（10年後）以降で有意な予測力が発現</strong>する。H1では頻度差わずか+0.5ptに対し、H2では+16.9ptへ急拡大。短期予測よりも中長期変化の方向性把握に適している。</div>
+  <div class="conclusion-item"><strong>paradigm_shift が最も高い実現度と頻度増加率</strong>を示す。H3実現度4.04、H2頻度成長+25.7%。構造変化を示すシグナルは、より明確に将来を示唆する。</div>
+  <div class="conclusion-item">KOR法（ランダム比較）では有意差なし（0.97倍）。単純なランキングでなく、<strong>意味的・時系列的な文脈</strong>でシグナルを評価することが重要。</div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div>分析日: 2026年4月26日 &nbsp;|&nbsp; データソース: SG Database (7,564 signals), sg_horizon_verification.json, sg_frequency_verification.json, sg_semantic_verification.json, sg_top_signals.json</div>
+  <div style="margin-top:4px;"><a href="sg_verification_report.md">検証レポート全文</a> &nbsp;|&nbsp; 解析手法: Semantic Matching (4-Horizon), Frequency Growth Rate (KDE), KOR Randomization Test</div>
+</footer>
 
 <script>
-let DATA = null; // loaded via fetch
-
-// Utility
-const fmt = (n,d=1) => n==null?'-':Number(n).toFixed(d);
-const pct = n => fmt(n,1)+'%';
-const gradeHTML = g => `<span class="grade grade-${g}">${g}</span>`;
-function sbHTML(v,max=1,color='var(--accent-warm)') {
-  const w = Math.max(0,Math.min(100,(v/max)*100));
-  return `<span class="sb"><span class="sb-fill" style="width:${w}%;background:${color}"></span></span>${fmt(v,3)}`;
-}
-function heatColor(v,min,max) {
-  if(v==null) return 'transparent';
-  const t = max===min?0.5:(v-min)/(max-min);
-  return `rgba(204,20,0,${(0.08+t*0.5).toFixed(2)})`;
+/* ============================================================
+   Theme
+============================================================ */
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur === 'dark' ? '' : 'dark');
+  setTimeout(() => { renderHorizonChart(); renderFreqChart(); }, 50);
 }
 
-// KPI
-function renderKPI() {
-  const o = DATA.overview;
-  const ms = DATA.mainstream;
-  const avgMS = ms.by_type.reduce((s,t)=>s+t.avg*t.n,0)/ms.by_type.reduce((s,t)=>s+t.n,0);
-  // Update subtitle dynamically
-  const sub = document.getElementById('sg-subtitle');
-  if (sub) sub.textContent = `${o.total_signals.toLocaleString()} Signals (PESTLE ${(o.by_source.pestle||0).toLocaleString()} + Cultural ${(o.by_source.cultural||0).toLocaleString()}) | 1900-2026 | Predictive Power Analysis`;
-  const items = [
-    {v:o.total_signals.toLocaleString(), l:'Total Signals', s:`PESTLE ${o.by_source.pestle} + Cultural ${o.by_source.cultural}`},
-    {v:fmt(o.pps_avg,3), l:'Avg PPS', s:`${fmt(o.pps_min,3)} - ${fmt(o.pps_max,3)}`, a:true},
-    {v:pct(o.realization_dist.find(r=>r.status==='fully_realized')?.pct||0), l:'Fully Realized', s:`${(o.realization_dist.find(r=>r.status==='fully_realized')?.count||0).toLocaleString()} signals`},
-    {v:pct(o.grade_dist.filter(g=>g.grade==='S'||g.grade==='A').reduce((s,g)=>s+g.pct,0)), l:'Grade S+A', s:`${o.grade_dist.filter(g=>g.grade==='S'||g.grade==='A').reduce((s,g)=>s+g.count,0).toLocaleString()} signals`},
-    {v:fmt(avgMS,1)+'yr', l:'Avg Mainstream', s:'signal to mainstream', a:true},
-  ];
-  document.getElementById('kpi').innerHTML = items.map(k=>`<div class="kpi"><div class="kpi-value${k.a?' accent':''}">${k.v}</div><div class="kpi-label">${k.l}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+/* ============================================================
+   Utility
+============================================================ */
+const fmt = (n, d=2) => n == null ? '-' : Number(n).toFixed(d);
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+function heatColor(v, min, max) {
+  if (v == null) return 'transparent';
+  const t = max === min ? 0.5 : (v - min) / (max - min);
+  const alpha = (0.06 + t * 0.52).toFixed(2);
+  return `rgba(204,20,0,${alpha})`;
+}
+function heatTextColor(v, min, max) {
+  const t = max === min ? 0.5 : (v - min) / (max - min);
+  return t > 0.55 ? '#ffffff' : 'var(--text)';
 }
 
-// Era
-function renderEra() {
-  const eraOrder = ['pre-war','world-wars','cold-war','digital-revolution','platform-era','ai-era'];
-  const eras = DATA.era_summary.slice().sort((a,b)=>eraOrder.indexOf(a.era)-eraOrder.indexOf(b.era));
-  const maxPPS = Math.max(...eras.map(e=>e.avg_predictive_power));
-  const labels = {'pre-war':'戦前 (1900-1913)','world-wars':'世界大戦 (1914-1944)','cold-war':'冷戦 (1945-1990)','digital-revolution':'デジタル革命 (1991-2009)','platform-era':'プラットフォーム (2010-2019)','ai-era':'AI時代 (2020-)'};
-  document.getElementById('era-chart').innerHTML = eras.map(e=>`<div class="bar-group"><div class="bar-label">${labels[e.era]||e.era} (n=${e.total_signals})</div><div class="bar-track"><div class="bar-fill" style="width:${(e.avg_predictive_power/maxPPS*100).toFixed(1)}%;background:var(--accent-warm)"></div></div><div class="bar-val">${fmt(e.avg_predictive_power,3)}</div></div>`).join('');
-}
+/* ============================================================
+   Horizon Bar Chart
+============================================================ */
+const HORIZON_DATA = {
+  labels: ['H1 (+5年)', 'H2 (+10年)', 'H3 (+20年)', 'Ultra (+30年)'],
+  signal:   [3.22, 3.22, 3.41, 3.74],
+  baseline: [1.62, 1.74, 1.56, 1.66]
+};
 
-// Grade + Realization
-function renderGR() {
-  const grades = DATA.overview.grade_dist;
-  const maxG = Math.max(...grades.map(g=>g.count));
-  const gc = {S:'var(--accent-warm)',A:'var(--green)',B:'var(--blue)',C:'var(--orange)',D:'var(--red)'};
-  document.getElementById('grade-chart').innerHTML = grades.map(g=>`<div class="bar-group"><div class="bar-label">${gradeHTML(g.grade)} ${g.count.toLocaleString()}</div><div class="bar-track"><div class="bar-fill" style="width:${(g.count/maxG*100).toFixed(1)}%;background:${gc[g.grade]||'var(--text-muted)'}"></div></div><div class="bar-val">${pct(g.pct)}</div></div>`).join('');
-
-  const reals = DATA.overview.realization_dist;
-  const maxR = Math.max(...reals.map(r=>r.count));
-  const rl = {fully_realized:'Full',substantially_realized:'Substantial',partially_realized:'Partial',pending:'Pending',falsified:'Falsified'};
-  const rc = {fully_realized:'var(--green)',substantially_realized:'var(--cyan)',partially_realized:'var(--orange)',pending:'var(--text-muted)',falsified:'var(--red)'};
-  document.getElementById('real-chart').innerHTML = reals.map(r=>`<div class="bar-group"><div class="bar-label">${rl[r.status]||r.status} (${r.count.toLocaleString()})</div><div class="bar-track"><div class="bar-fill" style="width:${(r.count/maxR*100).toFixed(1)}%;background:${rc[r.status]||'var(--text-muted)'}"></div></div><div class="bar-val">${pct(r.pct)}</div></div>`).join('');
-}
-
-// Mainstream
-function renderMS() {
-  const ms = DATA.mainstream;
-  const maxAvg = Math.max(...ms.by_type.map(t=>t.avg));
-  const tc = {emerging_trend:'var(--green)',weak_signal:'var(--cyan)',paradigm_shift:'var(--purple)',counter_trend:'var(--orange)',wild_card:'var(--red)'};
-  const tl = {emerging_trend:'Emerging Trend',weak_signal:'Weak Signal',paradigm_shift:'Paradigm Shift',counter_trend:'Counter Trend',wild_card:'Wild Card'};
-  document.getElementById('ms-type').innerHTML = ms.by_type.map(t=>`<div class="bar-group"><div class="bar-label">${tl[t.type]||t.type} (n=${t.n})</div><div class="bar-track"><div class="bar-fill" style="width:${(t.avg/maxAvg*100).toFixed(1)}%;background:${tc[t.type]||'var(--text-muted)'}"></div></div><div class="bar-val">${t.avg}yr</div></div>`).join('');
-
-  const maxP = Math.max(...ms.by_phase.map(p=>p.count));
-  const pl = {immediate:'即時 (<2yr)',['short-term']:'短期 (2-5yr)',['medium-term']:'中期 (5-10yr)',['long-term']:'長期 (10-20yr)',generational:'世代 (20yr+)'};
-  document.getElementById('ms-phase').innerHTML = ms.by_phase.map(p=>`<div class="bar-group"><div class="bar-label">${pl[p.phase]||p.phase}</div><div class="bar-track"><div class="bar-fill" style="width:${(p.count/maxP*100).toFixed(1)}%;background:var(--accent-warm)"></div></div><div class="bar-val">${p.count} (${pct(p.pct)})</div></div>`).join('');
-
-  // Decade chart
-  const c = document.getElementById('ms-canvas');
-  c.width = c.parentElement.clientWidth - 32;
-  const ctx = c.getContext('2d');
-  const W=c.width, H=c.height, pad={t:20,r:30,b:36,l:50};
-  const pW=W-pad.l-pad.r, pH=H-pad.t-pad.b;
-  ctx.clearRect(0,0,W,H);
-
-  const dec = ms.by_decade;
-  const maxY = Math.max(...dec.map(d=>Math.max(d.avg,d.ws_avg||0,d.et_avg||0,d.ps_avg||0)));
-  const gap = pW/dec.length;
-
-  // Grid
-  ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border-light').trim()||'#EEE';
-  for(let i=0;i<=4;i++){const y=pad.t+pH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim()||'#6B6B6B';ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText(fmt(maxY-maxY*i/4,0)+'yr',pad.l-6,y+4);}
-
-  // Lines
-  const lines=[{k:'avg',c:'#CC1400',l:'Total Avg'},{k:'et_avg',c:'#16A34A',l:'Emerging'},{k:'ws_avg',c:'#0891B2',l:'Weak Signal'},{k:'ps_avg',c:'#7C3AED',l:'Paradigm'}];
-  lines.forEach(ln=>{
-    ctx.strokeStyle=ln.c;ctx.lineWidth=2;ctx.beginPath();
-    dec.forEach((d,i)=>{const v=d[ln.k];if(v==null)return;const x=pad.l+i*gap+gap/2;const y=pad.t+pH-(v/maxY)*pH;if(i===0||dec[i-1][ln.k]==null)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
-    ctx.stroke();
-    dec.forEach((d,i)=>{const v=d[ln.k];if(v==null)return;const x=pad.l+i*gap+gap/2;const y=pad.t+pH-(v/maxY)*pH;ctx.fillStyle=ln.c;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});
-  });
-
-  // X labels
-  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim()||'#6B6B6B';ctx.font='10px system-ui';ctx.textAlign='center';
-  dec.forEach((d,i)=>{ctx.fillText(d.decade,pad.l+i*gap+gap/2,H-pad.b+16);});
-
-  // Legend
-  lines.forEach((ln,i)=>{const lx=pad.l+i*90;ctx.fillStyle=ln.c;ctx.fillRect(lx,6,12,3);ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-secondary').trim()||'#555';ctx.font='10px system-ui';ctx.textAlign='left';ctx.fillText(ln.l,lx+16,10);});
-}
-
-// Type cards
-function renderTypes() {
-  const types = DATA.type_summary;
-  const tl = {emerging_trend:'Emerging Trend',weak_signal:'Weak Signal',paradigm_shift:'Paradigm Shift',counter_trend:'Counter Trend',wild_card:'Wild Card'};
-  const ms = DATA.mainstream.by_type;
-  document.getElementById('type-cards').innerHTML = types.map(t=>{
-    const m = ms.find(m=>m.type===t.signal_type);
-    return `<div class="type-card"><div class="type-name">${tl[t.signal_type]||t.signal_type}</div><div class="type-stat">${t.total.toLocaleString()} signals</div><div class="type-big">${fmt(t.avg_pps,3)}</div><div class="type-stat">PPS (${fmt(t.min_pps,3)}-${fmt(t.max_pps,3)})</div><div class="type-stat" style="margin-top:6px">Mainstream: ${m?m.avg+'yr':'-'} | Realization: ${fmt(t.avg_realization,3)}</div></div>`;
-  }).join('');
-}
-
-// Heatmap
-function renderHM(metric) {
-  const data = DATA.heatmap;
-  const decades = [...new Set(data.map(d=>d.decade))].sort();
-  const catMap = {'政治':'Political','経済':'Economic','社会':'Social','技術':'Technological','法律':'Legal','環境':'Environmental'};
-  const cats = ['Political','Economic','Social','Technological','Legal','Environmental'];
-  const lookup = {};
-  data.forEach(d=>{const cat=catMap[d.category]||d.category;if(!cats.includes(cat))return;const k=`${d.decade}|${cat}`;if(!lookup[k])lookup[k]=[];lookup[k].push(d[metric]);});
-  Object.keys(lookup).forEach(k=>{const arr=lookup[k].filter(v=>v!=null);lookup[k]=arr.length?arr.reduce((s,v)=>s+v,0)/arr.length:null;});
-  const vals=Object.values(lookup).filter(v=>v!=null&&v>0);
-  const mn=Math.min(...vals),mx=Math.max(...vals);
-  const fmtV = metric==='count'?v=>Math.round(v):metric==='realization_rate'?v=>pct(v):v=>fmt(v,3);
-
-  let h='<table class="hm"><thead><tr><th></th>';
-  decades.forEach(d=>h+=`<th>${d}</th>`);
-  h+='</tr></thead><tbody>';
-  cats.forEach(cat=>{h+=`<tr><td class="rl">${cat}</td>`;decades.forEach(dec=>{const v=lookup[`${dec}|${cat}`];const bg=v?heatColor(v,mn,mx):'transparent';h+=`<td><div class="hm-cell" style="background:${bg}">${v!=null?fmtV(v):'-'}</div></td>`;});h+='</tr>';});
-  h+='</tbody></table>';
-  document.getElementById('hm-wrap').innerHTML=h;
-}
-
-function setupHMTabs() {
-  document.querySelectorAll('#hm-tabs .tab').forEach(tab=>{
-    tab.addEventListener('click',()=>{
-      document.querySelectorAll('#hm-tabs .tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
-      renderHM(tab.dataset.m);
-    });
-  });
-}
-
-// Timeline
-function renderTL() {
-  const tl = DATA.timeline;
-  const c = document.getElementById('tl-canvas');
-  c.width = c.parentElement.clientWidth - 32;
-  const ctx=c.getContext('2d');
-  const W=c.width,H=c.height,pad={t:24,r:30,b:36,l:50};
-  const pW=W-pad.l-pad.r,pH=H-pad.t-pad.b;
-  ctx.clearRect(0,0,W,H);
-
-  const maxPPS=Math.max(...tl.map(t=>t.avg_pps));
-  const minPPS=Math.min(...tl.map(t=>t.avg_pps));
-  const range=maxPPS-minPPS||0.1;
-  const gap=pW/tl.length;
-
-  ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--border-light').trim()||'#EEE';
-  for(let i=0;i<=4;i++){const y=pad.t+pH*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText(fmt(maxPPS-range*i/4,3),pad.l-6,y+4);}
-
-  const metrics=[{k:'avg_pps',c:'#CC1400',l:'PPS'},{k:'avg_realization',c:'#16A34A',l:'Realization'},{k:'avg_direction',c:'#0891B2',l:'Direction'},{k:'avg_timing',c:'#EA580C',l:'Timing'}];
-  metrics.forEach(m=>{
-    ctx.strokeStyle=m.c;ctx.lineWidth=2;ctx.beginPath();
-    tl.forEach((t,i)=>{const x=pad.l+i*gap+gap/2;const y=pad.t+pH-((t[m.k]-minPPS)/range)*pH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
-    ctx.stroke();
-    tl.forEach((t,i)=>{const x=pad.l+i*gap+gap/2;const y=pad.t+pH-((t[m.k]-minPPS)/range)*pH;ctx.fillStyle=m.c;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});
-  });
-  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='center';
-  tl.forEach((t,i)=>ctx.fillText(t.decade,pad.l+i*gap+gap/2,H-pad.b+16));
-  metrics.forEach((m,i)=>{const lx=pad.l+i*80;ctx.fillStyle=m.c;ctx.fillRect(lx,8,12,3);ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-secondary').trim();ctx.font='10px system-ui';ctx.textAlign='left';ctx.fillText(m.l,lx+16,12);});
-}
-
-// Scatter
-let allSignals = null;
-async function renderScatter() {
-  if(!allSignals){
-    try{const r=await fetch('data/sg_all_signals.json');allSignals=await r.json();}catch(e){allSignals=[];console.error('Failed to load scatter data');}
-  }
-  const c=document.getElementById('sc-canvas');
-  c.width=c.parentElement.clientWidth;
-  const ctx=c.getContext('2d');
-  const W=c.width,H=c.height,pad={t:16,r:20,b:36,l:50};
-  const pW=W-pad.l-pad.r,pH=H-pad.t-pad.b;
-  ctx.clearRect(0,0,W,H);
-
-  const tf=document.getElementById('f-type')?.value||'all';
-  const sf=document.getElementById('f-src')?.value||'all';
-  const filtered=allSignals.filter(s=>{if(tf!=='all'&&s.signal_type!==tf)return false;if(sf!=='all'&&s.source!==sf)return false;return true;});
-
-  const xMin=2,xMax=10,yMin=0.2,yMax=1.0;
-  ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--border-light').trim()||'#EEE';
-  for(let i=0;i<=5;i++){const y=pad.t+pH*i/5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText(fmt(yMax-(yMax-yMin)*i/5,2),pad.l-6,y+4);}
-
-  const gc={S:'#CC1400',A:'#16A34A',B:'#2563EB',C:'#EA580C',D:'#DC2626',F:'#6B6B6B'};
-  filtered.forEach(s=>{
-    const x=pad.l+((s.composite_score-xMin)/(xMax-xMin))*pW;
-    const y=pad.t+((yMax-s.predictive_power_score)/(yMax-yMin))*pH;
-    if(x<pad.l||x>W-pad.r||y<pad.t||y>H-pad.b)return;
-    ctx.fillStyle=gc[s.predictive_power_grade]||'#666';ctx.globalAlpha=0.45;
-    ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fill();
-  });
-  ctx.globalAlpha=1;
-  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--text-muted').trim();ctx.font='10px system-ui';ctx.textAlign='center';
-  ctx.fillText('Composite Score',pad.l+pW/2,H-4);
-  ctx.textAlign='right';ctx.fillText(`${filtered.length.toLocaleString()} signals`,W-pad.r,H-pad.b+28);
-
-  if(!document.getElementById('f-type')){
-    const types=[...new Set(allSignals.map(s=>s.signal_type))].filter(t=>allSignals.filter(s=>s.signal_type===t).length>5).sort();
-    document.getElementById('sc-filters').innerHTML=`<div><label>Type</label> <select id="f-type"><option value="all">All</option>${types.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div><div><label>Source</label> <select id="f-src"><option value="all">All</option><option value="pestle">PESTLE</option><option value="cultural">Cultural</option></select></div>`;
-    document.getElementById('f-type').addEventListener('change',renderScatter);
-    document.getElementById('f-src').addEventListener('change',renderScatter);
-  }
-}
-
-// Top table
-async function renderTop() {
-  let signals;
-  try{const r=await fetch('data/sg_top_signals.json');signals=await r.json();}catch(e){signals=[];console.error('Failed to load top signals');}
-  signals=signals.slice(0,50);
-  document.getElementById('top-n').textContent=`Top ${signals.length}`;
-  const tl={emerging_trend:'ET',weak_signal:'WS',paradigm_shift:'PS',counter_trend:'CT',wild_card:'WC'};
-  const rl={fully_realized:'Full',substantially_realized:'Subst.',partially_realized:'Partial',pending:'Pending',falsified:'False'};
-  let h='<thead><tr><th>#</th><th>Grade</th><th>Signal</th><th>Type</th><th>Decade</th><th>PPS</th><th>Realization</th><th>Direction</th><th>Timing</th></tr></thead><tbody>';
-  signals.forEach((s,i)=>{
-    h+=`<tr><td>${i+1}</td><td>${gradeHTML(s.predictive_power_grade)}</td><td class="sig-name" title="${s.signal_name}">${s.signal_name}</td><td>${tl[s.signal_type]||s.signal_type}</td><td>${s.decade||'-'}</td><td>${sbHTML(s.predictive_power_score,1,'var(--accent-warm)')}</td><td>${rl[s.realization_status]||s.realization_status}</td><td>${fmt(s.direction_accuracy,3)}</td><td>${fmt(s.timing_accuracy,3)}</td></tr>`;
-  });
-  h+='</tbody>';
-  document.getElementById('top-table').innerHTML=h;
-}
-
-// Init
-(async function init() {
-  const res = await fetch('data/sg_verification.json');
-  DATA = await res.json();
-  renderKPI(); renderEra(); renderGR(); renderMS(); renderTypes(); renderHM('avg_pps'); setupHMTabs(); renderTL(); renderScatter(); renderTop();
-})();
-
-// Megatrend verification (18 Futurology Themes)
-let MT_DATA = null; // loaded via fetch
-function renderMT() {
-  const vc = {'Strong Trend':'var(--accent-warm)','Moderate Trend':'var(--orange)','Weak Trend':'var(--text-muted)','No Trend':'var(--red)'};
-  const vl = {'Strong Trend':'太いトレンド','Moderate Trend':'中程度','Weak Trend':'弱い','No Trend':'なし'};
-  const maxTotal = Math.max(...MT_DATA.map(m=>m.pestle_total+m.cultural_total));
-  
-  let h = '';
-  MT_DATA.forEach(m => {
-    const total = m.pestle_total + m.cultural_total;
-    const barW = (total/maxTotal*100).toFixed(1);
-    const color = vc[m.verdict]||'var(--text-muted)';
-    
-    const ts = m.timeseries || [];
-    const maxTS = Math.max(...ts.map(t=>t.pestle+t.cultural), 1);
-    const sparkPts = ts.map((t,i) => {
-      const x = (i/(ts.length-1||1))*120;
-      const y = 28 - (((t.pestle+t.cultural)/maxTS)*24);
-      return `${x},${y}`;
-    }).join(' ');
-    
-    h += `<div class="panel" style="margin-bottom:8px;padding:12px 16px;">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div style="width:36px;font-weight:700;color:${color};font-size:0.78rem;font-family:monospace;">${m.score}</div>
-        <div style="width:24px;font-weight:700;color:var(--text-muted);font-size:0.72rem;font-family:monospace;">#${m.no}</div>
-        <div style="flex:1;min-width:200px;">
-          <div style="font-weight:600;font-size:0.88rem;">${m.name}</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);">${m.name_en}</div>
-        </div>
-        <div style="width:80px;text-align:center;">
-          <div style="font-size:0.72rem;font-weight:600;color:${color}">${vl[m.verdict]||m.verdict}</div>
-        </div>
-        <div style="width:140px;">
-          <div class="bar-track" style="height:14px;">
-            <div class="bar-fill" style="width:${barW}%;background:${color};opacity:0.7"></div>
-          </div>
-          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">
-            P:${m.pestle_total.toLocaleString()} C:${m.cultural_total.toLocaleString()} x${m.growth}
-          </div>
-        </div>
-        <svg width="124" height="30" style="flex-shrink:0;">
-          <polyline points="${sparkPts}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.7"/>
-        </svg>
-      </div>
-      <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:6px;">
-        ${m.reasons.join(' / ')}
-      </div>
-    </div>`;
-  });
-  
-  document.getElementById('mt-list').innerHTML = h;
-}
-(async function loadMT() {
-  try {
-    const res = await fetch('data/mt_themes.json');
-    const themes = await res.json();
-    MT_DATA = themes.map(t => ({
-      no: t.no, name: t.name, name_en: t.name_en || '',
-      score: t.score, verdict: t.verdict, verdict_ja: t.verdict_ja || t.verdict,
-      reasons: t.reasons || [],
-      pestle_total: t.pestle_total, cultural_total: t.cultural_total,
-      growth: t.growth, coverage: t.coverage, peak_year: t.peak_year,
-      categories: t.pestle_categories || {},
-      timeseries: t.timeseries || [],
-    }));
-    renderMT();
-  } catch(e) { console.error('Failed to load MT data', e); }
-})();
-
-// 18 Theme x Chu-Item Timeseries Charts
-let CHU_TS = null;
-const THEME_COLORS = [
-  '#CC1400','#2563EB','#16A34A','#EA580C','#7C3AED','#0891B2',
-  '#DC2626','#CA8A04','#4F46E5','#059669','#D97706','#9333EA',
-  '#0D9488','#E11D48','#6366F1','#15803D','#C2410C','#7C3AED'
-];
-const CHU_COLORS = ['#CC1400','#2563EB','#16A34A','#EA580C','#7C3AED','#0891B2','#DC2626','#CA8A04'];
-
-async function loadChuTS() {
-  if (CHU_TS) return;
-  try {
-    const r = await fetch('data/sg_chu_ts.json');
-    CHU_TS = await r.json();
-    renderDaiList();
-    document.getElementById('ts-mode').addEventListener('change', renderDaiList);
-    document.getElementById('ts-range').addEventListener('change', renderDaiList);
-  } catch(e) { console.error('Failed to load chu timeseries', e); }
-}
-
-function getFilteredChu(ts) {
-  const range = document.getElementById('ts-range')?.value || 'all';
-  const minYear = range === 'all' ? 1900 : parseInt(range);
-  return ts.filter(t => t.y >= minYear);
-}
-
-function drawChuChart(canvas, items, daiColor) {
-  const mode = document.getElementById('ts-mode')?.value || 'absolute';
+function renderHorizonChart() {
+  const canvas = document.getElementById('horizon-canvas');
+  canvas.width = canvas.parentElement.clientWidth - 32;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-  const pad = { t: 14, r: 10, b: 24, l: 36 };
+  const pad = { t: 24, r: 20, b: 44, l: 56 };
   const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
   ctx.clearRect(0, 0, W, H);
 
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridColor = isDark ? '#2A2A2A' : '#EEEEEE';
-  const mutedColor = isDark ? '#8A8A8A' : '#6B6B6B';
-
-  // Collect all years
-  const allYears = new Set();
-  items.forEach(it => {
-    const ts = getFilteredChu(it.ts);
-    ts.forEach(t => allYears.add(t.y));
-  });
-  const years = [...allYears].sort((a,b) => a - b);
-  if (!years.length) return;
-
-  // Max value across all items
-  let maxV = 1;
-  items.forEach(it => {
-    const ts = getFilteredChu(it.ts);
-    ts.forEach(t => {
-      const v = mode === 'rate' ? t.pr + t.cr : t.p + t.c;
-      if (v > maxV) maxV = v;
-    });
-  });
-
-  const gap = pW / (years.length - 1 || 1);
+  const maxV = 5;
+  const n = HORIZON_DATA.labels.length;
+  const groupW = pW / n;
+  const barW = Math.min(groupW * 0.32, 40);
+  const gap = barW * 0.4;
 
   // Grid
-  ctx.strokeStyle = gridColor; ctx.lineWidth = 0.5;
-  for (let i = 0; i <= 3; i++) {
-    const y = pad.t + pH * i / 3;
+  ctx.strokeStyle = cssVar('--border-light'); ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.t + pH * i / 5;
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.fillStyle = cssVar('--text-muted'); ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+    ctx.fillText(fmt(maxV - maxV * i / 5, 1), pad.l - 8, y + 4);
   }
-  ctx.fillStyle = mutedColor; ctx.font = '9px system-ui'; ctx.textAlign = 'right';
-  ctx.fillText(maxV >= 1000 ? (maxV/1000).toFixed(1)+'K' : maxV.toString(), pad.l - 3, pad.t + 8);
-  ctx.fillText('0', pad.l - 3, pad.t + pH + 4);
 
-  // Draw each chu item line
-  items.forEach((it, idx) => {
-    const ts = getFilteredChu(it.ts);
-    const tsMap = {};
-    ts.forEach(t => tsMap[t.y] = mode === 'rate' ? t.pr + t.cr : t.p + t.c);
-    const color = CHU_COLORS[idx % CHU_COLORS.length];
+  HORIZON_DATA.labels.forEach((label, i) => {
+    const cx = pad.l + i * groupW + groupW / 2;
+    const sigH = (HORIZON_DATA.signal[i] / maxV) * pH;
+    const blH = (HORIZON_DATA.baseline[i] / maxV) * pH;
 
-    // Area
-    ctx.beginPath();
-    let started = false;
-    let lastX = pad.l;
-    years.forEach((yr, i) => {
-      const v = tsMap[yr] || 0;
-      const x = pad.l + i * gap;
-      const y = pad.t + pH - (v / maxV) * pH;
-      if (!started) { ctx.moveTo(x, y); started = true; }
-      else ctx.lineTo(x, y);
-      lastX = x;
-    });
-    ctx.lineTo(lastX, pad.t + pH);
-    ctx.lineTo(pad.l, pad.t + pH);
-    ctx.closePath();
-    ctx.fillStyle = color + '0D';
-    ctx.fill();
+    // Signal bar
+    ctx.fillStyle = '#CC1400';
+    const sx = cx - barW - gap / 2;
+    ctx.fillRect(sx, pad.t + pH - sigH, barW, sigH);
 
-    // Line
-    ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.8;
-    ctx.beginPath(); started = false;
-    years.forEach((yr, i) => {
-      const v = tsMap[yr] || 0;
-      const x = pad.l + i * gap;
-      const y = pad.t + pH - (v / maxV) * pH;
-      if (!started) { ctx.moveTo(x, y); started = true; }
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  });
+    // Baseline bar
+    ctx.fillStyle = '#D9D9D9';
+    const bx = cx + gap / 2;
+    ctx.fillRect(bx, pad.t + pH - blH, barW, blH);
 
-  // X labels
-  ctx.fillStyle = mutedColor; ctx.font = '9px system-ui'; ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(years.length / 6));
-  years.forEach((yr, i) => {
-    if (i % step === 0 || i === years.length - 1) ctx.fillText(yr, pad.l + i * gap, H - 4);
-  });
+    // Value labels
+    ctx.fillStyle = '#CC1400'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(fmt(HORIZON_DATA.signal[i], 2), sx + barW / 2, pad.t + pH - sigH - 5);
+    ctx.fillStyle = cssVar('--text-muted'); ctx.font = '10px system-ui';
+    ctx.fillText(fmt(HORIZON_DATA.baseline[i], 2), bx + barW / 2, pad.t + pH - blH - 5);
 
-  // Legend
-  ctx.font = '9px system-ui'; ctx.textAlign = 'left';
-  items.forEach((it, idx) => {
-    const color = CHU_COLORS[idx % CHU_COLORS.length];
-    const lx = pad.l + 4;
-    const ly = pad.t + 4 + idx * 12;
-    ctx.fillStyle = color;
-    ctx.fillRect(lx, ly, 8, 3);
-    ctx.fillStyle = mutedColor;
-    const total = it.pestle_total + it.cultural_total;
-    ctx.fillText(`${it.label}: ${it.chu_name.substring(0,18)} (${total.toLocaleString()})`, lx + 12, ly + 4);
+    // X label
+    ctx.fillStyle = cssVar('--text-secondary'); ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(label, cx, H - 6);
   });
 }
 
-function renderDaiList() {
-  if (!CHU_TS) return;
-  const container = document.getElementById('ts-dai-list');
+/* ============================================================
+   Frequency Growth Chart
+============================================================ */
+const FREQ_DATA = {
+  labels: ['H1 (+5年)', 'H2 (+10年)', 'H3 (+20年)', 'Ultra (+30年)'],
+  signal:   [16.3, 14.8, 16.2, 13.6],
+  baseline: [15.8, -2.1, -2.7,  2.7]
+};
 
-  // Group by dai_no
-  const grouped = {};
-  CHU_TS.forEach(item => {
-    if (!grouped[item.dai_no]) grouped[item.dai_no] = { name: item.dai_name, items: [] };
-    if (item.chu_name === 'Delete') return;
-    grouped[item.dai_no].items.push(item);
+function renderFreqChart() {
+  const canvas = document.getElementById('freq-canvas');
+  canvas.width = canvas.parentElement.clientWidth - 32;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { t: 24, r: 20, b: 44, l: 60 };
+  const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
+  ctx.clearRect(0, 0, W, H);
+
+  const allVals = [...FREQ_DATA.signal, ...FREQ_DATA.baseline];
+  const maxV = Math.max(...allVals) + 2;
+  const minV = Math.min(...allVals) - 2;
+  const range = maxV - minV;
+  const zeroY = pad.t + pH * (maxV / range);
+
+  const n = FREQ_DATA.labels.length;
+  const groupW = pW / n;
+  const barW = Math.min(groupW * 0.32, 40);
+  const gap = barW * 0.4;
+
+  // Grid lines
+  ctx.strokeStyle = cssVar('--border-light'); ctx.lineWidth = 1;
+  const steps = 5;
+  for (let i = 0; i <= steps; i++) {
+    const v = maxV - range * i / steps;
+    const y = pad.t + pH * i / steps;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.fillStyle = cssVar('--text-muted'); ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+    ctx.fillText((v >= 0 ? '+' : '') + fmt(v, 1) + '%', pad.l - 6, y + 4);
+  }
+
+  // Zero line
+  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(W - pad.r, zeroY); ctx.stroke();
+
+  FREQ_DATA.labels.forEach((label, i) => {
+    const cx = pad.l + i * groupW + groupW / 2;
+    const sv = FREQ_DATA.signal[i];
+    const bv = FREQ_DATA.baseline[i];
+
+    const sigH = Math.abs(sv / range * pH);
+    const blH = Math.abs(bv / range * pH);
+    const sigY = sv >= 0 ? zeroY - sigH : zeroY;
+    const blY = bv >= 0 ? zeroY - blH : zeroY;
+
+    // Signal bar
+    ctx.fillStyle = '#CC1400';
+    const sx = cx - barW - gap / 2;
+    ctx.fillRect(sx, sigY, barW, sigH);
+
+    // Baseline bar
+    ctx.fillStyle = '#2563EB';
+    const bx = cx + gap / 2;
+    ctx.fillRect(bx, blY, barW, blH);
+
+    // Value labels
+    ctx.fillStyle = '#CC1400'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
+    const slabelY = sv >= 0 ? sigY - 4 : sigY + sigH + 13;
+    ctx.fillText((sv >= 0 ? '+' : '') + fmt(sv, 1) + '%', sx + barW / 2, slabelY);
+
+    ctx.fillStyle = '#2563EB'; ctx.font = '10px system-ui';
+    const blabelY = bv >= 0 ? blY - 4 : blY + blH + 13;
+    ctx.fillText((bv >= 0 ? '+' : '') + fmt(bv, 1) + '%', bx + barW / 2, blabelY);
+
+    // X label
+    ctx.fillStyle = cssVar('--text-secondary'); ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(label, cx, H - 6);
   });
+}
 
-  let html = '';
-  Object.keys(grouped).sort((a,b) => parseInt(a) - parseInt(b)).forEach(daiNo => {
-    const g = grouped[daiNo];
-    const items = g.items;
-    const daiTotal = items.reduce((s, it) => s + it.pestle_total + it.cultural_total, 0);
-    const color = THEME_COLORS[(parseInt(daiNo) - 1) % THEME_COLORS.length];
+/* ============================================================
+   Semantic 6-Dimension Table
+============================================================ */
+const SEM_DIMS = [
+  { name: 'Realization',  key: 'realization',  sig: 2.52, bl: 1.98 },
+  { name: 'Direction',    key: 'direction',     sig: 5.42, bl: 4.95 },
+  { name: 'Scale',        key: 'scale',         sig: 1.56, bl: 1.04 },
+  { name: 'Timing',       key: 'timing',        sig: 3.01, bl: 4.04, worse: true },
+  { name: 'Specificity',  key: 'specificity',   sig: 4.08, bl: 1.04 },
+  { name: 'Confidence',   key: 'confidence',    sig: 6.62, bl: 5.65 },
+];
 
-    // Chu item summary
-    const chuSummary = items.map((it, idx) => {
-      const t = it.pestle_total + it.cultural_total;
-      const c = CHU_COLORS[idx % CHU_COLORS.length];
-      return `<span style="color:${c};font-weight:500">${it.label}</span> ${it.chu_name.substring(0,20)} <span style="font-family:monospace;font-size:0.72rem">(${t.toLocaleString()})</span>`;
-    }).join(' / ');
+function renderSemTable() {
+  const maxScore = 8;
+  const tbody = document.getElementById('sem-tbody');
+  tbody.innerHTML = SEM_DIMS.map(d => {
+    const diff = d.sig - d.bl;
+    const isWorse = d.worse;
+    const diffClass = isWorse ? 'neg' : (diff >= 0 ? 'pos' : 'neg');
+    const diffSign = diff >= 0 ? '+' : '';
+    const sigPct = (d.sig / maxScore * 100).toFixed(1);
+    const blPct = (d.bl / maxScore * 100).toFixed(1);
+    return `<tr>
+      <td style="font-weight:600;font-size:0.82rem;">${d.name}${isWorse ? ' <span style="font-size:0.66rem;color:var(--text-muted)">※</span>' : ''}</td>
+      <td><span class="score-sig">${fmt(d.sig, 2)}</span></td>
+      <td><span class="score-bl">${fmt(d.bl, 2)}</span></td>
+      <td><span class="score-diff ${diffClass}">${diffSign}${fmt(diff, 2)}</span></td>
+      <td style="min-width:160px;">
+        <div style="margin-bottom:3px;display:flex;align-items:center;gap:4px;">
+          <span class="dim-bar" style="width:${sigPct}%;max-width:100%;height:7px;background:#CC1400;opacity:0.85;display:inline-block;"></span>
+          <span style="font-size:0.66rem;color:var(--accent-warm);">SIG</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span class="dim-bar" style="width:${blPct}%;max-width:100%;height:7px;background:#D9D9D9;display:inline-block;"></span>
+          <span style="font-size:0.66rem;color:var(--text-muted);">BL</span>
+        </div>
+      </td>
+      <td style="font-size:0.72rem;color:${isWorse ? 'var(--red)' : 'var(--green)'};">${isWorse ? '▼ シグナル劣位' : '▲ シグナル優位'}</td>
+    </tr>`;
+  }).join('');
+  // Add note
+  tbody.innerHTML += `<tr><td colspan="6" style="font-size:0.68rem;color:var(--text-muted);padding-top:8px;">※ Timing: シグナルはタイミング精度が低い（タイミング予測は苦手）</td></tr>`;
+}
 
-    html += `<div class="panel" style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <div>
-          <span style="font-weight:700;color:${color};font-family:monospace;font-size:0.82rem;">#${daiNo}</span>
-          <span style="font-weight:600;font-size:0.88rem;margin-left:6px;">${g.name}</span>
-          <span style="font-size:0.72rem;color:var(--text-muted);margin-left:8px;">${daiTotal.toLocaleString()} articles</span>
+/* ============================================================
+   Status Distribution
+============================================================ */
+const STATUS_DATA = {
+  signal: [
+    { key: 'not_realized',   label: '未実現',  count: 506, pct: 77.8, color: '#D9D9D9' },
+    { key: 'emerging',       label: '萌芽',    count: 43,  pct: 6.6,  color: '#0891B2' },
+    { key: 'partially',      label: '部分実現', count: 75,  pct: 11.5, color: '#EA580C' },
+    { key: 'substantially',  label: '実質実現', count: 26,  pct: 4.0,  color: '#CC1400' },
+  ],
+  baseline: [
+    { key: 'not_realized', label: '未実現', count: 94, pct: 94, color: '#D9D9D9' },
+    { key: 'emerging',     label: '萌芽',   count: 6,  pct: 6,  color: '#0891B2' },
+  ]
+};
+
+function renderStatusDist() {
+  ['sig', 'bl'].forEach(key => {
+    const data = key === 'sig' ? STATUS_DATA.signal : STATUS_DATA.baseline;
+    const row = document.getElementById(`status-${key}`);
+    const legend = document.getElementById(`status-${key}-legend`);
+    const bars = document.getElementById(`status-${key}-bars`);
+    const maxCount = Math.max(...data.map(d => d.count));
+
+    row.innerHTML = data.map(d =>
+      `<div class="status-seg" style="width:${d.pct}%;background:${d.color};${d.pct < 8 ? 'font-size:0;' : ''}" title="${d.label}: ${d.count}件 (${d.pct}%)">${d.pct >= 8 ? d.pct.toFixed(1) + '%' : ''}</div>`
+    ).join('');
+
+    legend.innerHTML = data.map(d =>
+      `<span><span class="status-dot" style="background:${d.color};"></span>${d.label}: ${d.count}件 (${d.pct.toFixed(1)}%)</span>`
+    ).join('');
+
+    bars.innerHTML = data.map(d =>
+      `<div class="bar-group"><div class="bar-label">${d.label} (${d.count})</div><div class="bar-track"><div class="bar-fill" style="width:${(d.count/maxCount*100).toFixed(1)}%;background:${d.color};"></div></div><div class="bar-val">${d.pct.toFixed(1)}%</div></div>`
+    ).join('');
+  });
+}
+
+/* ============================================================
+   Type Cards
+============================================================ */
+const TYPE_DATA = [
+  { key: 'paradigm_shift',  label: 'Paradigm Shift',  count: 1118, pct: 14.8, h3_real: 4.04, h2_growth: '+25.7%' },
+  { key: 'wild_card',       label: 'Wild Card',        count: 1024, pct: 13.5, h3_real: 4.21, h2_growth: '-5.6%'  },
+  { key: 'emerging_trend',  label: 'Emerging Trend',   count: 2252, pct: 29.8, h3_real: 3.01, h2_growth: '+19.5%' },
+  { key: 'counter_trend',   label: 'Counter Trend',    count: 1081, pct: 14.3, h3_real: 3.28, h2_growth: '+19.3%' },
+  { key: 'weak_signal',     label: 'Weak Signal',      count: 2085, pct: 27.6, h3_real: 3.23, h2_growth: '+11.5%' },
+];
+
+const TYPE_COLORS = {
+  paradigm_shift: '#CC1400',
+  wild_card:      '#7C3AED',
+  emerging_trend: '#16A34A',
+  counter_trend:  '#EA580C',
+  weak_signal:    '#0891B2',
+};
+
+function renderTypeCards() {
+  const container = document.getElementById('type-cards');
+  container.innerHTML = TYPE_DATA.map(t => {
+    const color = TYPE_COLORS[t.key] || 'var(--accent-warm)';
+    const growthColor = t.h2_growth.startsWith('+') ? 'var(--green)' : 'var(--red)';
+    return `<div class="type-card">
+      <div class="type-name" style="color:${color};">${t.label}</div>
+      <div class="type-count">${t.count.toLocaleString()} signals (${t.pct}%)</div>
+      <div class="type-big" style="color:${color};">${fmt(t.h3_real, 2)}</div>
+      <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:8px;">H3実現度スコア</div>
+      <div class="type-row">
+        <div class="type-metric">
+          <strong style="color:${growthColor};">${t.h2_growth}</strong>
+          H2頻度成長率
         </div>
       </div>
-      <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:8px;">${chuSummary}</div>
-      <canvas id="dai-c-${daiNo}" height="${Math.max(160, 120 + items.length * 12)}"></canvas>
     </div>`;
-  });
-
-  container.innerHTML = html;
-
-  // Draw charts
-  Object.keys(grouped).forEach(daiNo => {
-    const canvas = document.getElementById(`dai-c-${daiNo}`);
-    if (!canvas) return;
-    canvas.width = canvas.parentElement.clientWidth - 32;
-    const items = grouped[daiNo].items;
-    const color = THEME_COLORS[(parseInt(daiNo) - 1) % THEME_COLORS.length];
-    drawChuChart(canvas, items, color);
-  });
+  }).join('');
 }
 
-loadChuTS();
+/* ============================================================
+   Decade Heatmap
+============================================================ */
+const HEATMAP_DATA = [
+  { decade: '1900s', H1: 3.60, H2: 3.63, H3: 3.00, Ultra: 4.73 },
+  { decade: '1910s', H1: 3.50, H2: 3.87, H3: 4.57, Ultra: 4.17 },
+  { decade: '1920s', H1: 2.60, H2: 3.37, H3: 2.80, Ultra: 3.23 },
+  { decade: '1930s', H1: 4.50, H2: 3.40, H3: 3.33, Ultra: 3.73 },
+  { decade: '1940s', H1: 3.83, H2: 3.27, H3: 3.90, Ultra: 4.10 },
+  { decade: '1950s', H1: 2.73, H2: 3.37, H3: 3.13, Ultra: 3.90 },
+  { decade: '1960s', H1: 2.63, H2: 2.40, H3: 3.23, Ultra: 3.13 },
+  { decade: '1970s', H1: 3.13, H2: 3.13, H3: 3.03, Ultra: 3.50 },
+  { decade: '1980s', H1: 3.03, H2: 2.70, H3: 3.37, Ultra: 3.67 },
+  { decade: '1990s', H1: 2.60, H2: 3.03, H3: 3.77, Ultra: 3.20 },
+];
 
-window.addEventListener('resize',()=>{renderMS();renderTL();renderScatter();renderDaiList();});
+function renderHeatmap() {
+  const horizons = ['H1', 'H2', 'H3', 'Ultra'];
+  const allVals = HEATMAP_DATA.flatMap(d => horizons.map(h => d[h]));
+  const minV = Math.min(...allVals);
+  const maxV = Math.max(...allVals);
+
+  let html = '<thead><tr><th style="text-align:left;">年代</th>';
+  horizons.forEach(h => html += `<th>${h}</th>`);
+  html += '</tr></thead><tbody>';
+
+  HEATMAP_DATA.forEach(row => {
+    html += `<tr><td class="rl">${row.decade}</td>`;
+    horizons.forEach(h => {
+      const v = row[h];
+      const bg = heatColor(v, minV, maxV);
+      const fg = heatTextColor(v, minV, maxV);
+      html += `<td><div class="hm-cell" style="background:${bg};color:${fg};">${fmt(v, 2)}</div></td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody>';
+  document.getElementById('hm-table').innerHTML = html;
+}
+
+/* ============================================================
+   Top Signals Table (loaded from JSON)
+============================================================ */
+let allTopSignals = [];
+let displayedCount = 0;
+const PAGE_SIZE = 50;
+
+const TYPE_ABBR = {
+  paradigm_shift: 'PS',
+  wild_card:      'WC',
+  emerging_trend: 'ET',
+  counter_trend:  'CT',
+  weak_signal:    'WS',
+};
+
+const REAL_LABEL = {
+  not_realized:   '未実現',
+  partially:      '部分実現',
+  substantially:  '実質実現',
+  emerging:       '萌芽',
+  not_evaluated:  '未評価',
+};
+
+function renderTopRows(signals, startIdx) {
+  const tbody = document.getElementById('top-tbody');
+  const frag = signals.map((s, i) => {
+    const abbr = TYPE_ABBR[s.signal_type] || s.signal_type;
+    const real = REAL_LABEL[s.realization_status] || s.realization_status || '-';
+    const score = s.composite_score != null ? s.composite_score : (s.score != null ? s.score : null);
+    const scoreHTML = score != null
+      ? `<span class="score-bar"><span class="score-track"><span class="score-fill" style="width:${Math.min(100, score / 10 * 100).toFixed(0)}%;"></span></span>${fmt(score, 2)}</span>`
+      : '-';
+    const realColor = s.realization_status === 'substantially' ? 'var(--green)'
+      : s.realization_status === 'partially' ? 'var(--orange)'
+      : s.realization_status === 'emerging' ? 'var(--cyan)'
+      : 'var(--text-muted)';
+    const color = TYPE_COLORS[s.signal_type] || 'var(--text-muted)';
+    return `<tr>
+      <td style="color:var(--text-muted);font-family:monospace;">${startIdx + i + 1}</td>
+      <td style="font-family:monospace;">${s.year || s.decade || '-'}</td>
+      <td class="sig-name" title="${s.signal_name || s.name || ''}">${s.signal_name || s.name || '-'}</td>
+      <td><span class="type-pill" style="background:${color}22;color:${color};">${abbr}</span></td>
+      <td>${scoreHTML}</td>
+      <td style="color:${realColor};font-size:0.76rem;">${real}</td>
+    </tr>`;
+  }).join('');
+  if (startIdx === 0) {
+    tbody.innerHTML = frag;
+  } else {
+    tbody.innerHTML += frag;
+  }
+}
+
+function showMoreSignals() {
+  const next = allTopSignals.slice(displayedCount, displayedCount + PAGE_SIZE);
+  renderTopRows(next, displayedCount);
+  displayedCount += next.length;
+  if (displayedCount >= allTopSignals.length) {
+    document.getElementById('load-more-btn').style.display = 'none';
+  }
+}
+
+async function loadTopSignals() {
+  try {
+    const res = await fetch('data/sg_top_signals.json');
+    allTopSignals = await res.json();
+    displayedCount = 0;
+    const first = allTopSignals.slice(0, PAGE_SIZE);
+    renderTopRows(first, 0);
+    displayedCount = first.length;
+    if (allTopSignals.length > PAGE_SIZE) {
+      const btn = document.getElementById('load-more-btn');
+      btn.style.display = 'block';
+      btn.textContent = `さらに表示（+${Math.min(PAGE_SIZE, allTopSignals.length - displayedCount)}件 / 残り${allTopSignals.length - displayedCount}件）`;
+    }
+  } catch (e) {
+    document.getElementById('top-tbody').innerHTML = '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.78rem;">データの読み込みに失敗しました（sg_top_signals.json）</td></tr>';
+    console.warn('Failed to load top signals:', e);
+  }
+}
+
+/* ============================================================
+   Type Distribution
+============================================================ */
+function renderTypeDist() {
+  const total = 7564;
+  const types = [
+    { label: 'Emerging Trend', count: 2252, pct: 29.8, color: TYPE_COLORS.emerging_trend },
+    { label: 'Weak Signal',    count: 2085, pct: 27.6, color: TYPE_COLORS.weak_signal    },
+    { label: 'Paradigm Shift', count: 1118, pct: 14.8, color: TYPE_COLORS.paradigm_shift },
+    { label: 'Counter Trend',  count: 1081, pct: 14.3, color: TYPE_COLORS.counter_trend  },
+    { label: 'Wild Card',      count: 1024, pct: 13.5, color: TYPE_COLORS.wild_card      },
+  ];
+  const maxCount = Math.max(...types.map(t => t.count));
+  document.getElementById('type-dist').innerHTML = types.map(t =>
+    `<div class="type-dist-row">
+      <div class="type-dist-label" style="color:${t.color};font-weight:500;">${t.label}</div>
+      <div class="type-dist-track"><div class="type-dist-fill" style="width:${(t.count/maxCount*100).toFixed(1)}%;background:${t.color};opacity:0.75;"></div></div>
+      <div class="type-dist-val">${t.count.toLocaleString()} (${t.pct}%)</div>
+    </div>`
+  ).join('');
+}
+
+/* ============================================================
+   Sort Top Table
+============================================================ */
+let sortCol = null, sortDir = 1;
+document.querySelectorAll('.sig-table th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+    const keyFn = {
+      year: s => s.year || s.decade || 0,
+      type: s => s.signal_type || '',
+      score: s => s.composite_score || s.score || 0,
+      realization: s => s.realization_status || '',
+    }[col] || (s => 0);
+    allTopSignals.sort((a, b) => {
+      const va = keyFn(a), vb = keyFn(b);
+      return va < vb ? -sortDir : va > vb ? sortDir : 0;
+    });
+    displayedCount = 0;
+    renderTopRows(allTopSignals.slice(0, PAGE_SIZE), 0);
+    displayedCount = Math.min(PAGE_SIZE, allTopSignals.length);
+    const btn = document.getElementById('load-more-btn');
+    btn.style.display = displayedCount < allTopSignals.length ? 'block' : 'none';
+  });
+});
+
+/* ============================================================
+   Init
+============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  renderHorizonChart();
+  renderFreqChart();
+  renderSemTable();
+  renderStatusDist();
+  renderTypeCards();
+  renderHeatmap();
+  renderTypeDist();
+  loadTopSignals();
+});
+
+window.addEventListener('resize', () => {
+  renderHorizonChart();
+  renderFreqChart();
+});
 </script>
 </body>
 </html>
