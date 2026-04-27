@@ -753,11 +753,10 @@ def compute_link_counts(si_events, links):
     if rel_path.exists():
         with open(rel_path) as f:
             data = json.load(f)
+        # Count outgoing connections (source only) to avoid inflation
         for r in data.get("relationships", []):
             if r.get("source"):
                 counts[r["source"]] += 1
-            if r.get("target"):
-                counts[r["target"]] += 1
     else:
         directional = {"precedes", "influences", "enables", "informs"}
         for link in links:

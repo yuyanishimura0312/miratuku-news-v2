@@ -77,6 +77,11 @@ def build_person_relationships(events):
         for i in range(len(evs_sorted) - 1):
             for j in range(i + 1, min(i + 4, len(evs_sorted))):  # Connect up to 3 ahead
                 e1, e2 = evs_sorted[i], evs_sorted[j]
+                src = e1.get("title_en", "")
+                tgt = e2.get("title_en", "")
+                # Skip self-loops (same title_en from duplicate entries)
+                if not src or not tgt or src == tgt:
+                    continue
                 y1 = e1.get("event_year") or 0
                 y2 = e2.get("event_year") or 0
                 gap = abs(y2 - y1)
@@ -86,7 +91,7 @@ def build_person_relationships(events):
                     strength = "strong"
                 elif gap <= 10:
                     rel_type = "directly_led_to"
-                    strength = "strong"
+                    strength = "moderate"
                 elif gap <= 30:
                     rel_type = "evolved_into"
                     strength = "moderate"
@@ -95,8 +100,8 @@ def build_person_relationships(events):
                     strength = "weak"
 
                 relationships.append({
-                    "source": e1.get("title_en", ""),
-                    "target": e2.get("title_en", ""),
+                    "source": src,
+                    "target": tgt,
                     "type": rel_type,
                     "strength": strength,
                     "mechanism": "same_person",
@@ -134,13 +139,13 @@ def build_thematic_relationships(events):
             y2 = e2.get("event_year") or 0
             gap = abs(y2 - y1)
 
-            if gap > 100:  # Too far apart
+            if gap > 50:  # Tighter: 100→50
                 continue
 
-            if gap <= 10:
+            if gap <= 5:
                 rel_type = "co-occurrence"
-                strength = "strong"
-            elif gap <= 30:
+                strength = "moderate"
+            elif gap <= 20:
                 rel_type = "thematic_succession"
                 strength = "moderate"
             else:
@@ -165,11 +170,24 @@ def build_thematic_relationships(events):
 # =============================================================================
 
 def build_geographic_relationships(events):
-    """Events in same location within temporal proximity."""
+    """Events in same specific location within tight temporal proximity.
+    Only uses city-level locations (not countries) to avoid spurious matches."""
+    # Country-level names produce too many false positives
+    country_names = {
+        "United States", "France", "Japan", "China", "India", "Germany",
+        "England", "Italy", "Russia", "Spain", "Egypt", "Brazil", "Mexico",
+        "Turkey", "Iran", "Iraq", "Greece", "Korea", "Indonesia", "Nigeria",
+        "South Africa", "Argentina", "Colombia", "Peru", "Chile", "Canada",
+        "Australia", "Pakistan", "Thailand", "Vietnam", "Philippines",
+        "United Kingdom", "Netherlands", "Belgium", "Sweden", "Norway",
+        "Denmark", "Finland", "Poland", "Austria", "Switzerland", "Portugal",
+    }
+
     loc_events = defaultdict(list)
     for e in events:
         loc = (e.get("location_en") or "").strip()
-        if loc and len(loc) > 2:  # Skip empty/short
+        # Skip empty, short, and country-level locations
+        if loc and len(loc) > 2 and loc not in country_names:
             loc_events[loc].append(e)
 
     relationships = []
@@ -179,9 +197,13 @@ def build_geographic_relationships(events):
         evs_sorted = sorted(evs, key=lambda e: e.get("event_year") or 0)
 
         for i in range(len(evs_sorted)):
-            for j in range(i + 1, min(i + 5, len(evs_sorted))):
+            for j in range(i + 1, min(i + 3, len(evs_sorted))):  # Max 2 ahead
                 e1, e2 = evs_sorted[i], evs_sorted[j]
-                # Skip if same person (already covered)
+                src = e1.get("title_en", "")
+                tgt = e2.get("title_en", "")
+                if not src or not tgt or src == tgt:
+                    continue
+                # Skip if same person (already covered by strategy 1)
                 if (e1.get("person_name_en") and
                     e1.get("person_name_en") == e2.get("person_name_en")):
                     continue
@@ -190,13 +212,14 @@ def build_geographic_relationships(events):
                 y2 = e2.get("event_year") or 0
                 gap = abs(y2 - y1)
 
-                if gap > 50:
+                # Tighter threshold: max 30 years
+                if gap > 30:
                     continue
 
                 if gap <= 5:
                     rel_type = "co-located_contemporary"
-                    strength = "strong"
-                elif gap <= 20:
+                    strength = "moderate"
+                elif gap <= 15:
                     rel_type = "local_succession"
                     strength = "moderate"
                 else:
@@ -204,8 +227,8 @@ def build_geographic_relationships(events):
                     strength = "weak"
 
                 relationships.append({
-                    "source": e1.get("title_en", ""),
-                    "target": e2.get("title_en", ""),
+                    "source": src,
+                    "target": tgt,
                     "type": rel_type,
                     "strength": strength,
                     "mechanism": "geographic_temporal",
@@ -417,32 +440,38 @@ def build_llm_relationships(events, existing_rels, progress_path):
 # =============================================================================
 
 def deduplicate_relationships(all_rels):
-    """Merge duplicate pairs, keeping the strongest mechanism."""
+    """Merge duplicate pairs, keeping the strongest mechanism.
+    Preserves directionality: (A→B) and (B→A) are treated as the same pair
+    but the direction from the strongest mechanism is kept."""
     strength_order = {"strong": 3, "moderate": 2, "weak": 1}
     pair_best = {}
 
     for r in all_rels:
+        # Use sorted pair as key (for dedup) but preserve original direction
         pair = tuple(sorted([r["source"], r["target"]]))
         existing = pair_best.get(pair)
         if existing is None:
             pair_best[pair] = r
         else:
-            # Keep stronger or add mechanism
             curr_s = strength_order.get(r.get("strength", "weak"), 1)
             exist_s = strength_order.get(existing.get("strength", "weak"), 1)
             if curr_s > exist_s:
-                # Keep new but note multiple mechanisms
+                # Keep new (stronger) but record all mechanisms
                 r["mechanisms"] = list(set([
                     existing.get("mechanism", ""),
                     r.get("mechanism", "")
                 ]))
                 pair_best[pair] = r
-            elif curr_s == exist_s and r.get("mechanism") != existing.get("mechanism"):
+            elif r.get("mechanism") != existing.get("mechanism"):
+                # Different mechanism confirms — record but do NOT auto-upgrade to strong
                 existing["mechanisms"] = list(set(
                     existing.get("mechanisms", [existing.get("mechanism", "")]) +
                     [r.get("mechanism", "")]
                 ))
-                existing["strength"] = "strong"  # Multiple confirming mechanisms
+                # Upgrade one level if multiple mechanisms confirm (not straight to strong)
+                if exist_s < 3:
+                    upgraded = {1: "moderate", 2: "strong"}
+                    existing["strength"] = upgraded.get(exist_s, existing["strength"])
 
     return list(pair_best.values())
 
@@ -501,8 +530,11 @@ def main():
     else:
         print("\n[5/5] LLM-based relationships: SKIPPED (use --llm to enable)")
 
-    # Filter out empty source/target
-    all_relationships = [r for r in all_relationships if r.get("source") and r.get("target")]
+    # Filter out empty source/target and self-loops
+    all_relationships = [
+        r for r in all_relationships
+        if r.get("source") and r.get("target") and r["source"] != r["target"]
+    ]
 
     # Deduplicate
     print(f"\nTotal raw relationships: {len(all_relationships)}")
