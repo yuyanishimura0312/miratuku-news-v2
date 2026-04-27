@@ -725,94 +725,44 @@ def identify_failure(event):
 # =============================================================================
 
 def build_event_relationships(si_events, links):
-    """Build event-to-event relationships via shared concepts.
-    Uses fuzzy title matching since link event_title_en may differ slightly."""
-    # Index SI events by title_en for fast lookup (exact + normalized)
-    si_titles = {}
-    si_by_norm = {}
-    for e in si_events:
-        title = e.get("title_en", "")
-        si_titles[title] = e
-        # Normalized key: lowercase, stripped
-        norm = title.lower().strip()
-        si_by_norm[norm] = e
-
-    def find_si_event(title):
-        """Find SI event by exact or normalized match."""
-        if title in si_titles:
-            return si_titles[title]
-        norm = title.lower().strip()
-        if norm in si_by_norm:
-            return si_by_norm[norm]
-        # Partial match: check if link title is a substring of any SI title or vice versa
-        for si_title, ev in si_titles.items():
-            if len(norm) > 10 and (norm in si_title.lower() or si_title.lower() in norm):
-                return ev
-        return None
-
-    # Use ALL link types (not just directional) to build richer relationships
-    concept_events = defaultdict(list)
-    for link in links:
-        event_title = link.get("event_title_en", "")
-        si_ev = find_si_event(event_title)
-        if si_ev is not None:
-            concept_events[link.get("concept_name_en", "")].append({
-                "event": si_ev.get("title_en", ""),
-                "person": link.get("person_name_en", ""),
-                "type": link.get("link_type"),
-            })
-
-    # Project into event-event relationships
-    relationships = []
-    seen_pairs = set()
-    for concept, event_list in concept_events.items():
-        # Deduplicate within concept
-        unique_events = {}
-        for el in event_list:
-            unique_events[el["event"]] = el
-        unique_list = list(unique_events.values())
-
-        if len(unique_list) < 2:
-            continue
-        for i in range(len(unique_list)):
-            for j in range(i + 1, len(unique_list)):
-                e1, e2 = unique_list[i], unique_list[j]
-                if e1["event"] == e2["event"]:
-                    continue
-                pair_key = tuple(sorted([e1["event"], e2["event"]]))
-                if pair_key in seen_pairs:
-                    continue
-                seen_pairs.add(pair_key)
-
-                ev1 = si_titles.get(e1["event"], {})
-                ev2 = si_titles.get(e2["event"], {})
-                y1 = ev1.get("event_year") or 0
-                y2 = ev2.get("event_year") or 0
-
-                if y1 == y2:
-                    rel_type = "parallel"
-                elif abs(y1 - y2) <= 30:
-                    rel_type = "evolved_from"
-                else:
-                    rel_type = "influenced"
-
-                relationships.append({
-                    "source": e1["event"] if y1 <= y2 else e2["event"],
-                    "target": e2["event"] if y1 <= y2 else e1["event"],
-                    "concept": concept,
-                    "type": rel_type,
-                })
-
-    return relationships
+    """Load pre-built relationships from sif_relationships.json.
+    Falls back to concept-mediated approach if file not found.
+    Run build_sif_relationships.py to generate the relationships file."""
+    rel_path = DATA_DIR / "sif_relationships.json"
+    if rel_path.exists():
+        with open(rel_path) as f:
+            data = json.load(f)
+        relationships = data.get("relationships", [])
+        meta = data.get("metadata", {})
+        print(f"  Loaded from sif_relationships.json: {len(relationships)} relationships")
+        print(f"  Mechanisms: {meta.get('by_mechanism', {})}")
+        print(f"  Connected events: {meta.get('connected_events', '?')}/{meta.get('total_events', '?')}")
+        return relationships
+    else:
+        print("  WARNING: sif_relationships.json not found, using legacy concept-mediated approach")
+        print("  Run: python3 scripts/build_sif_relationships.py --llm")
+        # Legacy fallback (minimal)
+        return []
 
 
 def compute_link_counts(si_events, links):
-    """Count how many links each SI event has (for R3 bonus)."""
-    directional = {"precedes", "influences", "enables", "informs"}
+    """Count how many relationships each SI event has (for R3 bonus).
+    Uses sif_relationships.json if available, otherwise falls back to concept links."""
     counts = Counter()
-    for link in links:
-        if link.get("link_type") in directional:
-            counts[link.get("event_title_en", "")] += 1
+    rel_path = DATA_DIR / "sif_relationships.json"
+    if rel_path.exists():
+        with open(rel_path) as f:
+            data = json.load(f)
+        for r in data.get("relationships", []):
+            if r.get("source"):
+                counts[r["source"]] += 1
+            if r.get("target"):
+                counts[r["target"]] += 1
+    else:
+        directional = {"precedes", "influences", "enables", "informs"}
+        for link in links:
+            if link.get("link_type") in directional:
+                counts[link.get("event_title_en", "")] += 1
     return counts
 
 
