@@ -176,6 +176,29 @@
     .year-grid { grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); }
   }
 
+  /* Decade timeline */
+  .decade-block { margin-bottom: 24px; }
+  .decade-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding: 8px 12px; background: var(--text-primary); color: var(--bg); cursor: pointer; user-select: none; }
+  .decade-header:hover { opacity: 0.9; }
+  .decade-header-year { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; }
+  .decade-header-summary { font-size: 0.75rem; opacity: 0.8; flex: 1; }
+  .decade-header-count { font-size: 0.72rem; opacity: 0.7; }
+  .decade-header-toggle { font-size: 0.8rem; transition: transform 0.2s; }
+  .decade-header.collapsed .decade-header-toggle { transform: rotate(-90deg); }
+  .decade-body { display: block; }
+  .decade-body.collapsed { display: none; }
+  .year-row { display: grid; grid-template-columns: 56px 1fr; gap: 0; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.1s; }
+  .year-row:hover { background: var(--surface-hover); }
+  .year-row.cluster-row { background: rgba(204,20,0,0.04); }
+  .year-row.cluster-row:hover { background: rgba(204,20,0,0.08); }
+  .year-row.selected-row { background: rgba(59,130,246,0.08); border-left: 3px solid var(--accent-blue); }
+  .year-row-num { padding: 8px 8px; font-size: 0.82rem; font-weight: 700; text-align: center; border-right: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; }
+  .year-row-num.cluster-num { color: var(--accent); }
+  .year-row-body { padding: 8px 12px; min-width: 0; }
+  .year-row-zeitgeist { font-size: 0.8rem; font-weight: 600; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 2px; }
+  .year-row-tension { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .year-row.hidden { display: none; }
+
   /* Print */
   @media print { .header, .stats-bar, .tab-bar { position: relative; } .view { display: block !important; page-break-before: always; } }
 </style>
@@ -708,19 +731,48 @@
 <!-- ===== VIEW 7: EXPLORER ===== -->
 <div id="view-explorer" class="view">
   <section>
-    <h2>年次探索 — CLA 127年の4層構造</h2>
+    <h2>127年 年次探索 — CLA 4層構造 全年一覧</h2>
 
     <div class="prose">
-      <p>1900年から2026年までの各年について、CLA4層（Litany・Systemic Causes・Worldview・Myth/Metaphor）の詳細記述を探索できます。転換期クラスターに属する年はハイライト表示されています。年をクリックすると詳細が表示されます。</p>
+      <p>1900年から2026年までの全127年について、CLA4層（Litany・Systemic Causes・Worldview・Myth/Metaphor）の詳細分析を収録。各年のZeitgeist（時代精神）・Key Tension（核心的緊張）・Emerging Narrative（萌芽的ナラティブ）を年代別に一覧表示する。転換期クラスターに属する年は赤色で強調表示。行クリックで4層の全文が展開される。</p>
     </div>
 
-    <div class="year-grid" id="year-grid"></div>
+    <!-- Search and filter -->
+    <div style="display:flex;gap:12px;align-items:center;margin:16px 0;flex-wrap:wrap;">
+      <input type="text" id="year-search" placeholder="キーワード検索（zeitgeist・key_tension・4層全文）" oninput="filterYears()" style="flex:1;min-width:240px;padding:8px 14px;border:1px solid var(--border);background:var(--surface);color:var(--text-primary);font-size:0.82rem;font-family:inherit;">
+      <select id="decade-filter" onchange="filterYears()" style="padding:8px 14px;border:1px solid var(--border);background:var(--surface);color:var(--text-primary);font-size:0.82rem;font-family:inherit;">
+        <option value="all">全年代</option>
+        <option value="1900">1900年代</option><option value="1910">1910年代</option>
+        <option value="1920">1920年代</option><option value="1930">1930年代</option>
+        <option value="1940">1940年代</option><option value="1950">1950年代</option>
+        <option value="1960">1960年代</option><option value="1970">1970年代</option>
+        <option value="1980">1980年代</option><option value="1990">1990年代</option>
+        <option value="2000">2000年代</option><option value="2010">2010年代</option>
+        <option value="2020">2020年代</option>
+      </select>
+      <label style="font-size:0.78rem;color:var(--text-secondary);display:flex;align-items:center;gap:4px;">
+        <input type="checkbox" id="cluster-only" onchange="filterYears()"> 転換期のみ
+      </label>
+      <span id="match-count" style="font-size:0.75rem;color:var(--text-muted);"></span>
+    </div>
+
+    <!-- Decade-grouped timeline -->
+    <div id="decade-timeline"></div>
+
+    <!-- Year detail panel -->
     <div class="year-detail" id="year-detail">
-      <h3 id="detail-title"></h3>
-      <div style="margin-bottom:12px;">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--accent);margin-bottom:4px;" id="detail-zeitgeist"></div>
-        <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px;" id="detail-tension"></div>
-        <div style="font-size:0.78rem;color:var(--accent-green);margin-bottom:8px;" id="detail-emerging"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <h3 id="detail-title" style="font-family:var(--font-serif);font-size:1.1rem;"></h3>
+        <div style="display:flex;gap:6px;">
+          <button onclick="navigateYear(-1)" style="padding:4px 10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;font-size:0.78rem;">← 前年</button>
+          <button onclick="navigateYear(1)" style="padding:4px 10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;font-size:0.78rem;">翌年 →</button>
+          <button onclick="closeDetail()" style="padding:4px 10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;font-size:0.78rem;">閉じる</button>
+        </div>
+      </div>
+      <div style="margin-bottom:14px;padding:12px;background:var(--bg-secondary);border-left:3px solid var(--accent);">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--accent);margin-bottom:6px;" id="detail-zeitgeist"></div>
+        <div style="font-size:0.78rem;color:var(--text-primary);line-height:1.6;margin-bottom:6px;" id="detail-tension-full"></div>
+        <div style="font-size:0.78rem;color:var(--accent-green);line-height:1.6;" id="detail-emerging-full"></div>
       </div>
       <div class="layer-section">
         <div class="layer-label l1">Litany — 現象記述層</div>
@@ -753,7 +805,7 @@ function showView(id) {
   event.target.classList.add('active');
 }
 
-// Cluster years for highlighting
+// Cluster years
 const clusterYears = new Set([
   ...Array.from({length:7}, (_,i) => 1914+i),
   ...Array.from({length:5}, (_,i) => 1929+i),
@@ -764,65 +816,190 @@ const clusterYears = new Set([
   ...Array.from({length:7}, (_,i) => 2020+i),
 ]);
 
-// CLA data loading
+// Decade summaries
+const decadeSummaries = {
+  '1900': '帝国主義的秩序の成熟と内的矛盾の蓄積。産業革命の完成、民族運動の萌芽',
+  '1910': '第一次世界大戦と帝国崩壊。ロシア革命、民族自決、近代的進歩の幻想の終焉',
+  '1920': '戦後秩序の制度化と新たな矛盾。大量消費社会の出現、ファシズムの胎動',
+  '1930': '大恐慌と全体主義の台頭。民主主義の危機、救済神話の逆機能',
+  '1940': '第二次世界大戦と戦後国際秩序。原子力時代の開始、国連・人権宣言の制度化',
+  '1950': '冷戦二極体制と高度成長。脱植民地化、大衆消費社会、技術楽観主義',
+  '1960': '反体制運動と文化革命。68年世代、公民権運動、多元的解放の同時多発',
+  '1970': 'オイルショックとシステムの限界。環境問題の台頭、ポストモダンの萌芽',
+  '1980': '新自由主義と冷戦終結への助走。情報革命の開始、グローバル化の加速',
+  '1990': '冷戦終焉とグローバル化。「歴史の終わり」の楽観と即座の多元化・分裂',
+  '2000': 'テロとの戦争、金融バブル。監視社会化、デジタル革命、進歩の約束の空洞化',
+  '2010': '制度的危機と民衆の蜂起。SNS革命、ポピュリズム、AI萌芽、気候危機の可視化',
+  '2020': 'パンデミック以降の複合危機。Phase 2→3移行期、AI革命、民主主義の岐路',
+};
+
 let claData = [];
+let currentYear = null;
 
 async function loadCLA() {
   try {
     const resp = await fetch('../data/cla_integrated_127years.json');
     claData = await resp.json();
-    buildYearGrid();
+    buildDecadeTimeline();
   } catch(e) {
     console.error('CLA data load failed:', e);
-    buildYearGridFallback();
+    document.getElementById('decade-timeline').innerHTML = '<p style="color:var(--accent)">CLAデータの読み込みに失敗しました。</p>';
   }
 }
 
-function buildYearGrid() {
-  const grid = document.getElementById('year-grid');
-  grid.innerHTML = '';
-  for (let y = 1900; y <= 2026; y++) {
-    const cell = document.createElement('div');
-    cell.className = 'year-cell' + (clusterYears.has(y) ? ' cluster' : '');
-    cell.textContent = y;
-    cell.onclick = () => showYear(y);
-    grid.appendChild(cell);
-  }
+function buildDecadeTimeline() {
+  const container = document.getElementById('decade-timeline');
+  container.innerHTML = '';
+
+  const decades = {};
+  claData.forEach(entry => {
+    const y = parseInt(entry.period);
+    const dec = Math.floor(y / 10) * 10;
+    if (!decades[dec]) decades[dec] = [];
+    decades[dec].push(entry);
+  });
+
+  Object.keys(decades).sort().forEach(dec => {
+    const entries = decades[dec];
+    const block = document.createElement('div');
+    block.className = 'decade-block';
+    block.dataset.decade = dec;
+
+    const summary = decadeSummaries[dec] || '';
+    const clusterCount = entries.filter(e => clusterYears.has(parseInt(e.period))).length;
+
+    block.innerHTML = `
+      <div class="decade-header" onclick="toggleDecade(this)">
+        <span class="decade-header-year">${dec}s</span>
+        <span class="decade-header-summary">${summary}</span>
+        <span class="decade-header-count">${entries.length}年${clusterCount > 0 ? ' / 転換期' + clusterCount + '年' : ''}</span>
+        <span class="decade-header-toggle">▼</span>
+      </div>
+      <div class="decade-body">
+        ${entries.map(entry => {
+          const y = parseInt(entry.period);
+          const isCluster = clusterYears.has(y);
+          const z = entry.zeitgeist || '';
+          const kt = entry.key_tension ? entry.key_tension.substring(0, 120) : '';
+          return `<div class="year-row ${isCluster ? 'cluster-row' : ''}" data-year="${y}" onclick="showYear(${y})">
+            <div class="year-row-num ${isCluster ? 'cluster-num' : ''}">${y}</div>
+            <div class="year-row-body">
+              <div class="year-row-zeitgeist">${escapeHtml(z)}</div>
+              <div class="year-row-tension">${escapeHtml(kt)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+    container.appendChild(block);
+  });
+
+  updateMatchCount();
 }
 
-function buildYearGridFallback() {
-  const grid = document.getElementById('year-grid');
-  grid.innerHTML = '';
-  for (let y = 1900; y <= 2026; y++) {
-    const cell = document.createElement('div');
-    cell.className = 'year-cell' + (clusterYears.has(y) ? ' cluster' : '');
-    cell.textContent = y;
-    cell.onclick = () => showYear(y);
-    grid.appendChild(cell);
-  }
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function toggleDecade(header) {
+  header.classList.toggle('collapsed');
+  header.nextElementSibling.classList.toggle('collapsed');
+}
+
+function filterYears() {
+  const query = document.getElementById('year-search').value.toLowerCase().trim();
+  const decadeFilter = document.getElementById('decade-filter').value;
+  const clusterOnly = document.getElementById('cluster-only').checked;
+
+  document.querySelectorAll('.year-row').forEach(row => {
+    const y = parseInt(row.dataset.year);
+    const entry = claData.find(d => d.period === String(y));
+    if (!entry) { row.classList.add('hidden'); return; }
+
+    let show = true;
+
+    // Decade filter
+    if (decadeFilter !== 'all') {
+      const dec = Math.floor(y / 10) * 10;
+      if (dec !== parseInt(decadeFilter)) show = false;
+    }
+
+    // Cluster filter
+    if (clusterOnly && !clusterYears.has(y)) show = false;
+
+    // Text search
+    if (query && show) {
+      const searchText = [
+        entry.zeitgeist, entry.key_tension, entry.emerging_narrative,
+        entry.litany, entry.systemic_causes, entry.worldview, entry.myth_metaphor,
+        String(y)
+      ].join(' ').toLowerCase();
+      show = searchText.includes(query);
+    }
+
+    row.classList.toggle('hidden', !show);
+  });
+
+  // Show/hide decade blocks with no visible rows
+  document.querySelectorAll('.decade-block').forEach(block => {
+    const visibleRows = block.querySelectorAll('.year-row:not(.hidden)');
+    block.style.display = visibleRows.length > 0 ? '' : 'none';
+
+    // If decade filter is set, auto-expand matching decades
+    if (decadeFilter !== 'all' || query || clusterOnly) {
+      block.querySelector('.decade-header').classList.remove('collapsed');
+      block.querySelector('.decade-body').classList.remove('collapsed');
+    }
+  });
+
+  updateMatchCount();
+}
+
+function updateMatchCount() {
+  const visible = document.querySelectorAll('.year-row:not(.hidden)').length;
+  const total = document.querySelectorAll('.year-row').length;
+  const el = document.getElementById('match-count');
+  if (el) el.textContent = visible === total ? `${total}年` : `${visible} / ${total}年`;
 }
 
 function showYear(year) {
+  currentYear = year;
   const entry = claData.find(d => d.period === String(year));
   if (!entry) return;
 
-  // Highlight selected
-  document.querySelectorAll('.year-cell').forEach(c => c.classList.remove('selected'));
-  const cells = document.querySelectorAll('.year-cell');
-  cells.forEach(c => { if (c.textContent == year) c.classList.add('selected'); });
+  // Highlight selected row
+  document.querySelectorAll('.year-row').forEach(r => r.classList.remove('selected-row'));
+  const row = document.querySelector(`.year-row[data-year="${year}"]`);
+  if (row) row.classList.add('selected-row');
 
   const detail = document.getElementById('year-detail');
   detail.classList.add('visible');
-  document.getElementById('detail-title').textContent = year + '年のCLA 4層分析';
+  document.getElementById('detail-title').textContent = year + '年 — CLA 4層分析';
   document.getElementById('detail-zeitgeist').textContent = 'Zeitgeist: ' + (entry.zeitgeist || '—');
-  document.getElementById('detail-tension').textContent = 'Key Tension: ' + (entry.key_tension ? entry.key_tension.substring(0, 200) + '...' : '—');
-  document.getElementById('detail-emerging').textContent = 'Emerging Narrative: ' + (entry.emerging_narrative ? entry.emerging_narrative.substring(0, 200) + '...' : '—');
+  document.getElementById('detail-tension-full').textContent = 'Key Tension: ' + (entry.key_tension || '—');
+  document.getElementById('detail-emerging-full').textContent = 'Emerging Narrative: ' + (entry.emerging_narrative || '—');
   document.getElementById('detail-litany').textContent = entry.litany || '—';
   document.getElementById('detail-systemic').textContent = entry.systemic_causes || '—';
   document.getElementById('detail-worldview').textContent = entry.worldview || '—';
   document.getElementById('detail-myth').textContent = entry.myth_metaphor || '—';
 
   detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function navigateYear(delta) {
+  if (currentYear === null) return;
+  const nextYear = currentYear + delta;
+  if (nextYear >= 1900 && nextYear <= 2026) {
+    showYear(nextYear);
+  }
+}
+
+function closeDetail() {
+  document.getElementById('year-detail').classList.remove('visible');
+  document.querySelectorAll('.year-row').forEach(r => r.classList.remove('selected-row'));
+  currentYear = null;
 }
 
 // Initialize
