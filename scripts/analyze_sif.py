@@ -1588,6 +1588,16 @@ def main():
     si_events = select_si_events(all_events)
     print(f"  SI events selected: {len(si_events)}")
 
+    # Attach enriched structural descriptions
+    enriched_lookup = load_enriched_data()
+    enriched_count = 0
+    for e in si_events:
+        key = (e.get("title_en", ""), e.get("event_year"))
+        if key in enriched_lookup:
+            e["_structural_analysis"] = enriched_lookup[key]
+            enriched_count += 1
+    print(f"  Enriched descriptions attached: {enriched_count}/{len(si_events)}")
+
     # Score PRRRC
     print("\n[3/6] Scoring PRRRC dimensions...")
     links = consolidated.get("links", [])
