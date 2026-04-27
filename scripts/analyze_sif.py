@@ -330,6 +330,22 @@ def load_data():
     return consolidated, cases
 
 
+def load_enriched_data():
+    """Load enriched SI events with structural_analysis field.
+    Returns dict keyed by (title_en, event_year) for fast lookup."""
+    enriched_path = DATA_DIR / "sif_enriched_events.json"
+    if not enriched_path.exists():
+        return {}
+    with open(enriched_path, "r") as f:
+        data = json.load(f)
+    lookup = {}
+    for e in data.get("events", []):
+        key = (e.get("title_en", ""), e.get("event_year"))
+        if e.get("structural_analysis"):
+            lookup[key] = e["structural_analysis"]
+    return lookup
+
+
 def merge_events(consolidated, cases):
     """Merge events from consolidated and case files, deduplicating."""
     events = []
@@ -359,9 +375,10 @@ def merge_events(consolidated, cases):
 # =============================================================================
 
 def _get_text_fields(event):
-    """Concatenate all text fields for keyword search."""
+    """Concatenate all text fields for keyword search.
+    Includes structural_analysis if available (from enriched data)."""
     fields = ["title_ja", "title_en", "description_ja", "description_en",
-              "outcome_ja", "outcome_en"]
+              "outcome_ja", "outcome_en", "_structural_analysis"]
     return " ".join(str(event.get(f, "") or "") for f in fields)
 
 
@@ -450,21 +467,37 @@ def _event_type_base_scores(event_type):
 
 def score_prrrc(event, link_count=0):
     """Score an event on the 5 PRRRC dimensions.
-    Combines: (1) event_type base score, (2) keyword tier matching, (3) bonuses.
-    No importance scaling — importance was already used for SI selection."""
+    When structural_analysis is available (enriched data), keyword matching
+    runs on 500+ chars of rich text, making it the primary signal.
+    Event_type base scores serve as a floor only."""
     text = _get_text_fields(event)
+    has_enriched = bool(event.get("_structural_analysis"))
     etype = event.get("event_type", "")
     importance = event.get("importance", 3) or 3
 
-    # Base scores from event type
-    base = _event_type_base_scores(etype)
+    # Keyword-based scores from all text (including structural_analysis)
+    p_kw = _score_dimension(text, P_TIERS)
+    r1_kw = _score_dimension(text, R1_TIERS)
+    r2_kw = _score_dimension(text, R2_TIERS)
+    r3_kw = _score_dimension(text, R3_TIERS)
+    c_kw = _score_dimension(text, C_TIERS)
 
-    # Keyword-based scores (take max of base and keyword tier)
-    p = max(base["P"], _score_dimension(text, P_TIERS))
-    r1 = max(base["R1"], _score_dimension(text, R1_TIERS))
-    r2 = max(base["R2"], _score_dimension(text, R2_TIERS))
-    r3 = max(base["R3"], _score_dimension(text, R3_TIERS))
-    c = max(base["C"], _score_dimension(text, C_TIERS))
+    if has_enriched:
+        # With enriched data: keyword scores are primary, base is floor only
+        base = _event_type_base_scores(etype)
+        p = max(p_kw, base["P"])
+        r1 = max(r1_kw, base["R1"])
+        r2 = max(r2_kw, base["R2"])
+        r3 = max(r3_kw, base["R3"])
+        c = max(c_kw, base["C"])
+    else:
+        # Without enriched data: fall back to original base+keyword approach
+        base = _event_type_base_scores(etype)
+        p = max(base["P"], p_kw)
+        r1 = max(base["R1"], r1_kw)
+        r2 = max(base["R2"], r2_kw)
+        r3 = max(base["R3"], r3_kw)
+        c = max(base["C"], c_kw)
 
     # Duration bonus for R2
     year_start = event.get("event_year")
