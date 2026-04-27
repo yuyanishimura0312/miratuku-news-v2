@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>先住民伝統知識DB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+  --green: #16A34A; --blue: #2563EB; --purple: #7C3AED; --orange: #EA580C; --cyan: #0891B2;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+  --green: #22C55E; --blue: #3B82F6; --purple: #8B5CF6; --orange: #F97316; --cyan: #06B6D4;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 32px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; }
+
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.kpi { background: var(--surface); border: 1px solid var(--border-light); padding: 16px; text-align: center; }
+.kpi-value { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; }
+.kpi-value.accent { color: var(--accent-warm); }
+.kpi-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.kpi-sub { font-size: 0.66rem; color: var(--text-muted); margin-top: 2px; }
+
+.bar-group { margin-bottom: 6px; display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+.bar-label { width: 220px; flex-shrink: 0; color: var(--text-secondary); font-size: 0.78rem; }
+.bar-track { flex: 1; height: 20px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
+.bar-fill { height: 100%; transition: width 0.6s ease; }
+.bar-val { width: 70px; text-align: right; font-weight: 500; font-family: monospace; font-size: 0.78rem; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+.panel { background: var(--card); border: 1px solid var(--border-light); padding: 16px; margin-bottom: 12px; }
+.panel-title { font-size: 0.72rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.05em; margin-bottom: 10px; text-transform: uppercase; }
+
+.gta-card { border-left: 3px solid var(--accent-warm); background: var(--surface); padding: 16px 20px; margin-bottom: 10px; }
+.gta-code { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+.gta-code-ja { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 8px; }
+.gta-theory { font-size: 0.82rem; color: var(--text); line-height: 1.7; font-style: italic; }
+.gta-meta { font-size: 0.68rem; color: var(--text-muted); margin-top: 8px; }
+
+.sample-card { border: 1px solid var(--border); background: var(--card); padding: 16px 20px; margin-bottom: 12px; }
+.sample-source { font-size: 0.68rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.05em; margin-bottom: 6px; text-transform: uppercase; }
+.sample-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+.sample-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 8px; }
+.sample-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.sample-tag { font-size: 0.68rem; padding: 1px 8px; border: 1px solid var(--border-light); color: var(--text-muted); }
+.sample-tag.func { background: var(--accent-muted); color: var(--accent-warm); border-color: transparent; font-weight: 600; }
+
+.ethics-box { background: var(--surface); border: 1px solid var(--border); padding: 20px; margin-bottom: 24px; }
+.ethics-title { font-family: var(--font-serif); font-size: 0.92rem; font-weight: 700; margin-bottom: 10px; }
+.ethics-item { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 8px; padding-left: 16px; border-left: 2px solid var(--border-light); }
+.ethics-label { font-weight: 600; color: var(--text); }
+
+.src-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 8px; }
+.src-table th { text-align: left; padding: 6px 10px; font-weight: 600; color: var(--text-muted); font-size: 0.68rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+.src-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-light); }
+.src-table tr:hover td { background: var(--accent-muted); }
+
+.loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.84rem; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'">A</button>
+<a href="../databases.html" class="back">&larr; データベース一覧</a>
+
+<h1><span class="db-id">TK</span>先住民伝統知識データベース</h1>
+<p class="subtitle">Indigenous Traditional Knowledge Database</p>
+<p class="desc">世界の先住民族が保有する伝統知識を体系的に収集し、Grounded Theory Analysis（GTA）オープンコーディングによるボトムアップ分類で構造化。UNESCO ICH、D-PLACE（Ethnographic Atlas）、SCCS、Binfordデータセットを統合し、CLA第4層（worldview / myth_metaphor）との接続基盤を構築。CARE原則・OCAP原則に準拠。</p>
+
+<div id="dashboard-content">
+  <div class="loading">データを読み込み中...</div>
+</div>
+
+<script>
+'use strict';
+(function() {
+  fetch('data/tk_dashboard.json')
+    .then(function(r) { return r.json(); })
+    .then(render)
+    .catch(function() {
+      document.getElementById('dashboard-content').innerHTML =
+        '<p style="color:var(--text-muted)">ダッシュボードデータの読み込みに失敗しました。</p>';
+    });
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function num(n) { return typeof n === 'number' ? n.toLocaleString() : n; }
+
+  function render(data) {
+    var html = '';
+
+    // KPI Row
+    html += '<div class="kpi-row">';
+    html += kpi(num(data.total_groups), '先住民族グループ', '');
+    html += kpi(num(data.total_tk_items), '伝統知識アイテム', '');
+    html += kpi(num(data.total_open_codes), 'GTAオープンコード', '');
+    html += kpi(num(data.total_axial_codes), '軸カテゴリ', 'Axial Codes');
+    html += kpi(num(data.total_selective_codes), '選択コード', 'Selective Codes');
+    html += kpi(num(data.total_domains), '知識ドメイン', '');
+    html += '</div>';
+
+    // Region Distribution
+    html += '<h3>地域別分布</h3>';
+    if (data.by_region) {
+      var maxR = Math.max.apply(null, data.by_region.map(function(r) { return r.count; }));
+      data.by_region.forEach(function(r) {
+        html += bar(r.region, r.count, maxR, 'var(--accent-warm)');
+      });
+    }
+
+    // Domain Distribution
+    html += '<h3>知識ドメイン分布</h3>';
+    if (data.by_domain) {
+      var maxD = Math.max.apply(null, data.by_domain.map(function(d) { return d.count; }));
+      var colors = ['var(--accent-warm)','var(--green)','var(--blue)','var(--purple)','var(--orange)','var(--cyan)','var(--accent-warm)','var(--green)'];
+      data.by_domain.forEach(function(d, i) {
+        html += bar(d.name_ja || d.domain, d.count, maxD, colors[i % colors.length]);
+      });
+    }
+
+    // PESTLE + CLA panels
+    html += '<h3>PESTLE / CLA分布</h3>';
+    html += '<div class="grid-2">';
+
+    html += '<div class="panel"><div class="panel-title">PESTLE分類</div>';
+    if (data.by_pestle) {
+      var maxP = Math.max.apply(null, data.by_pestle.map(function(p) { return p.count; }));
+      data.by_pestle.forEach(function(p) {
+        html += bar(p.pestle, p.count, maxP, 'var(--blue)');
+      });
+    }
+    html += '</div>';
+
+    html += '<div class="panel"><div class="panel-title">CLA層分布</div>';
+    if (data.by_cla) {
+      var maxC = Math.max.apply(null, data.by_cla.map(function(c) { return c.count; }));
+      var claColors = { 'litany': 'var(--green)', 'systemic': 'var(--blue)', 'worldview': 'var(--purple)', 'myth_metaphor': 'var(--accent-warm)' };
+      data.by_cla.forEach(function(c) {
+        html += bar(c.layer, c.count, maxC, claColors[c.layer] || 'var(--orange)');
+      });
+    }
+    html += '</div></div>';
+
+    // GTA Selective Codes
+    if (data.selective_codes && data.selective_codes.length > 0) {
+      html += '<h3>GTA選択コード &#8212; Grounded Theory</h3>';
+      html += '<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:16px">GTAの3段階コーディング（オープン→軸→選択）から導出された、伝統知識の根底にある理論的中核概念。</p>';
+      data.selective_codes.forEach(function(sc) {
+        html += '<div class="gta-card">';
+        html += '<div class="gta-code">' + esc(sc.code) + '</div>';
+        if (sc.code_ja) html += '<div class="gta-code-ja">' + esc(sc.code_ja) + '</div>';
+        if (sc.theory) html += '<div class="gta-theory">' + esc(sc.theory) + '</div>';
+        html += '<div class="gta-meta">' + (sc.axial_count || 0) + ' axial codes</div>';
+        html += '</div>';
+      });
+    }
+
+    // GTA Axial Codes (top 20)
+    if (data.top_axial_codes && data.top_axial_codes.length > 0) {
+      html += '<h3>GTA軸カテゴリ（上位20）</h3>';
+      var maxAx = Math.max.apply(null, data.top_axial_codes.map(function(a) { return a.open_count; }));
+      data.top_axial_codes.forEach(function(a) {
+        var label = a.code_ja ? (a.code + ' / ' + a.code_ja) : a.code;
+        html += bar(label, a.open_count, maxAx, 'var(--purple)');
+      });
+    }
+
+    // Ethical Framework
+    html += '<h3>倫理的枠組み</h3>';
+    html += '<div class="ethics-box">';
+    html += '<div class="ethics-title">データ主権と倫理的配慮</div>';
+    html += '<div class="ethics-item"><span class="ethics-label">CARE原則</span> &#8212; Collective Benefit（集団的利益）, Authority to Control（管理権）, Responsibility（責任）, Ethics（倫理）。データが先住民コミュニティに利益をもたらすよう設計。</div>';
+    html += '<div class="ethics-item"><span class="ethics-label">OCAP原則</span> &#8212; Ownership（所有権）, Control（管理権）, Access（アクセス権）, Possession（占有権）。先住民族のデータガバナンス基準。</div>';
+    html += '<div class="ethics-item"><span class="ethics-label">感度レベル</span> &#8212; 本データベースはpublic（公開文献に基づく）およびtraditional_use（学術文献に記録済み）のデータのみを収録。sacred（神聖）・restricted（制限）に該当するデータは収録しない。</div>';
+    html += '<div class="ethics-item"><span class="ethics-label">データ出自</span> &#8212; 全データは既存の公開学術文献・UNESCO登録からの二次利用。新規フィールドワークや直接的なコミュニティ知識の抽出は行っていない。</div>';
+    html += '</div>';
+
+    // Sample Items
+    if (data.samples && data.samples.length > 0) {
+      html += '<h3>サンプルデータ</h3>';
+      data.samples.forEach(function(s) {
+        html += '<div class="sample-card">';
+        html += '<div class="sample-source">' + esc(s.region || '') + ' / ' + esc(s.group || '') + '</div>';
+        html += '<div class="sample-title">' + esc(s.title) + '</div>';
+        if (s.title_ja) html += '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:6px">' + esc(s.title_ja) + '</div>';
+        html += '<div class="sample-desc">' + esc(s.description || '') + '</div>';
+        html += '<div class="sample-tags">';
+        if (s.domain) html += '<span class="sample-tag func">' + esc(s.domain) + '</span>';
+        if (s.pestle) html += '<span class="sample-tag">' + esc(s.pestle) + '</span>';
+        if (s.cla) html += '<span class="sample-tag">' + esc(s.cla) + '</span>';
+        html += '</div></div>';
+      });
+    }
+
+    // Data Sources
+    html += '<h3>データソース</h3>';
+    if (data.data_sources) {
+      html += '<table class="src-table"><thead><tr><th>ソース</th><th>レコード数</th><th>ライセンス</th><th>倫理ノート</th></tr></thead><tbody>';
+      data.data_sources.forEach(function(ds) {
+        html += '<tr><td><strong>' + esc(ds.name) + '</strong></td><td style="font-family:monospace">' + num(ds.count) + '</td><td>' + esc(ds.license || '') + '</td><td style="font-size:0.72rem;color:var(--text-muted)">' + esc(ds.ethical_notes || '') + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    document.getElementById('dashboard-content').innerHTML = html;
+  }
+
+  function kpi(value, label, sub) {
+    return '<div class="kpi"><div class="kpi-value accent">' + value + '</div><div class="kpi-label">' + esc(label) + '</div>' + (sub ? '<div class="kpi-sub">' + esc(sub) + '</div>' : '') + '</div>';
+  }
+
+  function bar(label, val, max, color) {
+    var pct = max > 0 ? (val / max * 100) : 0;
+    return '<div class="bar-group"><div class="bar-label">' + esc(label) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + color + '"></div></div><div class="bar-val">' + num(val) + '</div></div>';
+  }
+})();
+</script>
+</body>
+</html>
