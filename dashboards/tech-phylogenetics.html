@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技術の系統樹 — 進化系譜図 | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF;--card:#FFFFFF;--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;
+  --border:#D9D9D9;--border-light:#EEE;--surface:#F7F7F5;--accent-warm:#CC1400;
+  --font:"Noto Sans JP",sans-serif;--font-serif:"Noto Serif JP",serif;
+}
+[data-theme="dark"]{--bg:#121212;--card:#1A1A1A;--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#8A8A8A;--border:#333;--border-light:#2A2A2A;--surface:#1A1A1A;--accent-warm:#FF4444;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.6}
+.top-bar{background:var(--bg);border-top:3px solid var(--accent-warm);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:48px;position:sticky;top:0;z-index:100}
+.top-bar-brand{font-size:0.75rem;font-weight:700;letter-spacing:0.08em;color:var(--text-muted)}
+.top-bar-brand span{color:var(--accent-warm)}
+.top-bar-actions{display:flex;gap:12px;align-items:center}
+.back-link{font-size:0.75rem;color:var(--text-muted);text-decoration:none}
+.back-link:hover{color:var(--accent-warm)}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:4px 10px;font-size:0.72rem;font-family:var(--font)}
+.theme-toggle:hover{border-color:var(--accent-warm);color:var(--accent-warm)}
+.header{max-width:1200px;margin:0 auto;padding:32px 24px 16px}
+h1{font-family:var(--font-serif);font-size:1.4rem;font-weight:700;margin-bottom:4px}
+.subtitle{font-size:0.84rem;color:var(--text-secondary);margin-bottom:16px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:0 24px;max-width:1200px;margin:0 auto;padding:0 24px}
+.tab{padding:8px 16px;font-size:0.82rem;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font)}
+.tab.active{color:var(--accent-warm);border-bottom-color:var(--accent-warm)}
+.tab:hover{color:var(--text)}
+.view{display:none;max-width:1200px;margin:0 auto;padding:24px}
+.view.active{display:block}
+#network-container{width:100%;height:calc(100vh - 200px);min-height:500px;border:1px solid var(--border);background:var(--card);position:relative}
+#tree-container{width:100%;overflow-x:auto}
+.tree-select{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap}
+.tree-btn{padding:6px 14px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;font-size:0.78rem;font-family:var(--font);border-radius:4px}
+.tree-btn.active{border-color:var(--accent-warm);color:var(--accent-warm);background:var(--card)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;font-size:0.72rem}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:16px 0}
+.stat{background:var(--surface);border:1px solid var(--border-light);padding:12px;text-align:center}
+.stat-val{font-family:var(--font-serif);font-size:1.2rem;font-weight:700;color:var(--accent-warm)}
+.stat-lbl{font-size:0.68rem;color:var(--text-muted);margin-top:2px}
+svg text{font-family:var(--font);fill:var(--text)}
+.node circle{stroke:var(--bg);stroke-width:2}
+.link{stroke:var(--border);stroke-opacity:0.6;fill:none}
+.link.enables{stroke:#2e7d32;stroke-opacity:0.5}
+.link.improves{stroke:#1565c0;stroke-opacity:0.5}
+.link.combines_with{stroke:#7b1fa2;stroke-opacity:0.5}
+.link.replaces{stroke:#d50000;stroke-opacity:0.8;stroke-dasharray:4}
+.tooltip{position:absolute;background:var(--card);border:1px solid var(--border);padding:8px 12px;font-size:0.78rem;pointer-events:none;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.1);max-width:250px}
+.node-label{font-size:9px;fill:var(--text-secondary)}
+</style>
+</head>
+<body>
+<header class="top-bar">
+<div class="top-bar-brand"><span>Tech Phylogenetics</span> — Interactive Visualization</div>
+<div class="top-bar-actions">
+<a href="ta.html" class="back-link">&larr; TA Dashboard</a>
+<a href="../reports/tech-phylogenetics.html" class="back-link">Report &rarr;</a>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">DARK</button>
+</div>
+</header>
+
+<div class="header">
+<h1>技術の系統樹 — 進化系譜図</h1>
+<p class="subtitle">337件の技術ノードと349件の系譜エッジによる進化ネットワーク。ドメイン別に色分け。</p>
+<div class="stats-row">
+<div class="stat"><div class="stat-val">337</div><div class="stat-lbl">接続技術</div></div>
+<div class="stat"><div class="stat-val">349</div><div class="stat-lbl">系譜関係</div></div>
+<div class="stat"><div class="stat-val">88</div><div class="stat-lbl">独立系統</div></div>
+<div class="stat"><div class="stat-val">12</div><div class="stat-lbl">最大深度</div></div>
+<div class="stat"><div class="stat-val">29,000x</div><div class="stat-lbl">進化速度加速</div></div>
+</div>
+</div>
+
+<div class="tabs">
+<button class="tab active" onclick="showView('network')">ネットワーク図</button>
+<button class="tab" onclick="showView('tree')">系統樹（ツリー）</button>
+</div>
+
+<div class="view active" id="view-network">
+<div class="legend">
+<div class="legend-item"><div class="legend-dot" style="background:#e65100"></div>エネルギー</div>
+<div class="legend-item"><div class="legend-dot" style="background:#1565c0"></div>通信</div>
+<div class="legend-item"><div class="legend-dot" style="background:#7b1fa2"></div>デジタル</div>
+<div class="legend-item"><div class="legend-dot" style="background:#2e7d32"></div>輸送</div>
+<div class="legend-item"><div class="legend-dot" style="background:#558b2f"></div>農業</div>
+<div class="legend-item"><div class="legend-dot" style="background:#d50000"></div>AI</div>
+<div class="legend-item"><div class="legend-dot" style="background:#795548"></div>冶金</div>
+<div class="legend-item"><div class="legend-dot" style="background:#00838f"></div>化学</div>
+<div class="legend-item"><div class="legend-dot" style="background:#f9a825"></div>光学</div>
+<div class="legend-item"><div class="legend-dot" style="background:#424242"></div>軍事</div>
+</div>
+<div id="network-container"></div>
+</div>
+
+<div class="view" id="view-tree">
+<div class="tree-select" id="tree-buttons"></div>
+<div id="tree-container"></div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none"></div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+const domainColors = {
+  energy:'#e65100',communication:'#1565c0',digital:'#7b1fa2',transportation:'#2e7d32',
+  agriculture:'#558b2f',military:'#424242',metallurgy:'#795548',chemical:'#00838f',
+  textile:'#ad1457',construction:'#4e342e',manufacturing:'#37474f',optical:'#f9a825',
+  ai:'#d50000',medicine:'#1b5e20',information:'#283593',stone_tool:'#6d4c41',
+  finance:'#1a237e',space:'#0d47a1',nuclear:'#b71c1c',other:'#757575'
+};
+
+let networkData, treesData;
+
+Promise.all([
+  fetch('../data/tech_tree_network.json').then(r=>r.json()),
+  fetch('../data/tech_trees.json').then(r=>r.json())
+]).then(([net, trees]) => {
+  networkData = net;
+  treesData = trees;
+  drawNetwork();
+  setupTreeButtons();
+});
+
+function drawNetwork() {
+  const container = document.getElementById('network-container');
+  const w = container.clientWidth, h = container.clientHeight;
+
+  d3.select('#network-container').selectAll('*').remove();
+  const svg = d3.select('#network-container').append('svg').attr('width',w).attr('height',h);
+  const g = svg.append('g');
+
+  const zoom = d3.zoom().scaleExtent([0.2, 5]).on('zoom', e => g.attr('transform', e.transform));
+  svg.call(zoom);
+
+  const simulation = d3.forceSimulation(networkData.nodes)
+    .force('link', d3.forceLink(networkData.links).id(d=>d.id).distance(60))
+    .force('charge', d3.forceManyBody().strength(-120))
+    .force('center', d3.forceCenter(w/2, h/2))
+    .force('collision', d3.forceCollide(12));
+
+  const link = g.selectAll('.link').data(networkData.links).join('line')
+    .attr('class', d => 'link ' + (d.type||''))
+    .attr('stroke-width', 1.5);
+
+  const node = g.selectAll('.node').data(networkData.nodes).join('g')
+    .attr('class','node')
+    .call(d3.drag().on('start',dragStart).on('drag',dragging).on('end',dragEnd));
+
+  node.append('circle')
+    .attr('r', d => {
+      const outDeg = networkData.links.filter(l => (l.source.id||l.source) === d.id).length;
+      return Math.max(4, Math.min(12, 4 + outDeg * 1.5));
+    })
+    .attr('fill', d => domainColors[d.domain] || '#757575');
+
+  node.append('text')
+    .attr('class','node-label')
+    .attr('dx', 10).attr('dy', 3)
+    .text(d => d.name.length > 25 ? d.name.slice(0,22)+'...' : d.name);
+
+  const tooltip = document.getElementById('tooltip');
+  node.on('mouseover', (e,d) => {
+    const preds = networkData.links.filter(l => (l.target.id||l.target)===d.id).map(l => networkData.nodes.find(n=>n.id===(l.source.id||l.source))?.name || '?');
+    const succs = networkData.links.filter(l => (l.source.id||l.source)===d.id).map(l => networkData.nodes.find(n=>n.id===(l.target.id||l.target))?.name || '?');
+    tooltip.innerHTML = `<strong>${d.name}</strong><br>Domain: ${d.domain}<br>Year: ${d.year}<br>Predecessors: ${preds.join(', ')||'(root)'}<br>Successors: ${succs.join(', ')||'(leaf)'}`;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.pageX+12)+'px';
+    tooltip.style.top = (e.pageY-12)+'px';
+  }).on('mouseout', () => { tooltip.style.display = 'none'; });
+
+  simulation.on('tick', () => {
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
+  });
+
+  function dragStart(e,d){if(!e.active)simulation.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y}
+  function dragging(e,d){d.fx=e.x;d.fy=e.y}
+  function dragEnd(e,d){if(!e.active)simulation.alphaTarget(0);d.fx=null;d.fy=null}
+
+  svg.call(zoom.transform, d3.zoomIdentity.translate(w*0.1, h*0.1).scale(0.8));
+}
+
+function setupTreeButtons() {
+  const btns = document.getElementById('tree-buttons');
+  treesData.forEach((t,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tree-btn' + (i===0?' active':'');
+    btn.textContent = t.name;
+    btn.onclick = () => {
+      document.querySelectorAll('.tree-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      drawTree(t);
+    };
+    btns.appendChild(btn);
+  });
+  if(treesData.length) drawTree(treesData[0]);
+}
+
+function drawTree(data) {
+  const container = document.getElementById('tree-container');
+  container.innerHTML = '';
+
+  const root = d3.hierarchy(data, d=>d.children);
+  const treeLayout = d3.tree().nodeSize([28, 180]);
+  treeLayout(root);
+
+  const nodes = root.descendants();
+  const links = root.links();
+  const xMin = d3.min(nodes, d=>d.x) - 40;
+  const xMax = d3.max(nodes, d=>d.x) + 40;
+  const yMax = d3.max(nodes, d=>d.y) + 200;
+  const h = xMax - xMin + 80;
+  const w = yMax + 100;
+
+  const svg = d3.select(container).append('svg').attr('width', w).attr('height', h);
+  const g = svg.append('g').attr('transform', `translate(40,${-xMin+40})`);
+
+  g.selectAll('.tree-link').data(links).join('path')
+    .attr('class','link enables')
+    .attr('d', d3.linkHorizontal().x(d=>d.y).y(d=>d.x));
+
+  const node = g.selectAll('.tree-node').data(nodes).join('g')
+    .attr('transform', d=>`translate(${d.y},${d.x})`);
+
+  node.append('circle')
+    .attr('r', 5)
+    .attr('fill', d => domainColors[d.data.domain]||'#757575');
+
+  node.append('text')
+    .attr('dx', d => d.children ? -8 : 8)
+    .attr('dy', 3)
+    .attr('text-anchor', d => d.children ? 'end' : 'start')
+    .style('font-size', '11px')
+    .text(d => {
+      const yr = d.data.year;
+      const yrStr = yr < 0 ? `${Math.abs(yr)}BC` : yr > 0 ? yr : '';
+      return `${d.data.name} (${yrStr})`;
+    });
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='network') setTimeout(drawNetwork, 100);
+}
+
+function toggleTheme(){
+  const h=document.documentElement,b=document.getElementById('themeToggle');
+  h.getAttribute('data-theme')==='dark'?(h.setAttribute('data-theme','light'),b.textContent='DARK'):(h.setAttribute('data-theme','dark'),b.textContent='LIGHT');
+}
+</script>
+</body>
+</html>
