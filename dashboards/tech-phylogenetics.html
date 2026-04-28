@@ -322,10 +322,37 @@ function init3D(){
       var l=DATA.links[j];
       gLinks.push({source:l.source,target:l.target,type:l.type});
     }
+    function makeTextSprite(text,color){
+      var canvas=document.createElement('canvas');
+      var ctx=canvas.getContext('2d');
+      var fontSize=28;
+      ctx.font=fontSize+'px Noto Sans JP, sans-serif';
+      var textWidth=ctx.measureText(text).width;
+      canvas.width=textWidth+16;
+      canvas.height=fontSize+12;
+      ctx.font=fontSize+'px Noto Sans JP, sans-serif';
+      ctx.fillStyle=color;
+      ctx.fillText(text,8,fontSize+2);
+      var texture=new THREE.CanvasTexture(canvas);
+      texture.needsUpdate=true;
+      var spriteMaterial=new THREE.SpriteMaterial({map:texture,depthTest:false,transparent:true});
+      var sprite=new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(canvas.width/6,canvas.height/6,1);
+      return sprite;
+    }
     graph3d=ForceGraph3D()(el)
       .graphData({nodes:gNodes,links:gLinks})
-      .nodeColor(function(n){return DC[n.domain]||'#757575'})
-      .nodeVal(4)
+      .nodeThreeObject(function(n){
+        var group=new THREE.Group();
+        var geo=new THREE.SphereGeometry(3);
+        var mat=new THREE.MeshLambertMaterial({color:DC[n.domain]||'#757575'});
+        var sphere=new THREE.Mesh(geo,mat);
+        group.add(sphere);
+        var label=makeTextSprite(n.name_ja,DC[n.domain]||'#555');
+        label.position.set(0,5,0);
+        group.add(label);
+        return group;
+      })
       .nodeLabel(function(n){var yr=n.year<0?Math.abs(n.year)+'BC':String(n.year);return n.name+' ('+yr+')'})
       .linkDirectionalArrowLength(4)
       .linkDirectionalArrowRelPos(1)
