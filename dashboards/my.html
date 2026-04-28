@@ -105,20 +105,20 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 <script>
 let D = null;
 const FUNC_COLORS = {NAR:'#CC1400',MOR:'#2563EB',PSY:'#7C3AED',WV:'#EA580C',EDU:'#16A34A',RIT:'#0891B2',SOC:'#CA8A04',ECO:'#059669',POL:'#DC2626',IDN:'#4F46E5'};
-const SRC_LABELS = {trilogy:'Trilogy Folktales (ATU)',wikipedia:'Wikipedia (curated)',wikipedia_category:'Wikipedia (categories)',wikipedia_retry:'Wikipedia (retry)',wikipedia_cache:'Wikipedia (cache)',gutenberg:'Project Gutenberg'};
+const SRC_LABELS = {trilogy:'Trilogy Folktales（ATU分類）',wikipedia:'Wikipedia（キュレーション済み）',wikipedia_category:'Wikipedia（カテゴリ収集）',wikipedia_retry:'Wikipedia（再取得）',wikipedia_cache:'Wikipedia（キャッシュ）',gutenberg:'Project Gutenberg'};
 const fmt = n => n>=1000?n.toLocaleString():n.toString();
 
 function renderKPI() {
   const tc = D.table_counts;
   document.getElementById('kpi').innerHTML = [
-    {v:fmt(D.total_narratives), l:'Narratives', s:D.enriched+' enriched'},
-    {v:D.cultures_count.toString(), l:'Cultures', s:D.regions.length+' regions'},
-    {v:fmt(tc.characters), l:'Characters', s:'LLM extracted'},
-    {v:fmt(tc.themes), l:'Themes', s:'across narratives'},
-    {v:fmt(tc.plot_structure), l:'Plot Phases', s:'Campbell/Propp'},
-    {v:fmt(tc.function_analysis), l:'Functions', s:'10 functions', a:true},
-    {v:fmt(tc.cross_cultural_parallels), l:'Parallels', s:'cross-cultural'},
-    {v:D.avg_quality.toString(), l:'Quality', s:'avg score 0-1'},
+    {v:fmt(D.total_narratives), l:'ナラティブ数', s:D.enriched+' 件エンリッチ済み'},
+    {v:D.cultures_count.toString(), l:'文化圏', s:D.regions.length+' 地域'},
+    {v:fmt(tc.characters), l:'登場人物', s:'LLM抽出'},
+    {v:fmt(tc.themes), l:'テーマ', s:'全ナラティブ横断'},
+    {v:fmt(tc.plot_structure), l:'プロット段階', s:'キャンベル/プロップ'},
+    {v:fmt(tc.function_analysis), l:'機能分析', s:'10の社会的機能', a:true},
+    {v:fmt(tc.cross_cultural_parallels), l:'構造パラレル', s:'異文化間'},
+    {v:D.avg_quality.toString(), l:'品質スコア', s:'平均（0-1）'},
   ].map(k=>'<div class="kpi"><div class="kpi-value'+(k.a?' accent':'')+'">'+k.v+'</div><div class="kpi-label">'+k.l+'</div><div class="kpi-sub">'+k.s+'</div></div>').join('');
 }
 
@@ -140,7 +140,7 @@ function renderFunctions() {
 function renderHeatmap() {
   var codes = ['NAR','MOR','PSY','WV','EDU','RIT','SOC','ECO','POL','IDN'];
   var regions = Object.keys(D.function_by_region);
-  var h = '<thead><tr><th>Region</th>';
+  var h = '<thead><tr><th>地域</th>';
   codes.forEach(function(c){h+='<th>'+c+'</th>';});
   h += '</tr></thead><tbody>';
   regions.forEach(function(r) {
@@ -159,14 +159,14 @@ function renderHeatmap() {
 
 function renderParallels() {
   var list = D.top_parallels || [];
-  if (!list.length) { document.getElementById('parallels-list').innerHTML = '<div class="panel" style="color:var(--text-muted);font-size:0.82rem">パラレルなし</div>'; return; }
+  if (!list.length) { document.getElementById('parallels-list').innerHTML = '<div class="panel" style="color:var(--text-muted);font-size:0.82rem">構造パラレルなし</div>'; return; }
   document.getElementById('parallels-list').innerHTML = list.map(function(p) {
     return '<div class="parallel-card"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="parallel-score">'+p.score.toFixed(3)+'</span><span style="font-size:0.68rem;color:var(--text-muted)">'+p.type+'</span></div><div style="font-weight:500">'+p.a_title+' <span style="color:var(--text-muted);font-size:0.72rem">('+p.a_culture+'/'+p.a_region+')</span></div><div style="color:var(--text-secondary);font-size:0.78rem;margin:2px 0">&harr;</div><div style="font-weight:500">'+p.b_title+' <span style="color:var(--text-muted);font-size:0.72rem">('+p.b_culture+'/'+p.b_region+')</span></div>'+(p.desc?'<div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">'+p.desc+'</div>':'')+'</div>';
   }).join('');
 }
 
 function renderSources() {
-  var h = '<thead><tr><th>Source</th><th>Records</th><th style="text-align:right">%</th></tr></thead><tbody>';
+  var h = '<thead><tr><th>ソース</th><th>レコード数</th><th style="text-align:right">%</th></tr></thead><tbody>';
   D.sources.forEach(function(s) {
     var pct = (s[1]/D.total_narratives*100).toFixed(1);
     h += '<tr><td style="font-weight:500">'+(SRC_LABELS[s[0]]||s[0])+'</td><td style="font-family:monospace">'+fmt(s[1])+'</td><td style="text-align:right;font-family:monospace;color:var(--text-muted)">'+pct+'%</td></tr>';
@@ -180,7 +180,7 @@ function renderSamples() {
     var funcs = (s.functions||[]).map(function(f){return '<span class="sample-tag func">'+f.code+' ('+f.conf.toFixed(2)+')</span>';}).join('');
     var themes = (s.themes||[]).map(function(t){return '<span class="sample-tag">'+t+'</span>';}).join('');
     var chars = (s.characters||[]).map(function(c){return c.name+(c.role?' ('+c.role+')':'');}).join(', ');
-    return '<div class="sample-card"><div class="sample-source">'+s.culture+' / '+s.region+' / '+s.type+'</div><div class="sample-title">'+s.title+'</div>'+(s.summary?'<div class="sample-desc">'+s.summary+'</div>':'')+(chars?'<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px">Characters: '+chars+'</div>':'')+'<div class="sample-tags">'+funcs+themes+'</div></div>';
+    return '<div class="sample-card"><div class="sample-source">'+s.culture+' / '+s.region+' / '+s.type+'</div><div class="sample-title">'+s.title+'</div>'+(s.summary?'<div class="sample-desc">'+s.summary+'</div>':'')+(chars?'<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px">登場人物: '+chars+'</div>':'')+'<div class="sample-tags">'+funcs+themes+'</div></div>';
   }).join('');
 }
 
