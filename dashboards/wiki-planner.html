@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Wiki 構造プランナー | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--card:#fff;--text:#121212;--ts:#555;--tm:#6B6B6B;--border:#D9D9D9;--bl:#EEE;--surface:#F7F7F5;--aw:#CC1400;--am:rgba(204,20,0,.06);--f:"Noto Sans JP",sans-serif;--fs:"Noto Serif JP",serif}
+[data-theme="dark"]{--bg:#121212;--card:#1A1A1A;--text:#E0E0E0;--ts:#AAA;--tm:#8A8A8A;--border:#333;--bl:#2A2A2A;--surface:#1A1A1A;--aw:#E85A45;--am:rgba(232,90,69,.1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);color:var(--text);background:var(--bg);line-height:1.6}
+.top-bar{background:var(--bg);border-top:3px solid var(--aw);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:48px;position:sticky;top:0;z-index:100}
+.top-bar-brand{font-size:.75rem;font-weight:700;letter-spacing:.08em;color:var(--tm)}
+.top-bar-brand span{color:var(--aw)}
+.top-bar-actions{display:flex;gap:12px;align-items:center}
+.back-link,.theme-toggle{font-family:var(--f);font-size:.72rem;color:var(--tm);text-decoration:none;background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer}
+.back-link{border:none}
+.back-link:hover,.theme-toggle:hover{color:var(--aw)}
+.main{max-width:1100px;margin:0 auto;padding:24px 20px}
+h1{font-family:var(--fs);font-size:1.3rem;font-weight:700;margin-bottom:4px}
+.sub{font-size:.84rem;color:var(--ts);margin-bottom:20px}
+.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.toolbar button{font-family:var(--f);font-size:.75rem;padding:6px 14px;border:1px solid var(--border);background:var(--surface);color:var(--ts);cursor:pointer;border-radius:4px}
+.toolbar button:hover{border-color:var(--aw);color:var(--aw)}
+.toolbar button.active{background:var(--aw);color:#fff;border-color:var(--aw)}
+.stats{display:flex;gap:16px;font-size:.75rem;color:var(--tm);margin-bottom:20px}
+.stats strong{color:var(--text)}
+.columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:24px}
+.column{background:var(--card);border:1px solid var(--border);border-radius:8px;min-height:200px}
+.column-header{padding:12px 16px;border-bottom:1px solid var(--bl);display:flex;justify-content:space-between;align-items:center}
+.column-title{font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.column-count{font-size:.68rem;color:var(--tm);background:var(--surface);padding:2px 8px;border-radius:10px}
+.column-body{padding:8px;min-height:150px}
+.column-body.drag-over{background:var(--am)}
+.card{background:var(--surface);border:1px solid var(--bl);border-radius:6px;padding:10px 12px;margin-bottom:6px;cursor:grab;position:relative;transition:transform .1s,box-shadow .1s}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card.dragging{opacity:.4;transform:scale(.95)}
+.card-title{font-size:.82rem;font-weight:500;line-height:1.5;padding-right:24px}
+.card-meta{display:flex;gap:8px;margin-top:6px;font-size:.68rem;color:var(--tm);flex-wrap:wrap}
+.card-tag{padding:1px 6px;border-radius:3px;font-size:.65rem}
+.card-tag.high{background:#dcfce7;color:#166534}
+.card-tag.medium{background:#fef3c7;color:#92400e}
+.card-tag.low{background:#fce7f3;color:#9d174d}
+.card-tag.open{background:#dbeafe;color:#1e40af}
+.card-tag.db{background:var(--am);color:var(--aw)}
+.card-delete{position:absolute;top:6px;right:8px;background:none;border:none;color:var(--tm);cursor:pointer;font-size:.88rem;line-height:1;padding:2px 4px;opacity:0;transition:opacity .15s}
+.card:hover .card-delete{opacity:1}
+.card-delete:hover{color:#dc2626}
+.add-card{border:1px dashed var(--border);border-radius:6px;padding:8px;text-align:center;cursor:pointer;font-size:.78rem;color:var(--tm);margin-top:4px}
+.add-card:hover{border-color:var(--aw);color:var(--aw)}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}
+.modal h2{font-family:var(--fs);font-size:1.05rem;margin-bottom:16px}
+.modal label{display:block;font-size:.78rem;font-weight:600;color:var(--ts);margin:12px 0 4px}
+.modal input,.modal select,.modal textarea{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:4px;font-size:.84rem;font-family:var(--f);background:var(--bg);color:var(--text)}
+.modal textarea{height:80px;resize:vertical}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.modal-actions button{padding:8px 20px;border-radius:4px;font-family:var(--f);font-size:.82rem;cursor:pointer}
+.btn-primary{background:var(--aw);color:#fff;border:none}
+.btn-secondary{background:var(--surface);color:var(--ts);border:1px solid var(--border)}
+.legend{font-size:.72rem;color:var(--tm);margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap}
+[data-theme="dark"] .card-tag.high{background:#052e16;color:#86efac}
+[data-theme="dark"] .card-tag.medium{background:#451a03;color:#fcd34d}
+[data-theme="dark"] .card-tag.low{background:#500724;color:#f9a8d4}
+[data-theme="dark"] .card-tag.open{background:#172554;color:#93c5fd}
+</style>
+</head>
+<body>
+<header class="top-bar">
+<div class="top-bar-brand"><span>LLM Wiki</span> — Structure Planner</div>
+<div class="top-bar-actions">
+<a href="../databases.html" class="back-link">&larr; データベース</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK</button>
+<button class="theme-toggle" onclick="exportJSON()">JSONエクスポート</button>
+</div>
+</header>
+
+<div class="main">
+<h1>LLM Wiki 構造プランナー</h1>
+<p class="sub">8つのデータベースから抽出された知見・モデル・矛盾・仮説・接続を構造化。ドラッグ&ドロップで移動、×で削除、＋で追加。</p>
+
+<div class="stats" id="stats"></div>
+
+<div class="legend">
+<span>信頼度: </span>
+<span class="card-tag high">high</span>
+<span class="card-tag medium">medium</span>
+<span class="card-tag low">low</span>
+<span style="margin-left:12px">状態: </span>
+<span class="card-tag open">open</span>
+</div>
+
+<div class="toolbar">
+<button onclick="filterCategory('all')" class="active" data-filter="all">すべて</button>
+<button onclick="filterCategory('findings')" data-filter="findings">発見 (Findings)</button>
+<button onclick="filterCategory('models')" data-filter="models">モデル (Models)</button>
+<button onclick="filterCategory('contradictions')" data-filter="contradictions">矛盾 (Contradictions)</button>
+<button onclick="filterCategory('hypotheses')" data-filter="hypotheses">仮説 (Hypotheses)</button>
+<button onclick="filterCategory('connections')" data-filter="connections">接続 (Connections)</button>
+</div>
+
+<div class="columns" id="columns"></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+<div class="modal" id="modal">
+<h2 id="modal-title">新規アイテム追加</h2>
+<label>タイトル</label>
+<input type="text" id="item-title" placeholder="知見のタイトル">
+<label>カテゴリ</label>
+<select id="item-category">
+<option value="findings">発見 (Finding)</option>
+<option value="models">モデル (Model)</option>
+<option value="contradictions">矛盾 (Contradiction)</option>
+<option value="hypotheses">仮説 (Hypothesis)</option>
+<option value="connections">接続 (Connection)</option>
+</select>
+<label>ソース</label>
+<input type="text" id="item-source" placeholder="レポート名やDB名">
+<label>信頼度</label>
+<select id="item-confidence">
+<option value="high">High</option>
+<option value="medium">Medium</option>
+<option value="low">Low</option>
+</select>
+<label>メモ（任意）</label>
+<textarea id="item-notes" placeholder="補足情報"></textarea>
+<div class="modal-actions">
+<button class="btn-secondary" onclick="closeModal()">キャンセル</button>
+<button class="btn-primary" onclick="saveItem()">追加</button>
+</div>
+</div>
+</div>
+
+<script>
+const CATEGORIES = {
+  findings: {label:'発見 (Findings)', color:'#16a34a'},
+  models: {label:'モデル (Models)', color:'#2563eb'},
+  contradictions: {label:'矛盾 (Contradictions)', color:'#dc2626'},
+  hypotheses: {label:'仮説 (Hypotheses)', color:'#9333ea'},
+  connections: {label:'接続 (Connections)', color:'#d97706'}
+};
+
+let data = {};
+let currentFilter = 'all';
+let dragItem = null;
+let dragSource = null;
+
+// Load data
+fetch('../data/wiki_structure.json')
+  .then(r => r.json())
+  .then(d => { data = d; render(); })
+  .catch(() => {
+    // Fallback: embedded data
+    data = {findings:[],models:[],contradictions:[],hypotheses:[],connections:[]};
+    render();
+  });
+
+function render() {
+  const cols = document.getElementById('columns');
+  cols.innerHTML = '';
+  updateStats();
+
+  const categories = currentFilter === 'all'
+    ? Object.keys(CATEGORIES)
+    : [currentFilter];
+
+  categories.forEach(cat => {
+    const info = CATEGORIES[cat];
+    const items = data[cat] || [];
+    const col = document.createElement('div');
+    col.className = 'column';
+    col.innerHTML = `
+      <div class="column-header">
+        <div class="column-title">
+          <span style="width:8px;height:8px;border-radius:50%;background:${info.color};display:inline-block"></span>
+          ${info.label}
+        </div>
+        <span class="column-count">${items.length}</span>
+      </div>
+      <div class="column-body" data-category="${cat}"></div>
+    `;
+    const body = col.querySelector('.column-body');
+
+    items.forEach((item, idx) => {
+      body.appendChild(createCard(item, cat, idx));
+    });
+
+    const addBtn = document.createElement('div');
+    addBtn.className = 'add-card';
+    addBtn.textContent = '＋ 追加';
+    addBtn.onclick = () => openModal(cat);
+    body.appendChild(addBtn);
+
+    // Drop zone
+    body.addEventListener('dragover', e => { e.preventDefault(); body.classList.add('drag-over'); });
+    body.addEventListener('dragleave', () => body.classList.remove('drag-over'));
+    body.addEventListener('drop', e => {
+      e.preventDefault();
+      body.classList.remove('drag-over');
+      if (dragItem && dragSource !== cat) {
+        // Move item
+        const srcArr = data[dragSource];
+        const idx = srcArr.findIndex(i => i.id === dragItem.id);
+        if (idx >= 0) {
+          srcArr.splice(idx, 1);
+          dragItem.category = cat;
+          data[cat].push(dragItem);
+          render();
+        }
+      }
+      dragItem = null; dragSource = null;
+    });
+
+    cols.appendChild(col);
+  });
+}
+
+function createCard(item, cat, idx) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.draggable = true;
+  card.dataset.id = item.id;
+
+  let metaHTML = '';
+  if (item.source) metaHTML += `<span class="card-tag db">${item.source}</span>`;
+  if (item.confidence) metaHTML += `<span class="card-tag ${item.confidence}">${item.confidence}</span>`;
+  if (item.status) metaHTML += `<span class="card-tag ${item.status}">${item.status}</span>`;
+  if (item.dbs) item.dbs.forEach(db => { metaHTML += `<span class="card-tag db">${db}</span>`; });
+  if (item.testable !== undefined) metaHTML += `<span class="card-tag ${item.testable?'high':'low'}">${item.testable?'検証可能':'概念的'}</span>`;
+
+  card.innerHTML = `
+    <div class="card-title">${escapeHtml(item.title)}</div>
+    <div class="card-meta">${metaHTML}</div>
+    <button class="card-delete" onclick="deleteItem('${cat}','${item.id}')" title="削除">&times;</button>
+  `;
+
+  card.addEventListener('dragstart', e => {
+    dragItem = item;
+    dragSource = cat;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+  return card;
+}
+
+function deleteItem(cat, id) {
+  if (!confirm('このアイテムを削除しますか？')) return;
+  data[cat] = data[cat].filter(i => i.id !== id);
+  render();
+}
+
+function openModal(cat) {
+  document.getElementById('item-category').value = cat || 'findings';
+  document.getElementById('item-title').value = '';
+  document.getElementById('item-source').value = '';
+  document.getElementById('item-confidence').value = 'medium';
+  document.getElementById('item-notes').value = '';
+  document.getElementById('modal-overlay').classList.add('show');
+  document.getElementById('item-title').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+function saveItem() {
+  const title = document.getElementById('item-title').value.trim();
+  if (!title) return alert('タイトルを入力してください');
+  const cat = document.getElementById('item-category').value;
+  const item = {
+    id: cat.charAt(0) + '-' + Date.now(),
+    title: title,
+    source: document.getElementById('item-source').value.trim(),
+    confidence: document.getElementById('item-confidence').value,
+    category: cat,
+    notes: document.getElementById('item-notes').value.trim()
+  };
+  if (cat === 'contradictions') item.status = 'open';
+  data[cat].push(item);
+  closeModal();
+  render();
+}
+
+function filterCategory(cat) {
+  currentFilter = cat;
+  document.querySelectorAll('.toolbar button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-filter="${cat}"]`).classList.add('active');
+  render();
+}
+
+function updateStats() {
+  const total = Object.values(data).reduce((s, arr) => s + arr.length, 0);
+  const high = Object.values(data).flat().filter(i => i.confidence === 'high').length;
+  const open = Object.values(data).flat().filter(i => i.status === 'open').length;
+  document.getElementById('stats').innerHTML = `
+    <span><strong>${total}</strong> アイテム</span>
+    <span><strong>${high}</strong> high confidence</span>
+    <span><strong>${open}</strong> 未解決矛盾</span>
+    <span><strong>${Object.keys(CATEGORIES).length}</strong> カテゴリ</span>
+  `;
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'wiki-structure.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleTheme() {
+  const h = document.documentElement, b = document.querySelector('.theme-toggle');
+  h.getAttribute('data-theme') === 'dark'
+    ? (h.setAttribute('data-theme','light'), b.textContent='DARK')
+    : (h.setAttribute('data-theme','dark'), b.textContent='LIGHT');
+}
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+</script>
+</body>
+</html>
