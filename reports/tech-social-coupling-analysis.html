@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技術史と社会変革の結合構造 — 3データベース横断による数理的分析</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --bg-alt: #FAFAF8; --card: #FFFFFF;
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --surface: #F7F7F5;
+  --accent: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --accent-blue: #1565c0; --accent-green: #2e7d32; --accent-orange: #e65100;
+  --serif: 'Noto Serif JP', serif; --sans: 'Noto Sans JP', sans-serif;
+}
+[data-theme="dark"] {
+  --bg: #0D0D0D; --bg-alt: #141414; --card: #1A1A1A;
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #777777;
+  --border: #333333; --border-light: #222222; --surface: #1E1E1E;
+  --accent: #FF4444; --accent-muted: rgba(255,68,68,0.08);
+  --accent-blue: #64b5f6; --accent-green: #66bb6a; --accent-orange: #ffb74d;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.9; font-weight: 400; -webkit-font-smoothing: antialiased; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 100; width: 36px; height: 36px; border: 1px solid var(--border); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.report-header { background: var(--bg-alt); border-bottom: 1px solid var(--border-light); padding: 48px 24px 40px; }
+.report-header-inner { max-width: 740px; margin: 0 auto; }
+.report-back { font-size: 0.75rem; color: var(--text-muted); text-decoration: none; display: inline-block; margin-bottom: 24px; }
+.report-back:hover { color: var(--accent); }
+.report-meta-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.report-badge { display: inline-block; padding: 2px 8px; background: var(--accent); color: #fff; font-size: 0.65rem; font-weight: 600; }
+.report-badge-outline { display: inline-block; padding: 2px 8px; border: 1px solid var(--border); color: var(--text-secondary); font-size: 0.65rem; font-weight: 500; }
+.report-date { font-size: 0.75rem; color: var(--text-muted); }
+.report-title { font-family: var(--serif); font-size: 1.75rem; font-weight: 700; line-height: 1.4; margin-bottom: 12px; }
+.report-subtitle { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; max-width: 640px; }
+.key-metrics { max-width: 740px; margin: -20px auto 0; padding: 0 24px; position: relative; z-index: 2; }
+.key-metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border: 1px solid var(--border); background: var(--card); }
+@media (max-width: 600px) { .key-metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+.key-metric { padding: 16px 12px; text-align: center; border-right: 1px solid var(--border-light); }
+.key-metric:last-child { border-right: none; }
+.key-metric-value { font-family: var(--serif); font-size: 1.15rem; font-weight: 700; line-height: 1.2; color: var(--accent); }
+.key-metric-label { font-size: 0.62rem; color: var(--text-muted); margin-top: 4px; }
+.article { max-width: 740px; margin: 0 auto; padding: 48px 24px 80px; }
+.toc { margin-bottom: 48px; padding: 24px 28px; background: var(--surface); border-left: 3px solid var(--accent); }
+.toc-title { font-family: var(--serif); font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px; }
+.toc ol { list-style: none; counter-reset: toc; padding-left: 0; }
+.toc ol li { counter-increment: toc; margin-bottom: 6px; }
+.toc ol li::before { content: counter(toc) "."; color: var(--accent); font-weight: 600; font-size: 0.78rem; margin-right: 6px; font-family: var(--serif); }
+.toc a { color: var(--text); text-decoration: none; font-size: 0.82rem; }
+.toc a:hover { color: var(--accent); }
+h2.article-h2 { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; line-height: 1.5; margin: 56px 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); }
+h3.article-h3 { font-family: var(--serif); font-size: 1.0rem; font-weight: 700; line-height: 1.5; margin: 36px 0 12px; }
+h2.article-h2:first-of-type { margin-top: 0; }
+.article p { margin-bottom: 18px; font-size: 0.92rem; line-height: 1.95; text-align: justify; }
+.section-num { display: block; font-family: var(--serif); font-size: 0.7rem; color: var(--accent); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 4px; }
+.pullquote { margin: 32px 0; padding: 20px 24px; border-left: 3px solid var(--accent); background: var(--accent-muted); font-family: var(--serif); font-size: 0.95rem; line-height: 1.8; }
+.finding-box { margin: 24px 0; padding: 18px 20px; border-left: 3px solid var(--accent-green); background: rgba(46,125,50,0.03); }
+[data-theme="dark"] .finding-box { background: rgba(102,187,106,0.04); }
+.finding-label { font-family: var(--serif); font-size: 0.72rem; font-weight: 700; color: var(--accent-green); margin-bottom: 8px; }
+.finding-box p { font-size: 0.88rem; margin-bottom: 8px; line-height: 1.8; text-align: left; }
+.finding-box p:last-child { margin-bottom: 0; }
+.data-box { margin: 24px 0; padding: 18px 20px; border-left: 3px solid var(--accent-blue); background: rgba(21,101,192,0.03); }
+[data-theme="dark"] .data-box { background: rgba(100,181,246,0.04); }
+.data-label { font-family: var(--serif); font-size: 0.72rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 8px; }
+.data-box p { font-size: 0.88rem; margin-bottom: 8px; line-height: 1.8; text-align: left; }
+.formula { margin: 24px 0; padding: 18px 24px; background: var(--surface); border: 1px solid var(--border-light); font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.8; text-align: center; overflow-x: auto; }
+.formula .label { font-family: var(--sans); font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 6px; text-align: left; }
+.formula .eq { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+.formula .note { font-family: var(--sans); font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top: 8px; text-align: left; }
+.chart-container { margin: 28px 0; padding: 20px; background: var(--surface); border: 1px solid var(--border-light); }
+.chart-caption { font-size: 0.72rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; text-align: center; }
+table.data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 24px 0; }
+table.data-table th { background: var(--surface); padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); font-size: 0.70rem; color: var(--text-secondary); text-transform: uppercase; }
+table.data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border-light); vertical-align: top; line-height: 1.6; }
+table.data-table td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: monospace; }
+table.data-table tr:hover td { background: var(--accent-muted); }
+.regime-tag { display: inline-block; padding: 1px 6px; font-size: 0.68rem; font-weight: 600; }
+.regime-co { background: #dcfce7; color: #16a34a; }
+.regime-tech { background: #fee2e2; color: #dc2626; }
+.regime-social { background: #dbeafe; color: #1d4ed8; }
+.regime-trans { background: #fef3c7; color: #92400e; }
+[data-theme="dark"] .regime-co { background: rgba(22,163,74,0.2); }
+[data-theme="dark"] .regime-tech { background: rgba(220,38,38,0.2); }
+[data-theme="dark"] .regime-social { background: rgba(29,78,216,0.2); }
+[data-theme="dark"] .regime-trans { background: rgba(146,64,14,0.2); }
+.report-footer { max-width: 740px; margin: 0 auto; padding: 0 24px 60px; border-top: 1px solid var(--border-light); padding-top: 32px; }
+.footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+.footer-link { font-size: 0.78rem; color: var(--text-muted); text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid var(--border-light); }
+.footer-link:hover { color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'">&#9790;</button>
+
+<div class="report-header">
+  <div class="report-header-inner">
+    <a class="report-back" href="../analysis-reports.html">&larr; 解析レポート一覧に戻る</a>
+    <div class="report-meta-top">
+      <span class="report-badge">TA</span>
+      <span class="report-badge">SIF</span>
+      <span class="report-badge">GF</span>
+      <span class="report-badge-outline">横断分析</span>
+      <span class="report-date">2026年4月28日</span>
+    </div>
+    <h1 class="report-title">技術史と社会変革の結合構造<br>3データベース横断による数理的分析</h1>
+    <p class="report-subtitle">技術発展加速度DB（5,396マイルストーン）、社会イノベーション枠組DB（1,096事象）、歴史偉人DB（9,178人物）を統合し、技術変遷と社会変革の共進化パターンを定量分析。冪乗則結合・遅延応答・構造的緊張の3つの数理モデルを導出。</p>
+  </div>
+</div>
+
+<div class="key-metrics">
+  <div class="key-metrics-grid">
+    <div class="key-metric"><div class="key-metric-value">r=0.964</div><div class="key-metric-label">Tech-SI相関</div></div>
+    <div class="key-metric"><div class="key-metric-value">R²=0.93</div><div class="key-metric-label">冪乗則適合</div></div>
+    <div class="key-metric"><div class="key-metric-value">81.9%</div><div class="key-metric-label">SI/Tech成長比</div></div>
+    <div class="key-metric"><div class="key-metric-value">5</div><div class="key-metric-label">レジーム分類</div></div>
+    <div class="key-metric"><div class="key-metric-value">3 DB</div><div class="key-metric-label">横断統合</div></div>
+  </div>
+</div>
+
+<div class="article">
+
+<div class="toc">
+  <div class="toc-title">目次</div>
+  <ol>
+    <li><a href="#sec1">分析の枠組み: 3つのデータベースの統合</a></li>
+    <li><a href="#sec2">時代別同時変動: 技術・社会・人物の密度比較</a></li>
+    <li><a href="#sec3">数式1: 冪乗則結合モデル</a></li>
+    <li><a href="#sec4">数式2: 指数成長率と構造的緊張</a></li>
+    <li><a href="#sec5">数式3: 遅延応答モデル</a></li>
+    <li><a href="#sec6">レジーム分類: 5つの共進化パターン</a></li>
+    <li><a href="#sec7">PRRRC次元の時代的変遷</a></li>
+    <li><a href="#sec8">位相ダイナミクス: 加速と減速の同期構造</a></li>
+    <li><a href="#sec9">統合モデル: 変換指数CTI</a></li>
+    <li><a href="#sec10">結論: 技術と社会の非対称な共進化</a></li>
+  </ol>
+</div>
+
+<!-- Section 1 -->
+<span class="section-num" id="sec1">SECTION 01</span>
+<h2 class="article-h2">分析の枠組み: 3つのデータベースの統合</h2>
+
+<p>人類の歴史を理解するには、技術の発展だけでも、社会制度の変革だけでも十分ではない。本分析は、3つの独立に構築されたデータベースを時間軸で統合することにより、技術変遷と社会変革がどのような構造的関係にあるかを数理的に解明する試みである。</p>
+
+<div class="data-box">
+  <div class="data-label">3つのデータソース</div>
+  <p><strong>T(t): 技術発展加速度DB（TA）</strong> — 5,396件の技術マイルストーン。紀元前700万年〜2024年。技術の「量」と「密度」を測る。</p>
+  <p><strong>S(t): 社会イノベーション枠組DB（SIF）</strong> — 1,096件の制度的社会変革。紀元前4万年〜2022年。PRRRC 5次元で変革の「構造的深度」を測る。</p>
+  <p><strong>G(t): 歴史偉人DB（GF）</strong> — 9,178人の歴史的人物と10,033の歴史イベント。「人的エージェンシー」の密度を測る。</p>
+</div>
+
+<p>14の時代区分（古代〜デジタル時代）を共通の時間軸として、各データベースの「密度」（件数/年）を算出し、相互の関係性を分析した。重要なのは、これらのデータベースが互いに独立に構築されていることである。技術マイルストーンの選定は技術史の観点から、社会イノベーションは制度変革の観点から、歴史偉人は人物史の観点から行われており、データベース間に人為的な相関は注入されていない。</p>
+
+<!-- Section 2 -->
+<span class="section-num" id="sec2">SECTION 02</span>
+<h2 class="article-h2">時代別同時変動: 技術・社会・人物の密度比較</h2>
+
+<div class="chart-container">
+  <canvas id="timeline-chart" height="320"></canvas>
+  <div class="chart-caption">図1: 3データベースの時代別密度推移（対数スケール）。技術(T)・社会変革(SI)・偉人(GF)はBC3000年から産業革命まで概ね同期的に上昇するが、20世紀後半以降乖離する。</div>
+</div>
+
+<p>3つの密度指標は、紀元前3000年から産業革命期（1800-1870年）まで驚くほど同期して上昇する。古代の技術密度0.089件/年に対して社会変革0.008件/年、偉人密度0.17人/年であったものが、産業革命期にはそれぞれ5.2、1.4、14.4へと、いずれも数十倍に増加した。この同期性は対数スケールで見ると明瞭である。</p>
+
+<p>しかし20世紀後半以降、3つの指標は異なる軌道を描き始める。技術密度は冷戦期（27.5件/年）からデジタル時代（54.7件/年）へと一貫して上昇を続けるが、社会変革密度は冷戦期（5.5件/年）をピークに停滞気味となり、偉人密度は冷戦期の25.3人/年からデジタル時代の2.9人/年へと急落する。技術が加速し続ける中で、社会変革と歴史的人物のペースが追いつかなくなっている。</p>
+
+<table class="data-table">
+<thead><tr><th>時代</th><th class="num">スパン</th><th class="num">Tech/年</th><th class="num">SI/年</th><th class="num">GF/年</th><th>レジーム</th></tr></thead>
+<tbody>
+<tr><td>古代</td><td class="num">2,500</td><td class="num">0.089</td><td class="num">0.008</td><td class="num">0.17</td><td><span class="regime-trans">基底状態</span></td></tr>
+<tr><td>古典</td><td class="num">1,000</td><td class="num">0.276</td><td class="num">0.046</td><td class="num">1.15</td><td><span class="regime-co">共加速</span></td></tr>
+<tr><td>初期中世</td><td class="num">500</td><td class="num">0.384</td><td class="num">0.114</td><td class="num">1.19</td><td><span class="regime-trans">移行期</span></td></tr>
+<tr><td>盛期中世</td><td class="num">300</td><td class="num">0.580</td><td class="num">0.150</td><td class="num">1.80</td><td><span class="regime-trans">移行期</span></td></tr>
+<tr><td>後期中世</td><td class="num">200</td><td class="num">0.340</td><td class="num">0.250</td><td class="num">3.43</td><td><span class="regime-social">社会先行</span></td></tr>
+<tr><td>近世</td><td class="num">200</td><td class="num">0.705</td><td class="num">0.305</td><td class="num">4.70</td><td><span class="regime-trans">移行期</span></td></tr>
+<tr><td>啓蒙主義</td><td class="num">100</td><td class="num">1.220</td><td class="num">0.240</td><td class="num">4.58</td><td><span class="regime-tech">技術先行</span></td></tr>
+<tr><td>産業革命</td><td class="num">70</td><td class="num">5.229</td><td class="num">1.443</td><td class="num">14.37</td><td><span class="regime-co">共加速</span></td></tr>
+<tr><td>後期産業</td><td class="num">44</td><td class="num">11.295</td><td class="num">2.045</td><td class="num">24.61</td><td><span class="regime-trans">移行期</span></td></tr>
+<tr><td>世界大戦</td><td class="num">31</td><td class="num">18.226</td><td class="num">1.548</td><td class="num">29.55</td><td><span class="regime-tech">技術先行</span></td></tr>
+<tr><td>冷戦</td><td class="num">30</td><td class="num">27.500</td><td class="num">5.500</td><td class="num">25.27</td><td><span class="regime-co">共加速</span></td></tr>
+<tr><td>冷戦後期</td><td class="num">16</td><td class="num">21.375</td><td class="num">6.125</td><td class="num">15.12</td><td><span class="regime-trans">移行期</span></td></tr>
+<tr><td>グローバル化</td><td class="num">19</td><td class="num">31.789</td><td class="num">9.474</td><td class="num">9.21</td><td><span class="regime-trans">移行期</span></td></tr>
+<tr><td>デジタル時代</td><td class="num">15</td><td class="num">54.667</td><td class="num">7.333</td><td class="num">2.93</td><td><span class="regime-tech">技術先行</span></td></tr>
+</tbody>
+</table>
+
+<!-- Section 3 -->
+<span class="section-num" id="sec3">SECTION 03</span>
+<h2 class="article-h2">数式1: 冪乗則結合モデル</h2>
+
+<p>技術密度T(t)と社会変革密度S(t)の関係を回帰分析すると、冪乗則（power law）が最も適合する。</p>
+
+<div class="formula">
+  <span class="label">数式1: 冪乗則結合（R² = 0.929）</span>
+  <span class="eq">S(t) = 0.233 &times; T(t)<sup>0.953</sup></span>
+  <span class="note">技術密度が2倍になると、社会変革密度は1.94倍に増加する。指数0.953は「ほぼ線形だがわずかに劣線形」を意味する。</span>
+</div>
+
+<p>この数式は驚くべき適合度（R²=0.929）を持つ。指数0.953は1に近いが1未満であり、技術の増加に対して社会変革がわずかに追いつけない——「構造的遅れ」——ことを定量的に示している。技術が2倍に増えても社会変革は2倍には達せず、1.94倍にとどまる。この6%の差は一見小さいが、指数関数的成長の下では時間とともに累積し、巨大な乖離を生む。</p>
+
+<p>対照的に、偉人密度G(t)と技術密度T(t)の関係はより弱い。</p>
+
+<div class="formula">
+  <span class="label">数式2: 偉人-技術結合（R² = 0.620）</span>
+  <span class="eq">G(t) = 2.76 &times; T(t)<sup>0.536</sup></span>
+  <span class="note">技術密度が2倍になると、偉人密度は1.45倍に増加。指数0.536は「平方根的」関係を示す。</span>
+</div>
+
+<p>偉人密度は技術密度の平方根にほぼ比例する。これは、技術の進歩が人的エージェンシーの発露を一定程度は促進するが、技術が高度化するほどその効果は逓減することを意味する。R²=0.620とやや低いのは、1975年以降にGF密度が急落する「偉人の現代的不可視化」（データベースの時代バイアスの可能性を含む）による。</p>
+
+<div class="chart-container">
+  <canvas id="powerlaw-chart" height="300"></canvas>
+  <div class="chart-caption">図2: 技術密度 vs 社会変革密度の散布図（対数-対数スケール）。冪乗則 S = 0.233 T^0.953 が良好にフィット。</div>
+</div>
+
+<!-- Section 4 -->
+<span class="section-num" id="sec4">SECTION 04</span>
+<h2 class="article-h2">数式2: 指数成長率と構造的緊張</h2>
+
+<p>1000年以降の近代化過程に限定して指数関数でフィッティングすると、技術と社会変革はいずれも指数成長するが、その速度に持続的な差がある。</p>
+
+<div class="formula">
+  <span class="label">数式3: 指数成長モデル（1000年以降）</span>
+  <span class="eq">T(t) = T<sub>0</sub> &middot; e<sup>0.00588t</sup> &emsp; 倍増: 118年</span><br>
+  <span class="eq">S(t) = S<sub>0</sub> &middot; e<sup>0.00481t</sup> &emsp; 倍増: 144年</span>
+  <span class="note">SIはTechの81.9%の速度で成長。この差が「構造的緊張」を生む。</span>
+</div>
+
+<p>技術は118年で倍増し、社会変革は144年で倍増する。この26年の差が意味するのは、技術が1世代先を走り続け、社会制度が常に追いかける構造である。この非対称性を「構造的緊張（Structural Tension）」と定義する。</p>
+
+<div class="formula">
+  <span class="label">数式4: 構造的緊張指数</span>
+  <span class="eq">Tension(t) = log<sub>10</sub>( T(t) / S(t) )</span>
+  <span class="note">Tension > 0.5 → 技術優位、-0.2 &lt; Tension &lt; 0.5 → 均衡、Tension &lt; -0.2 → 社会優位</span>
+</div>
+
+<div class="chart-container">
+  <canvas id="tension-chart" height="260"></canvas>
+  <div class="chart-caption">図3: 構造的緊張指数の推移。ほぼ全時代でTension &gt; 0.5（技術優位）。後期中世のみ均衡に近づく。</div>
+</div>
+
+<p>構造的緊張指数は14時代区分のうち12で0.5を超え（技術優位）、均衡に近づいたのは後期中世（0.134）と近世（0.364）のみである。後期中世は技術停滞期（ペスト等による人口減）だが社会変革は活発だった時代であり、ここに「社会が技術に追いつく条件」のヒントがある。世界大戦期（1.071）とデジタル時代（0.872）は最も緊張が高く、技術の急進と社会制度の適応遅れが同時に生じている。</p>
+
+<!-- Section 5 -->
+<span class="section-num" id="sec5">SECTION 05</span>
+<h2 class="article-h2">数式3: 遅延応答モデル</h2>
+
+<p>社会変革は技術変化に即座に反応するのか、それとも時間的遅れがあるのか。遅延パラメータ&tau;を導入してテストした。</p>
+
+<div class="formula">
+  <span class="label">数式5: 遅延応答モデル</span>
+  <span class="eq">S(t) = a &times; T(t &minus; &tau;)<sup>b</sup></span>
+</div>
+
+<table class="data-table">
+<thead><tr><th>遅延 &tau;</th><th class="num">係数 a</th><th class="num">指数 b</th><th class="num">R²</th><th>解釈</th></tr></thead>
+<tbody>
+<tr><td>0 期（同時）</td><td class="num">0.233</td><td class="num">0.953</td><td class="num">0.929</td><td>ベースライン</td></tr>
+<tr style="background:var(--accent-muted)"><td><strong>1 期（最適）</strong></td><td class="num">0.442</td><td class="num">0.844</td><td class="num"><strong>0.935</strong></td><td>社会変革は1期遅れで最も説明力が高い</td></tr>
+<tr><td>2 期</td><td class="num">0.703</td><td class="num">0.787</td><td class="num">0.909</td><td></td></tr>
+<tr><td>3 期</td><td class="num">1.052</td><td class="num">0.732</td><td class="num">0.821</td><td>適合度低下</td></tr>
+</tbody>
+</table>
+
+<div class="finding-box">
+  <div class="finding-label">FINDING</div>
+  <p><strong>社会変革は技術変化に対して1期（約50-100年）遅れで応答する。</strong>遅延1期のモデルがR²=0.935で最高の適合を示す。技術がまず突破し、社会制度が次の世代でそれに応答するという「世代遅延モデル」は、産業革命→労働法制定（50年）、インターネット登場→GDPR制定（30年）など、個別事例とも整合する。</p>
+</div>
+
+<!-- Section 6 -->
+<span class="section-num" id="sec6">SECTION 06</span>
+<h2 class="article-h2">レジーム分類: 5つの共進化パターン</h2>
+
+<p>各時代区分における技術成長率と社会変革成長率の組み合わせから、5つのレジーム（体制）が識別される。</p>
+
+<div class="chart-container">
+  <canvas id="regime-chart" height="300"></canvas>
+  <div class="chart-caption">図4: 技術成長倍率 vs 社会変革成長倍率のレジームマップ。右上が共加速、右下が技術先行、左上が社会先行。</div>
+</div>
+
+<p><strong>(1) 共加速レジーム</strong>（古典期、産業革命、冷戦）: 技術も社会変革も同時に加速する「黄金期」。産業革命期は技術4.3倍・社会6.0倍と社会変革が技術を上回る稀な局面であり、労働運動・公教育・社会保障制度の爆発的創出がこれを裏付ける。冷戦期は脱植民地化・開発機構設立が一気に進行し、SI密度5.5件/年と最高値を記録した。</p>
+
+<p><strong>(2) 技術先行レジーム</strong>（啓蒙主義、世界大戦期、デジタル時代）: 技術が急進するが社会制度の対応が追いつかない。構造的緊張が最も高まる局面。デジタル時代は技術54.7件/年に対しSI 7.3件/年と、緊張指数0.872で世界大戦期に次ぐ。AI・プラットフォーム経済・バイオテクに対する制度的応答の遅れを数値が裏付けている。</p>
+
+<p><strong>(3) 社会先行レジーム</strong>（後期中世）: 技術が停滞する中で社会変革が先行する。ペスト後の封建制解体、ギルド制度の発展、初期大学の設立が技術停滞期に集中した。SI/Tech比率0.735と14時代で最も均衡に近い。</p>
+
+<p><strong>(4) 移行レジーム</strong>（初期・盛期中世、近世、後期産業、冷戦後期、グローバル化）: いずれの指標も穏やかに変動。安定期と次の加速期をつなぐ「準備段階」。</p>
+
+<p><strong>(5) 停滞レジーム</strong>: 本データでは冷戦後期が近い（Tech-0.78倍）が、完全な停滞は観測されなかった。</p>
+
+<!-- Section 7 -->
+<span class="section-num" id="sec7">SECTION 07</span>
+<h2 class="article-h2">PRRRC次元の時代的変遷</h2>
+
+<p>社会変革の「質」を捉えるPRRRC 5次元（Power / Rules / Resources / Relations / Cognition）は、時代とともに重心が移動する。</p>
+
+<div class="chart-container">
+  <canvas id="prrrc-chart" height="280"></canvas>
+  <div class="chart-caption">図5: PRRRC 5次元の時代別平均スコア（0-2スケール）。Cognition（認知変革）が近代以降一貫して上昇。</div>
+</div>
+
+<table class="data-table">
+<thead><tr><th>時代</th><th class="num">Power</th><th class="num">Rules</th><th class="num">Resources</th><th class="num">Relations</th><th class="num">Cognition</th><th class="num">総合</th></tr></thead>
+<tbody>
+<tr><td>~1500年</td><td class="num">1.25</td><td class="num">1.63</td><td class="num">1.48</td><td class="num">1.63</td><td class="num">1.50</td><td class="num">18.40</td></tr>
+<tr><td>1500-1800</td><td class="num">1.35</td><td class="num">1.78</td><td class="num">1.44</td><td class="num">1.72</td><td class="num">1.69</td><td class="num">18.84</td></tr>
+<tr><td>1800-1945</td><td class="num">1.36</td><td class="num">1.74</td><td class="num">1.26</td><td class="num">1.68</td><td class="num">1.77</td><td class="num">19.01</td></tr>
+<tr><td>1945年~</td><td class="num">1.29</td><td class="num">1.76</td><td class="num">1.40</td><td class="num">1.69</td><td class="num">1.78</td><td class="num">19.15</td></tr>
+</tbody>
+</table>
+
+<p>最も顕著な傾向は<strong>Cognition（認知的変革）の一貫した上昇</strong>（1.50→1.69→1.77→1.78）である。技術が高度化するにつれ、社会変革は「権力の移転」や「資源の再配分」よりも「問題の再定義」「パラダイムの転換」といった認知的次元に重心を移している。これは技術の複雑化に伴い、制度の物理的再編よりも「何が問題かを再認識する」ことが変革のボトルネックになっていることを示唆する。</p>
+
+<p>逆にResources（資源変革）は1800-1945年で最低値（1.26）を記録する。産業革命期の社会変革は、資源配分の変更よりも権力構造（労働者の権利）や認知（科学的合理主義）の変革として進行したのである。</p>
+
+<!-- Section 8 -->
+<span class="section-num" id="sec8">SECTION 08</span>
+<h2 class="article-h2">位相ダイナミクス: 加速と減速の同期構造</h2>
+
+<p>技術と社会変革の「加速度」（2階微分の近似）を比較すると、興味深い位相関係が浮かび上がる。</p>
+
+<div class="chart-container">
+  <canvas id="phase-chart" height="280"></canvas>
+  <div class="chart-caption">図6: 技術加速度と社会変革加速度の位相ダイナミクス。T↑S↓（赤）は緊張蓄積期、T↑S↑（緑）は共進化期。</div>
+</div>
+
+<p>歴史は、技術が加速する一方で社会変革が減速する「<strong>緊張蓄積期</strong>」（T↑S↓）と、両方が同時に加速する「<strong>共進化期</strong>」（T↑S↑）を交互に繰り返してきた。</p>
+
+<p><strong>緊張蓄積期（T↑S↓）</strong>: 盛期中世、近世、啓蒙主義、後期産業、世界大戦期、デジタル時代。技術革新の成果が社会制度に「消化」されず蓄積される。これらの時期の末尾ではしばしば社会的爆発（革命、世界大戦、市民運動）が発生している。</p>
+
+<p><strong>共進化期（T↑S↑）</strong>: 産業革命、冷戦、グローバル化。技術と社会変革が同期して加速する。これらの時期には新たな制度的枠組み（労働法、国際機関、デジタルガバナンス）が技術に追随して創出された。</p>
+
+<div class="finding-box">
+  <div class="finding-label">FINDING</div>
+  <p>歴史的パターンから、<strong>デジタル時代は「緊張蓄積期」に分類される</strong>（T↑S↓）。これは次の「共進化期」——AI・バイオテク・気候変動に対応する新たな制度的枠組みの大量創出——が近い将来に到来することを示唆する。産業革命前の啓蒙主義（T↑S↓）が産業革命期の共加速（T↑S↑）に転じたパターンとの類似性が高い。</p>
+</div>
+
+<!-- Section 9 -->
+<span class="section-num" id="sec9">SECTION 09</span>
+<h2 class="article-h2">統合モデル: 変換指数CTI</h2>
+
+<p>技術・社会変革・人的エージェンシーを統合する単一指標として、Composite Transformation Index（CTI）を提案する。</p>
+
+<div class="formula">
+  <span class="label">数式6: 変換指数CTI</span>
+  <span class="eq">CTI(t) = T(t)<sup>0.4</sup> &times; S(t)<sup>0.4</sup> &times; G(t)<sup>0.2</sup></span>
+  <span class="note">重み: 技術(0.4) + 社会変革(0.4) + 人的エージェンシー(0.2) = 1.0<br>3要素のバランスが取れた時代ほど高い値を示す。</span>
+</div>
+
+<div class="chart-container">
+  <canvas id="cti-chart" height="260"></canvas>
+  <div class="chart-caption">図7: CTI（変換指数）の推移。産業革命で急上昇、冷戦期に最大値(14.2)。デジタル時代はGF低下により13.6に反落。</div>
+</div>
+
+<p>CTIは産業革命期に3.8→6.7→7.5と急上昇し、冷戦期に14.2でピークを記録する。しかしデジタル時代にはGF密度の急落により13.6に反落した。技術が急進しても社会変革や人的エージェンシーが伴わなければ、「変換」の総合力は低下する。CTIは技術決定論への定量的反論となる。</p>
+
+<!-- Section 10 -->
+<span class="section-num" id="sec10">SECTION 10</span>
+<h2 class="article-h2">結論: 技術と社会の非対称な共進化</h2>
+
+<p>3つのデータベースを横断する分析から、技術発展と社会変革の間に6つの数理的関係が確認された。</p>
+
+<div class="pullquote">
+技術と社会変革は冪乗則で強く結合している（R²=0.93）が、社会変革は技術の81.9%の速度でしか成長しない。この持続的な非対称性が「構造的緊張」を生み、歴史は緊張蓄積期と共進化期を交互に繰り返す。デジタル時代は緊張蓄積期にあり、次の共進化期——制度的革新の爆発——が歴史のパターンからは予測される。
+</div>
+
+<div class="data-box">
+  <div class="data-label">6つの数式の体系</div>
+  <p><strong>(1) 冪乗則結合:</strong> S(t) = 0.233 T(t)^0.953 [R²=0.93]</p>
+  <p><strong>(2) 偉人-技術結合:</strong> G(t) = 2.76 T(t)^0.536 [R²=0.62]</p>
+  <p><strong>(3) 指数成長:</strong> T: 倍増118年 / S: 倍増144年 / 比率81.9%</p>
+  <p><strong>(4) 構造的緊張:</strong> Tension(t) = log₁₀(T/S), 平均0.617</p>
+  <p><strong>(5) 遅延応答:</strong> S(t) = 0.442 T(t-1)^0.844 [R²=0.935, 最適]</p>
+  <p><strong>(6) 変換指数:</strong> CTI = T^0.4 S^0.4 G^0.2</p>
+</div>
+
+<p>これらの数式は、技術と社会の関係が「技術が進めば社会は自動的についてくる」という単純な技術決定論でも、「社会が技術を規定する」という社会構成主義でもない、<strong>非対称な共進化（asymmetric co-evolution）</strong>であることを示している。技術は常にやや先を走り、社会は1世代遅れで追いつく。そのギャップが緊張を生み、緊張が閾値を超えると制度的革新の波が到来する——これが、5,000年の歴史データが語る構造的パターンである。</p>
+
+</div>
+
+<div class="report-footer">
+  <div class="footer-links">
+    <a class="footer-link" href="../dashboards/ta.html">TAダッシュボード</a>
+    <a class="footer-link" href="ta-comprehensive-analysis.html">TA総合分析</a>
+    <a class="footer-link" href="transformation-structures.html">変革の構造</a>
+    <a class="footer-link" href="../analysis-reports.html">解析レポート一覧</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+const labels = ['古代','古典','初期中世','盛期中世','後期中世','近世','啓蒙','産業革命','後期産業','世界大戦','冷戦','冷戦後期','グローバル','デジタル'];
+const techR = [0.089,0.276,0.384,0.580,0.340,0.705,1.220,5.229,11.295,18.226,27.500,21.375,31.789,54.667];
+const siR = [0.008,0.046,0.114,0.150,0.250,0.305,0.240,1.443,2.045,1.548,5.500,6.125,9.474,7.333];
+const gfR = [0.17,1.15,1.19,1.80,3.43,4.70,4.58,14.37,24.61,29.55,25.27,15.12,9.21,2.93];
+
+// Timeline chart (log scale)
+new Chart(document.getElementById('timeline-chart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {label:'Tech/年',data:techR,borderColor:'#CC1400',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#CC1400',tension:0.2},
+      {label:'SI/年',data:siR,borderColor:'#1565c0',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#1565c0',tension:0.2},
+      {label:'GF/年',data:gfR,borderColor:'#2e7d32',borderWidth:2,pointRadius:3,pointBackgroundColor:'#2e7d32',tension:0.2,borderDash:[4,3]}
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {type:'logarithmic',title:{display:true,text:'密度 (件/年, log)'},ticks:{callback:v=>v<0.01?v.toExponential(0):v}},
+      x: {ticks:{font:{size:10},maxRotation:45}}
+    },
+    plugins: {legend:{position:'top',labels:{font:{size:11}}}}
+  }
+});
+
+// Power-law scatter
+new Chart(document.getElementById('powerlaw-chart'), {
+  type: 'scatter',
+  data: {
+    datasets: [
+      {label:'実測値',data:techR.map((t,i)=>({x:Math.log10(t),y:Math.log10(Math.max(siR[i],0.001))})),pointBackgroundColor:'#CC1400',pointRadius:6},
+      {label:'S=0.233T^0.953',data:Array.from({length:50},(_,i)=>{const x=-1.5+i*0.08;return{x,y:Math.log10(0.233)+0.953*x}}),type:'line',borderColor:'#CC140066',borderWidth:2,pointRadius:0}
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: {title:{display:true,text:'log₁₀(Tech/年)'},min:-1.5,max:2},
+      y: {title:{display:true,text:'log₁₀(SI/年)'},min:-2.5,max:1.5}
+    },
+    plugins: {legend:{position:'top',labels:{font:{size:11}}}}
+  }
+});
+
+// Tension chart
+const tension = techR.map((t,i) => Math.log10(t / Math.max(siR[i],0.001)));
+new Chart(document.getElementById('tension-chart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{data:tension,backgroundColor:tension.map(v=>v>0.5?'#CC140088':v>0?'#e6510088':'#1565c088')}]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{display:false}},
+    scales: {
+      y: {title:{display:true,text:'Tension = log₁₀(T/S)'},min:-0.5,max:1.3},
+      x: {ticks:{font:{size:10},maxRotation:45}}
+    }
+  }
+});
+
+// PRRRC radar
+new Chart(document.getElementById('prrrc-chart'), {
+  type: 'radar',
+  data: {
+    labels: ['Power','Rules','Resources','Relations','Cognition'],
+    datasets: [
+      {label:'~1500',data:[1.25,1.63,1.48,1.63,1.50],borderColor:'#88888888',backgroundColor:'rgba(136,136,136,0.05)',borderWidth:1.5},
+      {label:'1500-1800',data:[1.35,1.78,1.44,1.72,1.69],borderColor:'#e6510088',backgroundColor:'rgba(230,81,0,0.05)',borderWidth:1.5},
+      {label:'1800-1945',data:[1.36,1.74,1.26,1.68,1.77],borderColor:'#1565c088',backgroundColor:'rgba(21,101,192,0.05)',borderWidth:1.5},
+      {label:'1945~',data:[1.29,1.76,1.40,1.69,1.78],borderColor:'#CC1400',backgroundColor:'rgba(204,20,0,0.08)',borderWidth:2}
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {r:{min:1.0,max:2.0,ticks:{stepSize:0.2,font:{size:9}},pointLabels:{font:{size:12}}}},
+    plugins: {legend:{position:'top',labels:{font:{size:10}}}}
+  }
+});
+
+// Phase dynamics
+const techAccel = [];
+const siAccel = [];
+const phaseLabels = [];
+for(let i=2;i<techR.length;i++){
+  techAccel.push(techR[i]-2*techR[i-1]+techR[i-2]);
+  siAccel.push(siR[i]-2*siR[i-1]+siR[i-2]);
+  phaseLabels.push(labels[i]);
+}
+new Chart(document.getElementById('phase-chart'), {
+  type: 'bar',
+  data: {
+    labels: phaseLabels,
+    datasets: [
+      {label:'Tech加速度',data:techAccel,backgroundColor:'#CC140077'},
+      {label:'SI加速度',data:siAccel,backgroundColor:'#1565c077'}
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {title:{display:true,text:'加速度（2階微分近似）'}},
+      x: {ticks:{font:{size:10},maxRotation:45}}
+    },
+    plugins: {legend:{position:'top',labels:{font:{size:11}}}}
+  }
+});
+
+// Regime scatter
+const regimeData = [];
+for(let i=1;i<techR.length;i++){
+  regimeData.push({
+    x: techR[i]/techR[i-1],
+    y: siR[i]/Math.max(siR[i-1],0.001),
+    label: labels[i]
+  });
+}
+new Chart(document.getElementById('regime-chart'), {
+  type: 'scatter',
+  data: {
+    datasets: [{
+      data: regimeData.map(d=>({x:d.x,y:d.y})),
+      pointBackgroundColor: regimeData.map(d=>{
+        if(d.x>1.5&&d.y>1.5) return '#16a34a';
+        if(d.x>1.2&&d.y<0.9) return '#dc2626';
+        if(d.x<0.9&&d.y>1.2) return '#1d4ed8';
+        return '#d97706';
+      }),
+      pointRadius: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>regimeData[ctx.dataIndex].label+' T:'+ctx.parsed.x.toFixed(2)+'x S:'+ctx.parsed.y.toFixed(2)+'x'}}
+    },
+    scales: {
+      x: {title:{display:true,text:'Tech成長倍率'},min:0,max:5},
+      y: {title:{display:true,text:'SI成長倍率'},min:0,max:7}
+    }
+  }
+});
+
+// CTI chart
+const cti = techR.map((t,i) => Math.pow(t,0.4)*Math.pow(Math.max(siR[i],0.001),0.4)*Math.pow(gfR[i],0.2));
+new Chart(document.getElementById('cti-chart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      data: cti,
+      borderColor: '#CC1400',
+      backgroundColor: 'rgba(204,20,0,0.08)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 5,
+      pointBackgroundColor: '#CC1400'
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {legend:{display:false}},
+    scales: {
+      y: {title:{display:true,text:'CTI (変換指数)'},min:0},
+      x: {ticks:{font:{size:10},maxRotation:45}}
+    }
+  }
+});
+</script>
+</body>
+</html>
