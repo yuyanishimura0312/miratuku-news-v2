@@ -81,8 +81,8 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 <a href="../databases.html" class="back">&larr; データベース一覧</a>
 
 <h1><span class="db-id">TK</span>先住民伝統知識データベース</h1>
-<p class="subtitle">世界の先住民族が保有する伝統知識をGTAで構造化するデータベース</p>
-<p class="desc">世界の先住民族が保有する伝統知識を体系的に収集し、Grounded Theory Analysis（GTA）オープンコーディングによるボトムアップ分類で構造化。UNESCO ICH、D-PLACE（Ethnographic Atlas）、SCCS、Binfordデータセットを統合し、CLA第4層（worldview / myth_metaphor）との接続基盤を構築。CARE原則・OCAP原則に準拠。</p>
+<p class="subtitle">世界3,001の先住民族が保有する35,308件の伝統知識を全項目100%エンリッチメントで構造化</p>
+<p class="desc">世界の先住民族が保有する伝統知識を体系的に収集し、Grounded Theory Analysis（GTA）で構造化（77,268コード→1,027軸→15選択コード）。全アイテムに日本語翻訳・PESTLE・CLA・生��系依存度・気候感度・��会的伝承構造を付与。D-PLACE・UNESCO ICH・Glottologを統合し、16,260件の知識間関係ネットワークを構築。CARE原則・OCAP原則に準拠。</p>
 
 <div id="dashboard-content">
   <div class="loading">データを読み込み中...</div>
@@ -108,11 +108,11 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
     // KPI Row
     html += '<div class="kpi-row">';
     html += kpi(num(data.total_groups), '先住民族グループ', '');
-    html += kpi(num(data.total_tk_items), '伝統知識アイテム', '');
+    html += kpi(num(data.total_tk_items), '伝統知識アイテム', '100% enriched');
     html += kpi(num(data.total_open_codes), 'GTAオープンコード', '');
     html += kpi(num(data.total_axial_codes), '軸カテゴリ', '');
     html += kpi(num(data.total_selective_codes), '選択コード', '');
-    html += kpi(num(data.total_domains), '知識ドメイン', '');
+    html += kpi(num(data.total_relations || 0), '知識間関係', 'ネットワーク');
     html += '</div>';
 
     // Region Distribution
@@ -156,6 +156,97 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
       });
     }
     html += '</div></div>';
+
+    // Ecosystem & Climate
+    html += '<h3>生態系依存度 / 気候感度</h3>';
+    html += '<div class="grid-2">';
+    html += '<div class="panel"><div class="panel-title">生態系依存度</div>';
+    if (data.by_ecosystem) {
+      var maxE = Math.max.apply(null, data.by_ecosystem.map(function(e) { return e.count; }));
+      var ecoColors = { 'high': 'var(--green)', 'medium': 'var(--blue)', 'low': 'var(--orange)', 'none': 'var(--text-muted)' };
+      data.by_ecosystem.forEach(function(e) {
+        html += bar(e.dep, e.count, maxE, ecoColors[e.dep] || 'var(--purple)');
+      });
+    }
+    html += '</div>';
+    html += '<div class="panel"><div class="panel-title">気候感度</div>';
+    if (data.by_climate) {
+      var maxCl = Math.max.apply(null, data.by_climate.map(function(c) { return c.count; }));
+      var climColors = { 'critical': 'var(--accent-warm)', 'high': 'var(--orange)', 'moderate': 'var(--blue)', 'low': 'var(--green)' };
+      data.by_climate.forEach(function(c) {
+        html += bar(c.sensitivity, c.count, maxCl, climColors[c.sensitivity] || 'var(--purple)');
+      });
+    }
+    html += '</div></div>';
+
+    // Resource Type
+    if (data.by_resource) {
+      html += '<h3>関連資源タイプ</h3>';
+      var maxRes = Math.max.apply(null, data.by_resource.map(function(r) { return r.count; }));
+      data.by_resource.forEach(function(r) {
+        html += bar(r.type, r.count, maxRes, 'var(--green)');
+      });
+    }
+
+    // Social Transmission
+    html += '<h3>知識の社会的伝承構造</h3>';
+    html += '<div class="grid-2">';
+    html += '<div class="panel"><div class="panel-title">伝承方法</div>';
+    if (data.by_transmission) {
+      var maxT = Math.max.apply(null, data.by_transmission.map(function(t) { return t.count; }));
+      data.by_transmission.forEach(function(t) {
+        html += bar(t.method, t.count, maxT, 'var(--purple)');
+      });
+    }
+    html += '</div>';
+    html += '<div class="panel"><div class="panel-title">ジェンダー制約</div>';
+    if (data.by_gender) {
+      var maxG = Math.max.apply(null, data.by_gender.map(function(g) { return g.count; }));
+      data.by_gender.forEach(function(g) {
+        html += bar(g.restriction, g.count, maxG, 'var(--cyan)');
+      });
+    }
+    html += '</div></div>';
+
+    // Group Metadata: Biome + Subsistence + Language
+    html += '<h3>グループメタデータ</h3>';
+    html += '<div class="grid-2">';
+    html += '<div class="panel"><div class="panel-title">バイオーム分布</div>';
+    if (data.by_biome) {
+      var maxB = Math.max.apply(null, data.by_biome.map(function(b) { return b.count; }));
+      data.by_biome.forEach(function(b) {
+        html += bar(b.biome, b.count, maxB, 'var(--green)');
+      });
+    }
+    html += '</div>';
+    html += '<div class="panel"><div class="panel-title">生業形態</div>';
+    if (data.by_subsistence) {
+      var maxS = Math.max.apply(null, data.by_subsistence.map(function(s) { return s.count; }));
+      data.by_subsistence.forEach(function(s) {
+        html += bar(s.type, s.count, maxS, 'var(--orange)');
+      });
+    }
+    html += '</div></div>';
+
+    if (data.by_language_family) {
+      html += '<div class="panel"><div class="panel-title">言語ファミリー（上位15）</div>';
+      var maxL = Math.max.apply(null, data.by_language_family.map(function(l) { return l.count; }));
+      data.by_language_family.forEach(function(l) {
+        html += bar(l.family, l.count, maxL, 'var(--blue)');
+      });
+      html += '</div>';
+    }
+
+    // Relation Network
+    if (data.by_relation_type) {
+      html += '<h3>知識間関係ネットワーク</h3>';
+      html += '<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:16px">GTA軸コードの共起関係から自動構築。intra（同一グループ内）とcross（異文化間）の2レベル。</p>';
+      var maxRel = Math.max.apply(null, data.by_relation_type.map(function(r) { return r.count; }));
+      data.by_relation_type.forEach(function(r) {
+        var c = r.type.indexOf('cross_') === 0 ? 'var(--blue)' : r.type.indexOf('intra_') === 0 ? 'var(--green)' : 'var(--accent-warm)';
+        html += bar(r.type, r.count, maxRel, c);
+      });
+    }
 
     // GTA Selective Codes
     if (data.selective_codes && data.selective_codes.length > 0) {
@@ -204,6 +295,9 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
         if (s.domain) html += '<span class="sample-tag func">' + esc(s.domain) + '</span>';
         if (s.pestle) html += '<span class="sample-tag">' + esc(s.pestle) + '</span>';
         if (s.cla) html += '<span class="sample-tag">' + esc(s.cla) + '</span>';
+        if (s.ecosystem) html += '<span class="sample-tag">' + esc(s.ecosystem) + '</span>';
+        if (s.climate) html += '<span class="sample-tag">' + esc(s.climate) + '</span>';
+        if (s.transmission) html += '<span class="sample-tag">' + esc(s.transmission) + '</span>';
         html += '</div></div>';
       });
     }
