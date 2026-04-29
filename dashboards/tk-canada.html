@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カナダ先住民の伝統知識 | TK DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root {
+  --bg: #FFF; --card: #FFF; --text: #121212; --text-secondary: #555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+  --green: #16A34A; --blue: #2563EB; --purple: #7C3AED; --orange: #EA580C;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 16px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 16px; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 24px; }
+.kpi { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
+.kpi-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--accent-warm); }
+.kpi-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+#minimap { height: 350px; margin-bottom: 24px; border: 1px solid var(--border-light); }
+
+.group-card { border-left: 3px solid var(--accent-warm); background: var(--surface); padding: 14px 18px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; }
+.group-card:hover { background: var(--accent-muted); }
+.group-name { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 700; }
+.group-meta { font-size: 0.76rem; color: var(--text-secondary); margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
+.group-meta span { display: inline-flex; align-items: center; gap: 4px; }
+
+.item-card { border: 1px solid var(--border-light); background: var(--card); padding: 14px 18px; margin-bottom: 8px; }
+.item-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 3px; }
+.item-title-ja { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 5px; }
+.item-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.tag { font-size: 0.66rem; padding: 1px 7px; border: 1px solid var(--border-light); color: var(--text-muted); }
+.tag.domain { background: var(--accent-muted); color: var(--accent-warm); border-color: transparent; font-weight: 600; }
+.tag.safe { background: #dcfce7; color: #166534; border-color: transparent; }
+.tag.vulnerable { background: #dbeafe; color: #1e40af; border-color: transparent; }
+.tag.endangered { background: #ffedd5; color: #9a3412; border-color: transparent; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+.panel { background: var(--card); border: 1px solid var(--border-light); padding: 16px; margin-bottom: 12px; }
+.panel-title { font-size: 0.72rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.05em; margin-bottom: 10px; text-transform: uppercase; }
+.bar-group { margin-bottom: 5px; display: flex; align-items: center; gap: 8px; font-size: 0.78rem; }
+.bar-label { width: 160px; flex-shrink: 0; color: var(--text-secondary); font-size: 0.76rem; }
+.bar-track { flex: 1; height: 18px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
+.bar-fill { height: 100%; }
+.bar-val { width: 50px; text-align: right; font-weight: 500; font-family: monospace; font-size: 0.76rem; }
+
+.filter-bar { margin-bottom: 16px; }
+.filter-bar select { font-size: 0.82rem; padding: 6px 10px; border: 1px solid var(--border); font-family: var(--font); }
+.loading { text-align: center; padding: 40px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<a href="tk.html" class="back">&larr; TKダッシュボード</a>
+
+<h1><span class="db-id">TK</span>カナダ先住民の伝統知識</h1>
+<p class="subtitle">ファースト・ネーションズ13グループの伝統知識体系の構造分析</p>
+<p class="desc">カナダの先住民族13グループ（Haida、Tlingit、Blackfoot、Cree系、Iroquois系等）が保有する338件の伝統知識を分析。太平洋岸の海洋文化から大平原の遊牧文化、亜寒帯林の採集狩猟文化まで、多様な生態系と生業形態に適応した知識体系の構造的特徴を明らかにする。</p>
+
+<div id="minimap"></div>
+<div id="content"><div class="loading">データを読み込み中...</div></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+var JA = {
+  'Social':'社会','Economic':'経済','Political':'政治','Environmental':'環境',
+  'Technological':'技術','Legal':'法律',
+  'litany':'リタニー','systemic':'システム','worldview':'世界観','myth_metaphor':'神話・メタファー',
+  'high':'高','medium':'中','low':'低','none':'なし','critical':'深刻','moderate':'中程度',
+  'observation_imitation':'観察・模倣','family_lineage':'家系伝承','apprenticeship':'徒弟制',
+  'communal_practice':'共同実践','oral_instruction':'口頭指導','ritual_practice':'儀礼実践',
+  'none_apparent':'明示なし','specialist_training':'専門訓練','unknown':'不明',
+  'safe':'安全','vulnerable':'脆弱','endangered':'危機','critically_endangered':'深刻な危機','dormant':'休眠',
+  'temperate_forest':'温帯林','boreal_forest':'亜寒帯林','temperate_grassland':'温帯草原',
+  'mixed_farming':'混合農業','foraging':'採集狩猟','pastoralism':'牧畜','fishing':'漁撈',
+  'maritime':'海洋','agropastoralism':'農牧複合','horticulture':'園芸農業',
+};
+function ja(k) { return JA[k] || k; }
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+var minimap = L.map('minimap').setView([55, -100], 3);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 10
+}).addTo(minimap);
+
+fetch('data/tk_canada.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var groups = data.groups;
+    var items = data.items;
+    var html = '';
+
+    // Map markers
+    groups.forEach(function(g) {
+      if (g.lat && g.lon) {
+        var color = g.vitality >= 0.7 ? '#16a34a' : g.vitality >= 0.5 ? '#2563eb' : g.vitality >= 0.3 ? '#ea580c' : '#dc2626';
+        L.circleMarker([g.lat, g.lon], {
+          radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.8
+        }).bindPopup('<strong>' + g.name + '</strong><br>言語: ' + (g.language||'') + '<br>生業: ' + ja(g.subsistence||'') + '<br>活力度: ' + (g.vitality||''))
+        .addTo(minimap);
+      }
+    });
+
+    // KPIs
+    var avgVit = items.reduce(function(s,i){return s+(i.vitality||0);},0)/items.length;
+    var langFamilies = {};
+    groups.forEach(function(g){ if(g.language) langFamilies[g.language]=1; });
+
+    html += '<div class="kpi-row">';
+    html += '<div class="kpi"><div class="kpi-value">' + groups.length + '</div><div class="kpi-label">先住民グループ</div></div>';
+    html += '<div class="kpi"><div class="kpi-value">' + items.length + '</div><div class="kpi-label">知識アイテム</div></div>';
+    html += '<div class="kpi"><div class="kpi-value">' + Object.keys(langFamilies).length + '</div><div class="kpi-label">言語ファミリー</div></div>';
+    html += '<div class="kpi"><div class="kpi-value">' + avgVit.toFixed(3) + '</div><div class="kpi-label">平均活力度</div></div>';
+    html += '</div>';
+
+    // Group list
+    html += '<h3>先住民グループ一覧</h3>';
+    groups.forEach(function(g) {
+      var vitClass = (g.vitality >= 0.7) ? 'safe' : (g.vitality >= 0.5) ? 'vulnerable' : 'endangered';
+      html += '<div class="group-card" data-group="' + esc(g.name) + '">';
+      html += '<div class="group-name">' + esc(g.name) + '</div>';
+      html += '<div class="group-meta">';
+      if (g.language) html += '<span>言語: ' + esc(g.language) + '</span>';
+      if (g.biome) html += '<span>バイオーム: ' + esc(ja(g.biome)) + '</span>';
+      if (g.subsistence) html += '<span>生業: ' + esc(ja(g.subsistence)) + '</span>';
+      html += '<span>項目: ' + g.items + '件</span>';
+      if (g.vitality) html += '<span class="tag ' + vitClass + '">' + ja(vitClass) + ' (' + g.vitality + ')</span>';
+      html += '</div></div>';
+    });
+
+    // Distribution analysis
+    html += '<h3>知識構造の比較分析</h3>';
+    html += '<div class="grid-2">';
+
+    // By group subsistence
+    var subCount = {};
+    groups.forEach(function(g){ if(g.subsistence) subCount[g.subsistence]=(subCount[g.subsistence]||0)+1; });
+    html += '<div class="panel"><div class="panel-title">生業形態</div>';
+    var subArr = Object.entries(subCount).sort(function(a,b){return b[1]-a[1];});
+    var maxS = subArr[0] ? subArr[0][1] : 1;
+    subArr.forEach(function(s) {
+      html += '<div class="bar-group"><div class="bar-label">' + esc(ja(s[0])) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + (s[1]/maxS*100) + '%;background:var(--orange)"></div></div><div class="bar-val">' + s[1] + '</div></div>';
+    });
+    html += '</div>';
+
+    // CLA
+    var claCount = {};
+    items.forEach(function(i){ if(i.cla) claCount[i.cla]=(claCount[i.cla]||0)+1; });
+    html += '<div class="panel"><div class="panel-title">CLA層分布</div>';
+    var claArr = Object.entries(claCount).sort(function(a,b){return b[1]-a[1];});
+    var maxC = claArr[0] ? claArr[0][1] : 1;
+    claArr.forEach(function(c) {
+      html += '<div class="bar-group"><div class="bar-label">' + esc(ja(c[0])) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + (c[1]/maxC*100) + '%;background:var(--blue)"></div></div><div class="bar-val">' + c[1] + '</div></div>';
+    });
+    html += '</div></div>';
+
+    // Endangerment + Transmission
+    html += '<div class="grid-2">';
+    var endCount = {};
+    items.forEach(function(i){ if(i.endangerment) endCount[i.endangerment]=(endCount[i.endangerment]||0)+1; });
+    html += '<div class="panel"><div class="panel-title">危機度</div>';
+    var endArr = Object.entries(endCount).sort(function(a,b){return b[1]-a[1];});
+    var maxE = endArr[0] ? endArr[0][1] : 1;
+    var eColors = {'safe':'var(--green)','vulnerable':'var(--blue)','endangered':'var(--orange)','critically_endangered':'var(--accent-warm)','dormant':'var(--text-muted)'};
+    endArr.forEach(function(e) {
+      html += '<div class="bar-group"><div class="bar-label">' + esc(ja(e[0])) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + (e[1]/maxE*100) + '%;background:' + (eColors[e[0]]||'var(--orange)') + '"></div></div><div class="bar-val">' + e[1] + '</div></div>';
+    });
+    html += '</div>';
+
+    var transCount = {};
+    items.forEach(function(i){ if(i.transmission) transCount[i.transmission]=(transCount[i.transmission]||0)+1; });
+    html += '<div class="panel"><div class="panel-title">伝承方法</div>';
+    var transArr = Object.entries(transCount).sort(function(a,b){return b[1]-a[1];});
+    var maxT = transArr[0] ? transArr[0][1] : 1;
+    transArr.forEach(function(t) {
+      html += '<div class="bar-group"><div class="bar-label">' + esc(ja(t[0])) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + (t[1]/maxT*100) + '%;background:var(--purple)"></div></div><div class="bar-val">' + t[1] + '</div></div>';
+    });
+    html += '</div></div>';
+
+    // Filter + items
+    html += '<h3>知識アイテム一覧</h3>';
+    html += '<div class="filter-bar"><select id="groupFilter"><option value="all">全グループ</option>';
+    groups.forEach(function(g) { html += '<option value="' + esc(g.name) + '">' + esc(g.name) + '</option>'; });
+    html += '</select></div>';
+    html += '<div id="itemList">';
+    items.forEach(function(item) {
+      html += '<div class="item-card" data-group="' + esc(item.group) + '">';
+      html += '<div class="item-title">' + esc(item.title_en || '') + '</div>';
+      if (item.title_ja) html += '<div class="item-title-ja">' + esc(item.title_ja) + '</div>';
+      html += '<div class="item-tags">';
+      html += '<span class="tag domain">' + esc(item.domain || '') + '</span>';
+      if (item.pestle) html += '<span class="tag">' + esc(ja(item.pestle)) + '</span>';
+      if (item.cla) html += '<span class="tag">' + esc(ja(item.cla)) + '</span>';
+      if (item.endangerment) {
+        var cls = item.endangerment === 'safe' ? 'safe' : item.endangerment === 'vulnerable' ? 'vulnerable' : 'endangered';
+        html += '<span class="tag ' + cls + '">' + esc(ja(item.endangerment)) + '</span>';
+      }
+      html += '<span class="tag">' + esc(item.group || '') + '</span>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+
+    document.getElementById('content').innerHTML = html;
+
+    // Group filter
+    document.getElementById('groupFilter').addEventListener('change', function() {
+      var val = this.value;
+      document.querySelectorAll('#itemList .item-card').forEach(function(card) {
+        card.style.display = (val === 'all' || card.dataset.group === val) ? '' : 'none';
+      });
+    });
+  });
+</script>
+</body>
+</html>

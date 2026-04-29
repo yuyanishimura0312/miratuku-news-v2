@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界地図 | 先住民伝統知識DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); }
+.back { display: inline-block; margin: 16px 20px 8px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+.header { padding: 0 20px 12px; }
+h1 { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px; }
+
+#map { width: 100%; height: calc(100vh - 200px); min-height: 500px; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
+
+.controls { padding: 12px 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.controls label { font-size: 0.78rem; color: var(--text-secondary); }
+.controls select { font-size: 0.78rem; padding: 4px 8px; border: 1px solid var(--border); font-family: var(--font); }
+.stat-bar { padding: 8px 20px; font-size: 0.78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-light); }
+
+.popup-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; }
+.popup-meta { font-size: 0.75rem; color: #555; line-height: 1.6; }
+.popup-meta strong { color: #121212; }
+.popup-vitality { display: inline-block; padding: 1px 8px; font-size: 0.7rem; font-weight: 600; margin-top: 4px; }
+.popup-vitality.safe { background: #dcfce7; color: #166534; }
+.popup-vitality.vulnerable { background: #dbeafe; color: #1e40af; }
+.popup-vitality.endangered { background: #ffedd5; color: #9a3412; }
+.popup-vitality.critical { background: #fecaca; color: #991b1b; }
+
+.legend { background: white; padding: 10px 14px; border: 1px solid #ccc; font-size: 0.72rem; line-height: 1.8; }
+.legend-title { font-weight: 700; margin-bottom: 4px; }
+.legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: middle; border-radius: 50%; }
+</style>
+</head>
+<body>
+<a href="tk.html" class="back">&larr; TKダッシュボード</a>
+<div class="header">
+  <h1><span class="db-id">TK</span>先住民伝統知識 世界地図</h1>
+  <p class="subtitle">1,281グループの地理的分布と知識危機度</p>
+</div>
+
+<div class="controls">
+  <label>色分け:
+    <select id="colorBy">
+      <option value="vitality">知識活力度</option>
+      <option value="region">地域</option>
+      <option value="biome">バイオーム</option>
+      <option value="subsistence">生業形態</option>
+    </select>
+  </label>
+  <label>フィルタ:
+    <select id="filterRegion">
+      <option value="all">全地域</option>
+      <option value="Africa">Africa</option>
+      <option value="Americas">Americas</option>
+      <option value="Asia-Pacific">Asia-Pacific</option>
+      <option value="Europe">Europe</option>
+    </select>
+  </label>
+  <span class="stat-bar" id="statBar">読み込み中...</span>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+var map = L.map('map').setView([20, 0], 2);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  maxZoom: 18
+}).addTo(map);
+
+var allMarkers = [];
+var markerLayer = L.layerGroup().addTo(map);
+
+var vitalityColor = function(v) {
+  if (v === null || v === undefined) return '#999';
+  if (v >= 0.7) return '#16a34a';
+  if (v >= 0.5) return '#2563eb';
+  if (v >= 0.3) return '#ea580c';
+  return '#dc2626';
+};
+
+var regionColor = {
+  'Africa': '#CC1400', 'Americas': '#2563eb', 'Asia-Pacific': '#16a34a',
+  'Europe': '#7c3aed', 'Unknown': '#999'
+};
+
+var biomeColor = {
+  'tropical_savanna': '#ea580c', 'tropical_rainforest': '#16a34a',
+  'temperate_forest': '#22c55e', 'montane': '#7c3aed',
+  'temperate_grassland': '#eab308', 'desert': '#f97316',
+  'steppe': '#a3a3a3', 'coral_reef_coast': '#06b6d4',
+  'boreal_forest': '#0d9488', 'mediterranean': '#ef4444',
+  'wetland': '#0891b2', 'arctic': '#3b82f6'
+};
+
+var subsColor = {
+  'mixed_farming': '#16a34a', 'intensive_agriculture': '#22c55e',
+  'pastoralism': '#ea580c', 'foraging': '#7c3aed',
+  'agropastoralism': '#eab308', 'horticulture': '#2563eb',
+  'fishing': '#06b6d4', 'maritime': '#0891b2'
+};
+
+function getColor(props, mode) {
+  if (mode === 'vitality') return vitalityColor(props.vitality);
+  if (mode === 'region') return regionColor[props.region] || '#999';
+  if (mode === 'biome') return biomeColor[props.biome] || '#999';
+  if (mode === 'subsistence') return subsColor[props.subsistence] || '#999';
+  return '#CC1400';
+}
+
+function vitalityLabel(v) {
+  if (v === null) return '';
+  if (v >= 0.7) return '<span class="popup-vitality safe">safe</span>';
+  if (v >= 0.5) return '<span class="popup-vitality vulnerable">vulnerable</span>';
+  if (v >= 0.3) return '<span class="popup-vitality endangered">endangered</span>';
+  return '<span class="popup-vitality critical">critical</span>';
+}
+
+var JA = {
+  'tropical_savanna':'熱帯サバンナ','tropical_rainforest':'熱帯雨林','temperate_forest':'温帯林',
+  'montane':'山岳','temperate_grassland':'温帯草原','desert':'砂漠','steppe':'ステップ',
+  'coral_reef_coast':'サンゴ礁沿岸','boreal_forest':'亜寒帯林','mediterranean':'地中海性',
+  'wetland':'湿地','arctic':'北極圏',
+  'mixed_farming':'混合農業','intensive_agriculture':'集約農業','pastoralism':'牧畜',
+  'foraging':'採集狩猟','agropastoralism':'農牧複合','horticulture':'園芸農業',
+  'fishing':'漁撈','maritime':'海洋'
+};
+function ja(k) { return JA[k] || k; }
+
+function renderMarkers(data, colorMode, regionFilter) {
+  markerLayer.clearLayers();
+  var count = 0;
+  data.features.forEach(function(f) {
+    var p = f.properties;
+    if (regionFilter !== 'all' && p.region !== regionFilter) return;
+    var color = getColor(p, colorMode);
+    var marker = L.circleMarker(
+      [f.geometry.coordinates[1], f.geometry.coordinates[0]],
+      { radius: Math.min(4 + (p.items || 0) / 8, 10), fillColor: color, color: '#fff',
+        weight: 1, opacity: 0.9, fillOpacity: 0.75 }
+    );
+    marker.bindPopup(
+      '<div class="popup-title">' + p.name + '</div>' +
+      '<div class="popup-meta">' +
+      '<strong>地域:</strong> ' + p.region + '<br>' +
+      (p.biome ? '<strong>バイオーム:</strong> ' + ja(p.biome) + '<br>' : '') +
+      (p.subsistence ? '<strong>生業:</strong> ' + ja(p.subsistence) + '<br>' : '') +
+      (p.language_family ? '<strong>言語:</strong> ' + p.language_family + '<br>' : '') +
+      '<strong>知識項目:</strong> ' + p.items + '件<br>' +
+      (p.vitality !== null ? '<strong>活力度:</strong> ' + p.vitality + ' ' + vitalityLabel(p.vitality) : '') +
+      '</div>', { maxWidth: 280 }
+    );
+    marker.addTo(markerLayer);
+    count++;
+  });
+  document.getElementById('statBar').textContent = count.toLocaleString() + ' グループを表示中';
+}
+
+fetch('data/tk_groups_geo.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    window._geoData = data;
+    renderMarkers(data, 'vitality', 'all');
+
+    document.getElementById('colorBy').addEventListener('change', function() {
+      renderMarkers(data, this.value, document.getElementById('filterRegion').value);
+    });
+    document.getElementById('filterRegion').addEventListener('change', function() {
+      renderMarkers(data, document.getElementById('colorBy').value, this.value);
+    });
+
+    // Legend
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function() {
+      var div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = '<div class="legend-title">知識活力度</div>' +
+        '<div><i style="background:#16a34a"></i>安全 (0.7+)</div>' +
+        '<div><i style="background:#2563eb"></i>脆弱 (0.5-0.7)</div>' +
+        '<div><i style="background:#ea580c"></i>危機 (0.3-0.5)</div>' +
+        '<div><i style="background:#dc2626"></i>深刻 (<0.3)</div>';
+      return div;
+    };
+    legend.addTo(map);
+  });
+</script>
+</body>
+</html>
