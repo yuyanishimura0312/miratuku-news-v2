@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>妖怪データベース | Insight News</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="../js/shared/firebase-config.js"></script>
+  <style>
+    /* Yokai Database specific styles */
+    .yokai-header { margin-bottom: 24px; }
+    .yokai-header h2 { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; }
+    .yokai-header .subtitle { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.12em; margin-top: 2px; }
+
+    .yokai-stats-toggle { font-size: 0.78rem; padding: 6px 14px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
+    .yokai-stats-toggle:hover { background: var(--surface); }
+
+    .yokai-stats { background: var(--surface); border: 1px solid var(--border-light); padding: 20px; margin-bottom: 20px; display: none; }
+    .yokai-stats.show { display: block; }
+    .yokai-stats h3 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 8px; }
+    .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .stat-label { font-size: 0.72rem; color: var(--text-secondary); width: 100px; flex-shrink: 0; }
+    .stat-bar { flex: 1; height: 4px; background: var(--border-light); overflow: hidden; }
+    .stat-bar-fill { height: 100%; background: var(--accent-warm); }
+    .stat-count { font-size: 0.68rem; color: var(--text-muted); width: 32px; text-align: right; }
+
+    .yokai-filters { margin-bottom: 16px; }
+    .yokai-search { width: 100%; font-size: 0.84rem; padding: 10px 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); outline: none; margin-bottom: 10px; }
+    .yokai-search:focus { border-color: var(--accent-warm); }
+    .yokai-select-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .yokai-select { font-size: 0.78rem; padding: 6px 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); outline: none; min-width: 90px; }
+    .yokai-select:focus { border-color: var(--accent-warm); }
+
+    .yokai-count { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; }
+
+    .yokai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+
+    .yokai-card { background: var(--card); border: 1px solid var(--border-light); padding: 16px; text-decoration: none; color: var(--text); display: block; transition: border-color 0.15s; cursor: pointer; }
+    .yokai-card:hover { border-color: var(--accent-warm); }
+    .yokai-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+    .yokai-card-name { font-size: 0.88rem; font-weight: 700; font-family: var(--font-serif); }
+    .yokai-card-name-en { font-size: 0.72rem; color: var(--text-muted); }
+    .yokai-card-meta { font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 4px; }
+    .yokai-card-role { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .yokai-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .yokai-tag { font-size: 0.64rem; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-secondary); }
+    .yokai-tag-descola { font-size: 0.64rem; padding: 2px 8px; font-weight: 600; }
+
+    .yokai-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 28px; }
+    .yokai-page-btn { font-size: 0.78rem; padding: 6px 16px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; }
+    .yokai-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .yokai-page-btn:not(:disabled):hover { background: var(--surface); }
+    .yokai-page-info { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* Detail modal */
+    .yokai-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
+    .yokai-modal-overlay.show { display: flex; justify-content: center; padding: 40px 16px; }
+    .yokai-modal { background: var(--bg); border: 1px solid var(--border); max-width: 720px; width: 100%; padding: 32px; position: relative; }
+    .yokai-modal-close { position: absolute; top: 12px; right: 16px; font-size: 1.2rem; background: none; border: none; color: var(--text-muted); cursor: pointer; }
+    .yokai-modal h2 { font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 4px; }
+    .yokai-modal .modal-en { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
+    .yokai-detail-section { margin-bottom: 20px; }
+    .yokai-detail-section h3 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent-warm); margin-bottom: 8px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px; }
+    .yokai-field { margin-bottom: 8px; }
+    .yokai-field-label { font-size: 0.68rem; color: var(--text-muted); }
+    .yokai-field-value { font-size: 0.84rem; color: var(--text); margin-top: 1px; line-height: 1.6; }
+    .yokai-comp-bar { display: flex; height: 6px; overflow: hidden; margin-bottom: 4px; }
+    .yokai-comp-legend { display: flex; flex-wrap: wrap; gap: 8px; }
+    .yokai-comp-legend span { font-size: 0.68rem; color: var(--text-secondary); display: flex; align-items: center; gap: 3px; }
+    .yokai-comp-dot { width: 6px; height: 6px; display: inline-block; }
+
+    .yokai-source-link { font-size: 0.78rem; color: var(--accent-warm); text-decoration: none; margin-top: 12px; display: inline-block; }
+    .yokai-source-link:hover { text-decoration: underline; }
+
+    /* Data source tags */
+    .ds-tag { font-size: 0.64rem; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-secondary); }
+    .ds-tag-primary { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <main class="container">
+    <section class="app-section">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px" class="yokai-header">
+        <div>
+          <h2>妖怪データベース</h2>
+          <div class="subtitle">YOKAI DATABASE &mdash; <span id="totalCount">0</span> 体収録</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="yokai-stats-toggle" onclick="toggleStats()">統計</button>
+          <a href="../databases.html" style="font-size:0.78rem;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center">DB一覧</a>
+        </div>
+      </div>
+
+      <div id="statsPanel" class="yokai-stats">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <h3>地域分布</h3>
+            <div id="regionStats"></div>
+          </div>
+          <div>
+            <h3>存在論的分類</h3>
+            <div id="descolaStats"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="yokai-filters">
+        <input type="search" id="searchInput" class="yokai-search" placeholder="妖怪を検索... (名前・文化・役割・キーワード)">
+        <div class="yokai-select-row">
+          <select id="regionFilter" class="yokai-select"><option value="">全地域</option></select>
+          <select id="descolaFilter" class="yokai-select"><option value="">全分類</option></select>
+          <select id="moralFilter" class="yokai-select"><option value="">道徳性</option></select>
+          <select id="sizeFilter" class="yokai-select"><option value="">サイズ</option></select>
+        </div>
+      </div>
+
+      <div id="countDisplay" class="yokai-count"></div>
+      <div id="yokaiGrid" class="yokai-grid"></div>
+      <div id="pagination" class="yokai-pagination"></div>
+    </section>
+  </main>
+
+  <div id="yokaiModal" class="yokai-modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="yokai-modal">
+      <button class="yokai-modal-close" onclick="closeModal()">&times;</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+
+  <script src="../js/shared/utilities.js"></script>
+  <script src="../js/shared/auth-guard.js"></script>
+  <script src="../js/shared/nav.js"></script>
+  <script>
+  'use strict';
+
+  // Labels
+  var REGION_LABELS = { japan: '日本', east_asia: '東アジア', south_asia: '南アジア', southeast_asia: '東南アジア', middle_east: '中東', europe: 'ヨーロッパ', africa: 'アフリカ', americas: '南北アメリカ', oceania: 'オセアニア', other: 'その他・普遍' };
+  var DESCOLA_LABELS = { animism: 'アニミズム', totemism: 'トーテミズム', analogism: 'アナロジズム', naturalism: 'ナチュラリズム', hybrid: 'ハイブリッド' };
+  var DESCOLA_COLORS = { animism: '#8B0000', totemism: '#1A5276', analogism: '#2980b9', naturalism: '#c0392b', hybrid: '#6C3483' };
+  var MORAL_LABELS = { good: '善', neutral: '中立', evil: '悪', contextual: '文脈依存' };
+  var SIZE_LABELS = { small: '小型', animal: '動物大', human: '人間大', large: '大型', gigantic: '巨大', spirit: '霊体' };
+  var COMP_COLORS = { human: '#CC1400', animal: '#1A5276', spirit: '#6C3483', inorganic: '#2980b9', aquatic: '#0E6655', plant: '#27ae60', cosmic: '#8B0000', elemental: '#e67e22', divine: '#B8860B' };
+  var DS_LABELS = { weather: '気象', earthquake: '地震', seasonal: '季節', biodiversity: '生物多様性', ocean: '海洋', space: '宇宙', social: '社会', disaster: '災害', news: 'ニュース', topography: '地形', time: '時間', trending: 'トレンド', fire: '火災', spiritual: '霊的', geology: '地質', nature: '自然', storm: '嵐', water: '水文', death: '死', astronomy: '天文', wind: '風', history: '歴史', culture: '文化', rain: '降雨', light: '光', political: '政治', cosmos: '宇宙', forest: '森林', navigation: '航海', temperature: '気温', night: '夜', water_quality: '水質', urban: '都市', dream: '夢', river: '河川', desert: '砂漠', mountain: '山岳', calendar: '暦', volcano: '火山', agriculture: '農業', ecology: '生態学', cold: '寒冷', tide: '潮汐', seismic: '地震波', mineral: '鉱物', darkness: '闇', humidity: '湿度', snow: '雪', volcanic: '火山', electricity: '電気', stars: '星', deep_sea: '深海', lightning: '雷', ice: '氷', twilight: '黄昏', solar: '太陽', fog: '霧', eclipse: '日食/月食', arctic: '極地', lava: '溶岩', coral: 'サンゴ', tundra: 'ツンドラ', rainforest: '熱帯雨林', moon: '月', aurora: 'オーロラ', magnetic_field: '地磁気' };
+
+  var ITEMS_PER_PAGE = 60;
+  var yokaiData = [];
+  var filtered = [];
+  var currentPage = 0;
+
+  initNav('databases');
+  initAuthGuard(function() { loadYokaiData(); });
+
+  function loadYokaiData() {
+    fetch('../data/yokai-data.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        yokaiData = data;
+        document.getElementById('totalCount').textContent = data.length.toLocaleString();
+        populateFilters();
+        applyFilters();
+        renderStats();
+      })
+      .catch(function(err) {
+        console.error('Load error:', err);
+        document.getElementById('yokaiGrid').innerHTML = '<p style="color:var(--text-muted)">データの読み込みに失敗しました。</p>';
+      });
+  }
+
+  function populateFilters() {
+    var regions = {}, descolas = {}, morals = {}, sizes = {};
+    yokaiData.forEach(function(y) {
+      if (y.region_category) regions[y.region_category] = 1;
+      if (y.descola_classification) descolas[y.descola_classification] = 1;
+      if (y.moral_alignment) morals[y.moral_alignment] = 1;
+      if (y.size_category) sizes[y.size_category] = 1;
+    });
+    addOptions('regionFilter', regions, REGION_LABELS);
+    addOptions('descolaFilter', descolas, DESCOLA_LABELS);
+    addOptions('moralFilter', morals, MORAL_LABELS);
+    addOptions('sizeFilter', sizes, SIZE_LABELS);
+  }
+
+  function addOptions(id, keys, labels) {
+    var el = document.getElementById(id);
+    Object.keys(keys).sort().forEach(function(k) {
+      var opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = labels[k] || k;
+      el.appendChild(opt);
+    });
+  }
+
+  // Filters
+  document.getElementById('searchInput').addEventListener('input', function() { currentPage = 0; applyFilters(); });
+  document.getElementById('regionFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
+  document.getElementById('descolaFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
+  document.getElementById('moralFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
+  document.getElementById('sizeFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
+
+  function applyFilters() {
+    var q = document.getElementById('searchInput').value.toLowerCase();
+    var region = document.getElementById('regionFilter').value;
+    var descola = document.getElementById('descolaFilter').value;
+    var moral = document.getElementById('moralFilter').value;
+    var size = document.getElementById('sizeFilter').value;
+
+    filtered = yokaiData.filter(function(y) {
+      if (q) {
+        var match = (y.name_ja || '').toLowerCase().indexOf(q) >= 0 ||
+          (y.name_en || '').toLowerCase().indexOf(q) >= 0 ||
+          (y.name_local || '').toLowerCase().indexOf(q) >= 0 ||
+          (y.origin_culture || '').toLowerCase().indexOf(q) >= 0 ||
+          (y.cultural_role || '').toLowerCase().indexOf(q) >= 0 ||
+          (y.trigger_keywords || []).some(function(k) { return k.toLowerCase().indexOf(q) >= 0; });
+        if (!match) return false;
+      }
+      if (region && y.region_category !== region) return false;
+      if (descola && y.descola_classification !== descola) return false;
+      if (moral && y.moral_alignment !== moral) return false;
+      if (size && y.size_category !== size) return false;
+      return true;
+    });
+
+    renderGrid();
+    renderPagination();
+    var hasFilter = q || region || descola || moral || size;
+    document.getElementById('countDisplay').textContent = filtered.length.toLocaleString() + ' 体' + (hasFilter ? ' (' + yokaiData.length.toLocaleString() + ' 体中)' : '');
+  }
+
+  function renderGrid() {
+    var start = currentPage * ITEMS_PER_PAGE;
+    var paged = filtered.slice(start, start + ITEMS_PER_PAGE);
+    var html = '';
+    paged.forEach(function(y) {
+      var descolaColor = DESCOLA_COLORS[y.descola_classification] || 'var(--text-muted)';
+      var descolaLabel = DESCOLA_LABELS[y.descola_classification] || y.descola_classification || '';
+
+      html += '<div class="yokai-card" onclick="openDetail(\'' + escapeHtml(y.id) + '\')">';
+      html += '<div class="yokai-card-header"><div>';
+      html += '<div class="yokai-card-name">' + escapeHtml(y.name_ja || y.name_en) + '</div>';
+      if (y.name_en && y.name_ja) html += '<div class="yokai-card-name-en">' + escapeHtml(y.name_en) + '</div>';
+      html += '</div>';
+      if (descolaLabel) html += '<span class="yokai-tag-descola" style="border:1px solid ' + descolaColor + ';color:' + descolaColor + '">' + escapeHtml(descolaLabel) + '</span>';
+      html += '</div>';
+
+      var meta = [];
+      if (y.origin_culture) meta.push(y.origin_culture);
+      if (y.moral_alignment) meta.push(MORAL_LABELS[y.moral_alignment] || y.moral_alignment);
+      if (y.size_category) meta.push(SIZE_LABELS[y.size_category] || y.size_category);
+      if (meta.length) html += '<div class="yokai-card-meta">' + escapeHtml(meta.join(' / ')) + '</div>';
+
+      if (y.cultural_role) html += '<div class="yokai-card-role">' + escapeHtml(y.cultural_role) + '</div>';
+
+      if (y.supernatural_abilities && y.supernatural_abilities.length) {
+        html += '<div class="yokai-card-tags">';
+        y.supernatural_abilities.slice(0, 3).forEach(function(a) {
+          html += '<span class="yokai-tag">' + escapeHtml(a.length > 12 ? a.slice(0, 12) + '...' : a) + '</span>';
+        });
+        html += '</div>';
+      }
+
+      if (y.data_sources && y.data_sources.length) {
+        html += '<div class="yokai-card-tags" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border-light)">';
+        y.data_sources.forEach(function(s) {
+          var isPrimary = s === y.umwelt_primary;
+          html += '<span class="ds-tag' + (isPrimary ? ' ds-tag-primary' : '') + '">' + escapeHtml(DS_LABELS[s] || s) + '</span>';
+        });
+        html += '</div>';
+      }
+
+      html += '</div>';
+    });
+    document.getElementById('yokaiGrid').innerHTML = html || '<p style="color:var(--text-muted)">該当する妖怪がありません。</p>';
+  }
+
+  function renderPagination() {
+    var totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+    document.getElementById('pagination').innerHTML =
+      '<button class="yokai-page-btn" onclick="changePage(-1)"' + (currentPage === 0 ? ' disabled' : '') + '>前へ</button>' +
+      '<span class="yokai-page-info">' + (currentPage + 1) + ' / ' + totalPages + '</span>' +
+      '<button class="yokai-page-btn" onclick="changePage(1)"' + (currentPage >= totalPages - 1 ? ' disabled' : '') + '>次へ</button>';
+  }
+
+  function changePage(delta) {
+    var totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    currentPage = Math.max(0, Math.min(totalPages - 1, currentPage + delta));
+    renderGrid();
+    renderPagination();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleStats() {
+    document.getElementById('statsPanel').classList.toggle('show');
+  }
+
+  function renderStats() {
+    var regionCounts = {}, descolaCounts = {};
+    yokaiData.forEach(function(y) {
+      var r = y.region_category || 'other';
+      regionCounts[r] = (regionCounts[r] || 0) + 1;
+      var d = y.descola_classification || 'unknown';
+      descolaCounts[d] = (descolaCounts[d] || 0) + 1;
+    });
+
+    var total = yokaiData.length;
+    document.getElementById('regionStats').innerHTML = renderStatBars(regionCounts, REGION_LABELS, total);
+    document.getElementById('descolaStats').innerHTML = renderStatBars(descolaCounts, DESCOLA_LABELS, total);
+  }
+
+  function renderStatBars(counts, labels, total) {
+    var sorted = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; });
+    return sorted.map(function(e) {
+      var pct = (e[1] / total * 100).toFixed(1);
+      return '<div class="stat-row"><span class="stat-label">' + escapeHtml(labels[e[0]] || e[0]) + '</span>' +
+        '<div class="stat-bar"><div class="stat-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="stat-count">' + e[1] + '</span></div>';
+    }).join('');
+  }
+
+  // Detail modal
+  function openDetail(id) {
+    var y = yokaiData.find(function(d) { return d.id === id; });
+    if (!y) return;
+    var html = '<h2>' + escapeHtml(y.name_ja || y.name_en) + '</h2>';
+    if (y.name_en) html += '<div class="modal-en">' + escapeHtml(y.name_en) + (y.name_local && y.name_local !== y.name_ja ? ' / ' + escapeHtml(y.name_local) : '') + '</div>';
+
+    // Basic info
+    html += '<div class="yokai-detail-section"><h3>基本情報</h3>';
+    html += field('起源文化', y.origin_culture);
+    html += field('起源地域', y.origin_region);
+    html += field('地域分類', REGION_LABELS[y.region_category] || y.region_category);
+    html += field('存在論的分類', DESCOLA_LABELS[y.descola_classification] || y.descola_classification);
+    html += field('道徳性', MORAL_LABELS[y.moral_alignment] || y.moral_alignment);
+    html += field('サイズ', SIZE_LABELS[y.size_category] || y.size_category);
+    html += field('初出記録', y.first_record);
+    html += '</div>';
+
+    // Composition
+    if (y.composition && Object.keys(y.composition).length) {
+      html += '<div class="yokai-detail-section"><h3>構成要素</h3>';
+      var entries = Object.entries(y.composition).filter(function(e) { return e[1] > 0; });
+      html += '<div class="yokai-comp-bar">';
+      entries.forEach(function(e) { html += '<div style="width:' + e[1] + '%;background:' + (COMP_COLORS[e[0]] || '#888') + '"></div>'; });
+      html += '</div><div class="yokai-comp-legend">';
+      entries.forEach(function(e) { html += '<span><span class="yokai-comp-dot" style="background:' + (COMP_COLORS[e[0]] || '#888') + '"></span>' + escapeHtml(e[0]) + ' ' + e[1] + '%</span>'; });
+      html += '</div></div>';
+    }
+
+    // Personality
+    html += '<div class="yokai-detail-section"><h3>性格・特徴</h3>';
+    html += field('性格', y.personality);
+    html += field('話し方', y.speech_style);
+    html += field('文化的役割', y.cultural_role);
+    html += field('外見', y.color_features);
+    html += '</div>';
+
+    // Abilities
+    if (y.supernatural_abilities && y.supernatural_abilities.length) {
+      html += '<div class="yokai-detail-section"><h3>超自然的能力</h3>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+      y.supernatural_abilities.forEach(function(a) { html += '<span class="yokai-tag">' + escapeHtml(a) + '</span>'; });
+      html += '</div></div>';
+    }
+
+    // Ecology
+    html += '<div class="yokai-detail-section"><h3>生態</h3>';
+    html += field('棲息地', y.habitat_type);
+    html += field('活動時間', y.active_hours);
+    html += field('季節パターン', y.seasonal_pattern);
+    html += field('天候親和性', y.weather_affinity);
+    html += '</div>';
+
+    // Encounters
+    if (y.encounter_scenarios && y.encounter_scenarios.length) {
+      html += '<div class="yokai-detail-section"><h3>遭遇シナリオ</h3>';
+      y.encounter_scenarios.forEach(function(s) { html += '<div class="yokai-field-value" style="margin-bottom:4px">' + escapeHtml(s) + '</div>'; });
+      html += field('崇拝形態', y.worship_form);
+      html += '</div>';
+    }
+
+    // Data sources
+    if (y.data_sources && y.data_sources.length) {
+      html += '<div class="yokai-detail-section"><h3>データソース (ウムヴェルト)</h3>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+      y.data_sources.forEach(function(s) {
+        var isPrimary = s === y.umwelt_primary;
+        html += '<span class="ds-tag' + (isPrimary ? ' ds-tag-primary' : '') + '">' + escapeHtml(DS_LABELS[s] || s) + '</span>';
+      });
+      html += '</div></div>';
+    }
+
+    // Scholarly summary
+    if (y.scholarly_summary) {
+      html += '<div class="yokai-detail-section"><h3>学術的解説</h3>';
+      html += '<div class="yokai-field-value">' + escapeHtml(y.scholarly_summary) + '</div>';
+      html += '</div>';
+    }
+
+    // Cultural notes
+    if (y.cultural_notes) {
+      html += '<div class="yokai-detail-section"><h3>文化的背景</h3>';
+      html += '<div class="yokai-field-value">' + escapeHtml(y.cultural_notes) + '</div>';
+      html += '</div>';
+    }
+
+    // Related yokai
+    if (y.related_yokai && y.related_yokai.length) {
+      html += '<div class="yokai-detail-section"><h3>関連する妖怪</h3>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+      y.related_yokai.forEach(function(rid) {
+        var related = yokaiData.find(function(d) { return d.id === rid; });
+        var label = related ? related.name_ja : rid;
+        html += '<span class="yokai-tag" style="cursor:pointer" onclick="openDetail(\'' + escapeHtml(rid) + '\')">' + escapeHtml(label) + '</span>';
+      });
+      html += '</div></div>';
+    }
+
+    // Source texts
+    if (y.source_texts && y.source_texts.length) {
+      html += '<div class="yokai-detail-section"><h3>参考文献</h3>';
+      y.source_texts.forEach(function(s) { html += '<div class="yokai-field-value" style="font-size:0.78rem">' + escapeHtml(s) + '</div>'; });
+      html += '</div>';
+    }
+
+    html += '<a class="yokai-source-link" href="https://yokai-sns.vercel.app/database/' + encodeURIComponent(y.id) + '" target="_blank">妖怪百景で詳細を見る &rarr;</a>';
+
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('yokaiModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('yokaiModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Close on browser back
+  window.addEventListener('popstate', function() { closeModal(); });
+
+  function field(label, value) {
+    if (!value) return '';
+    return '<div class="yokai-field"><div class="yokai-field-label">' + escapeHtml(label) + '</div><div class="yokai-field-value">' + escapeHtml(value) + '</div></div>';
+  }
+  </script>
+</body>
+</html>

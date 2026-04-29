@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>妖怪データベース | Insight News</title>
+  <title>データベース | Insight News</title>
   <link rel="icon" href="https://esse-sense.com/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,450 +13,321 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="js/shared/firebase-config.js"></script>
-  <style>
-    /* Yokai Database specific styles */
-    .yokai-header { margin-bottom: 24px; }
-    .yokai-header h2 { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; }
-    .yokai-header .subtitle { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.12em; margin-top: 2px; }
-
-    .yokai-stats-toggle { font-size: 0.78rem; padding: 6px 14px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
-    .yokai-stats-toggle:hover { background: var(--surface); }
-
-    .yokai-stats { background: var(--surface); border: 1px solid var(--border-light); padding: 20px; margin-bottom: 20px; display: none; }
-    .yokai-stats.show { display: block; }
-    .yokai-stats h3 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 8px; }
-    .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    .stat-label { font-size: 0.72rem; color: var(--text-secondary); width: 100px; flex-shrink: 0; }
-    .stat-bar { flex: 1; height: 4px; background: var(--border-light); overflow: hidden; }
-    .stat-bar-fill { height: 100%; background: var(--accent-warm); }
-    .stat-count { font-size: 0.68rem; color: var(--text-muted); width: 32px; text-align: right; }
-
-    .yokai-filters { margin-bottom: 16px; }
-    .yokai-search { width: 100%; font-size: 0.84rem; padding: 10px 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); outline: none; margin-bottom: 10px; }
-    .yokai-search:focus { border-color: var(--accent-warm); }
-    .yokai-select-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .yokai-select { font-size: 0.78rem; padding: 6px 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); outline: none; min-width: 90px; }
-    .yokai-select:focus { border-color: var(--accent-warm); }
-
-    .yokai-count { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; }
-
-    .yokai-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-
-    .yokai-card { background: var(--card); border: 1px solid var(--border-light); padding: 16px; text-decoration: none; color: var(--text); display: block; transition: border-color 0.15s; cursor: pointer; }
-    .yokai-card:hover { border-color: var(--accent-warm); }
-    .yokai-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
-    .yokai-card-name { font-size: 0.88rem; font-weight: 700; font-family: var(--font-serif); }
-    .yokai-card-name-en { font-size: 0.72rem; color: var(--text-muted); }
-    .yokai-card-meta { font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 4px; }
-    .yokai-card-role { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .yokai-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-    .yokai-tag { font-size: 0.64rem; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-secondary); }
-    .yokai-tag-descola { font-size: 0.64rem; padding: 2px 8px; font-weight: 600; }
-
-    .yokai-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 28px; }
-    .yokai-page-btn { font-size: 0.78rem; padding: 6px 16px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; }
-    .yokai-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .yokai-page-btn:not(:disabled):hover { background: var(--surface); }
-    .yokai-page-info { font-size: 0.78rem; color: var(--text-muted); }
-
-    /* Detail modal */
-    .yokai-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
-    .yokai-modal-overlay.show { display: flex; justify-content: center; padding: 40px 16px; }
-    .yokai-modal { background: var(--bg); border: 1px solid var(--border); max-width: 720px; width: 100%; padding: 32px; position: relative; }
-    .yokai-modal-close { position: absolute; top: 12px; right: 16px; font-size: 1.2rem; background: none; border: none; color: var(--text-muted); cursor: pointer; }
-    .yokai-modal h2 { font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 4px; }
-    .yokai-modal .modal-en { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
-    .yokai-detail-section { margin-bottom: 20px; }
-    .yokai-detail-section h3 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent-warm); margin-bottom: 8px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px; }
-    .yokai-field { margin-bottom: 8px; }
-    .yokai-field-label { font-size: 0.68rem; color: var(--text-muted); }
-    .yokai-field-value { font-size: 0.84rem; color: var(--text); margin-top: 1px; line-height: 1.6; }
-    .yokai-comp-bar { display: flex; height: 6px; overflow: hidden; margin-bottom: 4px; }
-    .yokai-comp-legend { display: flex; flex-wrap: wrap; gap: 8px; }
-    .yokai-comp-legend span { font-size: 0.68rem; color: var(--text-secondary); display: flex; align-items: center; gap: 3px; }
-    .yokai-comp-dot { width: 6px; height: 6px; display: inline-block; }
-
-    .yokai-source-link { font-size: 0.78rem; color: var(--accent-warm); text-decoration: none; margin-top: 12px; display: inline-block; }
-    .yokai-source-link:hover { text-decoration: underline; }
-
-    /* Data source tags */
-    .ds-tag { font-size: 0.64rem; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-secondary); }
-    .ds-tag-primary { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
-  </style>
 </head>
 <body>
   <div id="app-nav"></div>
 
   <main class="container">
     <section class="app-section">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px" class="yokai-header">
-        <div>
-          <h2>妖怪データベース</h2>
-          <div class="subtitle">YOKAI DATABASE &mdash; <span id="totalCount">0</span> 体収録</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="yokai-stats-toggle" onclick="toggleStats()">統計</button>
-          <a href="databases-original.html" style="font-size:0.78rem;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center">DB一覧</a>
-        </div>
+      <div class="section-header">
+        <h2 class="section-title">データベース</h2>
+        <span class="section-subtitle">Intelligence Pipeline を支える25のデータソース</span>
+      </div>
+      <p style="font-size:0.84rem;color:var(--text-secondary);line-height:1.7;max-width:720px;margin-bottom:20px">
+        ミラツク・インテリジェンス・パイプラインは、4つの層に分類されたデータベースで構成されています。基軸データベースが情報を蓄積し、構造理解が分析フレームを提供し、変化検出がセンサーとして機能し、概念基盤が知識の文脈を与えます。
+      </p>
+      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <a href="analysis-reports.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent-warm);color:#fff;border-radius:6px;font-size:0.82rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">解析レポート<span style="font-size:0.72rem;opacity:0.85">&rarr;</span></a>
+        <a href="dashboards/wiki-planner.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--surface,#F7F7F5);color:var(--accent-warm);border:1px solid var(--accent-warm);border-radius:6px;font-size:0.82rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">LLM Wiki Planner<span style="font-size:0.72rem;opacity:0.85">&rarr;</span></a>
+      </div>
+      <div class="db-overview" id="dbOverview"></div>
+      <div class="db-arch-diagram">
+        <div class="db-arch-stage" data-layer="conceptual">概念基盤<span class="db-arch-stage-sub">AK・MY・AN・TK</span></div>
+        <span class="db-arch-arrow">&rarr;</span>
+        <div class="db-arch-stage" data-layer="core">基軸DB<span class="db-arch-stage-sub">FK・PE・CI・GR</span></div>
+        <span class="db-arch-arrow">&rarr;</span>
+        <div class="db-arch-stage" data-layer="structural">構造理解<span class="db-arch-stage-sub">CLA・MT・AL・GF</span></div>
+        <span class="db-arch-arrow">&rarr;</span>
+        <div class="db-arch-stage" data-layer="detection">変化検出<span class="db-arch-stage-sub">SG・IR・PD・SI・IC・AA 他</span></div>
+        <span class="db-arch-arrow">&rarr;</span>
+        <div class="db-arch-stage db-arch-stage-output">有望領域の特定</div>
+      </div>
+      <div id="dbLayersContent">
+        <div class="loading-indicator"><div class="loading-spinner"></div><div>データベース情報を読み込み中...</div></div>
       </div>
 
-      <div id="statsPanel" class="yokai-stats">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          <div>
-            <h3>地域分布</h3>
-            <div id="regionStats"></div>
+      <!-- Books & Reports Section -->
+      <div id="dbBooksSection" style="margin-top:40px;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:28px 24px">
+        <h3 style="font-family:var(--font-serif);font-size:1.08rem;font-weight:700;margin-bottom:6px">書籍・レポート</h3>
+        <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:20px">データベースに基づく学術書籍・教科書・分析レポート。</p>
+        <div class="db-layer-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+
+          <!-- 未来を読む力 -->
+          <div style="padding:20px;border:1px solid var(--border-light);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:0.72rem;font-weight:700;color:#CC1400">FS</span>
+              <span style="font-size:0.88rem;font-weight:600">未来を読む力</span>
+            </div>
+            <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">20章 / 200,000字</div>
+            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">Futures Studies Knowledge DB（448研究者・99手法・17学派・507概念）に基づく未来学入門書。</p>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>教科書</span><span>93冊調査</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="textbook.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <a href="reports/summary-fs.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">要約 &rarr;</a>
+            </div>
           </div>
-          <div>
-            <h3>存在論的分類</h3>
-            <div id="descolaStats"></div>
+
+          <!-- 神話の構造と10の社会的機能 -->
+          <div style="padding:20px;border:1px solid var(--border-light);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:0.72rem;font-weight:700;color:#CC1400">MY</span>
+              <span style="font-size:0.88rem;font-weight:600">神話の構造と10の社会的機能</span>
+            </div>
+            <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">20章 / 204,852字</div>
+            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">10,223物語・90文化・1,220万パラレルに基づくデータ駆動型比較神話学。98.5%をLLM構造分析済み。</p>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>書籍</span><span>6フレームワーク</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="book/myth-structure-functions.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <a href="reports/summary-my.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">要約 &rarr;</a>
+              <button onclick="downloadSingleBookPDF('book/myth-structure-functions.html','神話の構造と10の社会的機能')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">PDF</button>
+              <button onclick="downloadSingleBookTXT('book/myth-structure-functions.html','myth-structure-functions.txt')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">TXT</button>
+            </div>
           </div>
+
+          <!-- 技術の未来 -->
+          <div style="padding:20px;border:1px solid var(--border-light);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:0.72rem;font-weight:700;color:#CC1400">TA</span>
+              <span style="font-size:0.88rem;font-weight:600">技術の未来</span>
+            </div>
+            <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">20章 / 200,000字</div>
+            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">5,396件コア技術＋外部13ソース参照（計227Kレコード）に基づく700万年の技術史データ駆動型分析。</p>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>書籍</span><span>13外部ソース</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="book/tech-acceleration/index.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <a href="reports/summary-ta.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">要約 &rarr;</a>
+              <button onclick="downloadTaBookPDF()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">PDF</button>
+              <button onclick="downloadTaBookTXT()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">TXT</button>
+              <a href="dashboards/ta.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">ダッシュボード &rarr;</a>
+            </div>
+          </div>
+
+          <!-- ソーシャルイノベーションの構造 -->
+          <div style="padding:20px;border:1px solid var(--border-light);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:0.72rem;font-weight:700;color:#CC1400">SIF</span>
+              <span style="font-size:0.88rem;font-weight:600">ソーシャルイノベーションの構造</span>
+            </div>
+            <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">20章 / 200,000字</div>
+            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">1,389事象・1,649関係・10文明圏に基づく5000年の社会変革分析。全事象に構造変革記述を付与。</p>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>書籍</span><span>10システム法則</span><span>5戦略関係構築</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="book/si-textbook.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <a href="reports/summary-sif.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">要約 &rarr;</a>
+              <button onclick="downloadSingleBookPDF('book/si-textbook.html','ソーシャルイノベーションの構造')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">PDF</button>
+              <button onclick="downloadSingleBookTXT('book/si-textbook.html','si-textbook.txt')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">TXT</button>
+              <a href="dashboards/sif.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">ダッシュボード &rarr;</a>
+            </div>
+          </div>
+
+          <!-- 変革・変容の構造 -->
+          <div style="padding:20px;border:1px solid var(--border-light);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:0.72rem;font-weight:700;color:#CC1400">CLA+SI+GF+MY+SG+TA</span>
+              <span style="font-size:0.88rem;font-weight:600">変革・変容の構造</span>
+            </div>
+            <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">10部 / 122,995字</div>
+            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">CLA・SI・歴史構造・神話（52,703件）・技術史・シグナルの6DB多重構造解析。9人の解析者による並列多重解析。CITM拡張モデル・反証事例分析・五位相モデルv2を含む。</p>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>レポート</span><span>6DB横断</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="reports/transformation-structures.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <a href="reports/summary-transformation.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">要約 &rarr;</a>
+              <button onclick="downloadSingleBookPDF('reports/transformation-structures.html','変革・変容の構造')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">PDF</button>
+              <button onclick="downloadSingleBookTXT('reports/transformation-structures.html','transformation-structures.txt')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">TXT</button>
+              <a href="dashboards/transformation-unified.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">ダッシュボード &rarr;</a>
+            </div>
+          </div>
+
+          <!-- 未来は後ろ側にある -->
+          <div style="padding:20px;border:1px solid var(--border-light);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:0.72rem;font-weight:700;color:#CC1400">FS+TK+AN+MY+CLA+TA+SIF+GF</span>
+              <span style="font-size:0.88rem;font-weight:600">未来は後ろ側にある</span>
+            </div>
+            <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">19章 / 116,000字</div>
+            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">人類学的未来学の構築。3,001先住民グループ・35,308伝統知項目・10,223神話・930CLA分析・8DB横断。先住民の時間観から未来学を刷新する。</p>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>書籍</span><span>8DB横断</span><span>人類学的未来学</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="book/future-lies-behind.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <button onclick="downloadSingleBookPDF('book/future-lies-behind.html','未来は後ろ側にある')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">PDF</button>
+              <button onclick="downloadSingleBookTXT('book/future-lies-behind.html','future-lies-behind.txt')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">TXT</button>
+            </div>
+          </div>
+
+          <!-- 歴史の韻と変革 -->
+          <div style="padding:20px;border:1px solid var(--border-light);border-radius:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:0.72rem;font-weight:700;color:#CC1400">GF+PE+CI+CLA</span>
+              <span style="font-size:0.88rem;font-weight:600">歴史の韻と変革</span>
+            </div>
+            <div style="font-family:var(--font-serif);font-size:0.95rem;font-weight:700;margin-bottom:8px">20章 / 206,000字</div>
+            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">10,033イベント・671概念・12システムパターン・10意思決定アーキタイプから導く歴史の構造法則。</p>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap"><span>HTML</span><span>書籍</span><span>12パターン</span><span>20ケース</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a href="reports/book-rhymes-of-history.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--accent-warm);color:var(--accent-warm);border-radius:4px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">読む &rarr;</a>
+              <button onclick="downloadSingleBookPDF('reports/book-rhymes-of-history.html','歴史の韻と変革')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">PDF</button>
+              <button onclick="downloadSingleBookTXT('reports/book-rhymes-of-history.html','book-rhymes-of-history.txt')" style="display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;font-size:0.78rem;font-weight:500;background:transparent;cursor:pointer">TXT</button>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div class="yokai-filters">
-        <input type="search" id="searchInput" class="yokai-search" placeholder="妖怪を検索... (名前・文化・役割・キーワード)">
-        <div class="yokai-select-row">
-          <select id="regionFilter" class="yokai-select"><option value="">全地域</option></select>
-          <select id="descolaFilter" class="yokai-select"><option value="">全分類</option></select>
-          <select id="moralFilter" class="yokai-select"><option value="">道徳性</option></select>
-          <select id="sizeFilter" class="yokai-select"><option value="">サイズ</option></select>
+      <!-- Legacy Transformation Report link removed - integrated into grid above -->
+      <div style="display:none"><!-- Placeholder for removed individual cards --></div>
+      <div style="display:none"><!-- removed -->
+          <a href="reports/transformation-structures.html">Legacy</a>
+          <a href="dashboards/gf.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:0.82rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">GFダッシュボード<span style="font-size:0.72rem;opacity:0.6">&rarr;</span></a>
+          <a href="dashboards/sif.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:0.82rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">SIFダッシュボード<span style="font-size:0.72rem;opacity:0.6">&rarr;</span></a>
+          <a href="dashboards/my.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:0.82rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">MYダッシュボード<span style="font-size:0.72rem;opacity:0.6">&rarr;</span></a>
+          <a href="dashboards/cla-integrated.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:0.82rem;font-weight:500;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">統合CLA<span style="font-size:0.72rem;opacity:0.6">&rarr;</span></a>
         </div>
       </div>
-
-      <div id="countDisplay" class="yokai-count"></div>
-      <div id="yokaiGrid" class="yokai-grid"></div>
-      <div id="pagination" class="yokai-pagination"></div>
     </section>
   </main>
-
-  <div id="yokaiModal" class="yokai-modal-overlay" onclick="if(event.target===this)closeModal()">
-    <div class="yokai-modal">
-      <button class="yokai-modal-close" onclick="closeModal()">&times;</button>
-      <div id="modalContent"></div>
-    </div>
-  </div>
 
   <div id="app-footer"></div>
 
   <script src="js/shared/utilities.js"></script>
   <script src="js/shared/auth-guard.js"></script>
   <script src="js/shared/nav.js"></script>
+  <script src="js/pages/databases.js"></script>
   <script>
-  'use strict';
-
-  // Labels
-  var REGION_LABELS = { japan: '日本', east_asia: '東アジア', south_asia: '南アジア', southeast_asia: '東南アジア', middle_east: '中東', europe: 'ヨーロッパ', africa: 'アフリカ', americas: '南北アメリカ', oceania: 'オセアニア', other: 'その他・普遍' };
-  var DESCOLA_LABELS = { animism: 'アニミズム', totemism: 'トーテミズム', analogism: 'アナロジズム', naturalism: 'ナチュラリズム', hybrid: 'ハイブリッド' };
-  var DESCOLA_COLORS = { animism: '#8B0000', totemism: '#1A5276', analogism: '#2980b9', naturalism: '#c0392b', hybrid: '#6C3483' };
-  var MORAL_LABELS = { good: '善', neutral: '中立', evil: '悪', contextual: '文脈依存' };
-  var SIZE_LABELS = { small: '小型', animal: '動物大', human: '人間大', large: '大型', gigantic: '巨大', spirit: '霊体' };
-  var COMP_COLORS = { human: '#CC1400', animal: '#1A5276', spirit: '#6C3483', inorganic: '#2980b9', aquatic: '#0E6655', plant: '#27ae60', cosmic: '#8B0000', elemental: '#e67e22', divine: '#B8860B' };
-  var DS_LABELS = { weather: '気象', earthquake: '地震', seasonal: '季節', biodiversity: '生物多様性', ocean: '海洋', space: '宇宙', social: '社会', disaster: '災害', news: 'ニュース', topography: '地形', time: '時間', trending: 'トレンド', fire: '火災', spiritual: '霊的', geology: '地質', nature: '自然', storm: '嵐', water: '水文', death: '死', astronomy: '天文', wind: '風', history: '歴史', culture: '文化', rain: '降雨', light: '光', political: '政治', cosmos: '宇宙', forest: '森林', navigation: '航海', temperature: '気温', night: '夜', water_quality: '水質', urban: '都市', dream: '夢', river: '河川', desert: '砂漠', mountain: '山岳', calendar: '暦', volcano: '火山', agriculture: '農業', ecology: '生態学', cold: '寒冷', tide: '潮汐', seismic: '地震波', mineral: '鉱物', darkness: '闇', humidity: '湿度', snow: '雪', volcanic: '火山', electricity: '電気', stars: '星', deep_sea: '深海', lightning: '雷', ice: '氷', twilight: '黄昏', solar: '太陽', fog: '霧', eclipse: '日食/月食', arctic: '極地', lava: '溶岩', coral: 'サンゴ', tundra: 'ツンドラ', rainforest: '熱帯雨林', moon: '月', aurora: 'オーロラ', magnetic_field: '地磁気' };
-
-  var ITEMS_PER_PAGE = 60;
-  var yokaiData = [];
-  var filtered = [];
-  var currentPage = 0;
-
-  initNav('databases');
-  initAuthGuard(function() { loadYokaiData(); });
-
-  function loadYokaiData() {
-    fetch('data/yokai-data.json')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        yokaiData = data;
-        document.getElementById('totalCount').textContent = data.length.toLocaleString();
-        populateFilters();
-        applyFilters();
-        renderStats();
-      })
-      .catch(function(err) {
-        console.error('Load error:', err);
-        document.getElementById('yokaiGrid').innerHTML = '<p style="color:var(--text-muted)">データの読み込みに失敗しました。</p>';
-      });
-  }
-
-  function populateFilters() {
-    var regions = {}, descolas = {}, morals = {}, sizes = {};
-    yokaiData.forEach(function(y) {
-      if (y.region_category) regions[y.region_category] = 1;
-      if (y.descola_classification) descolas[y.descola_classification] = 1;
-      if (y.moral_alignment) morals[y.moral_alignment] = 1;
-      if (y.size_category) sizes[y.size_category] = 1;
-    });
-    addOptions('regionFilter', regions, REGION_LABELS);
-    addOptions('descolaFilter', descolas, DESCOLA_LABELS);
-    addOptions('moralFilter', morals, MORAL_LABELS);
-    addOptions('sizeFilter', sizes, SIZE_LABELS);
-  }
-
-  function addOptions(id, keys, labels) {
-    var el = document.getElementById(id);
-    Object.keys(keys).sort().forEach(function(k) {
-      var opt = document.createElement('option');
-      opt.value = k;
-      opt.textContent = labels[k] || k;
-      el.appendChild(opt);
-    });
-  }
-
-  // Filters
-  document.getElementById('searchInput').addEventListener('input', function() { currentPage = 0; applyFilters(); });
-  document.getElementById('regionFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
-  document.getElementById('descolaFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
-  document.getElementById('moralFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
-  document.getElementById('sizeFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
-
-  function applyFilters() {
-    var q = document.getElementById('searchInput').value.toLowerCase();
-    var region = document.getElementById('regionFilter').value;
-    var descola = document.getElementById('descolaFilter').value;
-    var moral = document.getElementById('moralFilter').value;
-    var size = document.getElementById('sizeFilter').value;
-
-    filtered = yokaiData.filter(function(y) {
-      if (q) {
-        var match = (y.name_ja || '').toLowerCase().indexOf(q) >= 0 ||
-          (y.name_en || '').toLowerCase().indexOf(q) >= 0 ||
-          (y.name_local || '').toLowerCase().indexOf(q) >= 0 ||
-          (y.origin_culture || '').toLowerCase().indexOf(q) >= 0 ||
-          (y.cultural_role || '').toLowerCase().indexOf(q) >= 0 ||
-          (y.trigger_keywords || []).some(function(k) { return k.toLowerCase().indexOf(q) >= 0; });
-        if (!match) return false;
+  // Download full textbook as TXT (fetch all 20 chapters, extract text, concatenate)
+  async function downloadFsTextTXT() {
+    var btn = event.target; btn.textContent = '...'; btn.disabled = true;
+    try {
+      var fullText = '未来を読む力 — 現代未来学の理論と実践\nNPO法人ミラツク 編\n\n';
+      var base = 'https://yuyanishimura0312.github.io/futures-textbook/chapters/';
+      for (var i = 1; i <= 20; i++) {
+        var num = i < 10 ? '0' + i : '' + i;
+        try {
+          var res = await fetch(base + 'ch' + num + '.html');
+          var html = await res.text();
+          // Extract title
+          var titleMatch = html.match(/<h1[^>]*class="report-title"[^>]*>(.*?)<\/h1>/);
+          var title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '') : '第' + i + '章';
+          // Extract article content
+          var artMatch = html.match(/<div class="article">([\s\S]*?)<\/div>\s*<div class="chapter-nav">/);
+          var content = artMatch ? artMatch[1] : '';
+          // Strip HTML tags
+          content = content.replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
+          content = content.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+          content = content.replace(/<svg[^>]*>[\s\S]*?<\/svg>/g, '[図]');
+          content = content.replace(/<h2[^>]*>(.*?)<\/h2>/g, '\n\n== $1 ==\n\n');
+          content = content.replace(/<h3[^>]*>(.*?)<\/h3>/g, '\n--- $1 ---\n\n');
+          content = content.replace(/<br\s*\/?>/g, '\n');
+          content = content.replace(/<\/p>/g, '\n\n');
+          content = content.replace(/<[^>]+>/g, '');
+          content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&mdash;/g, '—').replace(/&rarr;/g, '→').replace(/&larr;/g, '←');
+          content = content.replace(/\n{3,}/g, '\n\n').trim();
+          fullText += '\n\n' + '='.repeat(60) + '\n第' + i + '章 ' + title + '\n' + '='.repeat(60) + '\n\n' + content;
+        } catch(e) { fullText += '\n\n[第' + i + '章: 取得エラー]\n'; }
       }
-      if (region && y.region_category !== region) return false;
-      if (descola && y.descola_classification !== descola) return false;
-      if (moral && y.moral_alignment !== moral) return false;
-      if (size && y.size_category !== size) return false;
-      return true;
-    });
-
-    renderGrid();
-    renderPagination();
-    var hasFilter = q || region || descola || moral || size;
-    document.getElementById('countDisplay').textContent = filtered.length.toLocaleString() + ' 体' + (hasFilter ? ' (' + yokaiData.length.toLocaleString() + ' 体中)' : '');
+      var blob = new Blob([fullText], { type: 'text/plain; charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.download = 'miratuku-futures-textbook.txt'; a.href = url; a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) { alert('ダウンロードに失敗しました: ' + e.message); }
+    btn.textContent = 'TXT'; btn.disabled = false;
   }
 
-  function renderGrid() {
-    var start = currentPage * ITEMS_PER_PAGE;
-    var paged = filtered.slice(start, start + ITEMS_PER_PAGE);
-    var html = '';
-    paged.forEach(function(y) {
-      var descolaColor = DESCOLA_COLORS[y.descola_classification] || 'var(--text-muted)';
-      var descolaLabel = DESCOLA_LABELS[y.descola_classification] || y.descola_classification || '';
+  // === Single-file book: TXT download ===
+  async function downloadSingleBookTXT(url, filename) {
+    var btn = event.target; btn.textContent = '...'; btn.disabled = true;
+    try {
+      var res = await fetch(url);
+      var html = await res.text();
+      // Extract text content
+      var text = html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
+      text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+      text = text.replace(/<svg[^>]*>[\s\S]*?<\/svg>/g, '[図]');
+      text = text.replace(/<h1[^>]*>(.*?)<\/h1>/g, '\n\n========== $1 ==========\n\n');
+      text = text.replace(/<h2[^>]*>(.*?)<\/h2>/g, '\n\n== $1 ==\n\n');
+      text = text.replace(/<h3[^>]*>(.*?)<\/h3>/g, '\n--- $1 ---\n\n');
+      text = text.replace(/<br\s*\/?>/g, '\n');
+      text = text.replace(/<\/p>/g, '\n\n');
+      text = text.replace(/<[^>]+>/g, '');
+      text = text.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&mdash;/g,'—').replace(/&rarr;/g,'→').replace(/&larr;/g,'←').replace(/&nbsp;/g,' ');
+      text = text.replace(/\n{3,}/g, '\n\n').trim();
+      var blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
+      var a = document.createElement('a'); a.download = filename; a.href = URL.createObjectURL(blob); a.click();
+    } catch(e) { alert('ダウンロード失敗: ' + e.message); }
+    btn.textContent = 'TXT'; btn.disabled = false;
+  }
 
-      html += '<div class="yokai-card" onclick="openDetail(\'' + escapeHtml(y.id) + '\')">';
-      html += '<div class="yokai-card-header"><div>';
-      html += '<div class="yokai-card-name">' + escapeHtml(y.name_ja || y.name_en) + '</div>';
-      if (y.name_en && y.name_ja) html += '<div class="yokai-card-name-en">' + escapeHtml(y.name_en) + '</div>';
-      html += '</div>';
-      if (descolaLabel) html += '<span class="yokai-tag-descola" style="border:1px solid ' + descolaColor + ';color:' + descolaColor + '">' + escapeHtml(descolaLabel) + '</span>';
-      html += '</div>';
+  // === Single-file book: PDF (open in new tab for print) ===
+  function downloadSingleBookPDF(url, title) {
+    var w = window.open(url, '_blank');
+    setTimeout(function() { try { w.print(); } catch(e) {} }, 2000);
+  }
 
-      var meta = [];
-      if (y.origin_culture) meta.push(y.origin_culture);
-      if (y.moral_alignment) meta.push(MORAL_LABELS[y.moral_alignment] || y.moral_alignment);
-      if (y.size_category) meta.push(SIZE_LABELS[y.size_category] || y.size_category);
-      if (meta.length) html += '<div class="yokai-card-meta">' + escapeHtml(meta.join(' / ')) + '</div>';
-
-      if (y.cultural_role) html += '<div class="yokai-card-role">' + escapeHtml(y.cultural_role) + '</div>';
-
-      if (y.supernatural_abilities && y.supernatural_abilities.length) {
-        html += '<div class="yokai-card-tags">';
-        y.supernatural_abilities.slice(0, 3).forEach(function(a) {
-          html += '<span class="yokai-tag">' + escapeHtml(a.length > 12 ? a.slice(0, 12) + '...' : a) + '</span>';
-        });
-        html += '</div>';
+  // === Tech Acceleration (multi-chapter) TXT ===
+  async function downloadTaBookTXT() {
+    var btn = event.target; btn.textContent = '...'; btn.disabled = true;
+    try {
+      var base = 'book/tech-acceleration/chapters/';
+      var chapters = ['ch01-introduction','ch02-theorists','ch03-density','ch04-lognormal','ch05-industrial-revolution','ch06-stagnation','ch07-three-groups','ch08-network','ch09-four-types','ch10-domains','ch11-scurves','ch12-lifecycle','ch13-science-paradox','ch14-catalyst-effect','ch15-timelag','ch16-bidirectional','ch17-future-map','ch18-investment','ch19-foresight','ch20-open-db','appendix-a','appendix-b','appendix-c','appendix-d'];
+      var fullText = '技術の未来\nNPO法人ミラツク 編\n\n';
+      for (var i = 0; i < chapters.length; i++) {
+        try {
+          var res = await fetch(base + chapters[i] + '.html');
+          var html = await res.text();
+          var art = html.match(/<div class="article">([\s\S]*?)<\/div>\s*(?:<div class="chapter-nav"|<footer)/);
+          var content = art ? art[1] : html;
+          content = content.replace(/<style[^>]*>[\s\S]*?<\/style>/g,'').replace(/<script[^>]*>[\s\S]*?<\/script>/g,'').replace(/<svg[^>]*>[\s\S]*?<\/svg>/g,'[図]');
+          content = content.replace(/<h2[^>]*>(.*?)<\/h2>/g,'\n\n== $1 ==\n\n').replace(/<h3[^>]*>(.*?)<\/h3>/g,'\n--- $1 ---\n\n');
+          content = content.replace(/<\/p>/g,'\n\n').replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'');
+          content = content.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&mdash;/g,'—').replace(/&nbsp;/g,' ');
+          content = content.replace(/\n{3,}/g,'\n\n').trim();
+          fullText += '\n\n' + '='.repeat(50) + '\n' + chapters[i] + '\n' + '='.repeat(50) + '\n\n' + content;
+        } catch(e) { fullText += '\n[' + chapters[i] + ': エラー]\n'; }
       }
+      var blob = new Blob([fullText], { type: 'text/plain; charset=utf-8' });
+      var a = document.createElement('a'); a.download = 'tech-acceleration.txt'; a.href = URL.createObjectURL(blob); a.click();
+    } catch(e) { alert('ダウンロード失敗: ' + e.message); }
+    btn.textContent = 'TXT'; btn.disabled = false;
+  }
 
-      if (y.data_sources && y.data_sources.length) {
-        html += '<div class="yokai-card-tags" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border-light)">';
-        y.data_sources.forEach(function(s) {
-          var isPrimary = s === y.umwelt_primary;
-          html += '<span class="ds-tag' + (isPrimary ? ' ds-tag-primary' : '') + '">' + escapeHtml(DS_LABELS[s] || s) + '</span>';
-        });
-        html += '</div>';
+  // === Tech Acceleration PDF ===
+  function downloadTaBookPDF() {
+    var w = window.open('book/tech-acceleration/index.html', '_blank');
+    setTimeout(function() { try { w.print(); } catch(e) {} }, 2000);
+  }
+
+  // Open printable combined view for PDF
+  function downloadFsTextPDF() {
+    var w = window.open('', '_blank');
+    w.document.write('<html><head><meta charset="UTF-8"><title>未来を読む力 — 全文</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">' +
+      '<style>body{font-family:"Noto Serif JP",serif;max-width:800px;margin:40px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#121212}' +
+      'h1{font-size:1.8rem;text-align:center;margin:40px 0 10px}h2{font-size:1.3rem;margin:40px 0 16px;border-bottom:1px solid #ddd;padding-bottom:8px}' +
+      'h3{font-size:1.05rem;margin:30px 0 12px}p{margin-bottom:16px;text-align:justify}' +
+      '.loading{text-align:center;padding:60px;color:#999}</style></head>' +
+      '<body><h1>未来を読む力</h1><p style="text-align:center;color:#666">現代未来学の理論と実践<br>NPO法人ミラツク 編</p>' +
+      '<p class="loading">全20章を読み込み中...</p></body></html>');
+    w.document.close();
+    // Load chapters sequentially
+    (async function() {
+      var body = w.document.body;
+      var base = 'https://yuyanishimura0312.github.io/futures-textbook/chapters/';
+      var content = '';
+      for (var i = 1; i <= 20; i++) {
+        var num = i < 10 ? '0' + i : '' + i;
+        try {
+          var res = await fetch(base + 'ch' + num + '.html');
+          var html = await res.text();
+          var artMatch = html.match(/<div class="article">([\s\S]*?)<\/div>\s*<div class="chapter-nav">/);
+          if (artMatch) {
+            var art = artMatch[1].replace(/<style[^>]*>[\s\S]*?<\/style>/g, '').replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+            content += '<div style="page-break-before:always"><h2>第' + i + '章</h2>' + art + '</div>';
+          }
+        } catch(e) { content += '<p>[第' + i + '章: 取得エラー]</p>'; }
       }
-
-      html += '</div>';
-    });
-    document.getElementById('yokaiGrid').innerHTML = html || '<p style="color:var(--text-muted)">該当する妖怪がありません。</p>';
-  }
-
-  function renderPagination() {
-    var totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-    if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
-    document.getElementById('pagination').innerHTML =
-      '<button class="yokai-page-btn" onclick="changePage(-1)"' + (currentPage === 0 ? ' disabled' : '') + '>前へ</button>' +
-      '<span class="yokai-page-info">' + (currentPage + 1) + ' / ' + totalPages + '</span>' +
-      '<button class="yokai-page-btn" onclick="changePage(1)"' + (currentPage >= totalPages - 1 ? ' disabled' : '') + '>次へ</button>';
-  }
-
-  function changePage(delta) {
-    var totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-    currentPage = Math.max(0, Math.min(totalPages - 1, currentPage + delta));
-    renderGrid();
-    renderPagination();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function toggleStats() {
-    document.getElementById('statsPanel').classList.toggle('show');
-  }
-
-  function renderStats() {
-    var regionCounts = {}, descolaCounts = {};
-    yokaiData.forEach(function(y) {
-      var r = y.region_category || 'other';
-      regionCounts[r] = (regionCounts[r] || 0) + 1;
-      var d = y.descola_classification || 'unknown';
-      descolaCounts[d] = (descolaCounts[d] || 0) + 1;
-    });
-
-    var total = yokaiData.length;
-    document.getElementById('regionStats').innerHTML = renderStatBars(regionCounts, REGION_LABELS, total);
-    document.getElementById('descolaStats').innerHTML = renderStatBars(descolaCounts, DESCOLA_LABELS, total);
-  }
-
-  function renderStatBars(counts, labels, total) {
-    var sorted = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; });
-    return sorted.map(function(e) {
-      var pct = (e[1] / total * 100).toFixed(1);
-      return '<div class="stat-row"><span class="stat-label">' + escapeHtml(labels[e[0]] || e[0]) + '</span>' +
-        '<div class="stat-bar"><div class="stat-bar-fill" style="width:' + pct + '%"></div></div>' +
-        '<span class="stat-count">' + e[1] + '</span></div>';
-    }).join('');
-  }
-
-  // Detail modal
-  function openDetail(id) {
-    var y = yokaiData.find(function(d) { return d.id === id; });
-    if (!y) return;
-    var html = '<h2>' + escapeHtml(y.name_ja || y.name_en) + '</h2>';
-    if (y.name_en) html += '<div class="modal-en">' + escapeHtml(y.name_en) + (y.name_local && y.name_local !== y.name_ja ? ' / ' + escapeHtml(y.name_local) : '') + '</div>';
-
-    // Basic info
-    html += '<div class="yokai-detail-section"><h3>基本情報</h3>';
-    html += field('起源文化', y.origin_culture);
-    html += field('起源地域', y.origin_region);
-    html += field('地域分類', REGION_LABELS[y.region_category] || y.region_category);
-    html += field('存在論的分類', DESCOLA_LABELS[y.descola_classification] || y.descola_classification);
-    html += field('道徳性', MORAL_LABELS[y.moral_alignment] || y.moral_alignment);
-    html += field('サイズ', SIZE_LABELS[y.size_category] || y.size_category);
-    html += field('初出記録', y.first_record);
-    html += '</div>';
-
-    // Composition
-    if (y.composition && Object.keys(y.composition).length) {
-      html += '<div class="yokai-detail-section"><h3>構成要素</h3>';
-      var entries = Object.entries(y.composition).filter(function(e) { return e[1] > 0; });
-      html += '<div class="yokai-comp-bar">';
-      entries.forEach(function(e) { html += '<div style="width:' + e[1] + '%;background:' + (COMP_COLORS[e[0]] || '#888') + '"></div>'; });
-      html += '</div><div class="yokai-comp-legend">';
-      entries.forEach(function(e) { html += '<span><span class="yokai-comp-dot" style="background:' + (COMP_COLORS[e[0]] || '#888') + '"></span>' + escapeHtml(e[0]) + ' ' + e[1] + '%</span>'; });
-      html += '</div></div>';
-    }
-
-    // Personality
-    html += '<div class="yokai-detail-section"><h3>性格・特徴</h3>';
-    html += field('性格', y.personality);
-    html += field('話し方', y.speech_style);
-    html += field('文化的役割', y.cultural_role);
-    html += field('外見', y.color_features);
-    html += '</div>';
-
-    // Abilities
-    if (y.supernatural_abilities && y.supernatural_abilities.length) {
-      html += '<div class="yokai-detail-section"><h3>超自然的能力</h3>';
-      html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
-      y.supernatural_abilities.forEach(function(a) { html += '<span class="yokai-tag">' + escapeHtml(a) + '</span>'; });
-      html += '</div></div>';
-    }
-
-    // Ecology
-    html += '<div class="yokai-detail-section"><h3>生態</h3>';
-    html += field('棲息地', y.habitat_type);
-    html += field('活動時間', y.active_hours);
-    html += field('季節パターン', y.seasonal_pattern);
-    html += field('天候親和性', y.weather_affinity);
-    html += '</div>';
-
-    // Encounters
-    if (y.encounter_scenarios && y.encounter_scenarios.length) {
-      html += '<div class="yokai-detail-section"><h3>遭遇シナリオ</h3>';
-      y.encounter_scenarios.forEach(function(s) { html += '<div class="yokai-field-value" style="margin-bottom:4px">' + escapeHtml(s) + '</div>'; });
-      html += field('崇拝形態', y.worship_form);
-      html += '</div>';
-    }
-
-    // Data sources
-    if (y.data_sources && y.data_sources.length) {
-      html += '<div class="yokai-detail-section"><h3>データソース (ウムヴェルト)</h3>';
-      html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
-      y.data_sources.forEach(function(s) {
-        var isPrimary = s === y.umwelt_primary;
-        html += '<span class="ds-tag' + (isPrimary ? ' ds-tag-primary' : '') + '">' + escapeHtml(DS_LABELS[s] || s) + '</span>';
-      });
-      html += '</div></div>';
-    }
-
-    // Scholarly summary
-    if (y.scholarly_summary) {
-      html += '<div class="yokai-detail-section"><h3>学術的解説</h3>';
-      html += '<div class="yokai-field-value">' + escapeHtml(y.scholarly_summary) + '</div>';
-      html += '</div>';
-    }
-
-    // Cultural notes
-    if (y.cultural_notes) {
-      html += '<div class="yokai-detail-section"><h3>文化的背景</h3>';
-      html += '<div class="yokai-field-value">' + escapeHtml(y.cultural_notes) + '</div>';
-      html += '</div>';
-    }
-
-    // Related yokai
-    if (y.related_yokai && y.related_yokai.length) {
-      html += '<div class="yokai-detail-section"><h3>関連する妖怪</h3>';
-      html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
-      y.related_yokai.forEach(function(rid) {
-        var related = yokaiData.find(function(d) { return d.id === rid; });
-        var label = related ? related.name_ja : rid;
-        html += '<span class="yokai-tag" style="cursor:pointer" onclick="openDetail(\'' + escapeHtml(rid) + '\')">' + escapeHtml(label) + '</span>';
-      });
-      html += '</div></div>';
-    }
-
-    // Source texts
-    if (y.source_texts && y.source_texts.length) {
-      html += '<div class="yokai-detail-section"><h3>参考文献</h3>';
-      y.source_texts.forEach(function(s) { html += '<div class="yokai-field-value" style="font-size:0.78rem">' + escapeHtml(s) + '</div>'; });
-      html += '</div>';
-    }
-
-    html += '<a class="yokai-source-link" href="https://yokai-sns.vercel.app/database/' + encodeURIComponent(y.id) + '" target="_blank">妖怪百景で詳細を見る &rarr;</a>';
-
-    document.getElementById('modalContent').innerHTML = html;
-    document.getElementById('yokaiModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeModal() {
-    document.getElementById('yokaiModal').classList.remove('show');
-    document.body.style.overflow = '';
-  }
-
-  // Close on Escape key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeModal();
-  });
-
-  // Close on browser back
-  window.addEventListener('popstate', function() { closeModal(); });
-
-  function field(label, value) {
-    if (!value) return '';
-    return '<div class="yokai-field"><div class="yokai-field-label">' + escapeHtml(label) + '</div><div class="yokai-field-value">' + escapeHtml(value) + '</div></div>';
+      body.querySelector('.loading').remove();
+      body.insertAdjacentHTML('beforeend', content + '<p style="text-align:center;color:#999;margin-top:60px;border-top:1px solid #ddd;padding-top:20px">&copy; 2026 NPO法人ミラツク</p>');
+      setTimeout(function() { w.print(); }, 1000);
+    })();
   }
   </script>
 </body>
