@@ -157,6 +157,42 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
     }
     html += '</div></div>';
 
+    // Vitality / Endangerment
+    if (data.by_endangerment) {
+      html += '<h3>知識危機度評価（VITEK）</h3>';
+      html += '<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:16px">VITEK準拠の5次元評価（世代間伝承・実践継続性・言語活力・生態系健全性・制度的保護）に基づく知識活力度。平均スコア: ' + (data.mean_vitality_score || 'N/A') + '</p>';
+      html += '<div class="grid-2">';
+      html += '<div class="panel"><div class="panel-title">危機度分布</div>';
+      var maxEnd = Math.max.apply(null, data.by_endangerment.map(function(e) { return e.count; }));
+      var endColors = { 'safe': 'var(--green)', 'vulnerable': 'var(--blue)', 'endangered': 'var(--orange)', 'critically_endangered': 'var(--accent-warm)', 'dormant': 'var(--text-muted)' };
+      data.by_endangerment.forEach(function(e) {
+        html += bar(e.level, e.count, maxEnd, endColors[e.level] || 'var(--purple)');
+      });
+      html += '</div>';
+      html += '<div class="panel"><div class="panel-title">主要脅威要因</div>';
+      if (data.top_threats) {
+        var maxTh = Math.max.apply(null, data.top_threats.map(function(t) { return t.count; }));
+        data.top_threats.forEach(function(t) {
+          html += bar(t.threat, t.count, maxTh, 'var(--accent-warm)');
+        });
+      }
+      html += '</div></div>';
+    }
+
+    // GTA Validation
+    if (data.gta_validation_by_code) {
+      html += '<h3>GTA検証レイヤー</h3>';
+      html += '<p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:16px">層化サンプリング（15選択コード）によるSecond LLM検証。全体一致率: ' + ((data.gta_agreement_rate || 0) * 100).toFixed(1) + '%</p>';
+      html += '<div class="panel"><div class="panel-title">選択コード別一致率</div>';
+      data.gta_validation_by_code.forEach(function(v) {
+        var label = (v.code_ja || v.code).substring(0, 30);
+        var pct = (v.rate * 100).toFixed(0) + '% (' + v.agreed + '/' + v.n + ')';
+        var color = v.rate >= 0.8 ? 'var(--green)' : v.rate >= 0.6 ? 'var(--blue)' : 'var(--orange)';
+        html += '<div class="bar-group"><div class="bar-label">' + esc(label) + '</div><div class="bar-track"><div class="bar-fill" style="width:' + (v.rate*100).toFixed(1) + '%;background:' + color + '"></div></div><div class="bar-val">' + pct + '</div></div>';
+      });
+      html += '</div>';
+    }
+
     // Ecosystem & Climate
     html += '<h3>生態系依存度 / 気候感度</h3>';
     html += '<div class="grid-2">';
