@@ -1,0 +1,85 @@
+{
+  "database": {
+    "path": "/Users/nishimura+/projects/research/miratuku-news-v2/dashboards/data/llm_papers.db",
+    "description": "Comprehensive SQLite database of academic papers on Large Language Models",
+    "created": "2026-04-29",
+    "version": "1.0"
+  },
+  "schema": {
+    "tables": [
+      {
+        "name": "papers",
+        "columns": [
+          "id (INTEGER PRIMARY KEY)",
+          "title (TEXT NOT NULL)",
+          "authors (TEXT)",
+          "year (INTEGER)",
+          "venue (TEXT)",
+          "doi (TEXT)",
+          "arxiv_id (TEXT)",
+          "semantic_scholar_id (TEXT)",
+          "abstract (TEXT)",
+          "category (TEXT)",
+          "key_contribution (TEXT)",
+          "citation_count (INTEGER DEFAULT 0)",
+          "relevance_score (REAL DEFAULT 0)",
+          "is_landmark (INTEGER DEFAULT 0)"
+        ],
+        "indexes": [
+          "idx_papers_category",
+          "idx_papers_year",
+          "idx_papers_citation"
+        ]
+      },
+      {
+        "name": "categories",
+        "columns": [
+          "id (INTEGER PRIMARY KEY)",
+          "name (TEXT NOT NULL)",
+          "name_ja (TEXT)",
+          "description (TEXT)",
+          "parent_category_id (INTEGER REFERENCES categories(id))"
+        ]
+      },
+      {
+        "name": "lineage",
+        "columns": [
+          "id (INTEGER PRIMARY KEY)",
+          "predecessor_paper_id (INTEGER REFERENCES papers(id))",
+          "successor_paper_id (INTEGER REFERENCES papers(id))",
+          "relationship (TEXT)"
+        ]
+      }
+    ]
+  },
+  "statistics": {
+    "total_papers": 38,
+    "total_categories": 15,
+    "total_lineage_relationships": 37,
+    "papers_by_year": {
+      "2023": 12,
+      "2022": 10,
+      "2021": 4,
+      "2020": 4,
+      "2019": 3,
+      "2018": 2,
+      "2017": 1,
+      "2014": 1,
+      "2013": 1
+    },
+    "landmark_papers": 17,
+    "average_citation_count": 14789
+  },
+  "useful_queries": {
+    "find_landmark_papers": "SELECT title, year, category FROM papers WHERE is_landmark = 1 ORDER BY category",
+    "papers_by_category": "SELECT category, COUNT(*) as count FROM papers GROUP BY category ORDER BY count DESC",
+    "top_cited_papers": "SELECT title, citation_count FROM papers ORDER BY citation_count DESC LIMIT 10",
+    "papers_by_year": "SELECT year, COUNT(*) FROM papers WHERE year IS NOT NULL GROUP BY year ORDER BY year DESC",
+    "find_paper_descendants": "SELECT DISTINCT p2.title, p2.category FROM lineage l JOIN papers p1 ON l.predecessor_paper_id = p1.id JOIN papers p2 ON l.successor_paper_id = p2.id WHERE p1.title = ? ORDER BY p2.year",
+    "find_paper_ancestors": "SELECT DISTINCT p1.title, p1.category FROM lineage l JOIN papers p1 ON l.predecessor_paper_id = p1.id JOIN papers p2 ON l.successor_paper_id = p2.id WHERE p2.title = ? ORDER BY p1.year DESC",
+    "papers_in_category": "SELECT title, year, citation_count FROM papers WHERE category = ? ORDER BY citation_count DESC",
+    "find_by_arxiv": "SELECT title, year, category FROM papers WHERE arxiv_id = ?",
+    "find_by_doi": "SELECT title, year, category FROM papers WHERE doi = ?",
+    "relevance_scores_by_category": "SELECT category, title, relevance_score FROM papers WHERE category = ? ORDER BY relevance_score DESC"
+  }
+}
