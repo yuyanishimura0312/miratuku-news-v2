@@ -82,7 +82,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 
 <h1><span class="db-id">TK</span>先住民伝統知識データベース</h1>
 <p class="subtitle">世界3,001の先住民族が保有する35,308件の伝統知識を全項目100%エンリッチメントで構造化</p>
-<p class="desc">世界の先住民族が保有する伝統知識を体系的に収集し、Grounded Theory Analysis（GTA）で構造化（77,268コード→1,027軸→15選択コード）。全アイテムに日本語翻訳・PESTLE・CLA・生��系依存度・気候感度・��会的伝承構造を付与。D-PLACE・UNESCO ICH・Glottologを統合し、16,260件の知識間関係ネットワークを構築。CARE原則・OCAP原則に準拠。</p>
+<p class="desc">世界の先住民族が保有する伝統知識を体系的に収集し、Grounded Theory Analysis（GTA）で構造化（77,268コード→1,027軸→15選択コード）。全アイテムに日本語翻訳・PESTLE・CLA・生態系依存度・気候感度・社会的伝承構造を付与。VITEK準拠の知識危機度評価（平均活力度0.506）とGTA検証レイヤー（一致率72.6%）を実装。D-PLACE・UNESCO ICH・Glottologを統合し、16,260件の知識間関係ネットワークを構築。CARE原則・OCAP原則に準拠。</p>
 
 <div id="dashboard-content">
   <div class="loading">データを読み込み中...</div>
@@ -105,14 +105,80 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
   function render(data) {
     var html = '';
 
+    // Label translation maps
+    var JA = {
+      // Endangerment
+      'safe': '安全', 'vulnerable': '脆弱', 'endangered': '危機',
+      'critically_endangered': '深刻な危機', 'dormant': '休眠',
+      // Ecosystem
+      'high': '高', 'medium': '中', 'low': '低', 'none': 'なし',
+      // Climate
+      'critical': '深刻', 'moderate': '中程度',
+      // CLA
+      'litany': 'リタニー（事象）', 'systemic': 'システム（構造）',
+      'worldview': '世界観', 'myth_metaphor': '神話・メタファー',
+      // Transmission
+      'observation_imitation': '観察・模倣', 'family_lineage': '家系伝承',
+      'apprenticeship': '徒弟制', 'none_apparent': '明示なし',
+      'communal_practice': '共同実践', 'oral_instruction': '口頭指導',
+      'ritual_practice': '儀礼実践', 'unknown': '不明',
+      'formal_education': '公式教育', 'specialist_training': '専門訓練',
+      // Gender
+      'unrestricted': '制限なし', 'male_dominated': '男性優位',
+      'female_dominated': '女性優位', 'gender_complementary': '性別相補',
+      'gender_specific': '性別特化',
+      // Threats
+      'cultural_assimilation': '文化的同化', 'economic_marginalization': '経済的周縁化',
+      'climate_change': '気候変動', 'urbanization': '都市化',
+      'ecosystem_degradation': '生態系劣化', 'globalization': 'グローバリゼーション',
+      'language_loss': '言語喪失', 'demographic_shift': '人口動態変化',
+      'land_dispossession': '土地収奪', 'documentation_gap': '記録の空白',
+      // Biome
+      'tropical_savanna': '熱帯サバンナ', 'tropical_rainforest': '熱帯雨林',
+      'temperate_forest': '温帯林', 'montane': '山岳', 'temperate_grassland': '温帯草原',
+      'desert': '砂漠', 'steppe': 'ステップ', 'coral_reef_coast': 'サンゴ礁沿岸',
+      'boreal_forest': '亜寒帯林', 'mediterranean': '地中海性', 'wetland': '湿地', 'arctic': '北極圏',
+      // Subsistence
+      'mixed_farming': '混合農業', 'intensive_agriculture': '集約農業',
+      'pastoralism': '牧畜', 'foraging': '採集狩猟', 'agropastoralism': '農牧複合',
+      'horticulture': '園芸農業', 'fishing': '漁撈', 'maritime': '海洋',
+      // Resource
+      'agricultural': '農地', 'forest': '森林', 'marine': '海洋',
+      'grassland': '草原', 'mineral': '鉱物', 'water': '水域',
+      'mountain': '山岳',
+      // Relations
+      'cross_thematic_association': '異文化間・主題的関連',
+      'cross_institutional_link': '異文化間・制度的連関',
+      'cross_material_connection': '異文化間・物質的接続',
+      'cross_transmission_channel': '異文化間・伝承経路',
+      'cross_functional_dependency': '異文化間・機能的依存',
+      'cross_ecological_parallel': '異文化間・生態学的並行',
+      'cross_spatial_association': '異文化間・空間的関連',
+      'cross_cosmological_connection': '異文化間・宇宙論的接続',
+      'intra_functional_dependency': 'グループ内・機能的依存',
+      'intra_thematic_association': 'グループ内・主題的関連',
+      'intra_material_connection': 'グループ内・物質的接続',
+      'intra_institutional_link': 'グループ内・制度的連関',
+      'intra_transmission_channel': 'グループ内・伝承経路',
+      'intra_spatial_association': 'グループ内・空間的関連',
+      'intra_ecological_parallel': 'グループ内・生態学的並行',
+      'intra_cosmological_connection': 'グループ内・宇宙論的接続',
+      'theoretical_cluster': '理論的クラスター',
+      // PESTLE
+      'Social': '社会', 'Economic': '経済', 'Political': '政治',
+      'Environmental': '環境', 'Technological': '技術', 'Legal': '法律',
+    };
+    function ja(key) { return JA[key] || key; }
+
     // KPI Row
     html += '<div class="kpi-row">';
     html += kpi(num(data.total_groups), '先住民族グループ', '');
-    html += kpi(num(data.total_tk_items), '伝統知識アイテム', '100% enriched');
+    html += kpi(num(data.total_tk_items), '伝統知識アイテム', '全項目100%付与');
     html += kpi(num(data.total_open_codes), 'GTAオープンコード', '');
     html += kpi(num(data.total_axial_codes), '軸カテゴリ', '');
     html += kpi(num(data.total_selective_codes), '選択コード', '');
-    html += kpi(num(data.total_relations || 0), '知識間関係', 'ネットワーク');
+    html += kpi(num(data.total_relations || 0), '知識間関係', '');
+    html += kpi((data.mean_vitality_score || 0).toFixed(3), '平均活力度', 'VITEK');
     html += '</div>';
 
     // Region Distribution
@@ -142,7 +208,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
     if (data.by_pestle) {
       var maxP = Math.max.apply(null, data.by_pestle.map(function(p) { return p.count; }));
       data.by_pestle.forEach(function(p) {
-        html += bar(p.pestle, p.count, maxP, 'var(--blue)');
+        html += bar(ja(p.pestle), p.count, maxP, 'var(--blue)');
       });
     }
     html += '</div>';
@@ -152,7 +218,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
       var maxC = Math.max.apply(null, data.by_cla.map(function(c) { return c.count; }));
       var claColors = { 'litany': 'var(--green)', 'systemic': 'var(--blue)', 'worldview': 'var(--purple)', 'myth_metaphor': 'var(--accent-warm)' };
       data.by_cla.forEach(function(c) {
-        html += bar(c.layer, c.count, maxC, claColors[c.layer] || 'var(--orange)');
+        html += bar(ja(c.layer), c.count, maxC, claColors[c.layer] || 'var(--orange)');
       });
     }
     html += '</div></div>';
@@ -166,14 +232,14 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
       var maxEnd = Math.max.apply(null, data.by_endangerment.map(function(e) { return e.count; }));
       var endColors = { 'safe': 'var(--green)', 'vulnerable': 'var(--blue)', 'endangered': 'var(--orange)', 'critically_endangered': 'var(--accent-warm)', 'dormant': 'var(--text-muted)' };
       data.by_endangerment.forEach(function(e) {
-        html += bar(e.level, e.count, maxEnd, endColors[e.level] || 'var(--purple)');
+        html += bar(ja(e.level), e.count, maxEnd, endColors[e.level] || 'var(--purple)');
       });
       html += '</div>';
       html += '<div class="panel"><div class="panel-title">主要脅威要因</div>';
       if (data.top_threats) {
         var maxTh = Math.max.apply(null, data.top_threats.map(function(t) { return t.count; }));
         data.top_threats.forEach(function(t) {
-          html += bar(t.threat, t.count, maxTh, 'var(--accent-warm)');
+          html += bar(ja(t.threat), t.count, maxTh, 'var(--accent-warm)');
         });
       }
       html += '</div></div>';
@@ -201,7 +267,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
       var maxE = Math.max.apply(null, data.by_ecosystem.map(function(e) { return e.count; }));
       var ecoColors = { 'high': 'var(--green)', 'medium': 'var(--blue)', 'low': 'var(--orange)', 'none': 'var(--text-muted)' };
       data.by_ecosystem.forEach(function(e) {
-        html += bar(e.dep, e.count, maxE, ecoColors[e.dep] || 'var(--purple)');
+        html += bar(ja(e.dep), e.count, maxE, ecoColors[e.dep] || 'var(--purple)');
       });
     }
     html += '</div>';
@@ -210,7 +276,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
       var maxCl = Math.max.apply(null, data.by_climate.map(function(c) { return c.count; }));
       var climColors = { 'critical': 'var(--accent-warm)', 'high': 'var(--orange)', 'moderate': 'var(--blue)', 'low': 'var(--green)' };
       data.by_climate.forEach(function(c) {
-        html += bar(c.sensitivity, c.count, maxCl, climColors[c.sensitivity] || 'var(--purple)');
+        html += bar(ja(c.sensitivity), c.count, maxCl, climColors[c.sensitivity] || 'var(--purple)');
       });
     }
     html += '</div></div>';
@@ -220,7 +286,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
       html += '<h3>関連資源タイプ</h3>';
       var maxRes = Math.max.apply(null, data.by_resource.map(function(r) { return r.count; }));
       data.by_resource.forEach(function(r) {
-        html += bar(r.type, r.count, maxRes, 'var(--green)');
+        html += bar(ja(r.type), r.count, maxRes, 'var(--green)');
       });
     }
 
@@ -231,7 +297,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
     if (data.by_transmission) {
       var maxT = Math.max.apply(null, data.by_transmission.map(function(t) { return t.count; }));
       data.by_transmission.forEach(function(t) {
-        html += bar(t.method, t.count, maxT, 'var(--purple)');
+        html += bar(ja(t.method), t.count, maxT, 'var(--purple)');
       });
     }
     html += '</div>';
@@ -239,7 +305,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
     if (data.by_gender) {
       var maxG = Math.max.apply(null, data.by_gender.map(function(g) { return g.count; }));
       data.by_gender.forEach(function(g) {
-        html += bar(g.restriction, g.count, maxG, 'var(--cyan)');
+        html += bar(ja(g.restriction), g.count, maxG, 'var(--cyan)');
       });
     }
     html += '</div></div>';
@@ -251,7 +317,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
     if (data.by_biome) {
       var maxB = Math.max.apply(null, data.by_biome.map(function(b) { return b.count; }));
       data.by_biome.forEach(function(b) {
-        html += bar(b.biome, b.count, maxB, 'var(--green)');
+        html += bar(ja(b.biome), b.count, maxB, 'var(--green)');
       });
     }
     html += '</div>';
@@ -259,7 +325,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
     if (data.by_subsistence) {
       var maxS = Math.max.apply(null, data.by_subsistence.map(function(s) { return s.count; }));
       data.by_subsistence.forEach(function(s) {
-        html += bar(s.type, s.count, maxS, 'var(--orange)');
+        html += bar(ja(s.type), s.count, maxS, 'var(--orange)');
       });
     }
     html += '</div></div>';
@@ -280,7 +346,7 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
       var maxRel = Math.max.apply(null, data.by_relation_type.map(function(r) { return r.count; }));
       data.by_relation_type.forEach(function(r) {
         var c = r.type.indexOf('cross_') === 0 ? 'var(--blue)' : r.type.indexOf('intra_') === 0 ? 'var(--green)' : 'var(--accent-warm)';
-        html += bar(r.type, r.count, maxRel, c);
+        html += bar(ja(r.type), r.count, maxRel, c);
       });
     }
 
