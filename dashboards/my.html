@@ -6,6 +6,8 @@
 <title>神話ナラティブDB | Insight News</title>
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <style>
 :root {
   --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
@@ -59,6 +61,12 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 .heatmap-table td { padding: 6px 4px; text-align: center; font-family: monospace; }
 .parallel-card { border: 1px solid var(--border-light); padding: 12px 16px; margin-bottom: 8px; font-size: 0.82rem; }
 .parallel-score { font-family: monospace; font-weight: 700; color: var(--accent-warm); }
+#world-map path.land { fill: var(--surface); stroke: var(--border); stroke-width: 0.4px; }
+#world-map path.graticule { fill: none; stroke: var(--border-light); stroke-width: 0.3px; }
+#world-map circle.culture-dot { cursor: pointer; opacity: 0.85; transition: opacity 0.15s; }
+#world-map circle.culture-dot:hover { opacity: 1; }
+.region-link { display:block; text-decoration:none; padding:20px; border:1px solid var(--border-light); background:var(--card); transition:background 0.15s; }
+.region-link:hover { background:var(--accent-muted); }
 </style>
 </head>
 <body>
@@ -69,6 +77,26 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 <p class="desc">ジョゼフ・キャンベル、ウラジーミル・プロップ、カール・ユング等の比較神話学的アプローチに基づき、世界の神話・民話をナラティブ単位で構造分析。各物語から人物・プロット構造・テーマ・社会的機能をLLMで抽出し、異文化間の構造パラレルを自動検出。CLA第4層（神話・メタファー）との接続基盤として機能する。Wikipedia（英語・日本語）・Wikidata・Project Gutenberg・Trilogyの5ソースから10,200超のナラティブを収集、10,029件（98%）のLLM構造分析を完了。1,220万件の異文化間構造パラレルを検出。旧モチーフDB（52,703件）はATU分類で接続。</p>
 
 <div class="kpi-row" id="kpi"></div>
+
+<h3>世界地図 — 文化圏ナラティブ密度</h3>
+<div class="panel" style="padding:8px;overflow:hidden;" id="world-map-panel">
+  <svg id="world-map" style="width:100%;height:auto;display:block;"></svg>
+  <div id="map-tooltip" style="position:fixed;display:none;background:var(--card);border:1px solid var(--border);padding:6px 10px;font-size:0.78rem;pointer-events:none;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.15);"></div>
+</div>
+
+<h3>地域深掘り</h3>
+<div class="grid-2">
+  <a href="my-okinawa.html" class="region-link">
+    <div style="font-size:0.7rem;font-weight:700;color:var(--accent-warm);margin-bottom:4px">ASIA / EAST ASIA</div>
+    <div style="font-family:var(--font-serif);font-weight:700;margin-bottom:4px">沖縄（琉球）神話</div>
+    <div style="font-size:0.78rem;color:var(--text-secondary)">65ナラティブ / 100%エンリッチ / 儀礼機能最強</div>
+  </a>
+  <a href="my-canada-indigenous.html" class="region-link">
+    <div style="font-size:0.7rem;font-weight:700;color:var(--accent-warm);margin-bottom:4px">AMERICAS / NORTH AMERICA</div>
+    <div style="font-family:var(--font-serif);font-weight:700;margin-bottom:4px">カナダ先住民神話</div>
+    <div style="font-size:0.78rem;color:var(--text-secondary)">262ナラティブ / 5文化 / 変容テーマ最強</div>
+  </a>
+</div>
 
 <h3>地域分布</h3>
 <div class="grid-2">
@@ -187,10 +215,59 @@ function renderSamples() {
   }).join('');
 }
 
+const REGION_COLORS = {'Asia':'#EA580C','Europe':'#2563EB','Africa':'#16A34A','Americas':'#7C3AED','Middle East':'#CA8A04','Oceania':'#0891B2'};
+const regionColor = r => REGION_COLORS[r]||'#78716c';
+
+async function renderWorldMap() {
+  var geo = D.geo_cultures;
+  if (!geo || !geo.length) return;
+  var panel = document.getElementById('world-map-panel');
+  var W = panel.clientWidth - 16;
+  var H = Math.round(W * 0.5);
+  var svg = d3.select('#world-map').attr('viewBox','0 0 '+W+' '+H);
+  var proj = d3.geoNaturalEarth1().scale(W/6.3).translate([W/2,H/2]);
+  var path = d3.geoPath().projection(proj);
+  svg.append('path').datum(d3.geoGraticule()()).attr('class','graticule').attr('d',path);
+  try {
+    var world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(function(r){return r.json()});
+    svg.append('path').datum(topojson.feature(world,world.objects.land)).attr('class','land').attr('d',path);
+  } catch(e) {}
+  var maxC = d3.max(geo,function(d){return d.count});
+  var r = d3.scaleSqrt().domain([1,maxC]).range([3,20]);
+  var tooltip = document.getElementById('map-tooltip');
+  var sorted = geo.slice().sort(function(a,b){return b.count-a.count});
+  svg.selectAll('circle.culture-dot').data(sorted).join('circle')
+    .attr('class','culture-dot')
+    .attr('cx',function(d){return proj([d.lon,d.lat])[0]})
+    .attr('cy',function(d){return proj([d.lon,d.lat])[1]})
+    .attr('r',function(d){return r(d.count)})
+    .attr('fill',function(d){return regionColor(d.region)})
+    .attr('stroke','var(--bg)').attr('stroke-width',0.8)
+    .on('mousemove',function(event,d){
+      tooltip.style.display='block';
+      tooltip.style.left=(event.clientX+12)+'px';
+      tooltip.style.top=(event.clientY-28)+'px';
+      tooltip.innerHTML='<strong>'+d.culture+'</strong><br><span style="color:var(--text-muted)">'+d.region+' · '+d.count.toLocaleString()+' ナラティブ</span>';
+    })
+    .on('mouseleave',function(){tooltip.style.display='none'})
+    .on('click',function(event,d){
+      if(d.culture==='Ryukyuan') window.location.href='my-okinawa.html';
+      if(['Inuit','Native American','Cherokee','Navajo','Ojibwe'].indexOf(d.culture)>=0) window.location.href='my-canada-indigenous.html';
+    });
+  // Legend
+  var legend = svg.append('g').attr('transform','translate(10,'+(H-80)+')');
+  var regions = Object.keys(REGION_COLORS);
+  regions.forEach(function(rg,i){
+    legend.append('circle').attr('cx',0).attr('cy',i*14).attr('r',5).attr('fill',REGION_COLORS[rg]);
+    legend.append('text').attr('x',10).attr('y',i*14+4).attr('font-size','0.6rem').attr('fill','var(--text-muted)').text(rg);
+  });
+}
+
 async function init() {
   var res = await fetch('data/my_dashboard.json');
   D = await res.json();
   renderKPI();
+  renderWorldMap();
   renderBars('region-bars', D.regions, '#78716c');
   renderBars('culture-bars', D.cultures, '#78716c');
   if (D.sub_regions) renderBars('subregion-bars', D.sub_regions, '#78716c');
