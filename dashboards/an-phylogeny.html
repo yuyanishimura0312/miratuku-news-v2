@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人類学概念 系統樹 | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --bg:#FFFFFF;--card:#FFFFFF;--text:#121212;--text-s:#555;--text-m:#6B6B6B;
+  --border:#D9D9D9;--border-l:#EEE;--surface:#F7F7F5;
+  --accent:#CC1400;--accent-bg:rgba(204,20,0,0.06);
+  --font:"Noto Sans JP",sans-serif;--serif:"Noto Serif JP",serif;
+  --c1:#CC1400;--c2:#1A6B3C;--c3:#8B5CF6;--c4:#D97706;--c5:#0369A1;
+  --c6:#BE185D;--c7:#525252;--c8:#059669;--c9:#7C3AED;--c10:#DC2626;
+}
+[data-theme="dark"]{
+  --bg:#121212;--card:#1A1A1A;--text:#E0E0E0;--text-s:#AAA;--text-m:#8A8A8A;
+  --border:#333;--border-l:#2A2A2A;--surface:#1A1A1A;
+  --accent:#FF4444;--accent-bg:rgba(255,68,68,0.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);line-height:1.7;max-width:100%;margin:0 auto;padding:16px 20px}
+.back{display:inline-block;margin-bottom:12px;font-size:0.82rem;color:var(--text-s);text-decoration:none}
+.back:hover{color:var(--text)}
+h1{font-family:var(--serif);font-size:1.4rem;font-weight:700;margin-bottom:4px}
+.subtitle{font-size:0.84rem;color:var(--text-s);margin-bottom:8px}
+.desc{font-size:0.82rem;color:var(--text);margin-bottom:16px;line-height:1.8;max-width:800px}
+.theme-toggle{position:fixed;top:12px;right:12px;background:var(--surface);border:1px solid var(--border);padding:4px 8px;cursor:pointer;font-size:1rem;z-index:100}
+
+/* Tree container */
+#tree-container{width:100%;height:calc(100vh - 200px);min-height:600px;border:1px solid var(--border);background:var(--surface);position:relative;overflow:hidden}
+#tree-container svg{width:100%;height:100%}
+
+/* Timeline axis */
+.time-axis line,.time-axis path{stroke:var(--border)}
+.time-axis text{fill:var(--text-m);font-size:10px;font-family:var(--font)}
+
+/* Edges */
+.tree-edge{fill:none;stroke-opacity:0.35;stroke-width:1.5}
+.tree-edge:hover{stroke-opacity:0.8;stroke-width:2.5}
+
+/* Nodes */
+.tree-node circle{stroke:#fff;stroke-width:1;cursor:pointer;transition:r 0.2s}
+.tree-node circle:hover{r:7}
+.tree-node text{font-family:var(--font);fill:var(--text);pointer-events:none}
+
+/* Tooltip */
+.tooltip{position:absolute;background:var(--card);border:1px solid var(--border);padding:10px 14px;font-size:0.78rem;line-height:1.6;pointer-events:none;opacity:0;transition:opacity 0.15s;max-width:300px;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.tooltip .tt-name{font-weight:700;font-size:0.85rem;margin-bottom:2px}
+.tooltip .tt-meta{color:var(--text-m);font-size:0.72rem}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0;font-size:0.72rem;color:var(--text-m)}
+.legend-item{display:flex;align-items:center;gap:3px}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+/* Controls */
+.controls{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+.ctrl-btn{padding:3px 10px;font-size:0.72rem;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:var(--font);color:var(--text)}
+.ctrl-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ctrl-btn:hover{border-color:var(--accent)}
+.ctrl-label{font-size:0.72rem;color:var(--text-m);margin-right:4px}
+
+/* Era markers */
+.era-band{fill:var(--accent-bg);opacity:0.3}
+.era-label{font-size:9px;fill:var(--text-m);font-family:var(--font)}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+<a class="back" href="an.html">&larr; 人類学概念DBに戻る</a>
+
+<h1>人類学概念 系統樹</h1>
+<p class="subtitle">Phylogenetic Tree of Anthropological Concepts</p>
+<p class="desc">142の概念と98の影響関係を、進化の系統樹のように時間軸に沿って配置。横軸が提唱年（1884-2022）、枝の色がクラスターを表す。概念間の「派生」「影響」「拡張」「理論基盤」等の方向性のある関係のみを抽出し、知の分岐と収斂の歴史を可視化する。</p>
+
+<div class="controls">
+<span class="ctrl-label">クラスター:</span>
+<button class="ctrl-btn active" onclick="filterCluster(0,this)">全体</button>
+<button class="ctrl-btn" onclick="filterCluster(1,this)">交換と経済</button>
+<button class="ctrl-btn" onclick="filterCluster(2,this)">構造と実践</button>
+<button class="ctrl-btn" onclick="filterCluster(3,this)">儀礼と象徴</button>
+<button class="ctrl-btn" onclick="filterCluster(4,this)">権力と抵抗</button>
+<button class="ctrl-btn" onclick="filterCluster(5,this)">存在論的転回</button>
+<button class="ctrl-btn" onclick="filterCluster(6,this)">STS</button>
+<button class="ctrl-btn" onclick="filterCluster(7,this)">方法と認識</button>
+<button class="ctrl-btn" onclick="filterCluster(8,this)">医療・身体</button>
+<button class="ctrl-btn" onclick="filterCluster(9,this)">移民・都市</button>
+<button class="ctrl-btn" onclick="filterCluster(10,this)">自己・ジェンダー</button>
+</div>
+
+<div class="legend">
+<div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div>交換と経済</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c2)"></div>構造と実践</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c3)"></div>儀礼と象徴</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c4)"></div>権力と抵抗</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c5)"></div>存在論的転回</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c6)"></div>STS・ポストヒューマン</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c7)"></div>方法と認識</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c8)"></div>医療・身体</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c9)"></div>移民・都市</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--c10)"></div>自己・ジェンダー</div>
+</div>
+
+<div id="tree-container"></div>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const treeNodes = [{"id": "c468", "name_ja": "ブランドの人類学", "name_en": "Anthropology of Brands", "era_start": null, "subfield": "応用人類学", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c486", "name_ja": "存在の連鎖", "name_en": "Chain of Being (Ontological Critique)", "era_start": null, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c487", "name_ja": "近代性", "name_en": "Modernity (Anthropological Critique)", "era_start": null, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c232", "name_ja": "原始共産制", "name_en": "Primitive Communism", "era_start": 1884, "subfield": "economic_anthropology", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c016", "name_ja": "文化相対主義", "name_en": "Cultural Relativism", "era_start": 1887, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c212", "name_ja": "通過儀礼", "name_en": "Rites of Passage", "era_start": 1909, "subfield": "ritual_studies", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c205", "name_ja": "集合的沸騰", "name_en": "Collective Effervescence", "era_start": 1912, "subfield": "sociology_of_religion", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c290", "name_ja": "聖と俗", "name_en": "Sacred and Profane", "era_start": 1912, "subfield": "anthropology_of_religion", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c018", "name_ja": "参与観察", "name_en": "Participant Observation", "era_start": 1922, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c001", "name_ja": "贈与経済", "name_en": "Gift Economy", "era_start": 1925, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c065", "name_ja": "全体的社会的事実", "name_en": "Total Social Fact", "era_start": 1925, "subfield": "文化人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c025", "name_ja": "文化パターン", "name_en": "Culture Pattern", "era_start": 1934, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c213", "name_ja": "身体技法", "name_en": "Techniques of the Body", "era_start": 1934, "subfield": "anthropology_of_body", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c031", "name_ja": "ヘゲモニー", "name_en": "Hegemony", "era_start": 1935, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c076", "name_ja": "ヘゲモニー", "name_en": "Hegemony", "era_start": 1935, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c337", "name_ja": "ペルソナ", "name_en": "Persona (Anthropological Concept)", "era_start": 1938, "subfield": "心理人類学", "cluster": 10, "cluster_name": "自己・ジェンダー・感情"}, {"id": "c144", "name_ja": "視覚人類学", "name_en": "Visual Anthropology", "era_start": 1942, "subfield": "視覚人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c026", "name_ja": "埋め込み", "name_en": "Embeddedness", "era_start": 1944, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c071", "name_ja": "埋め込み", "name_en": "Embeddedness", "era_start": 1944, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c066", "name_ja": "交換の構造", "name_en": "Elementary Structures of Kinship", "era_start": 1949, "subfield": "社会人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c338", "name_ja": "人格", "name_en": "Personhood (Anthropological Discussion)", "era_start": 1950, "subfield": "心理人類学", "cluster": 10, "cluster_name": "自己・ジェンダー・感情"}, {"id": "c215", "name_ja": "印象管理", "name_en": "Impression Management", "era_start": 1956, "subfield": "microsociology", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c027", "name_ja": "形式主義-実体主義論争", "name_en": "Formalist-Substantivist Debate", "era_start": 1957, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c020", "name_ja": "構造", "name_en": "Structure", "era_start": 1958, "subfield": "文化人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c072", "name_ja": "形式主義-実体主義論争", "name_en": "Formalist-Substantivist Debate", "era_start": 1960, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c181", "name_ja": "間", "name_en": "Ma (In-between Space-Time)", "era_start": 1960, "subfield": "cultural_anthropology", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c211", "name_ja": "双系出自", "name_en": "Bilateral Descent", "era_start": 1960, "subfield": "kinship_studies", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c435", "name_ja": "歴史の下方からの視点", "name_en": "History from Below", "era_start": 1960, "subfield": "歴史人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c340", "name_ja": "位階", "name_en": "Hierarchy", "era_start": 1966, "subfield": "政治人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c277", "name_ja": "共生発生", "name_en": "Symbiogenesis", "era_start": 1967, "subfield": "multispecies_studies", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c122", "name_ja": "都市の権利", "name_en": "Right to the City", "era_start": 1968, "subfield": "都市人類学", "cluster": 9, "cluster_name": "移民・都市"}, {"id": "c003", "name_ja": "リミナリティ", "name_en": "Liminality", "era_start": 1969, "subfield": "文化人類学", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c013", "name_ja": "コムニタス", "name_en": "Communitas", "era_start": 1969, "subfield": "文化人類学", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c054", "name_ja": "反構造", "name_en": "Anti-Structure", "era_start": 1969, "subfield": "宗教人類学", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c182", "name_ja": "本音と建前", "name_en": "Honne and Tatemae", "era_start": 1970, "subfield": "cultural_anthropology", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c341", "name_ja": "第三の性", "name_en": "Third Gender/Two-Spirit", "era_start": 1970, "subfield": "ジェンダー人類学", "cluster": 10, "cluster_name": "自己・ジェンダー・感情"}, {"id": "c373", "name_ja": "文化的再生産（教育）", "name_en": "Cultural Reproduction (Education)", "era_start": 1970, "subfield": "教育人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c381", "name_ja": "多言語主義", "name_en": "Multilingualism (Anthropological Analysis)", "era_start": 1970, "subfield": "言語人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c010", "name_ja": "モラルエコノミー", "name_en": "Moral Economy", "era_start": 1971, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c004", "name_ja": "ハビトゥス", "name_en": "Habitus", "era_start": 1972, "subfield": "文化人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c009", "name_ja": "互酬性", "name_en": "Reciprocity", "era_start": 1972, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c382", "name_ja": "学びの生態学", "name_en": "Ecology of Learning", "era_start": 1972, "subfield": "教育人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c002", "name_ja": "厚い記述", "name_en": "Thick Description", "era_start": 1973, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c216", "name_ja": "フレーム分析", "name_en": "Frame Analysis", "era_start": 1974, "subfield": "microsociology", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c033", "name_ja": "生政治", "name_en": "Biopolitics", "era_start": 1976, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c078", "name_ja": "生政治", "name_en": "Biopolitics", "era_start": 1976, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c186", "name_ja": "空気を読む", "name_en": "Reading the Air (Kuuki wo Yomu)", "era_start": 1977, "subfield": "cultural_anthropology", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c037", "name_ja": "説明モデル", "name_en": "Explanatory Model", "era_start": 1978, "subfield": "医療人類学", "cluster": 8, "cluster_name": "医療・身体"}, {"id": "c138", "name_ja": "オリエンタリズム", "name_en": "Orientalism", "era_start": 1978, "subfield": "ポストコロニアル研究", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c014", "name_ja": "文化資本", "name_en": "Cultural Capital", "era_start": 1979, "subfield": "文化人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c256", "name_ja": "テクノサイエンス", "name_en": "Technoscience", "era_start": 1979, "subfield": "STS", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c378", "name_ja": "言語イデオロギー", "name_en": "Language Ideology", "era_start": 1979, "subfield": "言語人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c036", "name_ja": "疾患/病い/病気の三分法", "name_en": "Disease/Illness/Sickness Triad", "era_start": 1980, "subfield": "医療人類学", "cluster": 8, "cluster_name": "医療・身体"}, {"id": "c088", "name_ja": "社会関係資本", "name_en": "Social Capital", "era_start": 1980, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c346", "name_ja": "身体の政治", "name_en": "Body Politics (Anthropological Analysis)", "era_start": 1980, "subfield": "ジェンダー人類学", "cluster": 10, "cluster_name": "自己・ジェンダー・感情"}, {"id": "c400", "name_ja": "パブリック・ライフ", "name_en": "Public Life (Anthropological Concept)", "era_start": 1980, "subfield": "都市人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c489", "name_ja": "ポスト・モダニティ", "name_en": "Postmodernity (Anthropological Discussion)", "era_start": 1980, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c309", "name_ja": "ケアの倫理", "name_en": "Ethics of Care", "era_start": 1982, "subfield": "医療人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c436", "name_ja": "サバルタン・スタディーズ", "name_en": "Subaltern Studies", "era_start": 1982, "subfield": "歴史人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c021", "name_ja": "エージェンシー", "name_en": "Agency", "era_start": 1984, "subfield": "文化人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c041", "name_ja": "アクターネットワーク理論", "name_en": "Actor-Network Theory", "era_start": 1984, "subfield": "科学技術社会論（STS）", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c203", "name_ja": "構造化理論", "name_en": "Structuration Theory", "era_start": 1984, "subfield": "social_theory", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c015", "name_ja": "日常的抵抗", "name_en": "Everyday Forms of Resistance", "era_start": 1985, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c044", "name_ja": "サイボーグ", "name_en": "Cyborg", "era_start": 1985, "subfield": "科学技術社会論（STS）", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c075", "name_ja": "コモディティ・チェーン", "name_en": "Commodity Chain", "era_start": 1985, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c130", "name_ja": "食のグローバリゼーション", "name_en": "Food Globalization", "era_start": 1985, "subfield": "食の人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c149", "name_ja": "歴史の人類学", "name_en": "Anthropology of History", "era_start": 1985, "subfield": "歴史人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c042", "name_ja": "翻訳（ANT）", "name_en": "Translation (ANT)", "era_start": 1986, "subfield": "科学技術社会論（STS）", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c062", "name_ja": "書き文化", "name_en": "Writing Culture", "era_start": 1986, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c064", "name_ja": "リフレクシヴィティ", "name_en": "Reflexivity", "era_start": 1986, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c226", "name_ja": "貨幣の人類学", "name_en": "Anthropology of Money", "era_start": 1986, "subfield": "economic_anthropology", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c446", "name_ja": "実験的民族誌", "name_en": "Experimental Ethnography", "era_start": 1986, "subfield": "方法論", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c043", "name_ja": "ブラックボックス化", "name_en": "Black Boxing", "era_start": 1987, "subfield": "科学技術社会論（STS）", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c068", "name_ja": "文化の客体化", "name_en": "Objectification of Culture", "era_start": 1987, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c306", "name_ja": "身体の三つのレベル", "name_en": "Three Bodies", "era_start": 1987, "subfield": "医療人類学", "cluster": 8, "cluster_name": "医療・身体"}, {"id": "c467", "name_ja": "消費の人類学", "name_en": "Anthropology of Consumption", "era_start": 1987, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c198", "name_ja": "関係的存在論", "name_en": "Relational Ontology", "era_start": 1988, "subfield": "social_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c311", "name_ja": "身体化された苦痛", "name_en": "Embodied Distress", "era_start": 1988, "subfield": "医療人類学", "cluster": 8, "cluster_name": "医療・身体"}, {"id": "c148", "name_ja": "社会的記憶", "name_en": "Social Memory", "era_start": 1989, "subfield": "記憶の人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c035", "name_ja": "隠されたテキスト", "name_en": "Hidden Transcript", "era_start": 1990, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c038", "name_ja": "身体化", "name_en": "Embodiment", "era_start": 1990, "subfield": "医療人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c080", "name_ja": "隠されたテキスト", "name_en": "Hidden Transcript", "era_start": 1990, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c222", "name_ja": "コモンズ", "name_en": "Commons", "era_start": 1990, "subfield": "economic_anthropology", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c342", "name_ja": "トランスジェンダーの人類学", "name_en": "Anthropology of Transgender", "era_start": 1990, "subfield": "ジェンダー人類学", "cluster": 10, "cluster_name": "自己・ジェンダー・感情"}, {"id": "c353", "name_ja": "ケアワーク", "name_en": "Care Work (Anthropological Analysis)", "era_start": 1990, "subfield": "ジェンダー人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c388", "name_ja": "公共空間", "name_en": "Public Space (Anthropological Analysis)", "era_start": 1990, "subfield": "都市人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c022", "name_ja": "部分的つながり", "name_en": "Partial Connections", "era_start": 1991, "subfield": "社会人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c057", "name_ja": "正統的周辺参加", "name_en": "Legitimate Peripheral Participation", "era_start": 1991, "subfield": "認知人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c199", "name_ja": "対称性の人類学", "name_en": "Symmetrical Anthropology", "era_start": 1991, "subfield": "social_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c500", "name_ja": "人類学のディコロナイゼーション", "name_en": "Decolonizing Anthropology", "era_start": 1991, "subfield": "文化人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c134", "name_ja": "生殖技術と親族", "name_en": "Reproductive Technologies and Kinship", "era_start": 1992, "subfield": "親族研究", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c243", "name_ja": "暴力の人類学", "name_en": "Anthropology of Violence", "era_start": 1992, "subfield": "political_anthropology", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c295", "name_ja": "宗教の系譜", "name_en": "Genealogies of Religion", "era_start": 1993, "subfield": "anthropology_of_religion", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c102", "name_ja": "ハイブリディティ", "name_en": "Hybridity", "era_start": 1994, "subfield": "文化人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c034", "name_ja": "例外状態", "name_en": "State of Exception", "era_start": 1995, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c079", "name_ja": "例外状態", "name_en": "State of Exception", "era_start": 1995, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c192", "name_ja": "マルチサイト民族誌", "name_en": "Multi-sited Ethnography", "era_start": 1995, "subfield": "methodology", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c040", "name_ja": "構造的暴力", "name_en": "Structural Violence", "era_start": 1996, "subfield": "医療人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c091", "name_ja": "バイオソーシャリティ", "name_en": "Biosociality", "era_start": 1996, "subfield": "医療人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c132", "name_ja": "食の主権", "name_en": "Food Sovereignty", "era_start": 1996, "subfield": "食の人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c476", "name_ja": "監査の文化", "name_en": "Audit Culture", "era_start": 1997, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c011", "name_ja": "パースペクティビズム", "name_en": "Perspectivism", "era_start": 1998, "subfield": "文化人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c058", "name_ja": "実践コミュニティ", "name_en": "Communities of Practice", "era_start": 1998, "subfield": "認知人類学", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c196", "name_ja": "多自然主義", "name_en": "Multinaturalism", "era_start": 1998, "subfield": "social_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c224", "name_ja": "経済の遂行性", "name_en": "Performativity of Economics", "era_start": 1998, "subfield": "economic_anthropology", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c225", "name_ja": "市場の構築", "name_en": "Making of Markets", "era_start": 1998, "subfield": "economic_anthropology", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c136", "name_ja": "バイオテクノロジーと親族", "name_en": "Biotechnology and Kinship", "era_start": 1999, "subfield": "親族研究", "cluster": 2, "cluster_name": "構造と実践"}, {"id": "c259", "name_ja": "分類とその帰結", "name_en": "Sorting Things Out", "era_start": 1999, "subfield": "STS", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c049", "name_ja": "人類世", "name_en": "Anthropocene", "era_start": 2000, "subfield": "環境人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c146", "name_ja": "デジタル民族誌", "name_en": "Digital Ethnography", "era_start": 2000, "subfield": "デジタル人類学", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c195", "name_ja": "存在論的転回", "name_en": "Ontological Turn", "era_start": 2000, "subfield": "social_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c267", "name_ja": "監視の人類学", "name_en": "Anthropology of Surveillance", "era_start": 2000, "subfield": "digital_anthropology", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c490", "name_ja": "脱人間主義的人類学", "name_en": "Post-Humanist Anthropology", "era_start": 2000, "subfield": "文化人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c028", "name_ja": "価値理論", "name_en": "Theory of Value", "era_start": 2001, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c073", "name_ja": "価値理論", "name_en": "Theory of Value", "era_start": 2001, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c245", "name_ja": "ネクロポリティクス", "name_en": "Necropolitics", "era_start": 2003, "subfield": "political_anthropology", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c294", "name_ja": "世俗主義", "name_en": "Secularism", "era_start": 2003, "subfield": "anthropology_of_religion", "cluster": 3, "cluster_name": "儀礼と象徴"}, {"id": "c404", "name_ja": "アフリカの都市性", "name_en": "African Urbanism", "era_start": 2004, "subfield": "都市人類学", "cluster": 9, "cluster_name": "移民・都市"}, {"id": "c012", "name_ja": "アニミズム（存在論的再定義）", "name_en": "Animism (Ontological)", "era_start": 2005, "subfield": "文化人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c321", "name_ja": "道徳の人類学", "name_en": "Anthropology of Morality/Ethics", "era_start": 2005, "subfield": "心理人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c322", "name_ja": "倫理的主体", "name_en": "Ethical Subject", "era_start": 2005, "subfield": "心理人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c481", "name_ja": "金融の人類学", "name_en": "Anthropology of Finance", "era_start": 2006, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c447", "name_ja": "パラエスノグラフィー", "name_en": "Para-Ethnography", "era_start": 2008, "subfield": "方法論", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c006", "name_ja": "ゾミア", "name_en": "Zomia", "era_start": 2009, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c200", "name_ja": "概念的自己決定", "name_en": "Conceptual Self-Determination", "era_start": 2009, "subfield": "social_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c046", "name_ja": "マルチスピーシーズ民族誌", "name_en": "Multispecies Ethnography", "era_start": 2010, "subfield": "環境人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c262", "name_ja": "データの人類学", "name_en": "Anthropology of Data", "era_start": 2010, "subfield": "digital_anthropology", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c265", "name_ja": "デジタル・インフラ", "name_en": "Digital Infrastructure", "era_start": 2010, "subfield": "digital_anthropology", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c266", "name_ja": "プラットフォーム研究", "name_en": "Platform Studies", "era_start": 2010, "subfield": "digital_anthropology", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c316", "name_ja": "ケアインフラ", "name_en": "Care Infrastructure", "era_start": 2010, "subfield": "医療人類学", "cluster": 7, "cluster_name": "方法と認識"}, {"id": "c491", "name_ja": "人間以上の人類学", "name_en": "More-Than-Human Anthropology", "era_start": 2010, "subfield": "環境人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c495", "name_ja": "世界の終わりの人類学", "name_en": "Anthropology of the End", "era_start": 2010, "subfield": "環境人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c029", "name_ja": "負債", "name_en": "Debt", "era_start": 2011, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c074", "name_ja": "負債", "name_en": "Debt", "era_start": 2011, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c273", "name_ja": "遅い暴力", "name_en": "Slow Violence", "era_start": 2011, "subfield": "environmental_anthropology", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c477", "name_ja": "指標の人類学", "name_en": "Anthropology of Indicators/Metrics", "era_start": 2011, "subfield": "政治人類学", "cluster": 4, "cluster_name": "権力と抵抗"}, {"id": "c197", "name_ja": "ポスト人文主義", "name_en": "Posthumanism", "era_start": 2013, "subfield": "social_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c050", "name_ja": "残存の中の生", "name_en": "Living in Ruins", "era_start": 2015, "subfield": "環境人類学", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c261", "name_ja": "アルゴリズム的統治", "name_en": "Algorithmic Governance", "era_start": 2015, "subfield": "digital_anthropology", "cluster": 6, "cluster_name": "STS・ポストヒューマン"}, {"id": "c482", "name_ja": "暗号資産の人類学", "name_en": "Anthropology of Cryptocurrency", "era_start": 2015, "subfield": "経済人類学", "cluster": 1, "cluster_name": "交換と経済"}, {"id": "c276", "name_ja": "クトゥルフ世", "name_en": "Chthulucene", "era_start": 2016, "subfield": "environmental_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}, {"id": "c218", "name_ja": "多元的世界", "name_en": "Pluriverse", "era_start": 2018, "subfield": "political_anthropology", "cluster": 5, "cluster_name": "存在論的転回"}];
+const treeEdges = [{"parent": "c001", "child": "c009", "relation_type": "derived_from", "strength": 5}, {"parent": "c003", "child": "c013", "relation_type": "derived_from", "strength": 5}, {"parent": "c004", "child": "c014", "relation_type": "derived_from", "strength": 5}, {"parent": "c020", "child": "c004", "relation_type": "influenced", "strength": 5}, {"parent": "c026", "child": "c027", "relation_type": "influenced", "strength": 5}, {"parent": "c028", "child": "c029", "relation_type": "influenced", "strength": 5}, {"parent": "c015", "child": "c035", "relation_type": "influenced", "strength": 5}, {"parent": "c033", "child": "c034", "relation_type": "influenced", "strength": 5}, {"parent": "c054", "child": "c003", "relation_type": "derived_from", "strength": 5}, {"parent": "c054", "child": "c013", "relation_type": "derived_from", "strength": 5}, {"parent": "c057", "child": "c058", "relation_type": "derived_from", "strength": 5}, {"parent": "c036", "child": "c037", "relation_type": "derived_from", "strength": 5}, {"parent": "c042", "child": "c041", "relation_type": "derived_from", "strength": 5}, {"parent": "c043", "child": "c041", "relation_type": "derived_from", "strength": 5}, {"parent": "c065", "child": "c001", "relation_type": "derived_from", "strength": 5}, {"parent": "c071", "child": "c072", "relation_type": "influenced", "strength": 5}, {"parent": "c073", "child": "c074", "relation_type": "derived_from", "strength": 5}, {"parent": "c015", "child": "c080", "relation_type": "derived_from", "strength": 5}, {"parent": "c306", "child": "c311", "relation_type": "theoretical_foundation", "strength": 5}, {"parent": "c321", "child": "c322", "relation_type": "theoretical_foundation", "strength": 5}, {"parent": "c337", "child": "c338", "relation_type": "theoretical_foundation", "strength": 5}, {"parent": "c388", "child": "c400", "relation_type": "enables", "strength": 5}, {"parent": "c205", "child": "c290", "relation_type": "generates", "strength": 5}, {"parent": "c212", "child": "c022", "relation_type": "generates", "strength": 5}, {"parent": "c213", "child": "c004", "relation_type": "precursor_of", "strength": 5}, {"parent": "c224", "child": "c225", "relation_type": "generates", "strength": 5}, {"parent": "c245", "child": "c068", "relation_type": "extends", "strength": 5}, {"parent": "c294", "child": "c295", "relation_type": "builds_on", "strength": 5}, {"parent": "c490", "child": "c491", "relation_type": "develops_into", "strength": 5}, {"parent": "c006", "child": "c015", "relation_type": "derived_from", "strength": 4}, {"parent": "c016", "child": "c025", "relation_type": "influenced", "strength": 4}, {"parent": "c018", "child": "c002", "relation_type": "influenced", "strength": 4}, {"parent": "c004", "child": "c021", "relation_type": "influenced", "strength": 4}, {"parent": "c001", "child": "c026", "relation_type": "influenced", "strength": 4}, {"parent": "c001", "child": "c028", "relation_type": "influenced", "strength": 4}, {"parent": "c031", "child": "c035", "relation_type": "influenced", "strength": 4}, {"parent": "c031", "child": "c015", "relation_type": "influenced", "strength": 4}, {"parent": "c038", "child": "c004", "relation_type": "derived_from", "strength": 4}, {"parent": "c050", "child": "c049", "relation_type": "derived_from", "strength": 4}, {"parent": "c076", "child": "c015", "relation_type": "influenced", "strength": 4}, {"parent": "c076", "child": "c080", "relation_type": "influenced", "strength": 4}, {"parent": "c078", "child": "c079", "relation_type": "influenced", "strength": 4}, {"parent": "c001", "child": "c073", "relation_type": "influenced", "strength": 4}, {"parent": "c062", "child": "c064", "relation_type": "derived_from", "strength": 4}, {"parent": "c091", "child": "c078", "relation_type": "derived_from", "strength": 4}, {"parent": "c309", "child": "c316", "relation_type": "theoretical_foundation", "strength": 4}, {"parent": "c341", "child": "c342", "relation_type": "extends", "strength": 4}, {"parent": "c309", "child": "c353", "relation_type": "theoretical_foundation", "strength": 4}, {"parent": "c378", "child": "c381", "relation_type": "theoretical_foundation", "strength": 4}, {"parent": "c306", "child": "c346", "relation_type": "theoretical_foundation", "strength": 4}, {"parent": "c203", "child": "c004", "relation_type": "builds_on", "strength": 4}, {"parent": "c216", "child": "c215", "relation_type": "extends", "strength": 4}, {"parent": "c218", "child": "c195", "relation_type": "builds_on", "strength": 4}, {"parent": "c256", "child": "c035", "relation_type": "extends", "strength": 4}, {"parent": "c261", "child": "c267", "relation_type": "extends", "strength": 4}, {"parent": "c265", "child": "c266", "relation_type": "enables", "strength": 4}, {"parent": "c273", "child": "c243", "relation_type": "extends", "strength": 4}, {"parent": "c277", "child": "c276", "relation_type": "inspires", "strength": 4}, {"parent": "c435", "child": "c436", "relation_type": "develops_into", "strength": 4}, {"parent": "c476", "child": "c477", "relation_type": "develops_into", "strength": 4}, {"parent": "c486", "child": "c490", "relation_type": "develops_into", "strength": 4}, {"parent": "c436", "child": "c500", "relation_type": "develops_into", "strength": 4}, {"parent": "c122", "child": "c388", "relation_type": "theoretical_foundation", "strength": 4}, {"parent": "c088", "child": "c004", "relation_type": "extends", "strength": 4}, {"parent": "c138", "child": "c102", "relation_type": "theoretical_foundation", "strength": 4}, {"parent": "c010", "child": "c029", "relation_type": "influenced", "strength": 3}, {"parent": "c022", "child": "c011", "relation_type": "influenced", "strength": 3}, {"parent": "c046", "child": "c044", "relation_type": "derived_from", "strength": 3}, {"parent": "c040", "child": "c010", "relation_type": "derived_from", "strength": 3}, {"parent": "c046", "child": "c012", "relation_type": "derived_from", "strength": 3}, {"parent": "c066", "child": "c004", "relation_type": "influenced", "strength": 3}, {"parent": "c373", "child": "c340", "relation_type": "enables", "strength": 3}, {"parent": "c226", "child": "c001", "relation_type": "extends", "strength": 3}, {"parent": "c262", "child": "c259", "relation_type": "extends", "strength": 3}, {"parent": "c446", "child": "c447", "relation_type": "develops_into", "strength": 3}, {"parent": "c467", "child": "c468", "relation_type": "develops_into", "strength": 3}, {"parent": "c481", "child": "c482", "relation_type": "develops_into", "strength": 3}, {"parent": "c487", "child": "c489", "relation_type": "develops_into", "strength": 3}, {"parent": "c222", "child": "c001", "relation_type": "extends", "strength": 3}, {"parent": "c211", "child": "c066", "relation_type": "extends", "strength": 3}, {"parent": "c146", "child": "c018", "relation_type": "extends", "strength": 3}, {"parent": "c404", "child": "c388", "relation_type": "extends", "strength": 3}, {"parent": "c136", "child": "c134", "relation_type": "extends", "strength": 3}, {"parent": "c130", "child": "c075", "relation_type": "extends", "strength": 3}, {"parent": "c132", "child": "c010", "relation_type": "extends", "strength": 3}, {"parent": "c144", "child": "c018", "relation_type": "extends", "strength": 3}, {"parent": "c149", "child": "c148", "relation_type": "theoretical_foundation", "strength": 3}, {"parent": "c382", "child": "c057", "relation_type": "extends", "strength": 3}, {"parent": "c495", "child": "c049", "relation_type": "extends", "strength": 3}, {"parent": "c232", "child": "c009", "relation_type": "precursor_of", "strength": 2}, {"parent": "c181", "child": "c186", "relation_type": "enables", "strength": null}, {"parent": "c182", "child": "c186", "relation_type": "enables", "strength": null}, {"parent": "c192", "child": "c018", "relation_type": "extends", "strength": null}, {"parent": "c195", "child": "c198", "relation_type": "builds_on", "strength": null}, {"parent": "c196", "child": "c011", "relation_type": "extends", "strength": null}, {"parent": "c197", "child": "c044", "relation_type": "extends", "strength": null}, {"parent": "c199", "child": "c041", "relation_type": "founds", "strength": null}, {"parent": "c200", "child": "c196", "relation_type": "extends", "strength": null}];
+
+const clusterColors = {0:'#888',1:'#CC1400',2:'#1A6B3C',3:'#8B5CF6',4:'#D97706',5:'#0369A1',6:'#BE185D',7:'#525252',8:'#059669',9:'#7C3AED',10:'#DC2626'};
+
+let currentFilter = 0;
+
+function buildTree(filterClusterId) {
+  const container = document.getElementById('tree-container');
+  container.innerHTML = '';
+  const tooltip = document.getElementById('tooltip');
+
+  const W = container.clientWidth;
+  const H = container.clientHeight;
+  const margin = {top: 40, right: 40, bottom: 40, left: 60};
+
+  let nodes = treeNodes.map(n => ({...n}));
+  let edges = treeEdges.map(e => ({...e}));
+
+  // Filter by cluster
+  if (filterClusterId > 0) {
+    const clusterNodeIds = new Set(nodes.filter(n => n.cluster === filterClusterId).map(n => n.id));
+    // Include connected nodes
+    edges.forEach(e => {
+      if (clusterNodeIds.has(e.parent)) clusterNodeIds.add(e.child);
+      if (clusterNodeIds.has(e.child)) clusterNodeIds.add(e.parent);
+    });
+    nodes = nodes.filter(n => clusterNodeIds.has(n.id));
+    const nids = new Set(nodes.map(n => n.id));
+    edges = edges.filter(e => nids.has(e.parent) && nids.has(e.child));
+  }
+
+  if (nodes.length === 0) return;
+
+  // Compute children count for node sizing
+  const childCount = {};
+  edges.forEach(e => { childCount[e.parent] = (childCount[e.parent]||0) + 1; });
+
+  // Time scale (x-axis)
+  const minYear = Math.min(...nodes.map(n => n.era_start || 2000));
+  const maxYear = Math.max(...nodes.map(n => n.era_start || 2000));
+  const xScale = d3.scaleLinear()
+    .domain([minYear - 5, maxYear + 5])
+    .range([margin.left, W - margin.right]);
+
+  // Assign y positions: group by cluster, then spread within cluster
+  const clusterGroups = {};
+  nodes.forEach(n => {
+    const cl = n.cluster || 0;
+    if (!clusterGroups[cl]) clusterGroups[cl] = [];
+    clusterGroups[cl].push(n);
+  });
+
+  // Sort clusters, assign vertical bands
+  const clusterIds = Object.keys(clusterGroups).map(Number).sort((a,b) => a-b);
+  const bandHeight = (H - margin.top - margin.bottom) / clusterIds.length;
+
+  const nodeMap = {};
+  clusterIds.forEach((cl, ci) => {
+    const group = clusterGroups[cl];
+    // Sort by era within cluster
+    group.sort((a,b) => (a.era_start||2000) - (b.era_start||2000));
+    group.forEach((n, ni) => {
+      const bandTop = margin.top + ci * bandHeight;
+      const ySpread = bandHeight * 0.8;
+      const yOffset = bandTop + bandHeight * 0.1;
+      // Spread vertically within band, with slight jitter based on era
+      const normalizedIndex = group.length > 1 ? ni / (group.length - 1) : 0.5;
+      n.x = xScale(n.era_start || 2000);
+      n.y = yOffset + normalizedIndex * ySpread;
+      nodeMap[n.id] = n;
+    });
+  });
+
+  const svg = d3.select(container).append('svg').attr('width', W).attr('height', H);
+  const g = svg.append('g');
+
+  // Zoom
+  svg.call(d3.zoom().scaleExtent([0.3, 5]).on('zoom', e => g.attr('transform', e.transform)));
+
+  // Era bands (decades)
+  const decades = [];
+  for (let y = Math.floor(minYear/10)*10; y <= maxYear + 10; y += 10) decades.push(y);
+  g.selectAll('.era-band').data(decades.filter((_,i) => i%2===0)).join('rect')
+    .attr('class','era-band')
+    .attr('x', d => xScale(d))
+    .attr('y', margin.top - 10)
+    .attr('width', d => xScale(d+10) - xScale(d))
+    .attr('height', H - margin.top - margin.bottom + 20);
+
+  // Time axis labels
+  g.selectAll('.era-label').data(decades).join('text')
+    .attr('class','era-label')
+    .attr('x', d => xScale(d))
+    .attr('y', margin.top - 16)
+    .text(d => d);
+
+  // Cluster labels on left
+  clusterIds.forEach((cl, ci) => {
+    const bandTop = margin.top + ci * bandHeight;
+    const clName = {0:'他',1:'交換',2:'構造',3:'儀礼',4:'権力',5:'存在論',6:'STS',7:'方法',8:'医療',9:'移民',10:'自己'}[cl] || '';
+    g.append('text')
+      .attr('x', 8)
+      .attr('y', bandTop + bandHeight/2)
+      .attr('font-size', '9px')
+      .attr('font-weight', '600')
+      .attr('fill', clusterColors[cl] || '#888')
+      .attr('font-family', 'var(--font)')
+      .attr('dominant-baseline', 'middle')
+      .text(clName);
+
+    // Subtle horizontal separator
+    if (ci > 0) {
+      g.append('line')
+        .attr('x1', margin.left)
+        .attr('x2', W - margin.right)
+        .attr('y1', bandTop)
+        .attr('y2', bandTop)
+        .attr('stroke', 'var(--border-l)')
+        .attr('stroke-dasharray', '3,3')
+        .attr('stroke-opacity', 0.5);
+    }
+  });
+
+  // Draw edges as curved paths (phylogenetic style: horizontal then vertical)
+  const edgeData = edges.filter(e => nodeMap[e.parent] && nodeMap[e.child]);
+  g.selectAll('.tree-edge').data(edgeData).join('path')
+    .attr('class', 'tree-edge')
+    .attr('d', d => {
+      const p = nodeMap[d.parent];
+      const c = nodeMap[d.child];
+      // Phylogenetic-style: go right from parent, then curve to child
+      const midX = (p.x + c.x) / 2;
+      return `M${p.x},${p.y} C${midX},${p.y} ${midX},${c.y} ${c.x},${c.y}`;
+    })
+    .attr('stroke', d => {
+      const p = nodeMap[d.parent];
+      return clusterColors[p.cluster] || '#888';
+    });
+
+  // Draw nodes
+  const nodeGroup = g.selectAll('.tree-node').data(nodes).join('g')
+    .attr('class', 'tree-node')
+    .attr('transform', d => `translate(${d.x},${d.y})`);
+
+  nodeGroup.append('circle')
+    .attr('r', d => Math.sqrt(childCount[d.id] || 0) * 2.5 + 3.5)
+    .attr('fill', d => clusterColors[d.cluster] || '#888')
+    .attr('opacity', 0.85)
+    .on('mouseover', function(event, d) {
+      const cc = childCount[d.id] || 0;
+      tooltip.innerHTML = `<div class="tt-name">${d.name_ja} (${d.name_en})</div>` +
+        `<div class="tt-meta">${d.era_start || '?'}年 | ${d.subfield || ''}</div>` +
+        `<div class="tt-meta">C${d.cluster}: ${d.cluster_name} | 派生概念: ${cc}</div>`;
+      tooltip.style.opacity = 1;
+      tooltip.style.left = (event.pageX + 12) + 'px';
+      tooltip.style.top = (event.pageY - 20) + 'px';
+      // Highlight connected edges
+      g.selectAll('.tree-edge')
+        .attr('stroke-opacity', e => (e.parent === d.id || e.child === d.id) ? 0.9 : 0.1)
+        .attr('stroke-width', e => (e.parent === d.id || e.child === d.id) ? 3 : 1);
+    })
+    .on('mouseout', function() {
+      tooltip.style.opacity = 0;
+      g.selectAll('.tree-edge').attr('stroke-opacity', 0.35).attr('stroke-width', 1.5);
+    });
+
+  // Labels for important nodes (many children or early era)
+  nodeGroup.filter(d => (childCount[d.id] || 0) >= 2 || (d.era_start && d.era_start < 1930))
+    .append('text')
+    .attr('dx', d => Math.sqrt(childCount[d.id] || 0) * 2.5 + 6)
+    .attr('dy', 3)
+    .attr('font-size', d => (childCount[d.id] || 0) >= 3 ? '9px' : '7.5px')
+    .attr('font-weight', d => (childCount[d.id] || 0) >= 3 ? '600' : '400')
+    .text(d => d.name_ja);
+}
+
+function filterCluster(cl, btn) {
+  document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = cl;
+  buildTree(cl);
+}
+
+document.addEventListener('DOMContentLoaded', () => buildTree(0));
+</script>
+</body>
+</html>
