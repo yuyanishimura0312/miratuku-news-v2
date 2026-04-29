@@ -62,9 +62,16 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 .parallel-card { border: 1px solid var(--border-light); padding: 12px 16px; margin-bottom: 8px; font-size: 0.82rem; }
 .parallel-score { font-family: monospace; font-weight: 700; color: var(--accent-warm); }
 #world-map path.land { fill: var(--surface); stroke: var(--border); stroke-width: 0.4px; }
-#world-map path.graticule { fill: none; stroke: var(--border-light); stroke-width: 0.3px; }
-#world-map circle.culture-dot { cursor: pointer; opacity: 0.85; transition: opacity 0.15s; }
+#world-map path.graticule { fill: none; stroke: var(--border-light); stroke-width: 0.2px; stroke-dasharray: 2,2; }
+#world-map circle.culture-dot { cursor: pointer; opacity: 0.85; transition: opacity 0.2s, r 0.2s; }
 #world-map circle.culture-dot:hover { opacity: 1; }
+.map-controls { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+.map-btn { padding:4px 12px; font-size:0.72rem; font-weight:600; border:1px solid var(--border); background:var(--surface); color:var(--text-secondary); cursor:pointer; transition:all 0.15s; font-family:var(--font); }
+.map-btn.active { background:var(--accent-warm); color:#fff; border-color:var(--accent-warm); }
+.map-legend { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:8px; padding:8px 4px; font-size:0.68rem; color:var(--text-muted); }
+.map-legend-item { display:flex; align-items:center; gap:4px; }
+.map-legend-swatch { width:12px; height:12px; border-radius:2px; flex-shrink:0; }
+.map-stats { display:flex; gap:16px; font-size:0.72rem; color:var(--text-muted); margin-top:6px; padding:4px; }
 .region-link { display:block; text-decoration:none; padding:20px; border:1px solid var(--border-light); background:var(--card); transition:background 0.15s; }
 .region-link:hover { background:var(--accent-muted); }
 </style>
@@ -78,10 +85,17 @@ h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 
 
 <div class="kpi-row" id="kpi"></div>
 
-<h3>世界地図 — 文化圏ナラティブ密度</h3>
-<div class="panel" style="padding:8px;overflow:hidden;" id="world-map-panel">
+<h3>世界地図</h3>
+<div class="panel" style="padding:12px;overflow:hidden;" id="world-map-panel">
+  <div class="map-controls">
+    <button class="map-btn active" data-mode="biome" onclick="switchMapMode('biome')">バイオーム</button>
+    <button class="map-btn" data-mode="region" onclick="switchMapMode('region')">地域別</button>
+    <button class="map-btn" data-mode="density" onclick="switchMapMode('density')">密度</button>
+  </div>
   <svg id="world-map" style="width:100%;height:auto;display:block;"></svg>
-  <div id="map-tooltip" style="position:fixed;display:none;background:var(--card);border:1px solid var(--border);padding:6px 10px;font-size:0.78rem;pointer-events:none;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.15);"></div>
+  <div id="map-legend" class="map-legend"></div>
+  <div id="map-stats" class="map-stats"></div>
+  <div id="map-tooltip" style="position:fixed;display:none;background:var(--card);border:1px solid var(--border);padding:8px 12px;font-size:0.78rem;pointer-events:none;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.15);max-width:260px;line-height:1.5;"></div>
 </div>
 
 <h3>地域深掘り</h3>
@@ -216,51 +230,138 @@ function renderSamples() {
 }
 
 const REGION_COLORS = {'Asia':'#EA580C','Europe':'#2563EB','Africa':'#16A34A','Americas':'#7C3AED','Middle East':'#CA8A04','Oceania':'#0891B2'};
-const regionColor = r => REGION_COLORS[r]||'#78716c';
+const BIOME_COLORS = {
+  'Tropical':'#15803d','Subtropical':'#65a30d','Temperate':'#3b82f6','Mediterranean':'#f59e0b',
+  'Arid':'#dc2626','Boreal':'#0d9488','Arctic':'#64748b','Oceanic':'#0891b2','Highland':'#6d28d9'
+};
+// Classify each culture by biome based on lat/climate
+function getBiome(lat,lon) {
+  var absLat = Math.abs(lat);
+  if (absLat > 60) return 'Arctic';
+  if (absLat > 50) return 'Boreal';
+  if (absLat > 35 && absLat <= 50) {
+    if (lon > -10 && lon < 40 && lat > 30) return 'Mediterranean';
+    return 'Temperate';
+  }
+  if (absLat > 23.5 && absLat <= 35) return 'Subtropical';
+  if (absLat <= 23.5) {
+    // Arid band: Sahara, Arabia, Australian interior
+    if ((lon > -20 && lon < 60 && lat > 10 && lat < 35) || (lon > 110 && lon < 155 && lat < -15)) {
+      if (lat > 15 && lat < 35 && lon > 20 && lon < 60) return 'Arid';
+      if (lat < -20 && lon > 120) return 'Arid';
+    }
+    return 'Tropical';
+  }
+  return 'Temperate';
+}
+// Override biomes for island/oceanic cultures
+const OCEANIC_CULTURES = ['Hawaiian','Polynesian','Samoan','Tongan','Micronesian','Fijian','Melanesian','Maori'];
+
+var mapProj, mapPath, mapSvg, mapGeo, mapR, currentMode = 'biome';
+
+function dotColor(d) {
+  if (currentMode === 'region') return REGION_COLORS[d.region] || '#78716c';
+  if (currentMode === 'density') {
+    var maxC = d3.max(mapGeo, function(g){return g.count});
+    var t = Math.log(d.count+1) / Math.log(maxC+1);
+    return d3.interpolateYlOrRd(0.15 + t * 0.75);
+  }
+  // biome
+  if (OCEANIC_CULTURES.indexOf(d.culture) >= 0) return BIOME_COLORS['Oceanic'];
+  return BIOME_COLORS[getBiome(d.lat, d.lon)] || '#78716c';
+}
+
+function updateLegend() {
+  var el = document.getElementById('map-legend');
+  var items;
+  if (currentMode === 'biome') {
+    items = Object.entries(BIOME_COLORS);
+  } else if (currentMode === 'region') {
+    items = Object.entries(REGION_COLORS);
+  } else {
+    items = [['少','#fef3c7'],['中','#f97316'],['多','#991b1b']];
+  }
+  el.innerHTML = items.map(function(kv) {
+    return '<span class="map-legend-item"><span class="map-legend-swatch" style="background:'+kv[1]+'"></span>'+kv[0]+'</span>';
+  }).join('');
+}
+
+function updateStats() {
+  if (!mapGeo) return;
+  var totalOnMap = mapGeo.reduce(function(s,d){return s+d.count},0);
+  document.getElementById('map-stats').innerHTML =
+    '<span>地図上: '+totalOnMap.toLocaleString()+' ナラティブ</span>' +
+    '<span>'+mapGeo.length+' 文化圏</span>' +
+    '<span>表示外: '+(D.total_narratives - totalOnMap).toLocaleString()+' (メタカテゴリ)</span>';
+}
+
+function switchMapMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.map-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  mapSvg.selectAll('circle.culture-dot').attr('fill', function(d){return dotColor(d)});
+  updateLegend();
+}
 
 async function renderWorldMap() {
-  var geo = D.geo_cultures;
-  if (!geo || !geo.length) return;
+  mapGeo = D.geo_cultures;
+  if (!mapGeo || !mapGeo.length) return;
   var panel = document.getElementById('world-map-panel');
-  var W = panel.clientWidth - 16;
-  var H = Math.round(W * 0.5);
-  var svg = d3.select('#world-map').attr('viewBox','0 0 '+W+' '+H);
-  var proj = d3.geoNaturalEarth1().scale(W/6.3).translate([W/2,H/2]);
-  var path = d3.geoPath().projection(proj);
-  svg.append('path').datum(d3.geoGraticule()()).attr('class','graticule').attr('d',path);
+  var W = panel.clientWidth - 24;
+  var H = Math.round(W * 0.48);
+  mapSvg = d3.select('#world-map').attr('viewBox','0 0 '+W+' '+H);
+  mapProj = d3.geoNaturalEarth1().scale(W/6.2).translate([W/2, H/2]);
+  mapPath = d3.geoPath().projection(mapProj);
+
+  // Ocean background
+  mapSvg.append('rect').attr('width',W).attr('height',H).attr('fill','var(--bg)').attr('rx',4);
+
+  // Graticule
+  mapSvg.append('path').datum(d3.geoGraticule10()).attr('class','graticule').attr('d',mapPath);
+
+  // World land
   try {
     var world = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(function(r){return r.json()});
-    svg.append('path').datum(topojson.feature(world,world.objects.land)).attr('class','land').attr('d',path);
+    var countries = topojson.feature(world, world.objects.countries);
+    mapSvg.selectAll('path.country').data(countries.features).join('path')
+      .attr('class','land').attr('d',mapPath);
   } catch(e) {}
-  var maxC = d3.max(geo,function(d){return d.count});
-  var r = d3.scaleSqrt().domain([1,maxC]).range([3,20]);
+
+  // Sphere outline
+  mapSvg.append('path').datum({type:'Sphere'}).attr('fill','none').attr('stroke','var(--border)').attr('stroke-width',0.6).attr('d',mapPath);
+
+  var maxC = d3.max(mapGeo, function(d){return d.count});
+  mapR = d3.scaleSqrt().domain([1,maxC]).range([3.5,22]);
   var tooltip = document.getElementById('map-tooltip');
-  var sorted = geo.slice().sort(function(a,b){return b.count-a.count});
-  svg.selectAll('circle.culture-dot').data(sorted).join('circle')
+  var sorted = mapGeo.slice().sort(function(a,b){return b.count-a.count});
+
+  // Dots group
+  var dotsG = mapSvg.append('g').attr('class','dots-layer');
+  dotsG.selectAll('circle.culture-dot').data(sorted).join('circle')
     .attr('class','culture-dot')
-    .attr('cx',function(d){return proj([d.lon,d.lat])[0]})
-    .attr('cy',function(d){return proj([d.lon,d.lat])[1]})
-    .attr('r',function(d){return r(d.count)})
-    .attr('fill',function(d){return regionColor(d.region)})
-    .attr('stroke','var(--bg)').attr('stroke-width',0.8)
+    .attr('cx',function(d){return mapProj([d.lon,d.lat])[0]})
+    .attr('cy',function(d){return mapProj([d.lon,d.lat])[1]})
+    .attr('r',function(d){return mapR(d.count)})
+    .attr('fill',function(d){return dotColor(d)})
+    .attr('stroke','var(--bg)').attr('stroke-width',1)
     .on('mousemove',function(event,d){
       tooltip.style.display='block';
-      tooltip.style.left=(event.clientX+12)+'px';
-      tooltip.style.top=(event.clientY-28)+'px';
-      tooltip.innerHTML='<strong>'+d.culture+'</strong><br><span style="color:var(--text-muted)">'+d.region+' · '+d.count.toLocaleString()+' ナラティブ</span>';
+      tooltip.style.left=(event.clientX+14)+'px';
+      tooltip.style.top=(event.clientY-32)+'px';
+      var biome = OCEANIC_CULTURES.indexOf(d.culture)>=0 ? 'Oceanic' : getBiome(d.lat,d.lon);
+      tooltip.innerHTML='<strong style="font-size:0.85rem">'+d.culture+'</strong><br>'
+        +'<span style="color:var(--text-muted)">'+d.region+' · '+biome+'</span><br>'
+        +'<span style="font-family:monospace;font-weight:700;color:var(--accent-warm)">'+d.count.toLocaleString()+'</span> ナラティブ';
     })
     .on('mouseleave',function(){tooltip.style.display='none'})
     .on('click',function(event,d){
       if(d.culture==='Ryukyuan') window.location.href='my-okinawa.html';
-      if(['Inuit','Native American','Cherokee','Navajo','Ojibwe'].indexOf(d.culture)>=0) window.location.href='my-canada-indigenous.html';
+      if(['Inuit','Native American','Cherokee','Navajo','Ojibwe','Lakota','Hopi','Cree'].indexOf(d.culture)>=0) window.location.href='my-canada-indigenous.html';
     });
-  // Legend
-  var legend = svg.append('g').attr('transform','translate(10,'+(H-80)+')');
-  var regions = Object.keys(REGION_COLORS);
-  regions.forEach(function(rg,i){
-    legend.append('circle').attr('cx',0).attr('cy',i*14).attr('r',5).attr('fill',REGION_COLORS[rg]);
-    legend.append('text').attr('x',10).attr('y',i*14+4).attr('font-size','0.6rem').attr('fill','var(--text-muted)').text(rg);
-  });
+
+  updateLegend();
+  updateStats();
 }
 
 async function init() {
