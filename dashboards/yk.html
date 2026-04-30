@@ -83,6 +83,25 @@
     /* Data source tags */
     .ds-tag { font-size: 0.64rem; padding: 2px 6px; border: 1px solid var(--border); color: var(--text-secondary); }
     .ds-tag-primary { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+
+    /* Big Five radar summary */
+    .big-five-bars { display: flex; flex-direction: column; gap: 6px; }
+    .big-five-row { display: flex; align-items: center; gap: 8px; }
+    .big-five-label { font-size: 0.68rem; color: var(--text-secondary); width: 80px; flex-shrink: 0; }
+    .big-five-track { flex: 1; height: 5px; background: var(--border-light); overflow: hidden; }
+    .big-five-fill { height: 100%; background: var(--accent-warm); }
+    .big-five-score { font-size: 0.65rem; color: var(--text-muted); width: 28px; text-align: right; }
+
+    /* GTA core category badge */
+    .gta-badge { display: inline-block; font-size: 0.68rem; padding: 2px 8px; font-weight: 600; border: 1px solid var(--border); color: var(--text-secondary); }
+    .gta-badge-order { border-color: #8B0000; color: #8B0000; }
+    .gta-badge-transform { border-color: #1A5276; color: #1A5276; }
+    .gta-badge-mediate { border-color: #6C3483; color: #6C3483; }
+
+    /* List items in modal */
+    .yokai-bullet-list { margin: 0; padding: 0; list-style: none; }
+    .yokai-bullet-list li { font-size: 0.82rem; color: var(--text); line-height: 1.6; padding: 3px 0 3px 12px; position: relative; }
+    .yokai-bullet-list li::before { content: "-"; position: absolute; left: 0; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -102,7 +121,7 @@
       </div>
 
       <div id="statsPanel" class="yokai-stats">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
           <div>
             <h3>地域分布</h3>
             <div id="regionStats"></div>
@@ -110,6 +129,10 @@
           <div>
             <h3>存在論的分類</h3>
             <div id="descolaStats"></div>
+          </div>
+          <div>
+            <h3>GTA類型分布</h3>
+            <div id="gtaStats"></div>
           </div>
         </div>
       </div>
@@ -121,6 +144,14 @@
           <select id="descolaFilter" class="yokai-select"><option value="">全分類</option></select>
           <select id="moralFilter" class="yokai-select"><option value="">道徳性</option></select>
           <select id="sizeFilter" class="yokai-select"><option value="">サイズ</option></select>
+          <select id="gtaCoreFilter" class="yokai-select">
+            <option value="">GTA類型</option>
+            <option value="秩序維持型">秩序維持型</option>
+            <option value="変容促進型">変容促進型</option>
+            <option value="媒介統合型">媒介統合型</option>
+          </select>
+          <select id="archetypeFilter" class="yokai-select"><option value="">アーキタイプ</option></select>
+          <select id="ontRoleFilter" class="yokai-select"><option value="">存在論的役割</option></select>
         </div>
       </div>
 
@@ -179,17 +210,29 @@
   }
 
   function populateFilters() {
-    var regions = {}, descolas = {}, morals = {}, sizes = {};
+    var regions = {}, descolas = {}, morals = {}, sizes = {}, archetypes = {}, ontRoles = {};
     yokaiData.forEach(function(y) {
       if (y.region_category) regions[y.region_category] = 1;
       if (y.descola_classification) descolas[y.descola_classification] = 1;
       if (y.moral_alignment) morals[y.moral_alignment] = 1;
       if (y.size_category) sizes[y.size_category] = 1;
+      // Collect primary archetypes from personality_deep
+      if (y.personality_deep && y.personality_deep.archetype && y.personality_deep.archetype.primary) {
+        archetypes[y.personality_deep.archetype.primary] = 1;
+      }
+      // Collect ontological role_types
+      if (y.ontological_role && y.ontological_role.role_type) {
+        y.ontological_role.role_type.forEach(function(rt) {
+          if (rt) ontRoles[rt] = 1;
+        });
+      }
     });
     addOptions('regionFilter', regions, REGION_LABELS);
     addOptions('descolaFilter', descolas, DESCOLA_LABELS);
     addOptions('moralFilter', morals, MORAL_LABELS);
     addOptions('sizeFilter', sizes, SIZE_LABELS);
+    addOptions('archetypeFilter', archetypes, {});
+    addOptions('ontRoleFilter', ontRoles, {});
   }
 
   function addOptions(id, keys, labels) {
@@ -208,6 +251,9 @@
   document.getElementById('descolaFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
   document.getElementById('moralFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
   document.getElementById('sizeFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
+  document.getElementById('gtaCoreFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
+  document.getElementById('archetypeFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
+  document.getElementById('ontRoleFilter').addEventListener('change', function() { currentPage = 0; applyFilters(); });
 
   function applyFilters() {
     var q = document.getElementById('searchInput').value.toLowerCase();
@@ -215,6 +261,9 @@
     var descola = document.getElementById('descolaFilter').value;
     var moral = document.getElementById('moralFilter').value;
     var size = document.getElementById('sizeFilter').value;
+    var gtaCore = document.getElementById('gtaCoreFilter').value;
+    var archetype = document.getElementById('archetypeFilter').value;
+    var ontRole = document.getElementById('ontRoleFilter').value;
 
     filtered = yokaiData.filter(function(y) {
       if (q) {
@@ -230,12 +279,24 @@
       if (descola && y.descola_classification !== descola) return false;
       if (moral && y.moral_alignment !== moral) return false;
       if (size && y.size_category !== size) return false;
+      // Filter by GTA core category
+      if (gtaCore && y.gta_core_category !== gtaCore) return false;
+      // Filter by primary archetype
+      if (archetype) {
+        var arch = y.personality_deep && y.personality_deep.archetype ? y.personality_deep.archetype.primary : null;
+        if (arch !== archetype) return false;
+      }
+      // Filter by ontological role_type (any match)
+      if (ontRole) {
+        var roles = y.ontological_role && y.ontological_role.role_type ? y.ontological_role.role_type : [];
+        if (roles.indexOf(ontRole) < 0) return false;
+      }
       return true;
     });
 
     renderGrid();
     renderPagination();
-    var hasFilter = q || region || descola || moral || size;
+    var hasFilter = q || region || descola || moral || size || gtaCore || archetype || ontRole;
     document.getElementById('countDisplay').textContent = filtered.length.toLocaleString() + ' 体' + (hasFilter ? ' (' + yokaiData.length.toLocaleString() + ' 体中)' : '');
   }
 
@@ -307,17 +368,22 @@
   }
 
   function renderStats() {
-    var regionCounts = {}, descolaCounts = {};
+    var regionCounts = {}, descolaCounts = {}, gtaCounts = {};
     yokaiData.forEach(function(y) {
       var r = y.region_category || 'other';
       regionCounts[r] = (regionCounts[r] || 0) + 1;
       var d = y.descola_classification || 'unknown';
       descolaCounts[d] = (descolaCounts[d] || 0) + 1;
+      // Count GTA core categories
+      if (y.gta_core_category) {
+        gtaCounts[y.gta_core_category] = (gtaCounts[y.gta_core_category] || 0) + 1;
+      }
     });
 
     var total = yokaiData.length;
     document.getElementById('regionStats').innerHTML = renderStatBars(regionCounts, REGION_LABELS, total);
     document.getElementById('descolaStats').innerHTML = renderStatBars(descolaCounts, DESCOLA_LABELS, total);
+    document.getElementById('gtaStats').innerHTML = renderStatBars(gtaCounts, {}, total);
   }
 
   function renderStatBars(counts, labels, total) {
@@ -400,6 +466,154 @@
         html += '<span class="ds-tag' + (isPrimary ? ' ds-tag-primary' : '') + '">' + escapeHtml(DS_LABELS[s] || s) + '</span>';
       });
       html += '</div></div>';
+    }
+
+    // Behavioral patterns
+    if (y.behavioral_patterns && y.behavioral_patterns.length) {
+      html += '<div class="yokai-detail-section"><h3>行動パターン</h3>';
+      html += '<ul class="yokai-bullet-list">';
+      y.behavioral_patterns.forEach(function(b) { html += '<li>' + escapeHtml(b) + '</li>'; });
+      html += '</ul></div>';
+    }
+
+    // Ritual behaviors
+    if (y.ritual_behaviors && y.ritual_behaviors.length) {
+      html += '<div class="yokai-detail-section"><h3>儀礼行動</h3>';
+      html += '<ul class="yokai-bullet-list">';
+      y.ritual_behaviors.forEach(function(b) { html += '<li>' + escapeHtml(b) + '</li>'; });
+      html += '</ul></div>';
+    }
+
+    // Narrative episodes
+    if (y.narrative_episodes && y.narrative_episodes.length) {
+      html += '<div class="yokai-detail-section"><h3>伝承エピソード</h3>';
+      html += '<ul class="yokai-bullet-list">';
+      y.narrative_episodes.forEach(function(e) { html += '<li>' + escapeHtml(e) + '</li>'; });
+      html += '</ul></div>';
+    }
+
+    // Speech examples
+    if (y.speech_examples && y.speech_examples.length) {
+      html += '<div class="yokai-detail-section"><h3>言葉の例</h3>';
+      html += '<ul class="yokai-bullet-list">';
+      y.speech_examples.forEach(function(s) { html += '<li>' + escapeHtml(s) + '</li>'; });
+      html += '</ul></div>';
+    }
+
+    // Interaction patterns
+    if (y.interaction_patterns && y.interaction_patterns.length) {
+      html += '<div class="yokai-detail-section"><h3>インタラクション・パターン</h3>';
+      y.interaction_patterns.forEach(function(ip) {
+        html += '<div class="yokai-field" style="display:flex;gap:8px;align-items:baseline">';
+        html += '<span class="yokai-tag" style="flex-shrink:0">' + escapeHtml(ip.type || '') + '</span>';
+        html += '<div class="yokai-field-value" style="margin:0">' + escapeHtml(ip.description || '') + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Ontological role
+    if (y.ontological_role) {
+      var oRole = y.ontological_role;
+      html += '<div class="yokai-detail-section"><h3>存在論的役割</h3>';
+      if (oRole.role_type && oRole.role_type.length) {
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">';
+        oRole.role_type.forEach(function(rt) { html += '<span class="yokai-tag">' + escapeHtml(rt) + '</span>'; });
+        html += '</div>';
+      }
+      if (oRole.cosmological_function) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">宇宙論的機能</div><div class="yokai-field-value">' + escapeHtml(oRole.cosmological_function) + '</div></div>';
+      }
+      if (oRole.boundary_mediations && oRole.boundary_mediations.length) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">境界媒介</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">';
+        oRole.boundary_mediations.forEach(function(bm) { html += '<span class="yokai-tag">' + escapeHtml(bm) + '</span>'; });
+        html += '</div></div>';
+      }
+      if (oRole.human_yokai_interface) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">人間との接点</div><div class="yokai-field-value">' + escapeHtml(oRole.human_yokai_interface) + '</div></div>';
+      }
+      html += '</div>';
+    }
+
+    // Deep personality: Big Five summary, archetype, defense mechanisms, shadow aspects
+    if (y.personality_deep) {
+      var pd = y.personality_deep;
+      html += '<div class="yokai-detail-section"><h3>深層人格分析</h3>';
+
+      // Big Five domain scores (radar as horizontal bars)
+      if (pd.big_five) {
+        var bf = pd.big_five;
+        var BIG_FIVE_LABELS = { openness: '開放性', conscientiousness: '誠実性', extraversion: '外向性', agreeableness: '協調性', neuroticism: '神経症傾向' };
+        html += '<div class="yokai-field"><div class="yokai-field-label">Big Five</div>';
+        html += '<div class="big-five-bars" style="margin-top:4px">';
+        var bfKeys = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism'];
+        bfKeys.forEach(function(k) {
+          if (bf[k]) {
+            var score = bf[k].score || 0;
+            html += '<div class="big-five-row">';
+            html += '<span class="big-five-label">' + escapeHtml(BIG_FIVE_LABELS[k] || k) + '</span>';
+            html += '<div class="big-five-track"><div class="big-five-fill" style="width:' + score + '%"></div></div>';
+            html += '<span class="big-five-score">' + score + '</span>';
+            html += '</div>';
+          }
+        });
+        html += '</div></div>';
+      }
+
+      // Archetype
+      if (pd.archetype) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">アーキタイプ</div>';
+        html += '<div class="yokai-field-value">';
+        if (pd.archetype.primary) html += '主: ' + escapeHtml(pd.archetype.primary);
+        if (pd.archetype.secondary) html += ' / 副: ' + escapeHtml(pd.archetype.secondary);
+        if (pd.archetype.shadow) html += ' / 影: ' + escapeHtml(pd.archetype.shadow);
+        html += '</div></div>';
+      }
+
+      // Defense mechanisms
+      if (pd.defense_mechanisms && pd.defense_mechanisms.length) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">防衛機制</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">';
+        pd.defense_mechanisms.forEach(function(dm) { html += '<span class="yokai-tag">' + escapeHtml(dm) + '</span>'; });
+        html += '</div></div>';
+      }
+
+      // Shadow aspects
+      if (pd.shadow_aspects) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">シャドウ側面</div><div class="yokai-field-value">' + escapeHtml(pd.shadow_aspects) + '</div></div>';
+      }
+
+      html += '</div>';
+    }
+
+    // GTA analysis
+    if (y.gta_core_category || (y.gta_codes && y.gta_codes.length) || (y.gta_categories && y.gta_categories.length)) {
+      html += '<div class="yokai-detail-section"><h3>GTA分析</h3>';
+      if (y.gta_core_category) {
+        var gtaBadgeClass = 'gta-badge';
+        if (y.gta_core_category === '秩序維持型') gtaBadgeClass += ' gta-badge-order';
+        else if (y.gta_core_category === '変容促進型') gtaBadgeClass += ' gta-badge-transform';
+        else if (y.gta_core_category === '媒介統合型') gtaBadgeClass += ' gta-badge-mediate';
+        html += '<div class="yokai-field"><div class="yokai-field-label">コア類型</div>';
+        html += '<div style="margin-top:2px"><span class="' + gtaBadgeClass + '">' + escapeHtml(y.gta_core_category) + '</span></div></div>';
+      }
+      if (y.gta_categories && y.gta_categories.length) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">カテゴリ</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">';
+        y.gta_categories.forEach(function(c) { html += '<span class="yokai-tag">' + escapeHtml(c) + '</span>'; });
+        html += '</div></div>';
+      }
+      if (y.gta_codes && y.gta_codes.length) {
+        html += '<div class="yokai-field"><div class="yokai-field-label">オープンコード</div>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">';
+        y.gta_codes.forEach(function(gc) {
+          var codeLabel = typeof gc === 'string' ? gc : (gc.code || '');
+          html += '<span class="yokai-tag">' + escapeHtml(codeLabel) + '</span>';
+        });
+        html += '</div></div>';
+      }
+      html += '</div>';
     }
 
     // Scholarly summary
