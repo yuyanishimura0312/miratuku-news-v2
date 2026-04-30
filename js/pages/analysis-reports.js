@@ -15,19 +15,23 @@ initAuthGuard(function(user) {
   }
 
   // --- State ---
-  function getArchived() {
-    try { return JSON.parse(localStorage.getItem('ar_archived') || '[]'); } catch(e) { return []; }
+  function getList(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
   }
-  function setArchived(ids) { localStorage.setItem('ar_archived', JSON.stringify(ids)); }
-  function getDeleted() {
-    try { return JSON.parse(localStorage.getItem('ar_deleted') || '[]'); } catch(e) { return []; }
+  function setList(key, ids) { localStorage.setItem(key, JSON.stringify(ids)); }
+  function toggleList(key, id) {
+    var list = getList(key);
+    var idx = list.indexOf(id);
+    if (idx === -1) list.push(id); else list.splice(idx, 1);
+    setList(key, list);
+    return idx === -1; // true = added
   }
-  function setDeleted(ids) { localStorage.setItem('ar_deleted', JSON.stringify(ids)); }
 
   var currentData = null;
   var currentQuery = '';
   var currentSort = 'date-desc';
   var activeDbFilter = '';
+  var showBookmarksOnly = false;
 
   // --- Init ---
   function initPage(data) {
@@ -51,9 +55,10 @@ initAuthGuard(function(user) {
     // Overview stats
     html += '<div class="db-overview" id="ar-stats"></div>';
 
-    // Toolbar: search + sort
+    // Toolbar: search + bookmark toggle + sort
     html += '<div class="ar-toolbar">';
     html += '<input type="text" class="ar-search" id="ar-search" placeholder="\u30ec\u30dd\u30fc\u30c8\u3092\u691c\u7d22...">';
+    html += '<button class="ar-bookmark-toggle" id="ar-bookmark-toggle" title="\u30d6\u30c3\u30af\u30de\u30fc\u30af\u306e\u307f\u8868\u793a">\u2606 <span id="ar-bookmark-count">0</span></button>';
     html += '<select class="ar-sort" id="ar-sort">';
     html += '<option value="date-desc">\u65b0\u3057\u3044\u9806</option>';
     html += '<option value="date-asc">\u53e4\u3044\u9806</option>';
@@ -116,6 +121,18 @@ initAuthGuard(function(user) {
       '<div class="db-overview-card"><div class="db-overview-value">' + Math.round(totalWords / 1000) + 'K</div><div class="db-overview-label">\u7dcf\u6587\u5b57\u6570</div></div>';
   }
 
+  // --- Update bookmark toggle button ---
+  function updateBookmarkToggle() {
+    var bookmarks = getList('ar_bookmarked');
+    var countEl = document.getElementById('ar-bookmark-count');
+    var toggleEl = document.getElementById('ar-bookmark-toggle');
+    if (countEl) countEl.textContent = bookmarks.length;
+    if (toggleEl) {
+      toggleEl.classList.toggle('active', showBookmarksOnly);
+      toggleEl.innerHTML = (showBookmarksOnly ? '\u2605' : '\u2606') + ' <span id="ar-bookmark-count">' + bookmarks.length + '</span>';
+    }
+  }
+
   // --- Sort ---
   function sortReports(reports) {
     var sorted = reports.slice();
@@ -151,8 +168,9 @@ initAuthGuard(function(user) {
 
   // --- Apply all filters and render ---
   function applyFilters() {
-    var archived = getArchived();
-    var deleted = getDeleted();
+    var archived = getList('ar_archived');
+    var deleted = getList('ar_deleted');
+    var bookmarks = getList('ar_bookmarked');
 
     var activeReports = [];
     var archivedReports = [];
@@ -172,11 +190,15 @@ initAuthGuard(function(user) {
     var visibleAll = activeReports.concat(archivedReports);
     renderStats(visibleAll);
     renderDbFilters(visibleAll);
+    updateBookmarkToggle();
 
     // Filter active reports
     var q = currentQuery.toLowerCase();
     var filtered = activeReports.filter(function(r) {
-      return matchesQuery(r, q) && matchesDbFilter(r);
+      if (!matchesQuery(r, q)) return false;
+      if (!matchesDbFilter(r)) return false;
+      if (showBookmarksOnly && bookmarks.indexOf(r.id) === -1) return false;
+      return true;
     });
     filtered = sortReports(filtered);
 
@@ -185,19 +207,22 @@ initAuthGuard(function(user) {
     if (filtered.length === 0 && activeReports.length > 0) {
       cardsEl.innerHTML = '<div class="ar-no-results">\u8a72\u5f53\u3059\u308b\u30ec\u30dd\u30fc\u30c8\u304c\u3042\u308a\u307e\u305b\u3093</div>';
     } else {
-      cardsEl.innerHTML = renderCards(filtered, 'active');
+      cardsEl.innerHTML = renderCards(filtered, 'active', bookmarks);
     }
 
     // Archived section
     var archivedEl = document.getElementById('ar-archived-section');
     if (archivedReports.length > 0) {
       var filteredArchived = archivedReports.filter(function(r) {
-        return matchesQuery(r, q) && matchesDbFilter(r);
+        if (!matchesQuery(r, q)) return false;
+        if (!matchesDbFilter(r)) return false;
+        if (showBookmarksOnly && bookmarks.indexOf(r.id) === -1) return false;
+        return true;
       });
       filteredArchived = sortReports(filteredArchived);
       archivedEl.innerHTML =
         '<div class="ar-section-header"><h3 class="ar-section-title">\u30a2\u30fc\u30ab\u30a4\u30d6 <span class="ar-section-count">(' + archivedReports.length + '\u4ef6)</span></h3></div>' +
-        renderCards(filteredArchived, 'archived');
+        renderCards(filteredArchived, 'archived', bookmarks);
     } else {
       archivedEl.innerHTML = '';
     }
@@ -221,9 +246,10 @@ initAuthGuard(function(user) {
   }
 
   // --- Render cards ---
-  function renderCards(reports, mode) {
+  function renderCards(reports, mode, bookmarks) {
     var html = '';
     reports.forEach(function(r) {
+      var isBookmarked = bookmarks.indexOf(r.id) !== -1;
       var dbBadges = (r.databases || []).map(function(d) {
         return '<span class="report-archive-badge-db">' + escapeHtml(d) + '</span>';
       }).join('');
@@ -234,10 +260,13 @@ initAuthGuard(function(user) {
       var archivedClass = mode === 'archived' ? ' is-archived' : '';
       html += '<div class="report-archive-card' + archivedClass + '">';
 
-      // Header
+      // Header with bookmark
       html += '<div class="report-archive-header">';
       html += '<div class="report-archive-title">' + escapeHtml(r.title) + '</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">';
+      html += '<button class="ar-btn-bookmark' + (isBookmarked ? ' active' : '') + '" data-id="' + escapeHtml(r.id) + '" title="' + (isBookmarked ? '\u30d6\u30c3\u30af\u30de\u30fc\u30af\u89e3\u9664' : '\u30d6\u30c3\u30af\u30de\u30fc\u30af') + '">' + (isBookmarked ? '\u2605' : '\u2606') + '</button>';
       html += '<span class="report-archive-date">' + escapeHtml(r.date) + '</span>';
+      html += '</div>';
       html += '</div>';
 
       // Subtitle
@@ -340,6 +369,12 @@ initAuthGuard(function(user) {
       applyFilters();
     });
 
+    // Bookmark toggle
+    document.getElementById('ar-bookmark-toggle').addEventListener('click', function() {
+      showBookmarksOnly = !showBookmarksOnly;
+      applyFilters();
+    });
+
     // DB filter buttons (delegated)
     document.getElementById('ar-db-filters').addEventListener('click', function(e) {
       var btn = e.target.closest('.ar-tag-btn');
@@ -352,26 +387,29 @@ initAuthGuard(function(user) {
     container.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-id]');
       if (!btn) return;
-      if (btn.tagName === 'A') return; // don't intercept links
+      if (btn.tagName === 'A') return;
       var id = btn.dataset.id;
 
-      if (btn.classList.contains('ar-btn-archive')) {
-        var list = getArchived();
+      if (btn.classList.contains('ar-btn-bookmark')) {
+        toggleList('ar_bookmarked', id);
+        applyFilters();
+      } else if (btn.classList.contains('ar-btn-archive')) {
+        var list = getList('ar_archived');
         if (list.indexOf(id) === -1) list.push(id);
-        setArchived(list);
+        setList('ar_archived', list);
         applyFilters();
       } else if (btn.classList.contains('ar-btn-unarchive')) {
-        setArchived(getArchived().filter(function(x) { return x !== id; }));
+        setList('ar_archived', getList('ar_archived').filter(function(x) { return x !== id; }));
         applyFilters();
       } else if (btn.classList.contains('ar-btn-delete')) {
         if (confirm('\u300c' + id + '\u300d\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f')) {
-          var dl = getDeleted();
+          var dl = getList('ar_deleted');
           if (dl.indexOf(id) === -1) dl.push(id);
-          setDeleted(dl);
+          setList('ar_deleted', dl);
           applyFilters();
         }
       } else if (btn.classList.contains('ar-btn-restore')) {
-        setDeleted(getDeleted().filter(function(x) { return x !== id; }));
+        setList('ar_deleted', getList('ar_deleted').filter(function(x) { return x !== id; }));
         applyFilters();
       }
     });
