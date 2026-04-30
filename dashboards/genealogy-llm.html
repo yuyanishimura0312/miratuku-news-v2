@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLMの技術的系譜 | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--card:#fff;--text:#121212;--text-s:#555;--text-m:#6B6B6B;--border:#D9D9D9;--border-l:#EEE;--surface:#F7F7F5;--aw:#CC1400;--am:rgba(204,20,0,0.06);--f:"Noto Sans JP",sans-serif;--fs:"Noto Serif JP",serif;--content-w:900px;--gutter:32px}
+[data-theme="dark"]{--bg:#121212;--card:#1A1A1A;--text:#E0E0E0;--text-s:#AAA;--text-m:#8A8A8A;--border:#333;--border-l:#2A2A2A;--surface:#1A1A1A;--aw:#E85A45;--am:rgba(232,90,69,0.1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);color:var(--text);background:var(--bg);line-height:1.9;-webkit-font-smoothing:antialiased}
+a{color:var(--aw);text-decoration:none;transition:color .15s}a:hover{text-decoration:underline}
+
+/* Top bar */
+.top-bar{background:var(--bg);border-top:3px solid var(--aw);border-bottom:1px solid var(--border);padding:0 var(--gutter);display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(255,255,255,0.92)}
+[data-theme="dark"] .top-bar{background:rgba(18,18,18,0.92)}
+.top-bar-brand{font-family:var(--f);font-size:.75rem;font-weight:700;letter-spacing:.08em;color:var(--text-m)}
+.top-bar-brand span{color:var(--aw)}
+.top-bar-actions{display:flex;gap:12px;align-items:center}
+.back-link{font-family:var(--f);font-size:.75rem;color:var(--text-m);text-decoration:none;transition:color .15s}
+.back-link:hover{color:var(--aw)}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-m);cursor:pointer;padding:4px 12px;font-size:.72rem;font-family:var(--f);transition:border-color .15s,color .15s}
+.theme-toggle:hover{border-color:var(--aw);color:var(--aw)}
+
+/* Hero */
+.hero{max-width:var(--content-w);margin:0 auto;padding:56px var(--gutter) 40px}
+.db-tags{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.db-tag{font-family:var(--f);font-size:.65rem;font-weight:700;letter-spacing:.06em;padding:4px 10px;border:1px solid var(--border);color:var(--text-m)}
+.db-tag.primary{border-color:var(--aw);color:var(--aw);background:var(--am)}
+.hero h1{font-family:var(--fs);font-size:1.75rem;font-weight:700;line-height:1.45;margin-bottom:16px;letter-spacing:.01em}
+.hero .sub{font-family:var(--f);font-size:.9rem;color:var(--text-s);line-height:1.8;margin-bottom:24px}
+
+/* Content */
+.content{max-width:var(--content-w);margin:0 auto;padding:0 var(--gutter) 80px}
+
+/* Headings */
+h2{font-family:var(--fs);font-size:1.3rem;font-weight:700;margin:56px 0 20px;padding-bottom:10px;border-bottom:2px solid var(--aw);line-height:1.5;letter-spacing:.01em}
+h3{font-family:var(--fs);font-size:1.05rem;font-weight:600;margin:36px 0 14px;line-height:1.5}
+
+/* Body text */
+p{font-family:var(--f);font-size:.9rem;margin-bottom:20px;line-height:1.9}
+
+/* Stream section */
+.stream-section{margin-bottom:48px}
+.stream-title{font-family:var(--f);font-size:.78rem;font-weight:700;letter-spacing:.06em;color:var(--aw);margin-bottom:10px}
+
+/* Timeline */
+.timeline{position:relative;padding-left:32px;border-left:2px solid var(--border-l);margin:8px 0 24px}
+.timeline-item{position:relative;margin-bottom:20px;padding:16px 20px;background:var(--surface);border:1px solid var(--border-l);transition:border-color .15s}
+.timeline-item:hover{border-color:var(--border)}
+.timeline-item::before{content:'';position:absolute;left:-38px;top:20px;width:10px;height:10px;border-radius:50%;border:2px solid var(--aw);background:var(--bg);transition:background .15s}
+.timeline-item:hover::before{background:var(--am)}
+.timeline-year{font-family:var(--f);font-size:.72rem;font-weight:700;color:var(--aw);margin-bottom:4px;letter-spacing:.02em}
+.timeline-name{font-family:var(--fs);font-weight:600;font-size:.92rem;margin-bottom:6px;line-height:1.4}
+.timeline-desc{font-family:var(--f);font-size:.8rem;color:var(--text-s);line-height:1.7}
+
+/* Confluence boxes */
+.confluence{padding:24px 28px;background:var(--am);border:1px solid var(--aw);margin:32px 0;border-left:4px solid var(--aw)}
+.confluence-title{font-family:var(--fs);font-size:.88rem;font-weight:700;color:var(--aw);margin-bottom:10px;line-height:1.4}
+.confluence-desc{font-family:var(--f);font-size:.85rem;line-height:1.8}
+
+/* SVG diagrams */
+.flow-diagram{width:100%;overflow-x:auto;margin:32px 0;-webkit-overflow-scrolling:touch}
+.flow-diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-family:var(--f);font-size:.84rem;margin:16px 0 28px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border-l)}
+th{font-weight:600;background:var(--surface);font-size:.72rem;color:var(--text-m);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border)}
+tbody tr:hover{background:var(--am)}
+td{vertical-align:top;line-height:1.6}
+
+/* Note caption */
+.note{font-family:var(--f);font-size:.78rem;color:var(--text-m);margin-top:8px;line-height:1.7;padding-left:16px;border-left:2px solid var(--border-l)}
+
+/* Table responsive wrapper */
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:28px 0}
+.stat-box{padding:20px 16px;background:var(--surface);border:1px solid var(--border-l);text-align:center}
+.stat-num{font-family:var(--fs);font-size:1.6rem;font-weight:700;color:var(--aw);display:block;line-height:1.2}
+.stat-label{font-family:var(--f);font-size:.72rem;color:var(--text-m);margin-top:6px;display:block;line-height:1.5}
+
+/* Bar chart */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.78rem}
+.bar-label{min-width:200px;color:var(--text-s);font-family:var(--f);text-align:right;padding-right:4px;font-size:.75rem}
+.bar-track{flex:1;background:var(--border-l);height:16px;position:relative}
+.bar-fill{height:100%;background:var(--aw);opacity:.7;transition:width .3s}
+.bar-val{min-width:40px;color:var(--text-m);font-size:.72rem;font-family:var(--f)}
+
+/* Responsive */
+@media(max-width:768px){
+  :root{--gutter:20px}
+  .hero h1{font-size:1.35rem}
+  .hero .sub{font-size:.84rem}
+  h2{font-size:1.15rem;margin:40px 0 16px}
+  h3{font-size:.95rem;margin:28px 0 12px}
+  p{font-size:.84rem}
+  .timeline{padding-left:24px}
+  .timeline-item{padding:12px 14px}
+  .timeline-item::before{left:-30px;top:16px;width:8px;height:8px}
+  .timeline-name{font-size:.86rem}
+  .timeline-desc{font-size:.76rem}
+  .confluence{padding:18px 20px}
+  .confluence-title{font-size:.82rem}
+  .confluence-desc{font-size:.8rem}
+  th,td{padding:8px 10px;font-size:.78rem}
+  .note{font-size:.74rem}
+  .flow-diagram svg{min-width:720px}
+  .top-bar{padding:0 16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .bar-label{min-width:130px;font-size:.68rem}
+}
+@media(max-width:480px){
+  :root{--gutter:16px}
+  .hero{padding:40px var(--gutter) 28px}
+  .hero h1{font-size:1.2rem}
+  .hero .sub{font-size:.8rem;line-height:1.7}
+  h2{font-size:1.05rem;margin:32px 0 14px}
+  p{font-size:.82rem;line-height:1.8}
+  .db-tags{gap:6px}
+  .db-tag{font-size:.6rem;padding:3px 7px}
+  .flow-diagram svg{min-width:640px}
+  .timeline{padding-left:20px;margin-left:4px}
+  .timeline-item::before{left:-26px;width:7px;height:7px}
+  .confluence{padding:16px;border-left-width:3px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+}
+@media print{
+  .top-bar,.theme-toggle{display:none}
+  body{font-size:10pt;line-height:1.6}
+  .flow-diagram svg{max-width:100%;page-break-inside:avoid}
+  .confluence{page-break-inside:avoid}
+  .timeline-item{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-brand">INSIGHT <span>NEWS</span></div>
+  <div class="top-bar-actions">
+    <a class="back-link" href="ta-ai-agent-genealogy.html">&larr; AIエージェント系譜</a>
+    <button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">dark/light</button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="db-tags">
+    <span class="db-tag primary">LLM</span>
+    <span class="db-tag">技術系譜</span>
+    <span class="db-tag">1,097論文</span>
+    <span class="db-tag">深層分析</span>
+    <span class="db-tag">2013–2024</span>
+  </div>
+  <h1>LLMの技術的系譜 ── 1,097論文の深層分析</h1>
+  <p class="sub">2023年に世界を席巻したLarge Language Modelは、単一の発明ではない。単語表現学習・系列変換・アテンション機構・スケーリング則・強化学習からの人間フィードバックという、少なくとも5つの独立した研究系統が、2017年の「Attention Is All You Need」を分岐点として合流し、指数的に加速した結果である。本ページでは、1,097件の査読済み論文データベースに基づき、Word2Vec(2013)からGPT-4・LLaMA・エージェント応用(2023)に至る10年の技術進化を4つのエラに分けて解剖する。</p>
+</div>
+
+<div class="content">
+
+<!-- ============================================================ -->
+<!-- STATS -->
+<!-- ============================================================ -->
+<div class="stats-grid">
+  <div class="stat-box">
+    <span class="stat-num">1,097</span>
+    <span class="stat-label">収録論文数<br>（1992–2024）</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-num">61</span>
+    <span class="stat-label">カテゴリ数<br>（技術領域）</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-num">337</span>
+    <span class="stat-num" style="font-size:1rem;margin-top:2px">2023年</span>
+    <span class="stat-label">最多論文年（全体の31%）</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-num">95K</span>
+    <span class="stat-label">最高被引用数<br>（Transformer-XL / SBERT）</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: EVOLUTION TREE SVG -->
+<!-- ============================================================ -->
+<h2>1. LLM進化系統図 ── 4エラの技術的分岐と合流</h2>
+<p>以下の系統図は、1,097論文のデータベースから抽出した主要論文の因果的連鎖を視覚化したものである。縦軸は時間（2013年〜2024年）、横軸は技術的系統の分岐を示す。緑枠は基盤期、青枠はTransformer革命期、橙枠はスケーリング期、赤枠はエージェント期を表す。</p>
+
+<div class="flow-diagram">
+<svg viewBox="0 0 900 1500" xmlns="http://www.w3.org/2000/svg" style="min-width:700px;font-family:'Noto Sans JP',sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#999"/>
+    </marker>
+    <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#1565c0"/>
+    </marker>
+    <marker id="arr-o" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#e65100"/>
+    </marker>
+    <marker id="arr-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#b71c1c"/>
+    </marker>
+  </defs>
+
+  <!-- ========== ERA 1: 基盤期 ========== -->
+  <rect x="20" y="20" width="860" height="290" rx="6" fill="none" stroke="#2e7d32" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="36" y="44" font-size="13" font-weight="700" fill="#2e7d32" font-family="'Noto Sans JP',sans-serif">Era 1 ── 基盤期（〜2016）</text>
+
+  <!-- Word2Vec -->
+  <rect x="60" y="60" width="160" height="56" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="140" y="84" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Word2Vec</text>
+  <text x="140" y="98" text-anchor="middle" font-size="10" fill="#388e3c">2013 | 90,000引用</text>
+  <text x="140" y="111" text-anchor="middle" font-size="9" fill="#555">分散表現の基礎確立</text>
+
+  <!-- GloVe -->
+  <rect x="260" y="60" width="140" height="56" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="330" y="84" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">GloVe</text>
+  <text x="330" y="98" text-anchor="middle" font-size="10" fill="#388e3c">2014</text>
+  <text x="330" y="111" text-anchor="middle" font-size="9" fill="#555">グローバル共起行列</text>
+
+  <!-- Seq2Seq -->
+  <rect x="440" y="60" width="140" height="56" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="510" y="84" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Seq2Seq</text>
+  <text x="510" y="98" text-anchor="middle" font-size="10" fill="#388e3c">2014 | 65,000引用</text>
+  <text x="510" y="111" text-anchor="middle" font-size="9" fill="#555">Encoder-Decoder構造</text>
+
+  <!-- Attention -->
+  <rect x="620" y="60" width="140" height="56" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="690" y="84" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Attention機構</text>
+  <text x="690" y="98" text-anchor="middle" font-size="10" fill="#388e3c">2014–2015</text>
+  <text x="690" y="111" text-anchor="middle" font-size="9" fill="#555">Bahdanau et al.</text>
+
+  <!-- Batch Norm / Layer Norm -->
+  <rect x="160" y="165" width="160" height="56" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="240" y="188" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Batch Norm</text>
+  <text x="240" y="202" text-anchor="middle" font-size="10" fill="#388e3c">2015 | 45,000引用</text>
+  <text x="240" y="215" text-anchor="middle" font-size="9" fill="#555">訓練安定化の基礎</text>
+
+  <!-- Layer Norm -->
+  <rect x="360" y="165" width="160" height="56" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="440" y="188" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Layer Norm</text>
+  <text x="440" y="202" text-anchor="middle" font-size="10" fill="#388e3c">2016 | 3,400引用</text>
+  <text x="440" y="215" text-anchor="middle" font-size="9" fill="#555">Transformer正規化層</text>
+
+  <!-- Neural Turing Machine -->
+  <rect x="560" y="165" width="160" height="56" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="640" y="188" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">Neural Turing Machine</text>
+  <text x="640" y="202" text-anchor="middle" font-size="10" fill="#388e3c">2014 | 3,000引用</text>
+  <text x="640" y="215" text-anchor="middle" font-size="9" fill="#555">外部メモリ機構の原型</text>
+
+  <!-- Era1 arrows -->
+  <line x1="220" y1="88" x2="255" y2="88" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <line x1="400" y1="88" x2="435" y2="88" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <line x1="580" y1="88" x2="615" y2="88" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <!-- Down arrows to era2 -->
+  <line x1="510" y1="116" x2="510" y2="157" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <line x1="690" y1="116" x2="640" y2="157" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-g)"/>
+  <line x1="140" y1="116" x2="200" y2="157" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arr-g)"/>
+
+  <!-- ========== ERA 2: Transformer革命 ========== -->
+  <rect x="20" y="330" width="860" height="330" rx="6" fill="none" stroke="#1565c0" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="36" y="354" font-size="13" font-weight="700" fill="#1565c0">Era 2 ── Transformer革命（2017–2019）</text>
+
+  <!-- Transformer (center top) -->
+  <rect x="340" y="368" width="220" height="62" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="450" y="394" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">Attention Is All You Need</text>
+  <text x="450" y="410" text-anchor="middle" font-size="11" fill="#1565c0">2017 | 85,000引用</text>
+  <text x="450" y="423" text-anchor="middle" font-size="9" fill="#555">Self-Attention + Positional Encoding</text>
+
+  <!-- Arrow from Era1 to Transformer -->
+  <line x1="450" y1="221" x2="450" y2="360" stroke="#999" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+
+  <!-- ELMo -->
+  <rect x="60" y="460" width="150" height="56" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="135" y="482" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">ELMo</text>
+  <text x="135" y="496" text-anchor="middle" font-size="10" fill="#1565c0">2018 | 25,000引用</text>
+  <text x="135" y="509" text-anchor="middle" font-size="9" fill="#555">文脈的単語表現</text>
+
+  <!-- BERT -->
+  <rect x="240" y="460" width="150" height="56" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="315" y="482" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">BERT</text>
+  <text x="315" y="496" text-anchor="middle" font-size="10" fill="#1565c0">2018 | 75,000引用</text>
+  <text x="315" y="509" text-anchor="middle" font-size="9" fill="#555">双方向事前学習</text>
+
+  <!-- GPT-1/2 -->
+  <rect x="420" y="460" width="160" height="56" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="500" y="482" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">GPT-1 / GPT-2</text>
+  <text x="500" y="496" text-anchor="middle" font-size="10" fill="#1565c0">2018–2019 | 30,000引用</text>
+  <text x="500" y="509" text-anchor="middle" font-size="9" fill="#555">自己回帰言語モデル</text>
+
+  <!-- T5 -->
+  <rect x="610" y="460" width="150" height="56" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="685" y="482" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">T5</text>
+  <text x="685" y="496" text-anchor="middle" font-size="10" fill="#1565c0">2019 | 32,000引用</text>
+  <text x="685" y="509" text-anchor="middle" font-size="9" fill="#555">Text-to-Text統一フレーム</text>
+
+  <!-- XLNet / RoBERTa / ALBERT row -->
+  <rect x="60" y="555" width="130" height="52" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="125" y="575" text-anchor="middle" font-size="10" font-weight="700" fill="#0d47a1">XLNet</text>
+  <text x="125" y="589" text-anchor="middle" font-size="9" fill="#1565c0">2019 | 18,000引用</text>
+  <text x="125" y="602" text-anchor="middle" font-size="9" fill="#555">自己回帰+BERT</text>
+
+  <rect x="210" y="555" width="130" height="52" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="275" y="575" text-anchor="middle" font-size="10" font-weight="700" fill="#0d47a1">Transformer-XL</text>
+  <text x="275" y="589" text-anchor="middle" font-size="9" fill="#1565c0">2019 | 95,000引用</text>
+  <text x="275" y="602" text-anchor="middle" font-size="9" fill="#555">長文脈対応</text>
+
+  <rect x="360" y="555" width="130" height="52" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="425" y="575" text-anchor="middle" font-size="10" font-weight="700" fill="#0d47a1">BART / UNILM</text>
+  <text x="425" y="589" text-anchor="middle" font-size="9" fill="#1565c0">2019 | 4,000引用</text>
+  <text x="425" y="602" text-anchor="middle" font-size="9" fill="#555">生成+理解統一</text>
+
+  <rect x="510" y="555" width="130" height="52" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="575" y="575" text-anchor="middle" font-size="10" font-weight="700" fill="#0d47a1">SBERT</text>
+  <text x="575" y="589" text-anchor="middle" font-size="9" fill="#1565c0">2019 | 95,000引用</text>
+  <text x="575" y="602" text-anchor="middle" font-size="9" fill="#555">文埋め込み</text>
+
+  <rect x="660" y="555" width="130" height="52" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="725" y="575" text-anchor="middle" font-size="10" font-weight="700" fill="#0d47a1">AdamW / RMSNorm</text>
+  <text x="725" y="589" text-anchor="middle" font-size="9" fill="#1565c0">2019 | 4,000引用</text>
+  <text x="725" y="602" text-anchor="middle" font-size="9" fill="#555">最適化・正規化改良</text>
+
+  <!-- Era2 arrows -->
+  <line x1="380" y1="430" x2="315" y2="455" stroke="#1565c0" stroke-width="1.5" marker-end="url(#arr-b)"/>
+  <line x1="450" y1="430" x2="500" y2="455" stroke="#1565c0" stroke-width="1.5" marker-end="url(#arr-b)"/>
+  <line x1="520" y1="430" x2="685" y2="455" stroke="#1565c0" stroke-width="1.5" marker-end="url(#arr-b)"/>
+  <line x1="315" y1="516" x2="125" y2="550" stroke="#1565c0" stroke-width="1" marker-end="url(#arr-b)"/>
+  <line x1="315" y1="516" x2="275" y2="550" stroke="#1565c0" stroke-width="1" marker-end="url(#arr-b)"/>
+  <line x1="500" y1="516" x2="425" y2="550" stroke="#1565c0" stroke-width="1" marker-end="url(#arr-b)"/>
+  <line x1="500" y1="516" x2="575" y2="550" stroke="#1565c0" stroke-width="1" marker-end="url(#arr-b)"/>
+
+  <!-- ========== ERA 3: スケーリング期 ========== -->
+  <rect x="20" y="690" width="860" height="380" rx="6" fill="none" stroke="#e65100" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="36" y="714" font-size="13" font-weight="700" fill="#e65100">Era 3 ── スケーリング期（2020–2022）</text>
+
+  <!-- GPT-3 -->
+  <rect x="320" y="730" width="260" height="64" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="450" y="756" text-anchor="middle" font-size="12" font-weight="700" fill="#bf360c">GPT-3 (Language Models are Few-Shot Learners)</text>
+  <text x="450" y="773" text-anchor="middle" font-size="11" fill="#e65100">2020 | 30,000引用</text>
+  <text x="450" y="786" text-anchor="middle" font-size="9" fill="#555">175B params | In-context Learning</text>
+
+  <!-- Scaling Laws -->
+  <rect x="60" y="730" width="210" height="64" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="165" y="756" text-anchor="middle" font-size="11" font-weight="700" fill="#bf360c">Scaling Laws</text>
+  <text x="165" y="772" text-anchor="middle" font-size="10" fill="#e65100">2020 | 8,000引用</text>
+  <text x="165" y="786" text-anchor="middle" font-size="9" fill="#555">データ・計算・パラメータの法則</text>
+
+  <!-- CLIP -->
+  <rect x="620" y="730" width="200" height="64" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="720" y="756" text-anchor="middle" font-size="11" font-weight="700" fill="#bf360c">CLIP</text>
+  <text x="720" y="772" text-anchor="middle" font-size="10" fill="#e65100">2021 | 25,000引用</text>
+  <text x="720" y="786" text-anchor="middle" font-size="9" fill="#555">テキスト-画像対照学習</text>
+
+  <!-- RAG -->
+  <rect x="60" y="828" width="150" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1"/>
+  <text x="135" y="851" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">RAG</text>
+  <text x="135" y="865" text-anchor="middle" font-size="9" fill="#e65100">2020 | 8,000引用</text>
+  <text x="135" y="878" text-anchor="middle" font-size="9" fill="#555">検索拡張生成</text>
+
+  <!-- LoRA -->
+  <rect x="230" y="828" width="150" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="305" y="851" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">LoRA</text>
+  <text x="305" y="865" text-anchor="middle" font-size="9" fill="#e65100">2021 | 8,000引用</text>
+  <text x="305" y="878" text-anchor="middle" font-size="9" fill="#555">低ランク適応Fine-tuning</text>
+
+  <!-- InstructGPT -->
+  <rect x="400" y="828" width="160" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="480" y="851" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">InstructGPT</text>
+  <text x="480" y="865" text-anchor="middle" font-size="9" fill="#e65100">2022 | 7,000引用</text>
+  <text x="480" y="878" text-anchor="middle" font-size="9" fill="#555">RLHF + 指示追従学習</text>
+
+  <!-- Flash Attention -->
+  <rect x="580" y="828" width="150" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="655" y="851" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">Flash Attention</text>
+  <text x="655" y="865" text-anchor="middle" font-size="9" fill="#e65100">2022 | 4,600引用</text>
+  <text x="655" y="878" text-anchor="middle" font-size="9" fill="#555">IO効率的注意機構</text>
+
+  <!-- PaLM -->
+  <rect x="750" y="828" width="110" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1"/>
+  <text x="805" y="851" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">PaLM</text>
+  <text x="805" y="865" text-anchor="middle" font-size="9" fill="#e65100">2022</text>
+  <text x="805" y="878" text-anchor="middle" font-size="9" fill="#555">540Bスケール</text>
+
+  <!-- Chain-of-Thought -->
+  <rect x="200" y="918" width="200" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="300" y="940" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">Chain-of-Thought</text>
+  <text x="300" y="954" text-anchor="middle" font-size="9" fill="#e65100">2022 | 6,000引用</text>
+  <text x="300" y="967" text-anchor="middle" font-size="9" fill="#555">思考連鎖プロンプティング</text>
+
+  <!-- Chinchilla -->
+  <rect x="420" y="918" width="200" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="520" y="940" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">Chinchilla</text>
+  <text x="520" y="954" text-anchor="middle" font-size="9" fill="#e65100">2022 | 5,000引用</text>
+  <text x="520" y="967" text-anchor="middle" font-size="9" fill="#555">最適計算-データ比率</text>
+
+  <!-- Emergent Abilities -->
+  <rect x="640" y="918" width="200" height="56" rx="4" fill="#fff3e0" stroke="#e65100" stroke-width="1"/>
+  <text x="740" y="940" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">Emergent Abilities</text>
+  <text x="740" y="954" text-anchor="middle" font-size="9" fill="#e65100">2022 | 4,500引用</text>
+  <text x="740" y="967" text-anchor="middle" font-size="9" fill="#555">創発的能力の発見</text>
+
+  <!-- Era3 arrows -->
+  <line x1="500" y1="607" x2="450" y2="722" stroke="#999" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <line x1="450" y1="794" x2="480" y2="822" stroke="#e65100" stroke-width="1.5" marker-end="url(#arr-o)"/>
+  <line x1="165" y1="794" x2="135" y2="822" stroke="#e65100" stroke-width="1" marker-end="url(#arr-o)"/>
+  <line x1="480" y1="884" x2="300" y2="912" stroke="#e65100" stroke-width="1" marker-end="url(#arr-o)"/>
+  <line x1="480" y1="884" x2="520" y2="912" stroke="#e65100" stroke-width="1" marker-end="url(#arr-o)"/>
+
+  <!-- ========== ERA 4: エージェント期 ========== -->
+  <rect x="20" y="1100" width="860" height="370" rx="6" fill="none" stroke="#b71c1c" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="36" y="1124" font-size="13" font-weight="700" fill="#b71c1c">Era 4 ── エージェント期（2023〜）</text>
+
+  <!-- GPT-4 -->
+  <rect x="60" y="1140" width="170" height="60" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="2"/>
+  <text x="145" y="1163" text-anchor="middle" font-size="11" font-weight="700" fill="#7f0000">GPT-4</text>
+  <text x="145" y="1178" text-anchor="middle" font-size="10" fill="#b71c1c">2023 | 8,000引用</text>
+  <text x="145" y="1191" text-anchor="middle" font-size="9" fill="#555">マルチモーダル推論</text>
+
+  <!-- LLaMA -->
+  <rect x="260" y="1140" width="170" height="60" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="2"/>
+  <text x="345" y="1163" text-anchor="middle" font-size="11" font-weight="700" fill="#7f0000">LLaMA</text>
+  <text x="345" y="1178" text-anchor="middle" font-size="10" fill="#b71c1c">2023 | 12,000引用</text>
+  <text x="345" y="1191" text-anchor="middle" font-size="9" fill="#555">オープン基盤モデル</text>
+
+  <!-- Mistral -->
+  <rect x="460" y="1140" width="170" height="60" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="545" y="1163" text-anchor="middle" font-size="11" font-weight="700" fill="#7f0000">Mistral 7B</text>
+  <text x="545" y="1178" text-anchor="middle" font-size="10" fill="#b71c1c">2023 | 3,000引用</text>
+  <text x="545" y="1191" text-anchor="middle" font-size="9" fill="#555">効率的スライディング窓</text>
+
+  <!-- Mamba -->
+  <rect x="660" y="1140" width="170" height="60" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="745" y="1163" text-anchor="middle" font-size="11" font-weight="700" fill="#7f0000">Mamba</text>
+  <text x="745" y="1178" text-anchor="middle" font-size="10" fill="#b71c1c">2023 | 1,200引用</text>
+  <text x="745" y="1191" text-anchor="middle" font-size="9" fill="#555">選択的状態空間モデル</text>
+
+  <!-- LLaVA / Multimodal -->
+  <rect x="60" y="1240" width="155" height="56" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1"/>
+  <text x="137" y="1262" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">LLaVA</text>
+  <text x="137" y="1276" text-anchor="middle" font-size="9" fill="#b71c1c">2023 | 3,500引用</text>
+  <text x="137" y="1289" text-anchor="middle" font-size="9" fill="#555">視覚指示チューニング</text>
+
+  <!-- Toolformer -->
+  <rect x="235" y="1240" width="155" height="56" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="312" y="1262" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">Toolformer</text>
+  <text x="312" y="1276" text-anchor="middle" font-size="9" fill="#b71c1c">2023 | 2,500引用</text>
+  <text x="312" y="1289" text-anchor="middle" font-size="9" fill="#555">ツール自律使用</text>
+
+  <!-- DPO -->
+  <rect x="410" y="1240" width="155" height="56" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="487" y="1262" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">DPO</text>
+  <text x="487" y="1276" text-anchor="middle" font-size="9" fill="#b71c1c">2023 | 2,500引用</text>
+  <text x="487" y="1289" text-anchor="middle" font-size="9" fill="#555">RLHFの直接最適化</text>
+
+  <!-- QLoRA -->
+  <rect x="585" y="1240" width="155" height="56" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1"/>
+  <text x="662" y="1262" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">QLoRA</text>
+  <text x="662" y="1276" text-anchor="middle" font-size="9" fill="#b71c1c">2023 | 2,000引用</text>
+  <text x="662" y="1289" text-anchor="middle" font-size="9" fill="#555">量子化+LoRA</text>
+
+  <!-- Tree of Thought -->
+  <rect x="60" y="1336" width="180" height="52" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1"/>
+  <text x="150" y="1357" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">Tree of Thoughts</text>
+  <text x="150" y="1371" text-anchor="middle" font-size="9" fill="#b71c1c">2023 | 2,000引用</text>
+  <text x="150" y="1384" text-anchor="middle" font-size="9" fill="#555">思考木探索推論</text>
+
+  <!-- ReAct / Agent -->
+  <rect x="260" y="1336" width="180" height="52" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="350" y="1357" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">ReAct / Agents</text>
+  <text x="350" y="1371" text-anchor="middle" font-size="9" fill="#b71c1c">2023</text>
+  <text x="350" y="1384" text-anchor="middle" font-size="9" fill="#555">推論+行動統合エージェント</text>
+
+  <!-- StarCoder / Code -->
+  <rect x="460" y="1336" width="180" height="52" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1"/>
+  <text x="550" y="1357" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">StarCoder</text>
+  <text x="550" y="1371" text-anchor="middle" font-size="9" fill="#b71c1c">2023 | 1,800引用</text>
+  <text x="550" y="1384" text-anchor="middle" font-size="9" fill="#555">コード生成特化LLM</text>
+
+  <!-- Safety / DPO -->
+  <rect x="660" y="1336" width="180" height="52" rx="4" fill="#ffebee" stroke="#b71c1c" stroke-width="1"/>
+  <text x="750" y="1357" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">Safety &amp; Alignment</text>
+  <text x="750" y="1371" text-anchor="middle" font-size="9" fill="#b71c1c">2023–2024</text>
+  <text x="750" y="1384" text-anchor="middle" font-size="9" fill="#555">安全性・価値整合研究</text>
+
+  <!-- Era4 arrows from Era3 -->
+  <line x1="480" y1="974" x2="345" y2="1133" stroke="#999" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <!-- Era4 internal arrows -->
+  <line x1="145" y1="1200" x2="137" y2="1234" stroke="#b71c1c" stroke-width="1" marker-end="url(#arr-r)"/>
+  <line x1="345" y1="1200" x2="312" y2="1234" stroke="#b71c1c" stroke-width="1" marker-end="url(#arr-r)"/>
+  <line x1="487" y1="1200" x2="487" y2="1234" stroke="#b71c1c" stroke-width="1" marker-end="url(#arr-r)"/>
+  <line x1="150" y1="1296" x2="150" y2="1330" stroke="#b71c1c" stroke-width="1" marker-end="url(#arr-r)"/>
+  <line x1="312" y1="1296" x2="350" y2="1330" stroke="#b71c1c" stroke-width="1" marker-end="url(#arr-r)"/>
+  <line x1="487" y1="1296" x2="550" y2="1330" stroke="#b71c1c" stroke-width="1" marker-end="url(#arr-r)"/>
+
+  <!-- Legend -->
+  <rect x="660" y="1430" width="200" height="54" rx="4" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="760" y="1449" text-anchor="middle" font-size="10" font-weight="700" fill="#555">凡例</text>
+  <rect x="672" y="1458" width="14" height="8" fill="none" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="692" y="1467" font-size="9" fill="#555">基盤期</text>
+  <rect x="720" y="1458" width="14" height="8" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="740" y="1467" font-size="9" fill="#555">Transformer期</text>
+  <rect x="672" y="1473" width="14" height="8" fill="none" stroke="#e65100" stroke-width="1.5"/>
+  <text x="692" y="1482" font-size="9" fill="#555">スケーリング期</text>
+  <rect x="748" y="1473" width="14" height="8" fill="none" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="768" y="1482" font-size="9" fill="#555">エージェント期</text>
+</svg>
+</div>
+
+<p class="note">系統図は主要論文の因果的連鎖を概念的に示したもの。矢印は直接の技術的継承関係を表す。被引用数はデータベース収録時点（2024年）の概算値。</p>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: IMPACT AREA MAP -->
+<!-- ============================================================ -->
+<h2>2. 研究領域インパクトマップ ── 61カテゴリ・1,097論文の分布</h2>
+<p>1,097論文を61の技術カテゴリに分類すると、研究の重心が明確に浮かび上がる。最大のカテゴリはMultimodalで129論文（全体の11.8%）を占め、2021年のCLIP以降の画像・音声・動画とテキストの融合研究が急拡大したことを示す。次いでEfficiency（95件、8.7%）が続き、巨大モデルを実用化するための量子化・蒸留・LoRA等の研究が活発であることが分かる。</p>
+
+<div class="flow-diagram">
+<svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" style="min-width:700px;font-family:'Noto Sans JP',sans-serif">
+
+  <!-- Background -->
+  <rect x="0" y="0" width="900" height="620" fill="#fafafa" rx="4"/>
+  <text x="450" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#121212">研究領域バブルマップ ── カテゴリ別論文数（上位25領域）</text>
+
+  <!-- Cluster labels -->
+  <text x="180" y="65" text-anchor="middle" font-size="10" font-weight="700" fill="#b71c1c">コアLLM技術</text>
+  <text x="500" y="65" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">効率化・適応</text>
+  <text x="760" y="65" text-anchor="middle" font-size="10" font-weight="700" fill="#e65100">応用・安全性</text>
+
+  <!-- Cluster dividers -->
+  <line x1="350" y1="50" x2="350" y2="600" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="630" y1="50" x2="630" y2="600" stroke="#e0e0e0" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- CORE LLM cluster -->
+  <!-- Multimodal: 129 → r=58 -->
+  <circle cx="165" cy="180" r="58" fill="rgba(183,28,28,0.12)" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="165" y="175" text-anchor="middle" font-size="11" font-weight="700" fill="#7f0000">Multimodal</text>
+  <text x="165" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="#b71c1c">129</text>
+  <text x="165" y="204" text-anchor="middle" font-size="9" fill="#555">11.8%</text>
+
+  <!-- Training Methods: 71 → r=43 -->
+  <circle cx="280" cy="310" r="43" fill="rgba(183,28,28,0.09)" stroke="#b71c1c" stroke-width="1.5"/>
+  <text x="280" y="305" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">Training</text>
+  <text x="280" y="319" text-anchor="middle" font-size="10" font-weight="700" fill="#7f0000">Methods</text>
+  <text x="280" y="333" text-anchor="middle" font-size="11" font-weight="700" fill="#b71c1c">71</text>
+
+  <!-- Pre-training: 32 → r=29 -->
+  <circle cx="115" cy="330" r="29" fill="rgba(183,28,28,0.07)" stroke="#b71c1c" stroke-width="1"/>
+  <text x="115" y="326" text-anchor="middle" font-size="9" font-weight="700" fill="#7f0000">Pre-training</text>
+  <text x="115" y="340" text-anchor="middle" font-size="10" font-weight="700" fill="#b71c1c">32</text>
+
+  <!-- Foundations: 22 → r=24 -->
+  <circle cx="200" cy="420" r="24" fill="rgba(183,28,28,0.07)" stroke="#b71c1c" stroke-width="1"/>
+  <text x="200" y="416" text-anchor="middle" font-size="9" font-weight="700" fill="#7f0000">Foundations</text>
+  <text x="200" y="429" text-anchor="middle" font-size="10" font-weight="700" fill="#b71c1c">22</text>
+
+  <!-- Reasoning&Planning: 32 → r=29 -->
+  <circle cx="100" cy="460" r="29" fill="rgba(183,28,28,0.07)" stroke="#b71c1c" stroke-width="1"/>
+  <text x="100" y="456" text-anchor="middle" font-size="8" font-weight="700" fill="#7f0000">Reasoning</text>
+  <text x="100" y="467" text-anchor="middle" font-size="8" font-weight="700" fill="#7f0000">&amp; Planning</text>
+  <text x="100" y="480" text-anchor="middle" font-size="10" font-weight="700" fill="#b71c1c">32</text>
+
+  <!-- EFFICIENCY cluster -->
+  <!-- Efficiency: 95 → r=50 -->
+  <circle cx="445" cy="170" r="50" fill="rgba(21,101,192,0.12)" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="445" y="165" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">Efficiency</text>
+  <text x="445" y="180" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">95</text>
+  <text x="445" y="194" text-anchor="middle" font-size="9" fill="#555">8.7%</text>
+
+  <!-- Architecture: 39 → r=32 -->
+  <circle cx="540" cy="300" r="32" fill="rgba(21,101,192,0.09)" stroke="#1565c0" stroke-width="1"/>
+  <text x="540" y="295" text-anchor="middle" font-size="9" font-weight="700" fill="#0d47a1">Architecture</text>
+  <text x="540" y="309" text-anchor="middle" font-size="11" font-weight="700" fill="#1565c0">39</text>
+
+  <!-- Open Models: 38 → r=31 -->
+  <circle cx="395" cy="300" r="31" fill="rgba(21,101,192,0.09)" stroke="#1565c0" stroke-width="1"/>
+  <text x="395" y="295" text-anchor="middle" font-size="9" font-weight="700" fill="#0d47a1">Open</text>
+  <text x="395" y="307" text-anchor="middle" font-size="9" font-weight="700" fill="#0d47a1">Models</text>
+  <text x="395" y="320" text-anchor="middle" font-size="11" font-weight="700" fill="#1565c0">38</text>
+
+  <!-- Param-Efficient Fine-tuning: 20 → r=23 -->
+  <circle cx="470" cy="400" r="23" fill="rgba(21,101,192,0.07)" stroke="#1565c0" stroke-width="1"/>
+  <text x="470" y="395" text-anchor="middle" font-size="8" font-weight="700" fill="#0d47a1">PEFT</text>
+  <text x="470" y="407" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">20</text>
+
+  <!-- Long Context: 25 → r=26 -->
+  <circle cx="380" cy="430" r="26" fill="rgba(21,101,192,0.07)" stroke="#1565c0" stroke-width="1"/>
+  <text x="380" y="425" text-anchor="middle" font-size="8" font-weight="700" fill="#0d47a1">Long</text>
+  <text x="380" y="436" text-anchor="middle" font-size="8" font-weight="700" fill="#0d47a1">Context</text>
+  <text x="380" y="448" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">25</text>
+
+  <!-- Evaluation: 25 → r=26 -->
+  <circle cx="545" cy="430" r="26" fill="rgba(21,101,192,0.07)" stroke="#1565c0" stroke-width="1"/>
+  <text x="545" y="425" text-anchor="middle" font-size="9" font-weight="700" fill="#0d47a1">Evaluation</text>
+  <text x="545" y="440" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">25</text>
+
+  <!-- Model Distillation: 16 → r=21 -->
+  <circle cx="455" cy="510" r="21" fill="rgba(21,101,192,0.06)" stroke="#1565c0" stroke-width="1"/>
+  <text x="455" y="505" text-anchor="middle" font-size="8" fill="#0d47a1">Distillation</text>
+  <text x="455" y="518" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">16</text>
+
+  <!-- RAG: 17 → r=21 -->
+  <circle cx="365" cy="530" r="21" fill="rgba(21,101,192,0.06)" stroke="#1565c0" stroke-width="1"/>
+  <text x="365" y="526" text-anchor="middle" font-size="9" fill="#0d47a1">RAG</text>
+  <text x="365" y="539" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">17</text>
+
+  <!-- APPLICATIONS & SAFETY cluster -->
+  <!-- Agents: 37 → r=31 -->
+  <circle cx="690" cy="170" r="31" fill="rgba(230,81,0,0.1)" stroke="#e65100" stroke-width="1.5"/>
+  <text x="690" y="165" text-anchor="middle" font-size="10" font-weight="700" fill="#bf360c">Agents</text>
+  <text x="690" y="179" text-anchor="middle" font-size="12" font-weight="700" fill="#e65100">37</text>
+
+  <!-- Code Generation: 33 → r=29 -->
+  <circle cx="790" cy="180" r="29" fill="rgba(230,81,0,0.1)" stroke="#e65100" stroke-width="1.5"/>
+  <text x="790" y="175" text-anchor="middle" font-size="9" font-weight="700" fill="#bf360c">Code Gen</text>
+  <text x="790" y="189" text-anchor="middle" font-size="12" font-weight="700" fill="#e65100">33</text>
+
+  <!-- Tool Use: 21 → r=24 -->
+  <circle cx="740" cy="260" r="24" fill="rgba(230,81,0,0.08)" stroke="#e65100" stroke-width="1"/>
+  <text x="740" y="255" text-anchor="middle" font-size="9" fill="#bf360c">Tool Use</text>
+  <text x="740" y="268" text-anchor="middle" font-size="11" font-weight="700" fill="#e65100">21</text>
+
+  <!-- Safety: 20 → r=23 -->
+  <circle cx="670" cy="320" r="23" fill="rgba(230,81,0,0.08)" stroke="#e65100" stroke-width="1"/>
+  <text x="670" y="315" text-anchor="middle" font-size="9" fill="#bf360c">Safety</text>
+  <text x="670" y="328" text-anchor="middle" font-size="11" font-weight="700" fill="#e65100">20</text>
+
+  <!-- Robustness: 17 → r=21 -->
+  <circle cx="810" cy="310" r="21" fill="rgba(230,81,0,0.08)" stroke="#e65100" stroke-width="1"/>
+  <text x="810" y="305" text-anchor="middle" font-size="8" fill="#bf360c">Robustness</text>
+  <text x="810" y="318" text-anchor="middle" font-size="10" font-weight="700" fill="#e65100">17</text>
+
+  <!-- Medical NLP: 24 → r=25 -->
+  <circle cx="695" cy="410" r="25" fill="rgba(230,81,0,0.07)" stroke="#e65100" stroke-width="1"/>
+  <text x="695" y="405" text-anchor="middle" font-size="9" fill="#bf360c">Medical</text>
+  <text x="695" y="418" text-anchor="middle" font-size="11" font-weight="700" fill="#e65100">24</text>
+
+  <!-- Bias & Fairness: 15 → r=20 -->
+  <circle cx="770" cy="410" r="20" fill="rgba(230,81,0,0.07)" stroke="#e65100" stroke-width="1"/>
+  <text x="770" y="405" text-anchor="middle" font-size="8" fill="#bf360c">Bias &amp;</text>
+  <text x="770" y="416" text-anchor="middle" font-size="8" fill="#bf360c">Fairness</text>
+  <text x="770" y="428" text-anchor="middle" font-size="10" font-weight="700" fill="#e65100">15</text>
+
+  <!-- Reasoning (separate from R&P): 23 → r=25 -->
+  <circle cx="840" cy="480" r="25" fill="rgba(230,81,0,0.07)" stroke="#e65100" stroke-width="1"/>
+  <text x="840" y="475" text-anchor="middle" font-size="9" fill="#bf360c">Reasoning</text>
+  <text x="840" y="488" text-anchor="middle" font-size="11" font-weight="700" fill="#e65100">23</text>
+
+  <!-- Scientific LLM: 20 → r=23 -->
+  <circle cx="680" cy="500" r="23" fill="rgba(230,81,0,0.07)" stroke="#e65100" stroke-width="1"/>
+  <text x="680" y="495" text-anchor="middle" font-size="8" fill="#bf360c">Scientific</text>
+  <text x="680" y="507" text-anchor="middle" font-size="8" fill="#bf360c">LLM</text>
+  <text x="680" y="519" text-anchor="middle" font-size="10" font-weight="700" fill="#e65100">20</text>
+
+  <!-- Privacy: 15 → r=20 -->
+  <circle cx="760" cy="530" r="20" fill="rgba(230,81,0,0.06)" stroke="#e65100" stroke-width="1"/>
+  <text x="760" y="525" text-anchor="middle" font-size="9" fill="#bf360c">Privacy</text>
+  <text x="760" y="538" text-anchor="middle" font-size="10" font-weight="700" fill="#e65100">15</text>
+
+  <!-- Prompting: 16 → r=21 -->
+  <circle cx="300" cy="530" r="21" fill="rgba(21,101,192,0.06)" stroke="#1565c0" stroke-width="1"/>
+  <text x="300" y="524" text-anchor="middle" font-size="8" fill="#0d47a1">Prompting</text>
+  <text x="300" y="535" text-anchor="middle" font-size="8" fill="#0d47a1">&amp; ICL</text>
+  <text x="300" y="547" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">16</text>
+
+  <!-- Mathematical Reasoning: 19 → r=22 -->
+  <circle cx="200" cy="540" r="22" fill="rgba(183,28,28,0.06)" stroke="#b71c1c" stroke-width="1"/>
+  <text x="200" y="534" text-anchor="middle" font-size="8" fill="#7f0000">Math</text>
+  <text x="200" y="545" text-anchor="middle" font-size="8" fill="#7f0000">Reasoning</text>
+  <text x="200" y="557" text-anchor="middle" font-size="10" font-weight="700" fill="#b71c1c">19</text>
+
+  <!-- Applications: 29 → r=27 -->
+  <circle cx="100" cy="555" r="27" fill="rgba(183,28,28,0.06)" stroke="#b71c1c" stroke-width="1"/>
+  <text x="100" y="549" text-anchor="middle" font-size="9" fill="#7f0000">Applications</text>
+  <text x="100" y="562" text-anchor="middle" font-size="11" font-weight="700" fill="#b71c1c">29</text>
+
+  <!-- Societal Impact: 15 -->
+  <circle cx="630" cy="560" r="20" fill="rgba(230,81,0,0.06)" stroke="#e65100" stroke-width="1"/>
+  <text x="630" y="555" text-anchor="middle" font-size="8" fill="#bf360c">Societal</text>
+  <text x="630" y="566" text-anchor="middle" font-size="8" fill="#bf360c">Impact</text>
+  <text x="630" y="578" text-anchor="middle" font-size="9" font-weight="700" fill="#e65100">15</text>
+
+  <!-- Scaling Laws caption -->
+  <text x="450" y="600" text-anchor="middle" font-size="9" fill="#888">円の大きさ = 論文数。同色 = 同クラスタ。赤=コアLLM、青=効率化・適応、橙=応用・安全性</text>
+</svg>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: ERA ANALYSIS - PROSE -->
+<!-- ============================================================ -->
+<h2>3. 各エラの深層分析</h2>
+
+<h3>Era 1 ── 基盤期（2013以前〜2016）：表現学習の夜明け</h3>
+<p>LLMの系譜を辿れば、その起点は2013年のWord2Vecに行き着く。Mikolovらが発表した「Efficient Estimation of Word Representations in Vector Space」は、9万件を超える被引用数が示すとおり、自然言語処理の地形を根本から変えた論文である。それまで記号列として扱われていた単語を、意味的関係が幾何学的距離として保存される高次元ベクトル空間に埋め込むというアイデアは、「king − man + woman ≈ queen」という直感的な類推演算を可能にし、意味の計算的扱いへの扉を開いた。</p>
+
+<p>翌2014年には、SutskeverらによるSeq2Seq（6万5千引用）とBahdanauらによるAttention機構が相次いで登場する。Seq2SeqはEncoder-Decoderアーキテクチャを確立し、翻訳・要約・対話といった系列変換タスクへの統一的アプローチを提供した。同時期に発表されたAttention機構は、Decoderが入力系列の任意の部分に「注目」できるようにすることで、長文における情報の希薄化問題を克服した。この二つの発見が後のTransformerの直接的な祖先となる。</p>
+
+<p>2015年のBatch Normalization（4万5千引用）と2016年のLayer Normalizationは、深層ネットワークの訓練安定性という根本問題を解決した。Batch Normは勾配消失・爆発を抑制し、はるかに深いネットワークの訓練を可能にした。Layer Normはバッチサイズに依存しない正規化を提供し、特にTransformerとの相性が良く、今日のLLMにも標準的に組み込まれている。</p>
+
+<div class="confluence">
+  <div class="confluence-title">Era 1 の技術的合流点：「アテンション+正規化+分散表現」三位一体</div>
+  <div class="confluence-desc">基盤期の真の貢献は個々の論文ではなく、これら三要素の組み合わせにある。単語を密なベクトルで表現し（Word2Vec/GloVe）、系列を状態変換として処理し（Seq2Seq）、入力の重要部分に動的に注目し（Attention）、訓練を安定化させる（LayerNorm/BatchNorm）──これら4つの要素が揃って初めて、2017年のTransformerが「自然なアイデア」として着想されうる土台が整った。</div>
+</div>
+
+<h3>Era 2 ── Transformer革命（2017–2019）：統一アーキテクチャの誕生と爆発的展開</h3>
+<p>2017年、Vaswaniらによる「Attention Is All You Need」（8万5千引用）は、RNNやCNNを一切使わず、Self-Attentionのみで系列変換を実現できることを示した。このアーキテクチャは計算の並列化を可能にし、従来のRNNでは困難だった長距離依存関係の学習を効率的にした。発表当初は機械翻訳の改善として注目されたが、その真のインパクトは翌年以降に明らかになる。</p>
+
+<p>2018年は、BERTとGPT-1という二つの異なる事前学習パラダイムが同時に登場した年である。BERTは7万5千引用を誇り、マスク言語モデリングによる双方向エンコーダとして、分類・QA・NERといる理解タスクで圧倒的な性能を示した。対してGPT-1は自己回帰型デコーダとして生成タスクに特化し、後に1,000億パラメータを超える系譜の起点となった。この「理解派（BERT）vs 生成派（GPT）」の分岐が、その後の研究地形を大きく規定することになる。同年、ELMoが文脈依存の単語表現を提供し（2万5千引用）、転移学習への道筋をより明確にした。</p>
+
+<p>2019年は量的な爆発の年だった。Transformer-XL（9万5千引用）は固定長文脈を超えてセグメント間のアテンションを可能にし、Sentence-BERT（9万5千引用）はコサイン類似度で比較可能な文レベル埋め込みを提供した。T5（3万2千引用）は全NLPタスクをText-to-Textフレームワークに統一し、XLNet（1万8千引用）はBERTとGPTの利点を組み合わせた。AdamWやRMSNormといる最適化・正規化の改良も集中した時期であり、これらがのちのLLMの基本コンポーネントとして定着していく。</p>
+
+<div class="confluence">
+  <div class="confluence-title">Era 2 の技術的帰結：「大規模事前学習 + 転移学習」パラダイムの確立</div>
+  <div class="confluence-desc">2017〜2019年の最大の発見は特定のアーキテクチャではなく、「巨大なテキストコーパスで事前学習したTransformerが、少量のタスク特化データで微調整するだけで多様なタスクを解ける」という転移学習パラダイムそのものである。このパラダイムシフトがあったからこそ、次のエラにおけるスケーリングへの集中投資が意味を持った。</div>
+</div>
+
+<h3>Era 3 ── スケーリング期（2020–2022）：「規模が質を生む」の発見</h3>
+<p>2020年のGPT-3（「Language Models are Few-Shot Learners」、3万引用）は、1,750億パラメータという当時前例のない規模で、In-Context Learningという新現象を実証した。タスク固有の微調整なしに、わずかな例示（few-shot）を与えるだけで多様なタスクをこなせるという発見は、モデル規模とタスク汎化能力の間に想定外の相関があることを示唆した。</p>
+
+<p>同2020年、Kaplanらによる「Scaling Laws for Neural Language Models」（8千引用）は、この直感を数学的に定式化した。損失はパラメータ数・データ量・計算量のべき乗則に従って減少するという発見は、「どれだけスケールすべきか」という問いに初めて定量的な答えを与えた。2022年のChinchilla論文（5千引用）はこれをさらに精緻化し、パラメータ数とデータ量を1:1の比率でスケールすることが計算最適であることを示した。この知見がLLaMA等のデータ効率重視設計に直接影響を与える。</p>
+
+<p>2021年のCLIP（2万5千引用）は、画像とテキストを共通の意味空間に埋め込む対照学習を確立し、マルチモーダルLLMへの道を開いた。同年のLoRA（8千引用）は、重み行列を低ランク行列の積で近似することで、100分の1以下のパラメータで元モデルに匹敵する微調整を可能にした。この発見が、一般公開モデルへのアクセスが普及するEra 4の基盤となる。</p>
+
+<p>2022年は収束と応用の年だった。InstructGPT（7千引用）はRLHF（人間フィードバックからの強化学習）を用いて指示追従能力を獲得し、ChatGPTの直接の前身となった。Flash Attention（4,600引用）はIO効率を大幅に改善し、実際のトレーニングを加速した。Chain-of-Thought Prompting（6千引用）は中間推論ステップを明示することで複雑推論を劇的に向上させ、後のreasoning modelの先駆けとなった。PaLM（540億パラメータ）は多段階推論の創発的能力を実証し、「Emergent Abilities of Large Language Models」（4,500引用）という論文がこれを体系化した。</p>
+
+<div class="confluence">
+  <div class="confluence-title">Era 3 の最重要発見：「計量的スケーリング則」と「RLHF」の組み合わせ</div>
+  <div class="confluence-desc">スケーリング期の技術的遺産は二つある。一つ目は、「スケールすれば創発的能力が生まれる」という経験則の定式化であり、これが巨額投資の正当化根拠となった。二つ目は、巨大モデルを人間の意図に整合させるRLHF技術の確立であり、これが「使えるAI」を初めて生み出した。この組み合わせなしに、2023年以降のAI普及はなかった。</div>
+</div>
+
+<h3>Era 4 ── エージェント期（2023〜）：オープン化・特化・自律化の三極展開</h3>
+<p>2023年は、1,097論文中337件（31%）が集中した爆発の年である。GPT-4（8千引用）がマルチモーダル推論の新水準を示す一方、LLaMA（1万2千引用）はオープンソース基盤モデルとして最も影響力の大きな論文となった。Metaが7B〜65BパラメータのモデルをCC BY-NCで公開したことで、学術・産業コミュニティが独自の微調整と実験を爆発的に展開できるようになった。Vicuna、Alpaca、Dollyなど数十のLLaMA派生モデルがわずか数ヶ月で登場し、研究の分散化が加速した。</p>
+
+<p>Mistral 7B（3千引用）はGrouped Query AttentionとSliding Window Attentionを組み合わせ、はるかに大きなモデルに匹敵する性能を7Bパラメータで達成した。これはChinchillaの教訓（データ効率）を設計に組み込んだ実例であり、「大きければ良い」から「効率的に良い」へのパラダイム転換を象徴する。Mamba（1,200引用）はAttentionを持たない選択的状態空間モデルとして、長文処理における計算複雑度をO(n²)からO(n)に削減する可能性を示した。</p>
+
+<p>エージェント研究では、Toolformer（2,500引用）がモデル自身がAPIやツールの使い方を学べることを示し、ReActがFew-Shotプロンプティングを通じて推論と行動を統合するフレームワークを提供した。Tree of Thoughts（2千引用）は思考の分岐探索を導入し、複雑な問題解決における推論品質を大幅に改善した。LLaVA（3,500引用）は視覚エンコーダとLLMを軽量な投影層で接続するアーキテクチャを提案し、多様なマルチモーダルモデルの設計基準となった。</p>
+
+<p>安全性・整合研究も急増した。DPO（2,500引用）はRLHFの代替として、報酬モデルなしに直接人間の好みに整合させる手法を提案した。QLoRA（2千引用）は4bit量子化とLoRAを組み合わせ、単一のコンシューマGPU上でも65Bクラスのモデルを微調整可能にした。StarCoder（1,800引用）はコード生成に特化した高品質モデルとして、プログラミング支援の実用化を加速した。</p>
+
+<div class="confluence">
+  <div class="confluence-title">Era 4 の構造的変化：「中央集権型AI」から「分散型エコシステム」へ</div>
+  <div class="confluence-desc">2023年以降の最大の変化はモデル性能の向上ではなく、LLM開発の構造変容である。クローズドAPIとしてのみ存在したLLMが、オープンウェイトモデルとして研究者・企業・個人に開放され、微調整技術（LoRA/QLoRA）の普及によって誰もが自分のユースケース向けモデルを構築できるようになった。エージェント・マルチモーダル・コード・安全性という4方向への分岐は、LLMが汎用インフラとして定着したことを示す構造変化である。</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: CATEGORY TABLE -->
+<!-- ============================================================ -->
+<h2>4. カテゴリ別論文数一覧（上位30領域）</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>カテゴリ</th>
+      <th>論文数</th>
+      <th>構成比</th>
+      <th>代表論文（抜粋）</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Multimodal</td><td>129</td><td>11.8%</td><td>CLIP(2021), LLaVA(2023), ViT(2021)</td></tr>
+    <tr><td>2</td><td>Efficiency</td><td>95</td><td>8.7%</td><td>LoRA(2021), Flash Attention(2022), QLoRA(2023)</td></tr>
+    <tr><td>3</td><td>Training Methods</td><td>71</td><td>6.5%</td><td>InstructGPT(2022), DPO(2023), AdamW(2019)</td></tr>
+    <tr><td>4</td><td>Architecture</td><td>39</td><td>3.6%</td><td>Transformer-XL(2019), Mamba(2023), SSM(2022)</td></tr>
+    <tr><td>5</td><td>Open Models</td><td>38</td><td>3.5%</td><td>LLaMA(2023), Mistral 7B(2023), Vicuna(2023)</td></tr>
+    <tr><td>6</td><td>Agents</td><td>37</td><td>3.4%</td><td>Toolformer(2023), ReAct, AutoGPT</td></tr>
+    <tr><td>7</td><td>Code Generation</td><td>33</td><td>3.0%</td><td>StarCoder(2023), Codex, AlphaCode</td></tr>
+    <tr><td>8</td><td>Pre-training</td><td>32</td><td>2.9%</td><td>BERT(2018), GPT-2(2019), T5(2019)</td></tr>
+    <tr><td>9</td><td>Reasoning &amp; Planning</td><td>32</td><td>2.9%</td><td>Tree of Thoughts(2023), CoT(2022)</td></tr>
+    <tr><td>10</td><td>Applications</td><td>29</td><td>2.6%</td><td>各ドメイン応用</td></tr>
+    <tr><td>11</td><td>Evaluation</td><td>25</td><td>2.3%</td><td>HELM(2023), MMLU(2020)</td></tr>
+    <tr><td>12</td><td>Long Context</td><td>25</td><td>2.3%</td><td>Mamba(2023), RMT(2022)</td></tr>
+    <tr><td>13</td><td>medical_nlp</td><td>24</td><td>2.2%</td><td>Med-PaLM, BioGPT</td></tr>
+    <tr><td>14</td><td>Reasoning</td><td>23</td><td>2.1%</td><td>CoT variants, PaLM reasoning</td></tr>
+    <tr><td>15</td><td>Foundations</td><td>22</td><td>2.0%</td><td>Word2Vec(2013), Attention(2014)</td></tr>
+    <tr><td>16</td><td>Tool Use</td><td>21</td><td>1.9%</td><td>Toolformer, API calling</td></tr>
+    <tr><td>17</td><td>Parameter-Efficient Fine-tuning</td><td>20</td><td>1.8%</td><td>LoRA, Prefix Tuning, Adapters</td></tr>
+    <tr><td>18</td><td>Safety</td><td>20</td><td>1.8%</td><td>Constitutional AI, RLHF safety</td></tr>
+    <tr><td>19</td><td>scientific_llm</td><td>20</td><td>1.8%</td><td>AlphaFold(2021), Galactica</td></tr>
+    <tr><td>20</td><td>Mathematical Reasoning</td><td>19</td><td>1.7%</td><td>Minerva, WizardMath</td></tr>
+    <tr><td>21</td><td>RAG</td><td>17</td><td>1.6%</td><td>RAG(2020), HyDE, Self-RAG</td></tr>
+    <tr><td>22</td><td>Robustness</td><td>17</td><td>1.6%</td><td>Adversarial NLP</td></tr>
+    <tr><td>23</td><td>Model Distillation</td><td>16</td><td>1.5%</td><td>DistilBERT, TinyBERT</td></tr>
+    <tr><td>24</td><td>Prompting &amp; In-Context Learning</td><td>16</td><td>1.5%</td><td>GPT-3 ICL, Prompt Tuning</td></tr>
+    <tr><td>25</td><td>Bias &amp; Fairness</td><td>15</td><td>1.4%</td><td>Winogender, StereoSet</td></tr>
+    <tr><td>26</td><td>Privacy</td><td>15</td><td>1.4%</td><td>Differential Privacy, Unlearning</td></tr>
+    <tr><td>27</td><td>Societal Impact</td><td>15</td><td>1.4%</td><td>Stochastic Parrots, AI governance</td></tr>
+    <tr><td>28</td><td>legal_nlp</td><td>15</td><td>1.4%</td><td>LegalBERT, LawGPT</td></tr>
+    <tr><td>29</td><td>Toxicity &amp; Content Moderation</td><td>14</td><td>1.3%</td><td>Perspective API, RealToxicityPrompts</td></tr>
+    <tr><td>30</td><td>Watermarking &amp; Detection</td><td>14</td><td>1.3%</td><td>AI-generated text detection</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: YEAR DISTRIBUTION BAR CHART -->
+<!-- ============================================================ -->
+<h2>5. 年別論文数の推移</h2>
+<p>データベースの年別分布は、LLM研究の爆発的成長を数字で示している。2016年の34件が2020年には124件、2021年には193件、2023年には337件へと増加し、7年間で約10倍になった。特に2020〜2021年の急増はGPT-3とBERT応用研究の隆盛を反映し、2023年のピークはオープンソースLLMとエージェント研究の爆発に対応する。2024年（53件）は本データベースの収録タイムラグを考慮する必要があり、実際の論文数はさらに多い。</p>
+
+<div style="margin:24px 0">
+  <div class="bar-row"><span class="bar-label">2013</span><span class="bar-track"><span class="bar-fill" style="width:1.2%"></span></span><span class="bar-val">4</span></div>
+  <div class="bar-row"><span class="bar-label">2014</span><span class="bar-track"><span class="bar-fill" style="width:3.6%"></span></span><span class="bar-val">12</span></div>
+  <div class="bar-row"><span class="bar-label">2015</span><span class="bar-track"><span class="bar-fill" style="width:5%"></span></span><span class="bar-val">17</span></div>
+  <div class="bar-row"><span class="bar-label">2016</span><span class="bar-track"><span class="bar-fill" style="width:10%"></span></span><span class="bar-val">34</span></div>
+  <div class="bar-row"><span class="bar-label">2017</span><span class="bar-track"><span class="bar-fill" style="width:9.2%"></span></span><span class="bar-val">31</span></div>
+  <div class="bar-row"><span class="bar-label">2018</span><span class="bar-track"><span class="bar-fill" style="width:12.7%"></span></span><span class="bar-val">43</span></div>
+  <div class="bar-row"><span class="bar-label">2019</span><span class="bar-track"><span class="bar-fill" style="width:23.1%"></span></span><span class="bar-val">78</span></div>
+  <div class="bar-row"><span class="bar-label">2020</span><span class="bar-track"><span class="bar-fill" style="width:36.8%"></span></span><span class="bar-val">124</span></div>
+  <div class="bar-row"><span class="bar-label">2021</span><span class="bar-track"><span class="bar-fill" style="width:57.3%"></span></span><span class="bar-val">193</span></div>
+  <div class="bar-row"><span class="bar-label">2022</span><span class="bar-track"><span class="bar-fill" style="width:41.9%"></span></span><span class="bar-val">141</span></div>
+  <div class="bar-row"><span class="bar-label">2023</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">337</span></div>
+  <div class="bar-row"><span class="bar-label">2024</span><span class="bar-track"><span class="bar-fill" style="width:15.7%"></span></span><span class="bar-val">53</span></div>
+</div>
+<p class="note">2024年は収録期間の都合でアンダーカウントの可能性あり。2012年以前の論文（24件）は図省略。</p>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: TOP CITED TABLE -->
+<!-- ============================================================ -->
+<h2>6. 被引用数トップ論文</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>論文タイトル</th>
+      <th>年</th>
+      <th>被引用数</th>
+      <th>カテゴリ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks</td><td>2019</td><td>95,000</td><td>Pre-training</td></tr>
+    <tr><td>2</td><td>Transformer-XL: Attentive Language Models Beyond a Fixed-Length Context</td><td>2019</td><td>95,000</td><td>Architecture</td></tr>
+    <tr><td>3</td><td>Position Information in Transformers: Improvements and Applications</td><td>2018</td><td>94,000</td><td>Architecture</td></tr>
+    <tr><td>4</td><td>Efficient Estimation of Word Representations in Vector Space (Word2Vec)</td><td>2013</td><td>90,000</td><td>Foundations</td></tr>
+    <tr><td>5</td><td>Attention Is All You Need</td><td>2017</td><td>85,000</td><td>Foundations</td></tr>
+    <tr><td>6</td><td>BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</td><td>2018</td><td>75,000</td><td>Pre-training</td></tr>
+    <tr><td>7</td><td>Sequence to Sequence Learning with Neural Networks</td><td>2014</td><td>65,000</td><td>Foundations</td></tr>
+    <tr><td>8</td><td>Batch Normalization: Accelerating Deep Network Training</td><td>2015</td><td>45,000</td><td>Efficiency</td></tr>
+    <tr><td>9</td><td>Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer (T5)</td><td>2019</td><td>32,000</td><td>Pre-training</td></tr>
+    <tr><td>10</td><td>Language Models are Few-Shot Learners (GPT-3)</td><td>2020</td><td>30,000</td><td>GPT Series</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- DATA SOURCE -->
+<!-- ============================================================ -->
+<h2>データソースと方法論</h2>
+<p>本ページのデータは、LLM研究に関する査読済み論文1,097件を収録したSQLiteデータベース（<code>llm_papers.db</code>）に基づく。論文は61カテゴリに分類され、被引用数・発表年・カテゴリの3軸で分析した。収録期間は1992年〜2024年（主要収録は2013〜2023年）。被引用数はデータベース作成時点の概算値であり、実際の値とは差異がある場合がある。系統図の矢印は技術的継承関係の概念的表現であり、論文著者間の引用関係を直接示すものではない。</p>
+
+<div class="note">データソース: llm_papers.db（1,097論文）| 分析実施: 2026年4月 | 可視化: SVG手作成（D3.js不使用）| カテゴリ分類: データベース収録時の分類に準拠</div>
+
+<p style="margin-top:48px;padding-top:20px;border-top:1px solid var(--border-l)">
+  <a href="ta-ai-agent-genealogy.html">&larr; AIエージェントに至る技術合流の系譜</a>
+  &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="ta.html">技術発展加速度検証DB</a>
+</p>
+
+</div><!-- /content -->
+
+<script>
+// Dark/light theme toggle persistence
+(function(){
+  const saved = localStorage.getItem('theme');
+  if(saved) document.documentElement.dataset.theme = saved;
+})();
+document.querySelector('.theme-toggle').addEventListener('click', function(){
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('theme', t);
+});
+</script>
+</body>
+</html>
