@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>経営学概念DB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --accent-link: #CC1400;
+  --cluster-1: #CC1400; --cluster-2: #1A6B3C; --cluster-3: #8B5CF6;
+  --cluster-4: #D97706; --cluster-5: #0369A1; --cluster-6: #BE185D;
+  --cluster-7: #525252; --cluster-8: #2563EB; --cluster-9: #059669; --cluster-10: #9333EA;
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+  --accent-link: #FF6666;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+h2 { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent-warm); }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.7; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
+.overview-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; }
+.overview-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
+.cat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.cat-name { color: var(--text); } .cat-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; }
+
+/* Search */
+.search-box { width: 100%; padding: 10px 14px; font-size: 0.84rem; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); margin-bottom: 16px; }
+.search-box:focus { outline: none; border-color: var(--accent-warm); }
+
+/* Genealogy graph */
+#genealogy-container { width: 100%; height: 600px; border: 1px solid var(--border); background: var(--surface); margin: 16px 0; position: relative; overflow: hidden; }
+#genealogy-container svg { width: 100%; height: 100%; }
+.graph-controls { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.graph-btn { padding: 4px 12px; font-size: 0.75rem; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-family: var(--font); color: var(--text); }
+.graph-btn.active { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+.graph-btn:hover { border-color: var(--accent-warm); }
+.graph-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0; font-size: 0.72rem; color: var(--text-muted); }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Concept detail */
+.concept-section { margin-bottom: 48px; }
+.cluster-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.cluster-tag { font-family: monospace; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; color: #fff; }
+.concept-card { border: 1px solid var(--border); margin-bottom: 16px; padding: 18px 22px; background: var(--card); }
+.concept-card.hidden { display: none; }
+.concept-card-header { margin-bottom: 10px; }
+.concept-id { font-family: monospace; font-size: 0.68rem; color: var(--accent-warm); }
+.concept-title { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700; margin: 4px 0; }
+.concept-subtitle { font-size: 0.78rem; color: var(--text-muted); }
+.concept-meta { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 12px; font-size: 0.72rem; color: var(--text-muted); }
+.concept-meta span { padding: 2px 8px; background: var(--surface); border: 1px solid var(--border-light); }
+.concept-body { font-size: 0.84rem; line-height: 1.9; color: var(--text); margin-bottom: 12px; }
+.concept-body p { margin-bottom: 10px; text-align: justify; }
+.concept-genealogy { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-light); }
+.genealogy-label { font-size: 0.72rem; font-weight: 600; color: var(--accent-warm); margin-bottom: 6px; letter-spacing: 0.05em; }
+.genealogy-list { list-style: none; font-size: 0.8rem; }
+.genealogy-list li { padding: 3px 0; color: var(--text-secondary); }
+.genealogy-list .relation-type { font-family: monospace; font-size: 0.7rem; color: var(--text-muted); margin-right: 4px; }
+
+/* Researcher */
+.researcher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.researcher-card { border: 1px solid var(--border-light); padding: 14px 18px; background: var(--card); }
+.researcher-card.hidden { display: none; }
+.researcher-name { font-weight: 700; font-size: 0.88rem; margin-bottom: 2px; }
+.researcher-name-en { font-size: 0.76rem; color: var(--text-muted); }
+.researcher-dates { font-size: 0.72rem; color: var(--text-muted); font-family: monospace; margin: 4px 0; }
+.researcher-inst { font-size: 0.76rem; color: var(--text-secondary); }
+.researcher-bio { font-size: 0.78rem; color: var(--text); margin-top: 8px; line-height: 1.7; }
+
+/* TOC */
+.toc { background: var(--surface); border: 1px solid var(--border-light); padding: 16px 20px; margin: 20px 0; }
+.toc-title { font-weight: 700; font-size: 0.84rem; margin-bottom: 8px; }
+.toc-list { list-style: none; }
+.toc-list li { margin-bottom: 4px; }
+.toc-list a { font-size: 0.8rem; color: var(--accent-link); text-decoration: none; }
+.toc-list a:hover { text-decoration: underline; }
+.toc-cluster { font-size: 0.72rem; color: var(--text-muted); margin-left: 4px; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.84rem; }
+.loading-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent-warm); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Pagination */
+.pagination { display: flex; justify-content: center; gap: 8px; margin: 20px 0; }
+.page-btn { padding: 6px 14px; font-size: 0.78rem; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-family: var(--font); color: var(--text); }
+.page-btn.active { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+<a class="back" href="../databases.html">&larr; データベース一覧に戻る</a>
+
+<h1><span class="db-id">MG</span>経営学概念DB</h1>
+<p class="subtitle">経営学の主要概念・研究者を系譜的に構造化したデータベース</p>
+<p class="desc" id="dbDesc">読み込み中...</p>
+
+<div class="overview" id="overviewCards">
+  <div class="loading"><div class="loading-spinner"></div>データを読み込み中...</div>
+</div>
+
+<!-- TOC -->
+<div class="toc" id="tocSection" style="display:none">
+<div class="toc-title">目次 ── 10の知的クラスター</div>
+<ol class="toc-list" id="tocList"></ol>
+</div>
+
+<!-- ===== GENEALOGY GRAPH ===== -->
+<h2 id="genealogy">概念系譜図</h2>
+<p class="desc">概念間の知的系譜をforce-directedグラフとして可視化。ノードの大きさは接続数に比例し、色は所属クラスターを表す。</p>
+
+<div class="graph-controls" id="graphControls">
+<button class="graph-btn active" data-filter="all" onclick="filterGraph('all',this)">全体</button>
+</div>
+<div class="graph-legend" id="graphLegend"></div>
+<div id="genealogy-container"></div>
+
+<!-- ===== CONCEPTS ===== -->
+<h2>概念一覧</h2>
+<input type="text" class="search-box" id="conceptSearch" placeholder="概念を検索 (日本語・英語)" oninput="filterConcepts()">
+<div id="conceptSections">
+  <div class="loading"><div class="loading-spinner"></div>概念データを読み込み中...</div>
+</div>
+<div class="pagination" id="conceptPagination"></div>
+
+<!-- ===== RESEARCHERS ===== -->
+<h2 id="researchers">研究者</h2>
+<input type="text" class="search-box" id="researcherSearch" placeholder="研究者を検索" oninput="filterResearchers()">
+<div class="researcher-grid" id="researcherGrid">
+  <div class="loading"><div class="loading-spinner"></div>研究者データを読み込み中...</div>
+</div>
+
+<script>
+// Global data
+let DB = null;
+const ITEMS_PER_PAGE = 50;
+let currentPage = 1;
+let filteredConcepts = [];
+
+const clusterColors = {0:'#888',1:'#CC1400',2:'#1A6B3C',3:'#8B5CF6',4:'#D97706',5:'#0369A1',6:'#BE185D',7:'#525252',8:'#2563EB',9:'#059669',10:'#9333EA'};
+
+const clusterNames = {
+  1: '戦略と競争優位', 2: '起業家精神', 3: 'リーダーシップ', 4: 'イノベーション',
+  5: 'マーケティング', 6: '組織と人的資源', 7: 'ガバナンスと倫理', 8: 'ファイナンス',
+  9: 'オペレーション', 10: '行動科学と心理'
+};
+
+// Load data
+async function loadData() {
+  try {
+    const resp = await fetch('../data/mg_consolidated.json');
+    DB = await resp.json();
+    renderAll();
+  } catch (e) {
+    document.getElementById('overviewCards').innerHTML = '<div style="color:var(--accent-warm);padding:20px">データの読み込みに失敗しました。</div>';
+    console.error(e);
+  }
+}
+
+function renderAll() {
+  // Update cluster names from data if available
+  if (DB.clusters && DB.clusters.length > 0) {
+    DB.clusters.forEach(c => { clusterNames[c.id] = c.name_ja; });
+  }
+
+  renderDescription();
+  renderOverview();
+  renderTOC();
+  renderGraphControls();
+  renderGraphLegend();
+  buildGraph('all');
+  filteredConcepts = DB.concepts;
+  currentPage = 1;
+  renderConceptPage();
+  renderResearchers();
+}
+
+function renderDescription() {
+  const s = DB.stats;
+  document.getElementById('dbDesc').textContent =
+    `経営学の主要${s.total_concepts}概念を10の知的クラスターに分類し、${s.total_relations}件の概念間関係と${s.total_researchers}名の研究者を収録。戦略論・組織論・リーダーシップ論・イノベーション論・マーケティング論・行動科学など、経営学の全領域を系譜的に構造化する。`;
+}
+
+function renderOverview() {
+  const s = DB.stats;
+  document.getElementById('overviewCards').innerHTML = `
+    <div class="overview-card"><div class="overview-value">${s.total_concepts.toLocaleString()}</div><div class="overview-label">概念</div></div>
+    <div class="overview-card"><div class="overview-value">${s.total_researchers}</div><div class="overview-label">研究者</div></div>
+    <div class="overview-card"><div class="overview-value">${s.total_relations}</div><div class="overview-label">概念間関係</div></div>
+    <div class="overview-card"><div class="overview-value">${s.total_clusters}</div><div class="overview-label">知的クラスター</div></div>
+  `;
+}
+
+function renderTOC() {
+  const toc = document.getElementById('tocSection');
+  const list = document.getElementById('tocList');
+  toc.style.display = 'block';
+  let html = '';
+  for (let i = 1; i <= 10; i++) {
+    const name = clusterNames[i] || `クラスター${i}`;
+    const count = DB.concepts.filter(c => c.cluster === i).length;
+    html += `<li><a href="#cluster-${i}">${name}</a><span class="toc-cluster">(${count}概念)</span></li>`;
+  }
+  list.innerHTML = html;
+}
+
+function renderGraphControls() {
+  const ctrl = document.getElementById('graphControls');
+  let html = '<button class="graph-btn active" data-filter="all" onclick="filterGraph(\'all\',this)">全体</button>';
+  for (let i = 1; i <= 10; i++) {
+    html += `<button class="graph-btn" data-filter="cluster-${i}" onclick="filterGraph('cluster-${i}',this)">${clusterNames[i]||i}</button>`;
+  }
+  ctrl.innerHTML = html;
+}
+
+function renderGraphLegend() {
+  const legend = document.getElementById('graphLegend');
+  let html = '';
+  for (let i = 1; i <= 10; i++) {
+    html += `<div class="legend-item"><div class="legend-dot" style="background:${clusterColors[i]}"></div>${clusterNames[i]||i}</div>`;
+  }
+  html += `<div class="legend-item"><div class="legend-dot" style="background:#888"></div>その他</div>`;
+  legend.innerHTML = html;
+}
+
+// ===== D3.js Graph =====
+function buildGraph(filterCluster) {
+  const container = document.getElementById('genealogy-container');
+  container.innerHTML = '';
+  const width = container.clientWidth;
+  const height = 600;
+
+  let nodes = DB.graph_nodes.map(n => ({...n, cluster: DB.cluster_map[n.id] || 0}));
+  let edges = DB.graph_edges.map(e => ({...e}));
+
+  if (filterCluster !== 'all') {
+    const cNum = parseInt(filterCluster.split('-')[1]);
+    const nodeIds = new Set(nodes.filter(n => n.cluster === cNum).map(n => n.id));
+    edges.forEach(e => {
+      if (nodeIds.has(e.source) || nodeIds.has(e.source?.id)) nodeIds.add(typeof e.target === 'string' ? e.target : e.target.id);
+      if (nodeIds.has(e.target) || nodeIds.has(e.target?.id)) nodeIds.add(typeof e.source === 'string' ? e.source : e.source.id);
+    });
+    nodes = nodes.filter(n => nodeIds.has(n.id));
+    const nodeIdSet = new Set(nodes.map(n => n.id));
+    edges = edges.filter(e => {
+      const s = typeof e.source === 'string' ? e.source : e.source.id;
+      const t = typeof e.target === 'string' ? e.target : e.target.id;
+      return nodeIdSet.has(s) && nodeIdSet.has(t);
+    });
+  }
+
+  // Compute degree
+  const degree = {};
+  edges.forEach(e => {
+    const s = typeof e.source === 'string' ? e.source : e.source.id;
+    const t = typeof e.target === 'string' ? e.target : e.target.id;
+    degree[s] = (degree[s]||0) + 1;
+    degree[t] = (degree[t]||0) + 1;
+  });
+
+  const svg = d3.select(container).append('svg').attr('width', width).attr('height', height);
+  const g = svg.append('g');
+  svg.call(d3.zoom().scaleExtent([0.2, 4]).on('zoom', (e) => g.attr('transform', e.transform)));
+
+  const simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(edges).id(d => d.id).distance(60))
+    .force('charge', d3.forceManyBody().strength(-80))
+    .force('center', d3.forceCenter(width/2, height/2))
+    .force('collision', d3.forceCollide().radius(d => Math.sqrt(degree[d.id]||1)*4 + 8));
+
+  const link = g.append('g').selectAll('line').data(edges).join('line')
+    .attr('stroke', '#999').attr('stroke-opacity', 0.3).attr('stroke-width', 1);
+
+  const node = g.append('g').selectAll('g').data(nodes).join('g')
+    .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended));
+
+  node.append('circle')
+    .attr('r', d => Math.sqrt(degree[d.id]||1)*3 + 3)
+    .attr('fill', d => clusterColors[d.cluster] || '#888')
+    .attr('stroke', '#fff').attr('stroke-width', 0.5)
+    .attr('opacity', 0.85);
+
+  node.append('text')
+    .text(d => d.name_ja)
+    .attr('font-size', d => (degree[d.id]||0) > 3 ? '9px' : '7px')
+    .attr('font-weight', d => (degree[d.id]||0) > 3 ? '600' : '400')
+    .attr('dx', d => Math.sqrt(degree[d.id]||1)*3 + 5)
+    .attr('dy', 3)
+    .attr('fill', 'var(--text)')
+    .attr('font-family', 'var(--font)');
+
+  node.append('title').text(d => `${d.name_ja} (${d.name_en})\n${d.subfield || ''}\n接続数: ${degree[d.id]||0}`);
+
+  simulation.on('tick', () => {
+    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+  function dragstarted(e, d) { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+  function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
+  function dragended(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
+}
+
+function filterGraph(filter, btn) {
+  document.querySelectorAll('.graph-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildGraph(filter);
+}
+
+// ===== Concepts =====
+function renderConceptPage() {
+  const container = document.getElementById('conceptSections');
+  const total = filteredConcepts.length;
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const pageItems = filteredConcepts.slice(start, start + ITEMS_PER_PAGE);
+
+  // Group by cluster
+  let html = '';
+  let lastCluster = -1;
+  pageItems.forEach(c => {
+    if (c.cluster !== lastCluster) {
+      lastCluster = c.cluster;
+      const cName = clusterNames[c.cluster] || 'その他';
+      html += `<h3 id="cluster-${c.cluster}" style="margin-top:28px"><span class="cluster-tag" style="background:${clusterColors[c.cluster]||'#888'}">${c.cluster}</span> ${cName}</h3>`;
+    }
+    html += renderConceptCard(c);
+  });
+
+  container.innerHTML = html || '<p style="color:var(--text-muted);padding:20px">該当する概念が見つかりません。</p>';
+
+  // Pagination
+  renderPagination(totalPages);
+}
+
+function renderConceptCard(c) {
+  // Find relations for this concept
+  const rels = DB.graph_edges.filter(e => {
+    const s = typeof e.source === 'string' ? e.source : e.source.id;
+    const t = typeof e.target === 'string' ? e.target : e.target.id;
+    return s === c.id || t === c.id;
+  });
+
+  let genealogyHtml = '';
+  if (rels.length > 0) {
+    genealogyHtml = '<div class="concept-genealogy"><div class="genealogy-label">系譜的位置</div><ul class="genealogy-list">';
+    rels.forEach(r => {
+      const s = typeof r.source === 'string' ? r.source : r.source.id;
+      const t = typeof r.target === 'string' ? r.target : r.target.id;
+      const isSource = s === c.id;
+      const otherId = isSource ? t : s;
+      const other = DB.concepts.find(x => x.id === otherId);
+      const otherName = other ? `${other.name_ja}（${otherId}）` : otherId;
+      const arrow = isSource ? '&rarr;' : '&larr;';
+      genealogyHtml += `<li><span class="relation-type">${r.type} ${arrow}</span> ${otherName}</li>`;
+    });
+    genealogyHtml += '</ul></div>';
+  }
+
+  return `
+    <div class="concept-card" id="${c.id}" data-cluster="${c.cluster}" data-name="${(c.name_ja+' '+c.name_en).toLowerCase()}">
+      <div class="concept-card-header">
+        <div class="concept-id">${c.id}</div>
+        <div class="concept-title">${c.name_ja} ${c.name_en}</div>
+        <div class="concept-subtitle">${c.framework_ja || c.category} / ${c.origin_year || ''}年</div>
+      </div>
+      <div class="concept-meta">
+        ${c.origin_theorist ? `<span>提唱者: ${c.origin_theorist}</span>` : ''}
+        <span>クラスター: ${clusterNames[c.cluster] || c.category}</span>
+      </div>
+      <div class="concept-body"><p>${c.definition_ja || c.definition_en || ''}</p></div>
+      ${genealogyHtml}
+    </div>`;
+}
+
+function renderPagination(totalPages) {
+  const container = document.getElementById('conceptPagination');
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>前</button>`;
+  const maxShow = 7;
+  let startP = Math.max(1, currentPage - 3);
+  let endP = Math.min(totalPages, startP + maxShow - 1);
+  if (endP - startP < maxShow - 1) startP = Math.max(1, endP - maxShow + 1);
+  for (let p = startP; p <= endP; p++) {
+    html += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>次</button>`;
+  html += `<span style="font-size:0.72rem;color:var(--text-muted);padding:8px">${filteredConcepts.length}件中 ${(currentPage-1)*ITEMS_PER_PAGE+1}-${Math.min(currentPage*ITEMS_PER_PAGE, filteredConcepts.length)}</span>`;
+  container.innerHTML = html;
+}
+
+function goPage(p) {
+  const totalPages = Math.ceil(filteredConcepts.length / ITEMS_PER_PAGE);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderConceptPage();
+  document.getElementById('conceptSearch').scrollIntoView({behavior:'smooth'});
+}
+
+function filterConcepts() {
+  const q = document.getElementById('conceptSearch').value.trim().toLowerCase();
+  if (!q) {
+    filteredConcepts = DB.concepts;
+  } else {
+    filteredConcepts = DB.concepts.filter(c =>
+      (c.name_ja && c.name_ja.toLowerCase().includes(q)) ||
+      (c.name_en && c.name_en.toLowerCase().includes(q)) ||
+      (c.definition_ja && c.definition_ja.toLowerCase().includes(q)) ||
+      (c.origin_theorist && c.origin_theorist.toLowerCase().includes(q)) ||
+      (c.category && c.category.toLowerCase().includes(q))
+    );
+  }
+  currentPage = 1;
+  renderConceptPage();
+}
+
+// ===== Researchers =====
+function renderResearchers() {
+  const grid = document.getElementById('researcherGrid');
+  if (!DB.researchers || DB.researchers.length === 0) {
+    grid.innerHTML = '<p style="color:var(--text-muted);padding:10px">研究者データなし</p>';
+    return;
+  }
+  grid.innerHTML = DB.researchers.map(r => `
+    <div class="researcher-card" data-name="${(r.name_ja+' '+r.name_en).toLowerCase()}">
+      <div class="researcher-name">${r.name_ja}</div>
+      <div class="researcher-name-en">${r.name_en}</div>
+      <div class="researcher-dates">${r.birth_year || '?'}${r.death_year ? ' - '+r.death_year : ' -'}</div>
+      ${r.affiliation ? `<div class="researcher-inst">${r.affiliation}</div>` : ''}
+      ${r.bio_ja ? `<div class="researcher-bio">${r.bio_ja}</div>` : ''}
+    </div>`).join('');
+}
+
+function filterResearchers() {
+  const q = document.getElementById('researcherSearch').value.trim().toLowerCase();
+  document.querySelectorAll('.researcher-card').forEach(card => {
+    card.classList.toggle('hidden', q && !card.dataset.name.includes(q));
+  });
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
