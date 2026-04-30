@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SINIC量的調査 2026 レポート2 — 因子分析・分散分析・残差分析</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg-alt:#FAFAF8;--card:#fff;--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;--surface:#F7F7F5;--accent:#CC1400;--accent-muted:rgba(204,20,0,.06);--accent-blue:#1565c0;--accent-green:#2e7d32;--accent-orange:#e65100;--serif:'Noto Serif JP',serif;--sans:'Noto Sans JP',sans-serif}
+[data-theme="dark"]{--bg:#0D0D0D;--bg-alt:#141414;--card:#1A1A1A;--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#777;--border:#333;--border-light:#222;--surface:#1E1E1E;--accent:#FF4444;--accent-muted:rgba(255,68,68,.08);--accent-blue:#64b5f6;--accent-green:#66bb6a;--accent-orange:#ffb74d}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.9;-webkit-font-smoothing:antialiased}
+.theme-toggle{position:fixed;top:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.report-header{background:var(--bg-alt);border-bottom:1px solid var(--border-light);padding:48px 24px 40px}
+.report-header-inner{max-width:740px;margin:0 auto}
+.report-back{font-size:.75rem;color:var(--text-muted);text-decoration:none;display:inline-block;margin-bottom:24px}
+.report-back:hover{color:var(--accent)}
+.report-meta-top{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.report-badge{display:inline-block;padding:2px 8px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:600}
+.report-date{font-size:.75rem;color:var(--text-muted)}
+.report-title{font-family:var(--serif);font-size:1.6rem;font-weight:700;line-height:1.4;margin-bottom:12px}
+.report-subtitle{font-size:.88rem;color:var(--text-secondary);line-height:1.7;max-width:640px}
+.report-db-tags{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.report-db-tag{padding:2px 8px;font-size:.68rem;font-weight:500;border:1px solid var(--border);color:var(--text-secondary)}
+.key-metrics{max-width:740px;margin:-20px auto 0;padding:0 24px;position:relative;z-index:2}
+.key-metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);background:var(--card)}
+.key-metric{padding:18px 14px;text-align:center;border-right:1px solid var(--border-light)}
+.key-metric:last-child{border-right:none}
+.key-metric-value{font-family:var(--serif);font-size:1.3rem;font-weight:700;line-height:1.2}
+.key-metric-label{font-size:.65rem;color:var(--text-muted);margin-top:4px}
+.article{max-width:740px;margin:0 auto;padding:48px 24px 80px}
+.toc{margin-bottom:48px;padding:24px 28px;background:var(--surface);border-left:3px solid var(--accent)}
+.toc-title{font-family:var(--serif);font-size:.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:12px}
+.toc ol{list-style:none;counter-reset:toc}
+.toc>ol>li{counter-increment:toc;margin-bottom:6px}
+.toc>ol>li::before{content:counter(toc)".";color:var(--accent);font-weight:600;font-size:.78rem;margin-right:6px;font-family:var(--serif)}
+.toc a{color:var(--text);text-decoration:none;font-size:.82rem}
+.toc a:hover{color:var(--accent)}
+.section-num{display:block;font-family:var(--serif);font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.06em;margin-bottom:4px}
+h2.article-h2{font-family:var(--serif);font-size:1.25rem;font-weight:700;line-height:1.4;margin:56px 0 20px;padding-bottom:10px;border-bottom:1px solid var(--border-light)}
+h2.article-h2:first-of-type{margin-top:0}
+h3.article-h3{font-family:var(--serif);font-size:1.02rem;font-weight:700;line-height:1.5;margin:40px 0 14px}
+.article p{margin-bottom:18px;font-size:.92rem;line-height:1.9;text-align:justify}
+.pullquote{margin:32px 0;padding:20px 24px;border-left:3px solid var(--accent);background:var(--accent-muted);font-family:var(--serif);font-size:.95rem;line-height:1.8}
+.data-table{width:100%;border-collapse:collapse;font-size:.78rem;margin:20px 0}
+.data-table th{background:var(--surface);padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);font-size:.72rem;color:var(--text-secondary)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);vertical-align:top;line-height:1.5}
+.data-table tr:hover td{background:var(--accent-muted)}
+.insight-box{margin:24px 0;padding:18px 20px;border-left:3px solid var(--accent-orange);background:rgba(230,81,0,.03)}
+[data-theme="dark"] .insight-box{background:rgba(255,183,77,.04)}
+.insight-label{font-family:var(--serif);font-size:.78rem;font-weight:700;color:var(--accent-orange);margin-bottom:8px}
+.warning-box{margin:24px 0;padding:18px 20px;border-left:3px solid var(--accent);background:var(--accent-muted)}
+.warning-label{font-family:var(--serif);font-size:.78rem;font-weight:700;color:var(--accent);margin-bottom:8px}
+.method-card{margin:20px 0;border:1px solid var(--border);background:var(--card)}
+.method-header{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border-light);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.method-name{font-family:var(--serif);font-weight:700;font-size:.92rem}
+.method-verdict{font-size:.6rem;padding:1px 8px;font-weight:600;border-radius:2px}
+.method-valid{background:rgba(46,125,50,.1);color:var(--accent-green)}
+.method-invalid{background:rgba(204,20,0,.1);color:var(--accent)}
+.method-partial{background:rgba(230,81,0,.1);color:var(--accent-orange)}
+.method-body{padding:14px 16px;font-size:.85rem;line-height:1.7}
+.bar-chart{margin:16px 0}
+.bar-row{display:flex;align-items:center;margin-bottom:6px;font-size:.78rem}
+.bar-label{width:120px;flex-shrink:0;text-align:right;padding-right:10px;color:var(--text-secondary)}
+.bar-track{flex:1;height:20px;background:var(--surface);position:relative}
+.bar-fill{height:100%;background:var(--accent);transition:width .5s}
+.bar-fill-alt{background:var(--accent-blue)}
+.bar-fill-green{background:var(--accent-green)}
+.bar-value{position:absolute;right:4px;top:2px;font-size:.68rem;font-weight:600;color:var(--text-secondary)}
+.comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.comparison-card{border:1px solid var(--border);padding:16px}
+.comparison-year{font-family:var(--serif);font-size:.82rem;font-weight:700;color:var(--accent);margin-bottom:8px}
+.report-footer{max-width:740px;margin:0 auto;padding:0 24px 60px;border-top:1px solid var(--border)}
+.report-footer p{font-size:.75rem;color:var(--text-muted);line-height:1.7;margin-top:16px}
+@media(max-width:600px){.report-title{font-size:1.3rem}.key-metrics-grid{grid-template-columns:repeat(2,1fr)}.comparison-grid{grid-template-columns:1fr}.bar-label{width:80px;font-size:.7rem}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'" aria-label="テーマ切替">&#9681;</button>
+
+<header class="report-header">
+<div class="report-header-inner">
+<a href="../analysis-reports.html" class="report-back">&larr; 解析レポート一覧に戻る</a>
+<div class="report-meta-top">
+<span class="report-badge">SURVEY ANALYSIS</span>
+<span class="report-date">2026年4月30日</span>
+</div>
+<h1 class="report-title">SINIC量的調査 2026 レポート2<br>因子分析・分散分析・残差分析</h1>
+<p class="report-subtitle">2024年度レポートと同一手法（因子分析→因子合計得点の分散分析→カイ二乗検定・残差分析）を用い、2026年データの構造を解析した。<a href="sinic-survey-2026.html" style="color:var(--accent)">レポート1（統計解析全体）はこちら</a>。</p>
+<div class="report-db-tags">
+<span class="report-db-tag">一般回答者 n=1,110</span>
+<span class="report-db-tag">因子分析 (3因子・6因子)</span>
+<span class="report-db-tag">分散分析 (ANOVA)</span>
+<span class="report-db-tag">残差分析</span>
+</div>
+</div>
+</header>
+
+<div class="key-metrics">
+<div class="key-metrics-grid">
+<div class="key-metric"><div class="key-metric-value">6因子</div><div class="key-metric-label">因子分析解</div></div>
+<div class="key-metric"><div class="key-metric-value">年代</div><div class="key-metric-label">分散分析で有意な属性</div></div>
+<div class="key-metric"><div class="key-metric-value">p&lt;.001</div><div class="key-metric-label">Q12×年代 カイ二乗検定</div></div>
+<div class="key-metric"><div class="key-metric-value">0→4</div><div class="key-metric-label">居住エリア有意因子 (2024→2026)</div></div>
+</div>
+</div>
+
+<article class="article">
+<nav class="toc"><div class="toc-title">目次</div><ol>
+<li><a href="#sec1">因子分析結果</a></li>
+<li><a href="#sec2">因子構造の解釈</a></li>
+<li><a href="#sec3">分散分析結果</a></li>
+<li><a href="#sec4">分散分析の考察</a></li>
+<li><a href="#sec5">カイ二乗検定・残差分析: Q12（最重要キーワード）</a></li>
+<li><a href="#sec6">カイ二乗検定・残差分析: Q13（過去の価値観）</a></li>
+<li><a href="#sec7">全体考察</a></li>
+</ol></nav>
+<span class="section-num" id="sec1">1</span>
+<h2 class="article-h2">因子分析結果</h2>
+<p>21項目に対し、主因子法・プロマックス回転による因子分析を実施した。固有値の変化および項目内容の読み込みにより、3因子解と6因子解の両方を検討した。</p>
+<p style="font-size:.82rem;font-weight:600">固有値</p>
+<table class="data-table"><tr><th>因子</th><th style="text-align:right">固有値</th><th style="text-align:right">寄与率</th><th style="text-align:right">累積寄与率</th></tr>
+<tr><td>Factor 1</td><td style="text-align:right">9.148</td><td style="text-align:right">43.6%</td><td style="text-align:right">43.6%</td></tr>
+<tr><td>Factor 2</td><td style="text-align:right">1.436</td><td style="text-align:right">6.8%</td><td style="text-align:right">50.4%</td></tr>
+<tr><td>Factor 3</td><td style="text-align:right">0.945</td><td style="text-align:right">4.5%</td><td style="text-align:right">54.9%</td></tr>
+<tr><td>Factor 4</td><td style="text-align:right">0.852</td><td style="text-align:right">4.1%</td><td style="text-align:right">59.0%</td></tr>
+<tr><td>Factor 5</td><td style="text-align:right">0.774</td><td style="text-align:right">3.7%</td><td style="text-align:right">62.6%</td></tr>
+<tr><td>Factor 6</td><td style="text-align:right">0.729</td><td style="text-align:right">3.5%</td><td style="text-align:right">66.1%</td></tr>
+<tr><td>Factor 7</td><td style="text-align:right">0.669</td><td style="text-align:right">3.2%</td><td style="text-align:right">69.3%</td></tr>
+<tr><td>Factor 8</td><td style="text-align:right">0.651</td><td style="text-align:right">3.1%</td><td style="text-align:right">72.4%</td></tr>
+<tr><td>Factor 9</td><td style="text-align:right">0.584</td><td style="text-align:right">2.8%</td><td style="text-align:right">75.2%</td></tr>
+<tr><td>Factor 10</td><td style="text-align:right">0.568</td><td style="text-align:right">2.7%</td><td style="text-align:right">77.9%</td></tr>
+</table>
+<h3 class="article-h3">6因子解 因子負荷量（プロマックス回転）</h3>
+<table class="data-table"><tr><th style="width:30px"></th><th>項目</th><th style="text-align:right">F1</th><th style="text-align:right">F2</th><th style="text-align:right">F3</th><th style="text-align:right">F4</th><th style="text-align:right">F5</th><th style="text-align:right">F6</th></tr>
+<tr><td>1</td><td style="font-size:.72rem">人間も含めたあらゆる生き物は、何かにコントロールされなくても自律的に生き、機能している</td><td style="text-align:right;color:var(--text-muted)">-0.040</td><td style="text-align:right;color:var(--text-muted)">+0.006</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.828</td><td style="text-align:right;color:var(--text-muted)">+0.127</td><td style="text-align:right;color:var(--text-muted)">+0.010</td><td style="text-align:right;color:var(--text-muted)">-0.080</td></tr>
+<tr><td>2</td><td style="font-size:.72rem">どこで生きていけば良いかという問いへの答えは、人それぞれで異なる</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.642</td><td style="text-align:right;color:var(--text-muted)">+0.124</td><td style="text-align:right;color:var(--text-muted)">-0.002</td><td style="text-align:right;color:var(--text-muted)">-0.010</td><td style="text-align:right;color:var(--text-muted)">-0.082</td><td style="text-align:right;color:var(--text-muted)">-0.030</td></tr>
+<tr><td>3</td><td style="font-size:.72rem">人間や微生物を含むあらゆる生物は、お互いに関係し合い、地球環境と相互に影響し合っている</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.619</td><td style="text-align:right;color:var(--text-muted)">+0.071</td><td style="text-align:right;color:var(--text-muted)">+0.009</td><td style="text-align:right;color:var(--text-muted)">-0.097</td><td style="text-align:right;color:var(--text-muted)">-0.024</td><td style="text-align:right;color:var(--text-muted)">-0.112</td></tr>
+<tr><td>4</td><td style="font-size:.72rem">ポジティブな感情もネガティブな感情も、自分自身の感情に正直なことがウェルビーイングにとって大切である</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.422</td><td style="text-align:right;color:var(--text-muted)">+0.020</td><td style="text-align:right;color:var(--text-muted)">+0.203</td><td style="text-align:right;color:var(--text-muted)">-0.033</td><td style="text-align:right;color:var(--text-muted)">+0.157</td><td style="text-align:right;color:var(--text-muted)">+0.025</td></tr>
+<tr><td>5</td><td style="font-size:.72rem">テクノロジーの発展によって、むしろ人は自分たち自身の内面を見つめ直すことになる</td><td style="text-align:right;color:var(--text-muted)">+0.064</td><td style="text-align:right;color:var(--text-muted)">-0.002</td><td style="text-align:right;color:var(--text-muted)">+0.332</td><td style="text-align:right;color:var(--text-muted)">-0.189</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.577</td><td style="text-align:right;color:var(--text-muted)">+0.051</td></tr>
+<tr><td>6</td><td style="font-size:.72rem">喜怒哀楽などの感情によってもたらされる行動が、人間を人間らしくさせている</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.534</td><td style="text-align:right;color:var(--text-muted)">-0.107</td><td style="text-align:right;color:var(--text-muted)">+0.098</td><td style="text-align:right;color:var(--text-muted)">+0.033</td><td style="text-align:right;color:var(--text-muted)">+0.004</td><td style="text-align:right;color:var(--text-muted)">+0.112</td></tr>
+<tr><td>7</td><td style="font-size:.72rem">自由な時間、ゆっくりした時間が、自分自身の人生を自分で変化していくために必要である</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.648</td><td style="text-align:right;color:var(--text-muted)">-0.040</td><td style="text-align:right;color:var(--text-muted)">-0.133</td><td style="text-align:right;color:var(--text-muted)">-0.101</td><td style="text-align:right;color:var(--text-muted)">+0.022</td><td style="text-align:right;color:var(--text-muted)">+0.002</td></tr>
+<tr><td>8</td><td style="font-size:.72rem">知恵や知性は、情報だけでなく身体や直観の存在によって生まれてくる</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.480</td><td style="text-align:right;color:var(--text-muted)">-0.085</td><td style="text-align:right;color:var(--text-muted)">-0.068</td><td style="text-align:right;color:var(--text-muted)">+0.091</td><td style="text-align:right;color:var(--text-muted)">+0.076</td><td style="text-align:right;color:var(--text-muted)">+0.031</td></tr>
+<tr><td>9</td><td style="font-size:.72rem">選択の自由があることで、自分自身のことを自分で動かしていき、成長を促進する</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.618</td><td style="text-align:right;color:var(--text-muted)">-0.078</td><td style="text-align:right;color:var(--text-muted)">+0.040</td><td style="text-align:right;color:var(--text-muted)">+0.001</td><td style="text-align:right;color:var(--text-muted)">-0.017</td><td style="text-align:right;color:var(--text-muted)">+0.040</td></tr>
+<tr><td>10</td><td style="font-size:.72rem">独自の思考と哲学によって意味を見い出すことが、自分自身の人生を自分で変化してくために必要である</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.384</td><td style="text-align:right;color:var(--text-muted)">-0.009</td><td style="text-align:right;color:var(--text-muted)">+0.107</td><td style="text-align:right;color:var(--text-muted)">+0.119</td><td style="text-align:right;color:var(--text-muted)">+0.142</td><td style="text-align:right;color:var(--text-muted)">+0.081</td></tr>
+<tr><td>11</td><td style="font-size:.72rem">社会の中にある規範やルールが、自分たちの行動と進む方向を定めている</td><td style="text-align:right;color:var(--text-muted)">+0.261</td><td style="text-align:right;color:var(--text-muted)">+0.137</td><td style="text-align:right;color:var(--text-muted)">+0.114</td><td style="text-align:right;color:var(--text-muted)">+0.078</td><td style="text-align:right;color:var(--text-muted)">-0.096</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.434</td></tr>
+<tr><td>12</td><td style="font-size:.72rem">少数の人々の意見や態度、行動を尊重することが多様性を高め、よりよい社会や組織を実現することにつながる</td><td style="text-align:right;color:var(--text-muted)">+0.002</td><td style="text-align:right;color:var(--text-muted)">-0.190</td><td style="text-align:right;color:var(--text-muted)">+0.059</td><td style="text-align:right;color:var(--text-muted)">-0.098</td><td style="text-align:right;color:var(--text-muted)">+0.044</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.706</td></tr>
+<tr><td>13</td><td style="font-size:.72rem">人々は情報を残すことで記憶を継承し、その影響を受けながら想像したり思考したりしている</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.486</td><td style="text-align:right;color:var(--text-muted)">+0.027</td><td style="text-align:right;color:var(--text-muted)">-0.028</td><td style="text-align:right;color:var(--text-muted)">+0.026</td><td style="text-align:right;color:var(--text-muted)">+0.019</td><td style="text-align:right;color:var(--text-muted)">-0.197</td></tr>
+<tr><td>14</td><td style="font-size:.72rem">技術によって、人と自然の境が曖昧になっていく</td><td style="text-align:right;color:var(--text-muted)">+0.017</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.882</td><td style="text-align:right;color:var(--text-muted)">-0.008</td><td style="text-align:right;color:var(--text-muted)">+0.047</td><td style="text-align:right;color:var(--text-muted)">-0.018</td><td style="text-align:right;color:var(--text-muted)">-0.120</td></tr>
+<tr><td>15</td><td style="font-size:.72rem">自分自身の人生を自分で変化していくことが、お互いの関係をよくしたり、自分自身の健康や成長を促す</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.374</td><td style="text-align:right;color:var(--text-muted)">-0.098</td><td style="text-align:right;color:var(--text-muted)">+0.001</td><td style="text-align:right;color:var(--text-muted)">+0.226</td><td style="text-align:right;color:var(--text-muted)">+0.044</td><td style="text-align:right;color:var(--text-muted)">-0.025</td></tr>
+<tr><td>16</td><td style="font-size:.72rem">複雑なシステムであっても、相互に繋がり合うことにより、常に構造が修正され続け、安定する</td><td style="text-align:right;color:var(--text-muted)">+0.021</td><td style="text-align:right;color:var(--text-muted)">+0.127</td><td style="text-align:right;color:var(--text-muted)">-0.033</td><td style="text-align:right;color:var(--text-muted)">+0.222</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.393</td><td style="text-align:right;color:var(--text-muted)">-0.115</td></tr>
+<tr><td>17</td><td style="font-size:.72rem">システム全体にまで影響が及ぶ物事の重要な動きは、中心からではなく周縁部にこそ生まれてくる</td><td style="text-align:right;color:var(--text-muted)">-0.109</td><td style="text-align:right;color:var(--text-muted)">-0.086</td><td style="text-align:right;color:var(--text-muted)">-0.062</td><td style="text-align:right;color:var(--text-muted)">+0.054</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.448</td><td style="text-align:right;color:var(--text-muted)">-0.288</td></tr>
+<tr><td>18</td><td style="font-size:.72rem">情報環境や効率的なネットワークによって、一箇所でコントロールするのではない分散的な活動が促進される</td><td style="text-align:right;color:var(--text-muted)">+0.074</td><td style="text-align:right;color:var(--text-muted)">+0.015</td><td style="text-align:right;color:var(--text-muted)">-0.153</td><td style="text-align:right;color:var(--text-muted)">+0.089</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.529</td><td style="text-align:right;color:var(--text-muted)">+0.057</td></tr>
+<tr><td>19</td><td style="font-size:.72rem">相互につながり合った複雑なシステムでは、予測外の意図しないことがおこる</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.471</td><td style="text-align:right;color:var(--text-muted)">-0.012</td><td style="text-align:right;color:var(--text-muted)">-0.153</td><td style="text-align:right;color:var(--text-muted)">+0.092</td><td style="text-align:right;color:var(--text-muted)">+0.061</td><td style="text-align:right;color:var(--text-muted)">-0.008</td></tr>
+<tr><td>20</td><td style="font-size:.72rem">変化し続け、動き続けることだけが、ものごとの存在を可能にする</td><td style="text-align:right;color:var(--text-muted)">-0.049</td><td style="text-align:right;color:var(--text-muted)">-0.110</td><td style="text-align:right;color:var(--text-muted)">+0.119</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.736</td><td style="text-align:right;color:var(--text-muted)">-0.077</td><td style="text-align:right;color:var(--text-muted)">+0.091</td></tr>
+<tr><td>21</td><td style="font-size:.72rem">わたしたちは、周囲の環境によって自分自身を規定しながら、自分たち自身によって何が自分たち以外の環境で...</td><td style="text-align:right;color:var(--text-muted)">+0.062</td><td style="text-align:right;color:var(--text-muted)">+0.096</td><td style="text-align:right;color:var(--text-muted)">+0.026</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.517</td><td style="text-align:right;color:var(--text-muted)">+0.099</td><td style="text-align:right;color:var(--text-muted)">-0.026</td></tr>
+</table>
+<p style="font-size:.82rem;font-weight:600;margin-top:20px">因子間相関行列（6因子）</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">F1</th><th style="text-align:right">F2</th><th style="text-align:right">F3</th><th style="text-align:right">F4</th><th style="text-align:right">F5</th><th style="text-align:right">F6</th></tr>
+<tr><td>F1</td><td style="text-align:right">1.000</td><td style="text-align:right">-0.126</td><td style="text-align:right">0.287</td><td style="text-align:right">0.548</td><td style="text-align:right">0.580</td><td style="text-align:right">-0.424</td></tr>
+<tr><td>F2</td><td style="text-align:right">-0.126</td><td style="text-align:right">1.000</td><td style="text-align:right">-0.073</td><td style="text-align:right">-0.170</td><td style="text-align:right">-0.261</td><td style="text-align:right">0.107</td></tr>
+<tr><td>F3</td><td style="text-align:right">0.287</td><td style="text-align:right">-0.073</td><td style="text-align:right">1.000</td><td style="text-align:right">0.120</td><td style="text-align:right">0.192</td><td style="text-align:right">-0.151</td></tr>
+<tr><td>F4</td><td style="text-align:right">0.548</td><td style="text-align:right">-0.170</td><td style="text-align:right">0.120</td><td style="text-align:right">1.000</td><td style="text-align:right">0.521</td><td style="text-align:right">-0.452</td></tr>
+<tr><td>F5</td><td style="text-align:right">0.580</td><td style="text-align:right">-0.261</td><td style="text-align:right">0.192</td><td style="text-align:right">0.521</td><td style="text-align:right">1.000</td><td style="text-align:right">-0.415</td></tr>
+<tr><td>F6</td><td style="text-align:right">-0.424</td><td style="text-align:right">0.107</td><td style="text-align:right">-0.151</td><td style="text-align:right">-0.452</td><td style="text-align:right">-0.415</td><td style="text-align:right">1.000</td></tr>
+</table>
+<h3 class="article-h3">3因子解 因子負荷量（プロマックス回転）</h3>
+<table class="data-table"><tr><th style="width:30px"></th><th>項目</th><th style="text-align:right">F1</th><th style="text-align:right">F2</th><th style="text-align:right">F3</th></tr>
+<tr><td>1</td><td style="font-size:.72rem">人間も含めたあらゆる生き物は、何かにコントロールされなくても自律的に生き、機能している</td><td style="text-align:right;color:var(--text-muted)">-0.026</td><td style="text-align:right;color:var(--text-muted)">+0.053</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.786</td></tr>
+<tr><td>2</td><td style="font-size:.72rem">どこで生きていけば良いかという問いへの答えは、人それぞれで異なる</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.708</td><td style="text-align:right;color:var(--text-muted)">+0.143</td><td style="text-align:right;color:var(--text-muted)">+0.010</td></tr>
+<tr><td>3</td><td style="font-size:.72rem">人間や微生物を含むあらゆる生物は、お互いに関係し合い、地球環境と相互に影響し合っている</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.660</td><td style="text-align:right;color:var(--text-muted)">+0.099</td><td style="text-align:right;color:var(--text-muted)">+0.065</td></tr>
+<tr><td>4</td><td style="font-size:.72rem">ポジティブな感情もネガティブな感情も、自分自身の感情に正直なことがウェルビーイングにとって大切である</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.477</td><td style="text-align:right;color:var(--text-muted)">-0.004</td><td style="text-align:right;color:var(--text-muted)">+0.214</td></tr>
+<tr><td>5</td><td style="font-size:.72rem">テクノロジーの発展によって、むしろ人は自分たち自身の内面を見つめ直すことになる</td><td style="text-align:right;color:var(--text-muted)">+0.126</td><td style="text-align:right;color:var(--text-muted)">-0.164</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.401</td></tr>
+<tr><td>6</td><td style="font-size:.72rem">喜怒哀楽などの感情によってもたらされる行動が、人間を人間らしくさせている</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.549</td><td style="text-align:right;color:var(--text-muted)">-0.005</td><td style="text-align:right;color:var(--text-muted)">+0.057</td></tr>
+<tr><td>7</td><td style="font-size:.72rem">自由な時間、ゆっくりした時間が、自分自身の人生を自分で変化していくために必要である</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.670</td><td style="text-align:right;color:var(--text-muted)">+0.023</td><td style="text-align:right;color:var(--text-muted)">-0.100</td></tr>
+<tr><td>8</td><td style="font-size:.72rem">知恵や知性は、情報だけでなく身体や直観の存在によって生まれてくる</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.531</td><td style="text-align:right;color:var(--text-muted)">-0.163</td><td style="text-align:right;color:var(--text-muted)">-0.080</td></tr>
+<tr><td>9</td><td style="font-size:.72rem">選択の自由があることで、自分自身のことを自分で動かしていき、成長を促進する</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.639</td><td style="text-align:right;color:var(--text-muted)">+0.006</td><td style="text-align:right;color:var(--text-muted)">+0.028</td></tr>
+<tr><td>10</td><td style="font-size:.72rem">独自の思考と哲学によって意味を見い出すことが、自分自身の人生を自分で変化してくために必要である</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.463</td><td style="text-align:right;color:var(--text-muted)">-0.123</td><td style="text-align:right;color:var(--text-muted)">+0.076</td></tr>
+<tr><td>11</td><td style="font-size:.72rem">社会の中にある規範やルールが、自分たちの行動と進む方向を定めている</td><td style="text-align:right;color:var(--text-muted)">+0.325</td><td style="text-align:right;color:var(--text-muted)">-0.079</td><td style="text-align:right;color:var(--text-muted)">+0.215</td></tr>
+<tr><td>12</td><td style="font-size:.72rem">少数の人々の意見や態度、行動を尊重することが多様性を高め、よりよい社会や組織を実現することにつながる</td><td style="text-align:right;color:var(--text-muted)">-0.056</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.391</td><td style="text-align:right;color:var(--text-muted)">+0.277</td></tr>
+<tr><td>13</td><td style="font-size:.72rem">人々は情報を残すことで記憶を継承し、その影響を受けながら想像したり思考したりしている</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.545</td><td style="text-align:right;color:var(--text-muted)">-0.104</td><td style="text-align:right;color:var(--text-muted)">+0.034</td></tr>
+<tr><td>14</td><td style="font-size:.72rem">技術によって、人と自然の境が曖昧になっていく</td><td style="text-align:right;color:var(--text-muted)">-0.221</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.619</td><td style="text-align:right;color:var(--text-muted)">-0.010</td></tr>
+<tr><td>15</td><td style="font-size:.72rem">自分自身の人生を自分で変化していくことが、お互いの関係をよくしたり、自分自身の健康や成長を促す</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.438</td><td style="text-align:right;color:var(--text-muted)">-0.263</td><td style="text-align:right;color:var(--text-muted)">-0.027</td></tr>
+<tr><td>16</td><td style="font-size:.72rem">複雑なシステムであっても、相互に繋がり合うことにより、常に構造が修正され続け、安定する</td><td style="text-align:right;color:var(--text-muted)">+0.190</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.429</td><td style="text-align:right;color:var(--text-muted)">+0.009</td></tr>
+<tr><td>17</td><td style="font-size:.72rem">システム全体にまで影響が及ぶ物事の重要な動きは、中心からではなく周縁部にこそ生まれてくる</td><td style="text-align:right;color:var(--text-muted)">-0.037</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.562</td><td style="text-align:right;color:var(--text-muted)">+0.062</td></tr>
+<tr><td>18</td><td style="font-size:.72rem">情報環境や効率的なネットワークによって、一箇所でコントロールするのではない分散的な活動が促進される</td><td style="text-align:right;color:var(--text-muted)">+0.210</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.438</td><td style="text-align:right;color:var(--text-muted)">-0.117</td></tr>
+<tr><td>19</td><td style="font-size:.72rem">相互につながり合った複雑なシステムでは、予測外の意図しないことがおこる</td><td style="text-align:right;font-weight:700;color:var(--accent)">+0.541</td><td style="text-align:right;color:var(--text-muted)">-0.147</td><td style="text-align:right;color:var(--text-muted)">-0.148</td></tr>
+<tr><td>20</td><td style="font-size:.72rem">変化し続け、動き続けることだけが、ものごとの存在を可能にする</td><td style="text-align:right;color:var(--text-muted)">+0.074</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.499</td><td style="text-align:right;color:var(--text-muted)">-0.062</td></tr>
+<tr><td>21</td><td style="font-size:.72rem">わたしたちは、周囲の環境によって自分自身を規定しながら、自分たち自身によって何が自分たち以外の環境で...</td><td style="text-align:right;color:var(--text-muted)">+0.237</td><td style="text-align:right;font-weight:700;color:var(--accent)">-0.406</td><td style="text-align:right;color:var(--text-muted)">-0.048</td></tr>
+</table>
+<p style="font-size:.82rem;font-weight:600;margin-top:20px">因子間相関行列（3因子）</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">F1</th><th style="text-align:right">F2</th><th style="text-align:right">F3</th></tr>
+<tr><td>F1</td><td style="text-align:right">1.000</td><td style="text-align:right">-0.577</td><td style="text-align:right">0.445</td></tr>
+<tr><td>F2</td><td style="text-align:right">-0.577</td><td style="text-align:right">1.000</td><td style="text-align:right">-0.424</td></tr>
+<tr><td>F3</td><td style="text-align:right">0.445</td><td style="text-align:right">-0.424</td><td style="text-align:right">1.000</td></tr>
+</table>
+<span class="section-num" id="sec2">2</span>
+<h2 class="article-h2">因子構造の解釈</h2>
+<p>6因子解の各因子に帰属する項目（|負荷量| &ge; 0.35）を示す。</p>
+<div class="method-card"><div class="method-header"><span class="method-name">Factor 1</span><span class="method-verdict method-valid">11項目</span></div><div class="method-body"><table class="data-table" style="margin:0"><tr><th style="width:30px">Q</th><th>項目</th><th style="text-align:right;width:70px">負荷量</th></tr>
+<tr><td>7</td><td style="font-size:.75rem">自由な時間、ゆっくりした時間が、自分自身の人生を自分で変化していくために必要である</td><td style="text-align:right;font-weight:700">+0.648</td></tr>
+<tr><td>2</td><td style="font-size:.75rem">どこで生きていけば良いかという問いへの答えは、人それぞれで異なる</td><td style="text-align:right;font-weight:700">+0.642</td></tr>
+<tr><td>3</td><td style="font-size:.75rem">人間や微生物を含むあらゆる生物は、お互いに関係し合い、地球環境と相互に影響し合っている</td><td style="text-align:right;font-weight:700">+0.619</td></tr>
+<tr><td>9</td><td style="font-size:.75rem">選択の自由があることで、自分自身のことを自分で動かしていき、成長を促進する</td><td style="text-align:right;font-weight:700">+0.618</td></tr>
+<tr><td>6</td><td style="font-size:.75rem">喜怒哀楽などの感情によってもたらされる行動が、人間を人間らしくさせている</td><td style="text-align:right;font-weight:700">+0.534</td></tr>
+<tr><td>13</td><td style="font-size:.75rem">人々は情報を残すことで記憶を継承し、その影響を受けながら想像したり思考したりしている</td><td style="text-align:right;font-weight:700">+0.486</td></tr>
+<tr><td>8</td><td style="font-size:.75rem">知恵や知性は、情報だけでなく身体や直観の存在によって生まれてくる</td><td style="text-align:right;font-weight:700">+0.480</td></tr>
+<tr><td>19</td><td style="font-size:.75rem">相互につながり合った複雑なシステムでは、予測外の意図しないことがおこる</td><td style="text-align:right;font-weight:700">+0.471</td></tr>
+<tr><td>4</td><td style="font-size:.75rem">ポジティブな感情もネガティブな感情も、自分自身の感情に正直なことがウェルビーイングにとって大切である</td><td style="text-align:right;font-weight:700">+0.422</td></tr>
+<tr><td>10</td><td style="font-size:.75rem">独自の思考と哲学によって意味を見い出すことが、自分自身の人生を自分で変化してくために必要である</td><td style="text-align:right;font-weight:700">+0.384</td></tr>
+<tr><td>15</td><td style="font-size:.75rem">自分自身の人生を自分で変化していくことが、お互いの関係をよくしたり、自分自身の健康や成長を促す</td><td style="text-align:right;font-weight:700">+0.374</td></tr>
+</table></div></div>
+<div class="method-card"><div class="method-header"><span class="method-name">Factor 2</span><span class="method-verdict method-valid">1項目</span></div><div class="method-body"><table class="data-table" style="margin:0"><tr><th style="width:30px">Q</th><th>項目</th><th style="text-align:right;width:70px">負荷量</th></tr>
+<tr><td>14</td><td style="font-size:.75rem">技術によって、人と自然の境が曖昧になっていく</td><td style="text-align:right;font-weight:700">-0.882</td></tr>
+</table></div></div>
+<div class="method-card"><div class="method-header"><span class="method-name">Factor 3</span><span class="method-verdict method-valid">1項目</span></div><div class="method-body"><table class="data-table" style="margin:0"><tr><th style="width:30px">Q</th><th>項目</th><th style="text-align:right;width:70px">負荷量</th></tr>
+<tr><td>1</td><td style="font-size:.75rem">人間も含めたあらゆる生き物は、何かにコントロールされなくても自律的に生き、機能している</td><td style="text-align:right;font-weight:700">+0.828</td></tr>
+</table></div></div>
+<div class="method-card"><div class="method-header"><span class="method-name">Factor 4</span><span class="method-verdict method-valid">2項目</span></div><div class="method-body"><table class="data-table" style="margin:0"><tr><th style="width:30px">Q</th><th>項目</th><th style="text-align:right;width:70px">負荷量</th></tr>
+<tr><td>20</td><td style="font-size:.75rem">変化し続け、動き続けることだけが、ものごとの存在を可能にする</td><td style="text-align:right;font-weight:700">+0.736</td></tr>
+<tr><td>21</td><td style="font-size:.75rem">わたしたちは、周囲の環境によって自分自身を規定しながら、自分たち自身によって何が自分たち以外の環境であるかを規定している</td><td style="text-align:right;font-weight:700">+0.517</td></tr>
+</table></div></div>
+<div class="method-card"><div class="method-header"><span class="method-name">Factor 5</span><span class="method-verdict method-valid">4項目</span></div><div class="method-body"><table class="data-table" style="margin:0"><tr><th style="width:30px">Q</th><th>項目</th><th style="text-align:right;width:70px">負荷量</th></tr>
+<tr><td>5</td><td style="font-size:.75rem">テクノロジーの発展によって、むしろ人は自分たち自身の内面を見つめ直すことになる</td><td style="text-align:right;font-weight:700">+0.577</td></tr>
+<tr><td>18</td><td style="font-size:.75rem">情報環境や効率的なネットワークによって、一箇所でコントロールするのではない分散的な活動が促進される</td><td style="text-align:right;font-weight:700">+0.529</td></tr>
+<tr><td>17</td><td style="font-size:.75rem">システム全体にまで影響が及ぶ物事の重要な動きは、中心からではなく周縁部にこそ生まれてくる</td><td style="text-align:right;font-weight:700">+0.448</td></tr>
+<tr><td>16</td><td style="font-size:.75rem">複雑なシステムであっても、相互に繋がり合うことにより、常に構造が修正され続け、安定する</td><td style="text-align:right;font-weight:700">+0.393</td></tr>
+</table></div></div>
+<div class="method-card"><div class="method-header"><span class="method-name">Factor 6</span><span class="method-verdict method-valid">2項目</span></div><div class="method-body"><table class="data-table" style="margin:0"><tr><th style="width:30px">Q</th><th>項目</th><th style="text-align:right;width:70px">負荷量</th></tr>
+<tr><td>12</td><td style="font-size:.75rem">少数の人々の意見や態度、行動を尊重することが多様性を高め、よりよい社会や組織を実現することにつながる</td><td style="text-align:right;font-weight:700">-0.706</td></tr>
+<tr><td>11</td><td style="font-size:.75rem">社会の中にある規範やルールが、自分たちの行動と進む方向を定めている</td><td style="text-align:right;font-weight:700">-0.434</td></tr>
+</table></div></div>
+<h3 class="article-h3">2024年6因子解との対応</h3>
+<table class="data-table">
+<tr><th>2024年</th><th>構成項目</th><th>2026年</th><th>構成項目</th><th>変化</th></tr>
+<tr><td>F1 直感感性</td><td>Q4,Q8,Q9,Q10,Q12,Q15</td><td rowspan="2">F1 (統合)</td><td rowspan="2">Q7,Q2,Q3,Q9,Q6,Q13,Q8,Q19,Q4,Q10,Q15</td><td rowspan="2">直感感性+人間復興+継承思考が1因子に統合</td></tr>
+<tr><td>F2 人間復興</td><td>Q2,Q3,Q6,Q7</td></tr>
+<tr><td>F3 分散社会</td><td>Q16,Q17,Q18</td><td>F5</td><td>Q5,Q18,Q17,Q16</td><td>Q5が加わり、テクノロジーと分散が結合</td></tr>
+<tr><td>F4 自然共生</td><td>Q14</td><td>F2</td><td>Q14</td><td>構成変化なし</td></tr>
+<tr><td>F5 主客未分</td><td>Q21</td><td>F4</td><td>Q20,Q21</td><td>Q20が加わり、変化と存在が結合</td></tr>
+<tr><td>F6 継承思考</td><td>Q13</td><td>→F1に統合</td><td>—</td><td>独立因子としては消失</td></tr>
+<tr><td>—</td><td>—</td><td>F6 (新出)</td><td>Q12,Q11</td><td>規範・多様性が新因子として分離</td></tr>
+</table>
+<span class="section-num" id="sec3">3</span>
+<h2 class="article-h2">分散分析結果</h2>
+<p>因子分析によって得られた6グループに対して項目合計値を算出し、男女・年代・居住エリア別に一元配置分散分析を行った。有意な場合はBonferroni補正による多重比較を実施した。</p>
+<h3 class="article-h3">6因子 × 男女</h3>
+<table class="data-table"><tr><th>因子</th><th style="text-align:right">男性</th><th style="text-align:right">女性</th><th style="text-align:right">F値</th><th style="text-align:right">p</th><th style="text-align:right">η²</th><th>判定</th><th>多重比較（有意ペア）</th></tr>
+<tr><td>F1</td><td style="text-align:right">25.64</td><td style="text-align:right">25.02</td><td style="text-align:right">2.028</td><td style="text-align:right">0.1547</td><td style="text-align:right">0.0018</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F2</td><td style="text-align:right">2.88</td><td style="text-align:right">2.82</td><td style="text-align:right">1.397</td><td style="text-align:right">0.2375</td><td style="text-align:right">0.0013</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr style="font-weight:700"><td>F3</td><td style="text-align:right">2.72</td><td style="text-align:right">2.83</td><td style="text-align:right">4.288</td><td style="text-align:right">0.0386</td><td style="text-align:right">0.0039</td><td>*</td><td style="font-size:.7rem">男性>女性</td></tr>
+<tr><td>F4</td><td style="text-align:right">5.31</td><td style="text-align:right">5.41</td><td style="text-align:right">1.227</td><td style="text-align:right">0.2683</td><td style="text-align:right">0.0011</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F5</td><td style="text-align:right">10.75</td><td style="text-align:right">10.75</td><td style="text-align:right">0.001</td><td style="text-align:right">0.9712</td><td style="text-align:right">0.0000</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F6</td><td style="text-align:right">5.27</td><td style="text-align:right">5.21</td><td style="text-align:right">0.607</td><td style="text-align:right">0.4360</td><td style="text-align:right">0.0005</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+</table>
+<h3 class="article-h3">6因子 × 年代（20-60代）</h3>
+<table class="data-table"><tr><th>因子</th><th style="text-align:right">20代</th><th style="text-align:right">30代</th><th style="text-align:right">40代</th><th style="text-align:right">50代</th><th style="text-align:right">60代</th><th style="text-align:right">F値</th><th style="text-align:right">p</th><th style="text-align:right">η²</th><th>判定</th><th>多重比較（有意ペア）</th></tr>
+<tr style="font-weight:700"><td>F1</td><td style="text-align:right">26.39</td><td style="text-align:right">27.69</td><td style="text-align:right">26.18</td><td style="text-align:right">25.16</td><td style="text-align:right">23.58</td><td style="text-align:right">10.191</td><td style="text-align:right">0.0000</td><td style="text-align:right">0.0361</td><td>***</td><td style="font-size:.7rem">20代<60代; 30代<50代; 30代<60代; 40代<60代; 50代<60代</td></tr>
+<tr><td>F2</td><td style="text-align:right">2.71</td><td style="text-align:right">2.79</td><td style="text-align:right">2.89</td><td style="text-align:right">2.86</td><td style="text-align:right">2.87</td><td style="text-align:right">0.717</td><td style="text-align:right">0.5806</td><td style="text-align:right">0.0026</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F3</td><td style="text-align:right">2.90</td><td style="text-align:right">2.75</td><td style="text-align:right">2.81</td><td style="text-align:right">2.77</td><td style="text-align:right">2.70</td><td style="text-align:right">0.997</td><td style="text-align:right">0.4082</td><td style="text-align:right">0.0037</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F4</td><td style="text-align:right">5.39</td><td style="text-align:right">5.53</td><td style="text-align:right">5.34</td><td style="text-align:right">5.42</td><td style="text-align:right">5.18</td><td style="text-align:right">1.958</td><td style="text-align:right">0.0987</td><td style="text-align:right">0.0071</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr style="font-weight:700"><td>F5</td><td style="text-align:right">10.71</td><td style="text-align:right">11.26</td><td style="text-align:right">10.70</td><td style="text-align:right">10.78</td><td style="text-align:right">10.50</td><td style="text-align:right">2.726</td><td style="text-align:right">0.0282</td><td style="text-align:right">0.0099</td><td>*</td><td style="font-size:.7rem">30代<60代</td></tr>
+<tr style="font-weight:700"><td>F6</td><td style="text-align:right">5.19</td><td style="text-align:right">5.42</td><td style="text-align:right">5.36</td><td style="text-align:right">5.26</td><td style="text-align:right">5.06</td><td style="text-align:right">2.488</td><td style="text-align:right">0.0418</td><td style="text-align:right">0.0091</td><td>*</td><td style="font-size:.7rem">—</td></tr>
+</table>
+<h3 class="article-h3">6因子 × 居住エリア</h3>
+<table class="data-table"><tr><th>因子</th><th style="text-align:right">都心部</th><th style="text-align:right">都市郊外</th><th style="text-align:right">地方都市</th><th style="text-align:right">地方郊外</th><th style="text-align:right">F値</th><th style="text-align:right">p</th><th style="text-align:right">η²</th><th>判定</th><th>多重比較（有意ペア）</th></tr>
+<tr><td>F1</td><td style="text-align:right">25.27</td><td style="text-align:right">25.07</td><td style="text-align:right">25.93</td><td style="text-align:right">24.94</td><td style="text-align:right">1.079</td><td style="text-align:right">0.3569</td><td style="text-align:right">0.0030</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F2</td><td style="text-align:right">2.80</td><td style="text-align:right">2.86</td><td style="text-align:right">2.88</td><td style="text-align:right">2.85</td><td style="text-align:right">0.422</td><td style="text-align:right">0.7373</td><td style="text-align:right">0.0012</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F3</td><td style="text-align:right">2.73</td><td style="text-align:right">2.68</td><td style="text-align:right">2.81</td><td style="text-align:right">2.80</td><td style="text-align:right">1.520</td><td style="text-align:right">0.2076</td><td style="text-align:right">0.0042</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F4</td><td style="text-align:right">5.32</td><td style="text-align:right">5.32</td><td style="text-align:right">5.37</td><td style="text-align:right">5.33</td><td style="text-align:right">0.095</td><td style="text-align:right">0.9627</td><td style="text-align:right">0.0003</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F5</td><td style="text-align:right">10.70</td><td style="text-align:right">10.68</td><td style="text-align:right">10.87</td><td style="text-align:right">10.65</td><td style="text-align:right">0.517</td><td style="text-align:right">0.6704</td><td style="text-align:right">0.0014</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F6</td><td style="text-align:right">5.24</td><td style="text-align:right">5.17</td><td style="text-align:right">5.32</td><td style="text-align:right">5.21</td><td style="text-align:right">0.625</td><td style="text-align:right">0.5988</td><td style="text-align:right">0.0017</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+</table>
+<h3 class="article-h3">3因子 × 男女</h3>
+<table class="data-table"><tr><th>因子</th><th style="text-align:right">男性</th><th style="text-align:right">女性</th><th style="text-align:right">F値</th><th style="text-align:right">p</th><th style="text-align:right">η²</th><th>判定</th><th>多重比較（有意ペア）</th></tr>
+<tr><td>F1</td><td style="text-align:right">25.64</td><td style="text-align:right">25.02</td><td style="text-align:right">2.028</td><td style="text-align:right">0.1547</td><td style="text-align:right">0.0018</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F2</td><td style="text-align:right">18.99</td><td style="text-align:right">18.90</td><td style="text-align:right">0.152</td><td style="text-align:right">0.6963</td><td style="text-align:right">0.0001</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F3</td><td style="text-align:right">5.38</td><td style="text-align:right">5.51</td><td style="text-align:right">2.566</td><td style="text-align:right">0.1095</td><td style="text-align:right">0.0023</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+</table>
+<h3 class="article-h3">3因子 × 年代（20-60代）</h3>
+<table class="data-table"><tr><th>因子</th><th style="text-align:right">20代</th><th style="text-align:right">30代</th><th style="text-align:right">40代</th><th style="text-align:right">50代</th><th style="text-align:right">60代</th><th style="text-align:right">F値</th><th style="text-align:right">p</th><th style="text-align:right">η²</th><th>判定</th><th>多重比較（有意ペア）</th></tr>
+<tr style="font-weight:700"><td>F1</td><td style="text-align:right">26.39</td><td style="text-align:right">27.69</td><td style="text-align:right">26.18</td><td style="text-align:right">25.16</td><td style="text-align:right">23.58</td><td style="text-align:right">10.191</td><td style="text-align:right">0.0000</td><td style="text-align:right">0.0361</td><td>***</td><td style="font-size:.7rem">20代<60代; 30代<50代; 30代<60代; 40代<60代; 50代<60代</td></tr>
+<tr><td>F2</td><td style="text-align:right">18.76</td><td style="text-align:right">19.47</td><td style="text-align:right">18.99</td><td style="text-align:right">19.08</td><td style="text-align:right">18.54</td><td style="text-align:right">1.827</td><td style="text-align:right">0.1213</td><td style="text-align:right">0.0067</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F3</td><td style="text-align:right">5.56</td><td style="text-align:right">5.59</td><td style="text-align:right">5.51</td><td style="text-align:right">5.44</td><td style="text-align:right">5.28</td><td style="text-align:right">1.842</td><td style="text-align:right">0.1184</td><td style="text-align:right">0.0067</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+</table>
+<h3 class="article-h3">3因子 × 居住エリア</h3>
+<table class="data-table"><tr><th>因子</th><th style="text-align:right">都心部</th><th style="text-align:right">都市郊外</th><th style="text-align:right">地方都市</th><th style="text-align:right">地方郊外</th><th style="text-align:right">F値</th><th style="text-align:right">p</th><th style="text-align:right">η²</th><th>判定</th><th>多重比較（有意ペア）</th></tr>
+<tr><td>F1</td><td style="text-align:right">25.27</td><td style="text-align:right">25.07</td><td style="text-align:right">25.93</td><td style="text-align:right">24.94</td><td style="text-align:right">1.079</td><td style="text-align:right">0.3569</td><td style="text-align:right">0.0030</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F2</td><td style="text-align:right">18.77</td><td style="text-align:right">18.89</td><td style="text-align:right">19.16</td><td style="text-align:right">18.80</td><td style="text-align:right">0.639</td><td style="text-align:right">0.5899</td><td style="text-align:right">0.0018</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+<tr><td>F3</td><td style="text-align:right">5.40</td><td style="text-align:right">5.30</td><td style="text-align:right">5.51</td><td style="text-align:right">5.46</td><td style="text-align:right">1.213</td><td style="text-align:right">0.3037</td><td style="text-align:right">0.0033</td><td>n.s.</td><td style="font-size:.7rem">—</td></tr>
+</table>
+<span class="section-num" id="sec4">4</span>
+<h2 class="article-h2">分散分析の考察</h2>
+
+<table class="data-table">
+<tr><th>属性</th><th>2024年結果</th><th>2026年結果</th><th>変化</th></tr>
+<tr style="font-weight:700"><td>居住エリア</td><td>4因子で有意（直感感性・人間復興・分散社会・継承思考）<br>地方郊外 &gt; 都心部・都市郊外・地方都市</td><td>全因子で有意差なし（6因子・3因子とも）</td><td>地方郊外の特異性が完全に消失</td></tr>
+<tr style="font-weight:700"><td>年代</td><td>全因子で有意差なし</td><td>6因子解: F1(p&lt;.001), F5(p=.028), F6(p=.042) で有意<br>3因子解: F1(p&lt;.001) で有意<br>60代が全年代より賛同度が高い</td><td>年代差が新たに出現</td></tr>
+<tr><td>男女</td><td>直感感性のみ有意</td><td>6因子解: F3(p=.039)のみ有意<br>3因子解: 有意差なし</td><td>ほぼ変化なし（1因子のみ）</td></tr>
+</table>
+
+<div class="pullquote">
+2024年に見出された「地方郊外において変化の種が育っている」という仮説は、2026年データでは支持されない。代わりに、年代（特に60代の高い賛同度）が新たな差異要因として浮上した。これは「変化は居住エリアではなく世代の経験に規定される」方向への転換を示唆する。
+</div>
+<span class="section-num" id="sec5">5</span>
+<h2 class="article-h2">カイ二乗検定・残差分析: Q12（最重要キーワード）</h2>
+<h3 class="article-h3">Q12 × 男女</h3>
+<p style="font-size:.82rem;color:var(--text-secondary)">χ²=20.75, df=6, p=0.0020 **, Cramer's V=0.137, n=1106</p>
+<p style="font-size:.82rem;font-weight:600;margin-top:16px">構成比 (%)</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">機械化</th><th style="text-align:right">人間化</th><th style="text-align:right">情報化</th><th style="text-align:right">最適化</th><th style="text-align:right">自律</th><th style="text-align:right">自然</th><th style="text-align:right">該当なし</th><th style="text-align:right">n</th></tr>
+<tr><td>男性</td><td style="text-align:right">2.9</td><td style="text-align:right">12.4</td><td style="text-align:right">9.6</td><td style="text-align:right">39.0</td><td style="text-align:right">9.4</td><td style="text-align:right">15.8</td><td style="text-align:right">10.9</td><td style="text-align:right">659</td></tr>
+<tr><td>女性</td><td style="text-align:right">1.8</td><td style="text-align:right">8.1</td><td style="text-align:right">8.1</td><td style="text-align:right">34.7</td><td style="text-align:right">13.9</td><td style="text-align:right">16.3</td><td style="text-align:right">17.2</td><td style="text-align:right">447</td></tr>
+</table>
+<p style="font-size:.82rem;font-weight:600;margin-top:16px">調整済み残差</p>
+<p style="font-size:.72rem;color:var(--text-muted);margin-bottom:8px">赤太字: |残差| &ge; 2.58 (p&lt;.01) / オレンジ太字: |残差| &ge; 1.96 (p&lt;.05)</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">機械化</th><th style="text-align:right">人間化</th><th style="text-align:right">情報化</th><th style="text-align:right">最適化</th><th style="text-align:right">自律</th><th style="text-align:right">自然</th><th style="text-align:right">該当なし</th></tr>
+<tr><td>男性</td><td style="text-align:right;color:var(--text-muted)">+1.156</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.320</td><td style="text-align:right;color:var(--text-muted)">+0.861</td><td style="text-align:right;color:var(--text-muted)">+1.459</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.308</td><td style="text-align:right;color:var(--text-muted)">-0.245</td><td style="text-align:right;font-weight:700;color:var(--accent)">-3.012</td></tr>
+<tr><td>女性</td><td style="text-align:right;color:var(--text-muted)">-1.156</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.320</td><td style="text-align:right;color:var(--text-muted)">-0.861</td><td style="text-align:right;color:var(--text-muted)">-1.459</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.308</td><td style="text-align:right;color:var(--text-muted)">+0.245</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.012</td></tr>
+</table>
+<h3 class="article-h3">Q12 × 年代</h3>
+<p style="font-size:.82rem;color:var(--text-secondary)">χ²=105.02, df=24, p=0.0000 ***, Cramer's V=0.155, n=1093</p>
+<p style="font-size:.82rem;font-weight:600;margin-top:16px">構成比 (%)</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">機械化</th><th style="text-align:right">人間化</th><th style="text-align:right">情報化</th><th style="text-align:right">最適化</th><th style="text-align:right">自律</th><th style="text-align:right">自然</th><th style="text-align:right">該当なし</th><th style="text-align:right">n</th></tr>
+<tr><td>20代</td><td style="text-align:right">3.2</td><td style="text-align:right">9.7</td><td style="text-align:right">16.1</td><td style="text-align:right">27.4</td><td style="text-align:right">11.3</td><td style="text-align:right">6.5</td><td style="text-align:right">25.8</td><td style="text-align:right">62</td></tr>
+<tr><td>30代</td><td style="text-align:right">5.8</td><td style="text-align:right">19.0</td><td style="text-align:right">6.6</td><td style="text-align:right">31.4</td><td style="text-align:right">5.8</td><td style="text-align:right">7.3</td><td style="text-align:right">24.1</td><td style="text-align:right">137</td></tr>
+<tr><td>40代</td><td style="text-align:right">4.1</td><td style="text-align:right">14.7</td><td style="text-align:right">9.0</td><td style="text-align:right">35.1</td><td style="text-align:right">9.4</td><td style="text-align:right">13.1</td><td style="text-align:right">14.7</td><td style="text-align:right">245</td></tr>
+<tr><td>50代</td><td style="text-align:right">0.9</td><td style="text-align:right">9.9</td><td style="text-align:right">9.1</td><td style="text-align:right">40.9</td><td style="text-align:right">13.5</td><td style="text-align:right">14.6</td><td style="text-align:right">11.1</td><td style="text-align:right">342</td></tr>
+<tr><td>60代</td><td style="text-align:right">1.3</td><td style="text-align:right">5.5</td><td style="text-align:right">8.8</td><td style="text-align:right">39.7</td><td style="text-align:right">12.4</td><td style="text-align:right">24.8</td><td style="text-align:right">7.5</td><td style="text-align:right">307</td></tr>
+</table>
+<p style="font-size:.82rem;font-weight:600;margin-top:16px">調整済み残差</p>
+<p style="font-size:.72rem;color:var(--text-muted);margin-bottom:8px">赤太字: |残差| &ge; 2.58 (p&lt;.01) / オレンジ太字: |残差| &ge; 1.96 (p&lt;.05)</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">機械化</th><th style="text-align:right">人間化</th><th style="text-align:right">情報化</th><th style="text-align:right">最適化</th><th style="text-align:right">自律</th><th style="text-align:right">自然</th><th style="text-align:right">該当なし</th></tr>
+<tr><td>20代</td><td style="text-align:right;color:var(--text-muted)">+0.395</td><td style="text-align:right;color:var(--text-muted)">-0.315</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+1.998</td><td style="text-align:right;color:var(--text-muted)">-1.661</td><td style="text-align:right;color:var(--text-muted)">+0.033</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.067</td><td style="text-align:right;font-weight:700;color:var(--accent)">+2.967</td></tr>
+<tr><td>30代</td><td style="text-align:right;font-weight:700;color:var(--accent)">+2.717</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.251</td><td style="text-align:right;color:var(--text-muted)">-1.085</td><td style="text-align:right;color:var(--text-muted)">-1.537</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.115</td><td style="text-align:right;font-weight:700;color:var(--accent)">-2.900</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.947</td></tr>
+<tr><td>40代</td><td style="text-align:right;color:var(--text-muted)">+1.845</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.172</td><td style="text-align:right;color:var(--text-muted)">-0.048</td><td style="text-align:right;color:var(--text-muted)">-0.818</td><td style="text-align:right;color:var(--text-muted)">-1.001</td><td style="text-align:right;color:var(--text-muted)">-1.306</td><td style="text-align:right;color:var(--text-muted)">+0.698</td></tr>
+<tr><td>50代</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.290</td><td style="text-align:right;color:var(--text-muted)">-0.678</td><td style="text-align:right;color:var(--text-muted)">+0.005</td><td style="text-align:right;color:var(--text-muted)">+1.664</td><td style="text-align:right;color:var(--text-muted)">+1.621</td><td style="text-align:right;color:var(--text-muted)">-0.684</td><td style="text-align:right;color:var(--text-muted)">-1.473</td></tr>
+<tr><td>60代</td><td style="text-align:right;color:var(--text-muted)">-1.554</td><td style="text-align:right;font-weight:700;color:var(--accent)">-3.549</td><td style="text-align:right;color:var(--text-muted)">-0.189</td><td style="text-align:right;color:var(--text-muted)">+1.030</td><td style="text-align:right;color:var(--text-muted)">+0.798</td><td style="text-align:right;font-weight:700;color:var(--accent)">+5.118</td><td style="text-align:right;font-weight:700;color:var(--accent)">-3.563</td></tr>
+</table>
+<h3 class="article-h3">Q12 × 居住エリア</h3>
+<p style="font-size:.82rem;color:var(--text-secondary)">χ²=31.16, df=18, p=0.0276 *, Cramer's V=0.098, n=1088</p>
+<p style="font-size:.82rem;font-weight:600;margin-top:16px">構成比 (%)</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">機械化</th><th style="text-align:right">人間化</th><th style="text-align:right">情報化</th><th style="text-align:right">最適化</th><th style="text-align:right">自律</th><th style="text-align:right">自然</th><th style="text-align:right">該当なし</th><th style="text-align:right">n</th></tr>
+<tr><td>都心部</td><td style="text-align:right">4.1</td><td style="text-align:right">12.9</td><td style="text-align:right">9.5</td><td style="text-align:right">36.5</td><td style="text-align:right">12.0</td><td style="text-align:right">14.9</td><td style="text-align:right">10.0</td><td style="text-align:right">241</td></tr>
+<tr><td>都市郊外</td><td style="text-align:right">2.1</td><td style="text-align:right">8.7</td><td style="text-align:right">6.3</td><td style="text-align:right">40.9</td><td style="text-align:right">12.9</td><td style="text-align:right">16.8</td><td style="text-align:right">12.2</td><td style="text-align:right">286</td></tr>
+<tr><td>地方都市</td><td style="text-align:right">2.6</td><td style="text-align:right">9.7</td><td style="text-align:right">9.0</td><td style="text-align:right">36.6</td><td style="text-align:right">10.8</td><td style="text-align:right">11.9</td><td style="text-align:right">19.4</td><td style="text-align:right">268</td></tr>
+<tr><td>地方郊外</td><td style="text-align:right">1.4</td><td style="text-align:right">12.3</td><td style="text-align:right">10.9</td><td style="text-align:right">35.5</td><td style="text-align:right">9.6</td><td style="text-align:right">19.8</td><td style="text-align:right">10.6</td><td style="text-align:right">293</td></tr>
+</table>
+<p style="font-size:.82rem;font-weight:600;margin-top:16px">調整済み残差</p>
+<p style="font-size:.72rem;color:var(--text-muted);margin-bottom:8px">赤太字: |残差| &ge; 2.58 (p&lt;.01) / オレンジ太字: |残差| &ge; 1.96 (p&lt;.05)</p>
+<table class="data-table"><tr><th></th><th style="text-align:right">機械化</th><th style="text-align:right">人間化</th><th style="text-align:right">情報化</th><th style="text-align:right">最適化</th><th style="text-align:right">自律</th><th style="text-align:right">自然</th><th style="text-align:right">該当なし</th></tr>
+<tr><td>都心部</td><td style="text-align:right;color:var(--text-muted)">+1.886</td><td style="text-align:right;color:var(--text-muted)">+1.142</td><td style="text-align:right;color:var(--text-muted)">+0.388</td><td style="text-align:right;color:var(--text-muted)">-0.325</td><td style="text-align:right;color:var(--text-muted)">+0.405</td><td style="text-align:right;color:var(--text-muted)">-0.506</td><td style="text-align:right;color:var(--text-muted)">-1.615</td></tr>
+<tr><td>都市郊外</td><td style="text-align:right;color:var(--text-muted)">-0.486</td><td style="text-align:right;color:var(--text-muted)">-1.333</td><td style="text-align:right;color:var(--text-muted)">-1.812</td><td style="text-align:right;color:var(--text-muted)">+1.425</td><td style="text-align:right;color:var(--text-muted)">+1.015</td><td style="text-align:right;color:var(--text-muted)">+0.425</td><td style="text-align:right;color:var(--text-muted)">-0.476</td></tr>
+<tr><td>地方都市</td><td style="text-align:right;color:var(--text-muted)">+0.158</td><td style="text-align:right;color:var(--text-muted)">-0.694</td><td style="text-align:right;color:var(--text-muted)">+0.026</td><td style="text-align:right;color:var(--text-muted)">-0.328</td><td style="text-align:right;color:var(--text-muted)">-0.288</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.085</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.555</td></tr>
+<tr><td>地方郊外</td><td style="text-align:right;color:var(--text-muted)">-1.437</td><td style="text-align:right;color:var(--text-muted)">+0.928</td><td style="text-align:right;color:var(--text-muted)">+1.410</td><td style="text-align:right;color:var(--text-muted)">-0.792</td><td style="text-align:right;color:var(--text-muted)">-1.106</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.077</td><td style="text-align:right;color:var(--text-muted)">-1.469</td></tr>
+</table>
+<h3 class="article-h3">Q12 × 男女×年代</h3>
+<p style="font-size:.82rem;color:var(--text-secondary)">χ²=158.00, df=54, p=0.0000 ***, Cramer's V=0.156, n=1089</p>
+<p style="font-size:.82rem;font-weight:600;margin-top:16px">構成比 (%) と調整済み残差</p>
+<table class="data-table"><tr><th></th><th style="text-align:center" colspan="2">機械化</th><th style="text-align:center" colspan="2">人間化</th><th style="text-align:center" colspan="2">情報化</th><th style="text-align:center" colspan="2">最適化</th><th style="text-align:center" colspan="2">自律</th><th style="text-align:center" colspan="2">自然</th><th style="text-align:center" colspan="2">該当なし</th><th style="text-align:right">n</th></tr>
+<tr><td></td><th style="text-align:right;font-size:.65rem">%</th><th style="text-align:right;font-size:.65rem">残差</th><th style="text-align:right;font-size:.65rem">%</th><th style="text-align:right;font-size:.65rem">残差</th><th style="text-align:right;font-size:.65rem">%</th><th style="text-align:right;font-size:.65rem">残差</th><th style="text-align:right;font-size:.65rem">%</th><th style="text-align:right;font-size:.65rem">残差</th><th style="text-align:right;font-size:.65rem">%</th><th style="text-align:right;font-size:.65rem">残差</th><th style="text-align:right;font-size:.65rem">%</th><th style="text-align:right;font-size:.65rem">残差</th><th style="text-align:right;font-size:.65rem">%</th><th style="text-align:right;font-size:.65rem">残差</th><td></td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">男性_20代</td><td style="text-align:right;font-size:.72rem">0.0</td><td style="text-align:right;color:var(--text-muted)">-0.701</td><td style="text-align:right;font-size:.72rem">10.5</td><td style="text-align:right;color:var(--text-muted)">-0.031</td><td style="text-align:right;font-size:.72rem">21.1</td><td style="text-align:right;color:var(--text-muted)">+1.830</td><td style="text-align:right;font-size:.72rem">36.8</td><td style="text-align:right;color:var(--text-muted)">-0.057</td><td style="text-align:right;font-size:.72rem">10.5</td><td style="text-align:right;color:var(--text-muted)">-0.094</td><td style="text-align:right;font-size:.72rem">5.3</td><td style="text-align:right;color:var(--text-muted)">-1.262</td><td style="text-align:right;font-size:.72rem">15.8</td><td style="text-align:right;color:var(--text-muted)">+0.320</td><td style="text-align:right">19</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">男性_30代</td><td style="text-align:right;font-size:.72rem">10.0</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.854</td><td style="text-align:right;font-size:.72rem">26.7</td><td style="text-align:right;font-weight:700;color:var(--accent)">+4.097</td><td style="text-align:right;font-size:.72rem">8.3</td><td style="text-align:right;color:var(--text-muted)">-0.210</td><td style="text-align:right;font-size:.72rem">26.7</td><td style="text-align:right;color:var(--text-muted)">-1.778</td><td style="text-align:right;font-size:.72rem">3.3</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-1.988</td><td style="text-align:right;font-size:.72rem">3.3</td><td style="text-align:right;font-weight:700;color:var(--accent)">-2.709</td><td style="text-align:right;font-size:.72rem">21.7</td><td style="text-align:right;color:var(--text-muted)">+1.959</td><td style="text-align:right">60</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">男性_40代</td><td style="text-align:right;font-size:.72rem">5.1</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.117</td><td style="text-align:right;font-size:.72rem">16.8</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.444</td><td style="text-align:right;font-size:.72rem">11.7</td><td style="text-align:right;color:var(--text-muted)">+1.127</td><td style="text-align:right;font-size:.72rem">32.1</td><td style="text-align:right;color:var(--text-muted)">-1.383</td><td style="text-align:right;font-size:.72rem">8.0</td><td style="text-align:right;color:var(--text-muted)">-1.260</td><td style="text-align:right;font-size:.72rem">15.3</td><td style="text-align:right;color:var(--text-muted)">-0.129</td><td style="text-align:right;font-size:.72rem">10.9</td><td style="text-align:right;color:var(--text-muted)">-0.872</td><td style="text-align:right">137</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">男性_50代</td><td style="text-align:right;font-size:.72rem">1.4</td><td style="text-align:right;color:var(--text-muted)">-1.100</td><td style="text-align:right;font-size:.72rem">12.8</td><td style="text-align:right;color:var(--text-muted)">+1.072</td><td style="text-align:right;font-size:.72rem">9.0</td><td style="text-align:right;color:var(--text-muted)">-0.048</td><td style="text-align:right;font-size:.72rem">42.7</td><td style="text-align:right;color:var(--text-muted)">+1.734</td><td style="text-align:right;font-size:.72rem">10.9</td><td style="text-align:right;color:var(--text-muted)">-0.155</td><td style="text-align:right;font-size:.72rem">12.3</td><td style="text-align:right;color:var(--text-muted)">-1.503</td><td style="text-align:right;font-size:.72rem">10.9</td><td style="text-align:right;color:var(--text-muted)">-1.150</td><td style="text-align:right">211</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">男性_60代</td><td style="text-align:right;font-size:.72rem">1.3</td><td style="text-align:right;color:var(--text-muted)">-1.261</td><td style="text-align:right;font-size:.72rem">6.2</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.503</td><td style="text-align:right;font-size:.72rem">8.4</td><td style="text-align:right;color:var(--text-muted)">-0.425</td><td style="text-align:right;font-size:.72rem">43.6</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.151</td><td style="text-align:right;font-size:.72rem">10.6</td><td style="text-align:right;color:var(--text-muted)">-0.338</td><td style="text-align:right;font-size:.72rem">23.3</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.559</td><td style="text-align:right;font-size:.72rem">6.6</td><td style="text-align:right;font-weight:700;color:var(--accent)">-3.343</td><td style="text-align:right">227</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">女性_20代</td><td style="text-align:right;font-size:.72rem">4.7</td><td style="text-align:right;color:var(--text-muted)">+0.935</td><td style="text-align:right;font-size:.72rem">9.3</td><td style="text-align:right;color:var(--text-muted)">-0.311</td><td style="text-align:right;font-size:.72rem">14.0</td><td style="text-align:right;color:var(--text-muted)">+1.132</td><td style="text-align:right;font-size:.72rem">23.3</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-1.964</td><td style="text-align:right;font-size:.72rem">11.6</td><td style="text-align:right;color:var(--text-muted)">+0.090</td><td style="text-align:right;font-size:.72rem">7.0</td><td style="text-align:right;color:var(--text-muted)">-1.605</td><td style="text-align:right;font-size:.72rem">30.2</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.332</td><td style="text-align:right">43</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">女性_30代</td><td style="text-align:right;font-size:.72rem">2.6</td><td style="text-align:right;color:var(--text-muted)">+0.088</td><td style="text-align:right;font-size:.72rem">13.2</td><td style="text-align:right;color:var(--text-muted)">+0.705</td><td style="text-align:right;font-size:.72rem">5.3</td><td style="text-align:right;color:var(--text-muted)">-1.204</td><td style="text-align:right;font-size:.72rem">35.5</td><td style="text-align:right;color:var(--text-muted)">-0.362</td><td style="text-align:right;font-size:.72rem">7.9</td><td style="text-align:right;color:var(--text-muted)">-0.948</td><td style="text-align:right;font-size:.72rem">9.2</td><td style="text-align:right;color:var(--text-muted)">-1.613</td><td style="text-align:right;font-size:.72rem">26.3</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.459</td><td style="text-align:right">76</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">女性_40代</td><td style="text-align:right;font-size:.72rem">2.8</td><td style="text-align:right;color:var(--text-muted)">+0.227</td><td style="text-align:right;font-size:.72rem">11.2</td><td style="text-align:right;color:var(--text-muted)">+0.166</td><td style="text-align:right;font-size:.72rem">5.6</td><td style="text-align:right;color:var(--text-muted)">-1.320</td><td style="text-align:right;font-size:.72rem">39.3</td><td style="text-align:right;color:var(--text-muted)">+0.402</td><td style="text-align:right;font-size:.72rem">11.2</td><td style="text-align:right;color:var(--text-muted)">+0.004</td><td style="text-align:right;font-size:.72rem">10.3</td><td style="text-align:right;color:var(--text-muted)">-1.623</td><td style="text-align:right;font-size:.72rem">19.6</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.024</td><td style="text-align:right">107</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">女性_50代</td><td style="text-align:right;font-size:.72rem">0.0</td><td style="text-align:right;color:var(--text-muted)">-1.929</td><td style="text-align:right;font-size:.72rem">4.7</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.380</td><td style="text-align:right;font-size:.72rem">9.3</td><td style="text-align:right;color:var(--text-muted)">+0.089</td><td style="text-align:right;font-size:.72rem">38.8</td><td style="text-align:right;color:var(--text-muted)">+0.323</td><td style="text-align:right;font-size:.72rem">17.8</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">+2.542</td><td style="text-align:right;font-size:.72rem">18.6</td><td style="text-align:right;color:var(--text-muted)">+0.965</td><td style="text-align:right;font-size:.72rem">10.9</td><td style="text-align:right;color:var(--text-muted)">-0.877</td><td style="text-align:right">129</td></tr>
+<tr><td style="font-size:.72rem;white-space:nowrap">女性_60代</td><td style="text-align:right;font-size:.72rem">1.2</td><td style="text-align:right;color:var(--text-muted)">-0.735</td><td style="text-align:right;font-size:.72rem">3.8</td><td style="text-align:right;font-weight:700;color:var(--accent-orange)">-2.099</td><td style="text-align:right;font-size:.72rem">10.0</td><td style="text-align:right;color:var(--text-muted)">+0.294</td><td style="text-align:right;font-size:.72rem">28.7</td><td style="text-align:right;color:var(--text-muted)">-1.673</td><td style="text-align:right;font-size:.72rem">17.5</td><td style="text-align:right;color:var(--text-muted)">+1.855</td><td style="text-align:right;font-size:.72rem">28.7</td><td style="text-align:right;font-weight:700;color:var(--accent)">+3.332</td><td style="text-align:right;font-size:.72rem">10.0</td><td style="text-align:right;color:var(--text-muted)">-0.907</td><td style="text-align:right">80</td></tr>
+</table>
+<span class="section-num" id="sec6">6</span>
+<h2 class="article-h2">カイ二乗検定・残差分析: Q13（過去の価値観）</h2>
+<p>Q13は複数選択（MA）のため、各キーワードを個別の二値変数として検定した。</p>
+<h3 class="article-h3">Q13 × 男女</h3>
+<table class="data-table"><tr><th>キーワード</th><th style="text-align:right">男性</th><th style="text-align:right">女性</th><th style="text-align:right">χ²</th><th style="text-align:right">p</th><th>判定</th></tr>
+<tr><td>機械化</td><td style="text-align:right">25.6%</td><td style="text-align:right">21.5%</td><td style="text-align:right">2.32</td><td style="text-align:right">0.1280</td><td>n.s.</td></tr>
+<tr style="font-weight:700"><td>人間化</td><td style="text-align:right">16.7%</td><td style="text-align:right">8.7%</td><td style="text-align:right">13.83</td><td style="text-align:right">0.0002</td><td>***</td></tr>
+<tr><td>情報化</td><td style="text-align:right">12.6%</td><td style="text-align:right">10.3%</td><td style="text-align:right">1.16</td><td style="text-align:right">0.2819</td><td>n.s.</td></tr>
+<tr><td>最適化</td><td style="text-align:right">12.1%</td><td style="text-align:right">10.7%</td><td style="text-align:right">0.38</td><td style="text-align:right">0.5358</td><td>n.s.</td></tr>
+<tr><td>自律</td><td style="text-align:right">9.1%</td><td style="text-align:right">10.7%</td><td style="text-align:right">0.63</td><td style="text-align:right">0.4267</td><td>n.s.</td></tr>
+<tr><td>自然</td><td style="text-align:right">11.5%</td><td style="text-align:right">13.4%</td><td style="text-align:right">0.72</td><td style="text-align:right">0.3975</td><td>n.s.</td></tr>
+<tr style="font-weight:700"><td>該当なし</td><td style="text-align:right">31.0%</td><td style="text-align:right">40.7%</td><td style="text-align:right">10.74</td><td style="text-align:right">0.0010</td><td>**</td></tr>
+</table>
+<h3 class="article-h3">Q13 × 年代</h3>
+<table class="data-table"><tr><th>キーワード</th><th style="text-align:right">20代</th><th style="text-align:right">30代</th><th style="text-align:right">40代</th><th style="text-align:right">50代</th><th style="text-align:right">60代</th><th style="text-align:right">χ²</th><th style="text-align:right">p</th><th>判定</th></tr>
+<tr style="font-weight:700"><td>機械化</td><td style="text-align:right">17.7%</td><td style="text-align:right">13.1%</td><td style="text-align:right">21.6%</td><td style="text-align:right">22.5%</td><td style="text-align:right">33.2%</td><td style="text-align:right">25.76</td><td style="text-align:right">0.0000</td><td>***</td></tr>
+<tr><td>人間化</td><td style="text-align:right">9.7%</td><td style="text-align:right">14.6%</td><td style="text-align:right">13.1%</td><td style="text-align:right">14.0%</td><td style="text-align:right">14.3%</td><td style="text-align:right">1.16</td><td style="text-align:right">0.8845</td><td>n.s.</td></tr>
+<tr><td>情報化</td><td style="text-align:right">11.3%</td><td style="text-align:right">6.6%</td><td style="text-align:right">16.3%</td><td style="text-align:right">10.2%</td><td style="text-align:right">11.4%</td><td style="text-align:right">9.40</td><td style="text-align:right">0.0518</td><td>n.s.</td></tr>
+<tr><td>最適化</td><td style="text-align:right">21.0%</td><td style="text-align:right">13.9%</td><td style="text-align:right">11.0%</td><td style="text-align:right">10.2%</td><td style="text-align:right">10.4%</td><td style="text-align:right">7.14</td><td style="text-align:right">0.1285</td><td>n.s.</td></tr>
+<tr><td>自律</td><td style="text-align:right">8.1%</td><td style="text-align:right">8.0%</td><td style="text-align:right">13.5%</td><td style="text-align:right">9.1%</td><td style="text-align:right">9.4%</td><td style="text-align:right">4.57</td><td style="text-align:right">0.3339</td><td>n.s.</td></tr>
+<tr><td>自然</td><td style="text-align:right">9.7%</td><td style="text-align:right">14.6%</td><td style="text-align:right">11.0%</td><td style="text-align:right">12.3%</td><td style="text-align:right">12.4%</td><td style="text-align:right">1.44</td><td style="text-align:right">0.8380</td><td>n.s.</td></tr>
+<tr style="font-weight:700"><td>該当なし</td><td style="text-align:right">45.2%</td><td style="text-align:right">43.1%</td><td style="text-align:right">31.0%</td><td style="text-align:right">37.7%</td><td style="text-align:right">29.0%</td><td style="text-align:right">14.44</td><td style="text-align:right">0.0060</td><td>**</td></tr>
+</table>
+<h3 class="article-h3">Q13 × 居住エリア</h3>
+<table class="data-table"><tr><th>キーワード</th><th style="text-align:right">都心部</th><th style="text-align:right">都市郊外</th><th style="text-align:right">地方都市</th><th style="text-align:right">地方郊外</th><th style="text-align:right">χ²</th><th style="text-align:right">p</th><th>判定</th></tr>
+<tr><td>機械化</td><td style="text-align:right">25.7%</td><td style="text-align:right">27.6%</td><td style="text-align:right">22.8%</td><td style="text-align:right">20.8%</td><td style="text-align:right">4.26</td><td style="text-align:right">0.2344</td><td>n.s.</td></tr>
+<tr><td>人間化</td><td style="text-align:right">16.6%</td><td style="text-align:right">12.2%</td><td style="text-align:right">12.7%</td><td style="text-align:right">13.3%</td><td style="text-align:right">2.51</td><td style="text-align:right">0.4743</td><td>n.s.</td></tr>
+<tr><td>情報化</td><td style="text-align:right">14.5%</td><td style="text-align:right">11.9%</td><td style="text-align:right">11.6%</td><td style="text-align:right">8.9%</td><td style="text-align:right">4.16</td><td style="text-align:right">0.2446</td><td>n.s.</td></tr>
+<tr><td>最適化</td><td style="text-align:right">12.9%</td><td style="text-align:right">11.9%</td><td style="text-align:right">11.6%</td><td style="text-align:right">10.2%</td><td style="text-align:right">0.93</td><td style="text-align:right">0.8185</td><td>n.s.</td></tr>
+<tr><td>自律</td><td style="text-align:right">9.5%</td><td style="text-align:right">8.0%</td><td style="text-align:right">10.4%</td><td style="text-align:right">10.6%</td><td style="text-align:right">1.34</td><td style="text-align:right">0.7202</td><td>n.s.</td></tr>
+<tr><td>自然</td><td style="text-align:right">12.4%</td><td style="text-align:right">11.2%</td><td style="text-align:right">13.4%</td><td style="text-align:right">12.6%</td><td style="text-align:right">0.66</td><td style="text-align:right">0.8817</td><td>n.s.</td></tr>
+<tr><td>該当なし</td><td style="text-align:right">30.3%</td><td style="text-align:right">35.0%</td><td style="text-align:right">37.7%</td><td style="text-align:right">35.5%</td><td style="text-align:right">3.21</td><td style="text-align:right">0.3602</td><td>n.s.</td></tr>
+</table>
+<span class="section-num" id="sec7">7</span>
+<h2 class="article-h2">全体考察</h2>
+
+<h3 class="article-h3">7.1 自律社会構造（因子分析）</h3>
+<p>2024年の6因子（直感感性・人間復興・分散社会・自然共生・主客未分・継承思考）に対し、2026年では「直感感性」「人間復興」「継承思考」が1つの大因子に統合された。これは、個人の自律性・感性・記憶継承が分離した概念ではなく、一体的な価値志向として認識されるようになったことを示す。一方、「分散社会」「自然共生」「主客未分」は独立因子として維持されており、システム的・存在論的な概念は依然として分化した状態にある。新たにQ12（多様性）とQ11（規範）が独立因子として出現したことは、社会規範と多様性をめぐる意識が明確に分離したことを意味する。</p>
+
+<h3 class="article-h3">7.2 属性差の構造変化（分散分析）</h3>
+<p>分散分析の結果、2024年から2026年にかけて、属性差の構造が根本的に変化したことが統計的に確認された。2024年に4因子で有意差を示した居住エリアは、2026年では6因子・3因子のいずれでも有意差なしであった。代わりに年代がF1（p&lt;0.001）で高度に有意となり、60代が全年代より賛同度が高いという一貫したパターンが見られた。多重比較では、30代 vs 60代（p&lt;0.001）、40代 vs 60代（p&lt;0.001）、50代 vs 60代（p=0.018）がいずれも有意であった。</p>
+
+<h3 class="article-h3">7.3 SINIC社会像の属性差（残差分析）</h3>
+<p>Q12（最重要キーワード）の残差分析からは、年代による社会像の捉え方の違いが明確に示された。30代は「機械化」(+2.72)と「人間化」(+3.25)を有意に多く選択し、SINICにおける過去の社会像を重視する傾向がある。一方、60代は「自然」(+5.12)を突出して多く選択する。男女×年代の交差分析では、男性30代が「機械化」(+3.85)「人間化」(+4.10)に集中し、女性20-30代は「該当なし」(+3.33, +3.46)を有意に多く選択している。女性50代は「自律」(+2.54)が特徴的である。</p>
+
+<p>2024年の発見（30代後半-50代の女性がSINIC未来社会像を重視）と比較すると、2026年では「自律」を重視する女性50代という傾向は部分的に確認されるが、「自然」については60代の男女両方に移行しており、世代効果がより支配的になっている。</p>
+
+<div class="pullquote">
+「該当なし」の残差パターンは注目に値する。女性の若年層（20代+3.33, 30代+3.46, 40代+2.02）と60代男性（-3.34）で明確な対照をなしており、SINICの6社会像フレームワーク自体が若い女性にとって馴染みが薄く、高年男性にとっては自明なものとして機能していることを示している。
+</div>
+
+<div class="report-footer">
+<p>本レポートは<a href="sinic-survey-2026.html" style="color:var(--accent)">レポート1（統計解析全体）</a>の補完として、2024年度レポートと同一手法による分析結果をまとめたものです。分析手法: 主因子法・プロマックス回転による因子分析（3因子・6因子）、一元配置分散分析（Bonferroni補正による多重比較）、カイ二乗検定・調整済み残差分析。</p>
+</div>
+</article>
+</body>
+</html>
