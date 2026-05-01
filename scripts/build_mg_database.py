@@ -85,8 +85,20 @@ def deduplicate_concepts(concepts):
 
 def merge_additional_concepts(base_concepts, additional_files):
     """Merge additional concept files, deduplicating"""
-    all_concepts = list(base_concepts)
-    existing_names = {c.get("name_en", "").strip().lower() for c in base_concepts}
+    # First, deduplicate the base set itself
+    seen_base = {}
+    deduped_base = []
+    for c in base_concepts:
+        key = c.get("name_en", "").strip().lower()
+        if key and key not in seen_base:
+            seen_base[key] = True
+            deduped_base.append(c)
+        elif not key:
+            deduped_base.append(c)
+    if len(deduped_base) < len(base_concepts):
+        print(f"  Removed {len(base_concepts) - len(deduped_base)} duplicates within base set")
+    all_concepts = deduped_base
+    existing_names = {c.get("name_en", "").strip().lower() for c in deduped_base}
 
     for filepath in additional_files:
         if not os.path.exists(filepath):
@@ -150,8 +162,28 @@ def main():
         DATA_DIR / "mg_batch2_org.json",
         DATA_DIR / "mg_batch2_leadership.json",
         DATA_DIR / "mg_batch2_entrepreneurship.json",
+        DATA_DIR / "mg_batch3_expansion1.json",
+        DATA_DIR / "mg_batch3_expansion2.json",
     ]
     all_concepts = merge_additional_concepts(normalized, additional_files)
+
+    # Step 3.5: Apply enriched definitions (update only if new is longer)
+    enriched_defs_path = DATA_DIR / "mg_enriched_defs_batch1.json"
+    if enriched_defs_path.exists():
+        with open(enriched_defs_path, "r") as f:
+            enriched_defs = json.load(f)
+        name_to_def = {d["name_en"].strip().lower(): d["definition_ja"] for d in enriched_defs if d.get("name_en") and d.get("definition_ja")}
+        def_updated = 0
+        for c in all_concepts:
+            key = c.get("name_en", "").strip().lower()
+            if key in name_to_def:
+                new_def = name_to_def[key]
+                if len(new_def) > len(c.get("definition_ja", "")):
+                    c["definition_ja"] = new_def
+                    def_updated += 1
+        print(f"\nStep 3.5: Applied {def_updated} enriched definitions from {enriched_defs_path.name}")
+    else:
+        print(f"\nStep 3.5: Skipped (enriched defs file not found)")
 
     # Step 4: Re-index after merge
     print(f"\nStep 4: Re-indexing {len(all_concepts)} concepts...")
