@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歴史の韻 — 12パターンの検証・拡充・データベース化計画</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg-alt:#FAFAF8;--card:#fff;--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;--surface:#F7F7F5;--accent:#CC1400;--accent-muted:rgba(204,20,0,.06);--accent-blue:#1565c0;--accent-green:#2e7d32;--accent-orange:#e65100;--serif:'Noto Serif JP',serif;--sans:'Noto Sans JP',sans-serif}
+[data-theme="dark"]{--bg:#0D0D0D;--bg-alt:#141414;--card:#1A1A1A;--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#777;--border:#333;--border-light:#222;--surface:#1E1E1E;--accent:#FF4444;--accent-muted:rgba(255,68,68,.08);--accent-blue:#64b5f6;--accent-green:#66bb6a;--accent-orange:#ffb74d}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.9;-webkit-font-smoothing:antialiased}
+.theme-toggle{position:fixed;top:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.report-header{background:var(--bg-alt);border-bottom:1px solid var(--border-light);padding:48px 24px 40px}
+.report-header-inner{max-width:740px;margin:0 auto}
+.report-back{font-size:.75rem;color:var(--text-muted);text-decoration:none;display:inline-block;margin-bottom:24px}
+.report-back:hover{color:var(--accent)}
+.report-meta-top{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.report-badge{display:inline-block;padding:2px 8px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:600;letter-spacing:.04em}
+.report-date{font-size:.75rem;color:var(--text-muted);letter-spacing:.03em}
+.report-title{font-family:var(--serif);font-size:1.65rem;font-weight:700;line-height:1.4;margin-bottom:12px}
+.report-subtitle{font-size:.88rem;color:var(--text-secondary);line-height:1.7;max-width:640px}
+.report-db-tags{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.report-db-tag{padding:2px 8px;font-size:.68rem;font-weight:500;border:1px solid var(--border);color:var(--text-secondary)}
+.key-metrics{max-width:740px;margin:-20px auto 0;padding:0 24px;position:relative;z-index:2}
+.key-metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border);background:var(--card)}
+.key-metric{padding:18px 14px;text-align:center;border-right:1px solid var(--border-light)}
+.key-metric:last-child{border-right:none}
+.key-metric-value{font-family:var(--serif);font-size:1.3rem;font-weight:700;line-height:1.2}
+.key-metric-label{font-size:.65rem;color:var(--text-muted);margin-top:4px}
+.article{max-width:740px;margin:0 auto;padding:48px 24px 80px}
+.toc{margin-bottom:48px;padding:24px 28px;background:var(--surface);border-left:3px solid var(--accent)}
+.toc-title{font-family:var(--serif);font-size:.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:12px}
+.toc ol{list-style:none;counter-reset:toc}
+.toc>ol>li{counter-increment:toc;margin-bottom:6px}
+.toc>ol>li::before{content:counter(toc)".";color:var(--accent);font-weight:600;font-size:.78rem;margin-right:6px;font-family:var(--serif)}
+.toc a{color:var(--text);text-decoration:none;font-size:.82rem}
+.toc a:hover{color:var(--accent)}
+.section-num{display:block;font-family:var(--serif);font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.06em;margin-bottom:4px}
+h2.article-h2{font-family:var(--serif);font-size:1.25rem;font-weight:700;line-height:1.4;margin:56px 0 20px;padding-bottom:10px;border-bottom:1px solid var(--border-light)}
+h2.article-h2:first-of-type{margin-top:0}
+h3.article-h3{font-family:var(--serif);font-size:1.02rem;font-weight:700;line-height:1.5;margin:40px 0 14px}
+.article p{margin-bottom:18px;font-size:.92rem;line-height:1.9;text-align:justify}
+.pullquote{margin:32px 0;padding:20px 24px;border-left:3px solid var(--accent);background:var(--accent-muted);font-family:var(--serif);font-size:.95rem;line-height:1.8}
+.data-table{width:100%;border-collapse:collapse;font-size:.78rem;margin:20px 0}
+.data-table th{background:var(--surface);padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);font-size:.72rem;color:var(--text-secondary)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);vertical-align:top;line-height:1.5}
+.data-table tr:hover td{background:var(--accent-muted)}
+.insight-box{margin:24px 0;padding:18px 20px;border-left:3px solid var(--accent-orange);background:rgba(230,81,0,.03)}
+[data-theme="dark"] .insight-box{background:rgba(255,183,77,.04)}
+.insight-label{font-family:var(--serif);font-size:.78rem;font-weight:700;color:var(--accent-orange);margin-bottom:8px}
+.school-card{margin:16px 0;border:1px solid var(--border);background:var(--card)}
+.school-header{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border-light);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.school-name{font-family:var(--serif);font-weight:700;font-size:.92rem}
+.school-year{font-size:.6rem;padding:1px 6px;background:var(--accent-muted);color:var(--accent);font-weight:500}
+.school-body{padding:12px 16px;font-size:.85rem;line-height:1.7}
+.school-body ol{padding-left:1.4em;margin:8px 0}
+.school-body ol li{margin-bottom:6px}
+.school-body ul{padding-left:1.4em;margin:8px 0}
+.school-body ul li{margin-bottom:4px}
+.report-footer{max-width:740px;margin:0 auto;padding:0 24px 60px;border-top:1px solid var(--border)}
+.report-footer p{font-size:.75rem;color:var(--text-muted);line-height:1.7;margin-top:16px}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}
+.role-card{padding:16px 18px;border:1px solid var(--border);background:var(--card)}
+.role-num{font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--accent);margin-bottom:4px}
+.role-title{font-family:var(--serif);font-size:.9rem;font-weight:700;margin-bottom:6px}
+.role-desc{font-size:.8rem;color:var(--text-secondary);line-height:1.6}
+.code-block{background:var(--surface);border:1px solid var(--border);padding:16px 18px;font-family:'Courier New',monospace;font-size:.78rem;line-height:1.7;overflow-x:auto;margin:20px 0;white-space:pre}
+@media(max-width:600px){.report-title{font-size:1.3rem}.key-metrics-grid{grid-template-columns:repeat(2,1fr)}.school-header{flex-direction:column;gap:4px}.role-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'" aria-label="テーマ切替">&#9681;</button>
+
+<header class="report-header">
+<div class="report-header-inner">
+<a href="../analysis-reports.html" class="report-back">&larr; 解析レポート一覧に戻る</a>
+<div class="report-meta-top">
+<span class="report-badge">16チーム検証</span>
+<span class="report-date">2026年5月2日</span>
+</div>
+<h1 class="report-title">歴史の韻 — 12パターンの検証・拡充・データベース化計画</h1>
+<p class="report-subtitle">16チームCodex並列調査。12パターンの学術的検証、事例拡充（各5件）、不足パターン7候補、AI企業8社マッピング、SQLiteスキーマ設計</p>
+<div class="report-db-tags">
+<span class="report-db-tag">GF</span>
+<span class="report-db-tag">PE</span>
+<span class="report-db-tag">CI</span>
+<span class="report-db-tag">CLA</span>
+<span class="report-db-tag">SI</span>
+</div>
+</div>
+</header>
+
+<div class="key-metrics">
+<div class="key-metrics-grid">
+<div class="key-metric"><div class="key-metric-value">12</div><div class="key-metric-label">パターン</div></div>
+<div class="key-metric"><div class="key-metric-value">505</div><div class="key-metric-label">ケース</div></div>
+<div class="key-metric"><div class="key-metric-value">7</div><div class="key-metric-label">追加候補</div></div>
+<div class="key-metric"><div class="key-metric-value">8社</div><div class="key-metric-label">AIマッピング</div></div>
+</div>
+</div>
+
+<div class="article">
+
+<nav class="toc">
+<div class="toc-title">目次</div>
+<ol>
+<li><a href="#s1">PART I：12パターンの検証と事例拡充</a></li>
+<li><a href="#s2">PART II：追加すべきパターン候補7選</a></li>
+<li><a href="#s3">PART III：AI企業8社×12パターン マッピング</a></li>
+<li><a href="#s4">PART IV：データベース化計画</a></li>
+<li><a href="#s5">参考文献</a></li>
+</ol>
+</nav>
+
+<!-- PART I -->
+<span class="section-num" id="s1">PART I</span>
+<h2 class="article-h2">12パターンの検証と事例拡充</h2>
+
+<p>「歴史は繰り返さないが、韻を踏む」——マーク・トウェインに帰されるこの言葉は、比喩以上の認識論的命題として理解できる。本パートでは、16チームによるCodex並列調査によって検証・拡充された12の歴史パターンを、学術的根拠・歴史的事例・現代対応・限界の四層で構造化する。各パターンは厳密な自然法則ではなく、歴史を横断して繰り返す「中範囲理論」として位置づけるのが学術的に適切である。505のケースにわたるデータが示すのは、パターンそのものの普遍性ではなく、各パターンが発動する条件と抑制される条件の構造である。</p>
+
+<!-- P01 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">1. 革新-危機サイクル（Innovation-Crisis Cycle）</span>
+<span class="school-year">Schumpeter / Kondratiev / C. Perez</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>技術革新が社会的危機を誘発し、その危機対応の中で次の革新の基盤が形成される循環構造。革新は常に「純増」ではなく、既存秩序の破壊と制度的再編を伴う。</li>
+<li><strong>学術的根拠：</strong>シュンペーターの創造的破壊論は、新結合が既存産業・雇用・組織を破壊しながら成長を生む構造を定式化した。Carlota Perezは技術革命が「irruption → frenzy → turning point → synergy → maturity」という位相で展開し、制度・金融・社会秩序をまるごと刷新するテクノ・エコノミック・パラダイムを形成すると論じた。コンドラチェフ波は約50年の長波動として技術クラスターと経済周期の接続を示す。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>前1200年頃・東地中海｜青銅器宮殿国家の高度統合が脆弱性となり広域崩壊→鉄器・分散生産への移行</li>
+<li>15-16世紀・欧州｜印刷革命→宗教改革・宗教戦争→近代国家と世俗的行政の誕生</li>
+<li>18-19世紀・英国｜工業革命→労働・都市危機・ラッダイト→鉄道・衛生・大規模経営管理</li>
+<li>19世紀末-1940年代・欧米｜第二次産業革命→独占・大恐慌→ニューディール・電子計算技術の加速</li>
+<li>1990年代-2000年代・全球｜商用インターネット→ドットコム崩壊→Web 2.0・クラウド・スマホ→AI基盤の蓄積</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>AI革命は2026年5月時点でPerez的「設置期後半＝frenzy段階」にあり、投資過熱と制度未整備が共存する。OECD諸国のAI企業導入率は20%超だが、生産性効果の全面化には制度適応と補完投資を要する。</li>
+<li><strong>限界・反例：</strong>コンドラチェフ波の規則的周期性は実証的に争われており（Solomou, Modis）、危機が次の革新を自動的に生むとは限らない——大恐慌は特許活動を減らした事例（NBER）が示すように、危機は革新を潰すこともある。</li>
+</ol>
+</div>
+</div>
+
+<!-- P02 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">2. 統一-分裂の振動（Unification-Fragmentation Oscillation）</span>
+<span class="school-year">Tainter / Ibn Khaldun</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>統一は安全保障・交易・税収・標準化で利益を生むが、拡大につれ統治コスト・エリート対立・周辺反乱・制度硬直が増大し、分裂圧力が生まれる。分裂の混乱が再び統合需要を生む。</li>
+<li><strong>学術的根拠：</strong>テインターは社会の複雑性増大が収穫逓減を招き、維持コストが便益を上回る点で崩壊・簡素化が起きると論じた。イブン・ハルドゥーンはアサビーヤ（集団連帯）が王朝の興亡を駆動するが、繁栄の中で連帯が摩耗し新勢力に交代されると説いた——「統一の源泉が統一の成功によって摩耗する」という逆説が核心である。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>ローマ帝国｜内戦→帝政統一→東西分割→西方解体という多段階振動</li>
+<li>漢王朝｜戦国分裂→秦漢統一→新の断裂→後漢再統一→三国分裂</li>
+<li>モンゴル帝国｜部族分立→軍事的超統一→民政的統合の限界→諸ハン国分裂</li>
+<li>EU｜戦争と分裂→制度統合→拡大→Brexit・財政・移民問題による遠心力と再調整</li>
+<li>インターネット｜1990年代の開放的統一ネット→国家規制・データ主権・標準断片化による「splinternet」化圧力</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>2026年時点の世界は「覇権的一極統合の衰退後、ブロック化を伴う分裂相」にある。AI標準・チップ規制・データ主権をめぐる米中分節化がその現代形である。</li>
+<li><strong>限界・反例：</strong>すべての政治体が明確な振動を繰り返すわけではなく（近代英国・スイス）、西ローマのように分裂後に元の統一へ戻らない事例も多い。外部覇権・地理・資源によって長期安定する場合は振動モデル単独では説明不足になる。</li>
+</ol>
+</div>
+</div>
+
+<!-- P03 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">3. 周縁から中心への転換（Outsider-Insider Transformation）</span>
+<span class="school-year">Gramsci / C. Christensen / Santoro &amp; McGuire</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>支配的秩序の外縁に位置する勢力が、独自の組織原理・世界観・コスト構造を武器に、危機局面で中心権力を奪取または中心的正統性の供給者へ変容する過程。</li>
+<li><strong>学術的根拠：</strong>グラムシのヘゲモニー論は、支配が強制だけでなく「同意」の組織化であり、outsiderがinsiderになるには既存正統性への反抗者から新たな正統性供給者へ変わる必要があると示す。Christensenのディスラプション理論は、低性能・低価格で周辺需要から入り、既存企業が無視する間に上方移動して中核市場を奪うプロセスとしてこれを経済的に定式化した。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>1-4世紀・ローマ｜周縁宗教運動だった初期キリスト教が313年公認・380年帝国国教へ転換</li>
+<li>13世紀・ユーラシア｜草原辺境のモンゴルが被征服地の官僚制を吸収しながらユーラシア中心権力へ</li>
+<li>19世紀・日本｜旧秩序の半周縁的藩・下級武士層が明治維新で中央政府を握り新中心国家を形成</li>
+<li>20世紀後半・米国｜西海岸のガレージ起業群が半導体・PC・インターネット・クラウドで技術資本の中心へ</li>
+<li>2009年以降・全球｜cypherpunk的周縁だった暗号通貨が2024年SEC承認でBlackRock等既存金融の資産クラスへ部分転換</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>AI-native企業は「ソフトウェアとは何か」「人と組織はどう働くか」の定義を変えようとするグラムシ的ヘゲモニー争奪を行っている。ただし「転換完了」ではなく進行中の過程であり、独立継続・大手買収・基盤モデルへの吸収という三分岐の結末は未確定である。</li>
+<li><strong>限界・反例：</strong>多くのdisruptorが中心化を達成できず周縁のまま消える。転換速度は歴史上で最速レベルになっており、スピード優位が逆に制度化の浅さを生むリスクがある。</li>
+</ol>
+</div>
+</div>
+
+<!-- P04 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">4. 技術-制度のタイムラグ（Technology-Institution Lag）</span>
+<span class="school-year">Ogburn / Collingridge / Marchant</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>技術の普及速度が法律・行政・倫理規範・国際制度の更新速度を上回り、その隙間で社会的緊張・権利侵害・責任の空白・市場不確実性が増幅する構造。</li>
+<li><strong>学術的根拠：</strong>Ogburnの文化遅滞論は「物質文化（技術）」が先行し「非物質文化（規範・法）」が遅れて適応する過渡期に不適合が生じると定式化した。Collingridgeのジレンマは、初期段階では技術の影響が読めず規制しにくく、害が見える頃には社会に深く組み込まれ制御コストが高くなるという統治上の構造的難しさを示す。Marchantらの「pacing problem」はこれを現代法政策の枠組みで捉え直した。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>15世紀・欧州｜グーテンベルク印刷→1559年禁書目録まで約100年の制度遅滞と宗教的緊張</li>
+<li>18-19世紀・英国｜工場制の児童労働急拡大→実効的監督体制を持つ1833年工場法まで30年以上の遅延</li>
+<li>1945年・全球｜核兵器実戦使用→核不拡散条約1970年発効まで25年の制度空白</li>
+<li>2004-2018年・全球｜Facebook等SNS普及→GDPR2018年適用まで14年のプライバシー制度遅滞</li>
+<li>2022年以降・全球｜ChatGPT公開→著作権・責任・安全規制の分散的後追い整備が続行中</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>EU AI Actは2024年発効・2026年適用開始、日本のAI法は2025年9月全面施行、米国は包括的連邦法なく州法・既存権限のパッチワーク——制度的収束まで多年を要する見込みである。</li>
+<li><strong>限界・反例：</strong>汎用技術であるAIは著作権・労働・教育・選挙・安全保障を同時に揺らすため、従来より速度差が大きく一律の「遅滞」論では捉えにくい。焦点は「規制があるかないか」から「可変的かつ越境的な制度設計が可能か」へ移っている。</li>
+</ol>
+</div>
+</div>
+
+<!-- P05 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">5. 同盟のパラドックス（Alliance Paradox）</span>
+<span class="school-year">Snyder / Christensen &amp; Snyder / V. Cha</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>安全保障のために形成された同盟が、抑止効果をもたらす一方で、「見捨てられる恐怖」と「相手の戦争に引きずり込まれる恐怖」を同時に生み、非対称同盟では保護の代償として自律性の縮小をもたらす。</li>
+<li><strong>学術的根拠：</strong>SnyderはAlliance Security Dilemmaとして「放棄（abandonment）と巻き込み（entrapment）のジレンマ」を定式化した。Christensen &amp; Snyderの多極体系分析は、同盟が危機を局地封じ込めではなく連鎖拡大に傾けやすいことを示す。Victor Chaのpowerplay論は、東アジア二国間同盟が「保護と同時に拘束の装置」として機能することを明らかにした。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>前5世紀・ギリシャ｜対ペルシア防衛のデロス同盟が前454年以後アテネ帝国へ変質し加盟都市が実質的朝貢国化</li>
+<li>1882年・欧州｜三国同盟（独墺伊）が危機時の柔軟性を削り第一次大戦の連鎖拡大に寄与</li>
+<li>冷戦期・全球｜NATOは抑止の成功事例であると同時に、核共有・ただ乗り・放棄不安の管理を常時必要とした</li>
+<li>現代・日米｜最重要安全保障基盤であるとともに、基地負担・装備調達・対中戦略で政策自律と防衛保証を常に交換する構造</li>
+<li>2021年以降・AUKUS｜原潜・情報共有・産業基盤統合が深まるほど豪州の安全は増すが、技術従属と対中危機巻き込みリスクも高まる</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>AI企業とクラウド大手（OpenAI-Microsoft、Anthropic-Amazon/Google）の関係は「計算資源・流通・規制対応のための同盟」として同じ逆説を体現する。提携なしでは生き残れないが、深まるほど独立性を失うというジレンマである。OpenAIのStargate・Oracle・AWS多角化、AnthropicのAmazon主軸＋Google/Broadcom拡張は、国家版ヘッジングに対応する企業版ヘッジング戦略といえる。</li>
+<li><strong>限界・反例：</strong>同盟が実際に崩壊を招くかは政治指導者の危機管理能力・制度設計・情報の非対称性に大きく左右される。NATOは逆説を制度化で抑え込んだ「成功した逆説管理」の事例でもある。</li>
+</ol>
+</div>
+</div>
+
+<!-- P06 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">6. 改革-反動ループ（Reform-Backlash Loop）</span>
+<span class="school-year">Hirschman / Patashnik</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>改革が利害を再配分すると損失を感じる側が反動的に結集し、その反動が逆に制度の修正・再改革・再動員を促す——改革が反動を生み、反動が改革を消すのではなく別の制度形態に再鋳造する循環構造。</li>
+<li><strong>学術的根拠：</strong>Hirschmanは反動が典型的に「perversity（改革は逆効果）」「futility（何も変えられない）」「jeopardy（既存価値を危うくする）」という三類型の言説をとると整理した。Patashnikは改革後に生じる「negative policy feedback」として、新しい受益者を作ると同時に「失う側」に動機・資源・機会を与える逆動員のメカニズムを分析した。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>11世紀・北宋｜王安石の新法→既存官僚・地主・保守士大夫の反動→皇帝交代後の巻き戻し、しかし根本問題は未解決で再改革圧力が残存</li>
+<li>1789-1799年・フランス｜革命急進化と恐怖政治→テルミドール反動→ナポレオンが革命成果の一部（法的平等・中央集権）を保持した権威主義的再編へ</li>
+<li>19世紀・日本｜明治維新の近代化→士族反乱・農民不満→自由民権運動→1889年明治憲法という次段階の制度化</li>
+<li>1930年代・米国｜ニューディールによる連邦拡大→保守連合形成→レーガン期の保守革命へ蓄積、しかし社会保障国家の核は残存</li>
+<li>2010年以降・米国｜ACA（オバマケア）→ティーパーティー動員・廃止攻勢・トランプ台頭→ACA受益者増加で制度が定着、攻撃が逆に防衛的連帯を強化</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>ESG/DEIバックラッシュが現代版として鮮明である。2025年のトランプ政権DEI抑制命令→企業は廃止ではなく「rebrand・legal redesign・quiet continuation・financial-risk framing」という第二世代の反動適応戦略へ移行している。</li>
+<li><strong>限界・反例：</strong>反動が改革を完全に終わらせる場合もある（特に権威主義体制）。ループの速度と完結性は制度環境・政体・外部圧力に大きく依存する。</li>
+</ol>
+</div>
+</div>
+
+<!-- P07 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">7. 知識-権力の結節点（Knowledge-Power Nexus）</span>
+<span class="school-year">F. Bacon / Foucault / NBER</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>知識へのアクセス・保存・複製・解釈・配布の統制が権力構造を規定する。印刷術やインターネットやLLMはその都度「知の民主化」を進めるが、同時に新しい門番も作る——独占の破壊と再編の反復が本質である。</li>
+<li><strong>学術的根拠：</strong>Baconの「知識と力は一つのところで出会う」は知識を統治技術へ接続する近代科学の発想の基盤である。Foucaultのpower/knowledgeはさらに強く、知識の成立自体が権力作用と不可分であり、学校・病院・監獄の「記録・分類・診断・試験」が真理を生みながら主体を統治すると論じた。NBERの2024年研究は、基盤モデル市場が計算資源・データ・人材の規模の経済により市場集中へ傾きやすいことを示す。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>古代エジプト｜識字・暦・測量・税・宗教儀礼の知識が神官・書記層に集中し、知識独占が行政能力そのものだった</li>
+<li>中世欧州｜書物の保存・複写・教育が修道院スクリプトリウムに集約され、ラテン語文献へのアクセスが教会権力の持続条件となった</li>
+<li>15-16世紀・欧州｜活版印刷がルター95か条を拡散し教会知識独占を破壊→しかし出版・検閲をめぐる新たな権力秩序へ再編</li>
+<li>2024年・米国｜U.S. v. Google連邦判決——検索順位付けという「認識インフラの支配」が現代の知識-権力結節点として司法的に認定</li>
+<li>2026年・全球｜基盤モデル企業（OpenAI・Anthropic等）が「計算資源+学習データ+モデル重み+配布チャネル+安全ポリシー」の束として推論インフラを統制</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>LLM時代の権力は「蔵書の独占」から「推論の独占」へ移行した。何が要約されるか、どう解釈されるか、何が拒否されるかの統制が新たな知識-権力の核心である。</li>
+<li><strong>限界・反例：</strong>知識独占の崩壊は繰り返し起きており、「今度こそ永続的独占が生まれる」という議論は過去に何度も誤りだった。オープンソースモデルの拡大は現在進行形の反独占力として機能している。</li>
+</ol>
+</div>
+</div>
+
+<!-- P08 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">8. 生存-遺産の緊張（Survival-Legacy Tension）</span>
+<span class="school-year">J. March / Levinthal &amp; March / O'Reilly &amp; Tushman</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>短期の生存圧力への最適化が、長期に残る制度・知識・信頼・公共価値の形成を損ないやすい構造。組織は危機時ほど「探索（遺産形成）」より「活用（当座の生存）」を選び、この選択が長期的に基盤を食い潰す。</li>
+<li><strong>学術的根拠：</strong>Marchの「探索/活用ジレンマ」は既存能力の活用が短期成果をもたらす一方で長期には自己破壊的になりうると論じた。Levinthal &amp; Marchの「学習の近視眼」は組織が遠い時間・遠い場所・失敗を見落としやすいことを示す。Staw, Sandelands, Duttonの「Threat-rigidity」理論は脅威下で組織が情報処理を狭め慣れた反射に硬直化しやすいことを実証した。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>前221-207年・秦帝国｜統一・標準化という巨大遺産を残したが、苛烈統制・重税・焚書で政権は15年で崩壊</li>
+<li>後期ローマ｜対外脅威への軍事支出・重税・インフレが都市エリートの公共奉仕離れを招き制度的基盤を侵食</li>
+<li>1430年代・明朝｜鄭和遠征の財政負担を嫌い北方安全保障を優先して遠征停止→海洋的長期プレゼンスを閉じる</li>
+<li>1793-1794年・フランス｜恐怖政治は外敵阻止に寄与したが共和政の道徳的正統性を大きく損ねた</li>
+<li>江戸期・日本｜鎖国による体制安定が将来の外圧適応能力を弱め、19世紀末に政権正統性の危機を招いた</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>スタートアップでは資金調達・ARR・次ラウンドの物語が優先され、安全性・信頼・社会影響が後回しになりやすい。速く伸びても、後で規制・炎上・プロダクト負債として反動が来る——企業版の「学習の近視眼」である。</li>
+<li><strong>限界・反例：</strong>生存と遺産が同時達成される事例も存在する（インクリメンタルな改革による長期制度化）。問題は「生存を選ぶこと」ではなく「生存のための手段が未来の基盤を食い潰す設計になっているかどうか」の構造にある。</li>
+</ol>
+</div>
+</div>
+
+<!-- P09 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">9. 規模の閾値効果（Scale Threshold Effects）</span>
+<span class="school-year">Dunbar / Tainter / Bar-Yam / Chandler</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>組織・国家・ネットワークが特定の規模閾値を超えると、量的拡大から質的転換へ入る——標準化・官僚化・分権化・専制化・分裂のいずれかが発動し、組織の論理そのものが変わる。</li>
+<li><strong>学術的根拠：</strong>Dunbarの仮説は認知限界が群れの規模を制約すると示す（ただし「150」を普遍定数とする解釈には2021年批判）。テインターの複雑性理論は規模拡大が収穫逓減を招くと論じ、Bar-Yamは環境の多様性に対応するには組織の多層複雑性が必要であり中央集権ヒエラルキーには限界があることを示す。Chandlerは活動量・地理的分散が閾値を超えると近代的管理階層の出現を必然化させると論じた。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>前221年・秦帝国｜版図統合が文字・度量衡・法・道路の標準化国家への質変化を強制</li>
+<li>前3世紀-前1世紀・ローマ｜地中海全域支配が都市国家的共和政機構の限界を露呈し帝政へ移行</li>
+<li>13世紀・モンゴル｜超巨大帝国の維持に遊牧的統合原理だけでは対応できず諸ハン国へ分裂</li>
+<li>1850-1890年代・米国鉄道｜11万人規模組織が近代的大企業管理の原型（中央管理+中間管理層）を生んだ</li>
+<li>1970年代後半-1991年・ソ連｜計画経済の肥大した官僚制が後期ブレジネフ期に機能不全→ゴルバチョフ改革でも統制能力が回復せず解体へ</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>AI企業では「1000人で制度化、10000人で官僚化、プラットフォーム支配（モデル+API+業務インターフェース+計算資源）の四層統合で市場構造転換」の三段階閾値が観察される。OpenAIの100万超ビジネス顧客・毎分150億トークン超、Anthropicの30万超ビジネス顧客・最大100TPU拡張は、この閾値効果が市場支配構造の問題へ転化している局面を示す。</li>
+<li><strong>限界・反例：</strong>固定の「魔法の数字」があるわけではなく、技術・制度・競争環境によって閾値は変動する。閾値超えが必ずしも崩壊や転換を生むわけではなく、スラック（余裕）の保有や外部支援によって閾値効果を緩和できる場合がある。</li>
+</ol>
+</div>
+</div>
+
+<!-- P10 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">10. 適応的模倣と独自化（Adaptive Mimicry and Localization）</span>
+<span class="school-year">Gerschenkron / Amsden / L. Kim / K. Lee</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>後発者は先発者の技術・制度を借用・圧縮導入することで後発者利益を得る。しかし単なるコピーにとどまる場合は優位が続かず、自国の言語・需要構造・国家制度・企業能力に合わせた再設計に成功した場合のみ持続的な独自化が生まれる。</li>
+<li><strong>学術的根拠：</strong>ガーシェンクロン以来の後発者利益論は借用・圧縮導入の戦略的合理性を論じ、Alice Amsdenの韓国研究は「先行国から学ぶ過程」が後発工業化の本質だとした。Linsu Kimは成熟技術の導入→部品国産化→設計能力→固有R&Dという「imitation to innovation」の段階進化を示し、Keun Leeは知識吸収・制度設計・参入タイミング・window of opportunityへの感度が追い上げの成否を分けると論じた。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>7-10世紀・日本｜中国文字を受け入れながら仮名・国字を生成し日本語文法に適合した独自表記体系を確立</li>
+<li>1868年以降・日本｜欧米の軍制・官僚制・教育・憲法を集中導入しつつ、天皇制と寡頭制に適合した日本型近代国家へ</li>
+<li>1960-1990年代・韓国｜DRAM集中投資・量産学習を通じて模倣から自前R&Dへ移行し半導体分野で世界的競争力を獲得</li>
+<li>2000年代以降・中国｜米国インターネットモデル参照→国家規制・検閲・モバイル決済・スーパーアプリ（WeChat）統合により独自生態系へ進化</li>
+<li>1990年代以降・インド｜欧米向け受託開発・BPOから出発し品質管理・グローバルデリバリーモデルを磨いて高度サービス・AI・多言語基盤へ展開</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>AIでも共通基盤（Transformer・RLHF）を参照しながら言語資源・規制適合・推論最適化・産業特化・ローカル文化への適応で差異化する競争が進んでいる。DeepSeek-R1の強化学習推論特化、インドSarvamのインド諸語最適化、日本Swallowの日本語継続事前学習がその現代形である。</li>
+<li><strong>限界・反例：</strong>模倣が独自化へ進む保証はなく、制度的支援（国家・銀行・大企業動員）や市場規模が欠ければコピー段階で止まりやすい。後発者利益は先発者の技術的加速が速すぎる場合には縮小する。</li>
+</ol>
+</div>
+</div>
+
+<!-- P11 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">11. 聖俗の振動（Sacred-Secular Oscillation）</span>
+<span class="school-year">M. Weber / C. Taylor / Goldstein / Stolz &amp; Voas</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>社会が宗教的・超越的価値と世俗的・合理的・物質的価値のあいだで直線的に移行するのではなく、反復的・弁証法的に揺れる——世俗化が新たな「聖性の需要」を生み、強制的世俗化が再聖化を誘発する非線形過程。</li>
+<li><strong>学術的根拠：</strong>Weberの脱魔術化論は近代化が宗教的説明を科学・合理性へ置き換えると論じたが、カリスマ・感情・反合理主義の再浮上も内包する。Charles Taylorは世俗化を宗教衰退ではなく「信仰も不信仰もともに選択肢になる信仰条件の変化」として捉え、世俗条件下での再聖化の可能性を示した。近年の宗教社会学（Goldstein, Stolz &amp; Voas）は世俗化の直線過程論を修正し、一時的宗教的再興は「予期される」現象だと論じている。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>1730-40年代・英領アメリカ｜啓蒙・理神論化への反動として大覚醒が勃発——世俗化圧力への宗教的再熱</li>
+<li>18世紀・欧州｜啓蒙の理性極端化→ロマン主義的反動と宗教回帰——「俗の昂進が新たな聖の需要を生む」</li>
+<li>明治期・日本｜近代官僚制導入と同時に国家神道で天皇制を神聖化——近代化が聖性を再編成した事例</li>
+<li>ソ連期・ロシア｜国家無神論が宗教感情を強化し、1991年以降ロシア正教が公的空間で大復権——強制的世俗化が再聖化を誘発</li>
+<li>1960-70年代・西側｜制度教会衰退と同時に東洋宗教・瞑想・ニューエイジ的実践が拡大——「教会離れと聖性の拡散」の同時進行</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>2022-23年の生成AIブームは「救済・超知能・生産性革命」という代替宗教的想像力を帯びた。しかし2025年Pew調査では米国51%が「期待より不安」（「不安より期待」は11%）、Stack Overflow調査では開発者の46%がAI出力精度を信頼しないと回答——テクノロジーの聖化から制度的・懐疑的な世俗化への振れが進行中である。</li>
+<li><strong>限界・反例：</strong>「振動」の周期と振幅は文化・政治体制・経済環境によって大きく異なる。「脱宗教化した後に戻らない」事例（スカンジナビア諸国）も存在し、振動が普遍的とは言えない。</li>
+</ol>
+</div>
+</div>
+
+<!-- P12 -->
+<div class="school-card">
+<div class="school-header">
+<span class="school-name">12. 複雑性の崩壊（Complexity Collapse）</span>
+<span class="school-year">Tainter / P. Bak / IMF</span>
+</div>
+<div class="school-body">
+<ol>
+<li><strong>定義：</strong>問題解決のための複雑化が維持コストの逓増を招き、相互依存によって局所障害が全体へ伝播し、外部ショックが閾値を超えたとき非線形に連鎖する崩壊過程。崩壊はしばしば急激に見えるが、複雑性の累積コスト・相互依存・外部ショック・制度疲労が重なった結果である。</li>
+<li><strong>学術的根拠：</strong>テインターは複雑性増大が短期には有効でも累積すると収穫逓減を起こし持続可能性を損なうと示す。Bakの自己組織化臨界性（SOC）は複雑系が臨界状態へ自己組織化し、本来独立だった事象が相関して小さな撹乱が大崩壊に化けうることを示す。IMFはリーマン後に「too big to fail」だけでなく「too complex to fail」を強調し、金融ネットワークの複雑性が平時のリスク分散を危機時のリスク伝播回路へ反転させることを指摘した。</li>
+<li><strong>歴史的事例5件：</strong>
+<ul>
+<li>5世紀・西ローマ帝国｜高コスト帝国が気候変動と移動圧力への耐性を失い多因子崩壊</li>
+<li>8-9世紀・古典期マヤ｜高度な水管理システムへの依存が干ばつ脆弱性を高め、環境変動への適応複雑化が逆に脆弱性を生む逆説</li>
+<li>前1200年頃・後期青銅器時代｜交易・外交・軍事で強く結合した相互連結世界が多因子危機で連鎖崩壊——「最初のグローバル化の崩壊」</li>
+<li>1980年代・ソ連｜計画経済の中央集権的統制装置が規模拡大に対して柔軟性と革新性を失い維持費が成果を上回った</li>
+<li>2008年・全球｜証券化・CDS・短期資金市場の絡み合いが局所損失を全体危機へ拡大——金融システムの複雑ネットワークが「too complex to fail」を体現</li>
+</ul>
+</li>
+<li><strong>現代AIとの対応：</strong>半導体サプライチェーンは1000超の工程と少数の企業・地域への重要工程集中を抱え（OECD 2025）、その上にAI基盤の寡占が重なる。UNCTADは2022年に100社が世界AI研究開発の40%を占めると指摘。重要インフラへのAI埋め込みが進むほど、複雑性崩壊パターンのリスクが構造的に蓄積する。</li>
+<li><strong>限界・反例：</strong>崩壊は必然ではなく、冗長性・モジュール設計・フェイルセーフが閾値効果を緩和できる。崩壊ではなく「縮退（de-complexification）」による段階的適応に成功する事例も存在する。</li>
+</ol>
+</div>
+</div>
+
+<!-- PART II -->
+<span class="section-num" id="s2">PART II</span>
+<h2 class="article-h2">追加すべきパターン候補7選</h2>
+
+<p>16チームの並列検証は、既存12パターンが政治史と地政学に強みを持つ一方、人口動態・環境圧力・国家財政・格差構造・抗議の波及メカニズムが相対的に薄い構成であることを明らかにした。以下の7パターンは既存12との重複が小さく、比較史・歴史社会学での汎用性が高い追加候補として推奨される。とりわけ「戦争→国家能力強化」「分岐点→経路依存」「環境ショック→既存脆弱性の増幅」「不平等蓄積→暴力的平準化」の4つは、Tilly・Capoccia・Parker・Scheidelという比較史の主要理論と直接接続するという意味で優先度が高い。</p>
+
+<table class="data-table">
+<thead>
+<tr>
+<th>#</th>
+<th>パターン名</th>
+<th>定義</th>
+<th>学術的根拠</th>
+<th>代表事例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13</td>
+<td>戦争→国家能力強化</td>
+<td>対外戦争・その準備が徴税・官僚制・常備軍・インフラを強化し、国家機構そのものを鍛える</td>
+<td>Tilly系「好戦的国家形成」（bellicist theory）——戦争が動員能力の差を拡大する</td>
+<td>英仏近世の財政軍事国家化、プロイセンの官僚化、明治日本の軍制近代化</td>
+</tr>
+<tr>
+<td>14</td>
+<td>分岐点→経路依存</td>
+<td>短い不確定局面での初期選択が長期にわたり制度の軌道を固定する自己強化メカニズム</td>
+<td>Capoccia &amp; Kelemen（critical junctures）——初期選択の自己強化が核心</td>
+<td>1688年名誉革命後のイングランド財政・議会制度、明治維新後の中央集権化、戦後日本の55年体制</td>
+</tr>
+<tr>
+<td>15</td>
+<td>可視化→収奪→回避・抵抗</td>
+<td>国家の行政的把握が統治能力を高めると同時に、逃散・密貿易・日常的抵抗という回避戦略を同時生成する</td>
+<td>James C. Scott『Seeing Like a State』——国家可視性論</td>
+<td>姓の固定・戸籍・地籍調査、植民地の地図化、ソ連集団化、タンザニアのウジャマー村</td>
+</tr>
+<tr>
+<td>16</td>
+<td>人口圧力→若年動員→政治暴力</td>
+<td>若年人口の突出・雇用吸収不足・都市流入が重なると反乱・暴動・内戦のリスクが構造的に上昇する</td>
+<td>Goldstone（構造人口学的革命論）、Urdal（youth bulge and violence）</td>
+<td>近世末フランスの人口圧力と革命期不安定化、20世紀後半の中東・北アフリカ、アラブの春（2011年）</td>
+</tr>
+<tr>
+<td>17</td>
+<td>環境ショック→既存脆弱性の増幅</td>
+<td>気候変動・干ばつ・連続不作は単独原因ではなく、脆弱な財政・食糧・統治構造を通じて危機を増幅する媒介過程として機能する</td>
+<td>Parker（17世紀全般的危機）、Mach et al.（気候は紛争リスクの増幅因子）</td>
+<td>17世紀全般的危機、明末清初、オスマン・ムガルの局地危機</td>
+</tr>
+<tr>
+<td>18</td>
+<td>不平等蓄積→暴力的平準化→再集中</td>
+<td>不平等は平時に蓄積しやすく、歴史的に大幅な平準化は戦争・革命・国家崩壊・大疫病のような暴力的ショックでしか生じない——その後は再び集中が進む</td>
+<td>Scheidel『The Great Leveler』——「大平準化は暴力でしか起きない」</td>
+<td>黒死病後の賃金上昇、20世紀総力戦と革命後の資産破壊・再分配、van Bavel &amp; Scheffer（ショックと不平等）</td>
+</tr>
+<tr>
+<td>19</td>
+<td>模範連鎖→抗議の波及</td>
+<td>成功した反乱・革命・独立運動が、制度だけでなく抗議の作法・期待・戦術を越境的に拡散させる「モジュラー政治現象」</td>
+<td>Beissinger（modular political phenomena）——構造と事例の拡散メカニズム</td>
+<td>1848年革命の連鎖、東欧革命（1989年）、カラー革命（2000年代）、アラブの春（2011年）</td>
+</tr>
+</tbody>
+</table>
+
+<!-- PART III -->
+<span class="section-num" id="s3">PART III</span>
+<h2 class="article-h2">AI企業8社×12パターン マッピング</h2>
+
+<p>12の歴史パターンをレンズとしてAI企業8社の戦略を読むと、各社の行動が技術選択ではなく歴史的構造の必然として輪郭を帯びてくる。表中の「最も強く作用するパターン」は各社の戦略的本質を一言で記述したものであり、「副次パターン」は補助的に作用している構造を示す。2026年5月2日時点の調査に基づく。</p>
+
+<table class="data-table">
+<thead>
+<tr>
+<th>企業</th>
+<th>最も強く作用するパターン</th>
+<th>理由（1行）</th>
+<th>副次パターン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI</td>
+<td>5. 権力の正統化（権威で正統化される）</td>
+<td>最先端の力を持つほど非営利起源・PBC化・民主的AI・国家向けインフラ支援で正統性構築を迫られる</td>
+<td>8（カリスマ）、9（覇権秩序）、10（スポンサー依存）</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td>4. 政治は宗教を使う</td>
+<td>Constitutional AIと安全性の物語が企業そのものの統治原理であり、差別化戦略そのもの</td>
+<td>7（制度的トレードオフ）、10（クラウドスポンサー依存）</td>
+</tr>
+<tr>
+<td>Google</td>
+<td>9. 覇権国家／Pax</td>
+<td>Gemini+Search+Android+Cloud+TPUで「Google秩序」を維持・更新し、単体製品ではなく規格・生態系・供給網を包括</td>
+<td>1（体制維持の補助装置）、2（領土拡張）、5（正統化）</td>
+</tr>
+<tr>
+<td>Meta</td>
+<td>11. 大衆は扇動される</td>
+<td>数十億人のプロダクト配布力と開発者エコシステム動員力がモデル性能競争を超える競争優位</td>
+<td>2（周辺領域併呑）、8（Zuckerbergのカリスマ）、9（覇権秩序建設）</td>
+</tr>
+<tr>
+<td>Apple</td>
+<td>7. 完全な制度はない</td>
+<td>プライバシー・オンデバイス・統制されたUXを守るほど速度・開放性・モデル競争力との緊張が強まる</td>
+<td>1（体制維持）、5（正統化）、12（解体困難なエコシステム）</td>
+</tr>
+<tr>
+<td>Microsoft</td>
+<td>1. 体制維持の補助装置</td>
+<td>Copilot+Entra+Foundryで企業AIの「行政装置」を握り、AIそのものより企業運営のOS化で競合を凌ぐ</td>
+<td>9（覇権秩序）、10（スポンサー依存関係）、12（解体困難な基盤）</td>
+</tr>
+<tr>
+<td>NVIDIA</td>
+<td>2. 領土拡張の必然</td>
+<td>GPU→CUDA→ネットワーク→DGX→AI Factory→ロボティクスへ、勝者の必然として周辺領域を連続的に併呑</td>
+<td>8（Huangのカリスマ）、9（覇権秩序）、12（CUDA生態系の解体困難性）</td>
+</tr>
+<tr>
+<td>TSMC</td>
+<td>6. 人の移動が歴史を変える</td>
+<td>Arizona・熊本・ドレスデンへの製造拠点移転で地政学そのものが競争優位の条件になった</td>
+<td>9（覇権秩序の要衝）、10（国家スポンサー依存）、12（先端製造の解体困難性）</td>
+</tr>
+</tbody>
+</table>
+
+<div class="insight-box">
+<div class="insight-label">統合分析インサイト</div>
+<p style="margin-bottom:0;font-size:.88rem">12パターンでAI企業を読むと、各社の戦略が技術選択ではなく歴史的構造の必然として理解できる。NVIDIAの周辺領域併呑は「領土拡張の必然」であり、OpenAIの非営利→PBC転換は「権力の正統化」であり、TSMCのグローバル展開は「人の移動が歴史を変える」である。この8社は歴史的に「覇権秩序の運営者（Google・Microsoft）」「理念で正統性を作る前衛宗派（OpenAI・Anthropic）」「膨張する武器商人（NVIDIA）」「地政学的要衝（TSMC）」「規律ある閉鎖帝国（Apple）」「大衆動員型の民衆帝国（Meta）」という六つの役割に分かれる。AI産業における競争は、最も賢いモデルを作る技術競争から、秩序・正統性・配布・計算資源・制度ロックインをめぐる構造競争へと本質的に移行している。</p>
+</div>
+
+<!-- PART IV -->
+<span class="section-num" id="s4">PART IV</span>
+<h2 class="article-h2">データベース化計画</h2>
+
+<h3 class="article-h3">SQLiteスキーマ設計</h3>
+
+<p>以下のスキーマは、12パターンの構造化・505ケースの格納・現代対応事例・パターン間関係を一体的に管理するために設計された4テーブル構成である。外部キー制約を有効化し、パターン間関係には「強化・抑制・前提条件」の3種を型制約で管理する。将来の他DBとの接続を想定し、primary keyは整数型で統一している。</p>
+
+<div class="code-block">PRAGMA foreign_keys = ON;
+
+-- (1) パターンテーブル
+CREATE TABLE pattern (
+    pattern_id           INTEGER PRIMARY KEY,
+    name                 TEXT NOT NULL UNIQUE,
+    definition           TEXT NOT NULL,
+    academic_basis       TEXT NOT NULL,   -- 学術的根拠
+    related_theorists    TEXT             -- 関連理論家
+);
+
+-- (2) 事例テーブル
+CREATE TABLE historical_case (
+    case_id              INTEGER PRIMARY KEY,
+    pattern_id           INTEGER NOT NULL,
+    era                  TEXT NOT NULL,   -- 時代
+    region               TEXT NOT NULL,   -- 地域
+    actor                TEXT NOT NULL,   -- アクター
+    outcome              TEXT NOT NULL,   -- 帰結
+    lesson               TEXT,            -- 教訓
+    FOREIGN KEY (pattern_id) REFERENCES pattern(pattern_id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- (3) 現代対応テーブル
+CREATE TABLE contemporary_mapping (
+    mapping_id           INTEGER PRIMARY KEY,
+    pattern_id           INTEGER NOT NULL,
+    modern_case          TEXT NOT NULL,   -- 現代事例
+    phase                TEXT NOT NULL,   -- 位相
+    predictive_implication TEXT,          -- 予測含意
+    FOREIGN KEY (pattern_id) REFERENCES pattern(pattern_id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CHECK (phase IN (
+        '萌芽', '進行', '加速', '成熟', '停滞', '転換', '衰退', '再編'
+    ))
+);
+
+-- (4) パターン間関係テーブル
+CREATE TABLE pattern_relation (
+    relation_id          INTEGER PRIMARY KEY,
+    source_pattern_id    INTEGER NOT NULL,
+    target_pattern_id    INTEGER NOT NULL,
+    relation_type        TEXT NOT NULL,   -- 強化/抑制/前提条件
+    note                 TEXT,
+    FOREIGN KEY (source_pattern_id) REFERENCES pattern(pattern_id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (target_pattern_id) REFERENCES pattern(pattern_id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CHECK (relation_type IN ('強化', '抑制', '前提条件')),
+    CHECK (source_pattern_id &lt;&gt; target_pattern_id),
+    UNIQUE (source_pattern_id, target_pattern_id, relation_type)
+);
+
+-- 検索インデックス
+CREATE INDEX idx_historical_case_pattern_id ON historical_case(pattern_id);
+CREATE INDEX idx_historical_case_era_region ON historical_case(era, region);
+CREATE INDEX idx_contemporary_mapping_pattern_id ON contemporary_mapping(pattern_id);
+CREATE INDEX idx_contemporary_mapping_phase ON contemporary_mapping(phase);
+CREATE INDEX idx_pattern_relation_source ON pattern_relation(source_pattern_id);
+CREATE INDEX idx_pattern_relation_target ON pattern_relation(target_pattern_id);</div>
+
+<h3 class="article-h3">拡充ロードマップ</h3>
+
+<p>データベース化計画は5つのフェーズで段階的に実施する。</p>
+
+<p>Phase 1では、12パターンのDB化を行う。パターン定義テーブルへの12件の初期データ投入と、現在505ケースとして存在する歴史事例を「時代・地域・アクター・帰結・教訓」の5フィールドに構造化して historical_case テーブルへ移行することが中心作業となる。この段階でケースの地域・時代・政体の分布を可視化し、カバレッジの偏り（欧州・中国過多、古代・前国家社会の希薄さ等）を定量的に把握する。</p>
+
+<p>Phase 2では、追加7パターン（13〜19）の統合を行い、19パターン体制への移行を完了する。各パターンの学術的根拠・代表事例・理論家情報を入力するとともに、既存ケースの一部を新パターンへ再分類する作業が必要になる。この段階で「パターンの識別力」——各パターンが実際に崩壊・内乱・制度転換・覇権拡大等の結果変数をどれだけ説明するか——のロジット分析または多ラベル分類による初期検証を実施する。</p>
+
+<p>Phase 3では、contemporary_mapping テーブルを充実させる。AI企業8社マッピングを初期データとして投入し、他産業（エネルギー・製薬・金融・モビリティ等）への拡張を行う。位相（萌芽・進行・加速・成熟・停滞・転換・衰退・再編）の8段階分類により、各現代事例がパターンのどの局面にあるかを時系列追跡可能な形で格納する。</p>
+
+<p>Phase 4では、パターン間関係の構造化を進める。pattern_relation テーブルへ「強化・抑制・前提条件」の3種の関係を投入し、例えば「複雑性の崩壊（P12）は革新-危機サイクル（P01）の引き金を引きやすい（強化）」「改革-反動ループ（P06）は適応的模倣（P10）を前提条件とすることがある」といった構造的連関を明示化する。これにより単一パターンによる分析から複合パターン分析へと進化させる。</p>
+
+<p>Phase 5では、他DBとの外部キー接続を実現する。GF DB（9,178人物）との人物接続、SI Framework DB（1,096事象）との歴史事象接続、CLA DB（930件）との因果階層分析接続が主要ターゲットとなる。接続が完成したとき、「12パターンのどの局面にある歴史的人物が、どのパターンのどの事象と連動して、CLA的にはどの深度層の変化として現れているか」という多層的クエリが可能になる。</p>
+
+<div class="pullquote">12パターンのデータベース化は、歴史を「読み物」から「検索可能な構造知」に変換するプロジェクトである。505のケースが19のパターンに構造化され、現代のAI企業マッピングと接続されたとき、歴史は初めて本当の意味でフォーサイトのインフラになる。</div>
+
+<!-- References -->
+<span class="section-num" id="s5">APPENDIX</span>
+<h2 class="article-h2">参考文献</h2>
+
+<table class="data-table">
+<thead>
+<tr><th>著者</th><th>発表年</th><th>タイトル</th><th>区分</th></tr>
+</thead>
+<tbody>
+<tr><td>Schumpeter, J.A.</td><td>1942</td><td>Capitalism, Socialism and Democracy（創造的破壊論）</td><td>経済学</td></tr>
+<tr><td>Perez, C.</td><td>2002</td><td>Technological Revolutions and Financial Capital</td><td>技術経済史</td></tr>
+<tr><td>Tainter, J.</td><td>1988</td><td>The Collapse of Complex Societies</td><td>考古学・文明論</td></tr>
+<tr><td>Ibn Khaldun</td><td>1377</td><td>Muqaddimah（序説：アサビーヤ循環論）</td><td>歴史哲学</td></tr>
+<tr><td>Ogburn, W.F.</td><td>1922</td><td>Social Change with Respect to Culture and Original Nature（文化遅滞論）</td><td>社会学</td></tr>
+<tr><td>Snyder, G.H.</td><td>1984</td><td>The Security Dilemma in Alliance Politics, World Politics</td><td>国際政治学</td></tr>
+<tr><td>Hirschman, A.O.</td><td>1991</td><td>The Rhetoric of Reaction（反動の修辞学）</td><td>政治経済学</td></tr>
+<tr><td>Foucault, M.</td><td>1975</td><td>Discipline and Punish（監視と処罰、power/knowledge論）</td><td>哲学・社会理論</td></tr>
+<tr><td>March, J.G.</td><td>1991</td><td>Exploration and Exploitation in Organizational Learning, Organization Science</td><td>組織論</td></tr>
+<tr><td>Tilly, C.</td><td>1990</td><td>Coercion, Capital, and European States（好戦的国家形成論）</td><td>比較歴史社会学</td></tr>
+<tr><td>Capoccia, G. &amp; Kelemen, R.D.</td><td>2007</td><td>The Study of Critical Junctures, World Politics</td><td>歴史制度論</td></tr>
+<tr><td>Scott, J.C.</td><td>1998</td><td>Seeing Like a State（国家可視性論）</td><td>政治学・人類学</td></tr>
+<tr><td>Goldstone, J.</td><td>1991</td><td>Revolution and Rebellion in the Early Modern World</td><td>歴史人口学</td></tr>
+<tr><td>Parker, G.</td><td>2013</td><td>Global Crisis: War, Climate Change and Catastrophe in the 17th Century</td><td>環境史・比較史</td></tr>
+<tr><td>Scheidel, W.</td><td>2017</td><td>The Great Leveler: Violence and the History of Inequality</td><td>経済史</td></tr>
+<tr><td>Beissinger, M.R.</td><td>2007</td><td>Structure and Example in Modular Political Phenomena, Perspectives on Politics</td><td>比較政治学</td></tr>
+<tr><td>Bak, P., Tang, C. &amp; Wiesenfeld, K.</td><td>1987</td><td>Self-organized criticality, Physical Review A</td><td>複雑系科学</td></tr>
+<tr><td>Amsden, A.</td><td>1989</td><td>Asia's Next Giant: South Korea and Late Industrialization</td><td>発展経済学</td></tr>
+</tbody>
+</table>
+
+</div>
+
+<footer class="report-footer">
+<p><strong>分析日:</strong> 2026年5月2日<br>
+<strong>調査対象DB:</strong> GF, PE, CI, CLA, SI<br>
+<strong>調査体制:</strong> 16チーム並列調査（Codex）— 12パターン個別検証チーム×12、学術検証チーム×1、追加パターン候補検討チーム×1、AI企業マッピングチーム×1、DBスキーマ設計チーム×1<br>
+<strong>調査ケース数:</strong> 505件（既存）+ 7パターン候補追加予定<br>
+<strong>手法:</strong> 学術文献照合・歴史事例構造化・中範囲理論接続・パターン識別力評価・SQLiteスキーマ設計</p>
+</footer>
+
+</body>
+</html>
