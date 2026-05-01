@@ -149,6 +149,7 @@ def main():
         DATA_DIR / "mg_batch2_governance.json",
         DATA_DIR / "mg_batch2_org.json",
         DATA_DIR / "mg_batch2_leadership.json",
+        DATA_DIR / "mg_batch2_entrepreneurship.json",
     ]
     all_concepts = merge_additional_concepts(normalized, additional_files)
 
