@@ -100,6 +100,13 @@ def merge_additional_concepts(base_concepts, additional_files):
     all_concepts = deduped_base
     existing_names = {c.get("name_en", "").strip().lower() for c in deduped_base}
 
+    # Build index for definition upgrade: keep longer definition
+    name_to_idx = {}
+    for i, c in enumerate(all_concepts):
+        key = c.get("name_en", "").strip().lower()
+        if key:
+            name_to_idx[key] = i
+
     for filepath in additional_files:
         if not os.path.exists(filepath):
             print(f"  Skipping missing file: {filepath}")
@@ -107,13 +114,32 @@ def merge_additional_concepts(base_concepts, additional_files):
         with open(filepath, "r") as f:
             additional = json.load(f)
         added = 0
+        upgraded = 0
         for c in additional:
             key = c.get("name_en", "").strip().lower()
-            if key and key not in existing_names:
+            if not key:
+                continue
+            if key not in existing_names:
                 existing_names.add(key)
+                name_to_idx[key] = len(all_concepts)
                 all_concepts.append(c)
                 added += 1
-        print(f"  Added {added} concepts from {filepath}")
+            else:
+                # Upgrade definition if new one is longer
+                idx = name_to_idx.get(key)
+                if idx is not None:
+                    existing_def = len(all_concepts[idx].get("definition_ja", ""))
+                    new_def = len(c.get("definition_ja", ""))
+                    if new_def > existing_def:
+                        all_concepts[idx]["definition_ja"] = c["definition_ja"]
+                        upgraded += 1
+                    # Also fill missing subfield_id
+                    if not all_concepts[idx].get("subfield_id", "").startswith("s") and c.get("subfield_id", "").startswith("s"):
+                        all_concepts[idx]["subfield_id"] = c["subfield_id"]
+        msg = f"  Added {added} concepts from {filepath}"
+        if upgraded:
+            msg += f" (upgraded {upgraded} definitions)"
+        print(msg)
 
     return all_concepts
 
