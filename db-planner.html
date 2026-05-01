@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DB Planner | Intelligence Pipeline</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --card-hover: #F7F7F5;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+      --surface2: #EEEEEE;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+      --layer-core: #1A5276;
+      --layer-structural: #6C3483;
+      --layer-detection: #0E6655;
+      --layer-conceptual: #8B0000;
+      --layer-supplementary: #555555;
+    }
+    [data-theme="dark"] {
+      --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+      --accent: #E0E0E0; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.08);
+      --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+      --border: #333333; --border-light: #2A2A2A; --surface: #1A1A1A; --surface2: #222222;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3); --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+      --layer-core: #5599CC; --layer-structural: #AA77CC;
+      --layer-detection: #44AA88; --layer-conceptual: #E06060; --layer-supplementary: #999;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; min-height: 100vh; }
+
+    /* Header */
+    .header { background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .header-title { font-family: var(--font-serif); font-weight: 700; font-size: 1.1rem; }
+    .header-sub { font-size: 0.75rem; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 16px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-btn { background: var(--surface); border: 1px solid var(--border); padding: 6px 14px; font-size: 0.78rem; font-family: var(--font); cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+    .header-btn:hover { background: var(--surface2); color: var(--text); }
+    .header-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .container { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+
+    /* Summary bar */
+    .summary-bar { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .summary-card { flex: 1; min-width: 140px; padding: 16px; border: 1px solid var(--border-light); background: var(--card); }
+    .summary-value { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; }
+    .summary-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .summary-value.active-count { color: var(--layer-detection); }
+    .summary-value.inactive-count { color: var(--text-muted); }
+    .summary-value.size-count { color: var(--layer-core); }
+
+    /* Toolbar */
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+    .toolbar-group { display: flex; gap: 1px; background: var(--border); }
+    .toolbar-btn { background: var(--card); border: none; padding: 7px 14px; font-size: 0.78rem; font-family: var(--font); cursor: pointer; color: var(--text-secondary); transition: all 0.15s; white-space: nowrap; }
+    .toolbar-btn:hover { background: var(--surface2); }
+    .toolbar-btn.selected { background: var(--accent); color: #fff; }
+    .toolbar-sep { width: 1px; background: var(--border); margin: 0 8px; align-self: stretch; }
+    .toolbar-action { background: transparent; border: 1px solid var(--border); padding: 7px 14px; font-size: 0.78rem; font-family: var(--font); cursor: pointer; color: var(--text-secondary); transition: all 0.15s; }
+    .toolbar-action:hover { border-color: var(--accent); color: var(--text); }
+    .toolbar-action.danger { color: var(--accent-warm); border-color: rgba(204,20,0,0.3); }
+    .toolbar-action.danger:hover { background: var(--accent-muted); }
+
+    /* Pipeline diagram */
+    .pipeline { display: flex; align-items: center; gap: 0; margin-bottom: 28px; overflow-x: auto; padding: 8px 0; }
+    .pipeline-stage { padding: 12px 20px; border: 2px solid var(--border); text-align: center; min-width: 140px; transition: all 0.3s; position: relative; cursor: pointer; }
+    .pipeline-stage.active { border-color: var(--accent); background: var(--surface); }
+    .pipeline-stage.dimmed { opacity: 0.35; }
+    .pipeline-stage-name { font-size: 0.82rem; font-weight: 700; }
+    .pipeline-stage-ids { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+    .pipeline-stage-count { font-size: 0.68rem; color: var(--accent-warm); font-weight: 600; margin-top: 4px; }
+    .pipeline-arrow { font-size: 1.2rem; color: var(--border); padding: 0 4px; flex-shrink: 0; }
+    .pipeline-stage[data-layer="core"] .pipeline-stage-name { color: var(--layer-core); }
+    .pipeline-stage[data-layer="structural"] .pipeline-stage-name { color: var(--layer-structural); }
+    .pipeline-stage[data-layer="detection"] .pipeline-stage-name { color: var(--layer-detection); }
+    .pipeline-stage[data-layer="conceptual"] .pipeline-stage-name { color: var(--layer-conceptual); }
+    .pipeline-stage[data-layer="output"] { background: var(--accent); border-color: var(--accent); }
+    .pipeline-stage[data-layer="output"] .pipeline-stage-name { color: #fff; }
+    .pipeline-stage[data-layer="output"] .pipeline-stage-ids { color: rgba(255,255,255,0.6); }
+
+    /* Layer sections */
+    .layer { margin-bottom: 28px; }
+    .layer-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-left: 3px solid var(--border); margin-bottom: 12px; }
+    .layer-header[data-layer="core"] { border-left-color: var(--layer-core); }
+    .layer-header[data-layer="structural"] { border-left-color: var(--layer-structural); }
+    .layer-header[data-layer="detection"] { border-left-color: var(--layer-detection); }
+    .layer-header[data-layer="conceptual"] { border-left-color: var(--layer-conceptual); }
+    .layer-header[data-layer="supplementary"] { border-left-color: var(--layer-supplementary); }
+    .layer-title { font-size: 0.92rem; font-weight: 700; }
+    .layer-desc { font-size: 0.75rem; color: var(--text-muted); }
+    .layer-toggle { display: flex; gap: 8px; align-items: center; }
+    .layer-toggle-btn { background: transparent; border: 1px solid var(--border); padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); cursor: pointer; color: var(--text-muted); transition: all 0.15s; }
+    .layer-toggle-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    /* DB Grid */
+    .db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+    .db-card { border: 1px solid var(--border-light); padding: 16px; background: var(--card); transition: all 0.3s; position: relative; cursor: default; }
+    .db-card:hover { box-shadow: var(--shadow-md); }
+    .db-card.disabled { opacity: 0.3; background: var(--surface); }
+    .db-card.disabled .db-toggle { background: var(--text-muted); }
+    .db-card.highlighted { border-color: var(--accent-warm); box-shadow: 0 0 0 1px var(--accent-warm); }
+
+    .db-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+    .db-id { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border: 1px solid currentColor; display: inline-block; }
+    .db-card[data-layer="core"] .db-id { color: var(--layer-core); }
+    .db-card[data-layer="structural"] .db-id { color: var(--layer-structural); }
+    .db-card[data-layer="detection"] .db-id { color: var(--layer-detection); }
+    .db-card[data-layer="conceptual"] .db-id { color: var(--layer-conceptual); }
+    .db-card[data-layer="supplementary"] .db-id { color: var(--layer-supplementary); }
+
+    /* Toggle switch */
+    .db-toggle { position: relative; width: 36px; height: 20px; background: var(--layer-detection); border-radius: 10px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+    .db-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+    .db-toggle.off { background: var(--text-muted); }
+    .db-toggle.off::after { transform: translateX(0); }
+    .db-toggle:not(.off)::after { transform: translateX(16px); }
+
+    .db-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+    .db-name-en { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 6px; }
+    .db-stat { font-family: var(--font-serif); font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: var(--accent-warm); }
+    .db-desc { font-size: 0.76rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .db-card.expanded .db-desc { -webkit-line-clamp: unset; }
+    .db-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.68rem; color: var(--text-muted); }
+    .db-meta span { display: flex; align-items: center; gap: 3px; }
+    .db-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .db-action-btn { background: transparent; border: 1px solid var(--border); padding: 4px 10px; font-size: 0.7rem; font-family: var(--font); cursor: pointer; color: var(--text-secondary); transition: all 0.15s; }
+    .db-action-btn:hover { border-color: var(--accent); color: var(--text); }
+    .db-action-btn.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .db-action-btn.primary:hover { background: var(--accent-muted); }
+
+    /* Notes */
+    .db-note { margin-top: 8px; }
+    .db-note textarea { width: 100%; min-height: 48px; padding: 8px; border: 1px solid var(--border-light); background: var(--surface); font-family: var(--font); font-size: 0.75rem; resize: vertical; color: var(--text); line-height: 1.5; }
+    .db-note textarea:focus { outline: none; border-color: var(--accent); }
+    .db-note-label { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 3px; }
+
+    /* Priority badge */
+    .db-priority { position: absolute; top: -1px; right: -1px; font-size: 0.62rem; font-weight: 700; padding: 2px 8px; color: #fff; }
+    .db-priority.high { background: var(--accent-warm); }
+    .db-priority.medium { background: var(--layer-core); }
+    .db-priority.low { background: var(--text-muted); }
+
+    /* Export panel */
+    .export-panel { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 500; justify-content: center; align-items: center; }
+    .export-panel.open { display: flex; }
+    .export-content { background: var(--card); border: 1px solid var(--border); padding: 28px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .export-content h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+    .export-content pre { font-size: 0.75rem; line-height: 1.6; background: var(--surface); padding: 16px; border: 1px solid var(--border-light); overflow-x: auto; white-space: pre-wrap; }
+    .export-close { background: var(--accent); color: #fff; border: none; padding: 8px 20px; font-family: var(--font); font-size: 0.82rem; cursor: pointer; margin-top: 12px; }
+
+    /* View modes */
+    .view-list .db-grid { display: flex; flex-direction: column; gap: 4px; }
+    .view-list .db-card { display: flex; align-items: center; gap: 16px; padding: 10px 16px; }
+    .view-list .db-card-top { margin-bottom: 0; flex-shrink: 0; }
+    .view-list .db-desc { display: none; }
+    .view-list .db-note { display: none; }
+    .view-list .db-actions { display: none; }
+    .view-list .db-meta { display: none; }
+    .view-list .db-stat { margin-bottom: 0; font-size: 0.78rem; }
+    .view-list .db-name { margin-bottom: 0; font-size: 0.82rem; }
+    .view-list .db-name-en { display: none; }
+
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .db-grid { grid-template-columns: 1fr; }
+      .pipeline { flex-wrap: wrap; justify-content: center; }
+      .summary-bar { gap: 8px; }
+      .summary-card { min-width: 100px; padding: 12px; }
+      .toolbar { gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <span class="header-title">DB Planner</span>
+      <span class="header-sub">Intelligence Pipeline Planning Tool</span>
+    </div>
+    <div class="header-right">
+      <button class="header-btn" onclick="toggleTheme()" id="themeBtn">Dark</button>
+      <a href="databases.html" class="header-btn" style="text-decoration:none">DB Index</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Summary -->
+    <div class="summary-bar" id="summaryBar"></div>
+
+    <!-- Pipeline Diagram -->
+    <div class="pipeline" id="pipeline"></div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-group" id="viewMode">
+        <button class="toolbar-btn selected" data-view="grid" onclick="setView('grid')">Grid</button>
+        <button class="toolbar-btn" data-view="list" onclick="setView('list')">List</button>
+      </div>
+      <div class="toolbar-sep"></div>
+      <div class="toolbar-group" id="sortMode">
+        <button class="toolbar-btn selected" data-sort="layer" onclick="setSort('layer')">Layer</button>
+        <button class="toolbar-btn" data-sort="size" onclick="setSort('size')">Size</button>
+        <button class="toolbar-btn" data-sort="update" onclick="setSort('update')">Update</button>
+        <button class="toolbar-btn" data-sort="priority" onclick="setSort('priority')">Priority</button>
+      </div>
+      <div class="toolbar-sep"></div>
+      <button class="toolbar-action" onclick="enableAll()">All ON</button>
+      <button class="toolbar-action" onclick="disableAll()">All OFF</button>
+      <button class="toolbar-action" onclick="resetState()">Reset</button>
+      <div class="toolbar-sep"></div>
+      <button class="toolbar-action" onclick="exportMarkdown()">Export MD</button>
+      <button class="toolbar-action" onclick="exportJSON()">Export JSON</button>
+      <button class="toolbar-action" onclick="saveToLocalStorage()">Save</button>
+      <button class="toolbar-action danger" onclick="clearSaved()">Clear Saved</button>
+    </div>
+
+    <!-- DB Layers -->
+    <div id="dbContent"></div>
+  </div>
+
+  <!-- Export Modal -->
+  <div class="export-panel" id="exportPanel" onclick="if(event.target===this)closeExport()">
+    <div class="export-content">
+      <h3 id="exportTitle">Export</h3>
+      <pre id="exportBody"></pre>
+      <div style="display:flex;gap:8px">
+        <button class="export-close" onclick="copyExport()">Copy</button>
+        <button class="export-close" style="background:var(--text-muted)" onclick="closeExport()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ============================================================
+  // DATA
+  // ============================================================
+  var DB_REGISTRY = {
+    layers: [
+      {
+        id: "core", name: "基軸データベース",
+        description: "フォーサイト活動の基盤。日次更新で最新情報を蓄積。",
+        databases: [
+          { id:"FK", name:"Foresight Knowledge Base", nameJa:"フォーサイト知識基盤", stat:"363機関 / 51,159レポート", description:"世界のフォーサイト機関・レポートを網羅的に収集。55,000以上のレポート、650トレンドを構造化。", tables:7, rows:51159, sizeMB:0, storage:"GitHub/JSON", update:"週次", dashboard:"dashboards/fk.html" },
+          { id:"PE", name:"PESTLE DB", nameJa:"PESTLEニュースDB", stat:"198,311記事 / 日次更新", description:"124のRSSフィードから日次収集するPESTLE分類ニュース。国内57、海外67ソース。1900年〜現在をカバー。", tables:9, rows:198311, sizeMB:183, storage:"SQLite", update:"日次", dashboard:"dashboards/pe.html" },
+          { id:"CI", name:"Cultural Intelligence DB", nameJa:"文化インテリジェンスDB", stat:"295,951記事 / 21カテゴリ", description:"21カテゴリの文化ニュースを日次収集。FK/PEを補完する文化レイヤー。", tables:7, rows:295951, sizeMB:0, storage:"SQLite", update:"日次", dashboard:"dashboards/ci.html" },
+          { id:"GR", name:"Geopolitical Risk DB", nameJa:"地政学リスクDB", stat:"132カ国 / 422,216レコード", description:"GPR指数、EPU指数、紛争イベントを統合。24,810件のGPR月次データ、385,918件の紛争イベント。", tables:6, rows:422216, sizeMB:15, storage:"SQLite", update:"月次", dashboard:"dashboards/gr.html" }
+        ]
+      },
+      {
+        id: "structural", name: "構造理解",
+        description: "ニュースや情報を深層構造で分析するフレームワーク群。",
+        databases: [
+          { id:"CLA", name:"CLA DB", nameJa:"因果階層分析DB", stat:"127年統合CLA / 91,553レコード", description:"1900-2026年の127年間の統合CLA（四層＋zeitgeist）。全127年分をgeneration v2として再分析完了。", tables:20, rows:91553, sizeMB:20, storage:"SQLite", update:"日次", dashboard:"dashboards/cla.html" },
+          { id:"MT", name:"Megatrend / Foresight Taxonomy", nameJa:"18メガトレンド", stat:"18テーマ / 5メガドメイン", description:"約30冊の未来予測書籍から抽出した18の大項目。5メガドメイン、Three Horizons、5認識論的フレーム。", tables:0, rows:18, sizeMB:0, storage:"GitHub/JSON", update:"随時", dashboard:"dashboards/mt.html" },
+          { id:"AL", name:"Academic Landscape DB", nameJa:"学術ランドスケープ", stat:"114カ国", description:"国別の学術活動ランドスケープ。研究動向の地理的分布を可視化。", tables:0, rows:114, sizeMB:0, storage:"GitHub/JSON", update:"随時", dashboard:"dashboards/al.html" },
+          { id:"GF", name:"Great Figures DB", nameJa:"歴史構造DB", stat:"10,033イベント / 671概念 / 12パターン", description:"歴史上の重要人物・事象10,033件と671の概念、174の意思決定構造分析。12のシステムパターンと10の意思決定アーキタイプを発見。", tables:0, rows:10033, sizeMB:0, storage:"GitHub/JSON", update:"随時", dashboard:"dashboards/gf.html" }
+        ]
+      },
+      {
+        id: "detection", name: "変化検出（6系統）",
+        description: "各専門領域から変化の兆候を検出するセンサー群。",
+        databases: [
+          { id:"SG", name:"Signal DB", nameJa:"シグナルDB", stat:"11,441シグナル / 歴史的検証済み", description:"PESTLE+Culturalのフォーサイトシグナル。Tetlock/Brier Scoreベース5次元予測力評価。", tables:9, rows:11441, sizeMB:7.4, storage:"SQLite", update:"日次", dashboard:"dashboards/sg.html" },
+          { id:"IR", name:"Funding Database", nameJa:"VC投資DB", stat:"1,803社", description:"VC資金調達DB。3,658件のラウンド、1,803社、月次統計。スタートアップライフサイクル追跡。", tables:4, rows:5527, sizeMB:2.6, storage:"SQLite", update:"月次", dashboard:"dashboards/ir.html" },
+          { id:"PD", name:"Policy DB", nameJa:"政策DB", stat:"30,118件", description:"23省庁の審議会・委員会・予算事業・有識者データ。185K+行の政策文書。", tables:38, rows:221788, sizeMB:108.2, storage:"SQLite", update:"月次", dashboard:"dashboards/pd.html" },
+          { id:"SI", name:"Sangaku Matcher", nameJa:"企業ニーズDB", stat:"512,706件", description:"企業・特許・技術シーズの産学連携マッチングv2。3,872社、29,084件の産学連携実績。", tables:11, rows:512706, sizeMB:213.2, storage:"SQLite", update:"稼働中", dashboard:"dashboards/si.html" },
+          { id:"IC", name:"IR Collector", nameJa:"企業IRDB", stat:"3,829社", description:"上場企業のIR情報。EDINET有価証券報告書から自動収集。", tables:3, rows:7659, sizeMB:143.7, storage:"SQLite", update:"四半期", dashboard:"dashboards/ic.html" },
+          { id:"SGPR", name:"Sangaku Press Releases", nameJa:"産学プレスリリースDB", stat:"6,581件", description:"産学連携プレスリリースDB。sangaku-matcher-v2由来。", tables:2, rows:6583, sizeMB:2.5, storage:"SQLite", update:"月次", dashboard:"dashboards/sgpr.html" },
+          { id:"AA", name:"AI Acceleration Evidence DB", nameJa:"LLM親和領域DB", stat:"551言及 / 464出典 / 94ドメイン", description:"生成AIによって加速する研究・学術・事業領域のエビデンスDB。551件の加速言及を収集。", tables:17, rows:551, sizeMB:1.2, storage:"SQLite", update:"随時", dashboard:"https://yuyanishimura0312.github.io/foresight-tools/ai-acceleration-evidence.html" }
+        ]
+      },
+      {
+        id: "conceptual", name: "概念基盤",
+        description: "知識の構造化と歴史的文脈を提供する基盤データベース群。",
+        databases: [
+          { id:"AK", name:"Academic Knowledge DB", nameJa:"学術知識DB", stat:"4,703知識単位 / 5分野", description:"5分野（人文学・社会科学・自然科学・工学・芸術）の学術知識を体系的に収集・構造化。", tables:0, rows:4703, sizeMB:0, storage:"GitHub Pages/JSON", update:"継続収集中", dashboard:"https://yuyanishimura0312.github.io/academic-knowledge-db/" },
+          { id:"MY", name:"Myth Narratives Database", nameJa:"神話ナラティブDB", stat:"2,075物語 / 59文化 / 331,646パラレル", description:"世界59文化2,075件の神話・民話をナラティブ単位で構造分析。異文化間構造パラレル331,646件を検出。", tables:14, rows:2075, sizeMB:28, storage:"SQLite", update:"随時拡張", dashboard:"dashboards/my.html" },
+          { id:"AN", name:"Anthropology Concepts", nameJa:"人類学概念DB", stat:"500概念 / 252研究者", description:"人類学概念系譜DB。概念・研究者・文献・OCM分類の関係を構造化。", tables:10, rows:2603, sizeMB:1.4, storage:"SQLite", update:"随時", dashboard:"dashboards/an.html" },
+          { id:"SIF", name:"Social Innovation Framework", nameJa:"SI歴史的構造変革DB", stat:"1,389事象 / 1,649関係 / 10文明圏", description:"BCE3000〜現代の社会構造変革1,389事象を5次元PRRRCモデルで構造化。全事象にLLM生成の構造変革記述を付与。", tables:6, rows:1389, sizeMB:6.2, storage:"SQLite", update:"随時拡張", dashboard:"dashboards/sif.html" },
+          { id:"FS", name:"Futures Studies Knowledge DB", nameJa:"未来学知識DB", stat:"99手法 / 17学派 / 448研究者 / 507概念", description:"未来学という学問分野そのものの構造的理解を体系化。RAND/テクノ予測（1946）からアンティシペーション研究まで。", tables:21, rows:2450, sizeMB:0.5, storage:"SQLite+JSON", update:"随時拡張", dashboard:"reports/futures-studies-knowledge-db.html" },
+          { id:"TA", name:"Tech Acceleration DB", nameJa:"技術発展加速度検証DB", stat:"227Kレコード / 44テーブル / 13外部ソース", description:"カーツワイルの「収穫加速の法則」とアーサーの「組み合わせ進化」を700万年の技術史データで検証。", tables:44, rows:227000, sizeMB:75, storage:"SQLite+JSON(LFS)", update:"随時拡張", dashboard:"dashboards/ta.html" },
+          { id:"TK", name:"Traditional Knowledge DB", nameJa:"先住民伝統知識DB", stat:"1,944グループ / 34,219知識項目", description:"世界の先住民族1,944グループが保有する伝統知識34,219件をGTAオープンコーディングで構造化。", tables:15, rows:34219, sizeMB:25, storage:"SQLite", update:"随時拡張", dashboard:"dashboards/tk.html" }
+        ]
+      }
+    ],
+    supplementary: [
+      { id:"ME", name:"Macro Economy DB", nameJa:"マクロ経済DB", stat:"61カ国 / 42指標 / 52K件", description:"World Bank・IMFデータ。マクロ経済指標の時系列。", tables:0, rows:52000, sizeMB:0, storage:"SQLite", update:"月次", dashboard:"dashboards/me.html" },
+      { id:"RG", name:"Regulatory DB Japan", nameJa:"規制動態DB", stat:"1,332法令", description:"e-Gov法令APIから収集した日本の規制動態。", tables:0, rows:1332, sizeMB:0, storage:"SQLite", update:"月次", dashboard:"dashboards/rg.html" }
+    ]
+  };
+
+  // ============================================================
+  // STATE
+  // ============================================================
+  var STORAGE_KEY = 'db-planner-state';
+  var state = {
+    enabled: {},   // id -> boolean
+    priority: {},  // id -> 'high'|'medium'|'low'|null
+    notes: {},     // id -> string
+    view: 'grid',
+    sort: 'layer'
+  };
+
+  function getAllDbs() {
+    var all = [];
+    DB_REGISTRY.layers.forEach(function(l) {
+      l.databases.forEach(function(db) { all.push(Object.assign({}, db, { layer: l.id })); });
+    });
+    DB_REGISTRY.supplementary.forEach(function(db) { all.push(Object.assign({}, db, { layer: 'supplementary' })); });
+    return all;
+  }
+
+  function initState() {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try { var s = JSON.parse(saved); Object.assign(state, s); return; } catch(e) {}
+    }
+    getAllDbs().forEach(function(db) { state.enabled[db.id] = true; });
+  }
+
+  function saveToLocalStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    showToast('Saved');
+  }
+
+  function clearSaved() {
+    localStorage.removeItem(STORAGE_KEY);
+    state = { enabled: {}, priority: {}, notes: {}, view: 'grid', sort: 'layer' };
+    getAllDbs().forEach(function(db) { state.enabled[db.id] = true; });
+    render();
+    showToast('Cleared');
+  }
+
+  function resetState() {
+    getAllDbs().forEach(function(db) { state.enabled[db.id] = true; state.priority[db.id] = null; });
+    render();
+  }
+
+  function enableAll() { getAllDbs().forEach(function(db) { state.enabled[db.id] = true; }); render(); }
+  function disableAll() { getAllDbs().forEach(function(db) { state.enabled[db.id] = false; }); render(); }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function render() {
+    renderSummary();
+    renderPipeline();
+    renderContent();
+    updateToolbarState();
+  }
+
+  function renderSummary() {
+    var all = getAllDbs();
+    var activeCount = 0, totalRows = 0, totalSize = 0;
+    all.forEach(function(db) {
+      if (state.enabled[db.id]) {
+        activeCount++;
+        totalRows += (db.rows || 0);
+        totalSize += (db.sizeMB || 0);
+      }
+    });
+    var highP = Object.values(state.priority).filter(function(p){ return p === 'high'; }).length;
+    document.getElementById('summaryBar').innerHTML =
+      '<div class="summary-card"><div class="summary-value active-count">' + activeCount + '<span style="font-size:0.85rem;color:var(--text-muted)"> / ' + all.length + '</span></div><div class="summary-label">Active DBs</div></div>' +
+      '<div class="summary-card"><div class="summary-value">' + totalRows.toLocaleString() + '</div><div class="summary-label">Total Rows (active)</div></div>' +
+      '<div class="summary-card"><div class="summary-value size-count">' + (totalSize > 1000 ? (totalSize / 1000).toFixed(1) + 'GB' : totalSize.toFixed(0) + 'MB') + '</div><div class="summary-label">Storage (active)</div></div>' +
+      '<div class="summary-card"><div class="summary-value" style="color:var(--accent-warm)">' + highP + '</div><div class="summary-label">High Priority</div></div>';
+  }
+
+  function renderPipeline() {
+    var layers = [
+      { id: 'conceptual', name: '概念基盤', ids: [] },
+      { id: 'core', name: '基軸DB', ids: [] },
+      { id: 'structural', name: '構造理解', ids: [] },
+      { id: 'detection', name: '変化検出', ids: [] }
+    ];
+    var all = getAllDbs();
+    all.forEach(function(db) {
+      var l = layers.find(function(x){ return x.id === db.layer; });
+      if (l) l.ids.push(db.id);
+    });
+
+    var html = '';
+    layers.forEach(function(l, i) {
+      var activeInLayer = l.ids.filter(function(id){ return state.enabled[id]; }).length;
+      var dimmed = activeInLayer === 0 ? ' dimmed' : '';
+      html += '<div class="pipeline-stage' + dimmed + '" data-layer="' + l.id + '" onclick="toggleLayer(\'' + l.id + '\')">' +
+        '<div class="pipeline-stage-name">' + l.name + '</div>' +
+        '<div class="pipeline-stage-ids">' + l.ids.join(' / ') + '</div>' +
+        '<div class="pipeline-stage-count">' + activeInLayer + ' / ' + l.ids.length + ' active</div></div>';
+      if (i < layers.length - 1) html += '<span class="pipeline-arrow">&rarr;</span>';
+    });
+    html += '<span class="pipeline-arrow">&rarr;</span>';
+    var totalActive = all.filter(function(db){ return state.enabled[db.id]; }).length;
+    html += '<div class="pipeline-stage" data-layer="output"><div class="pipeline-stage-name">有望領域の特定</div><div class="pipeline-stage-ids">' + totalActive + ' DBs active</div></div>';
+    document.getElementById('pipeline').innerHTML = html;
+  }
+
+  function renderContent() {
+    var container = document.getElementById('dbContent');
+    var viewClass = state.view === 'list' ? ' view-list' : '';
+
+    if (state.sort === 'layer') {
+      var html = '';
+      DB_REGISTRY.layers.forEach(function(layer) {
+        html += renderLayerSection(layer.id, layer.name, layer.description, layer.databases, layer.id);
+      });
+      if (DB_REGISTRY.supplementary.length > 0) {
+        html += renderLayerSection('supplementary', '補助データベース', '主要パイプライン外の参照データ。', DB_REGISTRY.supplementary, 'supplementary');
+      }
+      container.innerHTML = '<div class="' + viewClass.trim() + '">' + html + '</div>';
+    } else {
+      var all = getAllDbs();
+      if (state.sort === 'size') all.sort(function(a,b){ return (b.rows||0) - (a.rows||0); });
+      else if (state.sort === 'update') {
+        var order = { '日次':0, '週次':1, '月次':2, '四半期':3, '稼働中':1, '継続収集中':1, '随時':4, '随時拡張':4 };
+        all.sort(function(a,b){ return (order[a.update]||5) - (order[b.update]||5); });
+      } else if (state.sort === 'priority') {
+        var pOrder = { high:0, medium:1, low:2 };
+        all.sort(function(a,b){ return (pOrder[state.priority[a.id]]||3) - (pOrder[state.priority[b.id]]||3); });
+      }
+      var html = '<div class="layer"><div class="db-grid">';
+      all.forEach(function(db) { html += renderDbCard(db, db.layer); });
+      html += '</div></div>';
+      container.innerHTML = '<div class="' + viewClass.trim() + '">' + html + '</div>';
+    }
+  }
+
+  function renderLayerSection(layerId, name, desc, databases, layerTag) {
+    var activeInLayer = databases.filter(function(db){ return state.enabled[db.id]; }).length;
+    var html = '<div class="layer">';
+    html += '<div class="layer-header" data-layer="' + layerId + '">';
+    html += '<div><div class="layer-title">' + esc(name) + ' <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400">' + activeInLayer + '/' + databases.length + '</span></div>';
+    html += '<div class="layer-desc">' + esc(desc) + '</div></div>';
+    html += '<div class="layer-toggle">';
+    html += '<button class="layer-toggle-btn" onclick="toggleLayerOn(\'' + layerId + '\')">All ON</button>';
+    html += '<button class="layer-toggle-btn" onclick="toggleLayerOff(\'' + layerId + '\')">All OFF</button>';
+    html += '</div></div>';
+    html += '<div class="db-grid">';
+    databases.forEach(function(db) { html += renderDbCard(db, layerTag); });
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderDbCard(db, layer) {
+    var enabled = state.enabled[db.id] !== false;
+    var priority = state.priority[db.id];
+    var note = state.notes[db.id] || '';
+    var cls = 'db-card' + (enabled ? '' : ' disabled');
+    var html = '<div class="' + cls + '" data-id="' + db.id + '" data-layer="' + layer + '">';
+
+    if (priority) html += '<div class="db-priority ' + priority + '">' + priority.toUpperCase() + '</div>';
+
+    html += '<div class="db-card-top">';
+    html += '<div><span class="db-id">' + esc(db.id) + '</span></div>';
+    html += '<div class="db-toggle' + (enabled ? '' : ' off') + '" onclick="toggleDb(\'' + db.id + '\')"></div>';
+    html += '</div>';
+
+    html += '<div class="db-name">' + esc(db.nameJa) + '</div>';
+    html += '<div class="db-name-en">' + esc(db.name) + '</div>';
+    html += '<div class="db-stat">' + esc(db.stat) + '</div>';
+    html += '<div class="db-desc">' + esc(db.description) + '</div>';
+
+    var meta = '';
+    if (db.storage) meta += '<span>' + esc(db.storage) + '</span>';
+    if (db.update) meta += '<span>' + esc(db.update) + '</span>';
+    if (db.tables) meta += '<span>' + db.tables + ' tables</span>';
+    if (db.rows) meta += '<span>' + db.rows.toLocaleString() + ' rows</span>';
+    if (db.sizeMB) meta += '<span>' + db.sizeMB + 'MB</span>';
+    if (meta) html += '<div class="db-meta">' + meta + '</div>';
+
+    // Actions
+    html += '<div class="db-actions">';
+    if (db.dashboard) {
+      var dashUrl = db.dashboard.startsWith('http') ? db.dashboard : 'https://yuyanishimura0312.github.io/miratuku-news-v2/' + db.dashboard;
+      html += '<a href="' + dashUrl + '" target="_blank" class="db-action-btn primary" style="text-decoration:none">Dashboard</a>';
+    }
+    html += '<button class="db-action-btn" onclick="cyclePriority(\'' + db.id + '\')">' + (priority ? priority : 'Priority') + '</button>';
+    html += '<button class="db-action-btn" onclick="toggleNote(\'' + db.id + '\')">' + (note ? 'Edit Note' : 'Add Note') + '</button>';
+    html += '</div>';
+
+    // Note area
+    html += '<div class="db-note" id="note-' + db.id + '" style="' + (note ? '' : 'display:none') + '">';
+    html += '<div class="db-note-label">Planning Note</div>';
+    html += '<textarea oninput="updateNote(\'' + db.id + '\', this.value)" placeholder="Enter planning notes...">' + esc(note) + '</textarea>';
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+  }
+
+  function updateToolbarState() {
+    document.querySelectorAll('#viewMode .toolbar-btn').forEach(function(btn) {
+      btn.classList.toggle('selected', btn.dataset.view === state.view);
+    });
+    document.querySelectorAll('#sortMode .toolbar-btn').forEach(function(btn) {
+      btn.classList.toggle('selected', btn.dataset.sort === state.sort);
+    });
+  }
+
+  // ============================================================
+  // INTERACTIONS
+  // ============================================================
+  function toggleDb(id) {
+    state.enabled[id] = !state.enabled[id];
+    render();
+  }
+
+  function toggleLayer(layerId) {
+    var layer = DB_REGISTRY.layers.find(function(l){ return l.id === layerId; });
+    if (!layer) return;
+    var allOn = layer.databases.every(function(db){ return state.enabled[db.id]; });
+    layer.databases.forEach(function(db){ state.enabled[db.id] = !allOn; });
+    render();
+  }
+
+  function toggleLayerOn(layerId) {
+    var dbs = layerId === 'supplementary' ? DB_REGISTRY.supplementary : (DB_REGISTRY.layers.find(function(l){ return l.id === layerId; }) || {}).databases || [];
+    dbs.forEach(function(db){ state.enabled[db.id] = true; });
+    render();
+  }
+
+  function toggleLayerOff(layerId) {
+    var dbs = layerId === 'supplementary' ? DB_REGISTRY.supplementary : (DB_REGISTRY.layers.find(function(l){ return l.id === layerId; }) || {}).databases || [];
+    dbs.forEach(function(db){ state.enabled[db.id] = false; });
+    render();
+  }
+
+  function cyclePriority(id) {
+    var cycle = [null, 'high', 'medium', 'low'];
+    var cur = cycle.indexOf(state.priority[id] || null);
+    state.priority[id] = cycle[(cur + 1) % cycle.length];
+    render();
+  }
+
+  function toggleNote(id) {
+    var el = document.getElementById('note-' + id);
+    if (el) {
+      var visible = el.style.display !== 'none';
+      el.style.display = visible ? 'none' : 'block';
+      if (!visible) el.querySelector('textarea').focus();
+    }
+  }
+
+  function updateNote(id, value) {
+    state.notes[id] = value;
+  }
+
+  function setView(v) { state.view = v; render(); }
+  function setSort(s) { state.sort = s; render(); }
+
+  // ============================================================
+  // EXPORT
+  // ============================================================
+  function exportMarkdown() {
+    var all = getAllDbs();
+    var lines = ['# DB Planner Export', '日付: ' + new Date().toISOString().slice(0,10), ''];
+
+    // Summary
+    var active = all.filter(function(db){ return state.enabled[db.id]; });
+    lines.push('## Summary');
+    lines.push('- Active: ' + active.length + ' / ' + all.length);
+    lines.push('- Total rows: ' + active.reduce(function(s,db){ return s + (db.rows||0); }, 0).toLocaleString());
+    lines.push('');
+
+    // By layer
+    lines.push('## Active Databases');
+    DB_REGISTRY.layers.forEach(function(layer) {
+      lines.push('');
+      lines.push('### ' + layer.name);
+      layer.databases.forEach(function(db) {
+        var status = state.enabled[db.id] ? 'ON' : 'OFF';
+        var p = state.priority[db.id] ? ' [' + state.priority[db.id].toUpperCase() + ']' : '';
+        lines.push('- [' + status + '] **' + db.id + '**: ' + db.nameJa + ' — ' + db.stat + p);
+        if (state.notes[db.id]) lines.push('  - Note: ' + state.notes[db.id]);
+      });
+    });
+
+    lines.push('');
+    lines.push('### 補助');
+    DB_REGISTRY.supplementary.forEach(function(db) {
+      var status = state.enabled[db.id] ? 'ON' : 'OFF';
+      lines.push('- [' + status + '] **' + db.id + '**: ' + db.nameJa + ' — ' + db.stat);
+      if (state.notes[db.id]) lines.push('  - Note: ' + state.notes[db.id]);
+    });
+
+    showExport('Export — Markdown', lines.join('\n'));
+  }
+
+  function exportJSON() {
+    var all = getAllDbs();
+    var data = {
+      exported: new Date().toISOString(),
+      summary: {
+        active: all.filter(function(db){ return state.enabled[db.id]; }).length,
+        total: all.length
+      },
+      databases: all.map(function(db) {
+        return {
+          id: db.id,
+          name: db.nameJa,
+          layer: db.layer,
+          enabled: !!state.enabled[db.id],
+          priority: state.priority[db.id] || null,
+          note: state.notes[db.id] || null,
+          rows: db.rows || 0,
+          update: db.update
+        };
+      })
+    };
+    showExport('Export — JSON', JSON.stringify(data, null, 2));
+  }
+
+  function showExport(title, body) {
+    document.getElementById('exportTitle').textContent = title;
+    document.getElementById('exportBody').textContent = body;
+    document.getElementById('exportPanel').classList.add('open');
+  }
+
+  function closeExport() { document.getElementById('exportPanel').classList.remove('open'); }
+
+  function copyExport() {
+    var text = document.getElementById('exportBody').textContent;
+    navigator.clipboard.writeText(text).then(function() { showToast('Copied'); });
+  }
+
+  // ============================================================
+  // THEME
+  // ============================================================
+  function toggleTheme() {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? '' : 'dark');
+    document.getElementById('themeBtn').textContent = dark ? 'Dark' : 'Light';
+  }
+
+  // ============================================================
+  // TOAST
+  // ============================================================
+  function showToast(msg) {
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:8px 24px;font-size:0.82rem;z-index:999;animation:fadeout 1.5s forwards';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 1500);
+  }
+
+  // ============================================================
+  // UTIL
+  // ============================================================
+  function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  initState();
+  render();
+  </script>
+  <style>
+    @keyframes fadeout { 0%{opacity:1} 70%{opacity:1} 100%{opacity:0} }
+  </style>
+</body>
+</html>
