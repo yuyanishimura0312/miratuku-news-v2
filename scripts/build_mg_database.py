@@ -196,11 +196,24 @@ def main():
     all_concepts = merge_additional_concepts(normalized, additional_files)
 
     # Step 3.5: Apply enriched definitions (update only if new is longer)
-    enriched_defs_path = DATA_DIR / "mg_enriched_defs_batch1.json"
-    if enriched_defs_path.exists():
-        with open(enriched_defs_path, "r") as f:
+    enriched_files = [
+        DATA_DIR / "mg_enriched_defs_batch1.json",
+        DATA_DIR / "mg_enriched_overlay.json",
+    ]
+    total_def_updated = 0
+    for enriched_path in enriched_files:
+        if not enriched_path.exists():
+            continue
+        with open(enriched_path, "r") as f:
             enriched_defs = json.load(f)
-        name_to_def = {d["name_en"].strip().lower(): d["definition_ja"] for d in enriched_defs if d.get("name_en") and d.get("definition_ja")}
+        name_to_def = {}
+        name_to_sf = {}
+        for d in enriched_defs:
+            key = (d.get("name_en") or "").strip().lower()
+            if key and d.get("definition_ja"):
+                name_to_def[key] = d["definition_ja"]
+            if key and d.get("subfield_id", "").startswith("s"):
+                name_to_sf[key] = d["subfield_id"]
         def_updated = 0
         for c in all_concepts:
             key = c.get("name_en", "").strip().lower()
@@ -209,9 +222,11 @@ def main():
                 if len(new_def) > len(c.get("definition_ja", "")):
                     c["definition_ja"] = new_def
                     def_updated += 1
-        print(f"\nStep 3.5: Applied {def_updated} enriched definitions from {enriched_defs_path.name}")
-    else:
-        print(f"\nStep 3.5: Skipped (enriched defs file not found)")
+            if key in name_to_sf and not c.get("subfield_id", "").startswith("s"):
+                c["subfield_id"] = name_to_sf[key]
+        total_def_updated += def_updated
+        print(f"  Applied {def_updated} enriched definitions from {enriched_path.name}")
+    print(f"\nStep 3.5: Total {total_def_updated} definitions upgraded")
 
     # Step 4: Re-index after merge
     print(f"\nStep 4: Re-indexing {len(all_concepts)} concepts...")
