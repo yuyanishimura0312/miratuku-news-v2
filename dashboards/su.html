@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スタートアップ学術知識DB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
+.overview-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; }
+.overview-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 10; }
+.chart-container { margin: 16px 0 28px; overflow-x: auto; }
+.chart { display: flex; align-items: flex-end; gap: 1px; height: 200px; min-width: 600px; }
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 3px; height: 100%; justify-content: flex-end; }
+.chart-bar { width: 100%; background: var(--accent-warm); opacity: 0.7; cursor: pointer; transition: opacity 0.15s; min-height: 1px; }
+.chart-bar:hover { opacity: 1; }
+.chart-label { font-size: 0.5rem; color: var(--text-muted); margin-top: 3px; writing-mode: vertical-rl; height: 24px; overflow: hidden; }
+.chart-tooltip { position: fixed; background: var(--card); border: 1px solid var(--border); padding: 8px 12px; font-size: 0.78rem; pointer-events: none; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.subfield-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; margin: 12px 0; }
+.subfield-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.subfield-name { flex: 1; }
+.subfield-name-ja { font-weight: 500; }
+.subfield-name-en { font-size: 0.7rem; color: var(--text-muted); }
+.subfield-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; min-width: 40px; text-align: right; }
+.subfield-bar { height: 3px; background: var(--accent-warm); opacity: 0.4; margin-top: 4px; }
+.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin: 12px 0; }
+.type-item { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.type-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; }
+.researcher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; margin: 12px 0; }
+.researcher-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.researcher-name { font-weight: 500; }
+.researcher-count { font-family: monospace; color: var(--text-muted); font-size: 0.75rem; }
+.cross-domain { margin: 12px 0 28px; }
+.cross-bar-wrap { display: flex; align-items: center; margin-bottom: 6px; }
+.cross-label { min-width: 160px; font-size: 0.78rem; color: var(--text-secondary); text-align: right; padding-right: 12px; }
+.cross-bar { height: 22px; background: var(--accent-warm); opacity: 0.6; display: flex; align-items: center; padding-left: 8px; }
+.cross-count { font-size: 0.72rem; color: #fff; font-weight: 600; }
+.report-list { display: grid; gap: 8px; margin: 12px 0 28px; }
+.report-item { padding: 12px 16px; border: 1px solid var(--border-light); background: var(--surface); }
+.report-item a { color: var(--text); text-decoration: none; }
+.report-item a:hover { color: var(--accent-warm); }
+.report-title { font-size: 0.84rem; font-weight: 600; line-height: 1.5; margin-bottom: 4px; }
+.report-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
+.link-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent-warm); color: #fff; font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: opacity 0.2s; margin-right: 8px; margin-bottom: 8px; }
+.link-btn:hover { opacity: 0.85; }
+.link-btn-outline { background: transparent; color: var(--accent-warm); border: 1px solid var(--accent-warm); }
+.link-btn-outline:hover { background: var(--accent-muted); }
+.quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin: 12px 0; }
+.quality-item { padding: 12px; background: var(--surface); border: 1px solid var(--border-light); text-align: center; }
+.quality-score { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; color: #2d8a4e; }
+.quality-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border-light); font-size: 0.72rem; color: var(--text-muted); text-align: center; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+<a class="back" href="../databases.html">&larr; データベース一覧に戻る</a>
+
+<h1><span class="db-id">SU</span>スタートアップ学術知識DB</h1>
+<p class="subtitle">14サブフィールド・9,031概念によるスタートアップ研究の統合的知識基盤</p>
+<p class="desc">Saras Sarasvathyのエフェクチュエーション理論（2001年）からリーンスタートアップ方法論（Eric Ries, 2011年）、ベンチャーキャピタル理論、プラットフォーム・デジタルスタートアップ、エコシステム論まで、スタートアップ・起業家精神研究の全領域を体系化した学術知識データベース。認知・行動論、機会発見・創造論、ファウンダー・チームダイナミクス、スケーリング戦略、社会的インパクトなど14の理論的サブフィールドにわたる9,031件の概念を収録し、42,497件の理論間関係によって全概念を接続した知識ネットワークを構築している。</p>
+
+<div style="margin-bottom:20px">
+  <a class="link-btn link-btn-outline" href="https://github.com/yuyanishimura0312/academic-knowledge-db">GitHub <span style="font-size:0.72rem;opacity:0.85">&rarr;</span></a>
+  <a class="link-btn link-btn-outline" href="https://yuyanishimura0312.github.io/research-dashboard/">Research Dashboard <span style="font-size:0.72rem;opacity:0.85">&rarr;</span></a>
+</div>
+
+<div class="overview">
+  <div class="overview-card"><div class="overview-value">9,031</div><div class="overview-label">理論・概念</div></div>
+  <div class="overview-card"><div class="overview-value">14</div><div class="overview-label">サブフィールド</div></div>
+  <div class="overview-card"><div class="overview-value">42,497</div><div class="overview-label">理論間関係</div></div>
+  <div class="overview-card"><div class="overview-value">100%</div><div class="overview-label">接続率</div></div>
+  <div class="overview-card"><div class="overview-value">4.71</div><div class="overview-label">平均関係数/概念</div></div>
+  <div class="overview-card"><div class="overview-value">94</div><div class="overview-label">年間カバー</div></div>
+</div>
+
+<h3>品質指標</h3>
+<div class="quality-grid">
+  <div class="quality-item"><div class="quality-score">100%</div><div class="quality-label">フィールド充填率</div></div>
+  <div class="quality-item"><div class="quality-score">0</div><div class="quality-label">重複エントリ</div></div>
+  <div class="quality-item"><div class="quality-score">100%</div><div class="quality-label">ネットワーク接続率</div></div>
+  <div class="quality-item"><div class="quality-score">4.71</div><div class="quality-label">平均関係数/概念</div></div>
+</div>
+
+<h3>年代別タイムライン（1872-2030年）</h3>
+<p class="note">スタートアップ・起業家精神研究の概念出現年分布。2000年以降の急増が研究領域の制度化とリーンスタートアップ運動の拡大を反映している。</p>
+<div class="chart-container"><div class="chart" id="timeline-chart"></div></div>
+<div id="chart-tooltip" class="chart-tooltip" style="display:none"></div>
+
+<h3>14サブフィールド</h3>
+<p class="note">起業家認知・行動論、エグジット戦略、リーンスタートアップ、プラットフォームなど14の専門サブフィールドによるスタートアップ研究の全体像。</p>
+<div class="subfield-grid" id="subfield-grid"></div>
+
+<h3>理論間関係の構成（42,497件）</h3>
+<p class="note">6種類の関係タイプによる理論間ネットワーク。related_to（関連）とinfluenced（影響）が主要な接続を構成する。</p>
+<div class="type-grid" id="relation-grid"></div>
+
+<h3>主要研究者（出現頻度順）</h3>
+<p class="note">データベース内で最も多く参照される研究者。起業家認知論・機会発見理論の研究者が上位を占める。</p>
+<div class="researcher-grid" id="researcher-grid"></div>
+
+<h3>年代別構成</h3>
+<div class="type-grid" id="decade-grid"></div>
+
+<footer>
+  Startup Theory DB &mdash; academic-knowledge-db / Insight News<br>
+  9,031 theories &middot; 42,497 relations &middot; Last updated: 2026-05-02
+</footer>
+
+<script>
+// Timeline data (from DB: SELECT era_start, COUNT(*) FROM startup_theory WHERE era_start IS NOT NULL GROUP BY era_start ORDER BY era_start)
+const yearlyData = {"1872":1,"1933":1,"1934":42,"1946":1,"1949":42,"1956":1,"1958":6,"1960":5,"1962":5,"1963":1,"1964":5,"1965":1,"1966":49,"1967":10,"1968":7,"1969":46,"1970":50,"1971":8,"1972":2,"1973":86,"1974":17,"1975":12,"1976":29,"1977":13,"1978":18,"1979":57,"1980":85,"1981":15,"1982":32,"1983":9,"1984":55,"1985":29,"1986":82,"1987":31,"1988":79,"1989":36,"1990":187,"1991":116,"1992":72,"1993":102,"1994":106,"1995":120,"1996":79,"1997":103,"1998":143,"1999":74,"2000":422,"2001":119,"2002":174,"2003":210,"2004":138,"2005":391,"2006":135,"2007":229,"2008":198,"2009":193,"2010":858,"2011":230,"2012":294,"2013":199,"2014":265,"2015":507,"2016":350,"2017":336,"2018":416,"2019":337,"2020":364,"2021":229,"2022":142,"2023":155,"2024":31,"2025":17,"2026":12,"2027":5,"2028":3,"2030":1,"2031":1};
+
+// Build timeline chart
+const chart = document.getElementById('timeline-chart');
+const tooltip = document.getElementById('chart-tooltip');
+const startYear = 1930, endYear = 2028;
+const maxVal = Math.max(...Object.values(yearlyData));
+
+for (let y = startYear; y <= endYear; y++) {
+  const val = yearlyData[y] || 0;
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-bar-wrap';
+  const bar = document.createElement('div');
+  bar.className = 'chart-bar';
+  bar.style.height = (val / maxVal * 100) + '%';
+  bar.addEventListener('mouseenter', e => {
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `<strong>${y}年</strong>: ${val}件`;
+  });
+  bar.addEventListener('mousemove', e => {
+    tooltip.style.left = (e.clientX + 12) + 'px';
+    tooltip.style.top = (e.clientY - 30) + 'px';
+  });
+  bar.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+  wrap.appendChild(bar);
+  if (y % 10 === 0) {
+    const label = document.createElement('div');
+    label.className = 'chart-label';
+    label.textContent = y;
+    wrap.appendChild(label);
+  }
+  chart.appendChild(wrap);
+}
+
+// Subfield data (from DB: SELECT subfield, COUNT(*) FROM startup_theory GROUP BY subfield ORDER BY COUNT(*) DESC)
+const subfields = [
+  {id:"A1", ja:"起業家認知・行動論", en:"entrepreneurial_cognition_behavior", count:714, cat:"A"},
+  {id:"A2", ja:"エグジット・IPO・M&A戦略", en:"exit_ipo_ma_strategy", count:714, cat:"A"},
+  {id:"A3", ja:"リーンスタートアップ方法論", en:"lean_startup_methodology", count:714, cat:"A"},
+  {id:"A4", ja:"プラットフォーム・デジタルスタートアップ", en:"platform_digital_startups", count:714, cat:"A"},
+  {id:"B1", ja:"ソーシャル・サステナブルスタートアップ", en:"social_impact_sustainable_startups", count:714, cat:"B"},
+  {id:"B2", ja:"スタートアップ・エコシステム論", en:"startup_ecosystem_clusters", count:714, cat:"B"},
+  {id:"B3", ja:"テクノロジー・ディープテック", en:"technology_deep_tech_startups", count:714, cat:"B"},
+  {id:"B4", ja:"ベンチャーキャピタル・資金調達", en:"venture_capital_financing", count:714, cat:"B"},
+  {id:"C1", ja:"機会発見・創造論", en:"opportunity_recognition_creation", count:630, cat:"C"},
+  {id:"C2", ja:"失敗・ピボット・レジリエンス", en:"startup_failure_pivot_resilience", count:600, cat:"C"},
+  {id:"C3", ja:"スケーリング・成長戦略", en:"scaling_growth_strategy", count:589, cat:"C"},
+  {id:"D1", ja:"ファウンダー・チームダイナミクス", en:"founder_team_dynamics", count:500, cat:"D"},
+  {id:"D2", ja:"グローバル・新興市場スタートアップ", en:"global_emerging_market_startups", count:500, cat:"D"},
+  {id:"D3", ja:"スタートアップ政策・規制", en:"startup_policy_regulation", count:500, cat:"D"}
+];
+const catColors = {A:"#CC1400",B:"#0066CC",C:"#008844",D:"#996600"};
+const sfGrid = document.getElementById('subfield-grid');
+const maxSf = Math.max(...subfields.map(s=>s.count));
+subfields.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'subfield-item';
+  el.innerHTML = `<div class="subfield-name"><div class="subfield-name-ja"><span style="font-family:monospace;font-size:0.7rem;color:${catColors[s.cat]};margin-right:4px">${s.id}</span>${s.ja}</div><div class="subfield-name-en">${s.en}</div><div class="subfield-bar" style="width:${s.count/maxSf*100}%;background:${catColors[s.cat]}"></div></div><div class="subfield-count">${s.count}</div>`;
+  sfGrid.appendChild(el);
+});
+
+// Relation types (from DB: SELECT relation_type, COUNT(*) FROM startup_theory_relations GROUP BY relation_type ORDER BY COUNT(*) DESC)
+const relTypes = [
+  ["related_to","一般関連",18270],
+  ["influenced","影響",12167],
+  ["complements","補完",11376],
+  ["derived_from","派生",487],
+  ["extends","拡張・発展",115],
+  ["competes_with","競合",82]
+];
+const relGrid = document.getElementById('relation-grid');
+relTypes.forEach(([type,ja,cnt]) => {
+  const el = document.createElement('div');
+  el.className = 'type-item';
+  el.innerHTML = `<span>${ja} <span style="font-size:0.7rem;color:var(--text-muted)">${type}</span></span><span class="type-count">${cnt.toLocaleString()}</span>`;
+  relGrid.appendChild(el);
+});
+
+// Researchers (counted from key_researchers field)
+const researchers = [
+  ["Scott Shane", 247],
+  ["Israel Kirzner", 206],
+  ["Dean Shepherd", 188],
+  ["Melissa Cardon", 151],
+  ["Per Davidsson", 126],
+  ["Lowell Busenitz", 118],
+  ["Jay Barney", 118],
+  ["Mathew Hayward", 113],
+  ["Steve Blank", 84],
+  ["Bob Dorf", 84],
+  ["Sankaran Venkataraman", 80],
+  ["Daniel Kahneman", 76],
+  ["Joakim Wincent", 75],
+  ["Gilad Chen", 75],
+  ["Albert Bandura", 75],
+  ["Norris Krueger", 74],
+  ["Joseph Schumpeter", 42],
+  ["Sharon Alvarez", 42],
+  ["Mark Granovetter", 42],
+  ["Howard Aldrich", 42]
+];
+const resGrid = document.getElementById('researcher-grid');
+researchers.forEach(([name,cnt]) => {
+  const el = document.createElement('div');
+  el.className = 'researcher-item';
+  el.innerHTML = `<span class="researcher-name">${name}</span><span class="researcher-count">${cnt} concepts</span>`;
+  resGrid.appendChild(el);
+});
+
+// Decades (computed from yearlyData)
+function sumRange(from, to) {
+  let s = 0;
+  for (let y = from; y <= to; y++) s += (yearlyData[y] || 0);
+  return s;
+}
+const decades = [
+  ["~1959", sumRange(1800,1959)],
+  ["1960s", sumRange(1960,1969)],
+  ["1970s", sumRange(1970,1979)],
+  ["1980s", sumRange(1980,1989)],
+  ["1990s", sumRange(1990,1999)],
+  ["2000s", sumRange(2000,2009)],
+  ["2010s", sumRange(2010,2019)],
+  ["2020s", sumRange(2020,2029)]
+];
+const decGrid = document.getElementById('decade-grid');
+decades.forEach(([label,cnt]) => {
+  const el = document.createElement('div');
+  el.className = 'type-item';
+  el.innerHTML = `<span>${label}</span><span class="type-count">${cnt.toLocaleString()}</span>`;
+  decGrid.appendChild(el);
+});
+</script>
+</body>
+</html>
