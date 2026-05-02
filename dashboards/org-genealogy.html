@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>組織系譜DB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #2E5A3F; --accent-muted: rgba(46,90,63,0.08);
+  --accent-link: #2E5A3F;
+  --era-1: #B07256; --era-2: #7A6A4F; --era-3: #5B6E4F; --era-4: #4A7A8C; --era-5: #6E5A7A;
+  --layer-1: #2E5A3F; --layer-2: #4A7A8C; --layer-3: #B07256;
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #4A9A6A; --accent-muted: rgba(74,154,106,0.12);
+  --accent-link: #6CB48C;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.75; max-width: 1040px; margin: 0 auto; padding: 24px 20px 80px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+h2 { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; margin: 44px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent-warm); }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.7; }
+.desc { font-size: 0.86rem; color: var(--text); margin-bottom: 24px; line-height: 1.85; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; color: var(--text); }
+.status-pill { display: inline-block; padding: 2px 10px; font-size: 0.7rem; font-weight: 600; background: var(--accent-muted); color: var(--accent-warm); border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+
+/* Overview metric grid */
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px 12px; text-align: center; }
+.overview-value { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--accent-warm); }
+.overview-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3; }
+
+/* Two-column layout */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+/* Theory lineage table */
+.theory-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.theory-table th, .theory-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); text-align: left; vertical-align: top; }
+.theory-table th { background: var(--surface); font-weight: 700; color: var(--text-secondary); font-size: 0.72rem; }
+.theory-table tr:hover td { background: var(--accent-muted); }
+.role-tag { display: inline-block; padding: 2px 8px; font-size: 0.68rem; font-weight: 600; border-radius: 4px; }
+.role-primary { background: var(--accent-warm); color: #fff; }
+.role-aux { background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary); }
+.role-critical { background: rgba(176,114,86,0.15); color: var(--era-1); border: 1px solid var(--era-1); }
+
+/* Function taxonomy grid */
+.func-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.func-card { background: var(--surface); border: 1px solid var(--border-light); border-left: 3px solid var(--layer-1); padding: 10px 12px; font-size: 0.78rem; }
+.func-card.vsm { border-left-color: var(--layer-2); }
+.func-id { font-family: monospace; font-size: 0.66rem; color: var(--text-muted); }
+.func-name { font-weight: 700; margin: 2px 0; font-size: 0.84rem; }
+.func-def { font-size: 0.74rem; color: var(--text-secondary); line-height: 1.55; }
+
+/* Era timeline */
+.timeline { display: flex; flex-direction: column; gap: 4px; margin: 12px 0; }
+.timeline-row { display: grid; grid-template-columns: 130px 1fr; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border-light); border-left: 4px solid var(--era-1); font-size: 0.8rem; }
+.timeline-row.era-2 { border-left-color: var(--era-2); }
+.timeline-row.era-3 { border-left-color: var(--era-3); }
+.timeline-row.era-4 { border-left-color: var(--era-4); }
+.timeline-row.era-5 { border-left-color: var(--era-5); }
+.timeline-period { font-family: monospace; font-size: 0.74rem; color: var(--text-muted); font-weight: 700; }
+.timeline-form { font-weight: 700; }
+.timeline-note { color: var(--text-secondary); font-size: 0.76rem; margin-top: 2px; }
+
+/* Schema layers */
+.schema-layer { background: var(--surface); border: 1px solid var(--border-light); border-top: 4px solid var(--layer-1); padding: 14px 16px; margin-bottom: 12px; }
+.schema-layer.v02 { border-top-color: var(--layer-2); }
+.schema-layer.v03 { border-top-color: var(--layer-3); }
+.schema-version { font-family: monospace; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); }
+.schema-title { font-size: 0.94rem; font-weight: 700; margin: 4px 0 8px; }
+.schema-tables { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.schema-table-tag { font-family: monospace; font-size: 0.72rem; padding: 3px 8px; background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+
+/* Roadmap quarters */
+.quarter-row { display: grid; grid-template-columns: 60px 80px 1fr; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border-light); align-items: start; font-size: 0.82rem; }
+.quarter-q { font-family: monospace; font-weight: 700; color: var(--accent-warm); }
+.quarter-v { font-family: monospace; font-size: 0.74rem; color: var(--text-muted); }
+.quarter-milestone { color: var(--text); }
+.quarter-deliv { display: block; color: var(--text-secondary); font-size: 0.74rem; margin-top: 4px; }
+
+/* Risk list */
+.risk-list { display: flex; flex-direction: column; gap: 4px; }
+.risk-row { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 8px 12px; background: var(--surface); border-left: 3px solid var(--era-1); font-size: 0.8rem; }
+.risk-num { font-family: monospace; font-weight: 700; color: var(--text-muted); }
+.risk-title { font-weight: 700; }
+.risk-mitig { font-size: 0.74rem; color: var(--text-secondary); margin-top: 2px; }
+
+/* Notes catalog */
+.notes-catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.note-card { background: var(--surface); border: 1px solid var(--border-light); padding: 10px 12px; font-size: 0.78rem; }
+.note-id { font-family: monospace; font-size: 0.7rem; font-weight: 700; color: var(--accent-warm); }
+.note-title { font-weight: 700; margin: 2px 0 4px; font-size: 0.84rem; }
+.note-summary { color: var(--text-secondary); font-size: 0.74rem; line-height: 1.55; }
+.note-size { font-family: monospace; font-size: 0.66rem; color: var(--text-muted); float: right; }
+
+/* Pillars */
+.pillars { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin: 12px 0; }
+.pillar { background: var(--surface); border: 1px solid var(--border-light); padding: 12px; font-size: 0.8rem; }
+.pillar-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 4px; font-size: 0.84rem; }
+.pillar-body { color: var(--text-secondary); font-size: 0.74rem; line-height: 1.55; }
+
+/* Trap warnings */
+.trap-list { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.trap { padding: 8px 12px; background: rgba(176,114,86,0.08); border-left: 3px solid var(--era-1); font-size: 0.78rem; color: var(--text); }
+.trap-name { font-weight: 700; color: var(--era-1); }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="toggleTheme()" title="テーマ切替">◐</button>
+<a href="../databases.html" class="back">&larr; データベース一覧へ戻る</a>
+
+<h1><span class="db-id">OG</span>組織系譜データベース<span class="status-pill">v0.0 事前リサーチ完了</span></h1>
+<p class="subtitle">Organization Genealogy as Living Systems — 原初〜現代の組織を生命体として捉える比較系譜分析</p>
+<p class="desc">
+組織を「法人」「企業」「制度」だけで括らず、誕生・境界維持・資源動員・知識継承・関係形成・変容・消滅を行う作動単位として捉え、狩猟採集バンドから DAO までを横断比較する。生命メタファーは説明装置ではなく観察次元を増やすための限定的な比喩として使い、生存を適応の証拠にしない claim ベースのデータベースを段階的に構築する。
+</p>
+
+<!-- ============ Overview metrics ============ -->
+<div class="overview">
+  <div class="overview-card"><div class="overview-value">19</div><div class="overview-label">リサーチノート</div></div>
+  <div class="overview-card"><div class="overview-value">25</div><div class="overview-label">機能タクソノミー<br>(Miller20 + VSM5)</div></div>
+  <div class="overview-card"><div class="overview-value">4</div><div class="overview-label">理論系譜<br>(個体群 / Auto / Cyber / 制度)</div></div>
+  <div class="overview-card"><div class="overview-value">13</div><div class="overview-label">既存タイポロジー</div></div>
+  <div class="overview-card"><div class="overview-value">41</div><div class="overview-label">既存データベース調査</div></div>
+  <div class="overview-card"><div class="overview-value">59</div><div class="overview-label">組織形態事例<br>(13+18+28)</div></div>
+  <div class="overview-card"><div class="overview-value">8</div><div class="overview-label">四半期ロードマップ<br>(v0.1 → v1.0)</div></div>
+  <div class="overview-card"><div class="overview-value">6</div><div class="overview-label">意思決定ゲート</div></div>
+  <div class="overview-card"><div class="overview-value">10</div><div class="overview-label">リスク登録</div></div>
+</div>
+
+<!-- ============ 4 Theoretical Lineages ============ -->
+<h2>4 理論系譜と採用ポジション</h2>
+<p class="desc">生命メタファーを単一理論として扱わず、何の問いに効くかで使い分ける。Hannan-Freeman を主、Luhmann と Beer を補助、Spencer を批判対象、制度論・資源依存論を補正項として配置する。</p>
+<table class="theory-table">
+<thead><tr><th>系譜</th><th>主要人物</th><th>「生命」として見る対象</th><th>強み</th><th>採用</th></tr></thead>
+<tbody>
+<tr><td>個体群生態学</td><td>Hannan & Freeman (1977/89)</td><td>組織個体群を生態学的個体群に類比</td><td>多数組織の比較・存続淘汰・環境適合</td><td><span class="role-tag role-primary">主理論</span></td></tr>
+<tr><td>オートポイエーシス</td><td>Maturana-Varela / Luhmann</td><td>自己の要素を自己産出する閉じた過程</td><td>境界・決定・意味の分析</td><td><span class="role-tag role-aux">補助</span></td></tr>
+<tr><td>サイバネティクス</td><td>Stafford Beer (1972-)</td><td>存続可能なシステムとしての組織</td><td>分権/統合・現業/方針・情報遅延の診断</td><td><span class="role-tag role-aux">補助</span></td></tr>
+<tr><td>有機体的社会観</td><td>Herbert Spencer (19c)</td><td>社会全体を有機体に類比</td><td>長期的制度分化の枠組み</td><td><span class="role-tag role-critical">批判対象</span></td></tr>
+<tr><td>制度論・資源依存論</td><td>DiMaggio-Powell / Pfeffer-Salancik</td><td>正統性・依存・権力の組織</td><td>「適応の物語」を正統性・模倣・強制で補正</td><td><span class="role-tag role-aux">補正項</span></td></tr>
+</tbody>
+</table>
+
+<h3>生命メタファーの 5 つの罠 (回避必須)</h3>
+<div class="trap-list">
+<div class="trap"><span class="trap-name">Reification</span> — 組織を実体的な生命体のように扱う罠。どの作動を生命現象に類比しているのかを毎回明示する</div>
+<div class="trap"><span class="trap-name">適者生存の循環論法</span> — 生き残った組織を「適応していた」と呼ぶ罠。適応度・正統性・資源を結果と別に測る</div>
+<div class="trap"><span class="trap-name">個体境界の曖昧さ</span> — 法的人格・成員・資産・通信の境界が一致しない。境界を分けて記録する</div>
+<div class="trap"><span class="trap-name">機能主義の後知恵</span> — 制度の存在理由を現在見える機能から逆算する罠。権威・偶然・模倣も候補に</div>
+<div class="trap"><span class="trap-name">生物学からの過剰輸入</span> — 淘汰・代謝・繁殖・死の対応関係を概念ごとに限定する</div>
+</div>
+
+<!-- ============ 25 Function Taxonomy ============ -->
+<h2>25 機能マスタータクソノミー</h2>
+<p class="desc">James Grier Miller の <em>Living Systems</em> (1978) の 20 critical subsystems と、Stafford Beer の VSM の S1〜S5 を統合した 25 機能。古代神殿経済から DAO まで同枠で比較できる。Aldrich の VSR と Teece の Dynamic Capabilities は機能ではなく時間軸の横断軸として扱う。</p>
+
+<h3>Miller — 物質・エネルギー処理 (10)</h3>
+<div class="func-grid">
+<div class="func-card"><div class="func-id">miller_01_reproducer</div><div class="func-name">再生産</div><div class="func-def">組織の憲章・型・後継単位を複製する</div></div>
+<div class="func-card"><div class="func-id">miller_02_boundary</div><div class="func-name">境界維持</div><div class="func-def">内外を区分し成員・資源・情報の出入りを制御</div></div>
+<div class="func-card"><div class="func-id">miller_03_ingestor</div><div class="func-name">取り込み</div><div class="func-def">人員・資金・物資・原材料を環境から取り入れる</div></div>
+<div class="func-card"><div class="func-id">miller_04_distributor</div><div class="func-name">配分</div><div class="func-def">資源を組織内の単位・工程・地域へ配分</div></div>
+<div class="func-card"><div class="func-id">miller_05_converter</div><div class="func-name">変換</div><div class="func-def">入力資源を中間資源へ変える</div></div>
+<div class="func-card"><div class="func-id">miller_06_producer</div><div class="func-name">生産</div><div class="func-def">財・サービス・制度的成果を作る</div></div>
+<div class="func-card"><div class="func-id">miller_07_storage</div><div class="func-name">物質・エネルギー貯蔵</div><div class="func-def">資源を蓄積・在庫化する</div></div>
+<div class="func-card"><div class="func-id">miller_08_extruder</div><div class="func-name">排出</div><div class="func-def">廃棄・余剰・退職者を組織外へ出す</div></div>
+<div class="func-card"><div class="func-id">miller_09_motor</div><div class="func-name">移動・作動</div><div class="func-def">組織や構成要素を動かし行動を実行可能に</div></div>
+<div class="func-card"><div class="func-id">miller_10_supporter</div><div class="func-name">支持・構造保持</div><div class="func-def">物理的基盤・制度的骨格を維持</div></div>
+</div>
+
+<h3>Miller — 情報処理 (10)</h3>
+<div class="func-grid">
+<div class="func-card"><div class="func-id">miller_11_input_transducer</div><div class="func-name">入力変換</div><div class="func-def">外部信号を組織内処理可能形式へ</div></div>
+<div class="func-card"><div class="func-id">miller_12_internal_transducer</div><div class="func-name">内部状態変換</div><div class="func-def">内部状態を管理可能情報へ変換</div></div>
+<div class="func-card"><div class="func-id">miller_13_channel</div><div class="func-name">通信路・ネットワーク</div><div class="func-def">構成単位間の通信路を維持</div></div>
+<div class="func-card"><div class="func-id">miller_14_timer</div><div class="func-name">時間調整</div><div class="func-def">活動の順序・周期・同期を生成</div></div>
+<div class="func-card"><div class="func-id">miller_15_decoder</div><div class="func-name">解読</div><div class="func-def">情報を組織内で理解可能な意味に変換</div></div>
+<div class="func-card"><div class="func-id">miller_16_associator</div><div class="func-name">関連付け・学習</div><div class="func-def">情報を結びつけパターン・経験則を形成</div></div>
+<div class="func-card"><div class="func-id">miller_17_memory</div><div class="func-name">記憶</div><div class="func-def">情報・手続き・歴史・関係を保存・検索</div></div>
+<div class="func-card"><div class="func-id">miller_18_decider</div><div class="func-name">意思決定</div><div class="func-def">選択・優先順位・命令を決める中枢</div></div>
+<div class="func-card"><div class="func-id">miller_19_encoder</div><div class="func-name">符号化</div><div class="func-def">内部判断を外部解釈可能な形式に</div></div>
+<div class="func-card"><div class="func-id">miller_20_output_transducer</div><div class="func-name">出力変換</div><div class="func-def">符号化情報を環境媒体へ物理的に出力</div></div>
+</div>
+
+<h3>Beer VSM — 制御メタ機能 (5)</h3>
+<div class="func-grid">
+<div class="func-card vsm"><div class="func-id">vsm_s1_operations</div><div class="func-name">S1 現業・一次活動</div><div class="func-def">環境と直接相互作用する自律的現業単位</div></div>
+<div class="func-card vsm"><div class="func-id">vsm_s2_coordination</div><div class="func-name">S2 調整・安定化</div><div class="func-def">現業単位間の摩擦・重複・衝突を抑える</div></div>
+<div class="func-card vsm"><div class="func-id">vsm_s3_internal_control</div><div class="func-name">S3 内部統制・最適化</div><div class="func-def">資源配分・短中期最適化・S3* 監査</div></div>
+<div class="func-card vsm"><div class="func-id">vsm_s4_intelligence_strategy</div><div class="func-name">S4 環境知能・戦略</div><div class="func-def">外部環境と未来を探索し長期適応を設計</div></div>
+<div class="func-card vsm"><div class="func-id">vsm_s5_policy_identity</div><div class="func-name">S5 方針・同一性</div><div class="func-def">目的・価値・正統性・同一性を定める</div></div>
+</div>
+
+<!-- ============ Era timeline ============ -->
+<h2>組織形態の系譜タイムライン</h2>
+<p class="desc">Stream B (西欧主軸) + Stream G (非西洋国家) + Stream H (周縁・運動) を統合した 13 + 18 + 28 = 59 形態のうち主軸 13 形態。旧形態は消えず併存 (修道院 1500 年継続、ワクフ・大学・東インド会社の系譜が現代企業の鋳型)。</p>
+<div class="timeline">
+<div class="timeline-row era-1"><div><div class="timeline-period">〜BC10000</div></div><div><div class="timeline-form">狩猟採集バンド</div><div class="timeline-note">30-50人、Boehm の逆転的支配階層、Dunbar 数 150 が認知上限</div></div></div>
+<div class="timeline-row era-1"><div><div class="timeline-period">BC10000〜</div></div><div><div class="timeline-form">氏族・部族・首長制</div><div class="timeline-note">親族原理、Sahlins 分節リネージ、Service 4 段階の Tribe→Chiefdom</div></div></div>
+<div class="timeline-row era-2"><div><div class="timeline-period">BC4000〜</div></div><div><div class="timeline-form">古代の専門組織</div><div class="timeline-note">メソポタミア神殿経済、エジプト宰相、ローマ legio (10 コホート / 5,300人)</div></div></div>
+<div class="timeline-row era-2"><div><div class="timeline-period">6c〜</div></div><div><div class="timeline-form">宗教共同体</div><div class="timeline-note">ベネディクト会、シトー会、サンガ、イスラームのワクフ＋マドラサ</div></div></div>
+<div class="timeline-row era-3"><div><div class="timeline-period">11–16c</div></div><div><div class="timeline-form">中世ギルド・商人会社</div><div class="timeline-note">ハンザ同盟、Maghribi (多角評判) vs Genoese (法廷執行) — Greif</div></div></div>
+<div class="timeline-row era-3"><div><div class="timeline-period">1602〜</div></div><div><div class="timeline-form">特許貿易会社</div><div class="timeline-note">VOC が「永続法人＋公開株式＋専門経営」を初めて結合 — 近代企業の鋳型</div></div></div>
+<div class="timeline-row era-4"><div><div class="timeline-period">19c後半〜</div></div><div><div class="timeline-form">国民国家官僚制</div><div class="timeline-note">Weber 合理的・法的支配、6 特性 (階層 / 規則 / 専門 / 非人格 / メリット / 文書)</div></div></div>
+<div class="timeline-row era-4"><div><div class="timeline-period">1850s–1920s</div></div><div><div class="timeline-form">産業企業 (U-form)</div><div class="timeline-note">Pennsylvania 鉄道、Carnegie 垂直統合、Chandler「見える手」</div></div></div>
+<div class="timeline-row era-4"><div><div class="timeline-period">1920s〜</div></div><div><div class="timeline-form">多事業部制 (M-form)</div><div class="timeline-note">GM (Sloan)、Du Pont、分権運営＋集権統制</div></div></div>
+<div class="timeline-row era-4"><div><div class="timeline-period">19c末–戦後</div></div><div><div class="timeline-form">財閥・コングロマリット・チェボル</div><div class="timeline-note">三井・三菱・住友、ITT、Samsung 等</div></div></div>
+<div class="timeline-row era-5"><div><div class="timeline-period">1970s〜</div></div><div><div class="timeline-form">ネットワーク型・系列・両利き</div><div class="timeline-note">Toyota 系列、Saxenian シリコンバレー、Tushman-O'Reilly Ambidextrous</div></div></div>
+<div class="timeline-row era-5"><div><div class="timeline-period">2000s〜</div></div><div><div class="timeline-form">プラットフォーム型</div><div class="timeline-note">Apple App Store、Uber、Airbnb — Parker/Van Alstyne/Choudary</div></div></div>
+<div class="timeline-row era-5"><div><div class="timeline-period">2013/2016〜</div></div><div><div class="timeline-form">DAO・分散自律組織</div><div class="timeline-note">Ethereum, MakerDAO, Aragon — スマートコントラクトでルール自動執行</div></div></div>
+</div>
+
+<h3>東アジア固有形態 (codex3 / 西洋系譜の補完線)</h3>
+<div class="pillars">
+<div class="pillar"><div class="pillar-title">家・暖簾・座・株仲間</div><div class="pillar-body">継承・名跡・奉公の関係体としての組織</div></div>
+<div class="pillar"><div class="pillar-title">中国の宗族・票号・商幫</div><div class="pillar-body">血縁・同郷・信用に基づく広域金融</div></div>
+<div class="pillar"><div class="pillar-title">朝鮮の門中</div><div class="pillar-body">父系リネージ、祖先祭祀、族譜、財産</div></div>
+<div class="pillar"><div class="pillar-title">系列・株式持合・QC</div><div class="pillar-body">市場と垂直統合の中間、長期関係型</div></div>
+<div class="pillar"><div class="pillar-title">場 (野中・伊丹)</div><div class="pillar-body">SECI スパイラル、知識生成の生態系</div></div>
+<div class="pillar"><div class="pillar-title">アメーバ経営 (稲盛)</div><div class="pillar-body">5-10 名の自律採算単位、JAL 再建にも</div></div>
+</div>
+
+<h3>非西洋国家組織 (Stream G)</h3>
+<div class="pillars">
+<div class="pillar"><div class="pillar-title">ダホメイ Mino</div><div class="pillar-body">17–19 世紀、6,000 人規模の女性のみ常備軍</div></div>
+<div class="pillar"><div class="pillar-title">中華帝国 科挙官僚制</div><div class="pillar-body">Etienne Balazs の家産官僚制、地方衙門</div></div>
+<div class="pillar"><div class="pillar-title">ムガル朝 マンサブダール</div><div class="pillar-body">階級官僚兼地租受給者、軍事・行政統合</div></div>
+<div class="pillar"><div class="pillar-title">インカ ayllu / mit'a</div><div class="pillar-body">親族集団＋労働徴用、quipucamayoc 結縄会計</div></div>
+<div class="pillar"><div class="pillar-title">ズールー amabutho</div><div class="pillar-body">年齢階梯による連隊組織、シャカ改革</div></div>
+<div class="pillar"><div class="pillar-title">オスマン devshirme・millet</div><div class="pillar-body">徴募奴隷官僚＋宗教共同体自治</div></div>
+</div>
+
+<!-- ============ Database schema layers ============ -->
+<h2>データベーススキーマ (PostgreSQL 16 + pgvector)</h2>
+<p class="desc">claim ベースで全主張に出典・確度・解釈者を紐づける。Stream J (Seshat の NA→Absent 撤回事件) を踏まえ value_kind を <code>present | absent | partial | unknown | inapplicable</code> の 5 値化。3 段階の段階リリース。</p>
+
+<div class="schema-layer">
+<div class="schema-version">v0.1 ─ minimal claim-based core</div>
+<div class="schema-title">出典トレーサブルな最小入力モデル</div>
+<div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.7">原初バンドから DAO まで同枠で扱う Organization と、すべての記述を polymorphic に紐づける Claim を中心。法人を標準型にせず、複数タクソノミー (Mintzberg / Hannan / Wikidata / 法人格) を併存。</div>
+<div class="schema-tables">
+<span class="schema-table-tag">organization</span>
+<span class="schema-table-tag">organization_form</span>
+<span class="schema-table-tag">organization_form_assignment</span>
+<span class="schema-table-tag">source</span>
+<span class="schema-table-tag">claim</span>
+</div>
+</div>
+
+<div class="schema-layer v02">
+<div class="schema-version">v0.2 ─ activity / function / impact 分離</div>
+<div class="schema-title">「何をしたか / 何の機能を果たしたか / 何が変わったか」</div>
+<div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.7">Function は 25 機能タクソノミー (Miller 20 + VSM 5) に制約。Activity は orientation (exploration / exploitation) を持つ。ImpactRecord は direction を必須化し価値判断を露見させる。</div>
+<div class="schema-tables">
+<span class="schema-table-tag">function_type</span>
+<span class="schema-table-tag">activity</span>
+<span class="schema-table-tag">function</span>
+<span class="schema-table-tag">impact_record</span>
+</div>
+</div>
+
+<div class="schema-layer v03">
+<div class="schema-version">v0.3 ─ relations / events / dormancy</div>
+<div class="schema-title">系譜ネットワークの基盤</div>
+<div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.7">DiMaggio-Powell の coercive / mimetic / normative isomorphism を relation_type に物理化。Stream I を踏まえ dormancy_record で「死と継続の中間状態」を扱う。Aldrich の VSR ラベルを Event の横断軸として保持。</div>
+<div class="schema-tables">
+<span class="schema-table-tag">relation</span>
+<span class="schema-table-tag">event</span>
+<span class="schema-table-tag">event_organization</span>
+<span class="schema-table-tag">event_relation</span>
+<span class="schema-table-tag">dormancy_record</span>
+</div>
+</div>
+
+<!-- ============ Roadmap ============ -->
+<h2>8 四半期ロードマップ</h2>
+<p class="desc">v0.0 (事前リサーチ完了) から v1.0 (公開リリース) までの 8 段階。期間は仮置き、Q1 はプロジェクト正式開始四半期。</p>
+<div>
+<div class="quarter-row" style="background:var(--accent-muted);font-weight:700"><div class="quarter-q">Q</div><div class="quarter-v">version</div><div>マイルストーン</div></div>
+<div class="quarter-row"><div class="quarter-q">Q1</div><div class="quarter-v">v0.0</div><div><div class="quarter-milestone">調査統合・理論立場の固定・最小スコープ定義</div><span class="quarter-deliv">統合メモ・用語集・v0.1 scope</span></div></div>
+<div class="quarter-row"><div class="quarter-q">Q2</div><div class="quarter-v">v0.1</div><div><div class="quarter-milestone">claim-based minimal DB 実装・オープンデータ取り込み</div><span class="quarter-deliv">schema v0.1・データ辞書・200-500 件 pilot</span></div></div>
+<div class="quarter-row"><div class="quarter-q">Q3</div><div class="quarter-v">v0.2</div><div><div class="quarter-milestone">Activity / Function / Impact 分離・深掘り注釈</div><span class="quarter-deliv">schema v0.2・注釈ガイド・50-100 件 deep cases</span></div></div>
+<div class="quarter-row"><div class="quarter-q">Q4</div><div class="quarter-v">v0.3</div><div><div class="quarter-milestone">Relation / Event 実装・系譜ネットワーク試作</div><span class="quarter-deliv">schema v0.3・遷移ネットワーク・系譜図 3-5 件</span></div></div>
+<div class="quarter-row"><div class="quarter-q">Q5</div><div class="quarter-v">v0.5</div><div><div class="quarter-milestone">temporal facet 本格化・比較ケースブック初版</div><span class="quarter-deliv">schema v0.5・casebook・facet 100-200 件</span></div></div>
+<div class="quarter-row"><div class="quarter-q">Q6</div><div class="quarter-v">v0.7</div><div><div class="quarter-milestone">特徴抽出・クラスタリング・暫定ボトムアップ分類</div><span class="quarter-deliv">feature schema・実験ノート・評価レポート</span></div></div>
+<div class="quarter-row"><div class="quarter-q">Q7</div><div class="quarter-v">v0.9</div><div><div class="quarter-milestone">系譜推定・専門家レビュー・妥当性検証 (tree + network)</div><span class="quarter-deliv">系譜ネットワーク・代表図・validation report</span></div></div>
+<div class="quarter-row"><div class="quarter-q">Q8</div><div class="quarter-v">v1.0</div><div><div class="quarter-milestone">公開版整備・論文草稿・公開コミュニケーション</div><span class="quarter-deliv">v1.0 release・public dataset・paper draft</span></div></div>
+</div>
+
+<h3>6 意思決定ゲート</h3>
+<div class="pillars">
+<div class="pillar"><div class="pillar-title">Gate 0 理論</div><div class="pillar-body">主理論・補助理論・避ける理論物語の確定</div></div>
+<div class="pillar"><div class="pillar-title">Gate 1 データ</div><div class="pillar-body">対象データ源・再配布可否・データ主権の確認</div></div>
+<div class="pillar"><div class="pillar-title">Gate 2 スキーマ</div><div class="pillar-body">法人中心・西洋中心・現代企業中心への偏り検査</div></div>
+<div class="pillar"><div class="pillar-title">Gate 3 分類</div><div class="pillar-body">クラスタの安定性・既存分類との関係・解釈可能性</div></div>
+<div class="pillar"><div class="pillar-title">Gate 4 系譜</div><div class="pillar-body">エッジの根拠・期間・確度・因果主張の強さ</div></div>
+<div class="pillar"><div class="pillar-title">Gate 5 公開</div><div class="pillar-body">ライセンス・GDPR・Indigenous Data Sovereignty</div></div>
+</div>
+
+<!-- ============ Risk register ============ -->
+<h2>リスク登録簿 (Top 10)</h2>
+<div class="risk-list">
+<div class="risk-row"><div class="risk-num">1</div><div><div class="risk-title">生命メタファーの実体化</div><div class="risk-mitig">対策: 対応する観察作動を毎回明示する</div></div></div>
+<div class="risk-row"><div class="risk-num">2</div><div><div class="risk-title">適者生存の循環論法</div><div class="risk-mitig">対策: 適応度・正統性・資源条件を結果と別に測る</div></div></div>
+<div class="risk-row"><div class="risk-num">3</div><div><div class="risk-title">西洋近代法人バイアス</div><div class="risk-mitig">対策: 東アジア・近代以前・非法人事例の最低比率</div></div></div>
+<div class="risk-row"><div class="risk-num">4</div><div><div class="risk-title">データライセンス違反</div><div class="risk-mitig">対策: public/private source tier の分離と公開ゲート</div></div></div>
+<div class="risk-row"><div class="risk-num">5</div><div><div class="risk-title">個人情報・センシティブ関係</div><div class="risk-mitig">対策: 集計化・文脈化・必要最小限</div></div></div>
+<div class="risk-row"><div class="risk-num">6</div><div><div class="risk-title">Indigenous Data Sovereignty 軽視</div><div class="risk-mitig">対策: 記述的利用に限定・当事者性とデータ主権を明記</div></div></div>
+<div class="risk-row"><div class="risk-num">7</div><div><div class="risk-title">名寄せ失敗</div><div class="risk-mitig">対策: source-backed alias・confidence・manual review</div></div></div>
+<div class="risk-row"><div class="risk-num">8</div><div><div class="risk-title">クラスタの過剰解釈</div><div class="risk-mitig">対策: 内部・外部・予測・専門家評価の triangulate</div></div></div>
+<div class="risk-row"><div class="risk-num">9</div><div><div class="risk-title">系譜エッジの因果過剰</div><div class="risk-mitig">対策: relation type と根拠強度を分ける</div></div></div>
+<div class="risk-row"><div class="risk-num">10</div><div><div class="risk-title">スキーマ複雑化</div><div class="risk-mitig">対策: v0.1 から段階追加し未使用抽象を作らない</div></div></div>
+</div>
+
+<!-- ============ Research notes catalog ============ -->
+<h2>事前リサーチ 19 ノート</h2>
+<p class="desc">第1波 (Stream A〜F) + 第2波 (Stream G〜L) の Claude エージェント並列調査と、codex CLI 並列実装タスク (codex 1〜7) を統合。すべて WebSearch / WebFetch で実在文献を確認した上で記述、捏造禁止。</p>
+
+<h3>理論・批判 (5 ノート / ~92KB)</h3>
+<div class="notes-catalog">
+<div class="note-card"><span class="note-size">24KB</span><div class="note-id">A</div><div class="note-title">理論基盤</div><div class="note-summary">Penrose / Hannan-Freeman / Nelson-Winter / Aldrich / Maturana / Luhmann / Beer / Miller / Holland / Anderson / Stacey / West / 野中 SECI / 伊丹「場」/ 稲盛アメーバ — 16 理論</div></div>
+<div class="note-card"><span class="note-size">12KB</span><div class="note-id">codex1</div><div class="note-title">理論批判</div><div class="note-summary">4 系譜の射程・限界・採用提言。Spencer 批判対象、生命メタファー 5 つの罠</div></div>
+<div class="note-card"><span class="note-size">25KB</span><div class="note-id">E</div><div class="note-title">イノベーション論</div><div class="note-summary">Schumpeter / Christensen / Teece / March / Chesbrough / Adner / von Hippel / NIS — 18 理論</div></div>
+<div class="note-card"><span class="note-size">15KB</span><div class="note-id">K</div><div class="note-title">Phylogenetic Network</div><div class="note-summary">12 系統推定手法。組織応用は McCarthy / Phillips のみ実在、network 手法は未確立</div></div>
+<div class="note-card"><span class="note-size">20KB</span><div class="note-id">L</div><div class="note-title">制度論・権力論</div><div class="note-summary">DiMaggio-Powell / Pfeffer-Salancik / Bourdieu / Lukes / Scott / Friedland-Alford — 13 理論</div></div>
+</div>
+
+<h3>歴史・形態 (4 ノート / ~103KB)</h3>
+<div class="notes-catalog">
+<div class="note-card"><span class="note-size">21KB</span><div class="note-id">B</div><div class="note-title">歴史的系譜</div><div class="note-summary">バンドから DAO まで 13 形態を時代順に。各形態の進化的優位と典拠</div></div>
+<div class="note-card"><span class="note-size">20KB</span><div class="note-id">C</div><div class="note-title">既存タイポロジー</div><div class="note-summary">Mintzberg / Burns-Stalker / Greiner / Quinn-Cameron / Schein / Laloux / NAICS — 14 件</div></div>
+<div class="note-card"><span class="note-size">35KB</span><div class="note-id">G</div><div class="note-title">非西洋・前植民地国家</div><div class="note-summary">中華科挙 / マンサブダール / インカ ayllu / ダホメイ Mino / オスマン devshirme — 18 件</div></div>
+<div class="note-card"><span class="note-size">27KB</span><div class="note-id">H</div><div class="note-title">周縁・運動・協同組合</div><div class="note-summary">Rochdale / Mondragón / SEWA / 公民権運動 / 先住民議会 / Wikipedia / Linux — 28 件</div></div>
+</div>
+
+<h3>データ・方法論 (4 ノート / ~88KB)</h3>
+<div class="notes-catalog">
+<div class="note-card"><span class="note-size">24KB</span><div class="note-id">D</div><div class="note-title">既存データベース</div><div class="note-summary">Wikidata / GLEIF / OpenAlex / Crunchbase / Seshat / D-PLACE — 41 DB</div></div>
+<div class="note-card"><span class="note-size">19KB</span><div class="note-id">F</div><div class="note-title">方法論</div><div class="note-summary">SBERT / BERTopic / GNN / NeighborNet / ABM — 19 手法と推奨スタック</div></div>
+<div class="note-card"><span class="note-size">23KB</span><div class="note-id">I</div><div class="note-title">組織の死亡・解散・継承</div><div class="note-summary">Stinchcombe / Hannan inertia / VOC 解散 / Lehman / 財閥解体 — 死亡因子 7・事例 13</div></div>
+<div class="note-card"><span class="note-size">21KB</span><div class="note-id">J</div><div class="note-title">Seshat / Cliodynamics</div><div class="note-summary">Equinox 2020 (374 ポリティ・1500+ 変数) と Whitehouse 2019 撤回事件の教訓</div></div>
+</div>
+
+<h3>地域 (1 ノート / ~20KB)</h3>
+<div class="notes-catalog">
+<div class="note-card"><span class="note-size">20KB</span><div class="note-id">codex3</div><div class="note-title">東アジア視点</div><div class="note-summary">日本経営学 15 + 東アジア固有形態 14。家・暖簾・宗族・票号・場・系列</div></div>
+</div>
+
+<h3>設計・実装 (5 ノート / ~108KB)</h3>
+<div class="notes-catalog">
+<div class="note-card"><span class="note-size">15KB</span><div class="note-id">codex2</div><div class="note-title">概念データモデル</div><div class="note-summary">claim ベースの 8 エンティティ、temporal facet、population 集計</div></div>
+<div class="note-card"><span class="note-size">12KB</span><div class="note-id">codex4-v01</div><div class="note-title">DDL v0.1</div><div class="note-summary">organization / source / claim / form の minimal core</div></div>
+<div class="note-card"><span class="note-size">9KB</span><div class="note-id">codex4-v02</div><div class="note-title">DDL v0.2</div><div class="note-summary">activity / function / impact_record + function_type 参照表</div></div>
+<div class="note-card"><span class="note-size">11KB</span><div class="note-id">codex4-v03</div><div class="note-title">DDL v0.3</div><div class="note-summary">relation / event / event_organization / dormancy_record</div></div>
+<div class="note-card"><span class="note-size">37KB</span><div class="note-id">codex5+7</div><div class="note-title">SPARQL 13 件 + 機能タクソノミー JSON</div><div class="note-summary">Wikidata 取り込みクエリと codex7_function_taxonomy.json</div></div>
+</div>
+
+<!-- ============ Footer ============ -->
+<h2>次のアクション (Phase 1 への移行)</h2>
+<div class="pillars">
+<div class="pillar"><div class="pillar-title">1. DDL 適用</div><div class="pillar-body">PostgreSQL 環境 (Supabase / RDS / Docker) に v0.1 適用</div></div>
+<div class="pillar"><div class="pillar-title">2. function_type ロード</div><div class="pillar-body">codex7_function_taxonomy.json → SQL INSERT 生成</div></div>
+<div class="pillar"><div class="pillar-title">3. Wikidata パイロット</div><div class="pillar-body">subclass tree クエリで 100 件取得・claim 経由投入</div></div>
+<div class="pillar"><div class="pillar-title">4. 5 代表ケース</div><div class="pillar-body">VOC / 三井越後屋 / ベネディクト会 / ハンザ / MakerDAO の完全注釈</div></div>
+</div>
+
+<p style="text-align:center;color:var(--text-muted);font-size:0.74rem;margin-top:60px;border-top:1px solid var(--border);padding-top:20px">
+組織を生命として捉える系譜分析 / 2026-05-02 事前リサーチ完了 / NPO 法人ミラツク
+</p>
+
+<script>
+function toggleTheme() {
+  var current = document.documentElement.getAttribute('data-theme') || 'light';
+  var next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+(function() {
+  var saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+</body>
+</html>
