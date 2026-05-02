@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>データ駆動型イノベーション設計フレームワーク — 29データベース×10,000理論の統合的アプローチ</title>
+<style>
+  :root {
+    --bg: #f8f7f2;
+    --text: #1a1a1a;
+    --sidebar-bg: #1e2a3a;
+    --sidebar-text: #c8d8e8;
+    --sidebar-active: #4a9eff;
+    --sidebar-hover: #2d3f52;
+    --accent: #cc1400;
+    --accent2: #1a6abf;
+    --border: #ddd;
+    --code-bg: #f0ede5;
+    --table-header: #1e2a3a;
+    --table-alt: #f3f0e8;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1);
+    --sidebar-width: 280px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1419;
+      --text: #e0e0e0;
+      --sidebar-bg: #0a1220;
+      --sidebar-text: #a0b8cc;
+      --sidebar-active: #4a9eff;
+      --sidebar-hover: #1a2535;
+      --accent: #ff4444;
+      --accent2: #4a9eff;
+      --border: #2a3a4a;
+      --code-bg: #1a2535;
+      --table-header: #0a1220;
+      --table-alt: #151f2e;
+      --shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.9;
+    font-size: 16px;
+  }
+  /* Sidebar */
+  #sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0 0 40px 0;
+  }
+  #sidebar .sidebar-title {
+    padding: 24px 20px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #4a9eff;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  #sidebar nav a {
+    display: block;
+    padding: 8px 20px 8px 20px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: background 0.15s;
+  }
+  #sidebar nav a:hover { background: var(--sidebar-hover); color: #fff; }
+  #sidebar nav a.active { color: var(--sidebar-active); font-weight: 600; }
+  #sidebar nav a.h2-link { font-weight: 600; padding-top: 10px; }
+  #sidebar nav a.h3-link { padding-left: 34px; font-size: 12px; color: #7a96b0; }
+  #sidebar nav a.h3-link:hover { color: #c8d8e8; }
+  /* Main content */
+  #main {
+    margin-left: var(--sidebar-width);
+    max-width: 860px;
+    padding: 60px 56px 120px;
+  }
+  h1.doc-title {
+    font-size: 26px; font-weight: 800;
+    line-height: 1.4;
+    margin: 0 0 8px;
+    color: var(--text);
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 16px;
+  }
+  .doc-subtitle {
+    font-size: 14px; color: #888; margin: 0 0 48px;
+  }
+  h2 {
+    font-size: 22px; font-weight: 700;
+    margin: 56px 0 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+    color: var(--text);
+  }
+  h3 {
+    font-size: 18px; font-weight: 600;
+    margin: 36px 0 14px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 16px; font-weight: 600;
+    margin: 24px 0 10px;
+    color: var(--accent2);
+  }
+  p { margin: 0 0 18px; }
+  ul, ol { margin: 0 0 18px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  strong { color: var(--accent2); }
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 24px 0 32px; }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 14px; line-height: 1.6;
+  }
+  th {
+    background: var(--table-header);
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: var(--table-alt); }
+  /* Code / diagram blocks */
+  .diagram {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent2);
+    padding: 20px 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 24px 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  /* Callout boxes */
+  .callout {
+    border-left: 4px solid var(--accent2);
+    background: var(--code-bg);
+    padding: 16px 20px;
+    margin: 24px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .callout.red { border-color: var(--accent); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-title { font-weight: 700; margin-bottom: 6px; color: var(--accent2); }
+  .callout.red .callout-title { color: var(--accent); }
+  /* DB badge */
+  .db-badge {
+    display: inline-block;
+    background: var(--accent2);
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin: 0 4px 4px 0;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .db-badge.red { background: var(--accent); }
+  /* Layer boxes */
+  .layer-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    position: relative;
+  }
+  .layer-label {
+    position: absolute; top: -12px; left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent2);
+  }
+  /* dark mode toggle */
+  #dark-toggle {
+    position: fixed; top: 12px; right: 16px;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 20px;
+    cursor: pointer; font-size: 12px; z-index: 200;
+  }
+  /* Progress bar decoration */
+  .progress-bar {
+    display: flex; align-items: center; gap: 4px;
+    margin: 6px 0;
+  }
+  .progress-fill {
+    height: 8px; border-radius: 4px;
+    background: var(--accent2);
+  }
+  .progress-label { font-size: 12px; color: #888; min-width: 60px; }
+  @media (max-width: 900px) {
+    #sidebar { width: 220px; }
+    #main { margin-left: 220px; padding: 40px 28px 80px; }
+  }
+  @media (max-width: 640px) {
+    #sidebar { display: none; }
+    #main { margin-left: 0; padding: 24px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<button id="dark-toggle" onclick="document.documentElement.classList.toggle('dark')">ダークモード切替</button>
+
+<div id="sidebar">
+  <div class="sidebar-title">Innovation Design Framework</div>
+  <nav id="toc">
+    <a href="#preface" class="h2-link">序章：なぜデータ駆動型なのか</a>
+    <a href="#framework-overview" class="h2-link">第1章：フレームワークの全体構造</a>
+    <a href="#layer1" class="h3-link">Layer 1：理論基盤</a>
+    <a href="#layer2" class="h3-link">Layer 2：文脈情報</a>
+    <a href="#layer3" class="h3-link">Layer 3：シグナル検出</a>
+    <a href="#layer4" class="h3-link">Layer 4：機会マッピング</a>
+    <a href="#layer5" class="h3-link">Layer 5：実装設計</a>
+    <a href="#layer-detail" class="h2-link">第2章：各レイヤーの詳細設計</a>
+    <a href="#detail-l1" class="h3-link">L1：14サブフィールドの活用法</a>
+    <a href="#detail-l2" class="h3-link">L2：既存DBとの接続マップ</a>
+    <a href="#detail-l3" class="h3-link">L3：PESTLE×Foresight</a>
+    <a href="#detail-l4" class="h3-link">L4：交差分析の方法論</a>
+    <a href="#detail-l5" class="h3-link">L5：プロトタイピング</a>
+    <a href="#usecases" class="h2-link">第3章：ユースケース</a>
+    <a href="#case1" class="h3-link">ケース1：ヘルスケア×AI×サステナビリティ</a>
+    <a href="#case2" class="h3-link">ケース2：地域イノベーションシステム</a>
+    <a href="#case3" class="h3-link">ケース3：フォーサイト起点の戦略</a>
+    <a href="#roadmap" class="h2-link">第4章：実装ロードマップ</a>
+    <a href="#conclusion" class="h2-link">結語</a>
+    <a href="#appendix-a" class="h2-link">補章A：29DB完全接続ガイド</a>
+    <a href="#appendix-b" class="h2-link">補章B：14サブフィールド解説</a>
+    <a href="#appendix-c" class="h2-link">補章C：問い集</a>
+  </nav>
+</div>
+
+<div id="main">
+
+<h1 class="doc-title">データ駆動型イノベーション設計フレームワーク</h1>
+<p class="doc-subtitle">29データベース × 10,000理論の統合的アプローチ ／ 2026年5月 ／ academic-knowledge-db v3</p>
+
+<!-- ========== 序章 ========== -->
+<h2 id="preface">序章：なぜデータ駆動型イノベーション設計なのか</h2>
+
+<p>イノベーションに関する理論は、過去一世紀にわたって膨大な蓄積を重ねてきた。シュンペーターが1911年に「新結合」の概念を提唱して以来、技術経済学、制度経済学、進化経済学、プラットフォーム論、持続可能性トランジション理論と、それぞれの時代の課題に応じた知的地平が切り拓かれてきた。今日、私たちが手にしているのはその結晶ともいうべき9,998件の理論的概念体系である。しかしこれほど豊富な知識が存在するにもかかわらず、実践の現場でイノベーション設計に活かされる理論はごく少数に限られている。この乖離を埋めることが、本フレームワークの根本的な問いである。</p>
+
+<p>問題の核心は、「どの理論を、いつ、どの文脈で使うか」という選択の困難さにある。イノベーションの実践者はしばしばデザイン思考か、リーンスタートアップか、オープンイノベーションかという二択・三択の問いを自らに課してしまう。だが現実のイノベーション課題はそれほど単純ではない。ヘルスケア領域でAIを活用した新サービスを構築しようとするならば、技術採用の障壁（拡散・採用理論）、医療規制の制約（規制動態）、人口動態と疾病負荷（マクロ経済・社会データ）、組織のダイナミックケイパビリティ（知識・学習理論）、そして将来の制度的変化（フォーサイト）を同時に考慮しなければならない。単一の理論フレームワークでこれを賄おうとすること自体に無理がある。</p>
+
+<p>本フレームワークが提案するのは、理論の「図書館」を「ナビゲーション可能なデータ空間」に変換するアプローチである。academic-knowledge-db（academic.db）に格納された9,998件のイノベーション理論は、14のサブフィールドと30以上の学派に体系的に分類されており、各理論には「いつ適用すべきか」「どの産業に適用可能か」「対立概念は何か」といったメタデータが付与されている。これをミラツクのエコシステムが保有する29以上のデータベースと接続することで、理論選択を「勘」から「構造的判断」へと変える。</p>
+
+<p>データ駆動型である理由は三つある。第一に、<strong>文脈適合性</strong>の向上である。同じ「プラットフォーム理論」でも、規制環境（regulatory-db-japan：1,332法令）が異なれば適用条件は大きく変わる。データで文脈を定量化することで、理論選択の精度が上がる。第二に、<strong>見落としの防止</strong>である。経営者が直感的に着目しないシグナル——たとえば価値観の変化（world-values-db：32カ国）や技術発展の加速パターン（tech-acceleration-db：162K件）——を構造的にスキャンすることで、盲点を減らす。第三に、<strong>学習の蓄積</strong>である。設計プロセスをデータとして記録することで、過去の判断を評価し、次のサイクルに活かすことができる。</p>
+
+<p>本フレームワークは、5つのレイヤーで構成される。最下層の理論基盤（Layer 1）から始まり、文脈情報（Layer 2）、シグナル検出（Layer 3）、機会マッピング（Layer 4）、実装設計（Layer 5）へと積み上がる構造は、抽象から具体への段階的な「具現化」プロセスを体系化したものである。各レイヤーは独立して使うことも、全体を通して使うことも可能だが、真の力は5層を統合したときに発揮される。</p>
+
+<div class="callout">
+  <div class="callout-title">本フレームワークが前提とするデータ基盤</div>
+  <p>本文書は、academic-knowledge-db（~/projects/research/academic-knowledge-db/academic.db）を中核とし、ミラツク・エッセンス・エコシステムが構築してきた29以上のデータベースを統合的に参照することを前提とする。各データベースは独立したSQLiteファイルとして管理されており、クロスリファレンスによる統合分析が可能である。</p>
+</div>
+
+<p>本フレームワークの想定ユーザーは、新規事業の企画担当者、政策立案者、研究者、そしてソーシャルイノベーションの実践者である。必ずしも深いデータサイエンスの知識を必要とせず、「問いの立て方」と「どのデータに当たるか」を知るだけで実践に移れるよう設計した。フレームワークは処方箋ではなく、思考の足場（scaffolding）である。使い手の判断を置き換えるのではなく、判断の質を高めることを目指す。</p>
+
+<p>イノベーション研究の知識が膨大になればなるほど、それを使いこなすメタ的な方法論の必要性が高まる。本フレームワークはその試みの一つである。9,998件の理論と29以上のデータベースという土台の上に、実践的なイノベーション設計の地図を描くことが、以下に続く議論の目的である。</p>
+
+<!-- ========== 第1章 ========== -->
+<h2 id="framework-overview">第1章：フレームワークの全体構造（5層モデル）</h2>
+
+<p>本フレームワークの全体構造は、理論から実践へと向かう5層の積層モデルとして設計されている。この5層構造は、イノベーション設計における認識論的な段階——何を知っているか、何が起きているか、何が変わろうとしているか、どこに機会があるか、どう実装するか——に対応している。各レイヤーは特定のデータベース群と紐づいており、それぞれ明確な役割と成果物を持つ。</p>
+
+<div class="diagram">
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 5: 実装設計  ── プロトタイプ設計・KPI設定・ロードマップ  │
+├─────────────────────────────────────────────────────────────┤
+│  Layer 4: 機会マッピング ── 理論×文脈×トレンドの交差点発見     │
+├─────────────────────────────────────────────────────────────┤
+│  Layer 3: シグナル検出 ── PESTLE・Foresight・AI加速度分析      │
+├─────────────────────────────────────────────────────────────┤
+│  Layer 2: 文脈情報 ── 経済・文化・規制・技術・価値観            │
+├─────────────────────────────────────────────────────────────┤
+│  Layer 1: 理論基盤 ── Innovation Theory 9,998件（14サブフィールド）│
+└─────────────────────────────────────────────────────────────┘
+         ↑ データが積み上がる方向                 ↓ 問いが降りてくる方向
+</div>
+
+<p>重要なのは、このフレームワークが「下から上へ」だけでなく「上から下へ」も機能するという点である。既存の理論（Layer 1）からボトムアップで機会を探索することもできるし、「ヘルスケアの未来をどう設計するか」という具体的な問い（Layer 5）からトップダウンで必要な理論と文脈データを参照することもできる。この双方向性こそが、フレームワークの柔軟性を支えている。</p>
+
+<h3 id="layer1">Layer 1：理論基盤（Innovation Theory 9,998件）</h3>
+
+<p>フレームワークの最下層であるLayer 1は、academic-knowledge-dbに格納された9,998件のイノベーション理論体系から構成される。これは単なる文献リストではなく、理論間の関係性、適用条件、対立概念、測定アプローチまでを体系化した「理論の地図」である。</p>
+
+<div class="table-wrap">
+<table>
+  <tr>
+    <th>サブフィールド</th>
+    <th>件数</th>
+    <th>代表的理論・概念</th>
+    <th>主な適用場面</th>
+  </tr>
+  <tr><td>neo_schumpeterian_economics</td><td>714</td><td>創造的破壊、新結合、技術経済パラダイム</td><td>産業構造変革の分析</td></tr>
+  <tr><td>technology_paradigms_regimes</td><td>716</td><td>技術レジーム、ニッチ管理、MLP</td><td>エネルギー・交通の転換設計</td></tr>
+  <tr><td>diffusion_adoption_user</td><td>714</td><td>ロジャーズ理論、TAM、キャズム</td><td>新技術・サービスの市場導入</td></tr>
+  <tr><td>disruptive_innovation_dynamics</td><td>714</td><td>破壊的イノベーション、ジョブ理論</td><td>新興市場・ローエンド参入</td></tr>
+  <tr><td>platform_digital_innovation</td><td>714</td><td>プラットフォーム経済、ネットワーク外部性</td><td>デジタルビジネスモデル設計</td></tr>
+  <tr><td>open_innovation_ecosystems</td><td>714</td><td>オープンイノベーション、イノベーションエコシステム</td><td>産学連携・パートナーシップ</td></tr>
+  <tr><td>knowledge_learning_capabilities</td><td>714</td><td>吸収能力、ダイナミックケイパビリティ</td><td>組織能力の構築・変革</td></tr>
+  <tr><td>entrepreneurship_venture</td><td>714</td><td>アントレプレナーシップ、スタートアップ理論</td><td>新規事業・ベンチャー設計</td></tr>
+  <tr><td>innovation_systems</td><td>714</td><td>国家・地域・セクター別イノベーションシステム</td><td>政策設計・エコシステム評価</td></tr>
+  <tr><td>sustainability_transitions_social</td><td>714</td><td>持続可能性トランジション、社会技術システム論</td><td>グリーンイノベーション・社会変革</td></tr>
+  <tr><td>institutional_economics_voc</td><td>714</td><td>制度的補完性、多様な資本主義</td><td>国際比較・政策分析</td></tr>
+  <tr><td>innovation_process_management</td><td>714</td><td>ステージゲート、アジャイル、デザイン思考</td><td>R&Dマネジメント・プロセス設計</td></tr>
+  <tr><td>sectoral_innovation_patterns</td><td>714</td><td>産業別イノベーションパターン、ペイビット分類</td><td>セクター別戦略策定</td></tr>
+  <tr><td>measurement_policy_governance</td><td>714</td><td>イノベーション測定、特許分析、政策評価</td><td>KPI設計・政策効果測定</td></tr>
+</table>
+</div>
+
+<p>14のサブフィールドそれぞれが714〜716件の理論を含んでいることは、収集の体系性を示している。さらに各理論には<code>schumpeter_layer</code>（macro/meso/micro）というメタ分類が付与されており、分析スケールに応じた絞り込みが可能である。Layer 1の詳細な活用法は第2章で論じる。</p>
+
+<h3 id="layer2">Layer 2：文脈情報（社会・文化・経済・技術・規制）</h3>
+
+<p>Layer 2は、イノベーションが展開される「場」の情報を提供するレイヤーである。理論は普遍的であろうとするが、実践は常に特定の文脈の中で起きる。Layer 2はその文脈を定量的・定性的に記述するデータ群で構成される。</p>
+
+<div class="layer-box">
+  <span class="layer-label">Layer 2 構成データベース</span>
+  <p><span class="db-badge">macro-economy-db</span> 61カ国42指標52,000件のマクロ経済データ（World Bank・IMF）。GDP成長率、産業構造、貿易パターン、R&D支出比率などを提供する。</p>
+  <p><span class="db-badge">regulatory-db-japan</span> 1,332件の日本の法令・規制動態データ（e-Gov法令API）。規制の新設・改正・廃止のタイムラインと、イノベーション阻害・促進への含意を格納する。</p>
+  <p><span class="db-badge">world-values-db</span> WVS第7波32カ国の価値観データ。生活満足度、信頼、自律性志向など、イノベーション受容に関わる社会的基盤を定量化する。</p>
+  <p><span class="db-badge">cultural-intelligence-db</span> 500ソース・21カテゴリの文化ニュースを日次収集。文化的トレンドとイノベーション受容性の変化を捉える。</p>
+  <p><span class="db-badge">anthropology-concepts</span> 500の人類学概念。文化差異、社会構造、知識体系の多様性を理解するための理論的リソース。</p>
+  <p><span class="db-badge">traditional-knowledge-db</span> 3,001グループ・35,308項目の先住民・伝統的知識データ。地域固有の知識体系とその現代的意義。</p>
+</div>
+
+<p>Layer 2の役割は「理論の適用条件の確認」である。たとえばオープンイノベーション理論を日本の製造業に適用しようとするとき、regulatory-db-japanで関連する知財規制や産学連携促進法の状況を確認し、macro-economy-dbでR&D支出や産業構造の変化を把握し、world-values-dbで企業間信頼の水準を参照することで、理論の適用可能性を多角的に検証できる。</p>
+
+<h3 id="layer3">Layer 3：シグナル検出（変化の兆し・トレンド）</h3>
+
+<p>Layer 3は、進行中の変化のシグナルを検出するレイヤーである。イノベーション設計において最も見落とされやすいのが「今、何が動いているか」という現在進行形の変化である。Layer 3はこれを複数のデータソースから多面的に捉える。</p>
+
+<div class="layer-box">
+  <span class="layer-label">Layer 3 構成データベース</span>
+  <p><span class="db-badge red">foresight-knowledge-base</span> 463機関・650トレンドのフォーサイトデータ。世界の主要シンクタンク・政府機関のレポートから抽出されたトレンドと予測を格納する。</p>
+  <p><span class="db-badge red">ai-acceleration-evidence-db</span> 498言及・322ソース・97ドメインのAI加速エビデンス。生成AIが各産業に与える影響を定量的に追跡する。</p>
+  <p><span class="db-badge red">tech-acceleration-db</span> 162,000件のレコード。技術発展の加速パターンをSeshat、OWID、Wikidataなど13ソースから実データで検証する。</p>
+  <p><span class="db-badge red">pestle-signal-db（miratuku-news-v2）</span> 毎日6時にPESTLEカテゴリ別（政治・経済・社会・技術・環境・法規制）に各50件、ニュースを収集・分類するリアルタイムシグナルDB。</p>
+  <p><span class="db-badge red">investment-signal-radar</span> 4,180組織・1,927ラウンド・160公的プロジェクト。VCの投資動向はイノベーションの最前線を示す先行指標である。</p>
+  <p><span class="db-badge red">ai-development-db</span> LLM 1,097件・AGI 1,139件＝合計2,236論文。AI分野の研究フロンティアをリアルタイムで把握する。</p>
+</div>
+
+<p>Layer 3の本質的な価値は「早期警戒システム」としての機能にある。foresight-knowledge-baseに格納されたトレンドデータは3〜10年先の変化を示し、pestle-signal-dbは今週の変化を示す。この時間軸の違いを意識しながら複数のシグナルを重ね合わせることで、「いつ動くべきか」の判断精度が上がる。</p>
+
+<h3 id="layer4">Layer 4：機会マッピング（理論×文脈の交差点）</h3>
+
+<p>Layer 4は、Layer 1〜3の情報を統合して「イノベーション機会」を特定するレイヤーである。ここでいう「機会」とは、現在の技術・社会・制度的条件と、特定の理論フレームワークが示す可能性の交差点である。機会マッピングは三つの軸で行う。</p>
+
+<div class="diagram">
+機会マッピングの三軸モデル
+
+軸1: 理論軸（Layer 1）
+  └── どのサブフィールドの理論が最も関連するか
+  └── そのフィールドで検証済みの成功パターンは何か
+
+軸2: 文脈軸（Layer 2）
+  └── 現在の経済・規制・文化条件は理論の適用条件を満たすか
+  └── 地域・セクター・時代によって条件はどう異なるか
+
+軸3: シグナル軸（Layer 3）
+  └── 変化の方向性はどこに向かっているか
+  └── 競合・類似事例はすでに動いているか
+
+機会 = 理論的可能性 × 文脈的実現可能性 × シグナルの方向整合性
+</div>
+
+<p>Layer 4で重要な役割を果たすデータベースが、social-innovation-framework（si_events.db：1,276件）とfutures-studies-db（fs_concepts：507件、fs_methods：99件）である。社会イノベーションの歴史的事例は「過去に何が可能だったか」を示し、未来学の概念体系は「何が可能になろうとしているか」を示す。この過去と未来の軸を現在の文脈データと組み合わせることが、機会マッピングの核心である。</p>
+
+<h3 id="layer5">Layer 5：実装設計（具体的イノベーション戦略）</h3>
+
+<p>Layer 5は、Layer 4で特定した機会を具体的な実装計画に変換するレイヤーである。ここでは「何を作るか」より「どう進めるか」に焦点が移る。実装設計は四つのコンポーネントで構成される。</p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>コンポーネント</th><th>内容</th><th>参照データベース</th></tr>
+  <tr><td>プロトタイプ設計</td><td>MVPの定義・テスト方法・フィードバックループ</td><td>management-studies-db、innovation_theory（process_management）</td></tr>
+  <tr><td>ステークホルダー設計</td><td>エコシステムの参加者・役割・インセンティブ設計</td><td>great-figures-db（リーダーパターン）、si_events（ガバナンス構造）</td></tr>
+  <tr><td>KPI・測定設計</td><td>イノベーションの進捗・成果の測定指標</td><td>innovation_theory（measurement_policy_governance）、macro-economy-db</td></tr>
+  <tr><td>ロードマップ設計</td><td>フェーズ分け・マイルストーン・リスク管理</td><td>regulatory-db-japan（規制タイムライン）、foresight-knowledge-base（予測）</td></tr>
+</table>
+</div>
+
+<p>Layer 5の設計において特に重要なのは、「制度的タイミング」の考慮である。regulatory-db-japanのデータを参照することで、規制緩和や新制度の施行タイミングに合わせてイノベーション実装を加速させるウィンドウを特定できる。また、great-figures-db（9,178人）の歴史的変革者の行動パターンを参照することで、大規模変革を実現するためのリーダーシップデザインへの示唆を得ることができる。</p>
+
+<!-- ========== 第2章 ========== -->
+<h2 id="layer-detail">第2章：各レイヤーの詳細設計</h2>
+
+<p>本章では、5層フレームワークの各レイヤーについて、実践的な使い方を詳細に解説する。理論的な構造の理解から、具体的なクエリ設計、アウトプットの形式まで、実際にフレームワークを動かすために必要な情報を提供する。</p>
+
+<h3 id="detail-l1">Layer 1：14サブフィールドの活用法——どの理論をいつ使うか</h3>
+
+<p>9,998件の理論を前にしたとき、多くの実践者が感じる困難は「選択肢が多すぎること」である。Layer 1の設計思想は、この困難を「サブフィールドによる構造化ナビゲーション」で解決する。14のサブフィールドはそれぞれ独自の問いの角度を持っており、直面している課題の性質に応じて入口を選べば、適切な理論群に自然と到達できる構造になっている。</p>
+
+<h4>サブフィールド選択マトリクス</h4>
+
+<div class="table-wrap">
+<table>
+  <tr>
+    <th>あなたの問いは何か</th>
+    <th>最適なサブフィールド</th>
+    <th>代表的概念</th>
+  </tr>
+  <tr>
+    <td>なぜ既存産業は新技術に対応できないのか</td>
+    <td>disruptive_innovation_dynamics</td>
+    <td>イノベーターのジレンマ、持続的イノベーション</td>
+  </tr>
+  <tr>
+    <td>新サービスがどのように社会に広がるか</td>
+    <td>diffusion_adoption_user</td>
+    <td>ロジャーズの普及理論、キャズム、TAM/UTAUT</td>
+  </tr>
+  <tr>
+    <td>プラットフォームビジネスをどう設計するか</td>
+    <td>platform_digital_innovation</td>
+    <td>ネットワーク外部性、二面市場、エコシステム</td>
+  </tr>
+  <tr>
+    <td>エネルギー・交通などのシステム転換を導くには</td>
+    <td>technology_paradigms_regimes</td>
+    <td>マルチレベルパースペクティブ、ニッチ戦略</td>
+  </tr>
+  <tr>
+    <td>国・地域のイノベーション政策をどう設計するか</td>
+    <td>innovation_systems</td>
+    <td>国家イノベーションシステム、地域イノベーションシステム</td>
+  </tr>
+  <tr>
+    <td>組織がイノベーション能力を継続的に保つには</td>
+    <td>knowledge_learning_capabilities</td>
+    <td>ダイナミックケイパビリティ、吸収能力、ルーティン進化</td>
+  </tr>
+  <tr>
+    <td>サステナビリティとイノベーションをどう結びつけるか</td>
+    <td>sustainability_transitions_social</td>
+    <td>トランジション管理、社会技術システム論</td>
+  </tr>
+  <tr>
+    <td>スタートアップや新規事業をどう立ち上げるか</td>
+    <td>entrepreneurship_venture</td>
+    <td>機会発見論、エフェクチュエーション、リーンスタートアップ</td>
+  </tr>
+  <tr>
+    <td>外部パートナーとの協働をどう設計するか</td>
+    <td>open_innovation_ecosystems</td>
+    <td>オープンイノベーション、イノベーション仲介、コイノベーション</td>
+  </tr>
+  <tr>
+    <td>国による産業政策の違いをどう理解するか</td>
+    <td>institutional_economics_voc</td>
+    <td>多様な資本主義、制度的補完性、経路依存性</td>
+  </tr>
+  <tr>
+    <td>R&Dプロセスをどう管理・改善するか</td>
+    <td>innovation_process_management</td>
+    <td>ステージゲート、アジャイルR&D、デザインスプリント</td>
+  </tr>
+  <tr>
+    <td>業界ごとのイノベーションパターンを理解したい</td>
+    <td>sectoral_innovation_patterns</td>
+    <td>ペイビット分類、産業別技術体制、ドミナントデザイン</td>
+  </tr>
+  <tr>
+    <td>技術発展の長期的パターンと予測をしたい</td>
+    <td>neo_schumpeterian_economics</td>
+    <td>長波理論、技術経済パラダイム転換、コンドラチェフ波</td>
+  </tr>
+  <tr>
+    <td>イノベーション成果をどう測定・評価するか</td>
+    <td>measurement_policy_governance</td>
+    <td>オスロマニュアル、特許分析、イノベーションサーベイ</td>
+  </tr>
+</table>
+</div>
+
+<p>各サブフィールドの理論には、<code>when_to_apply</code>フィールドに「競合プラットフォームに対抗する際」「組織の変革能力を診断する際」といった具体的な使用文脈が記載されている。実際の問い立てにおいては、まずこのフィールドを参照してサブフィールドを絞り込み、次に<code>school_of_thought</code>（30以上の学派）でアプローチのトーンを選び、最後に<code>industry_applicability</code>で産業適合性を確認するという三段階の絞り込みが有効である。</p>
+
+<p><strong>シュンペーター階層（schumpeter_layer）による分析スケールの選択</strong>も重要な切り口である。マクロレベル（1,686件）は国・産業全体の変化を、メゾレベル（1,861件）はセクター・地域・ネットワークを、マイクロレベル（1,006件）は個別企業・起業家を分析対象とする。課題の分析スケールに応じて理論群を絞り込むことで、認識論的な整合性を保った分析が可能になる。</p>
+
+<h4>学派別アプローチの選択</h4>
+
+<p>30以上の学派（school_of_thought）の存在は、同じ問いに対しても複数の知的系譜からアプローチできることを意味する。シュンペーター派とネオ・シュンペーター派（Dosi学派、SPRU学派、スウェーデン学派）は、技術変化の長期パターンと制度的文脈を重視する。ダイナミックケイパビリティ論（Teece学派）は企業の適応能力に焦点を当てる。進化経済学（Nelson & Winter学派）は組織ルーティンと変異選択プロセスを分析ツールとして提供する。複数の学派を意識的に組み合わせることで、単一の理論的枠組みに閉じた「視野狭窄」を避けることができる。</p>
+
+<h3 id="detail-l2">Layer 2：既存DBとの接続マップ——どのDBがどの文脈を提供するか</h3>
+
+<p>Layer 2の設計において核心となるのは、「どのデータベースが、どの種類の文脈情報を提供するか」という接続マップの理解である。イノベーション理論の適用条件を確認するために参照すべきデータベースは、問いの性質によって異なる。以下に、主要な文脈カテゴリとそれに対応するデータベースの接続マップを示す。</p>
+
+<div class="table-wrap">
+<table>
+  <tr>
+    <th>文脈カテゴリ</th>
+    <th>対応データベース</th>
+    <th>提供する情報</th>
+    <th>イノベーション設計への含意</th>
+  </tr>
+  <tr>
+    <td><strong>経済・産業構造</strong></td>
+    <td><span class="db-badge">macro-economy-db</span><br>61カ国42指標52K件</td>
+    <td>GDP成長率、産業構成比、R&D/GDP比、貿易特化係数</td>
+    <td>市場規模・成長性の定量的根拠、技術への投資余力の評価</td>
+  </tr>
+  <tr>
+    <td><strong>規制・制度環境</strong></td>
+    <td><span class="db-badge">regulatory-db-japan</span><br>1,332法令</td>
+    <td>法令の新設・改正・廃止タイムライン、産業別規制強度</td>
+    <td>規制変化ウィンドウの特定、コンプライアンスリスクの事前評価</td>
+  </tr>
+  <tr>
+    <td><strong>社会・価値観</strong></td>
+    <td><span class="db-badge">world-values-db</span><br>32カ国WVS第7波</td>
+    <td>信頼水準、自律性志向、リスク受容度、技術信頼感</td>
+    <td>イノベーション受容性の地域差の把握、社会的正当性の評価</td>
+  </tr>
+  <tr>
+    <td><strong>文化・行動様式</strong></td>
+    <td><span class="db-badge">cultural-intelligence-db</span><br>500ソース21カテゴリ</td>
+    <td>文化的トレンド、ライフスタイル変化、社会規範の変容</td>
+    <td>ユーザー行動変化の先行把握、文化摩擦リスクの評価</td>
+  </tr>
+  <tr>
+    <td><strong>知識・教育基盤</strong></td>
+    <td><span class="db-badge">management-studies-db</span><br>2,529概念</td>
+    <td>経営学概念、組織理論、戦略フレームワーク</td>
+    <td>組織設計・管理体制の理論的根拠の提供</td>
+  </tr>
+  <tr>
+    <td><strong>多様な知識体系</strong></td>
+    <td><span class="db-badge">anthropology-concepts</span><br>500概念</td>
+    <td>文化差異、社会構造、象徴体系、知識伝承</td>
+    <td>非西洋的視点からのイノベーション再解釈、共同創造設計</td>
+  </tr>
+  <tr>
+    <td><strong>在来知識・地域性</strong></td>
+    <td><span class="db-badge">traditional-knowledge-db</span><br>35,308項目</td>
+    <td>先住民グループの知識体系、地域固有の技術・実践</td>
+    <td>地域資源の発掘、ボトムアップ型イノベーションの基盤探索</td>
+  </tr>
+  <tr>
+    <td><strong>ESGリスク・機会</strong></td>
+    <td><span class="db-badge">esg-metadata</span><br>18カテゴリ</td>
+    <td>環境・社会・ガバナンス指標の属性情報</td>
+    <td>投資家・規制当局の評価軸との整合性確認</td>
+  </tr>
+</table>
+</div>
+
+<p>接続マップの使い方は、「文脈を絞り込む問い」を先に立てることから始まる。たとえば「日本のヘルスケア分野でAI診断支援ツールを展開する」という課題に対しては、（1）macro-economy-dbで医療関連産業のGDP構成比と高齢化率、（2）regulatory-db-japanで薬機法・医療機器規制の最近の改正動向、（3）world-values-dbで日本の医療技術信頼度と個人情報共有への態度、という三点を確認することで、理論適用の前提条件を定量化できる。</p>
+
+<p>さらに、management-studies-db（2,529概念）との連携は特に強力である。management-studies-dbは経営学の概念体系を網羅しており、innovation_theory（イノベーション理論）との橋渡しによって、「イノベーション戦略」と「組織能力」を統合した設計が可能になる。たとえばオープンイノベーション（open_innovation_ecosystems）の理論を適用する際に、management-studies-dbの「組織間信頼」「知識移転の粘着性」「取引費用理論」を参照することで、パートナーシップ設計の精度が格段に上がる。</p>
+
+<h4>データベース間のFK（外部キー）接続の活用</h4>
+
+<p>academic-knowledge-dbには<code>innovation_cross_domain</code>テーブルが存在し、イノベーション理論と他分野（humanities、social_theory、natural_discovery、engineering_method）との横断的関係が記録されている。この横断関係データは、「人類学的視点からイノベーション設計を見直す」「工学的方法論をイノベーション測定に応用する」といった学際的アプローチの設計に不可欠である。また、futures-studies-db内の<code>fs_bridge_academic_kb</code>テーブルは、未来学の概念体系とacademic-knowledge-dbのイノベーション理論とのブリッジを提供しており、長期的変化の理論的解釈を支援する。</p>
+
+<h3 id="detail-l3">Layer 3：PESTLE×Foresight DBによるシグナル検出</h3>
+
+<p>Layer 3における「シグナル検出」とは、変化の兆しを体系的に捕捉するプロセスである。イノベーション機会の多くは、単一のシグナルではなく複数のシグナルの「収束」として現れる。PESTLE（政治・経済・社会・技術・環境・法規制）の各カテゴリから収集されたシグナルが、フォーサイトデータベースのトレンドと一致する領域は、特に優先度の高いイノベーション機会を示す。</p>
+
+<div class="diagram">
+シグナル収束の検出フロー
+
+STEP 1: PESTLEシグナルの収集（pestle-signal-db）
+  ├── 政治（P）: 規制変化・政府方針・国際関係
+  ├── 経済（E）: 市場変動・投資動向・産業再編
+  ├── 社会（S）: 人口変化・ライフスタイル・価値観
+  ├── 技術（T）: 新技術登場・特許動向・論文フロンティア
+  ├── 環境（L/E）: 気候変化・資源制約・生態系変化
+  └── 法規制（L）: 新規制・規制緩和・制度設計
+
+STEP 2: Foresightトレンドとのマッチング（foresight-knowledge-base）
+  └── 650トレンド × PESTLEシグナルの交差確認
+
+STEP 3: AI加速度データによる時間軸の補正（ai-acceleration-evidence-db）
+  └── 技術成熟曲線上の現在位置を確認
+
+STEP 4: 投資シグナルとの照合（investment-signal-radar）
+  └── VCマネーの流れで「市場が信じている未来」を確認
+
+STEP 5: 収束領域の特定 → Layer 4へ引き渡し
+</div>
+
+<p>シグナル検出において最も難しいのは「ノイズとシグナルの区別」である。毎日数百件のニュースが収集されるpestle-signal-dbのデータから、真のイノベーション機会に結びつくシグナルを抽出するには、フォーサイト理論が提供する「弱いシグナル」の概念が有効である。弱いシグナルとは、現在は小規模・周辺的であるが将来的に大きな変化をもたらす可能性のある変化の兆候を指す。foresight-knowledge-base（463機関・650トレンド）に格納されたトレンドデータは、まさにこうした弱いシグナルの集積である。</p>
+
+<p>tech-acceleration-dbの162,000件のレコードが提供する「技術発展の加速パターン」データは、シグナルの「緊急度」を判断するために不可欠である。ある技術が指数関数的成長曲線のどの位置にあるかを知ることで、「今すぐ動くべきか、3年後に動くべきか」の判断精度が上がる。ai-development-db（2,236論文）との組み合わせにより、特にAI関連技術については研究フロンティアから市場普及までの時間軸を精度高く予測できる。</p>
+
+<p>investment-signal-radar（4,180組織・1,927ラウンド）のデータは「市場が信じている未来」を示す。VCはリスクを引き受けて将来に賭ける存在であり、その投資パターンはフォーサイトデータよりも具体的で行動に直結した先行指標となる。特定の技術・市場へのVC投資が急増しているセクターは、foresight-knowledge-baseで上位にランクされているトレンドと照合することで、信憑性の高いシグナルとして認識できる。</p>
+
+<h4>シグナルの強度評価フレームワーク</h4>
+
+<div class="table-wrap">
+<table>
+  <tr>
+    <th>シグナルの種類</th>
+    <th>主なデータソース</th>
+    <th>時間軸</th>
+    <th>信頼性評価の方法</th>
+  </tr>
+  <tr>
+    <td>弱いシグナル（Weak Signal）</td>
+    <td>foresight-knowledge-base、cultural-intelligence-db</td>
+    <td>5〜15年後</td>
+    <td>複数のフォーサイト機関での言及頻度</td>
+  </tr>
+  <tr>
+    <td>成長シグナル（Growing Signal）</td>
+    <td>ai-development-db、tech-acceleration-db</td>
+    <td>2〜7年後</td>
+    <td>論文引用数の増加曲線、特許出願の加速</td>
+  </tr>
+  <tr>
+    <td>市場シグナル（Market Signal）</td>
+    <td>investment-signal-radar</td>
+    <td>1〜3年後</td>
+    <td>投資ラウンド数、調達金額の変化率</td>
+  </tr>
+  <tr>
+    <td>制度シグナル（Regulatory Signal）</td>
+    <td>regulatory-db-japan、pestle-signal-db</td>
+    <td>0〜2年後</td>
+    <td>法令改正の官報掲載、パブリックコメント</td>
+  </tr>
+  <tr>
+    <td>社会シグナル（Social Signal）</td>
+    <td>world-values-db、pestle-signal-db（社会カテゴリ）</td>
+    <td>現在〜5年後</td>
+    <td>価値観調査の経年変化、メディア言及量</td>
+  </tr>
+</table>
+</div>
+
+<h3 id="detail-l4">Layer 4：交差分析の方法論（理論×トレンド×セクター）</h3>
+
+<p>Layer 4の核心は「交差分析」にある。単一の理論、単一のトレンド、単一のセクターを個別に分析するのではなく、これらを組み合わせることで初めて見えてくるイノベーション機会を特定することがLayer 4の目的である。交差分析には三つの方法論がある。</p>
+
+<p><strong>方法論1：理論収束分析（Theory Convergence Analysis）</strong>は、複数のサブフィールドが同一の現象を異なる角度から指摘している領域を特定する。たとえば「AIと製造業の融合」というテーマに対して、platform_digital_innovation、knowledge_learning_capabilities、sectoral_innovation_patternsの三つのサブフィールドがそれぞれ「プラットフォームが製造業を再編する」「組織が新しい能力を学習する必要がある」「製造業のイノベーションパターンが変容する」と同時に指摘している場合、それは信憑性の高いイノベーション機会である。academic.dbの<code>innovation_cross_domain</code>テーブルはこうした理論収束を構造化されたデータとして提供する。</p>
+
+<p><strong>方法論2：文脈-理論ギャップ分析（Context-Theory Gap Analysis）</strong>は、理論が前提とする適用条件と、Layer 2のデータが示す現実の文脈との乖離を測定する。たとえば国家イノベーションシステム論は一定水準のR&D投資と大学-産業間の知識移転を前提とするが、macro-economy-dbのデータでR&D/GDP比が1%を下回る地域では、同理論の適用は慎重に行う必要がある。このギャップ自体が、「制度的インフラの整備」という形の別のイノベーション機会を示す場合もある。</p>
+
+<p><strong>方法論3：時間軸統合分析（Temporal Integration Analysis）</strong>は、Layer 3の異なる時間軸シグナルを統合して「いつ動くべきか」のタイミングを割り出す。弱いシグナル（5〜15年）、成長シグナル（2〜7年）、市場シグナル（1〜3年）、制度シグナル（0〜2年）が収束するタイミングは、「機会の窓（Window of Opportunity）」として機能する。futures-studies-dbのfs_methods（99手法）は、こうした時間軸統合を行うための方法論的ツールボックスを提供する。</p>
+
+<div class="callout">
+  <div class="callout-title">交差分析の実践的手順</div>
+  <ol>
+    <li>課題領域の設定（例：「地方都市の脱炭素転換」）</li>
+    <li>関連するサブフィールドを2〜3個選定（technology_paradigms_regimes、sustainability_transitions_social、innovation_systems）</li>
+    <li>Layer 2で文脈確認（macro-economy-db：地域産業構造、regulatory-db-japan：エネルギー規制動向）</li>
+    <li>Layer 3でシグナルスキャン（foresight-knowledge-base：エネルギートランジション関連トレンド、investment-signal-radar：クリーンテック投資動向）</li>
+    <li>理論-文脈-シグナルの交差点を「機会マップ」として可視化</li>
+    <li>優先度を「理論的根拠の強さ × 文脈適合度 × シグナル収束度」で評価</li>
+  </ol>
+</div>
+
+<h4>セクター別交差分析マトリクス</h4>
+
+<p>social-innovation-framework（si_events.db：1,276件）が格納する社会イノベーションの歴史的事例は、「過去にどのセクターでどのイノベーションが成功したか」を示す実証データである。これを現在のシグナルデータと比較することで、「歴史的先例が存在する領域」と「前例のない新領域」を区別できる。前者はより確実な機会を、後者はより大きなポテンシャルを持つ機会を示す。</p>
+
+<div class="table-wrap">
+<table>
+  <tr>
+    <th>セクター</th>
+    <th>最適なサブフィールド（Layer 1）</th>
+    <th>参照すべきContext DB（Layer 2）</th>
+    <th>主要シグナルDB（Layer 3）</th>
+  </tr>
+  <tr>
+    <td>ヘルスケア</td>
+    <td>diffusion_adoption_user、sustainability_transitions_social</td>
+    <td>macro-economy-db（医療費対GDP）、regulatory-db-japan（薬機法）</td>
+    <td>ai-development-db、foresight-knowledge-base</td>
+  </tr>
+  <tr>
+    <td>エネルギー</td>
+    <td>technology_paradigms_regimes、sustainability_transitions_social</td>
+    <td>regulatory-db-japan（再エネ規制）、macro-economy-db（エネルギー輸入依存）</td>
+    <td>investment-signal-radar、pestle-signal-db（環境）</td>
+  </tr>
+  <tr>
+    <td>教育</td>
+    <td>diffusion_adoption_user、platform_digital_innovation</td>
+    <td>world-values-db（教育への態度）、macro-economy-db（教育支出）</td>
+    <td>foresight-knowledge-base、ai-acceleration-evidence-db</td>
+  </tr>
+  <tr>
+    <td>都市・地域</td>
+    <td>innovation_systems、sustainability_transitions_social</td>
+    <td>macro-economy-db（地域経済データ）、traditional-knowledge-db（地域資源）</td>
+    <td>pestle-signal-db、foresight-knowledge-base</td>
+  </tr>
+  <tr>
+    <td>金融・フィンテック</td>
+    <td>platform_digital_innovation、disruptive_innovation_dynamics</td>
+    <td>regulatory-db-japan（金融規制）、macro-economy-db（金融深化度）</td>
+    <td>investment-signal-radar、ai-development-db</td>
+  </tr>
+  <tr>
+    <td>農業・食料</td>
+    <td>sectoral_innovation_patterns、sustainability_transitions_social</td>
+    <td>macro-economy-db（農業生産性）、traditional-knowledge-db（農業知識）</td>
+    <td>tech-acceleration-db、foresight-knowledge-base</td>
+  </tr>
+</table>
+</div>
+
+<h3 id="detail-l5">Layer 5：プロトタイピングフレームワーク</h3>
+
+<p>Layer 5では、Layer 4で特定したイノベーション機会を具体的な設計に落とし込む。ここでの「プロトタイピング」は、製品プロトタイプの作成だけでなく、より広い意味での「イノベーション設計の試作」を指す。これには、ビジネスモデルの試作、政策介入の試作、組織変革の試作が含まれる。</p>
+
+<p>innovation_theory（innovation_process_management：714件）に格納された「イノベーション・プロセス管理」の理論群は、Layer 5の実践的基盤を提供する。ステージゲートプロセス、アジャイルR&D、デザインスプリント、リーンスタートアップのサイクルなど、多様なプロセス設計の選択肢が体系化されている。課題の性質（漸進的か破壊的か）、組織の規模、時間的制約に応じて適切なプロセスを選ぶための判断軸として機能する。</p>
+
+<p>management-studies-db（2,529概念）との接続は、Layer 5における組織設計のために特に重要である。イノベーションを実現するには、アイデアだけでなく、それを担う組織能力と資源配分の仕組みが必要である。戦略論、組織論、リーダーシップ論、変革管理論の概念体系が、プロトタイピングの際の組織設計を支援する。</p>
+
+<div class="diagram">
+Layer 5 プロトタイピング・テンプレート
+
+1. イノベーション仮説の設定
+   ├── 誰のどのような課題を（ジョブ理論による問い）
+   ├── どのような方法で解決するか
+   └── なぜ今この組織がやるべきか
+
+2. 設計の前提確認（Layer 1-4の統合）
+   ├── 適用する理論フレームワーク（Layer 1：2-3個）
+   ├── 文脈の適合確認（Layer 2：定量データ）
+   └── シグナルの収束確認（Layer 3）
+
+3. MVPの定義
+   ├── 最小限で検証すべき仮説は何か
+   ├── 成功の測定指標（KPI）は何か
+   └── フィードバックループの設計
+
+4. ステークホルダー・エコシステム設計
+   ├── 誰を巻き込むか（産学官民の役割分担）
+   ├── インセンティブ設計
+   └── ガバナンス構造
+
+5. ロードマップ（時間軸設計）
+   ├── フェーズ1（0-12ヶ月）：検証・MVP
+   ├── フェーズ2（1-3年）：スケールアップ
+   └── フェーズ3（3-5年）：制度化・拡散
+
+6. リスク管理
+   ├── 規制リスク（regulatory-db-japan参照）
+   ├── 技術リスク（tech-acceleration-db参照）
+   └── 社会的受容リスク（world-values-db参照）
+</div>
+
+<!-- ========== 第3章 ========== -->
+<h2 id="usecases">第3章：ユースケース（3つの実践シナリオ）</h2>
+
+<p>本章では、5層フレームワークを具体的な問いに適用する三つのシナリオを通じて、フレームワークの実践的な使い方を示す。これらのシナリオは架空の設定ではなく、実際のイノベーション設計課題に即した現実的な問い立てに基づいている。各ケースで「どのデータベースをどう使うか」を可能な限り具体的に示す。</p>
+
+<h3 id="case1">ケース1：ヘルスケア×AI×サステナビリティの交差イノベーション</h3>
+
+<p>ケース1の問いは「高齢化が加速する地方都市において、AIを活用した予防医療サービスをどう設計するか」である。これは単純なテクノロジー導入問題ではなく、社会インフラの再設計という性質を持つ複雑なイノベーション課題である。</p>
+
+<h4>Layer 1：理論選択</h4>
+
+<p>この課題には複数のサブフィールドが関連する。まず<strong>diffusion_adoption_user</strong>（714件）から、医療革新の普及に関する理論群を参照する。特に「医療イノベーションの普及：コールマン研究」「行政による技術普及促進：強制的普及メカニズム」「ユーザーイノベーション：フォン・ヒッペル」が関連する。患者や医療従事者がどのようにAI診断支援ツールを採用するかのプロセスは、ロジャーズの普及理論の医療版によって基本的枠組みを得られる。</p>
+
+<p>次に<strong>sustainability_transitions_social</strong>（714件）から、「社会技術システム論」と「トランジション管理」の概念を参照する。医療システムは制度的に非常に堅固な社会技術システムであり、技術の投入だけでは変わらない。ニッチ実験（地域での小規模試行）からレジーム（医療制度全体）へのトランジションを設計する視点が必要である。</p>
+
+<p>さらに<strong>innovation_systems</strong>（714件）から「セクター別イノベーションシステム」の分析枠組みを使う。医療は強力な国家規制を持つセクターであり、国家イノベーションシステムの枠組みで公的アクターの役割を整理することが設計の前提となる。</p>
+
+<h4>Layer 2：文脈の確認</h4>
+
+<p>macro-economy-dbで確認すべきは、日本の医療費の対GDP比（約10.7%）と高齢化率（29%超）の組み合わせである。この数字は財政的持続可能性への強い圧力を示しており、「予防医療への転換」という方向性に対する政策的動機が強いことを定量的に裏付ける。また、地域別の医師偏在データは、AIによる診断支援の需要が地方において特に高いことを示す。</p>
+
+<p>regulatory-db-japanでは、薬機法（医薬品医療機器等法）の2019〜2023年の改正トレンドを確認する。AIを用いた医療機器・プログラム医療機器（SaMD）に関する規制フレームワークの整備が進んでおり、2023年以降は認証プロセスが明確化されている。この規制変化は「機会の窓」が開いていることを示している。</p>
+
+<p>world-values-dbから日本の医療信頼度データを参照すると、日本は医療機関への信頼が相対的に高い国であることがわかる。しかし個人健康データの共有に関しては、プライバシー意識が欧米と比較して特殊な文脈を持つ。AI診断への信頼醸成には「技術の透明性」と「データ管理の明確化」が必須であることが示唆される。</p>
+
+<h4>Layer 3：シグナルの収束</h4>
+
+<p>foresight-knowledge-base（650トレンド）でヘルスケア×AIに関連するトレンドを確認すると、「予防医療へのパラダイムシフト」「パーソナライズド医療の台頭」「医療AIの民主化」が複数の主要フォーサイト機関（RAND、WEF、NIH等）で共通して上位に位置している。これは弱いシグナルから「確実なトレンド」へと移行していることを示す。</p>
+
+<p>ai-acceleration-evidence-db（498言及）では、医療AI分野の論文数が2020〜2025年にかけて指数関数的に増加していることが確認される。特に診断支援・医療画像解析・予測医療の三領域での論文増加が顕著であり、技術成熟曲線は「早期多数採用者」フェーズに移行しつつある。</p>
+
+<p>investment-signal-radar（1,927ラウンド）でヘルステック分野の投資動向を確認すると、予防・ウェルネス関連のスタートアップへの投資が2022〜2025年にかけて急増している。特に日本国内では、医療DX関連のスタートアップへの官民投資が増加している。</p>
+
+<h4>Layer 4：機会の特定</h4>
+
+<p>三つのレイヤーの情報を統合すると、以下の機会が特定される。「高齢化・医師不足という文脈的必要性（Layer 2）」と「予防医療×AI技術の成熟（Layer 3）」と「社会技術システム論が示すニッチ実験戦略（Layer 1）」が収束する点は、「地方都市での小規模AIホームケアシステムの実証実験（ニッチ）→制度承認→地域医療システムへの組み込み（レジーム転換）」という戦略的シナリオである。</p>
+
+<h4>Layer 5：実装設計</h4>
+
+<p>実装ロードマップの設計において、regulatory-db-japanのデータは規制のタイミングを示す。2026年度に予定されている医療情報活用基盤の整備は、データ統合型AIシステムの実装チャンスである。ロードマップは「フェーズ1（2026年）：1〜2都市での実証実験」「フェーズ2（2027〜2028年）：規制適合の確認と改善」「フェーズ3（2029〜）：全国展開」という三段階で設計する。</p>
+
+<p>KPI設計には、innovation_theory（measurement_policy_governance）の「イノベーション測定論」が枠組みを提供する。技術的KPI（診断精度、応答時間）、経済的KPI（医療コスト削減率）、社会的KPI（患者の生活質スコア改善）、普及KPI（採用率、継続使用率）の四軸で測定する。</p>
+
+<h3 id="case2">ケース2：地域イノベーションシステムの再設計</h3>
+
+<p>ケース2の問いは「人口減少が続く地方都市が、外部の大企業や技術に依存せず、地域固有の強みを活かした自律的イノベーションシステムを構築するにはどうすればよいか」である。これは経済政策と社会デザインの交差点に位置する問いである。</p>
+
+<h4>理論的基盤の多層構成</h4>
+
+<p>この課題では<strong>innovation_systems</strong>（714件）の「地域イノベーションシステム（Regional Innovation Systems: RIS）論」が中心的フレームワークとなる。RIS論は、イノベーションが個々の企業や研究機関の活動ではなく、大学・産業・政府・中間組織の相互作用によって生まれるシステム的プロセスであることを示す。スウェーデン学派（Lundvall）のイノベーション学習論は、「by doing, using, interacting（DUI）」という実践知の積み上げが地域イノベーションの源泉であることを強調する。</p>
+
+<p>同時に<strong>institutional_economics_voc</strong>（714件）からの「制度的補完性」の概念が重要になる。地域の金融機関、労働市場、教育機関、産業クラスターが互いを補完する制度的環境を形成しているとき、イノベーションは持続しやすい。逆に制度的補完性が欠けている領域こそが、設計の優先課題である。</p>
+
+<p>traditional-knowledge-db（35,308項目）との接続は、このケースで特に大きな価値を持つ。農業、漁業、伝統工芸、地域の気候・生態系知識など、地域に固有の知識体系はRISの「知識基盤」を構成する重要な資源である。外部技術の移入だけでなく、地域固有の知識を核とするイノベーション設計こそが、持続可能な地域イノベーションシステムの基盤となる。</p>
+
+<h4>文脈データとシグナルの統合</h4>
+
+<p>macro-economy-dbの地域別データから、対象地域の産業特化係数（LQ）、若年人口比率、地元企業の事業継承率を確認する。これらは地域イノベーションシステムの「現在地」を定量的に示す。規制データ（regulatory-db-japan）からは、地方創生関連の法令と国の支援プログラムの最新動向を把握し、活用可能な政策資源を特定する。</p>
+
+<p>foresight-knowledge-baseのトレンドデータで「地域分散型経済」「ローカルファースト」「テレワーク・地方移住」関連のトレンドを確認すると、2025年以降これらのトレンドが複数の主要機関で強化されていることがわかる。コロナ後の都市集中からの緩やかな分散傾向は、地域イノベーションシステムにとっての「機会の窓」を提供している。</p>
+
+<h4>交差イノベーションの設計</h4>
+
+<p>anthropology-concepts（500概念）の「コモンズ論」「相互扶助のネットワーク」「知識の共有体制」の概念は、地域イノベーションシステムの設計において実践的指針を提供する。経済合理性だけでは捉えられない地域コミュニティの協働原理を理解することで、単純な市場メカニズムに頼らないイノベーション設計が可能になる。</p>
+
+<p>社会イノベーションの歴史的事例（si_events.db：1,276件）を参照すると、成功した地域イノベーションの多くは「初期の実験的コミュニティ」→「制度的学習」→「他地域への展開」というパターンを持つことがわかる。ケース2の設計においてもこのパターンを意識したロードマップが有効である。</p>
+
+<h4>実装設計の核心</h4>
+
+<p>地域イノベーションシステムの再設計において最も困難なのは「誰がリーダーシップを取るか」という問いである。great-figures-db（9,178人の歴史的変革者データ）から、地域変革を牽引したリーダーの行動パターンを参照することで、現代的な文脈でのリーダーシップ設計に示唆を得られる。特に「ブローカー型リーダー」（異なる集団を結びつける仲介者）の役割は、地域イノベーションシステムの構築において繰り返し確認されているパターンである。</p>
+
+<p>KPIには「ネットワーク密度の変化」（地域内組織間の連携数）、「知識の循環率」（地域内での人材・情報の流通）、「新規事業の地元起業率」を加えることで、単なる経済指標を超えたシステム健全性の評価が可能になる。</p>
+
+<h3 id="case3">ケース3：フォーサイト起点のイノベーション戦略</h3>
+
+<p>ケース3の問いは「組織が10年後の社会変化を見据えて、今から動き出すべきイノベーション戦略をどう設計するか」である。これはLayer 3のシグナル検出機能をフル活用する最もフォーサイト指向のシナリオである。</p>
+
+<h4>フォーサイト理論の活用</h4>
+
+<p>futures-studies-db（fs_researchers：448人、fs_methods：99手法、fs_concepts：507概念）は、このケースで最も重要なデータ基盤となる。特に「シナリオプランニング」「デルファイ法」「バックキャスティング」「ロードマッピング」といった手法（fs_methods）は、長期的イノベーション戦略の設計プロセスを構造化する。fs_bridgeテーブルによって、これらの未来学的手法はinnovation_theoryの概念体系と接続されており、理論知と実践知の統合が可能である。</p>
+
+<p>フォーサイト起点の戦略設計は、一般的なイノベーション設計と逆方向のプロセスを取る。通常の設計が「現在の問題→解決策」という前向き（forward casting）であるのに対し、フォーサイト起点設計は「望ましい・あるいはあり得る未来像→現在の行動」というバックキャスティングの論理で動く。</p>
+
+<h4>データ駆動型シナリオの構築</h4>
+
+<p>foresight-knowledge-base（463機関・650トレンド）のデータを活用して「主要不確実性軸」を特定する。シナリオプランニングの基本は、高い不確実性を持つ二軸を選び、四象限のシナリオを構築することである。たとえば「技術進化の速度（高速／漸進）」×「社会的統合の度合い（個人化／集団化）」という二軸から、「分散型知識社会」「AI主導の標準化社会」「複雑系コミュニティ社会」「制度的安定社会」という四つのシナリオを描ける。</p>
+
+<p>各シナリオに対して、innovation_theory（neo_schumpeterian_economics）の「技術経済パラダイム論」を適用することで、各シナリオにおいてどの産業・技術が台頭し、どのイノベーション型が支配的になるかを理論的に推論できる。技術経済パラダイム論は過去の産業革命の転換パターンを体系化しており、AIとサステナビリティの収束という現在進行中の転換についても適用可能な枠組みを提供する。</p>
+
+<p>ai-development-db（2,236論文）とtech-acceleration-db（162,000件）の組み合わせは、「技術軸の不確実性」を定量的に絞り込むために機能する。現在の技術成熟度と加速パターンを実データで確認することで、「10年後に確実に実現している技術」と「まだ不確実な技術」を区別し、シナリオの前提をより精密に設定できる。</p>
+
+<h4>戦略的賭けのポートフォリオ設計</h4>
+
+<p>フォーサイト起点の戦略において、investment-signal-radar（4,180組織）のデータは「他のアクターが何に賭けているか」を把握するために役立つ。競合他社や同業の組織が集中投資している領域は「コンセンサスの未来」であり、差別化のためには「コンセンサスの外側」——すなわちVCや政府が未だ注目していないが、理論的・データ的根拠のある領域——を見つける必要がある。</p>
+
+<p>このとき、foresight-knowledge-baseの「弱いシグナル」カテゴリと、cultural-intelligence-db（21カテゴリの文化トレンド）の組み合わせが有効である。文化的変化は経済的変化や技術的変化よりも先行して社会の方向性を示すことが多く、cultural-intelligence-dbで捉えられる「まだ周辺的だが確実に広がっている文化的トレンド」は、長期的イノベーション戦略の「アーリーシグナル」として機能する。</p>
+
+<p>戦略的ポートフォリオは「確実な賭け（現在の技術トレンドの延長線）」「有望な賭け（2〜3年以内に顕在化するシグナル）」「探索的賭け（10年後のシナリオに対するオプション）」の三層で構成する。それぞれに対してinnovation_theoryの適切なサブフィールドを割り当て、理論的根拠を持った戦略設計を行う。</p>
+
+<!-- ========== 第4章 ========== -->
+<h2 id="roadmap">第4章：実装ロードマップ</h2>
+
+<p>本フレームワークを組織や個人が実際に使い始めるための実装ロードマップを示す。フレームワークの導入は一度に全てを立ち上げるのではなく、段階的に能力を構築していくプロセスとして設計する。</p>
+
+<h3>フェーズ1：基盤構築（1〜3ヶ月）</h3>
+
+<p>最初のフェーズでは、Layer 1（innovation_theory）への習熟と、Layer 2の主要データベース（macro-economy-db、regulatory-db-japan）の参照手順の確立に注力する。具体的には、直面している課題に対して「どのサブフィールドの理論が最も関連するか」を判断する能力を養うことが目標である。このフェーズの成果物は「理論マッピングシート」——自組織の課題と関連する理論サブフィールドの対応表——である。</p>
+
+<p>実践的な習得には、本フレームワークの「ユースケース」（第3章）を自組織の実際の課題に置き換えて適用する演習が有効である。既存の課題一つを選び、Layer 1〜3を実際にたどってみることで、データベースとの接点を体感的に理解できる。</p>
+
+<div class="table-wrap">
+<table>
+  <tr>
+    <th>フェーズ</th>
+    <th>期間</th>
+    <th>主な活動</th>
+    <th>達成指標</th>
+  </tr>
+  <tr>
+    <td>フェーズ1：基盤構築</td>
+    <td>1〜3ヶ月</td>
+    <td>理論マッピング習得、主要DBへのアクセス確立</td>
+    <td>課題を3つのサブフィールドに分類できる</td>
+  </tr>
+  <tr>
+    <td>フェーズ2：文脈統合</td>
+    <td>3〜6ヶ月</td>
+    <td>Layer 2-3の横断参照、交差分析の実践</td>
+    <td>「機会マップ」を独力で作成できる</td>
+  </tr>
+  <tr>
+    <td>フェーズ3：シナリオ設計</td>
+    <td>6〜12ヶ月</td>
+    <td>フォーサイト統合、フルフレームワーク適用</td>
+    <td>5層統合のイノベーション設計書を作成できる</td>
+  </tr>
+  <tr>
+    <td>フェーズ4：組織化</td>
+    <td>12ヶ月以降</td>
+    <td>チームへの展開、学習サイクルの確立</td>
+    <td>複数の課題に継続的にフレームワークを適用している</td>
+  </tr>
+</table>
+</div>
+
+<h3>フェーズ2：文脈統合（3〜6ヶ月）</h3>
+
+<p>フェーズ2では、Layer 2と3のデータを実際の設計プロセスに統合することを学ぶ。重要な能力は「データ量が多すぎることによる分析麻痺（Analysis Paralysis）を避けること」である。29以上のデータベースが存在するとき、全てを参照しようとすると判断が止まる。フェーズ2での学習目標は「問いに応じた最小限のデータセットの選択」——どのデータベースに当たれば十分かを判断する感覚——を身につけることである。</p>
+
+<p>この段階で特に有効な実践は「制約付き分析」である。1つの課題に対して、参照するデータベースを最大3つに制限し、2時間以内に機会マップを作成する演習を繰り返す。この制約が「本質的なシグナルへの集中」を促し、フレームワークの使用速度と判断の質を同時に高める。</p>
+
+<h3>フェーズ3：シナリオ設計とフルフレームワーク適用（6〜12ヶ月）</h3>
+
+<p>フェーズ3では、5層全てを統合した「イノベーション設計書」の作成能力を構築する。ここで重要になるのは、Layer 4（機会マッピング）の質である。理論×文脈×シグナルの交差点を特定する能力は、データの読み方というより「問い立ての技法」に依存する。futures-studies-db（fs_methods：99手法）のなかでも「シナリオプランニング」「ホライズンスキャニング」「クロスインパクト分析」は、Layer 4の機会特定プロセスを構造化するために直接活用できる方法論である。</p>
+
+<p>フォーサイト知識体系（foresight-taxonomy：多層タクソノミー）の活用も、フェーズ3での重要な学習内容である。5メガドメイン（Technology、Society、Economy、Environment、Governance）×Three Horizons（現在・台頭・変革）×認識論的フレームというタクソノミーは、機会マッピングの座標系として機能する。イノベーション機会をこの三次元空間に位置づけることで、設計の方向性がより明確になる。</p>
+
+<h3>フェーズ4：組織化と継続的改善（12ヶ月以降）</h3>
+
+<p>フェーズ4は、個人の能力構築からチームレベルの組織プロセスへの移行フェーズである。イノベーション設計をルーティン化するためには、「定期的なフレームワーク適用サイクル」の確立が必要である。たとえば四半期ごとに「シグナルスキャン→機会マッピング→設計優先度の見直し」というサイクルを回すことで、フレームワークが一時的な演習ではなく持続的な組織能力となる。</p>
+
+<p>このサイクルにおいて、CLAデータ（統合版CLA：36年分の因果階層分析）は長期トレンドの文脈理解に特に有効である。CLAは政治経済的リテラル（表層）から世界観・メタファー（深層）まで四層で変化を分析するフレームワークであり、イノベーション機会を表層の技術トレンドだけでなく深層の価値観変化と接続することを可能にする。</p>
+
+<!-- ========== 結語 ========== -->
+<h2 id="conclusion">結語：データと理論の統合が拓く設計の地平</h2>
+
+<p>本フレームワークの開発を通じて確認されたことは、イノベーションの「理論の豊富さ」と「実践での活用の貧しさ」の間にある乖離は、知識の不足ではなくナビゲーション能力の不足によるものだということである。9,998件のイノベーション理論、29以上のデータベース、650のフォーサイトトレンドが手元にあっても、それを使いこなすための構造がなければ宝の持ち腐れになる。本フレームワークの5層モデルは、その構造を提供するための試みである。</p>
+
+<p>フレームワークの真の価値は、単独のレイヤーではなく、5層の統合にある。Layer 1の理論的深度がLayer 3のシグナルを解釈する力を与え、Layer 2の文脈データがLayer 4の機会判断を根拠づけ、Layer 5の実装設計が再びLayer 1への問い返しを促す。このサイクルは、イノベーション設計における「学習ループ」そのものである。</p>
+
+<p>データ駆動型のアプローチが、直感や経験に基づくイノベーションの実践を代替すると考える必要はない。むしろデータは、直感を鍛え、経験の盲点を補い、判断の根拠を可視化するための道具である。29のデータベースという広大な知識基盤は、それを使う人間の問い立ての質によってその価値が決まる。優れたイノベーターは常に「問いを立てる人」であり、本フレームワークはその問いを豊かにするための地図である。</p>
+
+<p>最後に、このフレームワーク自体がイノベーションの対象であることを強調したい。academic-knowledge-dbは継続的に更新されており、フォーサイトデータベースは毎日新しいシグナルを受け取り、マクロ経済データは四半期ごとに更新される。フレームワークは静的な文書ではなく、生きたデータエコシステムの上に立つ動的な思考基盤である。使いながら改善し、改善しながら使うというプロセスそのものが、データ駆動型イノベーション設計の実践である。</p>
+
+<div class="callout red">
+  <div class="callout-title">データベースへのアクセスとクエリ例</div>
+  <p>本フレームワークで参照する主要データベースへのアクセスは以下のコマンドで行う。</p>
+  <p><code>sqlite3 ~/projects/research/academic-knowledge-db/academic.db "SELECT name_ja, when_to_apply FROM innovation_theory WHERE subfield='platform_digital_innovation' LIMIT 10"</code></p>
+  <p>横断分析（DB Agent）: <code>python3 ~/tools/db-agent.py cross</code></p>
+  <p>全DBリスト: <code>python3 ~/tools/db-agent.py list</code></p>
+</div>
+
+<!-- ========== 補章A ========== -->
+<h2 id="appendix-a">補章A：29データベース完全接続ガイド</h2>
+
+<p>本補章では、フレームワークで参照する全29以上のデータベースについて、その内容、スキーマの特徴、イノベーション設計への接続方法を体系的に整理する。各データベースの「どのテーブルを、どんな問いのときに参照するか」を明示することで、フレームワークの実装ハードルを下げることが目的である。</p>
+
+<h3>カテゴリI：理論・概念基盤データベース</h3>
+
+<p>理論・概念基盤カテゴリには、イノベーション理論の解釈・文脈化・深化のために参照する学術的な概念体系データベース群が含まれる。これらは Layer 1 の理論基盤を多角的に補完し、単純なイノベーション理論の適用にとどまらない学際的設計を可能にする。</p>
+
+<p><strong>academic-knowledge-db（academic.db）</strong>は本フレームワークの中核データベースである。innovation_theory（9,998件）を含む7分野の学術概念体系を格納している。テーブル構成は innovation_theory（イノベーション理論）、humanities_concept（人文学概念）、social_theory（社会理論）、natural_discovery（自然科学的発見）、engineering_method（工学的方法論）、arts_question（芸術的問い）、そして cross_domain_relations（横断的関係）である。イノベーション設計の際には、まず innovation_theory から理論を選定し、cross_domain_relations を通じて他分野の概念との関係を探索するという二段階の参照が標準的な使い方となる。特に humanities_concept の「技術哲学」「認識論」「社会的構成主義」関連の概念は、イノベーションの「意味づけ」を設計する際に不可欠な視点を提供する。</p>
+
+<p><strong>management-studies-db</strong>は経営学概念 2,529 件を格納する。戦略論、組織論、リーダーシップ論、マーケティング論、財務論、オペレーション管理論の六大分野にわたる体系的な知識基盤であり、232 名の主要研究者と 1,577 件の概念間関係が記録されている。カバー率 85.7%（7 カテゴリ 85% 超）という高い網羅性は、イノベーション設計に必要な経営学的知識をほぼ全て包含することを意味する。innovation_theory との組み合わせでは、特に「ダイナミックケイパビリティ論（Teece学派）× 組織ルーティン理論（Nelson & Winter学派）」の接続が、組織のイノベーション能力設計において強力な理論的枠組みを提供する。</p>
+
+<p><strong>anthropology-concepts（anthropology.db）</strong>には人類学の概念 500 件と主要研究者 252 名が収録されている。文化相対主義、厚い記述（thick description）、アクターネットワーク理論、実践理論、コモンズ論など、イノベーション研究が見落としがちな「文化的・社会的土台」に関する概念群を提供する。特に技術の「社会的形成論（Social Construction of Technology: SCOT）」は、innovation_theory の technology_paradigms_regimes サブフィールドと深い理論的接続を持ち、技術トランジション設計における社会的抵抗・受容のメカニズムを理解するために不可欠な視点を提供する。</p>
+
+<p><strong>futures-studies-db（futures_studies.db）</strong>は未来学の学問分野データベースである。448 名の研究者、99 の手法、507 の概念、17 の学派、40 の論争点、100 の機関、846 の文献が格納されており、FK（フォーサイト知識ベース）、CLA（因果階層分析）、タクソノミーとのブリッジ接続を持つ。innovation_theory の sustainability_transitions_social および technology_paradigms_regimes サブフィールドとは特に密接な関係にあり、長期的なトランジション設計においては両者の統合的参照が推奨される。fs_methods テーブルの 99 手法はそれぞれ適用文脈、必要なデータ、期待される成果物が記録されており、Layer 5 の実装設計における方法論選択のガイドとして機能する。</p>
+
+<p><strong>traditional-knowledge-db</strong>は 3,001 グループ・35,308 項目・16,260 関係を持つ先住民・伝統的知識データベースである。37 カラムの属性情報とグループ 96% のカバー率を誇る本データベースは、地域イノベーション設計において「外部から導入される技術・制度」と「地域固有の知識体系」の接合点を特定するために機能する。フルーガルイノベーション、適正技術、リバースイノベーションの理論（いずれも diffusion_adoption_user サブフィールドに収録）と組み合わせることで、地域の知識資源を活かした包摂的イノベーション設計が可能になる。</p>
+
+<p><strong>great-figures-db（great_figures.db）</strong>は 9,178 名の歴史的変革者データを格納している。568 の概念リンク、1,050 のイベント、741 の関係ネットワーク、100 の高解像度 structures、6 本のケースレポートが含まれる。イノベーション設計における活用場面は「変革リーダーの行動パターン分析」と「歴史的先例による妥当性確認」の二つである。特に「制度的起業家（Institutional Entrepreneurship）」として知られる変革リーダー——既存の制度的枠組みを変革しながらイノベーションを推進した人物——の事例は、Layer 5 の実装設計における組織・制度設計に直接的な示唆を提供する。</p>
+
+<h3>カテゴリII：文脈・環境データベース</h3>
+
+<p>文脈・環境カテゴリには、イノベーションが展開される現実の社会・経済・文化・制度的文脈を定量的・定性的に記述するデータベース群が含まれる。Layer 2 の中核をなすデータ基盤である。</p>
+
+<p><strong>macro-economy-db（macro_economy.db）</strong>は 61 カ国 42 指標 52,000 件のマクロ経済データを格納する。World Bank および IMF を主要ソースとし、国別・年別の経済指標を提供する。イノベーション設計で特に重要な指標は、R&D 支出対 GDP 比（技術投資の文化的・制度的基盤を示す）、製造業付加価値率（産業の技術的複雑性を示す）、インターネット普及率（デジタルイノベーションの基盤インフラを示す）、および特許出願数（技術活動の強度を示す）である。これらを時系列で追うことで、特定国・地域の「イノベーション文脈の変化」を動的に把握できる。</p>
+
+<p><strong>regulatory-db-japan（regulatory_dynamics_jp.db）</strong>は日本の法令・規制動態を格納する 1,332 件のデータベースである。e-Gov 法令 API を基盤とし、各法令の制定年、改正履歴、規制対象分野、イノベーション阻害・促進への含意が記録されている。テーブル構成は regulations（法令本体）、regulatory_areas（規制分野分類）、regulatory_timeline（改正タイムライン）、regulation_area_mapping（法令×分野の対応）の四つである。イノベーション設計での活用において最も重要なのは regulatory_timeline テーブルであり、直近 1〜3 年の改正トレンドから「規制の方向性」（強化か緩和か）を読み取ることで、参入タイミングの判断精度が上がる。特に医療、金融、データ、エネルギー、農業の五分野における規制変化は、イノベーション機会のトリガーになりやすい。</p>
+
+<p><strong>world-values-db（world_values.db）</strong>は WVS（世界価値観調査）第 7 波から抽出した 32 カ国のデータを格納する。生活満足度、社会信頼、政治信頼、自律性志向、宗教観、環境意識、テクノロジー受容、ジェンダー平等観など、イノベーション受容性に関わる価値観指標を体系的に提供する。「技術への信頼」と「変化への開放性」の二軸は、新技術の普及速度を規定する社会的基盤を示す指標として特に重要である。これを diffusion_adoption_user サブフィールドの普及理論と接続することで、特定の技術・サービスの採用予測精度を高めることができる。</p>
+
+<p><strong>cultural-intelligence-db</strong>は 500 ソース・21 カテゴリの文化ニュースを日次収集する動的データベースである。ライフスタイル、アート・クリエイティブ、フード・農業、健康・ウェルネス、都市・建築、テクノロジー文化、教育・学習、コミュニティ・社会関係など 21 カテゴリをカバーし、文化的変化のリアルタイムシグナルを提供する。マクロ経済や規制データが捉えられない「意識・行動レベルの変化」を捕捉できる点が、本データベースの独自価値である。foresight-knowledge-base のトレンドデータとの照合により、弱いシグナルの文化的根拠を確認することができる。</p>
+
+<p><strong>esg-metadata（esg_metadata.db）</strong>は 18 カテゴリの ESG（環境・社会・ガバナンス）メタデータレイヤーを提供する。PESTLE/IR（投資シグナル）/FK（フォーサイト知識）への属性付与型の設計であり、単独で完結するデータベースではなく他のデータベースの情報を「ESG 軸で評価・分類する」ための参照層として機能する。ESG 情報開示義務化の国際的潮流（ISSB 基準等）を背景に、投資家・規制当局の評価軸を意識したイノベーション設計において、本データベースの重要性は今後さらに高まると予測される。</p>
+
+<h3>カテゴリIII：シグナル・予測データベース</h3>
+
+<p>シグナル・予測カテゴリには、現在進行中の変化と将来予測に関するデータベース群が含まれる。Layer 3 の中核をなすデータ基盤であり、「今何が起きているか・何が起きようとしているか」を定量的・定性的に示す。</p>
+
+<p><strong>foresight-knowledge-base（foresight.db）</strong>は 463 機関・650 トレンドを格納するフォーサイト情報データベースである。RAND、WEF、McKinsey Global Institute、政府系シンクタンク、大学系フォーサイトセンターなど、世界の主要機関が発行したレポートから抽出されたトレンド情報を体系的に管理する。テーブル構成は sources（機関情報）、trends（トレンド内容）、reports（レポート原典）、theme_clusters（テーマ集積）、trend_themes（トレンド×テーマ対応）などである。trend_popularity テーブルには、各トレンドが何機関によって言及されているかの集計データが格納されており、「コンセンサストレンド」（多機関で言及）と「孤立シグナル」（少数機関のみ言及）を区別することができる。孤立シグナルのなかに将来の主要トレンドの萌芽を見出すことが、フォーサイト分析の醍醐味である。</p>
+
+<p><strong>ai-acceleration-evidence-db（ai_acceleration_evidence.db）</strong>は生成 AI の加速を示すエビデンスを 498 言及・322 ソース・97 ドメインにわたって収集した特化型データベースである。本データベースの設計思想は「AI がどのドメインにどの程度の速度で影響を与えているか」を定量的に追跡することにある。innovation_theory（platform_digital_innovation）のプラットフォーム経済理論と組み合わせることで、AI プラットフォームが各産業の価値連鎖をどこから再編しつつあるかを理論的に解釈できる。また、diffusion_adoption_user の「生成 AI 普及の S 曲線分析（2022〜2025 年）」理論は、本データベースのエビデンスを実測値として活用し、各ドメインでの AI 採用フェーズを診断するために使える。</p>
+
+<p><strong>tech-acceleration-db（tech_acceleration.db）</strong>は技術発展の加速度を検証するための 162,000 件超のレコードを格納する大規模データベースである。Seshat（人類史的データ）、Our World in Data（OWID）、Wikidata、特許データベースなど 13 の異なるソースからデータを統合しており、技術発展の「歴史的パターン」を長期視点で分析できる点が他のデータベースにはない独自価値である。innovation_theory（neo_schumpeterian_economics）の「技術経済パラダイム転換論」は、このデータを理論的に解釈するための最適なフレームワークであり、コンドラチェフ長波、技術クラスターの形成・崩壊・再形成のサイクルを実データで検証することができる。</p>
+
+<p><strong>investment-signal-radar（ir.db、ir_collector.db）</strong>は 4,180 組織・1,927 ラウンド・160 公的プロジェクトの投資情報を格納するデータベースである。本データベースの中核的価値は「市場参加者が何を信じているか」の集合的知性を捉えることにある。VC 投資の集中領域はイノベーション機会の市場的信憑性を示し、公的プロジェクトの重点分野は政策的優先度を示す。この二軸の重複領域——VC マネーと公的資金が同時に流入するセクター——は、民間イノベーションと政策変化が共鳴する「機会の窓」を示す最も強力なシグナルの一つである。innovation_theory（entrepreneurship_venture）の「コーポレートベンチャリング」「政府系スタートアップ支援」の理論と組み合わせることで、この窓をどのアクターがどう活用すべきかの設計に至ることができる。</p>
+
+<p><strong>ai-development-db</strong>は LLM 関連 1,097 件・AGI 関連 1,139 件、合計 2,236 本の論文データベースである。本データベースは「AI 研究のフロンティア」をリアルタイムで追跡するために設計されており、各論文の被引用数、研究機関、アブストラクト、発表年が記録されている。innovation_theory（platform_digital_innovation、knowledge_learning_capabilities）の理論と組み合わせることで、「AI 研究の進展が産業イノベーションに実装されるまでのラグタイム」の予測が可能になる。一般的に、基礎研究論文から産業実装まで 3〜7 年のラグが存在するとされるが、AI 分野ではこのラグが急速に縮小していることが本データベースの言及数増加パターンから確認される。</p>
+
+<h3>カテゴリIV：社会イノベーション・制度変化データベース</h3>
+
+<p>社会イノベーション・制度変化カテゴリは、イノベーションの「社会的実装」という観点から特に重要なデータベース群である。技術的可能性が実際の社会変革に結びつくためには、制度的・文化的・組織的変化が必要であり、これを過去の事例から学ぶためのデータ基盤を提供する。</p>
+
+<p><strong>social-innovation-framework（si_events.db）</strong>は 1,276 件の社会イノベーション事例を格納する。10 の文明圏、10 のシステム法則、1,096 の社会イノベーション事象（si_events テーブル）、232 の関係（event_relations）が構造化されて記録されている。本データベースは「過去にどこで、どのように、どの規模で社会イノベーションが起きたか」を体系的に記述しており、現在のイノベーション設計における「歴史的妥当性の確認」と「先行事例からの学習」に機能する。特に「civilizations（文明圏）」テーブルは、特定の文化的・歴史的文脈においてどのタイプの社会イノベーションが起きやすいかのパターンを示しており、地域固有のイノベーション設計に活用できる。</p>
+
+<p><strong>foresight-taxonomy（taxonomy.db、foresight_taxonomy.db）</strong>は多層タクソノミー v0.1 を格納する。5 メガドメイン（Technology、Society、Economy、Environment、Governance）× Three Horizons（H1：現在の主流、H2：台頭するトレンド、H3：変革的可能性）× 5 認識論的フレームという立体的な分類体系は、Layer 4 の機会マッピングにおける「座標系」として機能する。イノベーション機会をこの多次元空間に位置づけることで、「どのタイムラインで、どのドメインを対象に、どの変化の段階にある機会か」を明確に記述できる。innovation_theory の各サブフィールドとのタクソノミー的対応も記録されており、フレームワーク間の接続が容易である。</p>
+
+<p><strong>futures-studies-db（futures_studies.db）</strong>は、前述の未来学データベースに加えて、「論争（fs_debates：40 件）」テーブルが特に重要な参照価値を持つ。未来学内部の知的論争——「技術決定論 vs 社会的構成主義」「ポスト・ヒューマニズム論争」「成長の限界論争」など——は、イノベーション設計において避けられない根本的問いへの準備として機能する。自らのイノベーション設計が、どの知的立場に立っているかを自覚することは、設計の一貫性と説得力を高めるために不可欠である。</p>
+
+<h3>カテゴリV：アプリケーション・オペレーション系データベース</h3>
+
+<p>アプリケーション・オペレーション系のデータベース群は、直接的なイノベーション理論の参照には用いないが、フレームワークの実装プロセスを支援する文脈情報を提供する。</p>
+
+<p><strong>grant-db（grants.db）</strong>は 3,669 件の助成金・補助金情報を格納する。イノベーション設計において資金調達は常に課題であり、本データベースはどのフェーズにどの資金ソースを活用できるかの判断を支援する。特に Layer 5 のロードマップ設計において、政府・民間財団の助成スキームのタイミングとフェーズ設計を合わせることで、資金的な実現可能性を高めることができる。innovation_theory（measurement_policy_governance）の「政策評価論」と組み合わせることで、「助成金獲得に必要な成果指標の設計」も行える。</p>
+
+<p><strong>sangaku-matcher-v2（sangaku_v2.db）</strong>は産学連携マッチングデータベースである。大学の研究シーズと産業界のニーズのマッチング情報が格納されており、innovation_theory（open_innovation_ecosystems）の「産学連携イノベーション」の理論的枠組みを実際のマッチング実践に接続するブリッジとして機能する。</p>
+
+<p><strong>policy-db（policy.db）</strong>は政府事業 30,000 件・年度別予算推移データベースである。予算と事業内容が主軸であり、政策的優先度の変化を定量的に追跡できる。investment-signal-radar（公的プロジェクト 160 件）と組み合わせることで、「VCマネー×政策マネー」の収束領域をより精密に特定できる。innovation_theory（innovation_systems）の「国家イノベーションシステム論」が提示する「政府の役割設計」の理論的枠組みは、policy-db のデータを解釈するための最適なフレームワークである。</p>
+
+<!-- ========== 補章B ========== -->
+<h2 id="appendix-b">補章B：理論体系の詳細——14サブフィールド解説</h2>
+
+<p>本補章では、innovation_theory の 14 サブフィールドそれぞれの学問的系譜、中核的問い、主要な理論・概念、そしてイノベーション設計への実践的含意を詳述する。9,998 件という理論体系の「構造」を理解することで、フレームワークの活用精度が飛躍的に高まる。</p>
+
+<h3>ネオ・シュンペーター派経済学（neo_schumpeterian_economics）：714件</h3>
+
+<p>ネオ・シュンペーター派経済学は、ヨーゼフ・シュンペーターの「創造的破壊」と「新結合」の概念を基礎として、20 世紀後半に発展した広大な知的系譜である。中核的問いは「なぜ技術変化は長波的パターンを持つのか」「なぜ経済成長は技術革新によって不連続に起きるのか」である。</p>
+
+<p>このサブフィールドには、コンドラチェフ長波（约50年周期の技術経済パラダイム転換）、クリストファー・フリーマンとカルロタ・ペレスによる技術-経済パラダイム論（蒸気機関、鉄道、電気、石油化学、ICT という五つの転換）、ジョバンニ・ドージによるイノベーションの機会集合論、ネルソン＆ウィンターの進化経済学が含まれる。</p>
+
+<p>現在われわれが直面しているのは、ペレスが第六の技術経済パラダイムとして予測する「ICT とサステナビリティの収束」の時代である。このパラダイム論の枠組みでは、新興技術の「インストール期」（バブルと投資の過剰）と「展開期」（社会への組み込みと価値創出）の区別が重要であり、AI・クリーンテック・バイオテクノロジーの各領域がどの段階にあるかを診断することが、イノベーション設計のタイミング判断の基礎となる。AI は現在インストール期の後半から展開期の初期への移行点にあり、この診断は ai-acceleration-evidence-db と tech-acceleration-db のデータによって裏付けられる。</p>
+
+<h3>技術パラダイム・レジーム論（technology_paradigms_regimes）：716件</h3>
+
+<p>技術パラダイム・レジーム論は、技術変化を「個別技術の進歩」ではなく「社会技術システム全体の転換」として捉えるアプローチである。その中心概念が「マルチレベルパースペクティブ（MLP）」であり、技術ニッチ（小規模な実験的技術）、技術レジーム（支配的な社会技術システム）、ソシオ・テクニカルランドスケープ（文化・経済・政治的環境）の三層関係を分析する。</p>
+
+<p>MLP が示す「ニッチから始まるトランジション」の論理は、エネルギー転換、モビリティ転換、食料システム転換を設計する実践者にとって特に有用である。ニッチ段階での小規模実験→レジームへの圧力の蓄積→ランドスケープレベルの変化による「機会の窓」の開口→トランジション加速という段階的プロセスは、sustainable-transitions-social のデータと組み合わせることで具体的な政策設計・事業設計の論理として機能する。日本での応用例として、再生可能エネルギーのニッチ実験（コミュニティ電力、スマートグリッド）がFIT制度（regulatory-db-japan）という「機会の窓」を活用してレジーム転換を加速させたプロセスは、このフレームワークの典型的成功事例として分析できる。</p>
+
+<h3>持続可能性トランジション・社会イノベーション（sustainability_transitions_social）：714件</h3>
+
+<p>持続可能性トランジション研究は、エネルギー、交通、農食、水、建築などの「社会技術システム」を現在の非持続可能な状態からより持続可能な状態へと移行させるプロセスを研究する。「トランジション管理（Transition Management）」は、この理論を政策実践に接続した方法論であり、オランダ政府のエネルギートランジション政策に影響を与えた。</p>
+
+<p>social-innovation-framework（si_events.db）との接続は、このサブフィールドにおいて特に有意義である。歴史的な社会イノベーション事例（1,276 件）は、持続可能性トランジションの「先行事例」として機能し、どのような条件が揃えばシステム転換が成功するかのパターンを帰納的に抽出できる。また、world-values-db の環境意識データは、特定の社会でのサステナビリティ・イノベーションの「社会的受容基盤」の強さを定量的に示す。日本において ESG・サステナビリティ関連のイノベーションを設計する際には、esg-metadata との参照も必須である。</p>
+
+<h3>プラットフォーム・デジタルイノベーション（platform_digital_innovation）：714件</h3>
+
+<p>プラットフォーム・デジタルイノベーション論は、デジタル技術を基盤とした経済・事業の再編を説明する理論体系である。ネットワーク外部性（Katz & Shapiro）、二面市場論（Rochet & Tirole）、プラットフォームエコシステム論、データ独占とクラウドソーシング経済学が含まれる。本サブフィールドで最も重要な現代的概念は「プラットフォームが産業の「仲介者（middleman）」を脱廃し、需要と供給を直接結ぶ新しい経済空間を創出する」というメカニズムである。</p>
+
+<p>investment-signal-radar との組み合わせは特に強力である。4,180 組織の投資情報から「どのカテゴリのプラットフォームビジネスにマネーが流入しているか」を把握し、二面市場論・ネットワーク効果論でその理論的根拠を確認することで、「次のプラットフォーム機会」の輪郭が浮かび上がる。ai-development-db の最新 AI 研究と組み合わせることで、「AI がプラットフォームの競争優位をどう変えているか」（推薦システム、パーソナライゼーション、生成コンテンツ）の設計含意も得られる。</p>
+
+<h3>オープンイノベーション・エコシステム（open_innovation_ecosystems）：714件</h3>
+
+<p>オープンイノベーション論（Henry Chesbrough、2003）は、企業が内部の R&D だけでなく、外部の知識・技術・パートナーを積極的に取り込む（あるいは提供する）ことでイノベーション効率を高めるアプローチを体系化した。「内向き」（外部→内部）と「外向き」（内部→外部）の知識フローの管理が核心であり、知識の「粘着性（stickiness）」と「移転容易性」の分析が設計の基礎となる。</p>
+
+<p>sangaku-matcher-v2（産学連携マッチング）との接続は、このサブフィールドの理論を実践的な産学連携設計に直結させる。特に「イノベーション仲介組織（Innovation Intermediary）」の役割設計——大学の知識と産業の課題を接続する機関や機能の設計——は、open_innovation_ecosystems の理論が最も詳細に論じるテーマの一つである。management-studies-db の「組織間信頼」「取引費用理論」との組み合わせで、産学連携の設計を理論的に根拠づけられる。</p>
+
+<h3>イノベーション・プロセス管理（innovation_process_management）：714件</h3>
+
+<p>イノベーション・プロセス管理論は、「どのようにイノベーションを組織内で推進・管理するか」という実践的問いに答える理論体系である。ステージゲートプロセス（Cooper）、Stage-Gate とアジャイルの融合（Agile-Stage-Gate Hybrid）、デザインスプリント（Google Ventures）、リーンスタートアップ（Ries）、ジョブ理論（Christensen）が含まれる。</p>
+
+<p>本サブフィールドは Layer 5（実装設計）において最も直接的に活用される理論群である。特に「どの開発手法を、どの種類のイノベーション課題に使うか」の選択マトリクスが重要である。漸進的イノベーション（コアビジネスの改善）にはステージゲートが適し、破壊的イノベーション（新市場・新技術）にはアジャイルやリーンスタートアップが適し、システム転換型イノベーション（制度・インフラの変革）にはトランジション管理が適する。innovation_theory の<code>innovation_type</code>フィールド（product、process、business_model、radical、incremental、architectural 等）を参照することで、課題のイノベーションタイプを先に診断し、それに対応するプロセス手法を選択するという設計手順が確立される。</p>
+
+<!-- ========== 補章C ========== -->
+<h2 id="appendix-c">補章C：フレームワーク活用のための問い集</h2>
+
+<p>本補章は、フレームワークを実際に使い始める際に「どんな問いを立てればよいか」で迷う実践者のために、サブフィールド別・レイヤー別の問いの例を体系化する。これらは「問い立ての出発点」であり、自らの課題文脈に合わせてカスタマイズして使うことを前提としている。</p>
+
+<h3>Layer 1（理論選択）のための診断問い</h3>
+
+<div class="table-wrap">
+<table>
+  <tr>
+    <th>診断問い</th>
+    <th>問いへの答えが示すサブフィールド</th>
+  </tr>
+  <tr>
+    <td>この課題は「新しい技術の登場」によって起きているか、「制度・規制の変化」によって起きているか？</td>
+    <td>前者：technology_paradigms_regimes。後者：institutional_economics_voc</td>
+  </tr>
+  <tr>
+    <td>イノベーションの主体は「企業の戦略」か「社会システム全体の転換」か？</td>
+    <td>前者：disruptive_innovation_dynamics。後者：sustainability_transitions_social</td>
+  </tr>
+  <tr>
+    <td>課題の分析スケールは「個別企業」か「産業・地域」か「国・社会」か？</td>
+    <td>micro：entrepreneurship_venture。meso：sectoral_innovation_patterns。macro：innovation_systems</td>
+  </tr>
+  <tr>
+    <td>新技術の普及を「どう促進するか」が問いの中心か？</td>
+    <td>diffusion_adoption_user、platform_digital_innovation</td>
+  </tr>
+  <tr>
+    <td>組織が持続的にイノベーションし続けるための「能力」設計が問いか？</td>
+    <td>knowledge_learning_capabilities、innovation_process_management</td>
+  </tr>
+  <tr>
+    <td>外部のパートナー・コミュニティとどう協働してイノベーションを生むかが問いか？</td>
+    <td>open_innovation_ecosystems</td>
+  </tr>
+  <tr>
+    <td>成果をどう測定・評価・政策に結びつけるかが問いか？</td>
+    <td>measurement_policy_governance</td>
+  </tr>
+  <tr>
+    <td>デジタルプラットフォームのビジネスモデルや競争戦略が問いか？</td>
+    <td>platform_digital_innovation</td>
+  </tr>
+</table>
+</div>
+
+<h3>Layer 2（文脈確認）のための問い</h3>
+
+<p>Layer 2 の問いは「この理論は、現在この地域・産業・社会に適用可能か」という「適用条件の確認」に焦点を当てる。</p>
+
+<ul>
+  <li>この国・地域の R&D 投資水準は、イノベーションシステムを支えるに十分か（macro-economy-db 参照）</li>
+  <li>規制環境は、このイノベーションを促進しているか阻害しているか、また近年どちらの方向に動いているか（regulatory-db-japan 参照）</li>
+  <li>ターゲット社会の「技術信頼度」「変化への開放性」はどの水準にあるか（world-values-db 参照）</li>
+  <li>地域固有の知識・資源・コミュニティの強みは何か（traditional-knowledge-db 参照）</li>
+  <li>ESG・サステナビリティ軸での評価は、このイノベーションにプラスかマイナスか（esg-metadata 参照）</li>
+  <li>経営学的に、このイノベーションを実行する組織の「能力ギャップ」はどこにあるか（management-studies-db 参照）</li>
+</ul>
+
+<h3>Layer 3（シグナル検出）のための問い</h3>
+
+<ul>
+  <li>直近 1〜3 年で、このセクターに関連する規制変化は何が起きているか（regulatory-db-japan・pestle-signal-db 参照）</li>
+  <li>フォーサイト機関の上位トレンドに、このテーマはどの程度ランクインしているか（foresight-knowledge-base 参照）</li>
+  <li>AI 研究の最前線は、このセクターにどのような変化をもたらしつつあるか（ai-development-db 参照）</li>
+  <li>VC 投資はこの技術・市場に流入しているか、それとも流出しているか（investment-signal-radar 参照）</li>
+  <li>技術成熟曲線上で、この技術はどの段階にあるか（tech-acceleration-db 参照）</li>
+  <li>文化的変化として、このイノベーションへの社会的関心は高まっているか（cultural-intelligence-db 参照）</li>
+</ul>
+
+<h3>Layer 4（機会マッピング）のための問い</h3>
+
+<ul>
+  <li>複数のサブフィールドが「同じ現象」を異なる角度から指摘していないか——理論収束が起きている領域はどこか</li>
+  <li>理論が前提とする条件と現実の文脈の間に、最も大きなギャップはどこにあるか——このギャップ自体が機会ではないか</li>
+  <li>弱いシグナル・成長シグナル・市場シグナル・制度シグナルが同時に収束している時間的窓口はいつか</li>
+  <li>歴史的先例（si_events.db）と比較して、現在の状況はどのトランジションフェーズに相当するか</li>
+  <li>競合他社・政策当局が注目していない「コンセンサスの外側」の機会はどこにあるか</li>
+</ul>
+
+<h3>Layer 5（実装設計）のための問い</h3>
+
+<ul>
+  <li>MVP で検証すべき「最も不確実な仮説」は何か——これを最も効率的に検証できる方法は何か</li>
+  <li>このイノベーションのエコシステムには誰が必要か、各アクターのインセンティブ設計はどうなっているか</li>
+  <li>規制変化のタイムラインと実装のフェーズはどう対応させるか（regulatory-db-japan 参照）</li>
+  <li>成功を示す KPI は何か——技術・経済・社会・普及の四軸で測定指標を設定できているか</li>
+  <li>想定されるリスク（技術・規制・社会的受容）に対して、どのような事前措置を組み込むか</li>
+</ul>
+
+<p>これらの問いは出発点である。実際のイノベーション設計においては、これらの問いに答えながら新たな問いが生まれ、データベースへの参照がさらに深まり、理解が精緻化していく。フレームワークは「答えを与える機械」ではなく「問いを洗練させる装置」であるという理解が、最終的に最も重要である。イノベーション設計において最大の競争優位は、「正しい答え」を持つことではなく、「より深い問いを立てられること」にある。</p>
+
+<p>本フレームワークで参照する 9,998 件の理論と 29 以上のデータベースは、その問いを立てるための素材である。素材の豊富さが問いの豊富さを生み、問いの豊富さがイノベーション機会の多様性を生む。データと理論の統合は、最終的にはイノベーターの思考の質へと変換されて初めて価値を持つ。</p>
+
+<p style="margin-top: 60px; font-size: 13px; color: #888; border-top: 1px solid var(--border); padding-top: 20px;">
+  作成日：2026年5月2日 ／ データ基盤：academic-knowledge-db v3（innovation_theory 9,998件）、接続DB 29以上 ／
+  保存先：~/projects/research/academic-knowledge-db/innovation-design-framework.html
+</p>
+
+</div>
+
+<script>
+// Scroll-aware sidebar highlighting
+const sections = document.querySelectorAll('h2[id], h3[id]');
+const navLinks = document.querySelectorAll('#toc a');
+function highlight() {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', highlight, { passive: true });
+highlight();
+
+// Dark mode toggle
+const toggle = document.getElementById('dark-toggle');
+toggle.addEventListener('click', () => {
+  const html = document.documentElement;
+  if (html.style.colorScheme === 'dark') {
+    html.style.colorScheme = '';
+    toggle.textContent = 'ダークモード切替';
+  } else {
+    html.style.colorScheme = 'dark';
+    toggle.textContent = 'ライトモード切替';
+  }
+});
+</script>
+
+</body>
+</html>
