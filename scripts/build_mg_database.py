@@ -200,6 +200,7 @@ def main():
     enriched_files = [
         DATA_DIR / "mg_enriched_defs_batch1.json",
         DATA_DIR / "mg_enriched_overlay.json",
+        DATA_DIR / "mg_enriched_overlay2.json",
     ]
     total_def_updated = 0
     for enriched_path in enriched_files:
