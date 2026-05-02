@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>イノベーション理論DB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
+.overview-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; }
+.overview-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 10; }
+.chart-container { margin: 16px 0 28px; overflow-x: auto; }
+.chart { display: flex; align-items: flex-end; gap: 1px; height: 200px; min-width: 600px; }
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 3px; height: 100%; justify-content: flex-end; }
+.chart-bar { width: 100%; background: var(--accent-warm); opacity: 0.7; cursor: pointer; transition: opacity 0.15s; min-height: 1px; }
+.chart-bar:hover { opacity: 1; }
+.chart-label { font-size: 0.5rem; color: var(--text-muted); margin-top: 3px; writing-mode: vertical-rl; height: 24px; overflow: hidden; }
+.chart-tooltip { position: fixed; background: var(--card); border: 1px solid var(--border); padding: 8px 12px; font-size: 0.78rem; pointer-events: none; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.subfield-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; margin: 12px 0; }
+.subfield-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.subfield-name { flex: 1; }
+.subfield-name-ja { font-weight: 500; }
+.subfield-name-en { font-size: 0.7rem; color: var(--text-muted); }
+.subfield-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; min-width: 40px; text-align: right; }
+.subfield-bar { height: 3px; background: var(--accent-warm); opacity: 0.4; margin-top: 4px; }
+.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin: 12px 0; }
+.type-item { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.type-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; }
+.researcher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; margin: 12px 0; }
+.researcher-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.researcher-name { font-weight: 500; }
+.researcher-count { font-family: monospace; color: var(--text-muted); font-size: 0.75rem; }
+.cross-domain { margin: 12px 0 28px; }
+.cross-bar-wrap { display: flex; align-items: center; margin-bottom: 6px; }
+.cross-label { min-width: 160px; font-size: 0.78rem; color: var(--text-secondary); text-align: right; padding-right: 12px; }
+.cross-bar { height: 22px; background: var(--accent-warm); opacity: 0.6; display: flex; align-items: center; padding-left: 8px; }
+.cross-count { font-size: 0.72rem; color: #fff; font-weight: 600; }
+.report-list { display: grid; gap: 8px; margin: 12px 0 28px; }
+.report-item { padding: 12px 16px; border: 1px solid var(--border-light); background: var(--surface); }
+.report-item a { color: var(--text); text-decoration: none; }
+.report-item a:hover { color: var(--accent-warm); }
+.report-title { font-size: 0.84rem; font-weight: 600; line-height: 1.5; margin-bottom: 4px; }
+.report-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
+.link-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent-warm); color: #fff; font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: opacity 0.2s; margin-right: 8px; margin-bottom: 8px; }
+.link-btn:hover { opacity: 0.85; }
+.link-btn-outline { background: transparent; color: var(--accent-warm); border: 1px solid var(--accent-warm); }
+.link-btn-outline:hover { background: var(--accent-muted); }
+.quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin: 12px 0; }
+.quality-item { padding: 12px; background: var(--surface); border: 1px solid var(--border-light); text-align: center; }
+.quality-score { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; color: #2d8a4e; }
+.quality-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border-light); font-size: 0.72rem; color: var(--text-muted); text-align: center; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+<a class="back" href="../databases.html">&larr; データベース一覧に戻る</a>
+
+<h1><span class="db-id">IT</span>イノベーション理論DB</h1>
+<p class="subtitle">14サブフィールド・9,839概念によるイノベーション研究の統合的知識基盤</p>
+<p class="desc">シュンペーターの創造的破壊（1911年）から生成AI時代のプラットフォームイノベーション（2026年）まで、イノベーション研究の全領域を網羅する学術知識データベース。進化経済学・知識理論・システム論・トランジション研究・政策科学など14の理論的サブフィールドにわたる9,839件の概念を体系化し、35,939件の理論間関係と8,552件の分野横断関係によって全概念を接続した知識ネットワークを構築している。</p>
+
+<div style="margin-bottom:20px">
+  <a class="link-btn" href="https://yuyanishimura0312.github.io/research-dashboard/#entry-69f5a6b10yyrgu">構築完了レポート <span style="font-size:0.72rem;opacity:0.85">&rarr;</span></a>
+  <a class="link-btn link-btn-outline" href="https://github.com/yuyanishimura0312/academic-knowledge-db">GitHub <span style="font-size:0.72rem;opacity:0.85">&rarr;</span></a>
+</div>
+
+<div class="overview">
+  <div class="overview-card"><div class="overview-value">9,839</div><div class="overview-label">理論・概念</div></div>
+  <div class="overview-card"><div class="overview-value">14</div><div class="overview-label">サブフィールド</div></div>
+  <div class="overview-card"><div class="overview-value">35,939</div><div class="overview-label">理論間関係</div></div>
+  <div class="overview-card"><div class="overview-value">8,552</div><div class="overview-label">分野横断関係</div></div>
+  <div class="overview-card"><div class="overview-value">100%</div><div class="overview-label">接続率</div></div>
+  <div class="overview-card"><div class="overview-value">216</div><div class="overview-label">年間カバー</div></div>
+</div>
+
+<h3>品質指標</h3>
+<div class="quality-grid">
+  <div class="quality-item"><div class="quality-score">100%</div><div class="quality-label">フィールド充填率</div></div>
+  <div class="quality-item"><div class="quality-score">0</div><div class="quality-label">重複エントリ</div></div>
+  <div class="quality-item"><div class="quality-score">100%</div><div class="quality-label">ネットワーク接続率</div></div>
+  <div class="quality-item"><div class="quality-score">3.65</div><div class="quality-label">平均関係数/概念</div></div>
+</div>
+
+<h3>年代別タイムライン（1890-2026年）</h3>
+<p class="note">イノベーション理論の出現年分布。1990年代以降の急増がイノベーション研究の制度化を反映している。</p>
+<div class="chart-container"><div class="chart" id="timeline-chart"></div></div>
+<div id="chart-tooltip" class="chart-tooltip" style="display:none"></div>
+
+<h3>14サブフィールド</h3>
+<p class="note">4つの大分類（A. 基盤理論、B. システム論、C. プロセス・ダイナミクス、D. 方向性・応用）に属する14のサブフィールド。</p>
+<div class="subfield-grid" id="subfield-grid"></div>
+
+<h3>理論間関係の構成（35,939件）</h3>
+<p class="note">10種類の関係タイプによる理論間ネットワーク。extends（拡張）とrelated_to（関連）が主要な接続を構成する。</p>
+<div class="type-grid" id="relation-grid"></div>
+
+<h3>分野横断関係（8,552件）</h3>
+<p class="note">イノベーション理論と5つの学問分野テーブルとの概念的接続。</p>
+<div class="cross-domain" id="cross-domain"></div>
+
+<h3>主要研究者（出現頻度順）</h3>
+<p class="note">データベース内で最も多く参照される研究者。</p>
+<div class="researcher-grid" id="researcher-grid"></div>
+
+<h3>年代別構成</h3>
+<div class="type-grid" id="decade-grid"></div>
+
+<h3>関連レポート・成果物</h3>
+<div class="report-list">
+  <div class="report-item">
+    <a href="https://yuyanishimura0312.github.io/research-dashboard/#entry-69f5a6b10yyrgu">
+      <div class="report-title">イノベーション学術知識DB構築完了レポート（9,839件・35,939関係）</div>
+      <div class="report-meta"><span>2026-05-02</span><span>Research Dashboard</span></div>
+    </a>
+  </div>
+  <div class="report-item">
+    <a href="https://yuyanishimura0312.github.io/research-dashboard/#entry-69f42648tc9vyh">
+      <div class="report-title">イノベーション学術知識DB構築完了（2,800件）— 初期構築レポート</div>
+      <div class="report-meta"><span>2026-05-01</span><span>Research Dashboard</span></div>
+    </a>
+  </div>
+  <div class="report-item">
+    <div class="report-title">統合理論教科書「イノベーション理論の統合的理解」（20章・243KB）</div>
+    <div class="report-meta"><span>2026-05-02</span><span>academic-knowledge-db/textbook.html</span></div>
+  </div>
+  <div class="report-item">
+    <div class="report-title">データ駆動型イノベーション設計フレームワーク（116KB）</div>
+    <div class="report-meta"><span>2026-05-02</span><span>academic-knowledge-db/innovation-design-framework.html</span></div>
+  </div>
+</div>
+
+<footer>
+  Innovation Theory DB &mdash; academic-knowledge-db / Insight News<br>
+  9,839 theories &middot; 35,939 relations &middot; 8,552 cross-domain &middot; Last updated: 2026-05-02
+</footer>
+
+<script>
+// Timeline data
+const yearlyData = {"1890":7,"1892":1,"1893":1,"1897":1,"1900":4,"1905":1,"1908":2,"1911":12,"1912":2,"1913":1,"1917":1,"1921":2,"1922":1,"1925":2,"1926":3,"1927":1,"1928":1,"1930":1,"1934":2,"1935":1,"1936":6,"1938":1,"1939":2,"1940":1,"1942":3,"1943":4,"1944":2,"1945":15,"1947":5,"1949":2,"1950":11,"1951":3,"1953":4,"1954":3,"1955":5,"1956":5,"1957":5,"1958":15,"1959":4,"1960":27,"1961":6,"1962":26,"1963":12,"1964":6,"1965":8,"1966":9,"1967":5,"1968":7,"1969":10,"1970":36,"1971":4,"1972":12,"1973":15,"1974":8,"1975":12,"1976":13,"1977":13,"1978":19,"1979":17,"1980":59,"1981":8,"1982":56,"1983":28,"1984":30,"1985":71,"1986":72,"1987":37,"1988":46,"1989":31,"1990":236,"1991":77,"1992":78,"1993":80,"1994":114,"1995":164,"1996":101,"1997":106,"1998":103,"1999":80,"2000":350,"2001":184,"2002":174,"2003":185,"2004":172,"2005":296,"2006":166,"2007":192,"2008":209,"2009":204,"2010":583,"2011":253,"2012":423,"2013":323,"2014":352,"2015":618,"2016":475,"2017":371,"2018":564,"2019":426,"2020":483,"2021":277,"2022":251,"2023":170,"2024":87,"2025":32,"2026":8};
+
+// Build timeline chart
+const chart = document.getElementById('timeline-chart');
+const tooltip = document.getElementById('chart-tooltip');
+const startYear = 1890, endYear = 2026;
+const maxVal = Math.max(...Object.values(yearlyData));
+
+for (let y = startYear; y <= endYear; y++) {
+  const val = yearlyData[y] || 0;
+  const wrap = document.createElement('div');
+  wrap.className = 'chart-bar-wrap';
+  const bar = document.createElement('div');
+  bar.className = 'chart-bar';
+  bar.style.height = (val / maxVal * 100) + '%';
+  bar.addEventListener('mouseenter', e => {
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `<strong>${y}年</strong>: ${val}件`;
+  });
+  bar.addEventListener('mousemove', e => {
+    tooltip.style.left = (e.clientX + 12) + 'px';
+    tooltip.style.top = (e.clientY - 30) + 'px';
+  });
+  bar.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+  wrap.appendChild(bar);
+  if (y % 10 === 0) {
+    const label = document.createElement('div');
+    label.className = 'chart-label';
+    label.textContent = y;
+    wrap.appendChild(label);
+  }
+  chart.appendChild(wrap);
+}
+
+// Subfield data
+const subfields = [
+  {id:"A1", ja:"ネオ・シュンペーター派経済学", en:"neo_schumpeterian_economics", count:709, cat:"A"},
+  {id:"A2", ja:"知識・学習・能力論", en:"knowledge_learning_capabilities", count:713, cat:"A"},
+  {id:"A3", ja:"起業家精神・ベンチャー", en:"entrepreneurship_venture", count:701, cat:"A"},
+  {id:"B1", ja:"イノベーションシステム論", en:"innovation_systems", count:695, cat:"B"},
+  {id:"B2", ja:"制度的枠組み・資本主義の多様性", en:"institutional_economics_voc", count:695, cat:"B"},
+  {id:"B3", ja:"技術パラダイム・レジーム論", en:"technology_paradigms_regimes", count:712, cat:"B"},
+  {id:"C1", ja:"破壊的イノベーション", en:"disruptive_innovation_dynamics", count:701, cat:"C"},
+  {id:"C2", ja:"オープンイノベーション・エコシステム", en:"open_innovation_ecosystems", count:706, cat:"C"},
+  {id:"C3", ja:"拡散・採用・ユーザー", en:"diffusion_adoption_user", count:700, cat:"C"},
+  {id:"C4", ja:"プラットフォーム・デジタル", en:"platform_digital_innovation", count:713, cat:"C"},
+  {id:"D1", ja:"サステナビリティ・トランジション", en:"sustainability_transitions_social", count:709, cat:"D"},
+  {id:"D2", ja:"測定・政策・ガバナンス", en:"measurement_policy_governance", count:673, cat:"D"},
+  {id:"D3", ja:"イノベーションプロセス・マネジメント", en:"innovation_process_management", count:700, cat:"D"},
+  {id:"D4", ja:"セクター別イノベーション", en:"sectoral_innovation_patterns", count:712, cat:"D"}
+];
+const catColors = {A:"#CC1400",B:"#0066CC",C:"#008844",D:"#996600"};
+const catNames = {A:"A. 基盤理論",B:"B. システム論",C:"C. プロセス",D:"D. 方向性"};
+const sfGrid = document.getElementById('subfield-grid');
+const maxSf = Math.max(...subfields.map(s=>s.count));
+subfields.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'subfield-item';
+  el.innerHTML = `<div class="subfield-name"><div class="subfield-name-ja"><span style="font-family:monospace;font-size:0.7rem;color:${catColors[s.cat]};margin-right:4px">${s.id}</span>${s.ja}</div><div class="subfield-bar" style="width:${s.count/maxSf*100}%;background:${catColors[s.cat]}"></div></div><div class="subfield-count">${s.count}</div>`;
+  sfGrid.appendChild(el);
+});
+
+// Relation types
+const relTypes = [
+  ["related_to","一般関連",23546],["extends","拡張・発展",10117],["complements","補完",1395],
+  ["derived_from","派生",433],["synthesizes","統合",111],["influenced","影響",95],
+  ["competes_with","競合",80],["applies_to_policy","政策応用",67],["empirically_tests","実証検証",55],["critiques","批判",40]
+];
+const relGrid = document.getElementById('relation-grid');
+relTypes.forEach(([type,ja,cnt]) => {
+  const el = document.createElement('div');
+  el.className = 'type-item';
+  el.innerHTML = `<span>${ja} <span style="font-size:0.7rem;color:var(--text-muted)">${type}</span></span><span class="type-count">${cnt.toLocaleString()}</span>`;
+  relGrid.appendChild(el);
+});
+
+// Cross-domain
+const crossData = [
+  ["社会科学理論 (social_theory)",2596],["自然科学発見 (natural_discovery)",1733],
+  ["工学手法 (engineering_method)",1675],["芸術的問い (arts_question)",1361],["人文学概念 (humanities_concept)",1187]
+];
+const crossEl = document.getElementById('cross-domain');
+const maxCross = Math.max(...crossData.map(d=>d[1]));
+crossData.forEach(([label,cnt]) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'cross-bar-wrap';
+  wrap.innerHTML = `<div class="cross-label">${label}</div><div class="cross-bar" style="width:${cnt/maxCross*80}%"><span class="cross-count">${cnt.toLocaleString()}</span></div>`;
+  crossEl.appendChild(wrap);
+});
+
+// Researchers
+const researchers = [
+  ["Ikujiro Nonaka",18],["Joseph A. Schumpeter",17],["Franco Malerba",15],["Richard R. Nelson",14],
+  ["Giovanni Dosi",13],["Richard Nelson",13],["Sidney G. Winter",12],["David J. Teece",12],
+  ["Nathan Rosenberg",10],["Daniel A. Levinthal",10],["Frank Geels",10],["Carlota Perez",9],
+  ["Michael Tushman",9],["Wesley M. Cohen",8],["Christopher Freeman",7],["Zvi Griliches",7],
+  ["Keith Pavitt",7],["Bengt-Ake Lundvall",7],["Ron Boschma",7],["James G. March",7]
+];
+const resGrid = document.getElementById('researcher-grid');
+researchers.forEach(([name,cnt]) => {
+  const el = document.createElement('div');
+  el.className = 'researcher-item';
+  el.innerHTML = `<span class="researcher-name">${name}</span><span class="researcher-count">${cnt} concepts</span>`;
+  resGrid.appendChild(el);
+});
+
+// Decades
+const decades = [
+  ["~1959",154],["1960s",116],["1970s",149],["1980s",438],["1990s",1139],
+  ["2000s",2132],["2010s",4388],["2020s",1323]
+];
+const decGrid = document.getElementById('decade-grid');
+decades.forEach(([label,cnt]) => {
+  const el = document.createElement('div');
+  el.className = 'type-item';
+  el.innerHTML = `<span>${label}</span><span class="type-count">${cnt.toLocaleString()}</span>`;
+  decGrid.appendChild(el);
+});
+</script>
+</body>
+</html>
