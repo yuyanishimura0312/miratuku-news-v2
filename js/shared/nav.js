@@ -16,6 +16,7 @@ var NAV_LINKS = [
   { id: 'foresight',    href: 'foresight.html',     label: '未来洞察' },
   { id: 'bookmarks',    href: 'bookmarks.html',     label: 'ブックマーク', badge: true, badgeId: 'bookmarkCount' },
   { id: 'databases',    href: 'databases.html',     label: 'データベース' },
+  { id: 'strategy',     href: 'strategy.html',      label: '戦略' },
   { id: 'guide',        href: 'guide.html',         label: '使い方' }
 ];
 
