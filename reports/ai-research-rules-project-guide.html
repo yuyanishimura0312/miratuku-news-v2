@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIリサーチ・ルール基盤 [補遺II] — プロジェクト別実装ガイド (miratuku / foresight / esse-sense)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg-alt:#FAFAF8;--card:#fff;--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;--surface:#F7F7F5;--accent:#CC1400;--accent-muted:rgba(204,20,0,.06);--accent-blue:#1565c0;--accent-green:#2e7d32;--accent-orange:#e65100;--serif:'Noto Serif JP',serif;--sans:'Noto Sans JP',sans-serif}
+[data-theme="dark"]{--bg:#0D0D0D;--bg-alt:#141414;--card:#1A1A1A;--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#777;--border:#333;--border-light:#222;--surface:#1E1E1E;--accent:#FF4444;--accent-muted:rgba(255,68,68,.08)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.9}
+.theme-toggle{position:fixed;top:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.report-header{background:var(--bg-alt);border-bottom:1px solid var(--border-light);padding:48px 24px 40px}
+.report-header-inner{max-width:740px;margin:0 auto}
+.report-back{font-size:.75rem;color:var(--text-muted);text-decoration:none;display:inline-block;margin-bottom:24px}
+.report-back:hover{color:var(--accent)}
+.report-meta-top{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.report-badge{display:inline-block;padding:2px 8px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:600;letter-spacing:.04em}
+.report-date{font-size:.75rem;color:var(--text-muted)}
+.report-title{font-family:var(--serif);font-size:1.55rem;font-weight:700;line-height:1.4;margin-bottom:12px}
+.report-subtitle{font-size:.88rem;color:var(--text-secondary);line-height:1.7;max-width:640px}
+.article{max-width:740px;margin:0 auto;padding:48px 24px 80px}
+.section-num{display:block;font-family:var(--serif);font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.06em;margin-bottom:4px}
+h2.article-h2{font-family:var(--serif);font-size:1.2rem;font-weight:700;line-height:1.4;margin:48px 0 18px;padding-bottom:10px;border-bottom:1px solid var(--border-light)}
+h2.article-h2:first-of-type{margin-top:0}
+h3.article-h3{font-family:var(--serif);font-size:1rem;font-weight:700;line-height:1.5;margin:30px 0 12px}
+h4.article-h4{font-family:var(--serif);font-size:.92rem;font-weight:700;line-height:1.5;margin:24px 0 10px;color:var(--text-secondary)}
+.article p{margin-bottom:18px;font-size:.92rem;line-height:1.9;text-align:justify}
+.article ul{margin:14px 0 18px 24px;font-size:.9rem;line-height:1.85}
+.code{font-family:'SF Mono','Monaco',monospace;font-size:.78rem;background:var(--surface);padding:14px 18px;border-left:2px solid var(--accent);overflow-x:auto;line-height:1.6;margin:16px 0;white-space:pre}
+code.inline{font-family:'SF Mono','Monaco',monospace;font-size:.85em;background:var(--surface);padding:1px 5px;border-radius:2px}
+.proj-card{margin:24px 0;padding:20px 22px;border:1px solid var(--border);background:var(--card);border-left:4px solid var(--accent)}
+.proj-name{font-family:var(--serif);font-size:1.08rem;font-weight:700;margin-bottom:4px}
+.proj-tagline{font-size:.78rem;color:var(--text-muted);margin-bottom:12px;font-style:italic}
+.tag-row{margin:8px 0 14px 0;display:flex;gap:6px;flex-wrap:wrap}
+.tag{padding:2px 8px;font-size:.68rem;background:var(--accent-muted);color:var(--accent);font-weight:500}
+.report-footer{max-width:740px;margin:0 auto;padding:0 24px 60px;border-top:1px solid var(--border)}
+.report-footer p{font-size:.75rem;color:var(--text-muted);line-height:1.7;margin-top:16px}
+@media(max-width:600px){.report-title{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'" aria-label="テーマ切替">&#9681;</button>
+
+<header class="report-header">
+<div class="report-header-inner">
+<a href="../databases.html" class="report-back">&larr; データベース一覧に戻る</a>
+<div class="report-meta-top">
+<span class="report-badge">AIRR 補遺II</span>
+<span class="report-date">2026年5月3日</span>
+</div>
+<h1 class="report-title">AIリサーチ・ルール基盤 [補遺II] — プロジェクト別実装ガイド</h1>
+<p class="report-subtitle">miratuku（未来予測・PESTLE シグナル収集）/ foresight（動向調査・文献統合）/ esse-sense（概念分析・哲学的考察）の 3 プロジェクトに対し、ルール基盤の各原則をどう具体実装するかを、推奨アーキテクチャ・採用閾値・運用 Tips まで踏み込んでガイドする。</p>
+</div>
+</header>
+
+<article class="article">
+
+<section>
+<span class="section-num">PROJECT 01</span>
+<h2 class="article-h2">miratuku — 未来予測 / PESTLE シグナル収集</h2>
+
+<div class="proj-card">
+<div class="proj-name">miratuku-news-v2</div>
+<div class="proj-tagline">PESTLE analysis-based news platform v2</div>
+<div class="tag-row">
+<span class="tag">計画分離型</span>
+<span class="tag">多軌道シグナル</span>
+<span class="tag">Citation Agent</span>
+<span class="tag">Trajectory Logger</span>
+</div>
+<p style="font-size:.85rem;line-height:1.75">既存の <code class="inline">signals.html</code> / <code class="inline">js/pages/signals.js</code> は <code class="inline">ai_analysis.json</code> の <code class="inline">weak_signals</code> を表示している。新規アプリを作るより、既存パイプラインの各ステップに検証層を差し込む方が ROI が高い。</p>
+</div>
+
+<h3 class="article-h3">推奨アーキテクチャ</h3>
+<p>Si, Yang, Hashimoto（ICLR 2025）が 100 名以上の NLP 専門家研究で示した「LLM の novelty は高いが feasibility は低い」を前提に、人間が feasibility で再選別する stage-wise human-in-the-loop を必須化する。AI co-Scientist（Gottweis 2025）の generate-debate-evolve 方式（tournament evolution）は miratuku のシグナル収集にそのまま転用できる。</p>
+
+<h4 class="article-h4">シグナルメタデータ拡張（既存 ai_analysis.json への差分）</h4>
+<div class="code">{
+  "signal": "...",
+  "description": "...",
+  "pestle_categories": ["Technological", "Legal"],
+  "three_horizons": "H3",
+  "cla_depth": "systemic",
+  "composite_score": 7.4,
+  "evidence": [
+    {
+      "title": "...",
+      "url": "...",
+      "source_type": "news|paper|policy|dataset",
+      "retrieved_at": "2026-05-02T00:00:00Z",
+      "supports_claim": true
+    }
+  ],
+  "verification": {
+    "citation_existence": 1.0,
+    "support_rate": 0.87,
+    "self_consistency_k": 5,
+    "semantic_entropy": 0.42,
+    "abstained": false
+  }
+}</div>
+
+<h3 class="article-h3">重点ルール</h3>
+<ul>
+<li><strong>R5-1</strong> novelty/feasibility 前提（人間が feasibility 再選別）</li>
+<li><strong>R5-2</strong> 多サンプル多様性確保（temperature 高 + クラスタリング）</li>
+<li><strong>R3-1</strong> 多軌道検証（同一シグナルを 5 つの異なる視座で評価）</li>
+<li><strong>R6-2</strong> 採用ゲート（composite_score &lt; 5 は abstain、citation_existence &lt; 95% は再検索）</li>
+</ul>
+
+<h3 class="article-h3">採用閾値（B1 テンプレ準拠）</h3>
+<ul>
+<li>引用精度 D: ≥ 95%（PESTLE シグナルは公開ニュース中心のため標準）</li>
+<li>情報収集 B: BrowseComp ≥ 30%、GAIA Lv1 ≥ 70%</li>
+<li>$/シグナル: &lt; $0.30、レイテンシ p95 &lt; 30 秒</li>
+</ul>
+</section>
+
+<section>
+<span class="section-num">PROJECT 02</span>
+<h2 class="article-h2">foresight — 動向調査 / 文献統合</h2>
+
+<div class="proj-card">
+<div class="proj-name">foresight-app</div>
+<div class="proj-tagline">未来洞察・動向調査の文献統合プラットフォーム</div>
+<div class="tag-row">
+<span class="tag">PaperQA2 型 RAG</span>
+<span class="tag">Citation Agent (full gate)</span>
+<span class="tag">CoVe + Citation</span>
+<span class="tag">6軸全測定</span>
+</div>
+<p style="font-size:.85rem;line-height:1.75">Ajith ら（LitSearch, EMNLP 2024）の実証研究に従えば、Google Search 単独は最良の密検索より recall@5 で 32 ポイント劣後する。foresight では <strong>Semantic Scholar / OpenAlex / arXiv / Google Scholar の 4 系統並列 + embedding 密検索</strong> をデフォルトとする。</p>
+</div>
+
+<h3 class="article-h3">推奨アーキテクチャ</h3>
+<p>PaperQA2（Skarlinski 2024）は LitQA2 で precision 85.2%、生物学論文 1 編あたり 2.34±1.99 件の矛盾検出（70% が人間専門家により妥当判定）を達成した。foresight ではこの設計を踏襲し、Search → Gather Evidence → Answer の RAG エージェントに Citation Agent をパイプラインの<strong>必須ゲート</strong>として統合する。</p>
+
+<h4 class="article-h4">パイプライン</h4>
+<div class="code">[文献検索] Semantic Scholar + OpenAlex + arXiv + Google Scholar
+    ↓ (4 系統で取得した結果を embedding でクラスタ)
+[Evidence Gather] PaperQA2 風: 各論文の per-paper 要約と関連度評価
+    ↓ (Self-Consistency k=5 でエビデンス強度を評価)
+[Citation Agent] 全引用を Crossref/arXiv/OpenAlex で実在検証
+    ↓ (実在率 ≥ 95% を必須ゲート)
+[CoVe] Chain-of-Verification で長文事実性を確認
+    ↓
+[出力] 引用必須 + Trajectory Logger ですべて記録</div>
+
+<h3 class="article-h3">重点ルール</h3>
+<ul>
+<li><strong>R2-1〜R2-6</strong> 引用関連（DOI/PMID/arXiv 検証 + Google 単独不可）</li>
+<li><strong>R6-1</strong> 6 軸を全測定（特に C 文献統合 軸）</li>
+<li><strong>R4-2</strong> 計画分離（計画フェーズを human-in-the-loop で承認）</li>
+<li><strong>R3-5</strong> 矛盾検出を独立タスクで実行</li>
+</ul>
+</section>
+
+<section>
+<span class="section-num">PROJECT 03</span>
+<h2 class="article-h2">esse-sense — 概念分析 / 哲学的考察</h2>
+
+<div class="proj-card">
+<div class="proj-name">esse-sense (-data-kit, -keyword-analysis, -support-report)</div>
+<div class="proj-tagline">概念分析・哲学的考察 — LLM が苦手な領域</div>
+<div class="tag-row">
+<span class="tag">多軌道検証強化</span>
+<span class="tag">バイアス点検</span>
+<span class="tag">流暢さ ≠ 正しさ</span>
+<span class="tag">abstain 一級市民</span>
+</div>
+<p style="font-size:.85rem;line-height:1.75">esse-sense は LLM が構造的に苦手な領域である。Bender et al.（FAccT 2021）の「確率的オウム」批判が直撃する領域であり、ハイデガー / ベンヤミン / フーコーといった概念をモデルが「もっともらしく」扱える流暢さは、概念精度の保証ではない。</p>
+</div>
+
+<h3 class="article-h3">推奨アーキテクチャ：5 つの哲学的立場の並列実行</h3>
+<p>同一の概念質問を、異なる立場（例: 現象学的 / 構造主義的 / 分析哲学的 / 批判理論的 / 東洋思想的）から並列に解かせ、結果を集約する。これは Anthropic Multi-Agent Research の orchestrator-worker パターンに、立場ごとの subagent prompt で実装する。</p>
+
+<h4 class="article-h4">立場別 subagent プロンプトの設計（例）</h4>
+<div class="code">立場1: 現象学（フッサール、ハイデガー、メルロ＝ポンティ）
+立場2: 構造主義・ポスト構造主義（レヴィ＝ストロース、フーコー、デリダ）
+立場3: 分析哲学（ウィトゲンシュタイン、クワイン、ローティ）
+立場4: 批判理論（フランクフルト学派、ベンヤミン、ハーバーマス）
+立場5: 東洋思想（老荘、禅、京都学派）
+
+各立場で同一概念を独立に解析 → Lead が統合 → 矛盾点を明示的に保持
+（強制的に「合意」させない設計が重要）</div>
+
+<h3 class="article-h3">abstain 判定の再定義</h3>
+<p>esse-sense では abstain（答えない）の閾値を意図的に低く設定する。Self-Consistency k=5 のうち多数決クラスタが 60% 以上を取れない、または 5 立場の解釈が顕著に分岐する場合は<strong>「LLM 解釈は提示しない」</strong>を選ぶ。代わりに「各立場での暫定解釈」と「分岐の所在」のみを提示し、結論は人間に委ねる。</p>
+
+<h3 class="article-h3">バイアス点検の必須化</h3>
+<p>Algaba et al.（arXiv:2405.15739, 2024）は LLM の引用が高引用論文に偏る Matthew effect を統計的に立証した。esse-sense の文献選定では、(a) 西洋哲学優位、(b) 男性著者優位、(c) 英語圏文献優位 のバイアスが発生しやすい。各成果物に「バイアス点検レポート」（女性著者比率、非西洋哲学比率、第三世界文献比率等）を必須付帯する。</p>
+
+<h3 class="article-h3">内製 50 問の哲学領域版</h3>
+<ul>
+<li><strong>Lv1 (4 問)</strong>: 用語の定義（哲学辞典準拠の確認問題）— "Dasein" の Heidegger 1927 における原義は何か等</li>
+<li><strong>Lv2 (4 問)</strong>: 思想家間の比較（Foucault と Deleuze の権力概念の差異等）</li>
+<li><strong>Lv3 (2 問)</strong>: 概念史の流れの再構成（hermeneutics のシュライアマハーからガダマーまでの変遷等）</li>
+</ul>
+
+<h3 class="article-h3">重点ルール</h3>
+<ul>
+<li><strong>R3-1</strong> 多軌道検証（5 立場並列、合意強制なし）</li>
+<li><strong>R7-6</strong> バイアス点検（西洋・男性・英語圏優位の警告）</li>
+<li><strong>R7-1</strong> 流暢さ ≠ 正しさ（流暢な哲学的散文に騙されない）</li>
+<li><strong>R4-7</strong> abstain を一級市民に（不明領域では人間にエスカレーション）</li>
+</ul>
+</section>
+
+<section>
+<span class="section-num">CHAPTER 04</span>
+<h2 class="article-h2">プロジェクト横断の運用</h2>
+<p>3 プロジェクトとも以下を <strong>必須インフラ</strong> として共有する。</p>
+<ul>
+<li><strong>Citation Agent</strong>（C2）を成果物パイプラインに必須ゲートとして組込</li>
+<li><strong>Trajectory Logger</strong>（B3）で全実行を JSON-Lines で記録</li>
+<li><strong>Verification Stack</strong>（C4）で重要判断を Self-Consistency + CoVe + Semantic Entropy で多層検証</li>
+<li><strong>Red-Team Agent</strong>（C5）を主要成果物に対して定期実行（偽引用混入・トピックドリフト・誘導質問）</li>
+<li><strong>6 軸ダッシュボード</strong>（C3）で四半期スコアを可視化</li>
+</ul>
+
+<p>運用ルールは miratuku → foresight → esse-sense の順に厳格化する。最も寛容な miratuku（PESTLE シグナル収集）でも citation_existence ≥ 95% は最低基準である。最も厳格な esse-sense（哲学的考察）では abstain 判定の閾値を下げ、5 立場並列を必須化する。</p>
+</section>
+</article>
+
+<footer class="report-footer">
+<p>本補遺は AI Research Rules Foundation v1.0 の Chapter 6「プロジェクト別の実装ガイド」を補強する詳細レポートである。各プロジェクト（miratuku-news-v2 / foresight-app / esse-sense 系）の実装は GitHub 上のコードベースを踏まえて具体化した。</p>
+<p>関連レポート: <a href="ai-research-rules-foundation.html">本編レポート</a> / <a href="ai-research-rules-global-regulation.html">補遺I 国際規制比較</a></p>
+</footer>
+
+</body>
+</html>
