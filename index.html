@@ -1,13 +1,114 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>Insight News</title>
-<meta http-equiv="refresh" content="0; url=home.html">
-<link rel="canonical" href="home.html">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>サインイン | Insight News</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; background: #f5f5f7; }
+    .signin-card { background: #fff; padding: 40px 36px; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); width: 100%; max-width: 380px; }
+    .signin-card h1 { margin: 0 0 8px; font-size: 1.4rem; font-weight: 700; }
+    .signin-card .sub { color: #666; font-size: 0.85rem; margin-bottom: 24px; }
+    .signin-card label { display: block; font-size: 0.78rem; color: #444; margin: 12px 0 6px; }
+    .signin-card input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #d0d0d5; border-radius: 8px; font-size: 0.92rem; font-family: inherit; }
+    .signin-card input:focus { outline: none; border-color: #4a7dff; }
+    .btn { width: 100%; padding: 11px 14px; border-radius: 8px; border: none; font-size: 0.92rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-primary { background: #1a1a1a; color: #fff; margin-top: 20px; }
+    .btn-primary:hover { background: #333; }
+    .btn-google { background: #fff; color: #1a1a1a; border: 1px solid #d0d0d5; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-google:hover { background: #f5f5f7; }
+    .divider { text-align: center; color: #999; font-size: 0.75rem; margin: 18px 0 8px; position: relative; }
+    .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #e0e0e5; }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+    .err { color: #c33; font-size: 0.8rem; margin-top: 12px; min-height: 1.2em; }
+    .ok { color: #1a8245; font-size: 0.8rem; margin-top: 12px; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/shared/firebase-config.js"></script>
 </head>
 <body>
-<script>location.replace("home.html");</script>
-<p><a href="home.html">home.html へ移動</a></p>
+  <div class="signin-card">
+    <h1>Insight News</h1>
+    <div class="sub">サインインして続行してください</div>
+
+    <form id="signinForm" autocomplete="on">
+      <label for="email">メールアドレス</label>
+      <input id="email" type="email" autocomplete="email" required>
+      <label for="password">パスワード</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button type="submit" class="btn btn-primary" id="submitBtn">サインイン</button>
+    </form>
+
+    <div class="divider">または</div>
+    <button type="button" class="btn btn-google" id="googleBtn">
+      <span>Googleでサインイン</span>
+    </button>
+
+    <div class="err" id="errMsg"></div>
+  </div>
+
+  <script>
+    (function () {
+      var errEl = document.getElementById('errMsg');
+      var form = document.getElementById('signinForm');
+      var submitBtn = document.getElementById('submitBtn');
+      var googleBtn = document.getElementById('googleBtn');
+
+      function showErr(msg) { errEl.className = 'err'; errEl.textContent = msg || ''; }
+
+      // If already authenticated, send to home immediately
+      auth.onAuthStateChanged(function (user) {
+        if (user) { window.location.replace('home.html'); }
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        showErr('');
+        submitBtn.disabled = true;
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+        auth.signInWithEmailAndPassword(email, password)
+          .then(function () { window.location.replace('home.html'); })
+          .catch(function (err) {
+            submitBtn.disabled = false;
+            var map = {
+              'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+              'auth/user-not-found': 'ユーザーが見つかりません',
+              'auth/wrong-password': 'パスワードが違います',
+              'auth/invalid-credential': 'メールアドレスまたはパスワードが違います',
+              'auth/too-many-requests': '試行回数が多すぎます。しばらく待ってから再試行してください'
+            };
+            showErr(map[err.code] || ('サインイン失敗: ' + err.message));
+          });
+      });
+
+      googleBtn.addEventListener('click', function () {
+        showErr('');
+        var provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then(function () { window.location.replace('home.html'); })
+          .catch(function (err) {
+            if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+              auth.signInWithRedirect(provider);
+              return;
+            }
+            showErr('Googleサインイン失敗: ' + (err.message || err.code));
+          });
+      });
+
+      // Handle redirect result for Google sign-in fallback
+      auth.getRedirectResult().then(function (result) {
+        if (result && result.user) { window.location.replace('home.html'); }
+      }).catch(function () { /* ignore */ });
+    })();
+  </script>
 </body>
 </html>
