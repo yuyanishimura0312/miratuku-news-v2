@@ -170,7 +170,7 @@ const clusterNames = {
 // Load data
 async function loadData() {
   try {
-    const resp = await fetch('../data/mg_consolidated.json');
+    const resp = await fetch('../data/mg_consolidated.json?v=' + Date.now());
     DB = await resp.json();
     renderAll();
   } catch (e) {
@@ -191,6 +191,9 @@ function renderAll() {
   renderGraphControls();
   renderGraphLegend();
   buildGraph('all');
+  // Ensure cluster is int for sorting/grouping
+  DB.concepts.forEach(c => { c.cluster = parseInt(c.cluster) || 0; });
+  DB.concepts.sort((a, b) => a.cluster - b.cluster);
   filteredConcepts = DB.concepts;
   currentPage = 1;
   renderConceptPage();
@@ -209,7 +212,7 @@ function renderOverview() {
     <div class="overview-card"><div class="overview-value">${s.total_concepts.toLocaleString()}</div><div class="overview-label">概念</div></div>
     <div class="overview-card"><div class="overview-value">${s.total_researchers}</div><div class="overview-label">研究者</div></div>
     <div class="overview-card"><div class="overview-value">${s.total_relations}</div><div class="overview-label">概念間関係</div></div>
-    <div class="overview-card"><div class="overview-value">${s.total_clusters}</div><div class="overview-label">知的クラスター</div></div>
+    <div class="overview-card"><div class="overview-value">${s.total_clusters || 10}</div><div class="overview-label">知的クラスター</div></div>
   `;
 }
 
@@ -220,7 +223,7 @@ function renderTOC() {
   let html = '';
   for (let i = 1; i <= 10; i++) {
     const name = clusterNames[i] || `クラスター${i}`;
-    const count = DB.concepts.filter(c => c.cluster === i).length;
+    const count = DB.concepts.filter(c => parseInt(c.cluster) === i).length;
     html += `<li><a href="#cluster-${i}">${name}</a><span class="toc-cluster">(${count}概念)</span></li>`;
   }
   list.innerHTML = html;
