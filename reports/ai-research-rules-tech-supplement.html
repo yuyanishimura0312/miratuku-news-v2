@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIリサーチ・ルール基盤 [補遺III] — 技術実装詳細 (Anthropic Multi-Agent / PaperQA2 Fulltext / 査読LLM検出)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg-alt:#FAFAF8;--card:#fff;--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;--surface:#F7F7F5;--accent:#CC1400;--accent-muted:rgba(204,20,0,.06);--accent-blue:#1565c0;--accent-green:#2e7d32;--accent-orange:#e65100;--serif:'Noto Serif JP',serif;--sans:'Noto Sans JP',sans-serif}
+[data-theme="dark"]{--bg:#0D0D0D;--bg-alt:#141414;--card:#1A1A1A;--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#777;--border:#333;--border-light:#222;--surface:#1E1E1E;--accent:#FF4444;--accent-muted:rgba(255,68,68,.08)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.9}
+.theme-toggle{position:fixed;top:16px;right:16px;z-index:100;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.report-header{background:var(--bg-alt);border-bottom:1px solid var(--border-light);padding:48px 24px 40px}
+.report-header-inner{max-width:740px;margin:0 auto}
+.report-back{font-size:.75rem;color:var(--text-muted);text-decoration:none;display:inline-block;margin-bottom:24px}
+.report-meta-top{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.report-badge{display:inline-block;padding:2px 8px;background:var(--accent);color:#fff;font-size:.65rem;font-weight:600;letter-spacing:.04em}
+.report-date{font-size:.75rem;color:var(--text-muted)}
+.report-title{font-family:var(--serif);font-size:1.5rem;font-weight:700;line-height:1.4;margin-bottom:12px}
+.report-subtitle{font-size:.88rem;color:var(--text-secondary);line-height:1.7;max-width:640px}
+.article{max-width:740px;margin:0 auto;padding:48px 24px 80px}
+.section-num{display:block;font-family:var(--serif);font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.06em;margin-bottom:4px}
+h2.article-h2{font-family:var(--serif);font-size:1.2rem;font-weight:700;line-height:1.4;margin:48px 0 18px;padding-bottom:10px;border-bottom:1px solid var(--border-light)}
+h2.article-h2:first-of-type{margin-top:0}
+h3.article-h3{font-family:var(--serif);font-size:1rem;font-weight:700;line-height:1.5;margin:30px 0 12px}
+h4.article-h4{font-family:var(--serif);font-size:.92rem;font-weight:700;line-height:1.5;margin:22px 0 10px;color:var(--text-secondary)}
+.article p{margin-bottom:18px;font-size:.92rem;line-height:1.9;text-align:justify}
+.article ul{margin:14px 0 18px 24px;font-size:.9rem;line-height:1.85}
+.code{font-family:'SF Mono','Monaco',monospace;font-size:.78rem;background:var(--surface);padding:14px 18px;border-left:2px solid var(--accent);overflow-x:auto;line-height:1.6;margin:16px 0;white-space:pre}
+code.inline{font-family:'SF Mono','Monaco',monospace;font-size:.85em;background:var(--surface);padding:1px 5px;border-radius:2px}
+.data-table{width:100%;border-collapse:collapse;font-size:.78rem;margin:20px 0}
+.data-table th{background:var(--surface);padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);font-size:.72rem;color:var(--text-secondary)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);vertical-align:top;line-height:1.5}
+.source-list{margin:8px 0 18px;padding:8px 14px;background:var(--surface);border-left:2px solid var(--accent-blue);font-size:.72rem;line-height:1.7;color:var(--text-muted)}
+.source-list a{color:var(--accent-blue);text-decoration:none;word-break:break-all}
+.insight-box{margin:20px 0;padding:16px 18px;border-left:3px solid var(--accent-orange);background:rgba(230,81,0,.03)}
+.insight-label{font-family:var(--serif);font-size:.78rem;font-weight:700;color:var(--accent-orange);margin-bottom:8px}
+.report-footer{max-width:740px;margin:0 auto;padding:0 24px 60px;border-top:1px solid var(--border)}
+.report-footer p{font-size:.75rem;color:var(--text-muted);line-height:1.7;margin-top:16px}
+@media(max-width:600px){.report-title{font-size:1.2rem}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'" aria-label="テーマ切替">&#9681;</button>
+
+<header class="report-header">
+<div class="report-header-inner">
+<a href="../databases.html" class="report-back">&larr; データベース一覧に戻る</a>
+<div class="report-meta-top">
+<span class="report-badge">AIRR 補遺III</span>
+<span class="report-date">2026年5月3日</span>
+</div>
+<h1 class="report-title">AIリサーチ・ルール基盤 [補遺III] — 技術実装詳細</h1>
+<p class="report-subtitle">Anthropic Claude Research の multi-agent アーキテクチャ詳解、Citation Agent への PaperQA2 風 Fulltext 取得層（Unpaywall + PDF parser + Claude 本文照合）の実装、ICML/ICLR/NeurIPS/CVPR/ACL 2025-2026 の査読 LLM ポリシーと検出技術。本ルール基盤の技術背景を一次ソースから詳説する。</p>
+</div>
+</header>
+
+<article class="article">
+
+<section>
+<span class="section-num">CHAPTER 01</span>
+<h2 class="article-h2">Anthropic Claude Research の Multi-Agent アーキテクチャ</h2>
+
+<p>Anthropic の Research システムは、単なる「検索を並列化した RAG」ではなく、<strong>Lead Researcher が探索計画を立て、複数 Subagent に独立した調査タスクを委任し、最後に Citation Agent が出典整合性を補強する非同期・高トークン消費型の agent orchestration</strong> である。公開情報から確認できるのは設計思想と一部の運用上の数値であり、内部プロンプト・厳密な message schema・Citation Agent のコードレベル実装・scheduler の詳細は未公開である。</p>
+
+<h3 class="article-h3">1.1 Lead Researcher と Subagent の通信プロトコル</h3>
+<div class="code">User query
+  ↓
+Lead Researcher
+  - 問題分解
+  - 調査計画作成
+  - Subagent への委任
+  - 進捗統合
+  - 最終レポート生成
+  ↓
+Subagents (独立した context window と tools)
+  - 独立した検索・調査
+  - 必要ならさらに tool use
+  - 要約・発見事項を Lead に返却
+  ↓
+Lead Researcher
+  - 結果統合
+  - 不足領域の追加探索
+  - 最終回答</div>
+<p>通信プロトコルとして公開されているのは概念レベル。task-delegation protocol 的に運用されており、natural-language task contract + tool-result summarization に近い構造である。Lead が Subagent に「何を調べるか」を自然言語で渡し、Subagent が「何を見つけたか」を構造化要約として返す。peer-to-peer 通信や厳密な schema は公開情報では確認できない。</p>
+
+<h3 class="article-h3">1.2 Citation Agent の役割</h3>
+<p>Citation Agent は、最終回答の信頼性を補強する後段 agent として説明されている。「検索 agent」ではなく、<strong>生成済みレポートと source material の対応付けを行う検証・引用補助 agent</strong> である。Citation Agent の prompt、citation span matching のアルゴリズム、embedding/lexical search の有無、chunking strategy、confidence threshold、hallucinated citation の reject 条件、code-level implementation は<strong>すべて未公開</strong>である。Anthropic の Citations API は document を渡すと回答内で該当箇所への citation を返せる機能だが、Research system 内の Citation Agent と Citations API が同一実装かは公開情報では確認できない。</p>
+
+<h3 class="article-h3">1.3 並列度と token consumption の関係</h3>
+<div class="insight-box">
+<div class="insight-label">公開された運用数値</div>
+<p style="font-size:.85rem;line-height:1.7;margin:0">Anthropic Engineering ブログによれば、multi-agent research system はチャット比 <strong>15× の token を消費</strong>するが、内部 Research eval で単一 Opus 4 比 <strong>+90.2% の精度</strong>を達成し、複雑クエリで時間を最大 90% 短縮した。</p>
+</div>
+<p>このトレードオフは、ルール基盤 R4-6（コスト管理）の設計に直接効く。並列度を上げれば精度は上がるが、token / $ / レイテンシのコストは線形以上で増える。重要案件（医療・法務）では多軌道検証を優先し、低リスク案件（PESTLE シグナル）では並列度を抑える運用判断が必要。</p>
+
+<h3 class="article-h3">1.4 実運用上の落とし穴</h3>
+<ul>
+<li><strong>Subagent 間の重複調査</strong>: Lead の問題分解が粗いと、複数 Subagent が同じソースを並列に取得してトークンを浪費する</li>
+<li><strong>Citation Agent の偽陽性</strong>: 書誌情報レベルの一致だけで citation を付与すると、本文が主張を支持していない場合がある（→ 補遺III §2 の PaperQA2 fulltext 層で対処）</li>
+<li><strong>Lead の bottleneck</strong>: 全 Subagent 結果が Lead に集約されるため、Lead の context window 圧迫が問題化する場合がある</li>
+<li><strong>長期記憶の欠落</strong>: 公開情報からは Research system に永続メモリの統合は確認できない（Letta / Mem0 等の併用が必要な場面あり）</li>
+</ul>
+
+<div class="source-list">
+一次ソース:<br>
+&bull; <a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic Engineering: How we built our multi-agent research system</a><br>
+&bull; <a href="https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them">Claude Blog: Building multi-agent systems</a><br>
+&bull; <a href="https://www.anthropic.com/news/introducing-citations-api">Anthropic News: Introducing Citations API</a>
+</div>
+</section>
+
+<section>
+<span class="section-num">CHAPTER 02</span>
+<h2 class="article-h2">Citation Agent への PaperQA2 風 Fulltext 取得層</h2>
+
+<p>本ルール基盤の Citation Agent は、書誌情報レベル（タイトル + 著者 + 年）の topical relevance までを Claude セマンティック検証で実装している。PaperQA2（Skarlinski et al. 2024, arXiv:2409.13740）が示すように、本格的な引用支持率測定には<strong>本文照合（fulltext-level support verification）</strong>が必要である。</p>
+
+<h3 class="article-h3">2.1 設計</h3>
+<p>codex-team の調査により、以下の追加層を <code class="inline">verify_citations.py</code> に実装した。既存 API は変更せず、新メソッドを add する形式。</p>
+
+<h4 class="article-h4">追加された関数（公開 API）</h4>
+<ul>
+<li><code class="inline">FullTextResult</code>: PDF URL / 取得テキスト / parser / バイト数を保持するデータクラス</li>
+<li><code class="inline">fetch_unpaywall_pdf_url(c)</code>: DOI から Unpaywall API で <code class="inline">best_oa_location.url_for_pdf</code> / <code class="inline">oa_locations[].url_for_pdf</code> を取得</li>
+<li><code class="inline">fetch_full_text(c)</code>: DOI → Unpaywall → PDF download → text extraction の一気通貫</li>
+<li><code class="inline">parse_pdf_text(pdf_bytes)</code>: pdfplumber 優先（レイアウト保持）、fallback で PyPDF2</li>
+<li><code class="inline">build_full_text_support_prompt(...)</code>: Claude に「トピック一致」ではなく「本文が主張を直接支持するか」を JSON で返させるプロンプト</li>
+</ul>
+
+<h4 class="article-h4">レート制限と PDF サイズ制限</h4>
+<div class="code">RATE_LIMIT_PER_HOST["api.unpaywall.org"] = 1.0  # 1 req/sec (100K/day 制限)
+MAX_PDF_BYTES = 25 * 1024 * 1024                  # 25 MB cap
+MAX_FULL_TEXT_CHARS = 120_000                     # context window 配慮</div>
+
+<h3 class="article-h3">2.2 設計判断</h3>
+<ul>
+<li><strong>pdfplumber 優先</strong>: PyPDF2 と比べてレイアウト保持が比較的良く、本文照合に向く</li>
+<li><strong>本文照合プロンプト</strong>: 「topical relevance（トピック関連）」ではなく「direct support（主張の直接支持）」を判定させる。これにより既存の semantic verification より厳しい基準で評価可能</li>
+<li><strong>Unpaywall 優先</strong>: 100K/day のクォータ内で OA 経由の PDF 取得を実現。paywall 越えは試みない（ルール R7-3 に整合）</li>
+</ul>
+
+<h3 class="article-h3">2.3 期待される効果</h3>
+<p>既存の Claude セマンティック検証では本ルール基盤の自己検証で支持率 62.9% に留まっていた。本文照合層を加えることで、<strong>(a) 真の引用支持率の把握</strong>、<strong>(b) 偽陽性（書誌一致だが本文不一致）の検出</strong>、<strong>(c) 本文への direct quote の自動抽出</strong>が可能になる。これは PaperQA2 が precision 85.2±1.1%、accuracy 66.0±1.2% を達成した設計に追従する。</p>
+
+<div class="source-list">
+一次ソース:<br>
+&bull; <a href="https://arxiv.org/abs/2409.13740">PaperQA2 (Skarlinski et al. 2024)</a><br>
+&bull; <a href="https://archive.ph/rfXEp">Unpaywall REST API rate limit</a><br>
+&bull; <a href="https://support.unpaywall.org/support/solutions/articles/44002142311-what-do-the-fields-in-the-api-response-and-snapshot-records-mean-">Unpaywall API response fields</a>
+</div>
+</section>
+
+<section>
+<span class="section-num">CHAPTER 03</span>
+<h2 class="article-h2">査読プロセスでの LLM 使用 — 主要会議 2025-2026 ポリシー</h2>
+
+<p>Liang et al.（ICML 2024, arXiv:2403.07183）が査読本文の 6.5–16.9% に LLM 改変痕跡を確認したことを契機に、主要 ML/CS 会議は 2025-2026 にかけてポリシーと検出を急速に強化している。</p>
+
+<h3 class="article-h3">3.1 各会議のポリシー比較</h3>
+<table class="data-table">
+<thead><tr><th>会議</th><th>査読での LLM 使用</th><th>原稿投入</th><th>違反時</th></tr></thead>
+<tbody>
+<tr><td>ICML 2026</td><td>二重ポリシー: A=保守的(不使用)、B=許容的(理解+ポリッシュ)。査読者が事前選択</td><td>privacy-compliant LLM のみ可（Policy B）</td><td>flag + manual verify</td></tr>
+<tr><td>ICLR 2026</td><td>開示なき LLM 使用は<strong>即時 reject</strong></td><td>禁止</td><td>desk reject</td></tr>
+<tr><td>NeurIPS 2025</td><td>査読者は submission/コードを LLM と共有禁止</td><td>禁止</td><td>明文化</td></tr>
+<tr><td>CVPR 2025</td><td>査読での LLM 使用を<strong>完全禁止</strong></td><td>禁止</td><td>明文化</td></tr>
+<tr><td>ACL 2026</td><td>2023 ポリシー継承: 文法補助・短文 paraphrase は許容、新規生成は明示開示</td><td>原則禁止</td><td>開示義務</td></tr>
+</tbody>
+</table>
+
+<h3 class="article-h3">3.2 検出技術: プロンプトインジェクション透かし</h3>
+<p>ICML 2025 は<strong>提出 PDF に invisible なプロンプトインジェクション</strong>を埋め込み、LLM がそれを実行すると検出可能なフレーズが生成される仕組みを実装した。これにより 506 名の査読者から <strong>795 件</strong>（全体の約 1%）の AI 生成査読を flag、manual verify で false positive を排除した。</p>
+
+<h3 class="article-h3">3.3 回避策・抜け穴・限界</h3>
+<ul>
+<li><strong>透かし回避</strong>: PDF→テキスト変換時に invisible 命令を除去すれば回避可能。OCR 経由なら命令文字列も除去される</li>
+<li><strong>local LLM</strong>: Ollama / llama.cpp 等のローカル LLM 使用は外部からは検出不可</li>
+<li><strong>「校正のみ」の境界</strong>: 文法補助と新規生成の境界は曖昧で、運用は査読者の自己申告に依存</li>
+<li><strong>検出閾値</strong>: false positive を避けるため manual verify 必須となり、スケールに限界</li>
+</ul>
+
+<div class="insight-box">
+<div class="insight-label">ルール基盤への含意</div>
+<p style="font-size:.85rem;line-height:1.7;margin:0">本ルール基盤の R7-5（LLM 検出ツールを一次根拠としない）は、透かし技術の限界と回避策の存在を踏まえると依然として正しい。査読者の<strong>自己申告と説明責任</strong>を中心とし、検出は補助に留めるべきである。</p>
+</div>
+
+<h3 class="article-h3">3.4 倫理的論点</h3>
+<ul>
+<li><strong>プライバシー</strong>: 査読対象の未公開原稿を公開 LLM に投入することは守秘義務違反。これは ICML/ICLR/NeurIPS/CVPR/Nature/Science すべてに共通する基本ライン</li>
+<li><strong>透明性ジレンマ</strong>: Schilke &amp; Reimann（2025, OBHDP）は AI 使用開示が信頼を低下させることを実証。開示単独でなく検証プロセスとセットで提示する必要</li>
+<li><strong>非英語話者・新人研究者の支援</strong>: 文法補助での LLM 使用を完全禁止すると、非英語話者や新人研究者を不利にする。境界設計は慎重を要する</li>
+</ul>
+
+<div class="source-list">
+一次ソース:<br>
+&bull; <a href="https://icml.cc/Conferences/2026/LLM-Policy">ICML 2026 LLM Policy</a><br>
+&bull; <a href="https://icml.cc/Conferences/2026/Intro-LLM-Policy">ICML 2026 Intro LLM Policy</a><br>
+&bull; <a href="https://icml.cc/Conferences/2026/ReviewerInstructions">ICML 2026 Reviewer Instructions</a><br>
+&bull; <a href="https://2023.aclweb.org/blog/ACL-2023-policy/">ACL 2023 Policy on AI Writing Assistance</a><br>
+&bull; <a href="https://arxiv.org/abs/2403.07183">Liang et al. ICML 2024 (arXiv:2403.07183)</a>
+</div>
+</section>
+</article>
+
+<footer class="report-footer">
+<p>本補遺は AI Research Rules Foundation v1.0 の Citation Agent / Verification Stack / Trajectory Logger の技術背景を補強する。codex-team による一次ソース確認に基づき、PaperQA2 風 Fulltext 取得層は <code class="inline">tools/verify_citations.py</code> に実装済み。完全コードは <a href="https://github.com/yuyanishimura0312/ai-research-rules">github.com/yuyanishimura0312/ai-research-rules</a> を参照。</p>
+<p>関連レポート: <a href="ai-research-rules-foundation.html">本編</a> / <a href="ai-research-rules-global-regulation.html">補遺I 国際規制</a> / <a href="ai-research-rules-project-guide.html">補遺II 実装ガイド</a></p>
+</footer>
+
+</body>
+</html>
