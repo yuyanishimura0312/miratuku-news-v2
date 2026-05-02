@@ -12,22 +12,32 @@
   <style>
     body { font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; background: #f5f5f7; }
     .signin-card { background: #fff; padding: 40px 36px; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); width: 100%; max-width: 380px; }
-    .signin-card h1 { margin: 0 0 8px; font-size: 1.4rem; font-weight: 700; }
-    .signin-card .sub { color: #666; font-size: 0.85rem; margin-bottom: 24px; }
+    .signin-card h1 { margin: 0 0 4px; font-size: 1.4rem; font-weight: 700; }
+    .signin-card .sub { color: #666; font-size: 0.85rem; margin-bottom: 22px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 18px; background: #f0f0f3; padding: 4px; border-radius: 8px; }
+    .tab { flex: 1; padding: 8px 12px; border: none; background: transparent; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: #555; font-family: inherit; }
+    .tab.active { background: #fff; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
     .signin-card label { display: block; font-size: 0.78rem; color: #444; margin: 12px 0 6px; }
     .signin-card input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #d0d0d5; border-radius: 8px; font-size: 0.92rem; font-family: inherit; }
     .signin-card input:focus { outline: none; border-color: #4a7dff; }
     .btn { width: 100%; padding: 11px 14px; border-radius: 8px; border: none; font-size: 0.92rem; font-weight: 600; cursor: pointer; font-family: inherit; }
-    .btn-primary { background: #1a1a1a; color: #fff; margin-top: 20px; }
-    .btn-primary:hover { background: #333; }
-    .btn-google { background: #fff; color: #1a1a1a; border: 1px solid #d0d0d5; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn-google:hover { background: #f5f5f7; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: #1a1a1a; color: #fff; margin-top: 18px; }
+    .btn-primary:hover:not(:disabled) { background: #333; }
+    .btn-google { background: #fff; color: #1a1a1a; border: 1px solid #d0d0d5; margin-top: 10px; }
+    .btn-google:hover:not(:disabled) { background: #f5f5f7; }
     .divider { text-align: center; color: #999; font-size: 0.75rem; margin: 18px 0 8px; position: relative; }
     .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #e0e0e5; }
     .divider::before { left: 0; }
     .divider::after { right: 0; }
-    .err { color: #c33; font-size: 0.8rem; margin-top: 12px; min-height: 1.2em; }
-    .ok { color: #1a8245; font-size: 0.8rem; margin-top: 12px; }
+    .link-row { margin-top: 14px; text-align: center; font-size: 0.8rem; }
+    .link-row a { color: #4a7dff; text-decoration: none; cursor: pointer; }
+    .link-row a:hover { text-decoration: underline; }
+    .msg { font-size: 0.8rem; margin-top: 12px; min-height: 1.2em; }
+    .err { color: #c33; }
+    .ok { color: #1a8245; }
+    .pane { display: none; }
+    .pane.active { display: block; }
   </style>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -39,75 +49,130 @@
     <h1>Insight News</h1>
     <div class="sub">サインインして続行してください</div>
 
-    <form id="signinForm" autocomplete="on">
-      <label for="email">メールアドレス</label>
-      <input id="email" type="email" autocomplete="email" required>
-      <label for="password">パスワード</label>
-      <input id="password" type="password" autocomplete="current-password" required>
-      <button type="submit" class="btn btn-primary" id="submitBtn">サインイン</button>
+    <div class="tabs" id="tabs">
+      <button type="button" class="tab active" data-pane="signin">サインイン</button>
+      <button type="button" class="tab" data-pane="signup">新規登録</button>
+      <button type="button" class="tab" data-pane="reset">パスワード再設定</button>
+    </div>
+
+    <!-- SIGN IN -->
+    <form class="pane active" id="paneSignin" autocomplete="on">
+      <label for="signinEmail">メールアドレス</label>
+      <input id="signinEmail" type="email" autocomplete="email" required>
+      <label for="signinPassword">パスワード</label>
+      <input id="signinPassword" type="password" autocomplete="current-password" required>
+      <button type="submit" class="btn btn-primary" id="signinBtn">サインイン</button>
+      <div class="divider">または</div>
+      <button type="button" class="btn btn-google" id="googleBtn">Googleでサインイン</button>
+      <div class="msg" id="signinMsg"></div>
     </form>
 
-    <div class="divider">または</div>
-    <button type="button" class="btn btn-google" id="googleBtn">
-      <span>Googleでサインイン</span>
-    </button>
+    <!-- SIGN UP -->
+    <form class="pane" id="paneSignup" autocomplete="on">
+      <label for="signupEmail">メールアドレス</label>
+      <input id="signupEmail" type="email" autocomplete="email" required>
+      <label for="signupPassword">パスワード (6文字以上)</label>
+      <input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required>
+      <button type="submit" class="btn btn-primary" id="signupBtn">アカウント作成</button>
+      <div class="msg" id="signupMsg"></div>
+    </form>
 
-    <div class="err" id="errMsg"></div>
+    <!-- PASSWORD RESET -->
+    <form class="pane" id="paneReset" autocomplete="on">
+      <label for="resetEmail">登録済みメールアドレス</label>
+      <input id="resetEmail" type="email" autocomplete="email" required>
+      <button type="submit" class="btn btn-primary" id="resetBtn">リセットメール送信</button>
+      <div class="msg" id="resetMsg"></div>
+    </form>
   </div>
 
   <script>
     (function () {
-      var errEl = document.getElementById('errMsg');
-      var form = document.getElementById('signinForm');
-      var submitBtn = document.getElementById('submitBtn');
-      var googleBtn = document.getElementById('googleBtn');
+      function $(id) { return document.getElementById(id); }
+      function setMsg(el, text, kind) { el.className = 'msg ' + (kind || ''); el.textContent = text || ''; }
 
-      function showErr(msg) { errEl.className = 'err'; errEl.textContent = msg || ''; }
+      var firebaseErrorMap = {
+        'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+        'auth/user-not-found': 'このメールアドレスのアカウントは存在しません',
+        'auth/wrong-password': 'パスワードが違います',
+        'auth/invalid-credential': 'メールアドレスまたはパスワードが違います。新規登録 または パスワード再設定 をお試しください',
+        'auth/too-many-requests': '試行回数が多すぎます。しばらく待ってから再試行してください',
+        'auth/email-already-in-use': 'このメールアドレスは既に登録されています。サインインまたはパスワード再設定をお使いください',
+        'auth/weak-password': 'パスワードは6文字以上にしてください',
+        'auth/missing-password': 'パスワードを入力してください',
+        'auth/operation-not-allowed': 'この認証方式は Firebase で無効になっています'
+      };
+      function fbErr(err) { return firebaseErrorMap[err.code] || (err.message || err.code || 'エラーが発生しました'); }
 
-      // If already authenticated, send to home immediately
+      // tab switching
+      var tabs = document.querySelectorAll('.tab');
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+          tabs.forEach(function (x) { x.classList.remove('active'); });
+          t.classList.add('active');
+          document.querySelectorAll('.pane').forEach(function (p) { p.classList.remove('active'); });
+          $('pane' + t.dataset.pane.charAt(0).toUpperCase() + t.dataset.pane.slice(1)).classList.add('active');
+          ['signinMsg','signupMsg','resetMsg'].forEach(function (m) { setMsg($(m), ''); });
+        });
+      });
+
+      // Already-signed-in → home
       auth.onAuthStateChanged(function (user) {
         if (user) { window.location.replace('home.html'); }
       });
 
-      form.addEventListener('submit', function (e) {
+      // Sign in
+      $('paneSignin').addEventListener('submit', function (e) {
         e.preventDefault();
-        showErr('');
-        submitBtn.disabled = true;
-        var email = document.getElementById('email').value.trim();
-        var password = document.getElementById('password').value;
-        auth.signInWithEmailAndPassword(email, password)
+        var btn = $('signinBtn'); btn.disabled = true; setMsg($('signinMsg'), '');
+        auth.signInWithEmailAndPassword($('signinEmail').value.trim(), $('signinPassword').value)
           .then(function () { window.location.replace('home.html'); })
-          .catch(function (err) {
-            submitBtn.disabled = false;
-            var map = {
-              'auth/invalid-email': 'メールアドレスの形式が正しくありません',
-              'auth/user-not-found': 'ユーザーが見つかりません',
-              'auth/wrong-password': 'パスワードが違います',
-              'auth/invalid-credential': 'メールアドレスまたはパスワードが違います',
-              'auth/too-many-requests': '試行回数が多すぎます。しばらく待ってから再試行してください'
-            };
-            showErr(map[err.code] || ('サインイン失敗: ' + err.message));
-          });
+          .catch(function (err) { btn.disabled = false; setMsg($('signinMsg'), fbErr(err), 'err'); });
       });
 
-      googleBtn.addEventListener('click', function () {
-        showErr('');
+      // Google sign-in
+      $('googleBtn').addEventListener('click', function () {
+        setMsg($('signinMsg'), '');
         var provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider)
           .then(function () { window.location.replace('home.html'); })
           .catch(function (err) {
             if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
-              auth.signInWithRedirect(provider);
-              return;
+              auth.signInWithRedirect(provider); return;
             }
-            showErr('Googleサインイン失敗: ' + (err.message || err.code));
+            setMsg($('signinMsg'), 'Googleサインイン失敗: ' + fbErr(err), 'err');
           });
       });
+      auth.getRedirectResult().then(function (r) { if (r && r.user) window.location.replace('home.html'); }).catch(function () {});
 
-      // Handle redirect result for Google sign-in fallback
-      auth.getRedirectResult().then(function (result) {
-        if (result && result.user) { window.location.replace('home.html'); }
-      }).catch(function () { /* ignore */ });
+      // Sign up
+      $('paneSignup').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var btn = $('signupBtn'); btn.disabled = true; setMsg($('signupMsg'), '');
+        var email = $('signupEmail').value.trim();
+        auth.createUserWithEmailAndPassword(email, $('signupPassword').value)
+          .then(function (cred) {
+            return db.collection('users').doc(cred.user.uid).set({
+              email: email,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              status: 'active'
+            }, { merge: true }).catch(function () {}).then(function () { return cred; });
+          })
+          .then(function () { window.location.replace('home.html'); })
+          .catch(function (err) { btn.disabled = false; setMsg($('signupMsg'), fbErr(err), 'err'); });
+      });
+
+      // Password reset
+      $('paneReset').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var btn = $('resetBtn'); btn.disabled = true; setMsg($('resetMsg'), '');
+        auth.sendPasswordResetEmail($('resetEmail').value.trim())
+          .then(function () {
+            btn.disabled = false;
+            setMsg($('resetMsg'), 'リセットメールを送信しました。受信箱をご確認ください', 'ok');
+          })
+          .catch(function (err) { btn.disabled = false; setMsg($('resetMsg'), fbErr(err), 'err'); });
+      });
     })();
   </script>
 </body>
