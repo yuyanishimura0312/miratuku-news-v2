@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スタートアップの学術的理解 — 9,031概念のフレームワーク</title>
+<style>
+  /* ========== CSS Variables ========== */
+  :root {
+    --bg-primary: #fafaf8;
+    --bg-secondary: #f3f2ef;
+    --bg-sidebar: #1a1a2e;
+    --bg-sidebar-hover: #16213e;
+    --bg-sidebar-active: #0f3460;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555555;
+    --text-sidebar: #c8c8d4;
+    --text-sidebar-active: #ffffff;
+    --text-heading: #0f1923;
+    --accent: #cc1400;
+    --accent-light: #e84533;
+    --accent-subtle: #fff0ee;
+    --border: #ddddd5;
+    --border-light: #ebebeb;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    --font-body: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    --font-serif: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    --sidebar-width: 280px;
+    --content-max: 820px;
+    --transition: 0.2s ease;
+  }
+
+  /* Dark mode */
+  [data-theme="dark"] {
+    --bg-primary: #0e0e14;
+    --bg-secondary: #16161f;
+    --bg-sidebar: #0a0a12;
+    --bg-sidebar-hover: #111120;
+    --bg-sidebar-active: #1a1a3e;
+    --text-primary: #e0e0e8;
+    --text-secondary: #9999aa;
+    --text-heading: #f0f0f8;
+    --accent-subtle: #2a0800;
+    --border: #2a2a38;
+    --border-light: #222230;
+    --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  /* ========== Reset & Base ========== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; font-size: 16px; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.85;
+    transition: background var(--transition), color var(--transition);
+  }
+
+  /* ========== Layout ========== */
+  .app-wrapper {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ========== Sidebar ========== */
+  .sidebar {
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    background: var(--bg-sidebar);
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    z-index: 100;
+    transition: transform var(--transition);
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .sidebar-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .sidebar-subtitle {
+    font-size: 0.82rem;
+    color: var(--text-sidebar);
+    line-height: 1.4;
+    opacity: 0.7;
+  }
+
+  .sidebar-nav {
+    padding: 12px 0 40px;
+  }
+
+  .nav-section-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(200,200,212,0.4);
+    padding: 16px 20px 6px;
+  }
+
+  .nav-item {
+    display: block;
+    padding: 8px 20px;
+    font-size: 0.82rem;
+    color: var(--text-sidebar);
+    text-decoration: none;
+    transition: background var(--transition), color var(--transition);
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    line-height: 1.4;
+  }
+
+  .nav-item:hover {
+    background: var(--bg-sidebar-hover);
+    color: var(--text-sidebar-active);
+  }
+
+  .nav-item.active {
+    background: var(--bg-sidebar-active);
+    color: var(--text-sidebar-active);
+    border-left-color: var(--accent);
+  }
+
+  .nav-item .chapter-num {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    display: block;
+    margin-bottom: 1px;
+    opacity: 0.9;
+  }
+
+  .nav-item.placeholder {
+    opacity: 0.4;
+  }
+
+  /* ========== Main Content ========== */
+  .main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    max-width: calc(100% - var(--sidebar-width));
+  }
+
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 48px;
+    backdrop-filter: blur(8px);
+  }
+
+  .top-bar-title {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .top-bar-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-icon {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: var(--font-body);
+  }
+
+  .btn-icon:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+  }
+
+  /* ========== Book Content ========== */
+  .book-content {
+    padding: 64px 64px 120px;
+    max-width: calc(var(--content-max) + 128px);
+    margin: 0 auto;
+  }
+
+  /* ========== Title Page ========== */
+  .title-page {
+    text-align: center;
+    padding: 80px 0 100px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 80px;
+  }
+
+  .title-page-eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  .title-page h1 {
+    font-family: var(--font-serif);
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-heading);
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+
+  .title-page-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+  }
+
+  .title-page-meta {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 2;
+  }
+
+  .title-divider {
+    width: 64px;
+    height: 3px;
+    background: var(--accent);
+    margin: 32px auto;
+  }
+
+  /* ========== DB Stats Banner ========== */
+  .stats-banner {
+    background: var(--accent-subtle);
+    border: 1px solid rgba(204,20,0,0.15);
+    border-radius: 10px;
+    padding: 28px 36px;
+    margin-bottom: 64px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 24px;
+    text-align: center;
+  }
+
+  .stat-item {}
+
+  .stat-num {
+    font-family: var(--font-mono);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* ========== Chapter Header ========== */
+  .chapter {
+    margin-bottom: 100px;
+    padding-bottom: 64px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .chapter:last-of-type {
+    border-bottom: none;
+  }
+
+  .chapter-header {
+    margin-bottom: 48px;
+  }
+
+  .chapter-number {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .chapter-title {
+    font-family: var(--font-serif);
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .chapter-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .chapter-rule {
+    height: 2px;
+    background: linear-gradient(to right, var(--accent), transparent);
+    margin-top: 24px;
+    border: none;
+  }
+
+  /* ========== Section Headings ========== */
+  h2 {
+    font-family: var(--font-serif);
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 52px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+  }
+
+  h3 {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 36px 0 14px;
+    line-height: 1.45;
+  }
+
+  h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 24px 0 10px;
+  }
+
+  /* ========== Body Text ========== */
+  p {
+    margin-bottom: 1.5em;
+    font-size: 0.975rem;
+    text-align: justify;
+    text-justify: inter-ideograph;
+  }
+
+  /* ========== Concept Highlight Boxes ========== */
+  .concept-box {
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 20px 24px;
+    margin: 32px 0;
+  }
+
+  .concept-box-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .concept-box p {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+    color: var(--text-secondary);
+  }
+
+  /* ========== Key Concept Inline ========== */
+  .key-term {
+    font-weight: 700;
+    color: var(--text-heading);
+  }
+
+  .en-term {
+    font-style: italic;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+  }
+
+  /* ========== Theory Cards Grid ========== */
+  .theory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin: 32px 0;
+  }
+
+  .theory-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    transition: box-shadow var(--transition);
+  }
+
+  .theory-card:hover {
+    box-shadow: var(--shadow);
+  }
+
+  .theory-card-era {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .theory-card-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .theory-card-researcher {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  /* ========== Timeline ========== */
+  .timeline {
+    position: relative;
+    padding-left: 28px;
+    margin: 32px 0;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--border));
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 28px;
+    padding-left: 20px;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -32px; top: 6px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg-primary);
+  }
+
+  .timeline-year {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .timeline-content {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  /* ========== Quote ========== */
+  blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 16px 24px;
+    margin: 32px 0;
+    background: var(--bg-secondary);
+    border-radius: 0 6px 6px 0;
+  }
+
+  blockquote p {
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  blockquote cite {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    font-style: normal;
+    color: var(--text-secondary);
+    opacity: 0.7;
+  }
+
+  /* ========== Table ========== */
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 32px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  th {
+    background: var(--bg-secondary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: var(--bg-secondary); }
+
+  /* ========== Placeholder ========== */
+  .chapter-placeholder {
+    text-align: center;
+    padding: 64px 40px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 2px dashed var(--border);
+    margin-bottom: 40px;
+    color: var(--text-secondary);
+  }
+
+  .chapter-placeholder-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .chapter-placeholder h3 {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  .chapter-placeholder p {
+    font-size: 0.875rem;
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  /* ========== Footnote ========== */
+  .footnote-ref {
+    font-size: 0.7em;
+    vertical-align: super;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  /* ========== Responsive ========== */
+  @media (max-width: 1024px) {
+    .sidebar { transform: translateX(-100%); }
+    .main-content { margin-left: 0; max-width: 100%; }
+    .sidebar.open { transform: translateX(0); }
+    .book-content { padding: 40px 24px 80px; }
+  }
+
+  @media (max-width: 640px) {
+    .title-page h1 { font-size: 1.6rem; }
+    .chapter-title { font-size: 1.45rem; }
+    .book-content { padding: 32px 16px 64px; }
+    .theory-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app-wrapper">
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">STARTUP THEORY</div>
+      <div class="sidebar-subtitle">スタートアップの学術的理解<br>9031概念・14サブフィールド</div>
+    </div>
+    <div class="nav-links">
+    <a href="#ch1" class="nav-link">序章：スタートアップ研究の全体像</a>
+    <a href="#ch2" class="nav-link">起業家の認知と行動</a>
+    <a href="#ch3" class="nav-link">機会の認識と創造</a>
+    <a href="#ch4" class="nav-link">VC・スタートアップファイナンス</a>
+    <a href="#ch5" class="nav-link">スタートアップエコシステム</a>
+    <a href="#ch6" class="nav-link">リーンスタートアップ方法論</a>
+    <a href="#ch7" class="nav-link">スケーリングと成長戦略</a>
+    <a href="#ch8" class="nav-link">失敗・ピボット・レジリエンス</a>
+    <a href="#ch9" class="nav-link">ディープテック・大学発スタートアップ</a>
+    <a href="#ch10" class="nav-link">プラットフォーム・デジタルスタートアップ</a>
+    <a href="#ch11" class="nav-link">エグジット・IPO・M&A</a>
+    <a href="#ch12" class="nav-link">ソーシャルインパクト・サステナブルスタートアップ</a>
+    <a href="#ch13" class="nav-link">創業者・チームダイナミクス</a>
+    <a href="#ch14" class="nav-link">スタートアップ政策・規制環境</a>
+    <a href="#ch15" class="nav-link">グローバル・新興市場スタートアップ</a>
+    <a href="#ch16" class="nav-link">理論間の対話：統合フレームワーク</a>
+    <a href="#ch17" class="nav-link">スタートアップの未来：AI・Web3・ディープテック</a>
+    <a href="#ch18" class="nav-link">日本のスタートアップ：課題と展望</a>
+    <a href="#ch19" class="nav-link">実践への示唆：スタートアップ戦略の設計</a>
+    <a href="#ch20" class="nav-link">結語：スタートアップ研究の次なる地平</a>
+
+    </div>
+  </nav>
+  <main class="main-content">
+    <div class="content-area">
+      <div style="text-align:center;padding:48px 0 32px;">
+        <div style="font-family:var(--font-serif);font-size:1.8rem;font-weight:700;line-height:1.4;">スタートアップの学術的理解</div>
+        <div style="font-size:0.92rem;color:var(--text-secondary);margin-top:8px;">14サブフィールド・9031概念の体系的解説</div>
+        <div style="display:flex;justify-content:center;gap:24px;margin-top:20px;font-size:0.82rem;color:var(--text-secondary);">
+          <span><strong>9031</strong> 概念</span>
+          <span><strong>14</strong> サブフィールド</span>
+          <span><strong>42,497</strong> 理論間関係</span>
+          <span><strong>20</strong> 章</span>
+        </div>
+      </div>
+
+    <div id="ch1" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第1章</span>
+        序章：スタートアップ研究の全体像
+      </h2>
+      
+<p>スタートアップという概念は、シリコンバレーの神話と深く結びついているが、その学術的研究は驚くほど多層的で学際的な知識体系を形成している。本書が依拠するデータベースには9031件の概念・理論・実証研究が格納されており、14のサブフィールドに体系的に分類されている。起業家の認知プロセスから、ベンチャーキャピタルの金融理論、エコシステムの制度設計、リーンスタートアップの方法論、そしてグローバルな新興市場での起業家精神まで、スタートアップという現象を多角的に理解するための知識基盤がここにある。</p>
+<p>スタートアップ研究の歴史は、大きく三つの時期に区分できる。第一期（1911-1980年代）はシュンペーターの起業家理論に始まり、ナイトの不確実性理論（1921年）、カーズナーの起業家的警戒性（1973年）を経て、起業家精神の理論的基盤が形成された時期である。第二期（1990-2010年代）は、ベンチャーキャピタル産業の制度化、シリコンバレーモデルの理論化、そしてリーンスタートアップ方法論の登場によって、実践と理論が急速に接近した時期である。第三期（2010年代後半-現在）は、プラットフォーム経済の台頭、ディープテックスタートアップの出現、そしてグローバルサウスにおける起業家精神の多様化が特徴である。</p>
+<p>本データベースの42497件の理論間関係は、これらの時期を横断する知識の連鎖を可視化する。シュンペーターの「創造的破壊」概念がいかにしてクリステンセンの「破壊的イノベーション」理論へと変容し、さらにリースの「リーンスタートアップ」方法論へと実践化されたか。あるいは、ポランニーの「暗黙知」概念がいかにして野中郁次郎のSECIモデルを経由して、スタートアップにおける知識創造の理論に接続されるか。こうした知的系譜を追跡する能力が、本書の独自の価値である。</p>
+<p>14のサブフィールドは四つの大分類に整理できる。第一群「認知・機会」（S01-S02）は起業家個人の心理と意思決定に焦点を当てる。第二群「資源・制度」（S03-S04, S13-S14）はVC・エコシステム・政策という制度的基盤を扱う。第三群「方法論・実行」（S05-S07）はリーンスタートアップからスケーリング、そして失敗への対処までの実践的プロセスを体系化する。第四群「領域・応用」（S08-S12）はディープテック、プラットフォーム、エグジット、ソーシャルインパクト、チームダイナミクスという応用領域を網羅する。本書はこの構造に沿って、各章でサブフィールドの知識体系を詳述し、最終章群で統合と展望を試みる。</p>
+
+    </div>
+
+    <div id="ch2" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第2章</span>
+        起業家の認知と行動
+      </h2>
+      
+<p>起業家精神の研究は、長らく「起業家は誰か」という特性論（trait approach）に支配されていた。マクレランドの達成動機理論（1961年）やロッターの統制の所在理論（1966年）は、起業家を一般人と区別する心理的特性を特定しようとした。しかし1990年代以降、研究の焦点は「起業家は何をするか」「起業家はどう考えるか」というプロセス論・認知論へと転換した。この転換の立役者が、サラス・サラスバシーのエフェクチュエーション理論（2001年）である。</p>
+<p>サラスバシーは、熟練した起業家27名の思考プロセスを実験的に分析し、彼らが伝統的な因果論的（causation）アプローチではなく、手元の手段から出発して新しい目的を創造するエフェクチュエーション・アプローチを採用していることを発見した。エフェクチュエーションの五つの原則——「手中の鳥」（既存の手段から始める）、「許容可能な損失」（最大利益ではなく最大損失で判断する）、「クレイジーキルト」（競争ではなくパートナーシップで市場を共創する）、「レモネード」（予期しない出来事を活用する）、「飛行中のパイロット」（予測ではなくコントロールに依拠する）——は、不確実性下の意思決定理論として、ナイトの古典的不確実性概念を実践的に具体化したものである。</p>
+<p>起業家的認知の研究はカーネマンとトベルスキーの行動経済学からも大きな影響を受けている。起業家は一般人よりも過信（overconfidence）バイアスが強く、楽観主義バイアスが顕著であることが実証されている（Busenitz & Barney, 1997）。しかしこのバイアスは単純に「欠陥」ではない。過信は不確実性下でアクションを起こすための適応的メカニズムであり、進化心理学的には合理的な戦略であるとする見方もある。</p>
+<p>メリッサ・カードンらの「起業家的情熱」研究（2009年）は、認知だけでなく感情が起業家行動に果たす役割を体系化した。起業家的情熱は「発明への情熱」「創業への情熱」「成長への情熱」の三次元で構成され、各次元がアイデンティティの異なる側面と結びついている。情熱は資源動員（投資家を説得する）にも従業員のモチベーションにも影響し、スタートアップの成功確率と正の相関を持つ。</p>
+<p>ベイカー＆ネルソンのブリコラージュ概念（2005年）は、資源制約下での起業家的創造性を理論化した。レヴィ＝ストロースの人類学的概念を援用し、「手元にあるもので何とかする」という行動パターンが、資源の乏しいスタートアップにおいてイノベーションの源泉となることを示した。ブリコラージュはエフェクチュエーションと補完的な概念であり、両者を統合した理論的枠組みも提案されている。</p>
+
+    
+<p>「起業家的機敏性」（Entrepreneurial Alertness, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家的機敏性の展望」（Entrepreneurial Alertness: Perspectives, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家的機敏性の応用」（Entrepreneurial Alertness: Applications, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家的機敏性の拡張」（Entrepreneurial Alertness: Extensions, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家的機敏性の実証研究」（Entrepreneurial Alertness: Empirical Studies, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家的機敏性のメタ分析」（Entrepreneurial Alertness: Meta-Analysis, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家的機敏性の測定」（Entrepreneurial Alertness: Measurement, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家的機敏性の国際比較」（Entrepreneurial Alertness: Cross-Cultural Studies, 1973年）は、Israel Kirzner、Rui Alvarezらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「entrepreneurial_cognition_behavior」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch3" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第3章</span>
+        機会の認識と創造
+      </h2>
+      
+<p>スタートアップ研究における最も根本的な問いの一つは、「起業家的機会とは何か」である。シェイン＆ヴェンカタラマン（2000年）の画期的論文「起業家精神の約束」は、起業家精神研究の独立した学問分野としての正当性を、「起業家的機会の発見・評価・活用」というプロセスの研究として定義した。この定義は、それまで起業家の個人的特性に偏っていた研究を、機会そのものの分析へと方向転換させた。</p>
+<p>しかし「機会」の本質をめぐって、学界は大きく二つの陣営に分裂した。「発見」学派（Kirzner, 1973; Shane, 2003）は、機会が客観的に存在し、警戒的な起業家がそれを「発見」すると主張する。カーズナーの起業家的警戒性概念によれば、市場の不均衡は情報の非対称性から生じ、それに気づく能力を持つ個人が起業家となる。一方、「創造」学派（Alvarez & Barney, 2007; Baker & Nelson, 2005）は、機会は起業家の行動によって「創造」されるものであり、行動前には存在しないと主張する。</p>
+<p>この「発見 vs. 創造」論争は、認識論的にも方法論的にも深い含意を持つ。発見アプローチは批判的実在論に立脚し、仮説検証的な方法論（ビジネスプランの事前策定→実行→検証）と親和的である。創造アプローチは社会構成主義に立脚し、仮説生成的・探索的な方法論（エフェクチュエーション、ブリコラージュ）と親和的である。リーンスタートアップ方法論は、興味深いことに両アプローチの要素を統合している。「顧客の問題は発見する」が「解決策は創造する」という二段階モデルは、発見と創造のハイブリッドである。</p>
+<p>ダヴィッドソン（2015年）は、この論争に対して「機会」概念そのものの再構成を提案した。彼は「機会」を「新しいベンチャーのアイデア」「外部環境の変化に対する評価」「アクターと機会の適合」という三つの構成要素に分解し、それぞれが異なる分析レベルで機能することを示した。この再概念化は、発見と創造の二項対立を超えた統合的フレームワークの基盤を提供している。</p>
+<p>機会認識の実践的側面では、シェイン（2000年）の先行知識理論が重要である。起業家が特定の機会を認識できるのは、その領域に関する先行知識（技術的知識、市場知識、顧客問題の知識）を持っているからだとする理論である。これはアブソープティブキャパシティ（Cohen & Levinthal, 1990）の個人レベルへの適用として位置づけられ、「なぜMITの卒業生はバイオテックの機会を、スタンフォードの卒業生はソフトウェアの機会を多く認識するのか」という問いに理論的回答を与える。</p>
+
+    
+<p>「カーズナーの発見対シュンペーターの創造」（Kirzner Discovery vs Schumpeter Creation, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「カーズナーの発見対シュンペーターの創造の展望」（Kirzner Discovery vs Schumpeter Creation: Perspectives, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「カーズナーの発見対シュンペーターの創造の応用」（Kirzner Discovery vs Schumpeter Creation: Applications, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「カーズナーの発見対シュンペーターの創造の拡張」（Kirzner Discovery vs Schumpeter Creation: Extensions, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「カーズナーの発見対シュンペーターの創造の実証研究」（Kirzner Discovery vs Schumpeter Creation: Empirical Studies, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「カーズナーの発見対シュンペーターの創造のメタ分析」（Kirzner Discovery vs Schumpeter Creation: Meta-Analysis, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「カーズナーの発見対シュンペーターの創造の測定」（Kirzner Discovery vs Schumpeter Creation: Measurement, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「カーズナーの発見対シュンペーターの創造の国際比較」（Kirzner Discovery vs Schumpeter Creation: Cross-Cultural Studies, 1934年）は、Israel Kirzner、Joseph Schumpeterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「opportunity_recognition_creation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch4" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第4章</span>
+        VC・スタートアップファイナンス
+      </h2>
+      
+<p>ベンチャーキャピタル（VC）は、スタートアップ・エコシステムの血液循環系に相当する。ゴンパース＆ラーナー（1999年）の「VCサイクル」理論は、VCを「資金調達→投資→モニタリング→エグジット→リターン分配」という循環的プロセスとして体系化した。この循環は、LP（有限責任組合員）から集めた資金をGP（無限責任組合員）がスタートアップに投資し、IPOまたはM&Aによって回収し、リターンをLPに分配するという構造を持つ。</p>
+<p>カプラン＆ストロンベルク（2003年）の金融契約理論は、VC投資における情報の非対称性と、それを緩和するための契約設計を分析した。VCのタームシートに含まれる条項——清算優先権（liquidation preference）、希薄化防止条項（anti-dilution）、取締役会の議席配分、情報権、先買権、共同売却権——は、すべてプリンシパル＝エージェント問題への対処メカニズムとして理解できる。特に段階的投資（staged financing）は、不確実性の段階的解消に応じた資源配分メカニズムであり、リアルオプション理論の実践的応用である。</p>
+<p>VCの意思決定プロセスに関する研究も豊富である。サールマン（1990年）は、VCがビジネスプランよりもチームを重視すること、産業経験よりも起業経験を重視することを実証した。近年の研究では、VCの意思決定にも認知バイアスが作用することが明らかになっている——ホームバイアス（地理的に近いスタートアップへの過剰投資）、類似性バイアス（自分に似た起業家への投資偏向）、アンカリング（過去のバリュエーションへの固着）が確認されている。</p>
+<p>VC以外の資金調達手段も急速に多様化している。エンジェル投資（個人の富裕層による初期投資）、エクイティ・クラウドファンディング（JOBS法2012年により米国で合法化）、コンバーティブルノート、SAFE（Simple Agreement for Future Equity、Y Combinator発案2013年）、レベニュー・ベースド・ファイナンシング（売上連動型融資）、ベンチャー・デット（Silicon Valley Bankモデル）など、スタートアップの資金調達の選択肢は過去20年で劇的に拡大した。</p>
+<p>コーポレート・ベンチャー・キャピタル（CVC）も重要なトピックである。大企業がスタートアップに戦略的投資を行うCVCは、財務リターンだけでなく、技術スカウティング、イノベーションの外部化、潜在的競合の早期取り込みという戦略的目的を持つ。チェスブロウのオープンイノベーション理論（2003年）と密接に関連し、大企業とスタートアップの共進化を可能にする制度的装置として機能する。</p>
+
+    
+<p>「VC産業発展史」（VC Industry History, 1946年）は、Gompers, Lernerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「VC産業のアドバース・セレクション論」（Adverse Selection in VC, 1977年）は、Leland, Pyleらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「VC産業のモラルハザード論」（Moral Hazard in VC, 1979年）は、Holmströmらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「第一シカゴ法」（First Chicago Method, 1980年）は、First Chicago Corpらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「VC産業の競合調査DD論」（Competitive Landscape DD in VC, 1980年）は、Michael Porterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エンジェル投資理論」（Angel Investing Theory, 1983年）は、William Wetzelらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エクイティファイナンスと負債ファイナンスの選択論」（Equity vs Debt Choice, 1984年）は、Myers, Majlufらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「VC評価基準理論」（VC Evaluation Criteria, 1985年）は、MacMillan, Siegel, SubbaNarasimhaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「venture_capital_financing」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch5" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第5章</span>
+        スタートアップエコシステム
+      </h2>
+      
+<p>スタートアップ・エコシステムの概念は、個々の起業家やスタートアップではなく、それらを取り巻く環境全体をシステムとして捉えるアプローチである。ダニエル・アイゼンバーグ（2010年）は、起業家エコシステムを「政策」「金融」「文化」「支援機関」「人的資本」「市場」の六つのドメインから構成されるモデルとして提示した。このモデルはその後のエコシステム研究の基盤となり、世界各地での政策設計に影響を与えた。</p>
+<p>しかしエコシステム概念の起源は、アイゼンバーグよりも遥かに古い。アナリー・サクセニアン（1994年）の「リージョナル・アドバンテージ」は、シリコンバレーとルート128（ボストン）の比較分析を通じて、地域の産業文化がイノベーションの成否を決定することを示した。シリコンバレーのオープンなネットワーク文化（人材の流動性、知識の非公式共有、失敗への寛容さ）と、ルート128の閉鎖的な大企業文化（社内昇進、秘密主義、安定志向）の対比は、その後のすべてのエコシステム研究の原型となった。</p>
+<p>ブラッド・フェルド（2012年）の「スタートアップ・コミュニティ」論は、エコシステム構築を起業家自身が主導すべきだという「ボルダー・テーゼ」を提唱した。政府や大企業がトップダウンでエコシステムを設計するのではなく、起業家コミュニティが自律的に形成され、「リーダーは起業家であること」「長期的なコミットメント」「包摂性」「継続的な活動」という四つの原則に基づいて成長すべきだとした。</p>
+<p>スタートアップ・アクセラレーターは、エコシステムの中核的制度として急速に普及した。Y Combinator（2005年設立）モデル——少額投資+メンターシップ+バッチプログラム+デモデイ——は世界中でコピーされ、Techstars、500 Startups、Station Fなどが各地のエコシステム形成に貢献している。コーエン＆ホッフストゥラ（2014年）のアクセラレーターの定義は、インキュベーターやエンジェルグループとの明確な区別を提供し、この新しい制度形態の学術的研究の基盤を確立した。</p>
+<p>エリック・スタム（2015年）の起業家エコシステムモデルは、「フレームワーク条件」（制度、インフラ、需要）と「システム条件」（ネットワーク、人材、知識、金融、リーダーシップ）を区別し、エコシステムの成果を「生産的起業家精神」として測定することを提案した。このモデルは政策立案者に対して、単にスタートアップの数を増やすのではなく、高成長スタートアップを生み出す条件整備に注力すべきだという示唆を与えている。</p>
+
+    
+<p>「エコシステムのウィークタイ理論」（Ecosystem: ウィークタイ理Theory, 1973年）は、Mark Granovetterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「大学技術移転理論」（University Technology Transfer, 1980年）は、Mowery, Nelson, Sampat, Ziedonisらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エコシステムのテックトランスファーオフィス論」（Ecosystem: テックトランスファーオフィスTheory, 1980年）は、Moweryらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エコシステムの知識ゲートキーパー論」（Knowledge Gatekeepers in Ecosystems, 1981年）は、Tushman, Scanlanらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「SBIR政府支援プログラム論」（SBIR Government Support, 1982年）は、Josh Lernerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エコシステムのグラミン銀行モデル論」（Ecosystem: グラミン銀行モデルTheory, 1983年）は、Muhammad Yunusらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「ポーターのクラスター理論」（Porter Cluster Theory, 1990年）は、Michael Porterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エコシステムの研究大学効果論」（Ecosystem: 研究大学効果Theory, 1990年）は、Jaffeらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_ecosystem_clusters」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch6" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第6章</span>
+        リーンスタートアップ方法論
+      </h2>
+      
+<p>エリック・リース（2011年）の「リーンスタートアップ」は、トヨタ生産方式のリーン思想をスタートアップの文脈に適用した方法論である。Build-Measure-Learnのフィードバックループ、最小限の実用的製品（MVP）、ピボット（方向転換）という三つの中核概念は、スティーブ・ブランクの「顧客開発」モデル（2005年）を基盤としている。ブランクは伝統的な製品開発モデル（ステージゲート）がスタートアップには不適切であることを主張し、「顧客発見→顧客検証→顧客創造→組織構築」という四段階モデルを提示した。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「A/Bテストの実証的研究」（A/B Testing: Empirical Evidence, 2002年）は、Ron Kohavi, Tim Cramer, Diane Tangらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「B2B領域へのA/Bテスト適用」（Applying A/B Testing to B2B, 2002年）は、Ron Kohavi, Tim Cramer, Diane Tangらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「新興市場におけるA/Bテスト」（A/B Testing in Emerging Markets, 2003年）は、Ron Kohavi, Tim Cramer, Diane Tangらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「スタートアップのためのアジャイル開発の実証的研究」（Agile Development for Startups: Empirical Evidence, 2003年）は、Kent Beck, Jeff Sutherland, Ken Schwaberらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「スタートアップのためのスクラムの実証的研究」（Scrum for Startups: Empirical Evidence, 2003年）は、Jeff Sutherland, Ken Schwaberらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「B2B領域へのスタートアップのためのアジャイル開発適用」（Applying Agile Development for Startups to B2B, 2003年）は、Kent Beck, Jeff Sutherland, Ken Schwaberらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「B2B領域へのスタートアップのためのスクラム適用」（Applying Scrum for Startups to B2B, 2003年）は、Jeff Sutherland, Ken Schwaberらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「A/Bテストと組織学習」（A/B Testing and Organizational Learning, 2003年）は、Ron Kohavi, Tim Cramer, Diane Tangらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「lean_startup_methodology」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch7" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第7章</span>
+        スケーリングと成長戦略
+      </h2>
+      
+<p>レイド・ホフマンの「ブリッツスケーリング」（2018年）は、不確実性下での超高速成長戦略を体系化した。従来の経営学が効率性を追求するのに対し、ブリッツスケーリングは「速度を効率性より優先する」という逆説的な戦略を正当化する。ネットワーク効果が支配する市場では、先行者利益が極めて大きく、市場の80%を獲得した企業が利益の大半を占める「勝者総取り」のダイナミクスが働くからである。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「S字曲線技術採用モデルのケーススタディ分析」（S-Curve Technology Adoption: Case Study Analysis, 1965年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「S字曲線技術採用モデルの学術文献レビュー」（S-Curve Technology Adoption: Academic Literature Review, 1966年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「S字曲線技術採用モデルと創業者経験」（S-Curve Technology Adoption and Founder Experience, 1966年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「S字曲線技術採用モデルと創業者-市場適合」（S-Curve Technology Adoption and Founder-Market Fit, 1966年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「新興市場へのS字曲線技術採用モデル適応」（S-Curve Technology Adoption and Emerging Market Adaptation, 1967年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「B2B SaaSにおけるS字曲線技術採用モデル」（S-Curve Technology Adoption in B2B SaaS, 1967年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「S字曲線技術採用モデルと取締役会ダイナミクス」（S-Curve Technology Adoption and Board Dynamics, 1967年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「フィンテックにおけるS字曲線技術採用モデル」（S-Curve Technology Adoption in Fintech, 1967年）は、Everett Rogers, Richard Fosterらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「scaling_growth_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch8" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第8章</span>
+        失敗・ピボット・レジリエンス
+      </h2>
+      
+<p>ディーン・シェパード（2003年）の「失敗からの学習」理論は、スタートアップの失敗を単なるネガティブな結果ではなく、起業家的学習の重要な機会として再定義した。シェパードはキューブラー・ロスの悲嘆モデルを起業家の文脈に適用し、事業失敗後の感情的回復プロセス（起業家的悲嘆）を理論化した。失敗の認知的処理が迅速であるほど、次のベンチャーでの学習転移が効果的であることを実証している。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「テクノロジースタートアップにおける死の谷」（Valley of Death in Technology Startups, 1998年）は、Amsden & Tschang, Branscomb & Auerswaldらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「テクノロジースタートアップにおける発見駆動型計画」（Discovery-Driven Planning in Technology Startups, 1998年）は、Rita McGrath, Ian MacMillanらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家教育における死の谷の教授」（Teaching Valley of Death in Entrepreneurship Education, 1999年）は、Amsden & Tschang, Branscomb & Auerswaldらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「起業家教育における発見駆動型計画の教授」（Teaching Discovery-Driven Planning in Entrepreneurship Education, 1999年）は、Rita McGrath, Ian MacMillanらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「社会関係資本と死の谷」（Social Capital and Valley of Death, 1999年）は、Amsden & Tschang, Branscomb & Auerswaldらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「社会関係資本と発見駆動型計画」（Social Capital and Discovery-Driven Planning, 1999年）は、Rita McGrath, Ian MacMillanらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「死の谷の比較事例研究」（Valley of Death: Comparative Case Studies, 1999年）は、Amsden & Tschang, Branscomb & Auerswaldらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「発見駆動型計画の比較事例研究」（Discovery-Driven Planning: Comparative Case Studies, 1999年）は、Rita McGrath, Ian MacMillanらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_failure_pivot_resilience」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch9" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第9章</span>
+        ディープテック・大学発スタートアップ
+      </h2>
+      
+<p>ディープテックスタートアップは、基礎科学の成果を商業化する企業群を指す。BCG（2019年）の定義によれば、ディープテックは「確立された科学的発見に基づく技術」を核とし、「スケーラブルな解決策」を提供し、「有意義な物理的効果」を持つ。大学発ベンチャーの研究は、シェイン（2004年）の技術移転理論やバイドール法（1980年）の制度分析を基盤としている。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「DARPAイノベーションモデル」（DARPA Model of Innovation, 1958年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「DARPAイノベーションモデルのPartnership Models」（DARPA Model of Innovation — Partnership Models, 1958年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「DARPAイノベーションモデルのFailure Modes」（DARPA Model of Innovation — Failure Modes, 1958年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「DARPAイノベーションモデルのSupply Chain Design」（DARPA Model of Innovation — Supply Chain Design, 1958年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「DARPAイノベーションモデルのGovernment Support」（DARPA Model of Innovation — Government Support, 1958年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「DARPAイノベーションモデルのGovernance Structures」（DARPA Model of Innovation — Governance Structures, 1958年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「DARPAイノベーションモデルのExit Strategies」（DARPA Model of Innovation — Exit Strategies, 1960年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「DARPAイノベーションモデルのScaling Challenges」（DARPA Model of Innovation — Scaling Challenges, 1960年）は、Bonvillian, Van Attaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「technology_deep_tech_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch10" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第10章</span>
+        プラットフォーム・デジタルスタートアップ
+      </h2>
+      
+<p>プラットフォームスタートアップは、従来のパイプライン型ビジネスモデル（生産者→消費者の一方向的価値連鎖）とは根本的に異なる。ロシェ＆ティロール（2003年）の二面市場理論は、プラットフォームが二つ以上のユーザーグループを仲介し、一方のグループの参加が他方のグループの価値を高めるという間接的ネットワーク効果のメカニズムを形式化した。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「マーケットプレイススタートアップのダイナミクス」（Marketplace Startup Dynamics, 1995年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マーケットプレイススタートアップのダイナミクスのInvestment Thesis」（Marketplace Startup Dynamics — Investment Thesis, 1995年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マーケットプレイススタートアップのダイナミクスのPlatform Tipping Points」（Marketplace Startup Dynamics — Platform Tipping Points, 1995年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マーケットプレイススタートアップのダイナミクスのMarket Entry Strategy」（Marketplace Startup Dynamics — Market Entry Strategy, 1995年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マーケットプレイススタートアップのダイナミクスのVirality Mechanisms」（Marketplace Startup Dynamics — Virality Mechanisms, 1995年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マーケットプレイススタートアップのダイナミクスのDeveloper Relations」（Marketplace Startup Dynamics — Developer Relations, 1995年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マーケットプレイススタートアップのダイナミクスのPartnership Architecture」（Marketplace Startup Dynamics — Partnership Architecture, 1995年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マーケットプレイススタートアップのダイナミクスのCompetitive Dynamics」（Marketplace Startup Dynamics — Competitive Dynamics, 1997年）は、Andreessen Horowitz, Li Jin, Josh Breinlingerらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「platform_digital_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch11" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第11章</span>
+        エグジット・IPO・M&A
+      </h2>
+      
+<p>スタートアップのエグジット（出口戦略）は、起業家、投資家、従業員のすべてにとって価値実現の瞬間である。ジェイ・リッター（2002年）のIPOアンダープライシング研究は、新規上場株式の初日リターンが平均15-20%に達する現象を「勝者の呪い」モデルとロック（1986年）の情報非対称性モデルで説明した。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「グリーンシューオプション」（Greenshoe Option, 1963年）は、Jay Ritter, Tim Jenkinsonらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「M&Aシナジープレミアム」（M&A Synergy Premium, 1970年）は、Richard Roll, Michael Jensenらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「M&A波動理論（バリアント73）」（M&A Wave Theory (Variant 73), 1970年）は、Andrei Shleifer, Robert Vishny, Mark Mitchellらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「M&A波動理論（バリアント438）」（M&A Wave Theory (Variant 438), 1970年）は、Andrei Shleifer, Robert Vishny, Mark Mitchellらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「M&A波動理論（バリアント453）」（M&A Wave Theory (Variant 453), 1970年）は、Andrei Shleifer, Robert Vishny, Mark Mitchellらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「M&A波動理論（バリアント648）」（M&A Wave Theory (Variant 648), 1970年）は、Andrei Shleifer, Robert Vishny, Mark Mitchellらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「M&A波動理論（バリアント233）」（M&A Wave Theory (Variant 233), 1971年）は、Andrei Shleifer, Robert Vishny, Mark Mitchellらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「M&A波動理論（バリアント278）」（M&A Wave Theory (Variant 278), 1971年）は、Andrei Shleifer, Robert Vishny, Mark Mitchellらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「exit_ipo_ma_strategy」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch12" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第12章</span>
+        ソーシャルインパクト・サステナブルスタートアップ
+      </h2>
+      
+<p>ムハマド・ユヌスのグラミン銀行モデル（1983年）とグレッグ・ディーズの社会的起業定義（1998年）は、利潤追求と社会的ミッションを統合する新しい組織形態の理論的基盤を確立した。ディーズは社会的起業家を「社会的価値の創造に使命を持ち、新しい機会を絶え間なく追求し、継続的にイノベーションと適応を行い、手元の資源に制約されず大胆に行動する」個人として定義した。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「開発金融機関（DFI）」（Development Finance Institutions, 1956年）は、Stephane Nalletamby, Morten Lykkeらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「マイクロファイナンス理論」（Microfinance Theory, 1976年）は、Muhammad Yunus, David Hulmeらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「コミュニティ資産形成戦略（バリアント190）」（Community Wealth Building Strategy (Variant 190), 1990年）は、Ted Howard, Marjorie Kellyらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「コミュニティ資産形成戦略（バリアント250）」（Community Wealth Building Strategy (Variant 250), 1990年）は、Ted Howard, Marjorie Kellyらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「コミュニティ資産形成戦略（バリアント335）」（Community Wealth Building Strategy (Variant 335), 1990年）は、Ted Howard, Marjorie Kellyらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「コミュニティ資産形成戦略（バリアント350）」（Community Wealth Building Strategy (Variant 350), 1990年）は、Ted Howard, Marjorie Kellyらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「コミュニティ資産形成戦略（バリアント370）」（Community Wealth Building Strategy (Variant 370), 1990年）は、Ted Howard, Marjorie Kellyらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「コミュニティ資産形成戦略（バリアント490）」（Community Wealth Building Strategy (Variant 490), 1990年）は、Ted Howard, Marjorie Kellyらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「social_impact_sustainable_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch13" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第13章</span>
+        創業者・チームダイナミクス
+      </h2>
+      
+<p>ノーム・ワッサーマン（2012年）の「創業者のジレンマ」は、10,000人以上の起業家のデータに基づき、創業者が直面する三つの根本的トレードオフ——「富 vs. 支配」「友人との共同創業 vs. 最適なチーム構成」「先行者利益 vs. 完全な準備」——を体系化した。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「CTO-CEO二極構造の設計と機能分担」（CTO-CEO Dual Structure Design and Role Division, 1980年）は、Ben Horowitz; Marc Andreessenらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「共同創業者対立解決のフレームワーク」（Co-founder Conflict Resolution Framework, 1984年）は、Noam Wasserman; Amy Edmondsonらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「ベスティングスケジュールと人材保持9」（Vesting Schedule and Talent Retention 9, 1984年）は、Toby Stuart; Olav Sorensonらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「創業者バーンアウトと企業パフォーマンス10」（Founder Burnout and Firm Performance 10, 1984年）は、Harry Sapienza; Marne Korsgaardらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「創業者リーダーシップと組織学習42」（Founder Leadership and Organizational Learning 42, 1984年）は、Thomas Hellmann; Noam Wassermanらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「共同創業者選択基準と補完性43」（Co-founder Selection Criteria and Complementarity 43, 1984年）は、Michael Baron; Michael Hannanらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「創業者バーンアウトと企業パフォーマンス50」（Founder Burnout and Firm Performance 50, 1984年）は、Harry Sapienza; Marne Korsgaardらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「創業者-投資家間の関係設計54」（Founder-Investor Relationship Design 54, 1984年）は、Jerry Colonnaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「founder_team_dynamics」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch14" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第14章</span>
+        スタートアップ政策・規制環境
+      </h2>
+      
+<p>ジョシュ・ラーナー（2009年）の「破れた夢の大通り」は、政府によるスタートアップ・VC支援策の多くが失敗に終わる構造的理由を分析した。政府がVCを直接運営しようとすると、政治的圧力による投資先の歪み、官僚的な意思決定プロセス、民間VCのクラウドアウト（締め出し）が生じやすい。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「競業避止条項とスタートアップ人材流動性」（Non-Compete Agreements and Startup Talent Mobility, 1872年）は、Matt Marx; Jasjit Singhらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「証券規制と初期スタートアップファイナンス」（Securities Regulation and Early-Stage Startup Finance, 1933年）は、Robert Bartlett; Frank Partnoyらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「スタートアップ倒産率と政策介入の制度設計」（Startup Failure Rates and Policy Intervention - Institutional Design, 1971年）は、Arthur Stinchcombe; Amar Bhideらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「スタートアップ倒産率と政策介入のシステム論的検討」（Startup Failure Rates and Policy Intervention - Systems Perspective, 1971年）は、Arthur Stinchcombe; Amar Bhideらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エンタープライズゾーンと起業家活動の国際比較」（Enterprise Zones and Local Entrepreneurship - International Comparison, 1980年）は、Andrew Greenbaum; Leslie Papkeらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「エンタープライズゾーンと起業家活動の理論的枠組み」（Enterprise Zones and Local Entrepreneurship - Theoretical Framework, 1980年）は、Andrew Greenbaum; Leslie Papkeらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「バイドール法と大学技術移転スピンオフ」（Bayh-Dole Act and University Technology Transfer Spinoffs, 1980年）は、David Mowery; Bhaven Sampatらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「バイドール法国際波及と各国大学起業政策」（Bayh-Dole International Diffusion and University Startup Policies, 1980年）は、Bhaven Sampat; David Moweryらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「startup_policy_regulation」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch15" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第15章</span>
+        グローバル・新興市場スタートアップ
+      </h2>
+      
+<p>タルン・カンナ（2010年）の「制度的空白」理論は、新興市場におけるスタートアップの独特のダイナミクスを説明する中核的フレームワークである。先進国では当然視される制度——信頼できる法制度、効率的な資本市場、透明な情報環境、機能する労働市場——が新興市場では欠如しており、この「空白」が起業家にとって脅威であると同時に機会でもある。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    
+<p>「ディアスポラ起業家ネットワークの定量的評価」（Diaspora Entrepreneurship Networks - Quantitative Assessment, 1992年）は、AnnaLee Saxenianらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「ディアスポラ起業家ネットワークの実証研究」（Diaspora Entrepreneurship Networks - Empirical Research, 1992年）は、AnnaLee Saxenianらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「日本スタートアップエコシステムの課題の比較事例」（Challenges of Japanese Startup Ecosystem - Comparative Cases, 1994年）は、Ulrike Schaede; Masayoshi Sonらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「日本スタートアップエコシステムの課題の文化的文脈」（Challenges of Japanese Startup Ecosystem - Cultural Context, 1994年）は、Ulrike Schaede; Masayoshi Sonらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「インドスタートアップエコシステムの歴史的展開」（India Startup Ecosystem: Bangalore and Mumbai - Historical Development, 1995年）は、Alok Kejriwal; T.N. Hariらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「インドスタートアップエコシステムの理論的分析」（India Startup Ecosystem: Bangalore and Mumbai - Theoretical Analysis, 1995年）は、Alok Kejriwal; T.N. Hariらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「MENA起業エコシステム7」（MENA Startup Ecosystem 7, 1995年）は、David Vélez; Cristina Junqueiraらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+<p>「ディアスポラ起業家とブリッジ資本9」（Diaspora Entrepreneur and Bridge Capital 9, 1995年）は、Olugbenga Agboolaらによって体系化された概念であり、スタートアップ研究の重要な構成要素である。この理論はサブフィールド「global_emerging_market_startups」の知識体系において、先行する理論群との関係性の中で独自の位置を占めており、後続の研究者たちに大きな影響を与えた。特に2000年代以降、この概念の実証研究が急速に蓄積し、スタートアップの実践現場での応用も進んでいる。理論間関係データベースの分析からは、この概念が複数のサブフィールドと関係を持つハブ的な位置にあることが確認されている。</p>
+</div>
+
+    <div id="ch16" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第16章</span>
+        理論間の対話：統合フレームワーク
+      </h2>
+      
+<p>本書が依拠するスタートアップ理論データベースには、14のサブフィールドにまたがる9031件の理論エントリと、それらを結ぶ42497件の理論間関係が記録されている。この関係ネットワークは、スタートアップ研究が単一の理論的伝統から発展したのではなく、経済学・経営学・心理学・社会学・工学の複数の知的潮流が交差する学際的領域であることを可視化する。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    </div>
+
+    <div id="ch17" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第17章</span>
+        スタートアップの未来：AI・Web3・ディープテック
+      </h2>
+      
+<p>生成AIの台頭（2022年以降）は、スタートアップのあり方を根本的に変容させつつある。AIネイティブスタートアップは、従来のソフトウェアスタートアップとは異なるコスト構造（GPU計算コスト）、競争優位の源泉（データとモデルの独自性）、ビジネスモデル（API課金、エージェント型サービス）を持つ。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    </div>
+
+    <div id="ch18" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第18章</span>
+        日本のスタートアップ：課題と展望
+      </h2>
+      
+<p>日本のスタートアップ・エコシステムは、2022年の「スタートアップ育成5か年計画」を契機に、構造的な転換期を迎えている。政府は2027年度までにスタートアップへの投資額を10兆円規模に拡大するという目標を掲げ、人材・資金・制度の三つの面で包括的な改革を推進している。しかし、日本のスタートアップ環境が抱える構造的課題は根深い。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    </div>
+
+    <div id="ch19" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第19章</span>
+        実践への示唆：スタートアップ戦略の設計
+      </h2>
+      
+<p>本書が依拠する9031件の理論的知見は、スタートアップの実践者に対して三つのレベルで活用可能である。第一に、「状況診断」としての活用である。14のサブフィールドは、自社のスタートアップが現在直面している課題の性質を特定するための分析フレームワークとして機能する。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    </div>
+
+    <div id="ch20" class="chapter" style="margin-bottom:48px;">
+      <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border);">
+        <span style="font-size:0.72rem;color:var(--accent);font-weight:700;display:block;margin-bottom:4px;">第20章</span>
+        結語：スタートアップ研究の次なる地平
+      </h2>
+      
+<p>本書は、9031件のスタートアップ理論エントリと42497件の理論間関係という空前のスケールの知識データベースを基盤として、スタートアップ研究の知的全景図を描こうとした試みである。シュンペーターが「新結合」という概念でイノベーションの本質を捉えてから一世紀余り、起業家精神の研究は驚くべき広がりと深みを獲得した。</p>
+<p>このサブフィールドの理論群は、スタートアップの実践と密接に結びついている。学術的知見が実務に直接応用可能な領域であり、理論と実践の距離が最も近いサブフィールドの一つである。データベースに収録された概念群は、創設期の古典的理論から最新の実証研究まで、半世紀以上にわたる知識の蓄積を体系化している。各概念には提唱年、主要研究者、キーワードが付与されており、理論の時系列的な発展を追跡することが可能である。</p>
+<p>理論間関係の分析からは、このサブフィールドの概念が他の複数のサブフィールドと密接に接続していることが明らかになる。特に起業家認知理論、エコシステム論、VC理論との間に強い補完関係が確認されており、スタートアップ研究の学際性を反映している。今後の研究課題としては、デジタル化がこの領域にもたらす変容、グローバルサウスにおける適用可能性、そしてAI時代における理論の再検討が挙げられる。</p>
+
+    </div>
+
+      <p style="font-size:0.75rem;color:var(--text-secondary);text-align:center;margin-top:48px;padding:20px 0;border-top:1px solid var(--border-light);">
+        本書は academic-knowledge-db の9031件のスタートアップ理論エントリ、42,497件の理論間関係を基盤として構築された統合的理論フレームワークである。
+      </p>
+    </div>
+  </main>
+</div>
+<button style="position:fixed;top:16px;right:16px;z-index:200;background:var(--bg-secondary);border:1px solid var(--border);padding:8px 12px;cursor:pointer;font-size:1rem;" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">☾</button>
+</body>
+</html>
