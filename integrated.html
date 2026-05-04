@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>統合ダッシュボード | Insight News</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/shared/firebase-config.js"></script>
+  <style>
+    /* ========== Layer color tokens ========== */
+    :root {
+      --layer-conceptual: #6E2C2C;
+      --layer-core:       #CC1400;
+      --layer-structural: #2C3E50;
+      --layer-detection:  #1A5276;
+      --layer-supplementary: #6C3483;
+    }
+    [data-theme="dark"] {
+      --layer-conceptual: #C57676;
+      --layer-core:       #FF4444;
+      --layer-structural: #7799BB;
+      --layer-detection:  #5599CC;
+      --layer-supplementary: #AA77CC;
+    }
+
+    .integrated-wrap { padding: 32px 0 80px; }
+
+    /* ========== Hero ========== */
+    .id-hero { padding: 28px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+    .id-hero-eyebrow { font-size: 0.72rem; letter-spacing: 0.18em; color: var(--accent-warm); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+    .id-hero-title { font-family: var(--font-serif); font-size: 2.4rem; font-weight: 900; line-height: 1.25; color: var(--text); margin: 0 0 12px; letter-spacing: 0.01em; }
+    .id-hero-sub { font-size: 0.96rem; color: var(--text-secondary); max-width: 780px; line-height: 1.85; margin: 0; }
+
+    /* ========== KPI bar ========== */
+    .id-kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 24px 0 36px; background: var(--surface); }
+    .id-kpi { padding: 18px 20px; border-right: 1px solid var(--border); }
+    .id-kpi:last-child { border-right: none; }
+    .id-kpi-label { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+    .id-kpi-value { font-family: var(--font-serif); font-size: 1.7rem; font-weight: 900; color: var(--text); line-height: 1.1; }
+    .id-kpi-unit { font-size: 0.78rem; color: var(--text-secondary); margin-left: 4px; font-weight: 400; }
+    @media (max-width: 880px) { .id-kpi-grid { grid-template-columns: repeat(2, 1fr); } .id-kpi { border-bottom: 1px solid var(--border); } }
+
+    /* ========== Layer architecture ========== */
+    .id-section-title { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 900; color: var(--text); margin: 0 0 8px; padding-bottom: 8px; border-bottom: 2px solid var(--text); display: inline-block; }
+    .id-section-desc { font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 20px; line-height: 1.7; }
+    .id-section { margin-bottom: 48px; }
+
+    .id-arch-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; align-items: stretch; margin-bottom: 28px; }
+    .id-arch-cell { padding: 18px 14px; border: 1px solid var(--border); border-right: none; background: var(--card); position: relative; cursor: pointer; transition: background 120ms; }
+    .id-arch-cell:last-child { border-right: 1px solid var(--border); }
+    .id-arch-cell:hover { background: var(--card-hover); }
+    .id-arch-cell::after { content: ""; position: absolute; right: -1px; top: 50%; width: 10px; height: 10px; transform: translateY(-50%) rotate(45deg); border-top: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--card); z-index: 1; }
+    .id-arch-cell:last-child::after { display: none; }
+    .id-arch-layer-label { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+    .id-arch-layer-name { font-weight: 900; font-size: 1.02rem; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+    .id-arch-layer-count { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 900; color: var(--accent-warm); line-height: 1; }
+    .id-arch-layer-count-unit { font-size: 0.7rem; color: var(--text-secondary); margin-left: 3px; font-weight: 400; }
+    .id-arch-layer-codes { font-size: 0.68rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5; word-break: break-word; }
+    .id-arch-cell[data-layer="conceptual"] { border-top: 3px solid var(--layer-conceptual); }
+    .id-arch-cell[data-layer="core"] { border-top: 3px solid var(--layer-core); }
+    .id-arch-cell[data-layer="structural"] { border-top: 3px solid var(--layer-structural); }
+    .id-arch-cell[data-layer="detection"] { border-top: 3px solid var(--layer-detection); }
+    .id-arch-cell[data-layer="supplementary"] { border-top: 3px solid var(--layer-supplementary); }
+    @media (max-width: 880px) { .id-arch-flow { grid-template-columns: 1fr; } .id-arch-cell { border-right: 1px solid var(--border); border-bottom: none; } .id-arch-cell:last-child { border-bottom: 1px solid var(--border); } .id-arch-cell::after { display: none; } }
+
+    /* ========== Charts ========== */
+    .id-charts-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-bottom: 16px; }
+    .id-chart-card { background: var(--card); border: 1px solid var(--border); padding: 20px 22px; }
+    .id-chart-title { font-size: 0.82rem; letter-spacing: 0.06em; font-weight: 700; color: var(--text); text-transform: uppercase; margin: 0 0 4px; }
+    .id-chart-desc { font-size: 0.75rem; color: var(--text-muted); margin: 0 0 16px; }
+    .id-chart-canvas-wrap { position: relative; height: 280px; }
+    .id-chart-canvas-wrap.tall { height: 360px; }
+    @media (max-width: 880px) { .id-charts-grid { grid-template-columns: 1fr; } }
+
+    /* ========== Filter bar ========== */
+    .id-filter-bar { background: var(--card); border: 1px solid var(--border); padding: 16px 20px; margin-bottom: 20px; display: grid; grid-template-columns: 1.4fr auto auto auto; gap: 14px; align-items: center; }
+    .id-search-wrap { position: relative; }
+    .id-search-input { width: 100%; padding: 9px 12px 9px 30px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: var(--font); font-size: 0.88rem; box-sizing: border-box; }
+    .id-search-input:focus { outline: none; border-color: var(--accent-warm); }
+    .id-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.88rem; pointer-events: none; }
+    .id-filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
+    .id-filter-btn { padding: 7px 12px; border: 1px solid var(--border); background: var(--card); color: var(--text-secondary); font-family: var(--font); font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 120ms; }
+    .id-filter-btn:hover { color: var(--text); border-color: var(--text-secondary); }
+    .id-filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .id-filter-count { font-size: 0.78rem; color: var(--text-muted); margin-left: auto; }
+    @media (max-width: 880px) { .id-filter-bar { grid-template-columns: 1fr; } .id-filter-count { margin-left: 0; } }
+
+    /* ========== DB cards ========== */
+    .id-db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .id-db-card { background: var(--card); border: 1px solid var(--border); border-left-width: 4px; padding: 18px 20px 16px; transition: background 120ms; display: flex; flex-direction: column; }
+    .id-db-card:hover { background: var(--card-hover); }
+    .id-db-card[data-layer="conceptual"] { border-left-color: var(--layer-conceptual); }
+    .id-db-card[data-layer="core"] { border-left-color: var(--layer-core); }
+    .id-db-card[data-layer="structural"] { border-left-color: var(--layer-structural); }
+    .id-db-card[data-layer="detection"] { border-left-color: var(--layer-detection); }
+    .id-db-card[data-layer="supplementary"] { border-left-color: var(--layer-supplementary); }
+    .id-db-card-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+    .id-db-id { font-family: "JetBrains Mono", "SF Mono", Consolas, monospace; font-size: 0.78rem; font-weight: 700; padding: 2px 7px; background: var(--surface); color: var(--text); letter-spacing: 0.04em; }
+    .id-db-name { font-weight: 700; font-size: 1.02rem; color: var(--text); line-height: 1.35; }
+    .id-db-name-ja { font-size: 0.78rem; color: var(--text-muted); margin-left: auto; }
+    .id-db-stat { font-family: var(--font-serif); font-size: 0.92rem; font-weight: 700; color: var(--accent-warm); margin: 4px 0 8px; line-height: 1.4; }
+    .id-db-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.7; margin: 0 0 12px; flex-grow: 1; }
+    .id-db-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .id-db-meta-item { font-size: 0.7rem; padding: 2px 7px; background: var(--surface); color: var(--text-secondary); letter-spacing: 0.04em; }
+    .id-db-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border-light); }
+    .id-db-link { font-size: 0.78rem; color: var(--text); font-weight: 600; text-decoration: none; padding: 4px 10px; border: 1px solid var(--border); background: var(--card); transition: all 120ms; }
+    .id-db-link:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .id-db-link.repo { color: var(--text-muted); }
+
+    .id-empty-state { padding: 60px 20px; text-align: center; color: var(--text-muted); border: 1px dashed var(--border); }
+
+    /* ========== Cross-reference / Layer summary ========== */
+    .id-layer-section { margin-bottom: 36px; }
+    .id-layer-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .id-layer-marker { width: 4px; height: 22px; flex-shrink: 0; }
+    .id-layer-marker[data-layer="conceptual"] { background: var(--layer-conceptual); }
+    .id-layer-marker[data-layer="core"] { background: var(--layer-core); }
+    .id-layer-marker[data-layer="structural"] { background: var(--layer-structural); }
+    .id-layer-marker[data-layer="detection"] { background: var(--layer-detection); }
+    .id-layer-marker[data-layer="supplementary"] { background: var(--layer-supplementary); }
+    .id-layer-name { font-weight: 900; font-size: 1.1rem; color: var(--text); }
+    .id-layer-count-pill { font-family: var(--font-serif); font-size: 0.85rem; color: var(--text-muted); }
+    .id-layer-desc { font-size: 0.82rem; color: var(--text-secondary); margin-left: auto; max-width: 60%; text-align: right; line-height: 1.6; }
+    @media (max-width: 880px) { .id-layer-desc { max-width: none; text-align: left; margin-left: 0; margin-top: 4px; flex-basis: 100%; } }
+
+    /* ========== Loading / status ========== */
+    .id-loading { padding: 60px 20px; text-align: center; color: var(--text-muted); }
+    .id-loading::before { content: ""; display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent-warm); border-radius: 50%; animation: id-spin 700ms linear infinite; vertical-align: -2px; margin-right: 8px; }
+    @keyframes id-spin { to { transform: rotate(360deg); } }
+
+    /* ========== Bottom action ========== */
+    .id-quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+    .id-quick-link { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 0.82rem; font-weight: 600; transition: all 120ms; }
+    .id-quick-link:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .id-quick-link-id { font-family: "JetBrains Mono", monospace; font-size: 0.7rem; opacity: 0.7; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+
+  <main class="container integrated-wrap">
+
+    <!-- ===== Hero ===== -->
+    <section class="id-hero">
+      <div class="id-hero-eyebrow">Intelligence Pipeline · Integrated View</div>
+      <h1 class="id-hero-title">統合ダッシュボード</h1>
+      <p class="id-hero-sub">
+        ミラツク・インテリジェンス・パイプラインを構成する全データベースを単一の画面で俯瞰する統合ビュー。<span id="kpiInline">31データベース・220万レコード超</span>を、概念基盤・基軸・構造理解・変化検出・補助の5レイヤーで構造化し、規模・更新頻度・接続関係を横断的に可視化します。
+      </p>
+    </section>
+
+    <!-- ===== KPI ===== -->
+    <div class="id-kpi-grid" id="kpiGrid"></div>
+
+    <!-- ===== Architecture flow ===== -->
+    <section class="id-section">
+      <h2 class="id-section-title">パイプライン構造</h2>
+      <p class="id-section-desc">概念基盤が知識の文脈を提供し、基軸DBが日々の情報を蓄積し、構造理解が分析フレームを与え、変化検出センサーが変化兆候を抽出する。補助DBが領域横断の追加コンテキストを提供する5レイヤー構成。クリックで該当レイヤーまでスクロール。</p>
+      <div class="id-arch-flow" id="archFlow"></div>
+    </section>
+
+    <!-- ===== Charts ===== -->
+    <section class="id-section">
+      <h2 class="id-section-title">スケール分析</h2>
+      <p class="id-section-desc">レコード数の対数スケールでの分布、ストレージ形式の比率、更新頻度の分布。</p>
+      <div class="id-charts-grid">
+        <div class="id-chart-card">
+          <div class="id-chart-title">データベース別レコード数（log scale）</div>
+          <div class="id-chart-desc">各DBの保有レコード数を対数軸で比較。</div>
+          <div class="id-chart-canvas-wrap tall"><canvas id="chartRecords"></canvas></div>
+        </div>
+        <div class="id-chart-card">
+          <div class="id-chart-title">レイヤー別 累積レコード数</div>
+          <div class="id-chart-desc">5レイヤーが保有するレコード総数。</div>
+          <div class="id-chart-canvas-wrap"><canvas id="chartLayer"></canvas></div>
+        </div>
+      </div>
+      <div class="id-charts-grid" style="margin-top: 16px;">
+        <div class="id-chart-card">
+          <div class="id-chart-title">更新頻度の分布</div>
+          <div class="id-chart-desc">日次・月次・四半期・随時の構成。</div>
+          <div class="id-chart-canvas-wrap"><canvas id="chartUpdate"></canvas></div>
+        </div>
+        <div class="id-chart-card">
+          <div class="id-chart-title">ストレージ形式の分布</div>
+          <div class="id-chart-desc">SQLite / JSON / 混在の割合。</div>
+          <div class="id-chart-canvas-wrap"><canvas id="chartStorage"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DB list with filter ===== -->
+    <section class="id-section" id="dbListSection">
+      <h2 class="id-section-title">データベース一覧</h2>
+      <p class="id-section-desc">レイヤー・更新頻度・ストレージ形式で絞り込み、または検索キーワードで全文検索ができます。</p>
+
+      <div class="id-filter-bar">
+        <div class="id-search-wrap">
+          <span class="id-search-icon">⌕</span>
+          <input id="searchInput" class="id-search-input" type="search" placeholder="DB名・概要・カテゴリで検索...">
+        </div>
+        <div class="id-filter-group" id="layerFilters"></div>
+        <div class="id-filter-group" id="updateFilters"></div>
+        <div class="id-filter-count" id="resultCount">—</div>
+      </div>
+
+      <div id="layerSections"><div class="id-loading">データベース情報を読み込み中</div></div>
+    </section>
+
+    <!-- ===== Quick access ===== -->
+    <section class="id-section">
+      <h2 class="id-section-title">クイックアクセス</h2>
+      <p class="id-section-desc">全DBのダッシュボードへのリンク。</p>
+      <div class="id-quick-grid" id="quickGrid"></div>
+    </section>
+
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/shared/utilities.js"></script>
+  <script src="js/shared/firebase-config.js"></script>
+  <script src="js/shared/auth-guard.js"></script>
+  <script src="js/shared/i18n.js"></script>
+  <script src="js/shared/data-cache.js"></script>
+  <script src="js/shared/data-loader.js"></script>
+  <script src="js/shared/ui-components.js"></script>
+  <script src="js/shared/article-modal.js"></script>
+  <script src="js/shared/nav.js"></script>
+
+  <script>
+    'use strict';
+
+    // ===== State =====
+    var REGISTRY = null;
+    var ALL_DBS = [];
+    var FILTER = { layer: 'all', update: 'all', q: '' };
+
+    var LAYER_LABEL = {
+      conceptual: '概念基盤',
+      core: '基軸DB',
+      structural: '構造理解',
+      detection: '変化検出',
+      supplementary: '補助DB'
+    };
+    var LAYER_DESC = {
+      conceptual: '知識の構造化と歴史的文脈を提供する基盤データベース群',
+      core: '日次更新で最新情報を蓄積する基軸データソース群',
+      structural: '深層構造で分析するためのフレームワーク群',
+      detection: '専門領域から変化兆候を検出するセンサー群',
+      supplementary: 'マクロ経済・規制・特殊領域の補助データソース群'
+    };
+    var LAYER_ORDER = ['conceptual', 'core', 'structural', 'detection', 'supplementary'];
+
+    // ===== Init =====
+    document.addEventListener('DOMContentLoaded', function() {
+      try { initNav('integrated'); } catch (e) {}
+      loadRegistry();
+      bindFilters();
+    });
+
+    function loadRegistry() {
+      fetch('data/db-registry.json')
+        .then(function(r) { return r.json(); })
+        .then(function(json) {
+          REGISTRY = json;
+          ALL_DBS = flattenDbs(json);
+          renderKpi();
+          renderArchFlow();
+          renderLayerFilters();
+          renderUpdateFilters();
+          renderDbList();
+          renderQuickAccess();
+          renderCharts();
+        })
+        .catch(function(err) {
+          console.error('Failed to load registry:', err);
+          document.getElementById('layerSections').innerHTML =
+            '<div class="id-empty-state">データベース情報の読み込みに失敗しました: ' + (err && err.message || err) + '</div>';
+        });
+    }
+
+    // ===== Helpers =====
+    function flattenDbs(reg) {
+      var out = [];
+      (reg.layers || []).forEach(function(layer) {
+        (layer.databases || []).forEach(function(db) {
+          out.push(Object.assign({}, db, { layer: layer.id, layerName: layer.name }));
+        });
+      });
+      (reg.supplementary || []).forEach(function(db) {
+        out.push(Object.assign({}, db, { layer: 'supplementary', layerName: '補助DB' }));
+      });
+      return out;
+    }
+
+    function parseRows(db) {
+      if (typeof db.rows === 'number') return db.rows;
+      // try to extract a number from stat
+      if (db.stat) {
+        var m = db.stat.replace(/,/g, '').match(/(\d+)/);
+        if (m) return parseInt(m[1], 10);
+      }
+      return 0;
+    }
+
+    function classifyUpdate(u) {
+      if (!u) return 'その他';
+      if (u.indexOf('日次') !== -1) return '日次';
+      if (u.indexOf('週次') !== -1) return '週次';
+      if (u.indexOf('月次') !== -1) return '月次';
+      if (u.indexOf('四半期') !== -1) return '四半期';
+      if (u.indexOf('随時') !== -1 || u.indexOf('継続') !== -1) return '随時';
+      if (u.indexOf('稼働') !== -1) return '稼働中';
+      return 'その他';
+    }
+
+    function classifyStorage(s) {
+      if (!s) return '未指定';
+      if (s.indexOf('SQLite') !== -1 && s.indexOf('JSON') !== -1) return 'SQLite + JSON';
+      if (s.indexOf('SQLite') !== -1) return 'SQLite';
+      if (s.indexOf('JSON') !== -1) return 'JSON';
+      if (s.indexOf('GitHub') !== -1) return 'GitHub';
+      return s;
+    }
+
+    function fmtNum(n) {
+      if (!n && n !== 0) return '—';
+      return n.toLocaleString('ja-JP');
+    }
+
+    // ===== KPI =====
+    function renderKpi() {
+      var totalRecords = ALL_DBS.reduce(function(sum, d) { return sum + parseRows(d); }, 0);
+      var totalSize = ALL_DBS.reduce(function(sum, d) { return sum + (d.sizeMB || 0); }, 0);
+      var dailyCount = ALL_DBS.filter(function(d) { return classifyUpdate(d.update) === '日次'; }).length;
+      var sqliteCount = ALL_DBS.filter(function(d) { return (d.storage || '').indexOf('SQLite') !== -1; }).length;
+      var dashboardCount = ALL_DBS.filter(function(d) { return d.dashboard; }).length;
+
+      var kpis = [
+        { label: 'Databases', value: ALL_DBS.length, unit: '' },
+        { label: 'Total Records', value: fmtNum(totalRecords) + '+', unit: '' },
+        { label: 'Storage', value: (totalSize / 1024).toFixed(1), unit: 'GB' },
+        { label: 'Daily Updates', value: dailyCount, unit: 'DBs' },
+        { label: 'Live Dashboards', value: dashboardCount, unit: '' }
+      ];
+      var html = kpis.map(function(k) {
+        return '<div class="id-kpi"><div class="id-kpi-label">' + k.label + '</div>' +
+               '<div class="id-kpi-value">' + k.value + (k.unit ? '<span class="id-kpi-unit">' + k.unit + '</span>' : '') + '</div></div>';
+      }).join('');
+      document.getElementById('kpiGrid').innerHTML = html;
+
+      // Inline KPI in hero
+      var inline = document.getElementById('kpiInline');
+      if (inline) inline.textContent = ALL_DBS.length + 'データベース・' + fmtNum(totalRecords) + '+レコード・約' + (totalSize / 1024).toFixed(1) + 'GB';
+    }
+
+    // ===== Architecture flow =====
+    function renderArchFlow() {
+      var byLayer = {};
+      LAYER_ORDER.forEach(function(l) { byLayer[l] = []; });
+      ALL_DBS.forEach(function(d) { (byLayer[d.layer] = byLayer[d.layer] || []).push(d); });
+
+      var html = LAYER_ORDER.map(function(layer) {
+        var dbs = byLayer[layer] || [];
+        var codes = dbs.map(function(d) { return d.id; }).join(' · ');
+        return '<div class="id-arch-cell" data-layer="' + layer + '" data-jump="' + layer + '">' +
+                 '<div class="id-arch-layer-label">' + layer + '</div>' +
+                 '<div class="id-arch-layer-name">' + LAYER_LABEL[layer] + '</div>' +
+                 '<div class="id-arch-layer-count">' + dbs.length + '<span class="id-arch-layer-count-unit">DBs</span></div>' +
+                 '<div class="id-arch-layer-codes">' + codes + '</div>' +
+               '</div>';
+      }).join('');
+      document.getElementById('archFlow').innerHTML = html;
+
+      document.querySelectorAll('.id-arch-cell').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var layer = el.getAttribute('data-jump');
+          FILTER.layer = layer;
+          syncFilterButtons();
+          renderDbList();
+          var target = document.getElementById('dbListSection');
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    }
+
+    // ===== Filters =====
+    function renderLayerFilters() {
+      var btns = [{ id: 'all', label: 'すべて' }].concat(LAYER_ORDER.map(function(l) {
+        return { id: l, label: LAYER_LABEL[l] };
+      }));
+      var html = btns.map(function(b) {
+        return '<button class="id-filter-btn ' + (FILTER.layer === b.id ? 'active' : '') + '" data-filter-layer="' + b.id + '">' + b.label + '</button>';
+      }).join('');
+      document.getElementById('layerFilters').innerHTML = html;
+    }
+
+    function renderUpdateFilters() {
+      var freqs = ['all', '日次', '月次', '四半期', '随時'];
+      var labels = { all: '更新:全て', '日次': '日次', '月次': '月次', '四半期': '四半期', '随時': '随時' };
+      var html = freqs.map(function(f) {
+        return '<button class="id-filter-btn ' + (FILTER.update === f ? 'active' : '') + '" data-filter-update="' + f + '">' + labels[f] + '</button>';
+      }).join('');
+      document.getElementById('updateFilters').innerHTML = html;
+    }
+
+    function syncFilterButtons() {
+      document.querySelectorAll('[data-filter-layer]').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-filter-layer') === FILTER.layer);
+      });
+      document.querySelectorAll('[data-filter-update]').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-filter-update') === FILTER.update);
+      });
+    }
+
+    function bindFilters() {
+      document.addEventListener('click', function(e) {
+        var t = e.target;
+        if (t.matches('[data-filter-layer]')) {
+          FILTER.layer = t.getAttribute('data-filter-layer');
+          syncFilterButtons();
+          renderDbList();
+        } else if (t.matches('[data-filter-update]')) {
+          FILTER.update = t.getAttribute('data-filter-update');
+          syncFilterButtons();
+          renderDbList();
+        }
+      });
+      var search = document.getElementById('searchInput');
+      if (search) search.addEventListener('input', function(e) {
+        FILTER.q = (e.target.value || '').toLowerCase().trim();
+        renderDbList();
+      });
+    }
+
+    function applyFilter() {
+      return ALL_DBS.filter(function(d) {
+        if (FILTER.layer !== 'all' && d.layer !== FILTER.layer) return false;
+        if (FILTER.update !== 'all' && classifyUpdate(d.update) !== FILTER.update) return false;
+        if (FILTER.q) {
+          var hay = ((d.id || '') + ' ' + (d.name || '') + ' ' + (d.nameJa || '') + ' ' +
+                     (d.description || '') + ' ' + (d.stat || '') + ' ' + (d.storage || '')).toLowerCase();
+          if (hay.indexOf(FILTER.q) === -1) return false;
+        }
+        return true;
+      });
+    }
+
+    // ===== DB cards by layer =====
+    function renderDbList() {
+      var filtered = applyFilter();
+      document.getElementById('resultCount').textContent = filtered.length + ' / ' + ALL_DBS.length + ' DBs';
+
+      if (!filtered.length) {
+        document.getElementById('layerSections').innerHTML =
+          '<div class="id-empty-state">該当するデータベースがありません。検索条件を変更してください。</div>';
+        return;
+      }
+
+      // Group by layer in canonical order
+      var byLayer = {};
+      LAYER_ORDER.forEach(function(l) { byLayer[l] = []; });
+      filtered.forEach(function(d) { (byLayer[d.layer] = byLayer[d.layer] || []).push(d); });
+
+      var html = LAYER_ORDER.filter(function(l) { return byLayer[l] && byLayer[l].length; }).map(function(layer) {
+        var dbs = byLayer[layer];
+        var head = '<div class="id-layer-header">' +
+                     '<div class="id-layer-marker" data-layer="' + layer + '"></div>' +
+                     '<div class="id-layer-name">' + LAYER_LABEL[layer] + '</div>' +
+                     '<div class="id-layer-count-pill">' + dbs.length + ' DBs</div>' +
+                     '<div class="id-layer-desc">' + LAYER_DESC[layer] + '</div>' +
+                   '</div>';
+        var grid = '<div class="id-db-grid">' + dbs.map(renderDbCard).join('') + '</div>';
+        return '<div class="id-layer-section" id="layer-' + layer + '">' + head + grid + '</div>';
+      }).join('');
+      document.getElementById('layerSections').innerHTML = html;
+    }
+
+    function renderDbCard(d) {
+      var meta = [];
+      if (d.update) meta.push('更新: ' + d.update);
+      if (d.storage) meta.push(d.storage);
+      if (d.tables) meta.push(d.tables + ' tables');
+      if (d.sizeMB) meta.push(d.sizeMB + ' MB');
+
+      var actions = '';
+      if (d.dashboard) {
+        var isExt = d.dashboard.indexOf('http') === 0;
+        actions += '<a class="id-db-link" href="' + d.dashboard + '" ' + (isExt ? 'target="_blank" rel="noopener"' : '') + '>ダッシュボード →</a>';
+      }
+      if (d.url && (!d.dashboard || d.url !== d.dashboard)) {
+        actions += '<a class="id-db-link" href="' + d.url + '" target="_blank" rel="noopener">サイト →</a>';
+      }
+      if (d.repo) {
+        actions += '<a class="id-db-link repo" href="https://github.com/yuyanishimura0312/' + d.repo + '" target="_blank" rel="noopener">repo</a>';
+      }
+      if (!actions) actions = '<span class="id-db-link" style="cursor:default;color:var(--text-muted)">準備中</span>';
+
+      return '<div class="id-db-card" data-layer="' + d.layer + '">' +
+               '<div class="id-db-card-head">' +
+                 '<span class="id-db-id">' + d.id + '</span>' +
+                 '<span class="id-db-name">' + (d.nameJa || d.name) + '</span>' +
+                 '<span class="id-db-name-ja">' + d.name + '</span>' +
+               '</div>' +
+               (d.stat ? '<div class="id-db-stat">' + d.stat + '</div>' : '') +
+               '<p class="id-db-desc">' + (d.description || '') + '</p>' +
+               (meta.length ? '<div class="id-db-meta">' + meta.map(function(m) { return '<span class="id-db-meta-item">' + m + '</span>'; }).join('') + '</div>' : '') +
+               '<div class="id-db-actions">' + actions + '</div>' +
+             '</div>';
+    }
+
+    // ===== Quick access =====
+    function renderQuickAccess() {
+      var html = ALL_DBS.filter(function(d) { return d.dashboard; }).map(function(d) {
+        var isExt = d.dashboard.indexOf('http') === 0;
+        return '<a class="id-quick-link" href="' + d.dashboard + '" ' + (isExt ? 'target="_blank" rel="noopener"' : '') + '>' +
+                 '<span>' + (d.nameJa || d.name) + '</span>' +
+                 '<span class="id-quick-link-id">' + d.id + '</span>' +
+               '</a>';
+      }).join('');
+      document.getElementById('quickGrid').innerHTML = html;
+    }
+
+    // ===== Charts =====
+    function getCSS(varName) {
+      return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    }
+
+    function layerColor(layer) {
+      var map = {
+        conceptual: '--layer-conceptual',
+        core: '--layer-core',
+        structural: '--layer-structural',
+        detection: '--layer-detection',
+        supplementary: '--layer-supplementary'
+      };
+      return getCSS(map[layer] || '--accent') || '#888';
+    }
+
+    function renderCharts() {
+      Chart.defaults.font.family = "'Noto Sans JP', sans-serif";
+      Chart.defaults.font.size = 11;
+      Chart.defaults.color = getCSS('--text-secondary') || '#555';
+
+      // 1) Records per DB (log scale, sorted)
+      var sorted = ALL_DBS.slice().filter(function(d) { return parseRows(d) > 0; })
+        .sort(function(a, b) { return parseRows(b) - parseRows(a); });
+      var labels = sorted.map(function(d) { return d.id + ' (' + (d.nameJa || d.name).substring(0, 12) + ')'; });
+      var data = sorted.map(function(d) { return parseRows(d); });
+      var colors = sorted.map(function(d) { return layerColor(d.layer); });
+
+      new Chart(document.getElementById('chartRecords'), {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Records', data: data, backgroundColor: colors, borderColor: colors, borderWidth: 0 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: {
+            x: { type: 'logarithmic', grid: { color: getCSS('--border-light') }, ticks: { callback: function(v) { return v.toLocaleString(); } } },
+            y: { grid: { display: false }, ticks: { font: { size: 9 } } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) { return 'Records: ' + ctx.parsed.x.toLocaleString(); }
+              }
+            }
+          }
+        }
+      });
+
+      // 2) Layer cumulative records
+      var byLayerSum = {};
+      LAYER_ORDER.forEach(function(l) { byLayerSum[l] = 0; });
+      ALL_DBS.forEach(function(d) { byLayerSum[d.layer] = (byLayerSum[d.layer] || 0) + parseRows(d); });
+      var layerLabels = LAYER_ORDER.map(function(l) { return LAYER_LABEL[l]; });
+      var layerData = LAYER_ORDER.map(function(l) { return byLayerSum[l]; });
+      var layerColors = LAYER_ORDER.map(function(l) { return layerColor(l); });
+
+      new Chart(document.getElementById('chartLayer'), {
+        type: 'bar',
+        data: { labels: layerLabels, datasets: [{ data: layerData, backgroundColor: layerColors, borderWidth: 0 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: {
+            y: { type: 'logarithmic', grid: { color: getCSS('--border-light') }, ticks: { callback: function(v) { return v.toLocaleString(); } } },
+            x: { grid: { display: false } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.y.toLocaleString() + ' records'; } } }
+          }
+        }
+      });
+
+      // 3) Update frequency
+      var updateBuckets = {};
+      ALL_DBS.forEach(function(d) {
+        var k = classifyUpdate(d.update);
+        updateBuckets[k] = (updateBuckets[k] || 0) + 1;
+      });
+      var ukeys = Object.keys(updateBuckets);
+      new Chart(document.getElementById('chartUpdate'), {
+        type: 'doughnut',
+        data: {
+          labels: ukeys,
+          datasets: [{
+            data: ukeys.map(function(k) { return updateBuckets[k]; }),
+            backgroundColor: ['#CC1400', '#1A5276', '#6E2C2C', '#2C3E50', '#6C3483', '#888'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '60%',
+          plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } } }
+        }
+      });
+
+      // 4) Storage type
+      var storageBuckets = {};
+      ALL_DBS.forEach(function(d) {
+        var k = classifyStorage(d.storage);
+        storageBuckets[k] = (storageBuckets[k] || 0) + 1;
+      });
+      var skeys = Object.keys(storageBuckets);
+      new Chart(document.getElementById('chartStorage'), {
+        type: 'doughnut',
+        data: {
+          labels: skeys,
+          datasets: [{
+            data: skeys.map(function(k) { return storageBuckets[k]; }),
+            backgroundColor: ['#1A5276', '#6E2C2C', '#CC1400', '#2C3E50', '#888'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '60%',
+          plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } } }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
