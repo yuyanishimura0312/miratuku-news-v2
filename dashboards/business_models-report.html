@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BM Patterns DB 総合レポート — Stage 1〜4 全工程まとめ</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-light: #F7F7F5;
+  --accent-warm: #7A4033;
+  --accent-muted: rgba(122,64,51,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #7A4033;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222; --accent: #E0E0E0;
+  --accent-soft: #999999; --accent-warm: #C4795E; --accent-light: #1A1A1A;
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --highlight: #C4795E; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text); background: var(--bg);
+  line-height: 1.9; letter-spacing: 0.02em;
+  font-feature-settings: "palt"; min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar {
+  background: var(--bg); border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px; display: flex; align-items: center;
+  justify-content: space-between; height: 48px;
+  position: sticky; top: 0; z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font); font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border);
+  color: var(--text-muted); cursor: pointer;
+  padding: 4px 10px; font-size: 0.72rem; font-family: var(--font);
+  letter-spacing: 0.05em; transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.report-layout {
+  display: grid; grid-template-columns: 240px 1fr;
+  max-width: 1100px; margin: 0 auto; padding: 0 24px;
+}
+.toc-sidebar {
+  position: sticky; top: 48px; height: calc(100vh - 48px);
+  overflow-y: auto; padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-label {
+  font-family: var(--font); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--font); font-size: 0.72rem;
+  color: var(--text-secondary); padding: 5px 8px 5px 0;
+  line-height: 1.4; transition: color 0.15s;
+}
+.toc-list li a:hover { color: var(--accent-warm); }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem; color: var(--accent-warm);
+  min-width: 22px; flex-shrink: 0;
+}
+.report-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.report-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.report-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.tag {
+  font-family: var(--font); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.08em; padding: 3px 8px;
+  border: 1px solid var(--border); color: var(--text-muted);
+}
+.tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.report-title {
+  font-family: var(--font-serif); font-size: 2rem; font-weight: 700;
+  line-height: 1.4; letter-spacing: 0.03em;
+  color: var(--text); margin-bottom: 16px;
+}
+.report-subtitle {
+  font-family: var(--font); font-size: 0.88rem;
+  color: var(--text-secondary); line-height: 1.7;
+  margin-bottom: 28px; font-weight: 400;
+}
+.report-meta { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.report-author { font-family: var(--font); font-size: 0.82rem; color: var(--text); font-weight: 500; }
+.report-date { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); }
+.report-metrics { display: flex; gap: 20px; margin-top: 24px; flex-wrap: wrap; }
+.metric-item { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.metric-item strong { color: var(--text); font-weight: 600; }
+.section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.section:last-child { border-bottom: none; }
+.section-num {
+  font-family: var(--font); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent-warm); margin-bottom: 12px;
+}
+.section-title {
+  font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700;
+  line-height: 1.5; letter-spacing: 0.02em; color: var(--text);
+  margin-bottom: 36px; padding-bottom: 16px;
+  border-bottom: 2px solid var(--accent-warm);
+}
+.subsection {
+  font-family: var(--font-serif); font-size: 1.08rem; font-weight: 600;
+  color: var(--text); margin: 40px 0 16px;
+  line-height: 1.6; letter-spacing: 0.02em;
+}
+p { font-size: 0.92rem; line-height: 1.9; text-align: justify; margin-bottom: 1.2em; color: var(--text); }
+strong { font-weight: 700; }
+em { font-style: italic; }
+ul, ol { font-size: 0.92rem; padding-left: 1.8em; margin-bottom: 1.2em; line-height: 1.9; }
+li { margin-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 0.85rem; }
+th {
+  background: var(--surface); font-family: var(--font);
+  font-weight: 600; font-size: 0.78rem;
+  padding: 10px 14px; border: 1px solid var(--border);
+  text-align: left; letter-spacing: 0.03em;
+}
+td { padding: 10px 14px; border: 1px solid var(--border-light); vertical-align: top; }
+tr:nth-child(even) td { background: var(--surface); }
+.epigraph {
+  font-style: italic; font-size: 0.9rem; color: var(--text-muted);
+  border-left: 3px solid var(--accent-warm);
+  padding: 12px 20px; margin: 24px 0 32px; line-height: 1.7;
+}
+.epigraph .attribution {
+  display: block; margin-top: 8px; font-style: normal;
+  font-size: 0.78rem; color: var(--text-muted);
+}
+.callout, .insight-box {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+  padding: 16px 20px; margin: 24px 0;
+}
+.insight-box { background: var(--accent-muted); border: 1px solid var(--accent-warm); padding: 20px 24px; }
+.callout-label, .insight-box-label {
+  font-family: var(--font); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent-warm); margin-bottom: 10px;
+}
+.callout p, .insight-box p { font-size: 0.88rem; margin-bottom: 0.6em; }
+.callout p:last-child, .insight-box p:last-child { margin-bottom: 0; }
+.pullquote {
+  font-family: var(--font-serif); font-size: 1.1rem; font-weight: 600;
+  line-height: 1.6; color: var(--accent-warm); text-align: center;
+  padding: 24px 32px; margin: 32px 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.summary-box {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 20px 24px; margin: 32px 0;
+}
+.summary-box h4 {
+  font-family: var(--font); font-size: 0.78rem; font-weight: 700;
+  color: var(--text-secondary); letter-spacing: 0.06em;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.summary-box ul, .summary-box ol { font-size: 0.88rem; padding-left: 1.4em; }
+.summary-box li { margin-bottom: 6px; }
+.stage-card {
+  border: 1px solid var(--border); padding: 18px 22px;
+  margin: 16px 0; background: var(--card);
+}
+.stage-card-num {
+  font-family: var(--font); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.1em; color: var(--accent-warm); margin-bottom: 6px;
+}
+.stage-card h4 {
+  font-family: var(--font-serif); font-size: 1rem;
+  margin-bottom: 8px; color: var(--text);
+}
+.stage-card p { font-size: 0.86rem; margin-bottom: 0; color: var(--text-secondary); }
+.reading-progress {
+  position: fixed; top: 51px; left: 0; height: 2px;
+  background: var(--accent-warm); width: 0%; z-index: 99;
+  transition: width 0.1s;
+}
+@media (max-width: 768px) {
+  .report-layout { grid-template-columns: 1fr; }
+  .toc-sidebar { display: none; }
+  .report-main { padding: 40px 0 80px 0; }
+  .report-title { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="reading-progress" id="readingProgress"></div>
+
+<header class="top-bar">
+<div class="top-bar-brand">
+<span>BM Patterns DB</span> — Comprehensive Report
+</div>
+<div class="top-bar-actions">
+<a href="business_models-textbook.html" class="back-link">教科書へ</a>
+<a href="business_models.html" class="back-link">ダッシュボードへ</a>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">DARK</button>
+</div>
+</header>
+
+<div class="report-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">目次</div>
+<ol class="toc-list">
+
+<li><a href="#sec-01"><span class="toc-num">01</span> エグゼクティブ・サマリー</a></li>
+<li><a href="#sec-02"><span class="toc-num">02</span> プロジェクト背景と目的</a></li>
+<li><a href="#sec-03"><span class="toc-num">03</span> Stage 1：5並列基盤リサーチ</a></li>
+<li><a href="#sec-04"><span class="toc-num">04</span> Stage 2：DB大規模構築（7フェーズ）</a></li>
+<li><a href="#sec-05"><span class="toc-num">05</span> Stage 3：応用エンジンの設計</a></li>
+<li><a href="#sec-06"><span class="toc-num">06</span> Stage 4：条件レイヤーの拡充</a></li>
+<li><a href="#sec-07"><span class="toc-num">07</span> 主要な発見と示唆</a></li>
+<li><a href="#sec-08"><span class="toc-num">08</span> ミラツクへの応用提案</a></li>
+<li><a href="#sec-09"><span class="toc-num">09</span> 今後の発展方向</a></li>
+<li><a href="#sec-10"><span class="toc-num">10</span> 付録：データ構造と利用方法</a></li>
+
+</ol>
+</nav>
+
+<main class="report-main">
+<header class="report-header">
+<div class="report-tags">
+<span class="tag primary">BM Patterns DB</span>
+<span class="tag">Comprehensive Report</span>
+<span class="tag">2026-05</span>
+</div>
+<h1 class="report-title">ビジネスモデル/マネタイズパターンDB<br>総合レポート</h1>
+<p class="report-subtitle">5並列基盤リサーチからStage 4「条件レイヤー」拡充までの全工程と、ミラツクへの応用示唆</p>
+<div class="report-meta">
+<span class="report-author">西村勇也（NPO法人ミラツク）</span>
+<span class="report-date">2026年5月5日</span>
+</div>
+<div class="report-metrics">
+<span class="metric-item"><strong>735</strong> パターン</span>
+<span class="metric-item"><strong>4,085</strong> 関係（内部+横断）</span>
+<span class="metric-item"><strong>10</strong> 属性条件レイヤー</span>
+<span class="metric-item"><strong>12</strong> サブフィールド</span>
+<span class="metric-item"><strong>4</strong> Stage</span>
+<span class="metric-item"><strong>10</strong> セクション</span>
+</div>
+</header>
+
+
+<section id="sec-01" class="section">
+<div class="section-num">Section 01</div>
+<h2 class="section-title">エグゼクティブ・サマリー</h2>
+
+<div class="epigraph">
+パターンを知ることは、出発点である。条件と共に理解し、組み合わせ、応用すること——それが事業設計の知的実践である。
+<span class="attribution">— 本DB構築プロジェクトの基本姿勢</span>
+</div>
+
+<p>本レポートは、NPO法人ミラツク（知識運動体）が2026年5月に構築した「ビジネスモデル/マネタイズパターン・データベース」プロジェクトの全工程をまとめた総合報告書である。事業案・プロジェクト案に対して最適なマネタイズパターンを推奨・評価する応用エンジンを実現するため、5並列の基盤リサーチ、12サブフィールドの体系的DB構築、7フェーズの品質保証プロセス、そして10属性からなる「条件レイヤー」の付与を経て、<strong>735件</strong>のパターン、<strong>4,085本</strong>の関係ネットワーク（内部2,570本＋分野横断1,515本）を構築した。</p>
+
+<p>本DBの最大の特徴は、各パターンに付与された「条件レイヤー」である。enabling_conditions（生きる条件）、disabling_conditions（不適合条件）、trigger_signals（発動シグナル）、decay_signals（破綻シグナル）、maturity_stage（適用フェーズ）、unit_economics_threshold（採算ライン）、network_effect_type（ネットワーク効果の種別）、prerequisite_patterns（先行必要パターン）、incompatible_patterns（同時実装困難パターン）の10属性が、パターンが「いつ・どこで・どう」機能するかを構造化する。</p>
+
+<div class="summary-box">
+<h4>主要成果（数値）</h4>
+<ul>
+<li>パターン総数：<strong>735件</strong>（12サブフィールド）</li>
+<li>内部関係：<strong>2,570本</strong>（concept × 3.5倍）</li>
+<li>分野横断関係：<strong>1,515本</strong>（management_studies / innovation_theory / startup_theory / humanities_concept / social_theory）</li>
+<li>条件レイヤー充填率：<strong>100%</strong>（全735パターンに10属性）</li>
+<li>先行関係明示パターン：<strong>119件</strong></li>
+<li>非互換関係明示パターン：<strong>181件</strong></li>
+<li>応用エンジン：v2 Conditions-Aware（7ステップ・メタワークフロー）</li>
+<li>成果物：dashboard / 教科書18章 / <code>/business-models</code>エージェント</li>
+</ul>
+</div>
+
+</section>
+
+<section id="sec-02" class="section">
+<div class="section-num">Section 02</div>
+<h2 class="section-title">プロジェクト背景と目的</h2>
+
+<h3 class="subsection">問題意識——なぜマネタイズパターンを体系化するのか</h3>
+<p>ミラツク（知識運動体）は、暗黙知を形式知化し、AIと人間が共に活用できる知的資産を構築することを使命としてきた。その活動領域の一つに「事業設計支援」がある。多様な企業・組織・社会起業家から、事業モデルの構築・転換に関する相談を受けるなかで、ある共通の課題が浮かび上がっていた。それは、「自分の事業案がどのパターンに該当するのか分からない」「パターンを知っていても、それが自社の文脈で機能するか判断できない」という、認識と適用の二重の壁である。</p>
+
+<p>既存のビジネスモデル教材は豊富にある。Osterwalderの『ビジネスモデル・ジェネレーション』、Gassmannの『The Business Model Navigator』、Tien Tzuoの『Subscription Economy』など、優れた著作が多数存在する。しかし、これらの著作は個別に読むには優れていても、横断的に活用するには分散しすぎている。さらに、それぞれが「何ができるか」は語っても、「いつ機能し、いつ破綻するか」という条件論については体系性に欠けることが多い。</p>
+
+<h3 class="subsection">プロジェクトの目的</h3>
+<p>本プロジェクトは、3つの目的を掲げて設計された。</p>
+<ol>
+<li><strong>体系化</strong>：古典フレームワークからAI時代の新興パターンまで、12サブフィールド・1,000件規模で網羅</li>
+<li><strong>条件化</strong>：各パターンに「生きる条件・破綻シグナル・組合せ条件」を構造化属性として付与</li>
+<li><strong>応用化</strong>：事業案を入力すると、条件適合性付きでパターン候補を推奨する応用エンジンを実装</li>
+</ol>
+
+<h3 class="subsection">プロジェクトの位置づけ——ミラツク知識基盤の中で</h3>
+<p>本DBは、ミラツクが構築する複数の学術知識DB群の一員として位置づけられる。経営学概念DB（MG、3,369概念）、イノベーション理論DB（IT、9,839概念）、スタートアップDB（SU、9,031概念）など、関連DBとは横断的な関係（cross-domain relations）を通じて連携する。本DBは、これら理論層のDB群と、実装現場の事業設計をつなぐ「応用層」として機能する。</p>
+
+</section>
+
+<section id="sec-03" class="section">
+<div class="section-num">Section 03</div>
+<h2 class="section-title">Stage 1：5並列基盤リサーチ</h2>
+
+<h3 class="subsection">リサーチチームの編成と分担</h3>
+<p>プロジェクト初期、12サブフィールドの全体像を把握するため、5つの並列リサーチチームを編成した。各チームには異なる視座を担当させ、相互補完的に全体像を構築する設計を採用した。</p>
+
+<div class="stage-card">
+<div class="stage-card-num">Team C1</div>
+<h4>古典・分類学的フレームワーク調査</h4>
+<p>St. Gallen Business Model Navigator（55パターン）、Business Model Canvas（9ブロック）、MIT Business Model Archetypes（16型）、Timmers の11モデル、Rappaの9モデル、Linder & Cantrellの34パターン、Value Proposition Canvasを横断的に整理。各フレームワークの粒度・カバレッジ・体系性を比較マトリクスとして示し、本DB設計の出発点とした。</p>
+</div>
+
+<div class="stage-card">
+<div class="stage-card-num">Team C2</div>
+<h4>モダン・デジタル収益化パターン調査</h4>
+<p>SaaS・サブスクリプション（ハイブリッド/値ベース/Outcome/PLG）、プラットフォーム・マーケットプレイス（Take-rate/Aggregation Theory）、広告・データ収益、クリエイターエコノミー、モバイル/ゲーム、B2B/エンタープライズ、AI時代の新興モデル（Token/Agent/Outcome-as-a-Service）を網羅。OpenView Partners、Stratechery、McKinsey、EY、Chargebee Researchを主要参照源とし、2024-2026年時点で支配的な収益化パターンTOP20を提示した。</p>
+</div>
+
+<div class="stage-card">
+<div class="stage-card-num">Team C3</div>
+<h4>BMパターン応用方法論調査</h4>
+<p>Frankenbergerの4Iフレームワーク、Gassmannの3原理、Sarasvathyのエフェクチュエーション、McGrathのDiscovery-Driven Planning、HaakerのBusiness Model Stress Testing、Remaneの182パターンDBなどを統合。「事業案 → パターン抽出 → Fit評価 → 統合」の7ステップ・メタワークフローを設計し、本プロジェクトの応用エンジンの理論的基盤とした。</p>
+</div>
+
+<div class="stage-card">
+<div class="stage-card-num">Team C4</div>
+<h4>BM学術文献マッピング</h4>
+<p>Teece（2010、被引用7,899）、Zott-Amit（2007/2008/2011）、Chesbrough（2010）、Osterwalder（2005）、Magretta（2002）、Massa-Tucci-Afuah（2017）など、被引用5,000以上の中核論文を整理。30名の主要研究者ネットワーク、50本の主要論文、Long Range Planning・Strategic Management Journal・Journal of Business Modelsなど主要ジャーナルの位置づけ、引用ネットワークの中心ノードと橋渡しノードを地図化した。</p>
+</div>
+
+<div class="stage-card">
+<div class="stage-card-num">Team C5</div>
+<h4>産業別BMパターンとソーシャル/NPO/日本特有領域</h4>
+<p>10産業（ハードウェア/コンテンツ/教育/医療/金融/エネルギー/製造/物流/小売/不動産）の40パターン、社会的事業・非営利の25パターン、日本特有のパターン（系列・共同組合・寺社経済・伝統産業）を網羅。NPOの収入源分析（受託47%・会員14%・助成15%・寄付24%）と、3源泉以上を運営する組織の5年生存率78%という実証データを整理。</p>
+</div>
+
+<h3 class="subsection">統合と気付き</h3>
+<p>5チームの調査結果を統合した結果、本DBが網羅すべきパターンは概ね800〜1,200件規模が妥当との結論を得た。さらに重要だったのは、「単なるパターン辞書」では応用エンジンの基盤として不足するという認識である。各パターンが「いつ・どこで・どう機能するか」を構造化する条件レイヤーが不可欠であった。この認識が、Stage 4「条件レイヤー追加」の伏線となった。</p>
+
+</section>
+
+<section id="sec-04" class="section">
+<div class="section-num">Section 04</div>
+<h2 class="section-title">Stage 2：DB大規模構築（7フェーズ）</h2>
+
+<h3 class="subsection">academic-db-build方法論の適用</h3>
+<p>Stage 2では、ミラツクが過去のイノベーション理論DB（9,839件）・経営学DB（3,458件）構築で実証済みの7フェーズ方法論を本プロジェクトに適用した。</p>
+
+<table>
+<thead><tr><th>Phase</th><th>内容</th><th>成果物</th></tr></thead>
+<tbody>
+<tr><td>Phase 0</td><td>スコーピング</td><td>12サブフィールド設計、bm_scope.json</td></tr>
+<tr><td>Phase 1</td><td>調査設計（必須理論チェックリスト）</td><td>DBスキーマ、各サブフィールドの「創設者・転換点・現代・批判」4枠</td></tr>
+<tr><td>Phase 2</td><td>情報収集（並列チーム）</td><td>700件超のパターンエントリ</td></tr>
+<tr><td>Phase 3</td><td>品質検証（充填率・重複・時代分布）</td><td>充填率100%・重複0件</td></tr>
+<tr><td>Phase 4</td><td>関係ネットワーク構築</td><td>2,098本の内部関係＋1,515本の分野横断関係</td></tr>
+<tr><td>Phase 5</td><td>成果物生成（dashboard・教科書・エージェント）</td><td>HTML成果物群</td></tr>
+<tr><td>Phase 6</td><td>学術検証（4カテゴリ：snapshot不整合/ハルシネーション/カバレッジ/チーム間不整合）</td><td>検証レポート</td></tr>
+<tr><td>Phase 7</td><td>掲載・公開（databases.html・MEMORY.md・git push）</td><td>公開済みDB</td></tr>
+</tbody>
+</table>
+
+<h3 class="subsection">12サブフィールドの完成度</h3>
+<table>
+<thead><tr><th>ID</th><th>サブフィールド名</th><th>件数</th></tr></thead>
+<tbody>
+<tr><td>BM01</td><td>古典的BMフレームワーク</td><td>80</td></tr>
+<tr><td>BM02</td><td>SaaS・サブスクリプション収益</td><td>100</td></tr>
+<tr><td>BM03</td><td>プラットフォーム・マーケットプレイス</td><td>60</td></tr>
+<tr><td>BM04</td><td>広告・注意力経済</td><td>60</td></tr>
+<tr><td>BM05</td><td>クリエイターエコノミー・コミュニティ</td><td>60</td></tr>
+<tr><td>BM06</td><td>モバイルゲーム収益化</td><td>25</td></tr>
+<tr><td>BM07</td><td>エンタープライズ・B2B特有モデル</td><td>60</td></tr>
+<tr><td>BM08</td><td>AI時代の新興収益化</td><td>100</td></tr>
+<tr><td>BM09</td><td>ハードウェア・IoT・サービス化</td><td>60</td></tr>
+<tr><td>BM10</td><td>サステナブル・サーキュラーBM</td><td>25</td></tr>
+<tr><td>BM11</td><td>社会的事業・非営利・コモンズ</td><td>70</td></tr>
+<tr><td>BM12</td><td>BM応用方法論メタ</td><td>35</td></tr>
+
+</tbody>
+</table>
+
+<h3 class="subsection">遭遇した困難と対応</h3>
+<p>Phase 2の情報収集において、複数の困難に直面した。第一に、6並列収集チームのうち3チームがClaude API rate limit、2チームがoutput token上限（32K）に到達して完全失敗した。第二に、生成出力フォーマットがチームごとに異なり（JSON配列 vs オブジェクトラップ、ファイル分割パターンなど）、bulk_insertスクリプトの柔軟化が必要となった。これらの問題に対しては、（1）残8サブフィールド向けに10並列のmini-agentを再起動、（2）seed_remaining_subfields.pyによる直接的な専門知識ベースのエントリ生成、（3）part分割ファイルへの対応、で復旧した。</p>
+
+<div class="callout">
+<div class="callout-label">教訓</div>
+<p>大規模並列生成では、各エージェントの出力サイズを32K token以下に分割する設計が必須である。さらに、rate limitに到達した場合の代替戦略（直接生成スクリプト）を事前に用意しておくことで、プロジェクト全体の頓挫を回避できる。</p>
+</div>
+
+</section>
+
+<section id="sec-05" class="section">
+<div class="section-num">Section 05</div>
+<h2 class="section-title">Stage 3：応用エンジンの設計</h2>
+
+<h3 class="subsection">7ステップ・メタワークフロー</h3>
+<p>応用エンジンは、Frankenbergerの4Iフレームワークを基盤に、SarasvathyのEffectuation、McGrathのDiscovery-Driven Planning、HaakerのBusiness Model Stress Testingを統合した7ステップワークフローを実装する。</p>
+
+<ol>
+<li><strong>Step 0：問題定義＆機会フレーミング</strong>——Effectuation Bird-in-Hand原理で利用可能な手段から出発</li>
+<li><strong>Step 1：パターン候補抽出</strong>——相似（自業界既知）・対立（他業界転用）・複合（パターン組合せ）の3軸で候補提示</li>
+<li><strong>Step 2：5次元Fit評価</strong>——顧客・技術・組織・市場・資金 各1-5スコア</li>
+<li><strong>Step 3：シナリオベース評価</strong>——success_cases / failure_cases / decay_signalsによる楽観・悲観シナリオ</li>
+<li><strong>Step 4：Milestone Planning</strong>——enabling_conditions を「key_assumptions」、unit_economics_threshold を「target」として明示</li>
+<li><strong>Step 5：パターン統合と組合せ条件</strong>——complementary patterns、incompatibility警告、prerequisite提案</li>
+<li><strong>Step 6：パイロット実装</strong>——key_metricsにunit_economics_thresholdを組込、trigger_to_scale / decay_to_pivotの判定基準</li>
+<li><strong>Step 7：学習ループ</strong>——enabling/disabling conditionsの実観測フィードバック、network_effect_typeに応じたスケール戦略</li>
+</ol>
+
+<h3 class="subsection">日英クロスマッチング</h3>
+<p>本エンジンは日本語入力にも英語キーワードDBにも対応するため、JA_EN_MAP（50項目以上）を実装した。「サブスク→subscription」「プラットフォーム→platform」「コミュニティ→community」など、頻出する日本語ビジネス用語を英語キーワードに対応付けることで、入力言語に関わらず高精度のマッチングを実現する。</p>
+
+<h3 class="subsection">サブフィールドブースト</h3>
+<p>単純なJaccard類似度では、キーワード豊富な特定サブフィールド（広告など）に偏った推奨になる問題があった。これを解決するため、入力テキストに含まれるサブフィールド指示語（"saas"→BM02、"npo"→BM11、"ai agent"→BM08など）に対してブースト係数（0.8/hit）を適用する仕組みを実装した。これにより、「B2B SaaS」と入力すれば確実にBM02のSaaSパターン群が、「NPO 寄付」と入力すれば確実にBM11のソーシャルセクター・パターン群が、TOPに浮上するようになった。</p>
+
+</section>
+
+<section id="sec-06" class="section">
+<div class="section-num">Section 06</div>
+<h2 class="section-title">Stage 4：条件レイヤーの拡充</h2>
+
+<div class="epigraph">
+パターンは普遍的に成立する魔法ではない。それぞれが特定の前提条件のもとで機能し、その条件が崩れると破綻する。
+<span class="attribution">— 本プロジェクトの基本認識</span>
+</div>
+
+<h3 class="subsection">10属性の構造化</h3>
+<p>Stage 4は、本プロジェクトの最も野心的な工程であった。全735パターンに対して、以下の10属性を体系的に付与した。</p>
+
+<table>
+<thead><tr><th>属性</th><th>意味</th><th>充填件数</th></tr></thead>
+<tbody>
+<tr><td>enabling_conditions</td><td>パターンが生きるために必要な前提条件</td><td>735</td></tr>
+<tr><td>disabling_conditions</td><td>適用すると失敗する条件</td><td>735</td></tr>
+<tr><td>trigger_signals</td><td>「今がそのとき」を示す環境シグナル</td><td>735</td></tr>
+<tr><td>decay_signals</td><td>パターンが破綻する兆候</td><td>735</td></tr>
+<tr><td>maturity_stage</td><td>適用フェーズ（early/growth/mature/all）</td><td>735</td></tr>
+<tr><td>industry_lifecycle_fit</td><td>適合する産業ライフサイクル段階</td><td>735</td></tr>
+<tr><td>unit_economics_threshold</td><td>スケール採算ライン（数値基準）</td><td>735</td></tr>
+<tr><td>network_effect_type</td><td>direct / indirect / data / none</td><td>735</td></tr>
+<tr><td>prerequisite_patterns</td><td>先行に必要な他パターンID</td><td>119</td></tr>
+<tr><td>incompatible_patterns</td><td>同時実装困難な他パターンID</td><td>181</td></tr>
+</tbody>
+</table>
+
+<h3 class="subsection">サブフィールド別テンプレート＋個別オーバーライド</h3>
+<p>条件レイヤーの付与には、二段階のアプローチを採用した。第一段階として、12サブフィールド別に標準テンプレート（4つの条件配列＋6つのスカラ属性）を設計し、各サブフィールドの代表的特性を記述した。第二段階として、特に重要な高頻出パターン（BMC、Aggregation Theory、Patreon、Yunus Social Business、Power-by-Hourなど）に対して個別の特化条件を上書きした。これにより、効率性と精度の両立を実現した。</p>
+
+<h3 class="subsection">前提・非互換関係の明示</h3>
+<p>パターン間の組合せ条件は、最も知的に挑戦的な領域であった。例えば、「Aggregation Theoryの実装は、Two-Sided Platform（BM03_001）の理解を前提とする」「Yunus Social Business と純粋利益最大化を求める投資家構造は非互換」などの関係を明示的に整理した。119のパターンに前提パターンが、181のパターンに非互換パターンが付与され、応用エンジンのStep 5「組合せ条件」で活用される。</p>
+
+<div class="insight-box">
+<div class="insight-box-label">条件レイヤーがもたらした価値</div>
+<p>条件レイヤーの追加により、本DBは「パターン辞書」から「探究的意思決定支援システム」へと質的に変貌した。事業案を入力すると、エンジンは「このパターンが生きるためには何が必要か」「何があると破綻するか」「今がそのときであることを示すシグナルは何か」を可視化する。この可視化こそが、ガスマンの「再組み合わせ」が単なる模倣ではなく実践的な創造行為となるための知的基盤である。</p>
+</div>
+
+</section>
+
+<section id="sec-07" class="section">
+<div class="section-num">Section 07</div>
+<h2 class="section-title">主要な発見と示唆</h2>
+
+<h3 class="subsection">発見1——パターンの90%は組合せである</h3>
+<p>本DBの構築過程で、ガスマンの「90%は既存パターンの組合せ」という命題が、実証的に裏付けられた。AI native pricing（BM08）でさえ、その多くがTraditional SaaS（BM02）+ Token-based metering + Outcome-based pricingの組合せである。完全に新規のパターンは稀であり、ほとんどの「新しさ」は組合せの新しさに帰着する。</p>
+
+<h3 class="subsection">発見2——条件不在の議論は危険である</h3>
+<p>5並列リサーチで観察された既存教材の最大の弱点は、「パターンが機能する条件」の体系的記述の欠如であった。例えば、「Patreon型メンバーシップ」を導入しても、Kevin Kellyの「1,000 True Fans」基準（クリエイターのファンベース1,000人以上）を満たさなければユニットエコノミクスは破綻する。この種の条件論なしにパターンを推奨することは、無責任な助言になりかねない。</p>
+
+<h3 class="subsection">発見3——日本特有領域は欧米フレームワークでは捉えきれない</h3>
+<p>共同組合（生協・JA・漁協）、寺社経済、伝統産業の弟子制度・茶道家元制度などは、欧米の標準的BMフレームワークでは十分に捉えられない。これらは長期にわたる地域コミュニティと制度的権威に支えられた独特の収益構造を持つ。日本の事業設計においては、これらを明示的に検討対象とすべきパターン群である。本DBはこの領域に独自の重みを置いている。</p>
+
+<h3 class="subsection">発見4——AI時代の課金モデルは急速に進化している</h3>
+<p>2020年6月のOpenAI GPT-3 API公開から2026年5月までの6年間で、AI課金モデルは「ユーザー数→トークン数→タスク完了数→成果（Outcome）」という4段階の進化を経た。2027年に向けて、新規エンタープライズSaaS企業の80%以上がエージェント・タスクベース課金を基本とする予測がある。この変化は、本DBのBM08（AI native pricing）100件の蓄積に集約されている。</p>
+
+<h3 class="subsection">発見5——ハイブリッド収益ポートフォリオが持続性を支える</h3>
+<p>日本のNPO実態調査では、単一収入源（補助金または会費のみ）に依存する組織の5年生存率は31%にとどまる。だが、3源泉以上を運営する組織の5年生存率は78%である。本DBが体系化する「多源泉ハイブリッド収益ポートフォリオ」は、単なる理論ではなく、ソーシャル組織の実証的な持続可能性指標である。</p>
+
+</section>
+
+<section id="sec-08" class="section">
+<div class="section-num">Section 08</div>
+<h2 class="section-title">ミラツクへの応用提案</h2>
+
+<h3 class="subsection">ミラツク自身の経営モデル設計</h3>
+<p>本DBから直接導かれる、ミラツク自身の経営に応用可能な10のパターンを整理する。これらは互いに排他的ではなく、複合的に組み合わせることでハイブリッド収益ポートフォリオを構成する。</p>
+
+<table>
+<thead><tr><th>応用パターン</th><th>想定収益規模</th><th>パターン参照</th></tr></thead>
+<tbody>
+<tr><td>標準化・販売（DBの企業向けライセンス）</td><td>年100-500万円/契約</td><td>BM02 SaaS</td></tr>
+<tr><td>業界別パターン導入コンサル</td><td>月20-50万円</td><td>BM07 受託</td></tr>
+<tr><td>ソーシャルセクター版会員制</td><td>年24-36万円会費</td><td>BM11_018</td></tr>
+<tr><td>Open Collective継続寄付</td><td>月50-100万円</td><td>BM11_036</td></tr>
+<tr><td>地域フランチャイズ型コンサル</td><td>年1.2億円規模</td><td>BM11_010</td></tr>
+<tr><td>知識カフェ会員制</td><td>年900万円</td><td>BM05_014</td></tr>
+<tr><td>スピンアウト支援基金</td><td>ロイヤリティ収入</td><td>BM11 Spin-out</td></tr>
+<tr><td>企業内研修</td><td>年1,500-5,000万円</td><td>BM02_036+BM12</td></tr>
+<tr><td>パターン別アクセラレータ</td><td>参加費+成功報酬</td><td>BM05/BM07</td></tr>
+<tr><td>CSR寄付プログラム</td><td>年2,000-5,000万円</td><td>BM11_028</td></tr>
+</tbody>
+</table>
+
+<h3 class="subsection">クライアント支援への応用</h3>
+<p>ミラツクが日々受ける事業相談に対して、本DBは強力な共通言語を提供する。クライアントが「自社の事業モデルを変えたい」と相談したとき、コンサルタントは本DBから（1）現状モデルがどのパターンに該当するか、（2）転換可能な近接パターンは何か、（3）転換に必要な前提条件は満たされているか、（4）転換時の破綻シグナルは何か、を体系的に提示できる。これは経験と勘に依存していた従来のコンサルティングを、知識基盤に支えられた構造化されたものへと変える。</p>
+
+<h3 class="subsection">エージェント連携</h3>
+<p>本DBは <code>/business-models</code> エージェントとして登録されており、ミラツクの他のエージェント（<code>/mg</code> 経営学、<code>/innovation-db</code> イノベーション理論、<code>/startup-db</code> スタートアップ研究、<code>/academic-oracle</code> 横断統合）と連携する。事業案に関する問いは、これらのエージェントが協調して回答することで、理論層と応用層を接続した立体的な助言を実現できる。</p>
+
+</section>
+
+<section id="sec-09" class="section">
+<div class="section-num">Section 09</div>
+<h2 class="section-title">今後の発展方向</h2>
+
+<h3 class="subsection">短期（〜2026年末）</h3>
+<p>第一に、条件レイヤーの個別オーバーライドの拡張である。現在は高頻出パターンに対してのみ個別の特化条件を付与しているが、これを順次200件、500件と拡大していく。第二に、応用エンジンへの「事業案の自動分析」機能の追加である。現在は手動入力された事業案に対する推奨だが、Webサイト・事業計画書PDFなどから自動的に事業の本質を抽出する前処理層を実装する。</p>
+
+<h3 class="subsection">中期（2027年）</h3>
+<p>第一に、実装事例フィードバックループの構築である。本DBの推奨を採用した事業者から、実際の実装結果（成功/失敗、enabling_conditionsの実観測、unit_economicsの達成度）をフィードバックとして収集し、DBの精度を継続的に向上させる。第二に、海外パターンの拡充である。現在は欧米中心の英語パターンと日本特有パターンに偏っているが、東南アジア・インド・アフリカなど新興市場のローカルパターンを加えていく。</p>
+
+<h3 class="subsection">長期（2028年以降）</h3>
+<p>第一に、パターン同士の進化シミュレーション機能である。「もしAIエージェント課金が支配的になったら、SaaSサブスクは何件のパターンと統合・対立関係にシフトするか」といった「what-if」分析を可能にする。第二に、本DBを「フォーサイト・ビジネスモデル DB」として、未来予測・シナリオプランニングと統合する。これは、ミラツクのフォーサイト知識基盤（FK、FS、CLA等）との連携によって実現される。</p>
+
+</section>
+
+<section id="sec-10" class="section">
+<div class="section-num">Section 10</div>
+<h2 class="section-title">付録：データ構造と利用方法</h2>
+
+<h3 class="subsection">技術仕様</h3>
+<ul>
+<li>DB位置：<code>~/projects/research/academic-knowledge-db/academic.db</code></li>
+<li>主要テーブル：<code>business_models</code>（45カラム、735行）、<code>business_models_relations</code>（2,570行）</li>
+<li>分野横断テーブル：<code>cross_domain_relations</code>（business_models起点1,515行）</li>
+<li>応用エンジン：<code>~/projects/research/business-model-patterns-db/scripts/recommend_engine.py</code></li>
+<li>エージェント：<code>/business-models</code>（Claude Code内）</li>
+<li>公開リポジトリ：<a href="https://github.com/yuyanishimura0312/business-model-patterns-db">github.com/yuyanishimura0312/business-model-patterns-db</a>（private）</li>
+</ul>
+
+<h3 class="subsection">関係タイプの分布</h3>
+<table>
+<thead><tr><th>relation_type</th><th>件数</th></tr></thead>
+<tbody>
+<tr><td>related_to</td><td>1239</td></tr>
+<tr><td>applies_to_policy</td><td>544</td></tr>
+<tr><td>conflicts_with</td><td>246</td></tr>
+<tr><td>derived_from</td><td>226</td></tr>
+<tr><td>complements</td><td>196</td></tr>
+<tr><td>extends</td><td>119</td></tr>
+
+</tbody>
+</table>
+
+<h3 class="subsection">利用方法（クイックスタート）</h3>
+<p>事業案がある場合、以下のコマンドで条件付きパターン推奨を得られる。</p>
+<pre style="background: var(--surface); padding: 12px 16px; border: 1px solid var(--border); font-family: monospace; font-size: 0.82rem; overflow-x: auto;">python3 ~/projects/research/business-model-patterns-db/scripts/recommend_engine.py \
+  "B2B向けプロジェクト管理SaaS、月額サブスクで提供" \
+  --segment "B2B" \
+  --stage "growth"</pre>
+
+<p>あるいは、Claude Codeで <code>/business-models</code> エージェントを起動し、対話的に相談することもできる。エージェントは、事業案・組織形態・顧客セグメントなどを段階的にヒアリングしながら、最適なパターン候補・条件適合性・組合せ条件・パイロット計画を提示する。</p>
+
+<div class="pullquote">
+本DBは「答えを与える」ためにあるのではない。「問いを深める」ためにある。事業設計の探究は、ここから始まる。
+</div>
+
+</section>
+
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  if (html.dataset.theme === 'dark') {
+    html.dataset.theme = 'light';
+    btn.textContent = 'DARK';
+  } else {
+    html.dataset.theme = 'dark';
+    btn.textContent = 'LIGHT';
+  }
+}
+window.addEventListener('scroll', function() {
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const scrolled = window.scrollY / docHeight * 100;
+  document.getElementById('readingProgress').style.width = scrolled + '%';
+});
+</script>
+</body>
+</html>
