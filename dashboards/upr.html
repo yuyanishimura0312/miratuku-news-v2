@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大学プレスリリースDB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --accent-link: #CC1400;
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+  --accent-link: #FF6666;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+h2 { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent-warm); }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.7; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
+.overview-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--accent-warm); }
+.overview-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; }
+
+/* Charts */
+.chart-container { width: 100%; margin: 16px 0; }
+.chart-container svg { width: 100%; overflow: visible; }
+.bar { fill: var(--accent-warm); opacity: 0.85; }
+.bar:hover { opacity: 1; }
+.axis text { font-size: 11px; font-family: var(--font); fill: var(--text-secondary); }
+.axis line, .axis path { stroke: var(--border); }
+.grid line { stroke: var(--border-light); }
+.chart-label { font-size: 10px; font-family: var(--font); fill: var(--text-muted); }
+
+/* Pie chart */
+#pie-container { width: 100%; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; margin: 16px 0; }
+#pie-svg { flex: 0 0 220px; height: 220px; }
+.pie-legend { flex: 1; min-width: 180px; }
+.pie-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.8rem; }
+.pie-legend-dot { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 12px 0; }
+th { background: var(--surface); color: var(--text-secondary); font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); font-size: 0.78rem; }
+td { padding: 7px 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: top; }
+tr:hover td { background: var(--surface); }
+.rank-num { font-family: monospace; color: var(--text-muted); font-size: 0.72rem; }
+.count-cell { font-weight: 700; font-family: monospace; color: var(--accent-warm); }
+.bar-cell { padding-top: 10px; }
+.bar-inline { height: 6px; background: var(--accent-warm); opacity: 0.7; display: inline-block; }
+.univ-link { color: var(--accent-link); text-decoration: none; font-size: 0.8rem; }
+.univ-link:hover { text-decoration: underline; }
+
+/* Search */
+.search-box { width: 100%; padding: 10px 14px; font-size: 0.84rem; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); margin-bottom: 16px; }
+.search-box:focus { outline: none; border-color: var(--accent-warm); }
+.filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-select { padding: 6px 10px; font-size: 0.78rem; border: 1px solid var(--border); background: var(--card); color: var(--text); font-family: var(--font); cursor: pointer; }
+.filter-select:focus { outline: none; border-color: var(--accent-warm); }
+
+/* Sample PR cards / table */
+.pr-table { width: 100%; }
+.pr-table td { font-size: 0.78rem; }
+.pr-title { font-weight: 500; color: var(--text); }
+.pr-title a { color: var(--accent-link); text-decoration: none; }
+.pr-title a:hover { text-decoration: underline; }
+.pr-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.tag { display: inline-block; font-size: 0.65rem; padding: 1px 6px; border: 1px solid var(--border-light); color: var(--text-secondary); font-family: monospace; margin-right: 4px; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.84rem; }
+.loading-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent-warm); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Pagination */
+.pagination { display: flex; justify-content: center; gap: 6px; margin: 16px 0; flex-wrap: wrap; align-items: center; }
+.page-btn { padding: 5px 12px; font-size: 0.76rem; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-family: var(--font); color: var(--text); }
+.page-btn.active { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+.page-btn:disabled { opacity: 0.4; cursor: default; }
+.page-info { font-size: 0.72rem; color: var(--text-muted); }
+
+/* Two-column grid */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+/* Section note */
+.section-note { font-size: 0.76rem; color: var(--text-muted); margin: -8px 0 12px; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+<a class="back" href="../databases.html">&larr; データベース一覧に戻る</a>
+
+<h1><span class="db-id">UPR</span>大学プレスリリースDB</h1>
+<p class="subtitle">Japanese University Press Releases Database — 日本の大学が発信するプレスリリースの大規模収集・分析データベース</p>
+<p class="desc" id="dbDesc">読み込み中...</p>
+
+<div class="overview" id="overviewCards">
+  <div class="loading"><div class="loading-spinner"></div>データを読み込み中...</div>
+</div>
+
+<!-- ===== YEAR DISTRIBUTION ===== -->
+<h2>年別プレスリリース数</h2>
+<p class="section-note">2023年〜2026年の収録件数の推移</p>
+<div class="chart-container" id="year-chart"></div>
+
+<!-- ===== MONTHLY TREND ===== -->
+<h2>月次トレンド</h2>
+<p class="section-note">月ごとのプレスリリース発信数の推移</p>
+<div class="chart-container" id="monthly-chart"></div>
+
+<!-- ===== CATEGORY & PLATFORM ===== -->
+<h2>分野別・プラットフォーム別分布</h2>
+<div class="two-col">
+  <div>
+    <h3>カテゴリ分布（34分野）</h3>
+    <div class="chart-container" id="category-chart"></div>
+  </div>
+  <div>
+    <h3>収録プラットフォーム</h3>
+    <div id="pie-container">
+      <svg id="pie-svg"></svg>
+      <div class="pie-legend" id="pie-legend"></div>
+    </div>
+    <h3 style="margin-top:24px">大学種別</h3>
+    <div class="chart-container" id="univtype-chart"></div>
+  </div>
+</div>
+
+<!-- ===== TOP UNIVERSITIES ===== -->
+<h2>大学別ランキング（上位50大学）</h2>
+<p class="section-note">プレスリリース収録件数が多い大学の一覧</p>
+<table id="univTable">
+  <thead><tr><th style="width:40px">#</th><th>大学名</th><th style="width:100px;text-align:right">件数</th><th style="width:200px">割合</th></tr></thead>
+  <tbody id="univTableBody"><tr><td colspan="4"><div class="loading"><div class="loading-spinner"></div></div></td></tr></tbody>
+</table>
+
+<!-- ===== PREFECTURE MAP ===== -->
+<h2>都道府県別分布</h2>
+<p class="section-note">プレスリリースの発信元大学の所在都道府県</p>
+<div class="two-col">
+  <table>
+    <thead><tr><th>#</th><th>都道府県</th><th style="text-align:right">件数</th></tr></thead>
+    <tbody id="prefTableLeft"></tbody>
+  </table>
+  <table>
+    <thead><tr><th>#</th><th>都道府県</th><th style="text-align:right">件数</th></tr></thead>
+    <tbody id="prefTableRight"></tbody>
+  </table>
+</div>
+
+<!-- ===== SAMPLE PRESS RELEASES ===== -->
+<h2>プレスリリース一覧（最新200件）</h2>
+<p class="section-note">タイトル・大学名・カテゴリで絞り込み検索できます</p>
+<input type="text" class="search-box" id="prSearch" placeholder="タイトル・大学名・テーマで検索..." oninput="filterPRs()">
+<div class="filter-row">
+  <select class="filter-select" id="catFilter" onchange="filterPRs()">
+    <option value="">すべてのカテゴリ</option>
+  </select>
+  <select class="filter-select" id="univTypeFilter" onchange="filterPRs()">
+    <option value="">大学種別（全て）</option>
+    <option value="national">国立</option>
+    <option value="private">私立</option>
+    <option value="public">公立</option>
+  </select>
+  <select class="filter-select" id="yearFilter" onchange="filterPRs()">
+    <option value="">全期間</option>
+    <option value="2026">2026年</option>
+    <option value="2025">2025年</option>
+    <option value="2024">2024年</option>
+    <option value="2023">2023年</option>
+  </select>
+</div>
+<div id="prTableWrap">
+  <table class="pr-table">
+    <thead><tr><th style="width:80px">日付</th><th>タイトル / テーマ</th><th style="width:110px">大学</th><th style="width:90px">カテゴリ</th></tr></thead>
+    <tbody id="prTableBody"></tbody>
+  </table>
+</div>
+<div class="pagination" id="prPagination"></div>
+
+<script>
+// ── Global state ──────────────────────────────────────────────────
+let DB = null;
+let filteredPRs = [];
+let currentPRPage = 1;
+const PR_PER_PAGE = 25;
+
+const PLATFORM_LABELS = {
+  'science-portal': 'Science Portal',
+  'u-presscenter': 'U-PRESS CENTER',
+  'university-site': '大学公式サイト'
+};
+const UNIV_TYPE_LABELS = {
+  'national': '国立大学',
+  'private': '私立大学',
+  'public': '公立大学'
+};
+const PIE_COLORS = ['#CC1400', '#1A6B3C', '#0369A1', '#D97706', '#8B5CF6'];
+
+// ── Data loading ──────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const resp = await fetch('../data/upr_consolidated.json?v=' + Date.now());
+    DB = await resp.json();
+    renderAll();
+  } catch (e) {
+    document.getElementById('overviewCards').innerHTML =
+      '<div style="color:var(--accent-warm);padding:20px">データの読み込みに失敗しました。</div>';
+    console.error(e);
+  }
+}
+
+function renderAll() {
+  renderDescription();
+  renderOverview();
+  renderYearChart();
+  renderMonthlyChart();
+  renderCategoryChart();
+  renderPieChart();
+  renderUnivTypeChart();
+  renderUnivTable();
+  renderPrefTable();
+  populateCatFilter();
+  filteredPRs = (DB.samples || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+  currentPRPage = 1;
+  renderPRPage();
+}
+
+// ── Overview ──────────────────────────────────────────────────────
+function renderDescription() {
+  const s = DB.stats;
+  const m = DB.meta;
+  document.getElementById('dbDesc').textContent =
+    `${m.description}。${s.total_universities}大学・${s.total_press_releases.toLocaleString()}件のプレスリリースを収録し、` +
+    `${s.categories}カテゴリ・${s.unique_themes.toLocaleString()}テーマに分類。収録期間は${s.date_range.start}〜${s.date_range.end}。`;
+}
+
+function renderOverview() {
+  const s = DB.stats;
+  document.getElementById('overviewCards').innerHTML = `
+    <div class="overview-card"><div class="overview-value">${s.total_press_releases.toLocaleString()}</div><div class="overview-label">プレスリリース総数</div></div>
+    <div class="overview-card"><div class="overview-value">${s.total_universities.toLocaleString()}</div><div class="overview-label">収録大学数</div></div>
+    <div class="overview-card"><div class="overview-value">${s.categories}</div><div class="overview-label">カテゴリ数</div></div>
+    <div class="overview-card"><div class="overview-value">${s.unique_themes.toLocaleString()}</div><div class="overview-label">ユニークテーマ数</div></div>
+    <div class="overview-card"><div class="overview-value">2023–</div><div class="overview-label">収録期間</div></div>
+  `;
+}
+
+// ── Year chart ────────────────────────────────────────────────────
+function renderYearChart() {
+  const raw = DB.distributions.by_year;
+  const data = Object.entries(raw).map(([y, c]) => ({ label: y + '年', value: c }));
+  const margin = { top: 16, right: 20, bottom: 36, left: 60 };
+  const W = 880, H = 200;
+  const iW = W - margin.left - margin.right;
+  const iH = H - margin.top - margin.bottom;
+
+  const svg = d3.select('#year-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleBand().domain(data.map(d => d.label)).range([0, iW]).padding(0.35);
+  const y = d3.scaleLinear().domain([0, d3.max(data, d => d.value) * 1.1]).range([iH, 0]);
+
+  // Grid
+  g.append('g').attr('class', 'grid')
+    .call(d3.axisLeft(y).tickSize(-iW).tickFormat('').ticks(4))
+    .call(gg => gg.select('.domain').remove());
+
+  g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(x));
+  g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(4).tickFormat(d => d.toLocaleString()));
+
+  g.selectAll('.bar').data(data).join('rect')
+    .attr('class', 'bar')
+    .attr('x', d => x(d.label))
+    .attr('y', d => y(d.value))
+    .attr('width', x.bandwidth())
+    .attr('height', d => iH - y(d.value));
+
+  g.selectAll('.bar-label').data(data).join('text')
+    .attr('class', 'chart-label')
+    .attr('x', d => x(d.label) + x.bandwidth() / 2)
+    .attr('y', d => y(d.value) - 5)
+    .attr('text-anchor', 'middle')
+    .text(d => d.value.toLocaleString());
+}
+
+// ── Monthly trend chart ───────────────────────────────────────────
+function renderMonthlyChart() {
+  const raw = DB.distributions.monthly_trend;
+  const data = Object.entries(raw)
+    .map(([k, v]) => ({ label: k, value: v }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  const margin = { top: 16, right: 20, bottom: 50, left: 60 };
+  const W = 880, H = 220;
+  const iW = W - margin.left - margin.right;
+  const iH = H - margin.top - margin.bottom;
+
+  const svg = d3.select('#monthly-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scalePoint().domain(data.map(d => d.label)).range([0, iW]).padding(0.1);
+  const y = d3.scaleLinear().domain([0, d3.max(data, d => d.value) * 1.15]).range([iH, 0]);
+
+  // Grid
+  g.append('g').attr('class', 'grid')
+    .call(d3.axisLeft(y).tickSize(-iW).tickFormat('').ticks(5))
+    .call(gg => gg.select('.domain').remove());
+
+  // Show only every 3rd tick on X axis
+  g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
+    .call(d3.axisBottom(x).tickValues(data.filter((_, i) => i % 3 === 0).map(d => d.label)))
+    .selectAll('text').attr('transform', 'rotate(-40)').style('text-anchor', 'end');
+  g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(5).tickFormat(d => d.toLocaleString()));
+
+  // Line
+  const line = d3.line().x(d => x(d.label)).y(d => y(d.value)).curve(d3.curveMonotoneX);
+  g.append('path').datum(data).attr('fill', 'none').attr('stroke', 'var(--accent-warm)')
+    .attr('stroke-width', 2).attr('d', line);
+
+  // Area
+  const area = d3.area().x(d => x(d.label)).y0(iH).y1(d => y(d.value)).curve(d3.curveMonotoneX);
+  g.append('path').datum(data).attr('fill', 'var(--accent-warm)').attr('opacity', 0.08).attr('d', area);
+
+  // Dots
+  g.selectAll('circle').data(data).join('circle')
+    .attr('cx', d => x(d.label)).attr('cy', d => y(d.value))
+    .attr('r', 3).attr('fill', 'var(--accent-warm)')
+    .append('title').text(d => `${d.label}: ${d.value}件`);
+}
+
+// ── Category horizontal bar chart ─────────────────────────────────
+function renderCategoryChart() {
+  const raw = DB.distributions.by_category;
+  const data = Object.entries(raw)
+    .map(([k, v]) => ({ label: k, value: v }))
+    .sort((a, b) => b.value - a.value);
+
+  const barH = 16, gap = 4;
+  const margin = { top: 8, right: 80, bottom: 8, left: 140 };
+  const W = 440;
+  const iW = W - margin.left - margin.right;
+  const H = data.length * (barH + gap) + margin.top + margin.bottom;
+
+  const svg = d3.select('#category-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain([0, data[0].value]).range([0, iW]);
+  const y = d3.scaleBand().domain(data.map(d => d.label)).range([0, H - margin.top - margin.bottom]).paddingInner(0.25);
+
+  g.selectAll('.cat-bar').data(data).join('rect')
+    .attr('class', 'bar')
+    .attr('x', 0).attr('y', d => y(d.label))
+    .attr('width', d => x(d.value))
+    .attr('height', y.bandwidth());
+
+  g.selectAll('.cat-label-left').data(data).join('text')
+    .attr('x', -6).attr('y', d => y(d.label) + y.bandwidth() / 2)
+    .attr('text-anchor', 'end').attr('dominant-baseline', 'middle')
+    .attr('font-size', '10px').attr('font-family', 'var(--font)').attr('fill', 'var(--text)')
+    .text(d => d.label);
+
+  g.selectAll('.cat-label-right').data(data).join('text')
+    .attr('x', d => x(d.value) + 4).attr('y', d => y(d.label) + y.bandwidth() / 2)
+    .attr('dominant-baseline', 'middle')
+    .attr('font-size', '10px').attr('font-family', 'monospace').attr('fill', 'var(--text-muted)')
+    .text(d => d.value.toLocaleString());
+}
+
+// ── Pie chart (platform) ──────────────────────────────────────────
+function renderPieChart() {
+  const raw = DB.distributions.by_platform;
+  const data = Object.entries(raw)
+    .map(([k, v]) => ({ label: PLATFORM_LABELS[k] || k, key: k, value: v }))
+    .sort((a, b) => b.value - a.value);
+  const total = d3.sum(data, d => d.value);
+
+  const R = 90, CX = 110, CY = 110;
+  const svg = d3.select('#pie-svg');
+  const pie = d3.pie().value(d => d.value).sort(null);
+  const arc = d3.arc().innerRadius(40).outerRadius(R);
+
+  svg.selectAll('path').data(pie(data)).join('path')
+    .attr('transform', `translate(${CX},${CY})`)
+    .attr('d', arc)
+    .attr('fill', (d, i) => PIE_COLORS[i % PIE_COLORS.length])
+    .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
+    .append('title').text(d => `${d.data.label}: ${d.data.value.toLocaleString()}件`);
+
+  // Center label
+  svg.append('text').attr('x', CX).attr('y', CY - 6).attr('text-anchor', 'middle')
+    .attr('font-size', '11px').attr('font-family', 'var(--font)').attr('fill', 'var(--text-muted)')
+    .text('合計');
+  svg.append('text').attr('x', CX).attr('y', CY + 10).attr('text-anchor', 'middle')
+    .attr('font-size', '13px').attr('font-weight', '700').attr('font-family', 'var(--font-serif)').attr('fill', 'var(--text)')
+    .text(total.toLocaleString());
+
+  // Legend
+  const legend = document.getElementById('pie-legend');
+  legend.innerHTML = data.map((d, i) => `
+    <div class="pie-legend-item">
+      <div class="pie-legend-dot" style="background:${PIE_COLORS[i % PIE_COLORS.length]}"></div>
+      <span>${d.label}</span>
+      <span style="margin-left:auto;font-family:monospace;font-weight:700;color:var(--text-secondary)">${d.value.toLocaleString()}</span>
+      <span style="font-size:0.7rem;color:var(--text-muted)">(${(d.value/total*100).toFixed(1)}%)</span>
+    </div>`).join('');
+}
+
+// ── University type bar chart ─────────────────────────────────────
+function renderUnivTypeChart() {
+  const raw = DB.distributions.by_university_type;
+  const data = Object.entries(raw)
+    .map(([k, v]) => ({ label: UNIV_TYPE_LABELS[k] || k, value: v }))
+    .sort((a, b) => b.value - a.value);
+
+  const barH = 22, gap = 6;
+  const margin = { top: 8, right: 70, bottom: 8, left: 80 };
+  const W = 440;
+  const iW = W - margin.left - margin.right;
+  const H = data.length * (barH + gap) + margin.top + margin.bottom;
+
+  const svg = d3.select('#univtype-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+  const x = d3.scaleLinear().domain([0, data[0].value]).range([0, iW]);
+  const y = d3.scaleBand().domain(data.map(d => d.label)).range([0, H - margin.top - margin.bottom]).paddingInner(0.3);
+
+  const colors = ['#CC1400', '#1A6B3C', '#0369A1'];
+  g.selectAll('rect').data(data).join('rect')
+    .attr('x', 0).attr('y', d => y(d.label))
+    .attr('width', d => x(d.value)).attr('height', y.bandwidth())
+    .attr('fill', (d, i) => colors[i]).attr('opacity', 0.8);
+
+  g.selectAll('.left-label').data(data).join('text')
+    .attr('x', -6).attr('y', d => y(d.label) + y.bandwidth() / 2)
+    .attr('text-anchor', 'end').attr('dominant-baseline', 'middle')
+    .attr('font-size', '11px').attr('font-family', 'var(--font)').attr('fill', 'var(--text)')
+    .text(d => d.label);
+
+  g.selectAll('.right-label').data(data).join('text')
+    .attr('x', d => x(d.value) + 5).attr('y', d => y(d.label) + y.bandwidth() / 2)
+    .attr('dominant-baseline', 'middle')
+    .attr('font-size', '11px').attr('font-family', 'monospace').attr('fill', 'var(--text-muted)')
+    .text(d => d.value.toLocaleString());
+}
+
+// ── University ranking table ──────────────────────────────────────
+function renderUnivTable() {
+  const top = DB.rankings.top_universities;
+  const maxCount = top[0].count;
+  const tbody = document.getElementById('univTableBody');
+  tbody.innerHTML = top.map((u, i) => `
+    <tr>
+      <td class="rank-num">${i + 1}</td>
+      <td>${u.name}</td>
+      <td class="count-cell" style="text-align:right">${u.count.toLocaleString()}</td>
+      <td class="bar-cell"><div class="bar-inline" style="width:${(u.count/maxCount*160).toFixed(0)}px"></div></td>
+    </tr>`).join('');
+}
+
+// ── Prefecture table ──────────────────────────────────────────────
+function renderPrefTable() {
+  const prefs = DB.distributions.by_prefecture;
+  const sorted = [...prefs].sort((a, b) => b.count - a.count);
+  const half = Math.ceil(sorted.length / 2);
+  const leftData = sorted.slice(0, half);
+  const rightData = sorted.slice(half);
+
+  document.getElementById('prefTableLeft').innerHTML = leftData.map((p, i) =>
+    `<tr><td class="rank-num">${i + 1}</td><td>${p.name}</td><td class="count-cell" style="text-align:right">${p.count.toLocaleString()}</td></tr>`
+  ).join('');
+  document.getElementById('prefTableRight').innerHTML = rightData.map((p, i) =>
+    `<tr><td class="rank-num">${half + i + 1}</td><td>${p.name}</td><td class="count-cell" style="text-align:right">${p.count.toLocaleString()}</td></tr>`
+  ).join('');
+}
+
+// ── Category filter populate ──────────────────────────────────────
+function populateCatFilter() {
+  const cats = Object.keys(DB.distributions.by_category).sort();
+  const sel = document.getElementById('catFilter');
+  sel.innerHTML = '<option value="">すべてのカテゴリ</option>' +
+    cats.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+// ── PR table ─────────────────────────────────────────────────────
+function filterPRs() {
+  const q = document.getElementById('prSearch').value.trim().toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const univType = document.getElementById('univTypeFilter').value;
+  const year = document.getElementById('yearFilter').value;
+
+  filteredPRs = (DB.samples || []).filter(pr => {
+    if (cat && pr.category !== cat) return false;
+    if (univType && pr.univ_type !== univType) return false;
+    if (year && !pr.date.startsWith(year)) return false;
+    if (q) {
+      const haystack = [pr.title, pr.university, pr.theme, pr.category, pr.summary].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => b.date.localeCompare(a.date));
+
+  currentPRPage = 1;
+  renderPRPage();
+}
+
+function renderPRPage() {
+  const total = filteredPRs.length;
+  const totalPages = Math.ceil(total / PR_PER_PAGE);
+  const start = (currentPRPage - 1) * PR_PER_PAGE;
+  const items = filteredPRs.slice(start, start + PR_PER_PAGE);
+
+  const UNIV_TYPE_JA = { national: '国立', private: '私立', public: '公立' };
+
+  const tbody = document.getElementById('prTableBody');
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px">該当するプレスリリースが見つかりません。</td></tr>';
+  } else {
+    tbody.innerHTML = items.map(pr => {
+      const titleLink = pr.url
+        ? `<a class="univ-link" href="${pr.url}" target="_blank" rel="noopener">${escHtml(pr.title.substring(0, 80))}${pr.title.length > 80 ? '...' : ''}</a>`
+        : escHtml(pr.title.substring(0, 80));
+      const theme = pr.theme && pr.theme !== pr.title ? `<div class="pr-meta">テーマ: ${escHtml(pr.theme.substring(0, 60))}</div>` : '';
+      const univType = UNIV_TYPE_JA[pr.univ_type] || '';
+      return `<tr>
+        <td style="font-family:monospace;font-size:0.72rem;white-space:nowrap">${pr.date}</td>
+        <td><div class="pr-title">${titleLink}</div>${theme}</td>
+        <td style="font-size:0.76rem">${escHtml(pr.university)}<br><span style="font-size:0.66rem;color:var(--text-muted)">${univType} / ${pr.prefecture || ''}</span></td>
+        <td><span class="tag">${escHtml(pr.category || '')}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  renderPRPagination(totalPages, total, start);
+}
+
+function renderPRPagination(totalPages, total, start) {
+  const container = document.getElementById('prPagination');
+  if (totalPages <= 1 && total === 0) { container.innerHTML = ''; return; }
+  let html = `<button class="page-btn" onclick="goPagePR(${currentPRPage-1})" ${currentPRPage===1?'disabled':''}>前へ</button>`;
+  const maxShow = 7;
+  let startP = Math.max(1, currentPRPage - 3);
+  let endP = Math.min(totalPages, startP + maxShow - 1);
+  if (endP - startP < maxShow - 1) startP = Math.max(1, endP - maxShow + 1);
+  for (let p = startP; p <= endP; p++) {
+    html += `<button class="page-btn ${p===currentPRPage?'active':''}" onclick="goPagePR(${p})">${p}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goPagePR(${currentPRPage+1})" ${currentPRPage===totalPages?'disabled':''}>次へ</button>`;
+  html += `<span class="page-info">${total.toLocaleString()}件中 ${start+1}〜${Math.min(start+PR_PER_PAGE, total)}</span>`;
+  container.innerHTML = html;
+}
+
+function goPagePR(p) {
+  const totalPages = Math.ceil(filteredPRs.length / PR_PER_PAGE);
+  if (p < 1 || p > totalPages) return;
+  currentPRPage = p;
+  renderPRPage();
+  document.getElementById('prSearch').scrollIntoView({ behavior: 'smooth' });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
