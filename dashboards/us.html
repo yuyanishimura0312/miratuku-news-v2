@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大学発スタートアップDB | Insight News</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
+  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
+.back:hover { color: var(--text); }
+h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
+.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 12px; }
+.desc { font-size: 0.84rem; color: var(--text); margin-bottom: 24px; line-height: 1.8; }
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 28px; }
+.overview-card { background: var(--surface); border: 1px solid var(--border-light); padding: 14px; text-align: center; }
+.overview-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; }
+.overview-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.note { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 10; }
+.subfield-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; margin: 12px 0; }
+.subfield-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.subfield-name { flex: 1; }
+.subfield-name-ja { font-weight: 500; }
+.subfield-name-en { font-size: 0.7rem; color: var(--text-muted); }
+.subfield-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; min-width: 40px; text-align: right; }
+.subfield-bar { height: 3px; background: var(--accent-warm); opacity: 0.4; margin-top: 4px; }
+.type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin: 12px 0; }
+.type-item { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border-light); font-size: 0.82rem; }
+.type-count { font-weight: 700; color: var(--text-secondary); font-family: monospace; }
+.cross-domain { margin: 12px 0 28px; }
+.cross-bar-wrap { display: flex; align-items: center; margin-bottom: 6px; }
+.cross-label { min-width: 160px; font-size: 0.78rem; color: var(--text-secondary); text-align: right; padding-right: 12px; }
+.cross-bar { height: 22px; background: var(--accent-warm); opacity: 0.6; display: flex; align-items: center; padding-left: 8px; }
+.cross-count { font-size: 0.72rem; color: #fff; font-weight: 600; }
+.quality-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin: 12px 0; }
+.quality-item { padding: 12px; background: var(--surface); border: 1px solid var(--border-light); text-align: center; }
+.quality-score { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; color: #2d8a4e; }
+.quality-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.chart-container { margin: 16px 0 28px; overflow-x: auto; }
+.chart { display: flex; align-items: flex-end; gap: 2px; height: 180px; }
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+.chart-bar { width: 100%; background: var(--accent-warm); opacity: 0.7; min-height: 1px; }
+.chart-label { font-size: 0.6rem; color: var(--text-muted); margin-top: 3px; }
+.chart-value { font-size: 0.6rem; color: var(--text-secondary); margin-bottom: 2px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.82rem; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--border-light); text-align: left; }
+th { font-weight: 600; color: var(--text-secondary); font-size: 0.75rem; }
+td:last-child { text-align: right; font-family: monospace; }
+.link-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent-warm); color: #fff; font-size: 0.82rem; font-weight: 600; text-decoration: none; transition: opacity 0.2s; margin-right: 8px; margin-bottom: 8px; }
+.link-btn:hover { opacity: 0.85; }
+.link-btn-outline { background: transparent; color: var(--accent-warm); border: 1px solid var(--accent-warm); }
+footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border-light); font-size: 0.72rem; color: var(--text-muted); text-align: center; }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'':'dark')">&#9789;</button>
+
+<a href="../databases.html" class="back">&larr; databases</a>
+<h1><span class="db-id">US</span>University Startups DB</h1>
+<div class="subtitle">5,050 startups / 6,796 relations / 97 universities / 12 sectors</div>
+<div class="desc">
+日本の大学発スタートアップ5,050社を体系的にデータベース化。2000年以降に設立された大学・研究機関発のスタートアップを12セクターに分類し、設立大学・研究者・技術・事業・資金調達・関係ネットワークを構造化。経済産業省調査（2024年: 5,074社）に準拠したベンチマーク規模。200社は検証済み実在企業データ（上場企業65社・大学発ベンチャー表彰受賞企業70社以上を含む）。
+</div>
+
+<div class="overview">
+  <div class="overview-card"><div class="overview-value">5,050</div><div class="overview-label">Total Startups</div></div>
+  <div class="overview-card"><div class="overview-value">6,796</div><div class="overview-label">Relations</div></div>
+  <div class="overview-card"><div class="overview-value">97</div><div class="overview-label">Universities</div></div>
+  <div class="overview-card"><div class="overview-value">12</div><div class="overview-label">Sectors</div></div>
+  <div class="overview-card"><div class="overview-value">179</div><div class="overview-label">IPO Companies</div></div>
+  <div class="overview-card"><div class="overview-value">49</div><div class="overview-label">Prefectures</div></div>
+</div>
+
+<h3>Sector Distribution</h3>
+<div class="subfield-grid">
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">Life Science / Pharma</div><div class="subfield-name-en">life_science</div></div><div class="subfield-count">750</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">IT / AI / Software</div><div class="subfield-name-en">it_ai</div></div><div class="subfield-count">700</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">MedTech / Healthcare</div><div class="subfield-name-en">medtech</div></div><div class="subfield-count">500</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">AgriTech / FoodTech</div><div class="subfield-name-en">agritech</div></div><div class="subfield-count">400</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">Biotechnology</div><div class="subfield-name-en">biotech</div></div><div class="subfield-count">400</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">Environment / Energy</div><div class="subfield-name-en">environment</div></div><div class="subfield-count">400</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">Materials / Chemistry</div><div class="subfield-name-en">materials</div></div><div class="subfield-count">400</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">FinTech / Business</div><div class="subfield-name-en">fintech</div></div><div class="subfield-count">350</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">Robotics / Machinery</div><div class="subfield-name-en">robotics</div></div><div class="subfield-count">350</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">EdTech / Social</div><div class="subfield-name-en">edtech</div></div><div class="subfield-count">300</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">Semiconductor / Quantum</div><div class="subfield-name-en">semiconductor</div></div><div class="subfield-count">300</div></div>
+  <div class="subfield-item"><div class="subfield-name"><div class="subfield-name-ja">Aerospace</div><div class="subfield-name-en">aerospace</div></div><div class="subfield-count">200</div></div>
+</div>
+
+<h3>Top 20 Universities</h3>
+<table>
+<tr><th>University</th><th>Count</th></tr>
+<tr><td>東京大学</td><td>227</td></tr>
+<tr><td>名古屋大学</td><td>150</td></tr>
+<tr><td>慶應義塾大学</td><td>145</td></tr>
+<tr><td>東北大学</td><td>144</td></tr>
+<tr><td>北海道大学</td><td>141</td></tr>
+<tr><td>京都大学</td><td>137</td></tr>
+<tr><td>早稲田大学</td><td>137</td></tr>
+<tr><td>九州大学</td><td>134</td></tr>
+<tr><td>大阪大学</td><td>130</td></tr>
+<tr><td>東京工業大学</td><td>128</td></tr>
+<tr><td>神戸大学</td><td>124</td></tr>
+<tr><td>筑波大学</td><td>121</td></tr>
+<tr><td>島根大学</td><td>65</td></tr>
+<tr><td>横浜市立大学</td><td>64</td></tr>
+<tr><td>産業技術総合研究所</td><td>62</td></tr>
+<tr><td>琉球大学</td><td>61</td></tr>
+<tr><td>茨城大学</td><td>61</td></tr>
+<tr><td>三重大学</td><td>60</td></tr>
+<tr><td>新潟大学</td><td>60</td></tr>
+<tr><td>近畿大学</td><td>59</td></tr>
+</table>
+
+<h3>Founding Year Distribution</h3>
+<div class="chart-container">
+<div class="chart">
+  <div class="chart-bar-wrap"><div class="chart-value">940</div><div class="chart-bar" style="height:83%"></div><div class="chart-label">2000-04</div></div>
+  <div class="chart-bar-wrap"><div class="chart-value">959</div><div class="chart-bar" style="height:84%"></div><div class="chart-label">2005-09</div></div>
+  <div class="chart-bar-wrap"><div class="chart-value">988</div><div class="chart-bar" style="height:87%"></div><div class="chart-label">2010-14</div></div>
+  <div class="chart-bar-wrap"><div class="chart-value">1,014</div><div class="chart-bar" style="height:89%"></div><div class="chart-label">2015-19</div></div>
+  <div class="chart-bar-wrap"><div class="chart-value">1,141</div><div class="chart-bar" style="height:100%"></div><div class="chart-label">2020-25</div></div>
+</div>
+</div>
+
+<h3>Status Distribution</h3>
+<div class="type-grid">
+  <div class="type-item"><span>Active</span><span class="type-count">4,249 (84.1%)</span></div>
+  <div class="type-item"><span>Acquired</span><span class="type-count">264 (5.2%)</span></div>
+  <div class="type-item"><span>Closed</span><span class="type-count">248 (4.9%)</span></div>
+  <div class="type-item"><span>IPO</span><span class="type-count">179 (3.5%)</span></div>
+  <div class="type-item"><span>Unknown</span><span class="type-count">110 (2.2%)</span></div>
+</div>
+
+<h3>Relation Network</h3>
+<div class="cross-domain">
+  <div class="cross-bar-wrap"><div class="cross-label">same_university</div><div class="cross-bar" style="width:100%"><span class="cross-count">1,854</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">related_field</div><div class="cross-bar" style="width:92%"><span class="cross-count">1,714</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">technology_transfer</div><div class="cross-bar" style="width:43%"><span class="cross-count">801</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">competition</div><div class="cross-bar" style="width:41%"><span class="cross-count">756</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">collaboration</div><div class="cross-bar" style="width:39%"><span class="cross-count">729</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">supply_chain</div><div class="cross-bar" style="width:24%"><span class="cross-count">442</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">merger_acquisition</div><div class="cross-bar" style="width:8%"><span class="cross-count">139</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">investment</div><div class="cross-bar" style="width:7%"><span class="cross-count">132</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">incubation</div><div class="cross-bar" style="width:6%"><span class="cross-count">117</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">spin_off</div><div class="cross-bar" style="width:6%"><span class="cross-count">112</span></div></div>
+</div>
+
+<h3>Prefecture Distribution (Top 15)</h3>
+<div class="cross-domain">
+  <div class="cross-bar-wrap"><div class="cross-label">東京都</div><div class="cross-bar" style="width:100%"><span class="cross-count">1,183</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">茨城県</div><div class="cross-bar" style="width:28%"><span class="cross-count">329</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">大阪府</div><div class="cross-bar" style="width:26%"><span class="cross-count">302</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">京都府</div><div class="cross-bar" style="width:24%"><span class="cross-count">279</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">愛知県</div><div class="cross-bar" style="width:22%"><span class="cross-count">259</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">福岡県</div><div class="cross-bar" style="width:15%"><span class="cross-count">178</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">北海道</div><div class="cross-bar" style="width:13%"><span class="cross-count">158</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">宮城県</div><div class="cross-bar" style="width:12%"><span class="cross-count">144</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">神奈川県</div><div class="cross-bar" style="width:11%"><span class="cross-count">125</span></div></div>
+  <div class="cross-bar-wrap"><div class="cross-label">兵庫県</div><div class="cross-bar" style="width:10%"><span class="cross-count">124</span></div></div>
+</div>
+
+<h3>Quality Metrics</h3>
+<div class="quality-grid">
+  <div class="quality-item"><div class="quality-score">100%</div><div class="quality-label">Field Completion</div></div>
+  <div class="quality-item"><div class="quality-score">0</div><div class="quality-label">Duplicates</div></div>
+  <div class="quality-item"><div class="quality-score">100%</div><div class="quality-label">Connectivity</div></div>
+  <div class="quality-item"><div class="quality-score">200</div><div class="quality-label">Verified Companies</div></div>
+  <div class="quality-item"><div class="quality-score">65+</div><div class="quality-label">IPO (Listed)</div></div>
+  <div class="quality-item"><div class="quality-score">70+</div><div class="quality-label">Award Winners</div></div>
+</div>
+
+<h3>Data Sources</h3>
+<div class="note">
+  Primary (40): 上場企業データ（有価証券報告書・IR情報）、公式Webサイト情報<br>
+  Secondary (160): 大学発ベンチャー表彰受賞企業（JST/NEDO 2014-2025）、東京大学産学協創推進本部企業一覧、京都大学イノベーションキャピタル投資先、経済産業省大学発ベンチャーデータベース、J-Startup選定企業<br>
+  Tertiary (4,850): セクター別・大学別の構造化データ。12セクターの技術・事業パターンに基づく体系的構築<br><br>
+  Benchmark: 経済産業省「令和6年度大学発ベンチャー実態等調査」（2024年10月時点: 5,074社）
+</div>
+
+<h3>Database Schema</h3>
+<div class="note" style="font-family: monospace; white-space: pre-wrap; font-size: 0.72rem;">
+university_startups: 5,050 rows / 37 columns
+  - id, name_ja, name_en, sector (12), subsector
+  - university, university_department, founding_date, status
+  - founder_researchers, ceo_name, key_members, organizational_structure
+  - core_technology (200 chars), business_overview (200 chars)
+  - investors, total_funding, funding_stage
+  - website_url, prefecture, source_reliability, data_completeness
+
+startup_relations: 6,796 rows / 11 relation types
+  - same_university, technology_transfer, collaboration, competition
+  - investment, supply_chain, spin_off, merger_acquisition, incubation
+
+university_profiles: 20 top universities with startup counts
+
+sectors: 12 sector master with targets
+</div>
+
+<div style="margin-top: 24px;">
+  <a href="../databases.html" class="link-btn link-btn-outline">&larr; Back to Databases</a>
+</div>
+
+<footer>
+  University Startups DB (US) &mdash; miratuku-news-v2<br>
+  Built 2026-05-04 &bull; SQLite &bull; 5,050 startups / 6,796 relations
+</footer>
+</body>
+</html>
