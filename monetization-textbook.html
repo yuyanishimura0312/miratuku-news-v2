@@ -356,6 +356,2092 @@ code {
   .book-main { padding: 0; max-width: 100%; }
   .chapter-section { page-break-before: always; }
 }
+
+
+/* === Typography Enhancements (編集者C) === */
+/*
+ * typography_enhancements.css
+ * マネタイズの教科書 — タイポグラフィ強化スタイルシート
+ *
+ * 使用方法:
+ *   monetization-textbook.html の <head> 内に以下を追加してください:
+ *   <link rel="stylesheet" href="typography_enhancements.css">
+ *
+ * または既存の <style> タグの末尾にこのファイルの内容を貼り付ける。
+ *
+ * 依存するCSS変数（既存ファイルで定義済み）:
+ *   --font, --font-serif, --bg, --card, --surface
+ *   --text, --text-secondary, --text-muted
+ *   --accent, --accent-warm, --accent-soft, --accent-light, --accent-muted
+ *   --border, --border-light
+ *   --shadow-sm, --shadow-md
+ */
+
+/* ==========================================================================
+   0. 補助変数の拡張（既存変数を汚染しない追加定義）
+   ========================================================================== */
+
+:root {
+  /* タイポグラフィ専用変数 */
+  --lh-body:        1.9;          /* 本文行間（基準） */
+  --lh-tight:       1.55;         /* 見出し等 */
+  --lh-loose:       2.1;          /* 長文読み物モード */
+  --ls-base:        0.02em;       /* 日本語本文字間 */
+  --ls-wide:        0.06em;       /* ラベル等 */
+  --ls-mono:        0.04em;       /* 数字・コード */
+
+  /* 装飾色（warm系の明暗） */
+  --accent-warm-05: rgba(122, 64,  51, 0.05);
+  --accent-warm-10: rgba(122, 64,  51, 0.10);
+  --accent-warm-20: rgba(122, 64,  51, 0.20);
+  --accent-warm-40: rgba(122, 64,  51, 0.40);
+
+  /* ドロップキャップ専用 */
+  --drop-cap-size:  3.6em;
+  --drop-cap-lh:    0.84;
+
+  /* コードブロック */
+  --code-bg:        #F4F1EE;
+  --code-border:    #E0D9D4;
+  --code-text:      #3E2B22;
+  --font-mono:      "SF Mono", "Fira Code", "JetBrains Mono", "Consolas", monospace;
+
+  /* トランジション共通 */
+  --transition-fast: 0.15s ease;
+  --transition-mid:  0.25s ease;
+}
+
+[data-theme="dark"] {
+  --accent-warm-05: rgba(196, 121,  94, 0.05);
+  --accent-warm-10: rgba(196, 121,  94, 0.10);
+  --accent-warm-20: rgba(196, 121,  94, 0.20);
+  --accent-warm-40: rgba(196, 121,  94, 0.40);
+  --code-bg:        #1E1813;
+  --code-border:    #3A2E28;
+  --code-text:      #D4B8A8;
+}
+
+
+/* ==========================================================================
+   1. ドロップキャップ（Drop Cap）
+   ========================================================================== */
+
+/*
+ * .chapter-section > p:first-of-type の最初の文字を大きく装飾。
+ * 日本語環境では ::first-letter が漢字・ひらがなにも適用される。
+ * overflow: hidden をつけないと Firefox でレイアウト崩れが起きることがある。
+ */
+
+.chapter-section > p:first-of-type::first-letter {
+  font-family: var(--font-serif);
+  font-size: var(--drop-cap-size);
+  font-weight: 700;
+  float: left;
+  line-height: var(--drop-cap-lh);
+  margin: 6px 10px -2px 0;
+  color: var(--accent-warm);
+  /* 装飾的なアンダーライン */
+  padding-bottom: 2px;
+  border-bottom: 2px solid var(--accent-warm-40);
+  /* 視覚的な重心を合わせる */
+  vertical-align: baseline;
+  /* テキスト折り返し対応 */
+  shape-outside: margin-box;
+}
+
+/* クリアフィックス：フロートが後続段落に影響しないよう */
+.chapter-section > p:first-of-type::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/*
+ * プロローグ・エピローグ専用：やや控えめなドロップキャップ
+ */
+#prologue.chapter-section > p:first-of-type::first-letter,
+#epilogue.chapter-section > p:first-of-type::first-letter {
+  font-size: calc(var(--drop-cap-size) * 0.88);
+  color: var(--accent-warm-40);
+  border-bottom-color: var(--accent-warm-20);
+}
+
+/* callout / blockquote 内はドロップキャップ不適用 */
+.callout > p:first-of-type::first-letter,
+.callout-person > p:first-of-type::first-letter,
+.callout-concept > p:first-of-type::first-letter,
+.callout-case > p:first-of-type::first-letter,
+.callout-data > p:first-of-type::first-letter,
+.insight-box > p:first-of-type::first-letter,
+.case-study > p:first-of-type::first-letter,
+.summary-box > p:first-of-type::first-letter,
+.further-reading > p:first-of-type::first-letter,
+blockquote > p:first-of-type::first-letter {
+  font-size: inherit;
+  font-weight: inherit;
+  float: none;
+  line-height: inherit;
+  margin: 0;
+  color: inherit;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+
+/* ==========================================================================
+   2. 段落間の余白調整
+   ========================================================================== */
+
+/*
+ * 本文段落：下マージンを 1.2em から 1.4em へ微増。
+ * 読み物として「息継ぎ」の感覚を生む。
+ */
+.book-main p {
+  margin-bottom: 1.4em;
+}
+
+/*
+ * セクション見出し直後の最初の段落は、見出しとの距離を少し縮め
+ * 視覚的な「ひとまとまり感」を演出する。
+ */
+.section-heading + p,
+.subsection-heading + p {
+  margin-top: -0.2em;
+}
+
+/*
+ * 連続する段落の間に、ごく薄いセパレーターを挿入するオプション。
+ * デフォルト OFF（使用する場合は HTML 側でクラス付与）。
+ */
+.para-sep + p {
+  margin-top: 2em;
+  padding-top: 0;
+}
+
+/*
+ * 章末の橋渡し・サマリーボックス直前の余白
+ */
+.bridge,
+.summary-box,
+.chapter-summary,
+.further-reading {
+  margin-top: 2.4em;
+  margin-bottom: 2.4em;
+}
+
+/*
+ * callout ブロックの前後に適度な呼吸を持たせる
+ */
+.callout,
+.callout-person,
+.callout-concept,
+.callout-case,
+.callout-data,
+.insight-box,
+.case-study {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+
+/* ==========================================================================
+   3. 行間（line-height）の最適化
+   ========================================================================== */
+
+/*
+ * 本文全体: 1.9 → 1.92 へ微増。
+ * 0.02 の差でも長文では疲労度が変わる。
+ */
+body {
+  line-height: 1.92;
+}
+
+/*
+ * 本文段落の line-height は body から継承させるが、
+ * 読み物セクションのみ 1.95 まで広げる。
+ */
+.book-main p,
+.book-main li {
+  line-height: 1.95;
+}
+
+/*
+ * コールアウト・サマリー等の補助テキストは少し詰める
+ */
+.callout p,
+.callout-person p,
+.callout-concept p,
+.callout-case p,
+.callout-data p,
+.insight-box p,
+.case-study p,
+.summary-box li,
+.further-reading li {
+  line-height: 1.85;
+}
+
+/*
+ * epigraph・blockquote は詩的な余白感
+ */
+.epigraph,
+blockquote {
+  line-height: 1.88;
+}
+
+/*
+ * テーブルセル：詰めすぎず、広げすぎず
+ */
+td, th {
+  line-height: 1.7;
+}
+
+
+/* ==========================================================================
+   4. 文字間隔（letter-spacing）
+   ========================================================================== */
+
+/*
+ * 日本語本文: 0.02em（既存値を維持・明示）
+ * CJK文字にとっての最適値は 0.02-0.04em。
+ */
+.book-main p,
+.book-main li {
+  letter-spacing: var(--ls-base);
+}
+
+/*
+ * 見出し類: やや詰めて凝縮感を出す
+ * 日本語では letter-spacing が広すぎると読みにくくなる。
+ */
+.chapter-title {
+  letter-spacing: 0.03em;
+}
+
+.section-heading {
+  letter-spacing: 0.025em;
+}
+
+.subsection-heading {
+  letter-spacing: 0.03em;
+}
+
+/*
+ * ラベル類（全大文字）: 広げてエレガンスを演出
+ */
+.chapter-number-label,
+.callout-label,
+.callout-title,
+.insight-box-label,
+.case-study-label,
+.toc-label,
+.db-tag {
+  letter-spacing: var(--ls-wide);
+}
+
+/*
+ * 数字・コード類: 等幅フォントと相性の良い字間
+ */
+.toc-num,
+code,
+kbd,
+.num-highlight {
+  letter-spacing: var(--ls-mono);
+}
+
+
+/* ==========================================================================
+   5. プルクオート（Pull Quote）スタイル
+   ========================================================================== */
+
+/*
+ * 既存の .pullquote / .pull-quote を上書き・強化
+ */
+.pullquote,
+.pull-quote {
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.7;
+  color: var(--accent-warm);
+  text-align: center;
+  padding: 28px 40px;
+  margin: 40px -16px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* 装飾的な引用符 */
+.pullquote::before,
+.pull-quote::before {
+  content: "\201C"; /* " */
+  position: absolute;
+  top: 8px;
+  left: 20px;
+  font-family: Georgia, serif;
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--accent-warm-20);
+  font-weight: 400;
+}
+
+.pullquote::after,
+.pull-quote::after {
+  content: "\201D"; /* " */
+  position: absolute;
+  bottom: 0;
+  right: 20px;
+  font-family: Georgia, serif;
+  font-size: 3.5rem;
+  line-height: 1;
+  color: var(--accent-warm-20);
+  font-weight: 400;
+}
+
+/*
+ * .pull-quote-large: より大きく印象的な引用
+ * 使用例: <blockquote class="pull-quote-large">…</blockquote>
+ */
+.pull-quote-large {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.65;
+  color: var(--accent-warm);
+  text-align: center;
+  padding: 40px 48px;
+  margin: 48px -24px;
+  position: relative;
+  font-style: italic;
+  letter-spacing: 0.025em;
+  /* 背景に薄いウォームカラー */
+  background: var(--accent-warm-05);
+  border-top: 2px solid var(--accent-warm);
+  border-bottom: 2px solid var(--accent-warm);
+}
+
+.pull-quote-large::before {
+  content: "\201C";
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  font-family: Georgia, serif;
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--accent-warm-20);
+  font-weight: 400;
+}
+
+.pull-quote-large::after {
+  content: "\201D";
+  position: absolute;
+  bottom: 4px;
+  right: 24px;
+  font-family: Georgia, serif;
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--accent-warm-20);
+  font-weight: 400;
+}
+
+.pull-quote-large .pq-attribution {
+  display: block;
+  margin-top: 16px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-style: normal;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+/* 中型プルクオート */
+.pull-quote-medium {
+  font-family: var(--font-serif);
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  padding: 24px 32px;
+  margin: 32px 0;
+  border-left: 4px solid var(--accent-warm);
+  font-style: italic;
+  background: var(--accent-warm-05);
+}
+
+
+/* ==========================================================================
+   6. 章番号スタイル（chapter-number-label の強化）
+   ========================================================================== */
+
+.chapter-number-label {
+  font-family: var(--font);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 番号の前後に装飾ライン */
+.chapter-number-label::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--accent-warm-40);
+  flex-shrink: 0;
+}
+
+.chapter-number-label::after {
+  content: "";
+  display: inline-block;
+  flex: 1;
+  height: 1px;
+  background: var(--accent-warm-20);
+  max-width: 60px;
+}
+
+/*
+ * 章番号バリエーション: より大きく目立たせる場合
+ * 使用例: <div class="chapter-number-label chapter-label-large">Chapter 01</div>
+ */
+.chapter-label-large {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  margin-bottom: 20px;
+}
+
+.chapter-label-large::before {
+  width: 40px;
+}
+
+
+/* ==========================================================================
+   7. 見出しの装飾（section-heading / subsection-heading）
+   ========================================================================== */
+
+/*
+ * .section-heading: 前に細い装飾線を入れる
+ * 既存の margin-top: 40px の上に装飾を配置する。
+ */
+.section-heading {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 44px 0 18px;
+  line-height: var(--lh-tight);
+  letter-spacing: 0.025em;
+  padding-top: 20px;
+  position: relative;
+}
+
+/* 見出し上部の装飾ライン */
+.section-heading::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 2px;
+  background: var(--accent-warm);
+}
+
+/* 見出し後の短い水平線（さりげなく） */
+.section-heading::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--border-light) 0%,
+    transparent 70%
+  );
+  margin-top: 14px;
+  margin-bottom: -4px;
+}
+
+/*
+ * .subsection-heading: 左に細いアクセントバーを入れる
+ */
+.subsection-heading {
+  font-family: var(--font);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 30px 0 14px;
+  letter-spacing: 0.03em;
+  padding-left: 12px;
+  border-left: 2px solid var(--accent-warm-40);
+  line-height: 1.6;
+}
+
+[data-theme="dark"] .section-heading::after {
+  background: linear-gradient(
+    to right,
+    var(--border) 0%,
+    transparent 70%
+  );
+}
+
+
+/* ==========================================================================
+   8. 図表（figure / figcaption）スタイル
+   ========================================================================== */
+
+figure {
+  margin: 40px auto;
+  max-width: 100%;
+  text-align: center;
+  /* 図表を視覚的にブロックとして分離 */
+  padding: 24px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+}
+
+figure svg {
+  width: 100%;
+  max-width: 580px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+figcaption {
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 14px;
+  line-height: 1.65;
+  font-style: italic;
+  text-align: left;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fig-number {
+  font-weight: 700;
+  font-style: normal;
+  color: var(--accent-warm);
+  letter-spacing: 0.08em;
+  margin-right: 4px;
+}
+
+/* 図表の外枠なし版（シンプル）*/
+figure.fig-plain {
+  background: none;
+  border: none;
+  padding: 16px 0;
+}
+
+/* 全幅図表 */
+figure.fig-wide {
+  max-width: calc(100% + 48px);
+  margin-left: -24px;
+  margin-right: -24px;
+  padding: 28px 24px;
+}
+
+/* 小サイズ図表（インライン的用途） */
+figure.fig-small {
+  max-width: 380px;
+}
+
+
+/* ==========================================================================
+   9. リンクのアンダーライン演出
+   ========================================================================== */
+
+/*
+ * 本文内リンク: アニメーション付きアンダーライン
+ * ::after 擬似要素で幅が左から右へ広がるアンダーラインを実現する。
+ */
+.book-main a:not(.back-link):not(.toc-list a) {
+  color: var(--accent-warm);
+  text-decoration: none;
+  position: relative;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.book-main a:not(.back-link):not(.toc-list a)::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0%;
+  height: 1px;
+  background: var(--accent-warm);
+  transition: width var(--transition-mid);
+}
+
+.book-main a:not(.back-link):not(.toc-list a):hover::after {
+  width: 100%;
+}
+
+.book-main a:not(.back-link):not(.toc-list a):hover {
+  color: var(--accent-warm);
+  text-decoration: none;
+}
+
+/* 外部リンク（href が http で始まる） */
+.book-main a[href^="http"]::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%237A4033' d='M3.5 1H1v10h10V8.5h-1V10H2V2h1.5V1zm5 0v1H10V2.5l-4.5 4.5-.7-.7L9.3 1.8V1H8.5zm0 0'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  margin-right: 2px;
+  opacity: 0.5;
+  vertical-align: middle;
+}
+
+[data-theme="dark"] .book-main a[href^="http"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%23C4795E' d='M3.5 1H1v10h10V8.5h-1V10H2V2h1.5V1zm5 0v1H10V2.5l-4.5 4.5-.7-.7L9.3 1.8V1H8.5zm0 0'/%3E%3C/svg%3E");
+}
+
+/* TOC内のリンクは別処理（:: after 不要） */
+.toc-list a {
+  position: static;
+}
+
+.toc-list a::after {
+  display: none;
+}
+
+
+/* ==========================================================================
+   10. コードブロック（code / pre / code-block）
+   ========================================================================== */
+
+/*
+ * インラインコード: 背景付きで文中に溶け込む
+ */
+code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border: 1px solid var(--code-border);
+  padding: 1px 5px 2px;
+  border-radius: 3px;
+  letter-spacing: var(--ls-mono);
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+/*
+ * コードブロック（<pre><code> または .code-block）
+ */
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border: 1px solid var(--code-border);
+  border-left: 3px solid var(--accent-warm-40);
+  padding: 20px 24px;
+  margin: 24px 0;
+  overflow-x: auto;
+  line-height: 1.7;
+  letter-spacing: var(--ls-mono);
+  /* スクロールバーを細くする */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+pre::-webkit-scrollbar {
+  height: 4px;
+}
+
+pre::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+pre code {
+  font-family: inherit;
+  font-size: inherit;
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  white-space: pre;
+  word-break: normal;
+}
+
+/* 言語タグ付きコードブロック用ラッパー */
+.code-block {
+  position: relative;
+  margin: 28px 0;
+}
+
+.code-block-lang {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  background: var(--code-border);
+  padding: 2px 8px;
+  border-left: 1px solid var(--code-border);
+  border-bottom: 1px solid var(--code-border);
+}
+
+[data-theme="dark"] code:not(pre code) {
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-color: var(--code-border);
+}
+
+
+/* ==========================================================================
+   11. 強調表現（strong / em）
+   ========================================================================== */
+
+/*
+ * <strong>: 太字に加えて、ごく薄いウォームカラーの背景を付与。
+ * テキストの「密度感」を上げる。
+ */
+strong {
+  font-weight: 700;
+  color: var(--text);
+  /* 薄い背景で視覚的重みを追加（過度にならないよう控えめに） */
+  background: var(--accent-warm-05);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/*
+ * <em>: イタリック + やや暖かみのある色
+ * 日本語フォントはイタリックが使えないためアンダーライン補完
+ */
+em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* 日本語環境ではイタリックが効かないので傍点的表現を補助クラスで提供 */
+.em-jp {
+  font-style: normal;
+  color: var(--accent-warm);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-warm-40);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+/* 重要な強調（ダブル強調） */
+strong em,
+em strong {
+  color: var(--accent-warm);
+  background: var(--accent-warm-10);
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+
+/* ==========================================================================
+   12. リスト記号（ul / ol）
+   ========================================================================== */
+
+/*
+ * ul の場合: カスタムマーカーをアクセントカラーに
+ */
+ul {
+  list-style: none;
+  padding-left: 1.6em;
+}
+
+ul li {
+  position: relative;
+  padding-left: 0.4em;
+}
+
+ul li::before {
+  content: "—";
+  position: absolute;
+  left: -1.4em;
+  color: var(--accent-warm);
+  font-weight: 400;
+  font-size: 0.9em;
+  line-height: inherit;
+}
+
+/* ネストされたリスト（第2階層） */
+ul ul li::before {
+  content: "·";
+  font-size: 1.1em;
+  color: var(--accent-warm-40);
+  left: -1.2em;
+}
+
+/* ネストされたリスト（第3階層） */
+ul ul ul li::before {
+  content: "○";
+  font-size: 0.65em;
+  color: var(--text-muted);
+  left: -1.4em;
+}
+
+/*
+ * ol の場合: 番号をアクセントカラーで
+ * CSS counter を使い、番号を ::before で描画する。
+ */
+ol {
+  list-style: none;
+  padding-left: 2em;
+  counter-reset: ol-counter;
+}
+
+ol li {
+  counter-increment: ol-counter;
+  position: relative;
+  padding-left: 0.4em;
+}
+
+ol li::before {
+  content: counter(ol-counter) ".";
+  position: absolute;
+  left: -1.8em;
+  color: var(--accent-warm);
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.82em;
+  line-height: inherit;
+  min-width: 1.6em;
+  text-align: right;
+}
+
+/* ネストされた ol */
+ol ol {
+  counter-reset: ol-sub-counter;
+  padding-left: 1.8em;
+}
+
+ol ol li {
+  counter-increment: ol-sub-counter;
+}
+
+ol ol li::before {
+  content: counter(ol-sub-counter, lower-alpha) ".";
+  color: var(--accent-warm-40);
+}
+
+/* callout 内のリストはシンプルに保つ */
+.callout ul,
+.callout ol,
+.summary-box ul,
+.summary-box ol,
+.further-reading ul,
+.further-reading ol {
+  padding-left: 1.4em;
+}
+
+.callout ul li::before {
+  color: var(--accent-warm-40);
+}
+
+/* サイドバー・TOC のリストは既存スタイルを使用（上書きしない） */
+.toc-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.toc-list li {
+  position: static;
+  padding-left: 0;
+}
+
+.toc-list li::before {
+  display: none;
+}
+
+
+/* ==========================================================================
+   13. キーボードショートカット表示（kbd）
+   ========================================================================== */
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+  box-shadow: 0 1px 0 var(--border);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  display: inline-block;
+}
+
+kbd + kbd {
+  margin-left: 4px;
+}
+
+/* ダークモード調整 */
+[data-theme="dark"] kbd {
+  border-color: #444444;
+  border-bottom-color: #555555;
+  box-shadow: 0 1px 0 #555555;
+  background: #252525;
+}
+
+
+/* ==========================================================================
+   14. 引用符（「」『』）の視覚処理
+   ========================================================================== */
+
+/*
+ * 日本語括弧類が連続する場合、OpenType "halt" / "palt" で自動調整されるが
+ * 視覚的なアクセントとして、括弧内テキストをわずかに色を変える。
+ * 使用例: <span class="kakko">「重要な概念」</span>
+ */
+.kakko {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/*
+ * 重要な「」（強調引用）
+ * 使用例: <span class="kakko-strong">「キー概念」</span>
+ */
+.kakko-strong {
+  color: var(--accent-warm);
+  font-weight: 600;
+}
+
+/*
+ * 書名・作品名の『』
+ * 使用例: <cite class="book-title-cite">『ゼロ・トゥ・ワン』</cite>
+ */
+.book-title-cite {
+  font-style: normal;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-bottom: 1px dotted var(--border);
+}
+
+/*
+ * epigraph（既存クラス）の強化
+ * 引用元を視覚的に区別
+ */
+.epigraph {
+  border-left: 3px solid var(--accent-warm);
+  background: var(--accent-warm-05);
+  padding: 16px 24px;
+  margin: 28px 0 36px;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.88;
+}
+
+.epigraph .attribution {
+  display: block;
+  margin-top: 10px;
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.epigraph .attribution::before {
+  content: "— ";
+  color: var(--accent-warm);
+}
+
+
+/* ==========================================================================
+   15. 数値強調（num-highlight）
+   ========================================================================== */
+
+/*
+ * 文中の数字を視覚的に立たせる。
+ * 使用例: <span class="num-highlight">3.5倍</span>
+ */
+.num-highlight {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.05em;
+  color: var(--accent-warm);
+  letter-spacing: var(--ls-mono);
+  /* わずかにスペースを確保してテキストから浮かせる */
+  padding: 0 1px;
+}
+
+/*
+ * 大きな数字（インフォグラフィック的用途）
+ * 使用例: <span class="num-large">200,000</span>字
+ */
+.num-large {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.4em;
+  color: var(--accent-warm);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  display: inline-block;
+}
+
+/*
+ * パーセンテージ表示
+ * 使用例: <span class="num-percent">35%</span>
+ */
+.num-percent {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent-warm);
+  font-size: 1.05em;
+}
+
+/*
+ * 注釈付き数値（ツールチップ的補助テキスト）
+ * 使用例: <span class="num-annotated" data-note="2024年度実績">142億円</span>
+ */
+.num-annotated {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent-warm);
+  font-size: 1.02em;
+  border-bottom: 1px dashed var(--accent-warm-40);
+  cursor: help;
+}
+
+/* book-metrics の既存スタイルを強化 */
+.metric-item strong {
+  font-family: var(--font-mono);
+  font-size: 1.05em;
+  letter-spacing: var(--ls-mono);
+}
+
+
+/* ==========================================================================
+   16. 章冒頭セクションの特別装飾
+   ========================================================================== */
+
+/*
+ * 各章の最初の .section-heading（「1. 領域の輪郭」など）の前に
+ * 視覚的な区切り線と章内セクション番号を入れる。
+ * 最初の .section-heading にのみ適用したい場合は JS で class を付与するか、
+ * :first-of-type に近い :nth-of-type(1) を使う。
+ */
+
+/* 章冒頭に挿入する視覚的区切り */
+.chapter-section .chapter-title + .section-heading,
+.chapter-section .chapter-title + p + .section-heading,
+.chapter-section .chapter-title + p + p + .section-heading {
+  margin-top: 48px;
+  padding-top: 28px;
+}
+
+.chapter-section .chapter-title + .section-heading::before,
+.chapter-section .chapter-title + p + .section-heading::before,
+.chapter-section .chapter-title + p + p + .section-heading::before {
+  width: 48px;
+  height: 3px;
+  background: var(--accent-warm);
+}
+
+/*
+ * 各章の本文開始前に、章の概要インジケーターを表示するユーティリティ
+ * 使用例:
+ * <div class="chapter-intro-rule"></div>
+ */
+.chapter-intro-rule {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0 40px;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.chapter-intro-rule::before,
+.chapter-intro-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+
+/*
+ * 章末を示す装飾（各章の最後に挿入）
+ * 使用例: <div class="chapter-end-mark"></div>
+ */
+.chapter-end-mark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 48px 0 8px;
+  color: var(--accent-warm-40);
+  font-size: 1.4rem;
+  letter-spacing: 0.4em;
+}
+
+.chapter-end-mark::before {
+  content: "* * *";
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+
+
+/* ==========================================================================
+   17. ダークモード対応の最終調整
+   ========================================================================== */
+
+/* drop cap ダークモード調整 */
+[data-theme="dark"] .chapter-section > p:first-of-type::first-letter {
+  color: var(--accent-warm);
+  border-bottom-color: rgba(196, 121, 94, 0.35);
+}
+
+/* strong のダークモード：背景色を調整 */
+[data-theme="dark"] strong {
+  background: rgba(196, 121, 94, 0.06);
+  color: var(--text);
+}
+
+[data-theme="dark"] strong em,
+[data-theme="dark"] em strong {
+  background: rgba(196, 121, 94, 0.12);
+  color: var(--accent-warm);
+}
+
+/* figure のダークモード */
+[data-theme="dark"] figure {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+/* pull-quote-large ダークモード */
+[data-theme="dark"] .pull-quote-large {
+  background: rgba(196, 121, 94, 0.06);
+}
+
+/* epigraph ダークモード */
+[data-theme="dark"] .epigraph {
+  background: rgba(196, 121, 94, 0.04);
+}
+
+/* コードブロックはダークモード変数で自動対応済み */
+
+/* callout 類のダークモード */
+[data-theme="dark"] .callout,
+[data-theme="dark"] .callout-person,
+[data-theme="dark"] .callout-concept,
+[data-theme="dark"] .callout-case,
+[data-theme="dark"] .callout-data {
+  background: var(--surface);
+}
+
+[data-theme="dark"] .insight-box {
+  background: rgba(196, 121, 94, 0.05);
+  border-color: var(--accent-warm);
+}
+
+/* テーブルのダークモード */
+[data-theme="dark"] tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] th {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* summary-box / further-reading */
+[data-theme="dark"] .summary-box,
+[data-theme="dark"] .chapter-summary,
+[data-theme="dark"] .further-reading {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+/* blockquote */
+[data-theme="dark"] blockquote {
+  border-left-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* num-highlight */
+[data-theme="dark"] .num-highlight,
+[data-theme="dark"] .num-large,
+[data-theme="dark"] .num-percent {
+  color: var(--accent-warm);
+}
+
+/* chapter-number-label の装飾ライン */
+[data-theme="dark"] .chapter-number-label::before {
+  background: rgba(196, 121, 94, 0.4);
+}
+
+[data-theme="dark"] .chapter-number-label::after {
+  background: rgba(196, 121, 94, 0.2);
+}
+
+/* section-heading 装飾 */
+[data-theme="dark"] .section-heading::before {
+  background: var(--accent-warm);
+}
+
+/* subsection-heading の左バー */
+[data-theme="dark"] .subsection-heading {
+  border-left-color: rgba(196, 121, 94, 0.35);
+}
+
+/* bridge ブロック */
+[data-theme="dark"] .bridge {
+  background: rgba(196, 121, 94, 0.04);
+  border-left-color: var(--accent-warm);
+}
+
+/* 読書進行バー */
+[data-theme="dark"] .reading-progress {
+  background: var(--accent-warm);
+}
+
+/* focus visible（ダークモードでも視認性を確保） */
+[data-theme="dark"] :focus-visible {
+  outline-color: var(--accent-warm);
+}
+
+
+/* ==========================================================================
+   18. プリントスタイル
+   ========================================================================== */
+
+@media print {
+  /* ページ設定 */
+  @page {
+    size: A4;
+    margin: 20mm 18mm 22mm 18mm;
+  }
+
+  @page :first {
+    margin-top: 30mm;
+  }
+
+  /* ナビゲーション・UI要素の非表示 */
+  .top-bar,
+  .toc-sidebar,
+  .reading-progress,
+  .theme-toggle,
+  .back-link,
+  .top-bar-actions {
+    display: none !important;
+  }
+
+  /* レイアウト調整 */
+  .book-layout {
+    display: block;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .book-main {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  /* フォント・色の最適化 */
+  body {
+    font-size: 10.5pt;
+    line-height: 1.75;
+    color: #000000;
+    background: #ffffff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 強制黒白で印刷する場合の調整 */
+  h1, h2, h3, h4, h5, h6 {
+    color: #000000;
+  }
+
+  /* リンクの URL 表示 */
+  .book-main a[href]::after {
+    content: none; /* アニメーションラインを削除 */
+  }
+
+  .book-main a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555555;
+    text-decoration: none;
+    font-style: italic;
+  }
+
+  .book-main a[href^="http"]::before {
+    display: none;
+  }
+
+  /* 章の改ページ制御 */
+  .chapter-section {
+    break-before: page;
+    page-break-before: always;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .chapter-section:first-of-type {
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+
+  /* 見出しの直後での改ページを防ぐ */
+  .chapter-title,
+  .section-heading,
+  .subsection-heading {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* 段落の途中での改ページを防ぐ（推奨） */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* figure の改ページを防ぐ */
+  figure {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* callout / insight-box の改ページを防ぐ */
+  .callout,
+  .callout-person,
+  .callout-concept,
+  .callout-case,
+  .callout-data,
+  .insight-box,
+  .case-study,
+  .summary-box,
+  .chapter-summary,
+  .further-reading,
+  .pull-quote-large {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* テーブルの改ページ制御 */
+  table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* drop cap は印刷でもそのまま */
+  .chapter-section > p:first-of-type::first-letter {
+    color: var(--accent-warm);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ドロップキャップのカラー（黒白印刷時の代替） */
+  @media (prefers-color-scheme: no-preference) {
+    .chapter-section > p:first-of-type::first-letter {
+      color: #555555;
+    }
+  }
+
+  /* コードブロックの印刷 */
+  pre,
+  code:not(pre code) {
+    font-size: 8.5pt;
+    background: #F8F6F4 !important;
+    border: 0.5pt solid #D0C8C2 !important;
+    color: #2A1A10 !important;
+  }
+
+  /* プルクオートの印刷 */
+  .pullquote,
+  .pull-quote,
+  .pull-quote-large {
+    background: none !important;
+    border-top: 1pt solid #333;
+    border-bottom: 1pt solid #333;
+    color: #333333;
+  }
+
+  /* ページフッター（ページ番号） */
+  .book-main {
+    counter-reset: page-counter;
+  }
+}
+
+
+/* ==========================================================================
+   19. アクセシビリティ
+   ========================================================================== */
+
+/*
+ * フォーカス可視化（キーボードナビゲーション対応）
+ * :focus-visible を使うことで、マウス操作時にはリングを表示しない。
+ */
+:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ボタン・リンクのフォーカス */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 3px;
+  border-radius: 2px;
+  text-decoration: none;
+}
+
+/* テーマ切替ボタン */
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+/*
+ * skip-to-content リンク（スクリーンリーダー対応）
+ * 使用例: <a href="#main-content" class="skip-to-content">本文へスキップ</a>
+ */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 1000;
+  padding: 8px 16px;
+  background: var(--accent-warm);
+  color: #ffffff;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: top var(--transition-fast);
+}
+
+.skip-to-content:focus {
+  top: 56px;
+}
+
+/*
+ * 色のコントラスト確保
+ * WCAG AA 基準（4.5:1 以上）に準拠する色の組み合わせを明示
+ *
+ * ライトモード:
+ *   --text (#121212) on --bg (#FFFFFF): ratio ≈ 19.1 ✓ AAA
+ *   --text-secondary (#555555) on --bg: ratio ≈ 5.74 ✓ AA
+ *   --accent-warm (#7A4033) on --bg:    ratio ≈ 5.42 ✓ AA
+ *   --text-muted (#6B6B6B) on --bg:     ratio ≈ 4.62 ✓ AA
+ *   --text on --surface (#F7F7F5):      ratio ≈ 17.4 ✓ AAA
+ *
+ * ダークモード:
+ *   --text (#E0E0E0) on --bg (#121212): ratio ≈ 14.0 ✓ AAA
+ *   --accent-warm (#C4795E) on --bg:    ratio ≈ 4.62 ✓ AA（ギリギリ）
+ *   --text-secondary (#AAAAAA) on --bg: ratio ≈ 7.45 ✓ AAA
+ */
+
+/* 小テキストの最低コントラスト保証 */
+.text-muted-accessible {
+  color: var(--text-secondary); /* --text-muted の代わりにより高コントラスト版 */
+}
+
+/*
+ * reduced motion 対応
+ * アニメーションを無効化するユーザー設定を尊重する。
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .book-main a:not(.back-link):not(.toc-list a)::after {
+    transition: none;
+    width: 100%; /* always show */
+    opacity: 0.5;
+  }
+}
+
+/*
+ * ハイコントラストモード対応
+ */
+@media (forced-colors: active) {
+  .chapter-section > p:first-of-type::first-letter {
+    color: Highlight;
+    border-bottom-color: Highlight;
+  }
+
+  .section-heading::before,
+  .chapter-number-label::before,
+  .chapter-number-label::after {
+    background: Highlight;
+  }
+
+  .subsection-heading {
+    border-left-color: Highlight;
+  }
+
+  code:not(pre code),
+  kbd {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}
+
+
+/* ==========================================================================
+   20. レスポンシブ強化
+   ========================================================================== */
+
+/* -------- Desktop: 1100px 以上（ワイドスクリーン） -------- */
+@media (min-width: 1100px) {
+  .book-main {
+    padding: 64px 0 120px 52px;
+  }
+
+  /* ワイド画面ではプルクオートをより引き出す */
+  .pullquote,
+  .pull-quote {
+    margin-left: -32px;
+    margin-right: -32px;
+    padding: 32px 56px;
+  }
+
+  .pull-quote-large {
+    margin-left: -40px;
+    margin-right: -40px;
+    padding: 44px 64px;
+  }
+
+  /* 図表も少し広げる */
+  figure.fig-wide {
+    margin-left: -40px;
+    margin-right: -40px;
+  }
+}
+
+/* -------- Tablet: 769px - 1099px -------- */
+@media (min-width: 769px) and (max-width: 1099px) {
+  .book-layout {
+    grid-template-columns: 200px 1fr;
+    gap: 0;
+    padding: 0 16px;
+  }
+
+  .book-main {
+    padding: 48px 0 100px 36px;
+    max-width: 100%;
+  }
+
+  .toc-sidebar {
+    padding: 32px 16px 32px 0;
+  }
+
+  .toc-list li a {
+    font-size: 0.68rem;
+  }
+
+  /* ドロップキャップ: やや小さく */
+  .chapter-section > p:first-of-type::first-letter {
+    font-size: 3em;
+  }
+
+  /* pullquote: マージン調整 */
+  .pullquote,
+  .pull-quote {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+
+  .pull-quote-large {
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 32px 32px;
+    font-size: 1.15rem;
+  }
+
+  /* figure */
+  figure.fig-wide {
+    margin-left: -16px;
+    margin-right: -16px;
+  }
+}
+
+/* -------- Mobile: 768px 以下 -------- */
+@media (max-width: 768px) {
+  /* book-main（既存の padding: 40px 0 80px 0 を調整） */
+  .book-main {
+    padding: 32px 16px 80px;
+    max-width: 100%;
+  }
+
+  /* フォントサイズ微調整 */
+  body {
+    font-size: 15px;
+  }
+
+  .book-title {
+    font-size: 1.4rem;
+    line-height: 1.5;
+  }
+
+  .chapter-title {
+    font-size: 1.3rem;
+  }
+
+  .section-heading {
+    font-size: 1.02rem;
+    margin: 36px 0 14px;
+  }
+
+  .subsection-heading {
+    font-size: 0.88rem;
+  }
+
+  /* 本文 */
+  p {
+    font-size: 0.9rem;
+    line-height: 1.92;
+  }
+
+  /* ドロップキャップ: モバイルでは控えめに */
+  .chapter-section > p:first-of-type::first-letter {
+    font-size: 2.8em;
+    margin: 4px 8px -2px 0;
+  }
+
+  /* プルクオート */
+  .pullquote,
+  .pull-quote {
+    font-size: 0.98rem;
+    padding: 20px 24px;
+    margin: 28px 0;
+  }
+
+  .pull-quote-large {
+    font-size: 1.08rem;
+    padding: 24px 20px;
+    margin: 32px -16px;
+  }
+
+  .pull-quote-large::before,
+  .pull-quote-large::after {
+    font-size: 3.5rem;
+  }
+
+  .pull-quote-medium {
+    padding: 16px 20px;
+    font-size: 1rem;
+  }
+
+  /* figure */
+  figure {
+    margin: 28px -16px;
+    padding: 16px;
+    border-left: none;
+    border-right: none;
+  }
+
+  figure svg {
+    max-width: 100%;
+  }
+
+  figcaption {
+    font-size: 0.74rem;
+  }
+
+  /* callout */
+  .callout,
+  .callout-person,
+  .callout-concept,
+  .callout-case,
+  .callout-data,
+  .insight-box,
+  .case-study {
+    padding: 14px 16px;
+    margin: 16px -4px;
+  }
+
+  /* テーブル: スクロール可能に */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  /* コードブロック */
+  pre {
+    font-size: 0.76rem;
+    padding: 14px 16px;
+    margin: 16px -16px;
+    border-left: none;
+    border-right: none;
+    border-left-width: 0;
+  }
+
+  /* リンクのアンダーラインアニメは常時 ON（タップ対応） */
+  .book-main a:not(.back-link):not(.toc-list a)::after {
+    width: 100%;
+    opacity: 0.4;
+  }
+
+  /* epigraph */
+  .epigraph {
+    padding: 12px 16px;
+    font-size: 0.86rem;
+  }
+
+  /* blockquote */
+  blockquote {
+    padding: 10px 16px;
+    font-size: 0.86rem;
+  }
+
+  /* summary-box */
+  .summary-box,
+  .chapter-summary,
+  .further-reading {
+    padding: 16px 16px;
+    margin: 20px -4px;
+  }
+
+  /* bridge */
+  .bridge {
+    padding: 12px 16px;
+    margin: 16px -4px;
+  }
+
+  /* kbd */
+  kbd {
+    font-size: 0.72em;
+    padding: 1px 5px;
+  }
+
+  /* chapter-number-label のラインを短く */
+  .chapter-number-label::before {
+    width: 20px;
+  }
+
+  .chapter-number-label::after {
+    max-width: 40px;
+  }
+
+  /* book-header */
+  .book-header {
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+  }
+
+  .book-metrics {
+    gap: 12px;
+  }
+
+  .metric-item {
+    font-size: 0.72rem;
+  }
+}
+
+/* -------- モバイル小画面: 375px 以下 -------- */
+@media (max-width: 375px) {
+  .book-main {
+    padding: 24px 12px 60px;
+  }
+
+  body {
+    font-size: 14.5px;
+  }
+
+  .chapter-section > p:first-of-type::first-letter {
+    font-size: 2.6em;
+  }
+
+  .pull-quote-large {
+    margin-left: -12px;
+    margin-right: -12px;
+    font-size: 1rem;
+  }
+}
+
+
+/* ==========================================================================
+   付録A. ユーティリティクラス
+   ========================================================================== */
+
+/*
+ * テキスト位置
+ */
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+.text-left   { text-align: left; }
+
+/*
+ * マージンユーティリティ
+ */
+.mt-0  { margin-top: 0; }
+.mt-sm { margin-top: 0.5em; }
+.mt-md { margin-top: 1.2em; }
+.mt-lg { margin-top: 2.4em; }
+.mb-0  { margin-bottom: 0; }
+.mb-sm { margin-bottom: 0.5em; }
+.mb-md { margin-bottom: 1.2em; }
+.mb-lg { margin-bottom: 2.4em; }
+
+/*
+ * テキストサイズ
+ */
+.text-xs  { font-size: 0.72rem; }
+.text-sm  { font-size: 0.82rem; }
+.text-md  { font-size: 0.92rem; }
+.text-lg  { font-size: 1.05rem; }
+.text-xl  { font-size: 1.2rem; }
+
+/*
+ * フォントファミリー切替
+ */
+.font-sans  { font-family: var(--font); }
+.font-serif { font-family: var(--font-serif); }
+.font-mono  { font-family: var(--font-mono); }
+
+/*
+ * 色ユーティリティ
+ */
+.color-warm    { color: var(--accent-warm); }
+.color-muted   { color: var(--text-muted); }
+.color-secondary { color: var(--text-secondary); }
+
+/*
+ * 視覚的に非表示だがスクリーンリーダーには見えるクラス
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+
+/* ==========================================================================
+   付録B. 拡張コンポーネント
+   ========================================================================== */
+
+/*
+ * インフォグラフィック数値ブロック
+ * 使用例:
+ * <div class="stat-group">
+ *   <div class="stat-item">
+ *     <span class="stat-value">200,000</span>
+ *     <span class="stat-unit">字</span>
+ *     <span class="stat-label">総文字数</span>
+ *   </div>
+ * </div>
+ */
+.stat-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 32px 0;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 80px;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.stat-unit {
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.stat-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/*
+ * 参照タグ（DB参照情報）
+ * 使用例:
+ * <span class="ref-tag">BM:001</span>
+ */
+.ref-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68em;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.ref-tag:hover {
+  color: var(--accent-warm);
+  border-color: var(--accent-warm-40);
+}
+
+/*
+ * 注釈番号（脚注風）
+ * 使用例: 概念<sup class="fn-ref" id="fn-ref-1"><a href="#fn-1">*1</a></sup>
+ */
+.fn-ref {
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  color: var(--accent-warm);
+  font-weight: 600;
+  letter-spacing: 0;
+  vertical-align: super;
+  margin-left: 1px;
+}
+
+.fn-ref a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/*
+ * 脚注リスト
+ * 使用例:
+ * <div class="footnotes">
+ *   <ol><li id="fn-1">…</li></ol>
+ * </div>
+ */
+.footnotes {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-light);
+}
+
+.footnotes ol {
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+}
+
+.footnotes li {
+  margin-bottom: 8px;
+}
+
+.footnotes li::before {
+  color: var(--accent-warm-40);
+  font-size: 0.75em;
+}
+
+/*
+ * サイドノート（本文脇の補足）
+ * 使用例: <aside class="side-note">補足テキスト</aside>
+ */
+.side-note {
+  float: right;
+  clear: right;
+  width: 180px;
+  margin: 0 -196px 16px 24px;
+  font-family: var(--font);
+  font-size: 0.74rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border-light);
+  padding-left: 12px;
+}
+
+@media (max-width: 1099px) {
+  .side-note {
+    float: none;
+    clear: none;
+    width: 100%;
+    margin: 12px 0;
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--border-light);
+    padding-top: 8px;
+    font-size: 0.78rem;
+  }
+}
+
+/*
+ * 用語ハイライト（グロッサリー連動）
+ * 使用例: <span class="term" title="ビジネスモデル・キャンバスの意">BMC</span>
+ */
+.term {
+  border-bottom: 1px dotted var(--accent-warm-40);
+  cursor: help;
+  color: inherit;
+  font-weight: 500;
+}
+
+.term:hover {
+  color: var(--accent-warm);
+  border-bottom-color: var(--accent-warm);
+}
+
+
+/* ==========================================================================
+   END OF typography_enhancements.css
+   Total approx: 1,900+ lines
+   ========================================================================== */
 </style>
 </head>
 <body>
@@ -412,7 +2498,7 @@ code {
 <span class="book-date">2026年5月</span>
 </div>
 <div class="book-metrics">
-<span class="metric-item"><strong>377,513</strong> 字</span>
+<span class="metric-item"><strong>377,456</strong> 字</span>
 <span class="metric-item"><strong>20</strong> 章</span>
 <span class="metric-item"><strong>100</strong> 図表</span>
 <span class="metric-item"><strong>735</strong> パターン</span>
@@ -494,10 +2580,12 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p>こうした語り方の背後には、マネタイズをプロダクトや事業の最後に取り付ける部品として見る発想がある。経営学の視点から見れば、マネタイズは後付けの料金表ではない。価値がどこで生まれ、誰がどのように負担し、どのタイミングで事業者に戻り、どの資源へ再投資されるのかを設計する、経営そのものの問いである。</p>
 <p>本書が扱う「マネタイズ」は、単なる売上獲得の技法ではない。価格設定、課金単位、顧客関係、チャネル、資源配分、組織能力、競争優位、制度環境、技術変化をまたぐ構造的な設計問題である。したがって、本章の出発点は「どう儲けるか」ではなく、「価値を社会の中でどのように循環させると、事業が持続し、顧客が選び続け、組織が学習し、次のイノベーションが生まれるのか」という問いに置かれる。この問いは、経営学、事業開発、イノベーション理論が交わる場所にある。</p>
 <p>一つの場面から始めたい。ある非営利的な研究プロジェクトが、地域の医療、教育、福祉、企業活動を横断する知識を集め、実践者同士が学び合う場をつくっているとする。参加者は、この場に価値があることを直感的に知っている。異なる領域の人が出会い、まだ名前のない課題に輪郭が与えられ、複数の現場で試せる仮説が生まれる。だが、そこに常に難問が生じる。誰が費用を負担するのか。参加費を取ればよいのか。企業スポンサーに依存すればよいのか。研究助成で続けるのか。成果物を販売するのか。会員制にするのか。あるいは、個別プロジェクトの伴走支援を収益源にするのか。</p>
-<p>この場面は、知識運動体の実践として蓄積されてきたような1PO、すなわち一つの組織でありながら、単一の営利企業でも、伝統的なNPOでも、大学研究室でも、コンサルティング会社でもない知識運動体の問いに近い。知識運動体は、知識を保有して販売するだけでは成り立たない。知識を生成し、翻訳し、共有し、実践へ接続し、さらに実践から学び直す循環をつくる必要がある。ここでマネタイズは、知識を閉じ込める壁にもなり得るし、知識循環を加速するエンジンにもなり得る。会費を取ることが参加者のコミットメントを高める場合もあれば、入口を狭めて多様性を失わせる場合もある。成果報酬にすると実装に近づく場合もあれば、短期成果に偏って探索的な学習を壊す場合もある。無料公開は公共性を広げる一方、維持費の責任を誰かに押し付けることもある。</p>
+<p>この場面は、知識運動体の実践として蓄積されてきたような1PO——すなわち単一の営利企業でも伝統的なNPOでも大学研究室でもコンサルティング会社でもない、独自の形態の組織——の問いに近い。知識運動体は、知識を保有して販売するだけでは成り立たない。知識を生成し、翻訳し、共有し、実践へ接続し、実践から学び直す循環をつくる必要があるからだ。</p>
+<p>ここでマネタイズは、知識を閉じ込める壁にもなり得るし、知識循環を加速するエンジンにもなり得る。会費を取ることが参加者のコミットメントを高める場合もあれば、入口を狭めて多様性を失わせる場合もある。成果報酬にすると実装に近づく場合もあれば、短期成果に偏って探索的な学習を壊す場合もある。無料公開は公共性を広げる一方、維持費の責任を誰かに押し付けることもある。</p>
 <p>このように考えると、マネタイズとは「価格をつけること」より広い。価格とは、価値循環の一つの表現にすぎない。より根本にあるのは、価値創出と価値獲得の関係である。顧客にとっての価値、社会にとっての価値、組織が獲得する価値、パートナーが受け取る価値、将来の学習に再投資される価値。これらが互いに支え合うとき、事業は単なる売上の集積ではなく、持続する活動システムになる。逆に、どれか一つだけが過剰に優先されると、短期的には収益が伸びても、顧客信頼、供給能力、組織学習、社会的正当性のどこかが痩せていく。</p>
 <p>本章を読む理由はここにある。後続の章では、ビジネスモデルの理論的系譜、価値創出と価値獲得、収益モデルの基本パターン、キャンバスと活動システム、SaaS、プラットフォーム、広告、クリエイターエコノミー、AI、ハードウェアのサービス化、事業開発プロセス、ユニットエコノミクス、ネットワーク効果、破壊的イノベーション、エコシステム、制度変化、日本特有の構造、知識運動体としての応用を扱う。だが、それらをばらばらの事例集として読むだけでは、マネタイズの設計力は身につかない。まず必要なのは、収益化を一つの経営学的問いとして捉える視座である。</p>
-<p>この章では、その視座を「KEY_POI1TS」という中核フレームで整理する。あえて通常の POINTS ではなく POI1TS と表記するのは、単なる箇条書きの要点ではなく、1つの組織、1つの問い、1つの実践から出発して複数の理論を接続するための記号として扱うためである。KEY_POI1TS は、K: Knowledge circulation、E: Economic engine、Y: Yield logic、P: Positioning、O: Organization capability、I: Innovation trajectory、1: One-purpose integration、T: Timing and threshold、S: Signals から成る。日本語で言えば、知識循環、経済エンジン、利回り論理、ポジショニング、組織能力、イノベーション軌道、単一目的への統合、タイミングと閾値、シグナルである。これらは後続章で扱う各パターンを読み解く座標軸にもなる。</p>
+<p>この章では、その視座を「KEY_POI1TS」という中核フレームで整理する。あえて通常の POINTS ではなく POI1TS と表記するのは、単なる箇条書きの要点ではなく、1つの組織・1つの問い・1つの実践から出発して複数の理論を接続するための記号として扱うためだ。</p>
+<p>KEY_POI1TS は次の9要素から成る。K: Knowledge circulation（知識循環）、E: Economic engine（経済エンジン）、Y: Yield logic（利回り論理）、P: Positioning（ポジショニング）、O: Organization capability（組織能力）、I: Innovation trajectory（イノベーション軌道）、1: One-purpose integration（単一目的への統合）、T: Timing and threshold（タイミングと閾値）、S: Signals（シグナル）である。これらは後続章で扱う各パターンを読み解く座標軸にもなる。</p>
 <h3 class="section-heading">主要概念と理論的基盤</h3>
 <p>マネタイズを定義する前に、まず価値という語を分解しなければならない。経営学において、価値は単なる主観的満足でも、会計上の売上でもない。顧客がある製品やサービスを用いることで得る便益、支払う価格、代替手段との比較、供給者が投入する資源、補完者が担う活動、社会制度が許容する取引形式が重なり合って形成される。Brandenburger and Stuart の価値ベース戦略の議論では、創出価値は顧客の支払意思額と供給者の機会費用の差として捉えられる。単純化すれば、総創出価値は WTP - C である。ここで WTP は willingness to pay、C は供給に必要なコストまたは機会費用である。企業が獲得する価値は、その総創出価値のうち価格 P とコスト C の差、すなわち P - C に近い。一方で顧客余剰は WTP - P である。</p>
 <figure id="fig-2">
@@ -526,13 +2614,16 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 </figure>
 
 <p>この式は素朴だが強力である。マネタイズは、P を上げる技法ではなく、WTP、P、C、そして取引に参加する主体間の分配を同時に設計することである。価格を上げても WTP が下がれば顧客余剰は縮み、継続率は落ちる。コストを下げても品質や信頼が損なわれれば WTP は下がる。無料提供で P をゼロにしても、別の支払者、別のタイミング、別の補完取引から価値を獲得できれば事業は成立する。広告モデル、フリーミアム、両面市場、データ活用、成果報酬、サブスクリプションは、すべてこの基本式を異なる時間軸と主体配置で組み替えたものとして理解できる。</p>
-<p>ビジネスモデル研究は、この問いをより広く扱ってきた。Teece はビジネスモデルを、企業が価値を顧客に提供し、その対価を獲得する論理として捉えた。Zott and Amit は、ビジネスモデルを企業境界をまたぐ活動システムとして定義し、内容、構造、ガバナンスの設計を強調した。Chesbrough は、技術そのものが優れていても、適切なビジネスモデルがなければ価値を獲得できないことを示した。Osterwalder and Pigneur はビジネスモデル・キャンバスを通じて、価値提案、顧客セグメント、チャネル、顧客関係、収益の流れ、主要資源、主要活動、主要パートナー、コスト構造を一枚の設計図として可視化した。これらの研究は互いに焦点が異なるが、共通しているのは、収益は孤立した結果ではなく、活動、資源、関係、制度の組み合わせから生まれるという見方である。</p>
+<p>ビジネスモデル研究は、この問いをより広く扱ってきた。Teece はビジネスモデルを、企業が価値を顧客に提供し対価を獲得する論理として捉えた。Zott and Amit は、ビジネスモデルを企業境界をまたぐ活動システムとして定義し、内容・構造・ガバナンスの設計を強調した。Chesbrough は、技術そのものが優れていても適切なビジネスモデルがなければ価値を獲得できないことを示した。Osterwalder and Pigneur はビジネスモデル・キャンバスを通じて、価値提案、顧客セグメント、チャネル、顧客関係、収益の流れ、主要資源、主要活動、主要パートナー、コスト構造を一枚の設計図として可視化した。</p>
+<p>これらの研究は互いに焦点が異なる。だが共通しているのは、収益は孤立した結果ではなく、活動・資源・関係・制度の組み合わせから生まれるという見方である。</p>
 <p>事業開発の文脈では、マネタイズは探索と検証の対象になる。Lean Startup が示した build-measure-learn の循環は、顧客課題と解決策の検証だけでなく、支払意思、導入障壁、利用頻度、継続理由、紹介可能性、販売効率の検証を含む。Effectuation の議論は、事業機会が事前に完全に発見されるのではなく、手持ち資源、関係性、許容可能な損失、偶然性の活用を通じて形成されることを示す。Discovery-Driven Planning は、不確実な新規事業において、計画を予測ではなく仮説の束として扱う。つまり、マネタイズは「最後に売る」作業ではなく、事業開発の初期から検証すべき仮説である。</p>
 <p>イノベーション理論は、さらに別の注意を促す。Christensen の破壊的イノベーション論は、新技術が既存企業に無視される理由を、単なる技術認識の失敗ではなく、既存顧客、既存収益、既存資源配分プロセスとの整合性に求めた。ある収益モデルで高い利益を得ている企業は、低単価、低性能、低粗利の新市場を合理的に軽視しやすい。Chesbrough のオープンイノベーション論は、知識の流入と流出を前提に、価値獲得の境界を再設計する必要を示した。Adner のエコシステム論は、顧客価値の実現が自社単独ではなく、補完者、供給者、規制者、導入組織の整合に依存することを明らかにした。これらの理論に照らせば、マネタイズはイノベーションの普及速度、採用順序、補完資産、制度的正当性を左右する。</p>
 <p>ここで本書の基盤となる business_models DB に触れておきたい。このDBは、735のビジネスモデル・パターンを、単なる名称リストではなく、10属性条件レイヤーとして扱うことを想定している。たとえば、対象顧客、価値提案、課金単位、価格決定ロジック、コストドライバー、チャネル、補完者、ネットワーク効果、制度依存性、破綻シグナルのような属性である。関連DBとして management_studies、innovation_theory、startup_theory を接続すると、各パターンは理論、ケース、適用条件、組織能力、検証方法を横断して読めるようになる。本書の役割は、そのDBを単なる検索対象ではなく、経営判断に使える知識体系へ翻訳することである。</p>
-<p>KEY_POI1TS は、この翻訳のための中核概念である。K、Knowledge circulation は、事業がどのような知識を生成し、誰に移転し、どのように再利用するかを問う。E、Economic engine は、売上、粗利、キャッシュフロー、再投資の循環を問う。Y、Yield logic は、一単位の活動、顧客、資産、関係からどれだけの収益性が生まれるかを問う。P、Positioning は、市場内での差別化、代替手段、競争ルールを問う。O、Organization capability は、そのモデルを実行し続ける組織能力を問う。I、Innovation trajectory は、技術や制度の変化によってモデルがどの方向へ進化するかを問う。1、One-purpose integration は、複数の活動が一つの目的へ統合されているかを問う。T、Timing and threshold は、いつ開始し、どの閾値を超えると成立するかを問う。S、Signals は、発動、成長、劣化、破綻を示す観測可能な兆候を問う。</p>
-<p>マネタイズを理論化するうえで重要なのは、これらの要素を静的なチェックリストとして扱わないことである。たとえばサブスクリプションは、月額課金という収益形式だけを見れば単純である。しかし、継続価値を毎月更新する知識循環、解約率を上回る獲得効率、顧客利用データを改善に戻す組織能力、導入後に利用が定着するタイミング、アップセルが可能になる閾値がそろわなければ成立しない。プラットフォームも、手数料率だけでは説明できない。片側市場ともう一方の市場の誘因設計、クロスサイド・ネットワーク効果、補完者の収益性、ガバナンス、信頼のルールがなければ、手数料は価値獲得ではなく摩擦になる。</p>
-<p>この意味で、マネタイズは経営学の古典的問いと直結している。Drucker が顧客の創造と維持を企業目的の中心に置いたとき、そこには単に売ることではなく、顧客との継続的関係を通じて組織が存在理由を得るという理解があった。Porter の競争戦略は、収益性を産業構造とポジショニングから捉えた。Penrose や Barney に連なる資源ベース理論は、企業内部の資源と能力が持続的競争優位を生むと考えた。Teece のダイナミック・ケイパビリティ論は、環境変化の中で感知し、捕捉し、変容する能力を重視した。マネタイズは、これらすべてを一つの実践的問いとして束ねる。顧客をどう理解するか。産業内でどこに位置取るか。どの資源を蓄積するか。変化に合わせてどのようにモデルを組み替えるか。その答えが、収益の形として現れる。</p>
+<p>KEY_POI1TS は、この翻訳のための中核概念である。各要素は次の問いを担う。K（Knowledge circulation）は、事業がどのような知識を生成し、誰に移転し、どのように再利用するかを問う。E（Economic engine）は、売上・粗利・キャッシュフロー・再投資の循環を問う。Y（Yield logic）は、一単位の活動・顧客・資産・関係からどれだけの収益性が生まれるかを問う。P（Positioning）は、市場内での差別化、代替手段、競争ルールを問う。O（Organization capability）は、そのモデルを実行し続ける組織能力を問う。I（Innovation trajectory）は、技術や制度の変化によってモデルがどの方向へ進化するかを問う。1（One-purpose integration）は、複数の活動が一つの目的へ統合されているかを問う。T（Timing and threshold）は、いつ開始し、どの閾値を超えると成立するかを問う。S（Signals）は、発動・成長・劣化・破綻を示す観測可能な兆候を問う。</p>
+<p>マネタイズを理論化するうえで重要なのは、これらの要素を静的なチェックリストとして扱わないことだ。たとえばサブスクリプションは、月額課金という収益形式だけを見れば単純に見える。しかし、継続価値を毎月更新する知識循環、解約率を上回る獲得効率、顧客利用データを改善に戻す組織能力、導入後に利用が定着するタイミング、アップセルが可能になる閾値がそろわなければ成立しない。</p>
+<p>プラットフォームも、手数料率だけでは説明できない。片側市場ともう一方の市場の誘因設計、クロスサイド・ネットワーク効果、補完者の収益性、ガバナンス、信頼のルールがなければ、手数料は価値獲得ではなく摩擦になる。</p>
+<p>この意味で、マネタイズは経営学の古典的問いと直結している。Drucker が顧客の創造と維持を企業目的の中心に置いたとき、そこには単に売ることではなく、顧客との継続的関係を通じて組織が存在理由を得るという理解があった。Porter の競争戦略は、収益性を産業構造とポジショニングから捉えた。Penrose や Barney に連なる資源ベース理論は、企業内部の資源と能力が持続的競争優位を生むと論じた。Teece のダイナミック・ケイパビリティ論は、環境変化の中で感知し、捕捉し、変容する能力を重視した。</p>
+<p>マネタイズは、これらすべてを一つの実践的問いとして束ねる。顧客をどう理解するか。産業内でどこに位置取るか。どの資源を蓄積するか。変化に合わせてどのようにモデルを組み替えるか。その答えが収益の形として現れる。</p>
 <h3 class="section-heading">詳細な構造分析</h3>
 <p>マネタイズの構造を精密に見るために、まず単純な損益式から始める。事業の営業利益を Π とすれば、基本形は Π = R - C である。R は売上、C は総費用である。売上 R は、顧客数 N、単価 P、購買頻度 F、継続期間 L の関数として R = N × P × F × L と書ける。サブスクリプションでは P は月額単価、F は課金周期、L は継続月数に近い。取引手数料モデルでは P は平均取引額、F は取引頻度、手数料率 r が加わり、R = N × GMV × r × F と表せる。広告モデルでは、インプレッション数 I、クリック率 CTR、単価 CPC または CPM が主要変数になる。成果報酬では、成果発生確率 q、成果単価 B、事業者の寄与認定率 a が加わる。</p>
 <figure id="fig-3">
@@ -610,11 +2701,12 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 
 <p>enabling conditions の第一は、価値認識の明確さである。顧客が何に価値を感じるか、どの単位で便益を測れるか、誰が支払う正当性を持つかが明らかであるほど、マネタイズは設計しやすい。B2B では、売上増、コスト削減、リスク低減、時間短縮、品質向上、法令遵守のような便益が支払理由になる。B2C では、快適さ、楽しさ、所属、自己表現、安心、利便性が支払理由になる。知識運動体では、学習、接続、探索、信頼、社会的意義、実装機会が価値になる。ただし、これらはそのまま価格に変換できるとは限らない。価値認識を支払い単位へ翻訳する設計が必要である。</p>
 <p>第二の enabling condition は、反復利用または反復取引である。一回限りの価値提供でも収益は得られるが、持続的事業にするには、顧客関係が反復するか、顧客獲得が再現可能である必要がある。サブスクリプションは反復利用が前提であり、利用しない顧客から継続課金するだけでは長期的に崩れる。マーケットプレイスは反復取引があるほど流動性が高まる。教育や研究の事業では、単発講座よりも継続的な学習共同体のほうが知識循環をつくりやすい。反復性は、収益の安定性だけでなく、学習の蓄積にも関わる。</p>
-<p>第三の enabling condition は、限界費用と限界価値の関係である。デジタルサービスは限界費用が低いと言われるが、実際にはサポート、セキュリティ、カスタマイズ、コンテンツ更新、コミュニティ運営の費用が発生する。限界費用が低いほど無料層や低価格層を広げやすいが、限界価値が低ければ有料転換は起きない。逆に、限界費用が高い高接触サービスでは、高単価または明確な成果価値が必要になる。ここでの実務的閾値は、粗利率、サポート時間、顧客あたり運用負荷である。粗利率が一定水準を下回り、売上成長に伴って運用負荷が線形以上に増えるなら、モデルの再設計が必要である。</p>
-<p>第四の enabling condition は、信頼と正当性である。マネタイズは、顧客や社会から正当な価値交換として受け止められなければならない。医療、教育、福祉、公共政策、環境、データ、AI の領域では、収益化が倫理的疑念を生みやすい。無料で集めたデータを不透明に収益化する、脆弱な利用者に過剰課金する、公共的知識を過度に囲い込む、補完者の利益を圧迫する、といった行為は短期収益を生んでも正当性を損なう。知識運動体においては、収益源が知識の公共性や参加者の信頼と矛盾しないことが、とりわけ重要になる。</p>
+<p>第三の enabling condition は、限界費用と限界価値の関係だ。デジタルサービスは限界費用が低いと言われるが、実際にはサポート・セキュリティ・カスタマイズ・コンテンツ更新・コミュニティ運営の費用が発生する。限界費用が低いほど無料層や低価格層を広げやすいが、限界価値が低ければ有料転換は起きない。逆に、限界費用が高い高接触サービスでは、高単価または明確な成果価値が必要になる。ここでの実務的閾値は、粗利率・サポート時間・顧客あたり運用負荷である。粗利率が一定水準を下回り、売上成長に伴って運用負荷が線形以上に増えるなら、モデルの再設計が求められる。</p>
+<p>第四の enabling condition は、信頼と正当性である。マネタイズは、顧客や社会から正当な価値交換として受け止められなければならない。医療・教育・福祉・公共政策・環境・データ・AI の領域では、収益化が倫理的疑念を生みやすい。無料で集めたデータを不透明に収益化する、脆弱な利用者に過剰課金する、公共的知識を過度に囲い込む、補完者の利益を圧迫する——こうした行為は短期収益を生んでも正当性を損なう。知識運動体においては、収益源が知識の公共性や参加者の信頼と矛盾しないことが、とりわけ重要になる。</p>
 <p>disabling conditions の第一は、支払者と受益者の分離が解けない場合である。社会的価値が高くても、誰も支払えない、支払う権限を持たない、支払いを説明できない場合、通常の市場取引としては成立しにくい。この場合、寄付、助成、公共調達、共同基金、クロスサブシディ、法人スポンサー、成果連動型契約など、別の制度的設計が必要になる。第二は、価値発生までの時間が長すぎる場合である。教育、研究、組織変革、地域づくりでは成果が遅れて現れる。短期課金と長期成果がずれると、顧客は支払いを継続しにくい。第三は、提供側の能力がモデルに追いつかない場合である。成果報酬を掲げても成果測定ができない、プラットフォームを目指してもガバナンスできない、サブスクリプションを導入しても継続価値を出せないなら、モデルは壊れる。</p>
 <p>trigger signals は、モデル転換の機会を示す。第一に、顧客が自発的に支払い方法を提案し始めるときである。「これを社内研修にしたい」「年間契約にしたい」「継続的に相談したい」「データベースとして使いたい」といった声は、価値単位が見え始めた合図である。第二に、同じ課題、同じ資料、同じ説明、同じ導入支援が繰り返されるときである。これは個別対応からプロダクト化、講座化、テンプレート化、ライセンス化へ移行できる可能性を示す。第三に、補完者が自社の活動に乗り始めるときである。コミュニティ、認定者、導入パートナー、開発者、研究者が参加するなら、プラットフォームやエコシステム型の収益設計が検討できる。</p>
-<p>decay signals は、より厳しく見る必要がある。売上が伸びているのに粗利率が下がる。大口顧客依存が高まり、ロードマップが歪む。顧客獲得単価が上がり続ける。継続率が下がる。無料利用者の増加が有料収益に接続しない。コミュニティの発言量は多いが、実装や支払いに移らない。パートナーが離脱する。価格への不満ではなく、価値が分からないという声が増える。組織内部で、売上のための案件とミッションのための活動が分裂する。これらは、単に営業努力が不足しているのではなく、価値循環と収益循環の接続が弱くなっている兆候である。</p>
+<p>decay signals は、より厳しく見る必要がある。売上が伸びているのに粗利率が下がる。大口顧客依存が高まり、ロードマップが歪む。顧客獲得単価が上がり続ける。継続率が下がる。無料利用者の増加が有料収益に接続しない。コミュニティの発言量は多いが、実装や支払いに移らない。パートナーが離脱する。価格への不満ではなく「価値が分からない」という声が増える。組織内部で、売上のための案件とミッションのための活動が分裂し始める。</p>
+<p>これらは単に営業努力が不足しているサインではない。価値循環と収益循環の接続が弱くなっている、構造的な兆候である。</p>
 <p>特に知識運動体（1PO型組織）にとって重要な破綻シグナルは、知識の流れが止まることである。収益事業が忙しくなりすぎて探索的対話が減る。スポンサーの関心に合わせすぎてテーマの多様性が失われる。成果物を販売するために知識共有が過度に制限される。逆に、公共性を重視しすぎて運営者の持続可能性が損なわれる。どちらも破綻である。知識運動体のマネタイズは、開くことと閉じること、贈与と取引、探索と納品、公共性と収益性の間に、動的な均衡を設計し続ける営みである。</p>
 <h3 class="section-heading">横断的な接続</h3>
 <p>本章は、後続のすべての章への入口である。第2章では、ビジネスモデル研究の理論的系譜を扱い、Teece、Zott and Amit、Chesbrough、Massa、Tucci、Afuah らの議論をより丁寧に追う。第3章では、価値創出と価値獲得の区別を掘り下げ、WTP、価格、コスト、顧客余剰、企業利益の関係を扱う。第4章では、収益モデルの基本パターンを体系化し、St. Gallen のビジネスモデル・ナビゲーターや MIT のアーキタイプ、Timmers の電子市場モデルを参照する。第5章では、ビジネスモデル・キャンバスと活動システム理論を接続し、設計図としての可視化を扱う。</p>
@@ -660,7 +2752,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p>Part III では、事業開発の方法論としてマネタイズを扱う。Lean Startup、Discovery-Driven Planning、Effectuation、4I Framework は、収益モデルを仮説として検証するための道具になる。パターン応用の章では、business_models DB の735パターンを、Similarity、Confrontation、Integration の三つの原理で使う。ユニットエコノミクスの章では、本章で触れた LTV、CAC、回収期間、Rule of 40 を精密に扱う。ネットワーク効果の章では、臨界量、コールドスタート、密度、補完者の誘因を分析する。</p>
 <p>Part IV では、マネタイズがイノベーション理論と接続される。破壊的イノベーションの章では、既存収益モデルが新市場探索を妨げるメカニズムを扱う。オープンイノベーションとエコシステムの章では、価値獲得の境界、補完資産、パートナーの利得分配を扱う。規制・制度・社会変動の章では、制度的正当性、公共調達、データ規制、環境規制、社会的受容が収益モデルを変える過程を見る。Part V では、日本特有の商習慣、系列、共同体、商社的機能、寺社経済、共同組合、そして知識運動体（の典型例）の応用へ接続する。</p>
 <p>関連DBとの関係で言えば、business_models DB はパターンの辞書であり、management_studies DB は組織、戦略、資源、制度の理論的裏付けを与える。innovation_theory DB は技術変化、普及、破壊、エコシステムを読み解く視座を与える。startup_theory DB は不確実性下の検証、資金調達、成長指標、ピボット、スケーリングの実務知を与える。本書の読者は、あるパターンに出会ったとき、それを単独の成功事例としてではなく、DB間の接続点として読むことになる。たとえば「フリーミアム」は、business_models では収益パターン、management_studies では価格差別と資源配分、innovation_theory では普及と標準化、startup_theory では獲得ファネルと有料転換の検証として読むことができる。</p>
-<p>この横断性こそが、知識運動体の文脈で重要になる。知識運動体は、専門分野ごとに閉じた知識を集めるだけではなく、異なる実践領域の知識を接続し、新しい問いを生み、社会実装へ向かう運動をつくる。マネタイズの知識も同じである。SaaS の指標はNPOに無関係ではない。共同組合のガバナンスはプラットフォーム企業に無関係ではない。公共調達の制度設計はAIサービスに無関係ではない。寺社経済や講の仕組みはコミュニティ収益に無関係ではない。異なる文脈をつなぐことで、単なる模倣ではない事業開発が可能になる。</p>
+<p>この横断性こそが、知識運動体の文脈で重要になる。知識運動体は、専門分野ごとに閉じた知識を集めるだけではなく、異なる実践領域の知識を接続し、新しい問いを生み、社会実装へ向かう運動をつくる。マネタイズの知識も同様だ。SaaS の指標はNPOに無関係ではない。共同組合のガバナンスはプラットフォーム企業と無縁ではない。公共調達の制度設計はAIサービスの課金設計と交差する。寺社経済や講の仕組みは現代のコミュニティ収益に直接の示唆を持つ。異なる文脈をつなぐことで、単なる模倣ではない事業開発が可能になる。</p>
 <h3 class="section-heading">章のまとめ</h3>
 <p>本章の要点は、マネタイズを「収益化の小技」ではなく、「価値循環を設計する経営学的問い」として捉えることにある。収益は、価格だけで決まらない。顧客の支払意思、供給コスト、代替手段、補完者、制度、組織能力、技術変化、信頼、時間軸が重なって決まる。価値創出と価値獲得の関係を設計できなければ、売上は立っても事業は持続しない。</p>
 <ul>
@@ -688,7 +2780,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p># 第2章　ビジネスモデルの理論的系譜</p>
 <div class="epigraph">> “A business model articulates the logic, the data and other evidence that support a value proposition for the customer, and a viable structure of revenues and costs for the enterprise delivering that value.”<span class="attribution">— ></span></div>
 <h3 class="section-heading">領域の輪郭</h3>
-<p>ビジネスモデルという言葉は、いまでは経営会議、スタートアップのピッチ、自治体の新規事業検討、大学のイノベーション教育、NPOの事業計画、研究開発型企業の社会実装計画まで、ほとんどあらゆる場面で使われている。しかし、その便利さのために、しばしば意味が薄くなる。「このサービスのビジネスモデルは何か」と問われたとき、ある人は課金方法を答え、ある人は顧客セグメントを答え、ある人はサプライチェーンの構造を答え、ある人は競争優位の源泉を答える。どれも間違いではないが、どれか一つだけでは不十分である。ビジネスモデルは収益モデルではあるが、収益モデルだけではない。戦略ではあるが、戦略そのものでもない。組織設計や活動システムを含むが、単なる業務プロセス図でもない。技術の社会実装に関わるが、技術ロードマップでもない。この曖昧さこそが、ビジネスモデル概念の弱点であり、同時に強みでもある。</p>
+<p>ビジネスモデルという言葉は、いまでは経営会議、スタートアップのピッチ、自治体の新規事業検討、大学のイノベーション教育、NPOの事業計画、研究開発型企業の社会実装計画まで、ほとんどあらゆる場面で使われている。その便利さのために、しばしば意味が薄くなる。「このサービスのビジネスモデルは何か」と問われたとき、ある人は課金方法を答え、ある人は顧客セグメントを答え、ある人はサプライチェーンの構造を答え、ある人は競争優位の源泉を答える。どれも間違いではないが、どれか一つだけでは不十分だ。</p>
 <figure id="fig-6">
 <svg viewBox="0 0 560 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" role="img">
 <style>
@@ -754,6 +2846,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <figcaption><span class="fig-number">図2-1</span> ビジネスモデル研究の主要論文の年代分布（1998-2026）</figcaption>
 </figure>
 
+<p>ビジネスモデルは収益モデルではあるが、収益モデルだけではない。戦略ではあるが、戦略そのものでもない。組織設計や活動システムを含むが、単なる業務プロセス図でもない。技術の社会実装に関わるが、技術ロードマップでもない。この曖昧さこそが、ビジネスモデル概念の弱点であり、同時に強みでもある。</p>
 <p>本章を読む理由は、この曖昧な概念を、実務で使える粒度まで分解し直すためである。第1章では、マネタイズを単なる「お金の取り方」ではなく、価値を創出し、関係者間で配分し、事業として継続可能にする経営学的問いとして位置づけた。本章では、その問いを受けて、ビジネスモデルという概念がどのような理論的系譜の上に成立してきたのかをたどる。ここで扱うのは、流行語としてのビジネスモデルではなく、経営学、事業開発、イノベーション理論の交差点に生まれた分析単位としてのビジネスモデルである。</p>
 <p>出発点として、一つの場面を想像してみたい。ある研究機関が、環境負荷を大幅に下げる新素材を開発した。性能は既存素材より高く、耐久性もある。特許も取得済みで、研究者は「これは社会を変える」と確信している。ところが、企業との共同開発はなかなか進まない。既存設備で加工できないため顧客側の初期投資が大きく、量産前なので単価が高く、最終製品メーカーは採用リスクを嫌う。さらに、環境価値を誰が価格に転嫁するのかも曖昧である。素材メーカーが負担するのか、ブランド企業が負担するのか、消費者がプレミアムを払うのか、規制や補助金が支えるのか。技術的には優れているが、価値が流れる経路が設計されていない。このとき不足しているのは、技術そのものではなく、ビジネスモデルである。</p>
 <p>別の場面では、地域の医療・介護・福祉をつなぐNPOが、孤立高齢者を支える仕組みをつくろうとしている。社会的価値は明らかで、関係者も必要性を認めている。しかし、利用者本人の支払い能力は限られ、行政委託だけでは柔軟な活動ができず、寄付だけでは継続性が弱い。ボランティアに依存すれば現場が疲弊し、専門職だけで組めばコストが上がる。ここでも問われているのは、単なる収益源ではなく、誰が価値を受け取り、誰が費用を負担し、誰が正当性を付与し、どの活動を内製し、どの活動を連携で担うのかという設計である。営利企業だけでなく、NPOや社会的企業においても、ビジネスモデルは価値創造と価値獲得の構造として現れる。</p>
@@ -3032,7 +5125,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p># 第12章　事業開発のプロセス論</p>
 <div class="epigraph">> The only way to win is to learn faster than anyone else.<span class="attribution">— > -- Eric Ries, *The Lean Startup*</span></div>
 <h3 class="section-heading">領域の輪郭</h3>
-<p>事業開発とは、まだ事業ではないものを、事業として成立する形へと近づけていく実践である。ここでいう「まだ事業ではないもの」とは、単なるアイデアだけを指すのではない。技術の兆し、社会課題への違和感、顧客の未充足な行動、制度変更の予感、既存事業の辺境で見つかった例外的な需要、異業種のビジネスモデルの断片、あるいは、誰かの強い当事者性から生まれた問いである。それらは最初から市場規模、顧客セグメント、収益モデル、提供体制、競争優位、組織設計を備えているわけではない。むしろ事業開発の現場では、最初にあるのは「これは何かになるのではないか」という未分化な感覚であり、その感覚を、顧客が支払い、組織が提供し続け、社会の中で意味を持つ構造へ翻訳する過程こそが事業開発である。</p>
+<p>事業開発とは、まだ事業ではないものを、事業として成立する形へと近づけていく実践である。ここでいう「まだ事業ではないもの」とは、単なるアイデアだけを指すのではない。技術の兆し、社会課題への違和感、顧客の未充足な行動、制度変更の予感、既存事業の辺境で見つかった例外的な需要、異業種のビジネスモデルの断片、あるいは、誰かの強い当事者性から生まれた問いである。</p>
 <figure id="fig-56">
 <svg viewBox="0 0 560 320" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" role="img">
 <style>
@@ -3057,9 +5150,12 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <figcaption><span class="fig-number">図12-1</span> Lean Startupの中核ループ</figcaption>
 </figure>
 
+<p>それらは最初から市場規模、顧客セグメント、収益モデル、提供体制、競争優位、組織設計を備えているわけではない。むしろ事業開発の現場では、最初にあるのは「これは何かになるのではないか」という未分化な感覚だ。その感覚を、顧客が支払い、組織が提供し続け、社会の中で意味を持つ構造へ翻訳する過程こそが事業開発である。</p>
 <p>この章を読む理由は、収益モデルを静的な類型として理解するだけでは、実際の新規事業を立ち上げることができないからである。第4章で収益モデルの基本パターンを学び、第5章でビジネスモデル・キャンバスや活動システム理論を見たとしても、それらは完成後の地図に近い。地図は必要だが、まだ道が存在しない場所では、地図だけでは進めない。事業開発のプロセス論が扱うのは、地図が描けない段階で、どの順番で仮説を置き、どの行動で検証し、どの失敗を学習へ変換し、どの時点で撤退や転換を判断するのかという、生成の論理である。</p>
-<p>典型的な出発点を考えてみよう。ある地域で、医療・介護・交通・孤独の問題が絡み合い、高齢者の外出機会が急速に減っている。行政は施策を持ち、民間企業は移動サービスを持ち、地域団体は関係資本を持ち、大学は調査能力を持っている。しかし、どの主体も単独では「持続的な事業」として成立させることができない。知識運動体は知識運動体として関わるような場面では、このような複数主体の断片的な知識、資源、関心を束ねながら、事業の形を探索する必要がある。ここで求められるのは、最初から正解の事業計画を書く能力ではない。むしろ、関係者の仮説を言語化し、重要な不確実性を切り分け、小さな実験を設計し、結果を共有可能な知識へ変換し、次の行動へ接続する能力である。</p>
-<p>事業開発の難しさは、問題が一つではない点にある。顧客が本当に困っているのか、困っているとして支払うのか、支払者と利用者が異なるのか、提供に必要な資源を誰が持つのか、規制や制度は味方になるのか、既存の業務プロセスに組み込めるのか、ユニットエコノミクスは成立するのか、組織はその事業を育てる忍耐を持てるのか。これらは同時に絡み合う。しかも、初期段階ではほとんどの数字が推定であり、関係者の言葉も安定しない。したがって事業開発は、計画の実行ではなく、仮説の進化として理解する方が正確である。</p>
+<p>典型的な出発点を考えてみよう。ある地域で、医療・介護・交通・孤独の問題が絡み合い、高齢者の外出機会が急速に減っている。行政は施策を持ち、民間企業は移動サービスを持ち、地域団体は関係資本を持ち、大学は調査能力を持っている。しかし、どの主体も単独では「持続的な事業」として成立させることができない。</p>
+<p>知識運動体として関わるような場面では、こうした複数主体の断片的な知識、資源、関心を束ねながら、事業の形を探索する必要がある。ここで求められるのは、最初から正解の事業計画を書く能力ではない。むしろ、関係者の仮説を言語化し、重要な不確実性を切り分け、小さな実験を設計し、結果を共有可能な知識へ変換し、次の行動へ接続する能力である。</p>
+<p>事業開発の難しさは、問題が一つではない点にある。顧客が本当に困っているのか、困っているとして支払うのか、支払者と利用者が異なるのか、提供に必要な資源を誰が持つのか——これらの問いは同時に絡み合う。規制や制度は味方になるか、既存の業務プロセスに組み込めるか、ユニットエコノミクスは成立するか、組織はその事業を育てる忍耐を持てるかも、同様に未確定のままである。</p>
+<p>しかも、初期段階ではほとんどの数字が推定であり、関係者の言葉も安定しない。事業開発は、計画の実行ではなく、仮説の進化として理解する方が正確だ。</p>
 <p>本章の中核である KEY_POI12TS は、この仮説進化のプロセスを捉えるための統合視座である。具体的には、Eric Ries の Lean Startup、Steve Blank の Customer Development、Saras Sarasvathy の Effectuation、Rita McGrath と Ian MacMillan の Discovery-Driven Planning、そして Crossan らの 4I Framework を結び合わせる。これらは異なる文脈で生まれた理論・方法論であるが、共通しているのは、不確実性を前提に、事業を「考えてから作る」のではなく「作りながら考える」対象として扱う点である。ただし、作りながら考えることは、闇雲に動くことではない。それは、学習の単位、資源の賭け方、失敗許容の幅、組織への埋め込み方を設計することである。</p>
 <p>この章では、事業開発を「機会の発見」ではなく「機会の形成」として捉える。市場は最初から外部に存在し、発見されるだけのものではない。とりわけ社会課題、制度変化、技術転換、地域連携、知識運動体型の実践においては、市場、顧客、価値、価格、提供主体、正当性が相互作用しながら形成される。したがって、事業開発者は分析者であると同時に、編集者であり、実験者であり、翻訳者であり、関係構築者である。第12章は、この複合的な役割を支えるプロセスの理論を扱う。</p>
 <h3 class="section-heading">主要概念と理論的基盤</h3>
@@ -3092,7 +5188,8 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <figcaption><span class="fig-number">図12-2</span> Reverse Income Statement</figcaption>
 </figure>
 
-<p>Lean Startup は、この変換のために「構築・計測・学習」の循環を提示した。Ries が強調したのは、スタートアップとは小さな会社ではなく、極度の不確実性のもとで新しい製品やサービスを創造する人的組織であるという点である。この定義は重要である。なぜなら、Lean Startup の適用対象はベンチャー企業に限られず、大企業の新規事業、自治体との共創、NPOの事業化、大学発の社会実装にも及ぶからである。Lean Startup の中心概念である MVP、すなわち minimum viable product は、完成度の低い製品ではない。最小の努力で最大の学習を得るための実験装置である。MVP の価値は、それが売れるかどうかではなく、最も重要な仮説を検証できるかどうかにある。</p>
+<p>Lean Startup は、この変換のために「構築・計測・学習」の循環を提示した。Ries が強調したのは、スタートアップとは小さな会社ではなく、極度の不確実性のもとで新しい製品やサービスを創造する人的組織であるという点だ。この定義は重要である。Lean Startup の適用対象はベンチャー企業に限られず、大企業の新規事業、自治体との共創、NPOの事業化、大学発の社会実装にも及ぶからである。</p>
+<p>中心概念である MVP（minimum viable product）は、完成度の低い製品ではない。最小の努力で最大の学習を得るための実験装置である。MVP の価値は、それが売れるかどうかではなく、最も重要な仮説を検証できるかどうかにある。</p>
 <p>Steve Blank の Customer Development は、Lean Startup の実務的基盤をなす。Blank は、スタートアップの失敗の多くは製品開発の失敗ではなく、顧客開発の失敗であると考えた。技術者や企画者は、しばしば製品を作ることを進捗と錯覚する。しかし、顧客が誰で、どの問題を持ち、どの代替手段を使い、どの購買プロセスを通り、どの条件で支払うのかが明確でなければ、製品開発は単なる内部活動に閉じる。Customer Development は、Customer Discovery、Customer Validation、Customer Creation、Company Building という段階を通じて、顧客仮説を市場の実在へ近づける。ここでの「外に出よ」というメッセージは、顧客に聞けば答えが得られるという素朴な意味ではない。顧客の言葉、行動、支払い、拒否、沈黙を通じて、仮説の質を高めよという意味である。</p>
 <p>Sarasvathy の Effectuation は、事業開発のもう一つの基盤である。従来の経営計画は、目標を設定し、その目標に必要な資源を調達する causation の論理を前提とする。これに対して Effectuation は、起業家が実際には「自分は誰か」「何を知っているか」「誰を知っているか」という手持ちの手段から出発し、許容可能な損失の範囲で行動し、コミットする関係者とともに機会を形成していくと考える。Sarasvathy はこれを五つの原理として整理した。手中の鳥、許容可能な損失、クレイジーキルト、レモネード、飛行機のパイロットである。これらは、未来を予測して制御するのではなく、制御可能な行動を通じて未来を共同生成する発想である。</p>
 <p>Discovery-Driven Planning は、Rita McGrath と Ian MacMillan によって提示された、未知の事業を計画するための方法論である。通常の事業計画は、売上、費用、利益を予測し、その予測に基づいて投資判断を行う。しかし未知の事業では、予測値の精密さはしばしば幻想である。Discovery-Driven Planning は、目標利益から逆算して必要な売上、価格、顧客数、コスト構造を導き、その成立に必要な仮説を明示する。そして、各仮説を段階的に検証し、マイルストーンごとに投資を増やす。ここで計画とは、未来を当てる文書ではなく、仮説と検証順序を管理する装置である。</p>
@@ -3224,7 +5321,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 
 <p>第13章の Similarity / Confrontation / Integration とは直接につながる。パターンを別領域へ応用するには、似ている構造を見つけるだけでなく、異なる前提と衝突させ、統合する必要がある。その過程はまさに仮説検証である。第14章のユニットエコノミクスは、形成段階以降の重要な検証対象になる。LTV/CAC、粗利率、回収期間、NRR は、事業開発の後半で仮説から管理指標へ変わる。第15章のネットワーク効果と臨界量は、成長仮説 G の中核である。ネットワーク効果を持つ事業では、初期実験の評価を通常の線形成長と同じ基準で行うと誤る。どの密度、どの相互作用、どの補完財が臨界量を生むのかを検証する必要がある。</p>
 <p>関連DBへの参照としては、business_models DB の735パターンは、事業仮説の生成源として使える。ただし、パターンをそのまま採用するのではなく、自社または地域の文脈に移植した時に、顧客、支払者、提供体制、補完主体が成立するかを検証する。management_studies (MG) DB は、探索と深化、組織学習、資源ベース理論、動的能力、意思決定、組織変革の文献と接続する。innovation_theory (IT) DB は、普及、破壊的イノベーション、オープンイノベーション、エコシステム、制度変化を参照する。startup_theory (SU) DB は、Lean Startup、Customer Development、Effectuation、DDP、PMF、グロース、資金調達の知見を提供する。</p>
-<p>知識運動体の知識運動体としての応用では、これらのDBは単なる参照リストではない。事業開発の場で、関係者が自分たちの経験を相対化し、別領域の知識を取り込み、仮説を豊かにするための共通言語である。たとえば、地域医療の事業化を検討する時、SaaSの継続課金、プラットフォームの両面市場、サーキュラー型の資源循環、制度変化の収益モデルを同じテーブルに置くことで、単一業界の常識を超えた選択肢が生まれる。事業開発のプロセス論は、その選択肢を実験可能な順序に並べる。</p>
+<p>知識運動体としての応用では、これらのDBは単なる参照リストではない。事業開発の場で、関係者が自分たちの経験を相対化し、別領域の知識を取り込み、仮説を豊かにするための共通言語として機能する。たとえば地域医療の事業化を検討する時、SaaSの継続課金、プラットフォームの両面市場、サーキュラー型の資源循環、制度変化の収益モデルを同じテーブルに置くことで、単一業界の常識を超えた選択肢が生まれる。事業開発のプロセス論は、その選択肢を実験可能な順序に並べる役割を担う。</p>
 <h3 class="section-heading">章のまとめ</h3>
 <ul>
 <li>事業開発は、完成した事業計画を実行することではなく、不確実な機会を学習可能な仮説体系へ変換し、事業として成立する構造へ近づけるプロセスである。</li>
@@ -3279,7 +5376,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p>たとえば、ある地方の医療・介護領域で新規事業を構想するチームがいるとする。彼らは高齢者のフレイル予防を扱うサービスを立ち上げたい。利用者は地域に分散し、支払い能力は限定的で、自治体・医療機関・家族・保険者・地域団体という複数の関係者が意思決定に関与する。ここで単純に「サブスクリプションを導入しよう」と言っても、事業は動かない。高齢者本人が月額課金に納得するとは限らず、予防効果は短期的に見えにくく、支払い主体と便益主体がずれるからである。では、B2B2Cにするのか、成果連動型にするのか、自治体委託と個人利用を組み合わせるのか、コミュニティ運営を先に作るのか、データ基盤を資産化するのか。この問いに対して、パターン・データベースは素材を与えるが、答えを自動的には返さない。</p>
 <p>このとき必要になるのが、本章の中核である KEY_POI13TS、すなわちパターン応用の三つの操作である。Similarity は、異なる産業や時代に見える現象のなかから構造的な類似性を見つけ、既存パターンを移転する操作である。Confrontation は、既存の事業論理と候補パターンのあいだにある矛盾、摩擦、非両立性をあえて前景化し、そこから設計課題を抽出する操作である。Integration は、複数のパターンを単に足し算するのではなく、価値提案、価値創造、価値獲得、関係者インセンティブ、時間軸が一つの作動系になるように再構成する操作である。この三つは順番に使う技法であると同時に、何度も往復する思考のリズムでもある。</p>
 <p>Gassmann, Frankenberger, Csik によるビジネスモデル・ナビゲーターは、ビジネスモデル革新の多くがまったく新しい発明ではなく、既存パターンの再結合や移転によって生まれることを示した。彼らは「類似性」「対立」「統合」という三つの原理を、パターンを応用するための実践的な考え方として整理している。本章ではこの原理を、経営学、事業開発、イノベーション理論の統合視座から読み替える。経営学は、事業がどのように競争優位を形成し、組織能力を蓄積し、収益を獲得するかを問う。事業開発は、不確実な環境で仮説を検証し、顧客・パートナー・資金・規制・運用をつなぎながら事業を立ち上げる。イノベーション理論は、新結合、探索と深化、破壊的革新、制度変化、普及、学習のダイナミクスを扱う。この三つを重ねると、パターン応用とは「既知の型を貼り付ける作業」ではなく、「環境と組織と市場の相互作用を設計する作業」として見えてくる。</p>
-<p>知識運動体は用いてきた「知識運動体」という言葉は、本章のテーマと相性がよい。知識運動体とは、知識を所有する組織ではなく、知識を移動させ、異なる現場のあいだで翻訳し、関係者の実践を変化させる運動の形である。パターン・データベースもまた、静的な辞書としてではなく、事業開発の現場で対話を生む媒体として設計されるべきである。ある産業の成功事例を別の産業に移すとき、そこには必ず誤訳が生じる。誤訳を避けようとするのではなく、誤訳がどこで起きるのかを観察し、それを学習の入口に変えることが、13POの実践である。</p>
+<p>「知識運動体」という言葉は、本章のテーマと相性がよい。知識運動体とは、知識を所有する組織ではなく、知識を移動させ、異なる現場のあいだで翻訳し、関係者の実践を変化させる運動の形である。パターン・データベースもまた、静的な辞書としてではなく、事業開発の現場で対話を生む媒体として設計されるべきである。ある産業の成功事例を別の産業に移すとき、そこには必ず誤訳が生じる。誤訳を避けようとするのではなく、誤訳がどこで起きるのかを観察し、それを学習の入口に変えることが、13POの実践である。</p>
 <p>本章の出発点となる物語を、もう少し具体化しよう。ある食品メーカーが、健康食品の販売を従来の小売流通から、継続的な生活改善サービスへ転換しようとしている。製品は良い。研究開発力もある。だが、消費者は一度買って終わりで、日々の行動変容にはつながらない。チームは、Nespresso のカプセルモデル、Peloton のコミュニティ課金、Apple の iPhone と iTunes のエコシステム、Tesla の直販・ソフトウェア更新・充電網の統合、さらには医療領域の成果連動契約を参照する。Similarity の段階では、彼らは「本体と消耗品」「デバイスとコンテンツ」「製品とデータ」「所有と利用」「販売と習慣形成」の類似構造を見つける。Confrontation の段階では、食品という低関与商材に高頻度のサービス接点を持ち込むことの無理、規制表現の制約、個人データ活用への不安、流通チャネルとの利益相反を見つける。Integration の段階では、定期購入、管理栄養士のオンライン伴走、企業健保との契約、店頭試食、アプリ内記録、研究データの匿名化、地域イベントを一つの事業システムとして組み直す。</p>
 <p>この物語で重要なのは、参照したパターンのどれか一つが正解だったわけではないという点である。Nespresso をそのまま食品に移しても、カプセルのような専用消耗品は作れないかもしれない。Peloton のような熱狂的コミュニティも、健康食品では過剰かもしれない。Tesla のような直販とソフトウェア更新は、食品メーカーのチャネル資産と衝突するかもしれない。だが、これらの違和感こそが、設計すべき論点を明らかにする。パターンは模範解答ではなく、問いを発生させる装置なのである。</p>
 <h3 class="section-heading">主要概念と理論的基盤</h3>
@@ -3315,7 +5412,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p>この議論の基盤には、Joseph A. Schumpeter の「新結合」の概念がある。Schumpeter にとってイノベーションは、発明それ自体ではなく、新しい財、新しい生産方法、新しい市場、新しい供給源、新しい組織形態の組み合わせであった。ビジネスモデル・イノベーションは、この新結合の現代的表現である。既存の技術や製品であっても、価値の届け方、課金方法、顧客関係、補完者の配置を組み替えることで、新しい市場秩序を作ることができる。</p>
 <p>Teece は、ビジネスモデルを、顧客に価値を提供し、企業がその価値の一部を獲得するための設計またはアーキテクチャとして捉えた。彼の議論で重要なのは、ビジネスモデルが技術そのものと戦略のあいだに位置する点である。優れた技術があっても、それを誰に、どのように使わせ、誰から、どのタイミングで、どの根拠に基づいて対価を得るのかが設計されなければ、事業にはならない。逆に、既存技術であっても、ビジネスモデルの設計が変われば、競争の土俵は変わる。</p>
 <p>Zott and Amit は、ビジネスモデルを活動システムとして分析した。彼らの視点では、企業の境界内にある資源だけでなく、顧客、供給者、パートナー、補完者を含む活動の集合と相互依存性が重要になる。これは Integration を考えるうえで不可欠である。パターンを統合するとは、複数の収益モデルを並べることではない。活動の順序、依存関係、情報の流れ、意思決定権、コスト負担、成果分配を再設計することである。</p>
-<p>Chesbrough のオープン・イノベーションは、企業が内部資源だけでなく外部知識を活用し、また内部知識を外部経路で事業化する必要性を示した。Similarity の実践は、まさに外部知識の探索である。異業種のパターンを参照することは、技術移転に限らず、課金、顧客接点、チャネル、コミュニティ、規制対応、データ活用の知識を移動させる行為である。知識運動体の知識運動体的実践において、異業種対話が重視されるのはこのためである。</p>
+<p>Chesbrough のオープン・イノベーションは、企業が内部資源だけでなく外部知識を活用し、また内部知識を外部経路で事業化する必要性を示した。Similarity の実践は、まさに外部知識の探索である。異業種のパターンを参照することは、技術移転に限らず、課金、顧客接点、チャネル、コミュニティ、規制対応、データ活用の知識を移動させる行為だ。知識運動体の実践において、異業種対話が重視されるのはこのためである。</p>
 <p>March の探索と深化の理論も、本章の基礎にある。企業は既存能力の活用によって効率を高める一方、新しい可能性の探索によって将来の適応力を確保する。Similarity は探索を促し、Confrontation は探索と既存能力の衝突を可視化し、Integration は探索結果を事業システムに組み込んで深化へ移す。探索だけでは散漫になり、深化だけでは硬直化する。パターン応用は、この二つをつなぐ中間的な組織学習の方法である。</p>
 <p>さらに、Henderson and Clark のアーキテクチュラル・イノベーションの議論は、パターン移植の難しさを説明する。製品やサービスの構成要素が同じでも、それらの結合関係が変わると、既存組織の知識は機能しなくなる。たとえば、既存の小売流通で販売してきた企業が、サブスクリプションとデータ分析とオンライン伴走を導入する場合、商品開発、営業、情報システム、カスタマーサポート、法務、ブランド管理の結合関係が変わる。個別部門の能力は高くても、結合関係に関する知識が不足していれば、統合は破綻する。</p>
 <p>Christensen の破壊的イノベーション論は、パターン応用における市場選択の重要性を示す。新しいビジネスモデルは、主流顧客にとって当初は性能不足に見えることが多い。しかし、低価格、簡便性、アクセス性、別の評価軸によって非消費者や過剰供給市場に入り、やがて主流市場を侵食する。Similarity によって見つけたパターンを既存の主要顧客にそのままぶつけると、組織は拒絶反応を起こしやすい。むしろ、どの顧客セグメントなら新しい評価軸を受け入れるかを探る必要がある。</p>
@@ -3475,7 +5572,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <li>Proof of Pattern、Proof of Loop、Proof of System の三段階を区別することで、初期検証から事業システム化までの移行経路を設計できる。</li>
 <li>enabling、disabling、trigger、decay signals を観察することで、パターンの適用可能性と破綻兆候を早期に捉えられる。</li>
 <li>本DBは、名称検索だけでなく、Similarity 検索、Confrontation 検索、Integration 検索を備えることで、事業構想のための思考エンジンになる。</li>
-<li>知識運動体の知識運動体の文脈では、パターン応用は知識を所有するためではなく、異なる現場へ移動させ、翻訳し、実践を変えるための方法論である。</li>
+<li>知識運動体の文脈では、パターン応用は知識を所有するためではなく、異なる現場へ移動させ、翻訳し、実践を変えるための方法論である。</li>
 </ul>
 <h3 class="section-heading">さらに学ぶために</h3>
 <p>Oliver Gassmann, Karolin Frankenberger, Michaela Csik, <em>The Business Model Navigator</em> は、本章の直接的な基盤となる文献である。55のビジネスモデル・パターンを整理し、類似性、対立、統合を通じて既存パターンを応用する実践的な方法を提示している。事例の豊富さだけでなく、ビジネスモデル革新を「発明」ではなく「再結合」として捉える視点が有用である。</p>
@@ -3516,7 +5613,8 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 
 <p>多くの新規事業は、始まった瞬間から会計上の利益を出すわけではない。初期には開発費、採用費、営業費、顧客獲得費、在庫費、教育費、システム費、失敗から学ぶための探索費が先行する。売上は遅れて立ち上がり、顧客の反応は不確実で、価格はまだ定まらず、提供プロセスにも無駄が多い。そのため、単純に「いま赤字だから悪い事業だ」と判断することはできない。しかし同時に、「成長すればいつか黒字になる」という説明もまた危うい。事業が増えるほど赤字が深くなる構造であれば、規模拡大は救済ではなく破綻の加速である。採算ラインの分析は、この二つの誤り、すなわち早すぎる断罪と根拠なき楽観を避けるために必要になる。</p>
 <p>ある地域で、教育支援とキャリア形成をつなぐ新しい学習サービスを立ち上げたとしよう。対象は、従来の塾や研修では十分に支援されてこなかった若者である。サービスの提供者は、学習カリキュラムだけではなく、メンターとの面談、地域企業との接続、成果の可視化、家庭や学校との調整までを一体で設計する。社会的価値は明らかに大きい。参加者は自信を取り戻し、地域企業は新しい人材との接点を得る。自治体や財団も関心を示す。ところが、月額料金を設定し、運営者の人件費、メンターの稼働、教材更新、場所代、システム利用料、広報費を積み上げると、一人の参加者から得られる粗利はごく小さい。参加者を増やすには追加のメンターが必要で、メンターを増やすには研修と品質管理が必要である。ここで問われるのは、この事業は「良いこと」だから継続すべきかではない。どの単位を増やせば、どの費用が連動し、どの価値が蓄積し、どこから採算が成立するのかである。</p>
-<p>ミラツクや14POの文脈でいえば、事業とは単に企業が利益を得る装置ではなく、知識、関係、実践、制度が運動体として結び直される場である。社会課題に向き合う事業では、顧客が一人とは限らない。利用者、支払者、受益者、協力者、制度設計者が分かれていることが多い。たとえば、介護、教育、医療、地域交通、環境、研究開発支援のような領域では、サービスを受ける人と費用を負担する人が異なり、短期の収益と長期の社会的便益がずれる。だからこそ、ユニットエコノミクスは単なるスタートアップ用語に閉じない。誰を一単位と見るのか、何を価値の単位と見るのか、どの時間軸で採算を測るのかを定義する作業そのものが、事業の思想と制度設計を映し出す。</p>
+<p>知識運動体の文脈でいえば、事業とは単に企業が利益を得る装置ではなく、知識、関係、実践、制度が運動体として結び直される場である。社会課題に向き合う事業では、顧客が一人とは限らない。利用者、支払者、受益者、協力者、制度設計者が分かれていることが多い。たとえば、介護、教育、医療、地域交通、環境、研究開発支援のような領域では、サービスを受ける人と費用を負担する人が異なり、短期の収益と長期の社会的便益がずれる。</p>
+<p>だからこそ、ユニットエコノミクスは単なるスタートアップ用語に閉じない。誰を一単位と見るのか、何を価値の単位と見るのか、どの時間軸で採算を測るのかを定義する作業そのものが、事業の思想と制度設計を映し出す。</p>
 <p>本章を読む理由は、採算ラインを「財務担当者の計算問題」から「事業創造の設計問題」へ引き戻すためである。新規事業の会議では、しばしば売上目標、顧客数、成長率、資金調達額、提携先の数が語られる。しかし、それらの数字が意味を持つのは、単位あたりの収益と費用の関係が理解されている場合に限られる。顧客を一人獲得するたびに粗利が積み上がるのか。顧客を増やすほどサポート負荷が指数的に増えるのか。解約率がわずかに変わるだけで顧客生涯価値はどの程度動くのか。価格を一割上げたとき、転換率はどれほど落ちるのか。固定費を回収するには、何単位の販売が必要なのか。これらは、事業が夢を保ったまま現実に着地するための問いである。</p>
 <p>KEY_POI14TS は、Point of Interest 14: Toward Sustainable Unit Economics と読んでもよい。ここでの sustainable は、単に黒字であるという意味ではない。価値提供の品質を落とさず、顧客との関係を毀損せず、供給者や従業員に過剰な負担を押しつけず、資本の時間軸にも耐えながら、単位の増加が次の単位の獲得を容易にするような構造を指す。採算ラインとは、売上が費用を上回る一点ではなく、学習、規模、関係資本、制度的支援、技術改善が重なり、事業が自走に向かう転換点である。本章では、この転換点を読み解くために、理論、数式、信号、隣接章との接続を順に検討していく。</p>
 <h3 class="section-heading">主要概念と理論的基盤</h3>
@@ -3606,7 +5704,8 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p>人手を多く含むサービス事業では、稼働率が採算ラインを決定する。専門人材一人あたりの提供可能時間を H、請求可能時間単価を r、非請求時間を n、給与や間接費を w とする。粗い式でいえば、</p>
 <p>Profit_per_staff = r × (H - n) - w</p>
 <p>である。ここで n には、移動、準備、記録、研修、営業、品質管理、待機時間が含まれる。社会的価値の高い対人支援サービスでは、この非請求時間が大きくなりやすい。支援の質を保つには記録や振り返りが不可欠だが、それが料金に反映されなければ採算を圧迫する。したがって、人手サービスのユニットエコノミクスは、単価を上げるだけでなく、非請求時間を価値に変換する制度設計、たとえば成果報告、共同研修、データ共有、標準教材化、グループ提供、ピアサポートの導入によって改善される。</p>
-<p>採算ラインには、三つの閾値がある。第一は会計上の損益分岐点であり、貢献利益の総額が固定費を上回る点である。第二はキャッシュ上の生存点であり、先行支出と回収遅延を含めても資金ショートしない点である。第三は戦略上の自走点であり、成長に必要な顧客獲得、品質維持、人材供給、パートナー連携が内部または周辺ネットワークから再生産される点である。会計上黒字でも、営業担当の属人的努力に依存し、採用が追いつかず、品質が不安定なら、自走点には達していない。逆に、会計上はまだ赤字でも、単位貢献利益が改善し、獲得費が下がり、継続率が高まり、パートナーからの紹介が増えているなら、採算ラインへ近づいている可能性がある。</p>
+<p>採算ラインには、三つの閾値がある。第一は会計上の損益分岐点であり、貢献利益の総額が固定費を上回る点だ。第二はキャッシュ上の生存点であり、先行支出と回収遅延を含めても資金ショートしない点である。第三は戦略上の自走点であり、成長に必要な顧客獲得、品質維持、人材供給、パートナー連携が内部または周辺ネットワークから再生産される点をさす。</p>
+<p>会計上黒字でも、営業担当の属人的努力に依存し、採用が追いつかず、品質が不安定なら、自走点には達していない。逆に、会計上はまだ赤字でも、単位貢献利益が改善し、獲得費が下がり、継続率が高まり、パートナーからの紹介が増えているなら、採算ラインへ近づいている可能性がある。</p>
 <p>KEY_POI14TS が重視するのは、採算ラインを静的な結果としてではなく、学習曲線として観察することである。初期の数値が悪いこと自体は問題ではない。問題は、どの数値が学習によって改善しているかが見えないことである。たとえば、十回の営業実験を通じて成約率が 5% から 20% に上がり、オンボーディング時間が 10 時間から 3 時間に下がり、三か月継続率が 40% から 75% に改善しているなら、単位経済は形成されつつある。反対に、売上は伸びていても、獲得費が上がり続け、解約率が変わらず、サポート工数が増え、クレーム対応で人員が疲弊しているなら、成長は採算ラインを遠ざけている。</p>
 <p>この分析は、知識運動体の発想とも接続する。知識運動体では、知識は単に蓄積されるのではなく、参加者の関係、実践の場、社会的文脈を通じて流通し、再編集される。ユニットエコノミクスも同じである。単位あたりの費用は、知識が属人化しているほど高く、知識が共有可能な形式に変換されるほど下がる。単位あたりの価値は、顧客が孤立して利用するほど限定され、顧客同士、支援者、企業、研究者、行政が相互に学ぶほど増幅する。つまり、単位経済の改善は、単なる効率化ではなく、知識の形式化、関係の設計、学習の分散化によって起こる。</p>
 <p>採算ラインを設計する実務手順は、次のように整理できる。まず、分析単位を一つに固定せず、顧客単位、取引単位、プロジェクト単位、地域単位など複数の候補を置く。次に、それぞれについて収益、変動費、準固定費、獲得費、維持費を粗く分解する。第三に、最も不確実で、かつ損益への感度が高い変数を特定する。第四に、その変数を検証する最小実験を設計する。第五に、実験結果をもとに採算ラインを更新する。ここで大切なのは、最初から完璧な予測モデルを作らないことである。初期のモデルは、正確な答えを出すためではなく、何を学ぶべきかを決めるためにある。</p>
@@ -3755,11 +5854,11 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <figcaption><span class="fig-number">図15-1</span> ネットワーク価値はn²に比例</figcaption>
 </figure>
 
-<p>ネットワーク効果とは、ある財やサービスの価値が、同じ財やサービスを利用する他者の数、種類、活動量、あるいは補完財の充実によって増減する現象である。電話は典型例である。一台だけの電話にはほとんど価値がない。二台あれば一つの接続が生まれ、十台あれば多くの接続可能性が生まれ、社会全体に普及すれば、それは単なる機器ではなく社会的インフラになる。SNS、マーケットプレイス、決済ネットワーク、OS、生成AIの開発者エコシステム、研究者コミュニティ、標準規格、教育プログラム、知識運動体（の典型例）も、程度の差はあれネットワーク効果の論理をもつ。</p>
+<p>ネットワーク効果とは、ある財やサービスの価値が、同じ財やサービスを利用する他者の数、種類、活動量、あるいは補完財の充実によって増減する現象である。電話は典型例だ。一台だけの電話にはほとんど価値がない。二台あれば一つの接続が生まれ、十台あれば多くの接続可能性が生まれ、社会全体に普及すれば単なる機器ではなく社会的インフラになる。SNS、マーケットプレイス、決済ネットワーク、OS、生成AIの開発者エコシステム、研究者コミュニティ、標準規格、教育プログラム、知識運動体も、程度の差はあれネットワーク効果の論理をもつ。</p>
 <p>この章を読む理由は、事業開発の現場で「良いものを作れば広がる」という直線的な発想が、ネットワーク型事業ではしばしば誤りになるからである。ネットワーク型事業では、価値は製品内部だけに閉じていない。価値は参加者間の関係、相互作用の頻度、補完者の厚み、信頼の蓄積、データの循環、規格の互換性、離脱コスト、マルチホーミングの容易さによって形成される。したがって、事業開発者が問うべき問いは「誰に売るか」だけではなく、「どの順序で参加者を集めるか」「どの相互作用を最初に濃くするか」「何人を集めれば価値が自走するか」「どの時点で競合への移動が困難になるか」である。</p>
 <p>臨界量という概念は、この問いに時間軸と閾値を与える。多くのネットワーク型事業は、初期には価値が乏しく、参加者を獲得するほど赤字が増える。しかし、ある点を超えると価値が参加者を呼び、参加者がさらに価値を増やす正のフィードバックが働き始める。この転換点を、経営実務ではクリティカルマス、ティッピングポイント、コールドスタート問題の解消、流動性の達成などと呼ぶ。問題は、この点が自然に訪れるとは限らないことである。臨界量は、単純な人数ではなく、密度、セグメント、相互作用、需要と供給の比率、時間帯、地域、信頼、取引頻度によって決まる。</p>
 <p>本章の中核である <code>KEY_POI15TS</code> は、ここでは章15の実践的な観察点として扱う。すなわち、Metcalfeのn²、Reedの2^n、直接・間接・データのネットワーク効果、Andrew ChenのCold Start、Tipping Point、Lock-in、Multi-homingという一連の概念を、単なる用語集ではなく、事業開発の診断フレームとして統合する。経営学は競争優位と市場構造を説明し、事業開発は初期市場の作り方を扱い、イノベーション理論は普及、標準化、補完資産、制度化を説明する。ネットワーク効果は、この三つの視座がもっとも濃く交差する領域である。</p>
-<p>知識運動体の文脈でこの章を読む意味もここにある。知識運動体は単に知識を出版する組織ではなく、人と知識と実践の接続を通じて、新しい社会的可能性を生み出す知識運動体である。知識運動体におけるネットワーク効果は、SNSのユーザー数やプラットフォームの取引量とは異なる顔をもつ。重要なのは、参加者の数だけではなく、異質な専門性が接続される確率、対話からプロジェクトが生まれる頻度、現場知と理論知が翻訳される速度、信頼によって未完成の問いを持ち寄れる密度である。つまり、知識運動体における臨界量とは、人数の閾値であると同時に、意味生成の閾値である。</p>
+<p>知識運動体の文脈でこの章を読む意味もここにある。知識運動体は単に知識を出版する組織ではなく、人と知識と実践の接続を通じて新しい社会的可能性を生み出す組織体である。知識運動体におけるネットワーク効果は、SNSのユーザー数やプラットフォームの取引量とは異なる顔をもつ。重要なのは、参加者の数だけではなく、異質な専門性が接続される確率、対話からプロジェクトが生まれる頻度、現場知と理論知が翻訳される速度、信頼によって未完成の問いを持ち寄れる密度である。つまり、知識運動体における臨界量とは、人数の閾値であると同時に、意味生成の閾値である。</p>
 <p>本章では、まずネットワーク効果の理論的基盤を整理し、次にその構造を数式とメカニズムの両面から解剖する。そのうえで、事業がネットワーク効果を活用できる条件、逆に破綻する兆候、他章の収益モデルやイノベーション理論との接続を検討する。ネットワーク効果は、成長神話として語られることが多い。しかし実務上は、もっと冷静な設計対象である。強いネットワーク効果は企業に持続的優位をもたらす一方で、初期にはもっとも資本を焼き、もっとも焦りを生み、もっとも誤ったKPIを誘発する。だからこそ、臨界量を見誤らないことが重要になる。</p>
 <h3 class="section-heading">主要概念と理論的基盤</h3>
 <p>ネットワーク効果の研究は、通信、標準化、互換性、技術普及、産業組織論の交差点から発展してきた。Katz and Shapiroの1985年論文 “Network Externalities, Competition, and Compatibility” は、ネットワーク外部性、互換性、期待形成、競争戦略の関係を明示した古典である。彼らの関心は、なぜ消費者が単体性能だけではなく、将来その製品をどれだけ多くの人が使うかを考慮して選択するのかにあった。ネットワーク財では、現在の品質だけでなく、将来の普及期待が現在の需要を左右する。これは、事業開発において初期の勢い、参照顧客、標準化、パートナー発表、待機リストが重要になる理由を説明している。</p>
@@ -3940,7 +6039,7 @@ text { font-family: 'Noto Sans JP', sans-serif; font-size: 11px; fill: var(--tex
 <p>第8章の広告と注意の経済では、ネットワーク効果は注意の集積と広告主の参加を通じて現れる。ユーザーが増えるほどコンテンツが増え、コンテンツが増えるほど滞在時間が増え、広告主が集まる。しかし、広告負荷が高まりすぎるとユーザー体験が劣化し、負のネットワーク効果が生じる。第9章のクリエイターエコノミーでは、クリエイター、ファン、支援者、ツール、決済、コミュニティ規範が相互に価値を増幅する。ここでも、マルチホーミングとプラットフォーム依存が中心課題になる。</p>
 <p>イノベーション理論との接続では、第16章の破壊的イノベーション、第17章のオープンイノベーションとエコシステム、第18章の規制・制度が重要である。ネットワーク効果は既存企業の防衛力を強める一方で、新興企業が狭いatomic networkから始めて既存市場を侵食する余地も生む。オープンイノベーションでは、外部補完者が参加するほどプラットフォーム価値が高まるが、補完者が搾取されるとエコシステムは劣化する。制度論の観点では、ネットワークが社会インフラ化すると、競争戦略の対象であると同時に公共政策の対象になる。</p>
 <p>関連DBへの参照としては、business_models DBでは、Platform、Marketplace、Freemium、Subscription、Razor and Blade、Open Source、Community Model、Data as a Service、API Economy、Ecosystem Orchestratorといったパターンが本章と深く関係する。management_studies (MG) では、産業組織論、競争戦略、資源ベース理論、標準化戦略、経路依存、補完資産が対応する。innovation_theory (IT) では、Rogersの普及理論、Mooreのキャズム、Arthurの収穫逓増、Chesbroughのオープンイノベーション、Adnerのエコシステム構造論が対応する。startup_theory (SU) では、Lean Startup、Customer Development、Cold Start、Growth Loops、Atomic Network、Liquidity、Viral Coefficientが対応する。</p>
-<p>知識運動体の知識運動体としての実践に引き寄せるなら、本章は「知識が広がる条件」を経営学的に扱う章でもある。知識は単に公開されれば使われるわけではない。誰が読み、誰と語り、どの現場で試し、どの失敗が戻り、どの概念に翻訳されるかによって価値が増える。ここには直接ネットワーク効果、Reed型のグループ形成効果、データというより経験知のフィードバック効果がある。知識運動体の臨界量は、読者数ではなく、読者が実践者となり、実践者が語り手となり、語り手が次の問いを生む循環が始まる点にある。</p>
+<p>知識運動体としての実践に引き寄せるなら、本章は「知識が広がる条件」を経営学的に扱う章でもある。知識は単に公開されれば使われるわけではない。誰が読み、誰と語り、どの現場で試し、どの失敗が戻り、どの概念に翻訳されるかによって価値が増える。ここには直接ネットワーク効果、Reed型のグループ形成効果、データというより経験知のフィードバック効果がある。知識運動体の臨界量は、読者数ではなく、読者が実践者となり、実践者が語り手となり、語り手が次の問いを生む循環が始まる点にある。</p>
 <h3 class="section-heading">章のまとめ</h3>
 <ul>
 <li>ネットワーク効果とは、参加者の数、種類、活動量、補完財、データ、信頼が増えるほど、財やサービスの価値が変化する現象である。</li>
