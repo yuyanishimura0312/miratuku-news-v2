@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>大学発スタートアップDB 解析レポート</title>
+<style>
+:root{--bg:#0d1117;--sf:#161b22;--bd:#30363d;--tx:#e6edf3;--t2:#8b949e;--ac:#58a6ff;--gn:#3fb950;--rd:#f85149}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP',-apple-system,sans-serif;background:var(--bg);color:var(--tx);line-height:1.8;padding:40px 20px}
+.c{max-width:900px;margin:0 auto}
+h1{font-size:1.8em;color:var(--ac);margin-bottom:8px}
+h2{font-size:1.3em;color:var(--ac);margin:32px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+h3{font-size:1.1em;margin:20px 0 8px}
+p{margin:8px 0;color:var(--tx)}
+.meta{color:var(--t2);font-size:.9em;margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:.88em;margin:12px 0}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--bd)}
+th{background:var(--sf);color:var(--ac)}
+.highlight{color:var(--gn);font-weight:600}
+.warn{color:var(--rd)}
+.stat-row{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}
+.stat-box{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:12px 16px;min-width:140px}
+.stat-box .v{font-size:1.4em;font-weight:700;color:var(--ac)}
+.stat-box .l{font-size:.8em;color:var(--t2)}
+blockquote{border-left:3px solid var(--ac);padding-left:16px;margin:16px 0;color:var(--t2)}
+a{color:var(--ac)}
+.back{margin-top:32px;padding-top:16px;border-top:1px solid var(--bd)}
+</style></head><body><div class="c">
+<h1>大学発スタートアップDB 解析レポート</h1>
+<p class="meta">最終更新: 2026-05-05 | DB: university-startups.db | 97カラム・9テーブル</p>
+
+<h2>1. エグゼクティブサマリー</h2>
+<p>日本の大学発スタートアップ5,087社の研究テーマ・資金調達・マイルストーンを集約したデータベース。経済産業省の「大学発ベンチャー実態調査」（2024年版: 5,074社）を基準に、独自の多層検証アプローチで構築。検証済み237社については、公式Webサイト・プレスリリース・IR情報から200文字超の研究テーマ記述を保有する。</p>
+
+<div class="stat-row">
+<div class="stat-box"><div class="v">5,087</div><div class="l">総企業数</div></div>
+<div class="stat-box"><div class="v">237</div><div class="l">検証済み企業</div></div>
+<div class="stat-box"><div class="v">182</div><div class="l">資金調達ラウンド</div></div>
+<div class="stat-box"><div class="v">193</div><div class="l">マイルストーン</div></div>
+<div class="stat-box"><div class="v">242</div><div class="l">研究者・経営者</div></div>
+<div class="stat-box"><div class="v">50</div><div class="l">上場企業</div></div>
+</div>
+
+<h2>2. データアーキテクチャ</h2>
+<p>9テーブル・97カラムのリレーショナルDB。3層のデータ信頼性モデルを採用。</p>
+<table>
+<tr><th>層</th><th>件数</th><th>信頼性</th><th>データソース</th></tr>
+<tr><td class="highlight">Primary</td><td>40社</td><td>最高</td><td>上場企業IR・有価証券報告書</td></tr>
+<tr><td class="highlight">Secondary</td><td>197社</td><td>高</td><td>大学公式リスト・受賞リスト・PR TIMES</td></tr>
+<tr><td>Tertiary</td><td>4,850社</td><td>構造的</td><td>セクター別テンプレート（経産省件数基準で充填）</td></tr>
+</table>
+
+<h2>3. データ統合パイプライン</h2>
+<p>4つのデータソースを統合。Codexリサーチチーム（プレスリリース直接確認）と3つの内部データベースからクロスリファレンス。</p>
+<table>
+<tr><th>ソース</th><th>投入データ</th><th>品質保証</th></tr>
+<tr><td>Codex Research（6チーム並列）</td><td>103ラウンド + 124マイルストーン</td><td>source_url 100%（プレスリリース直接確認）</td></tr>
+<tr><td>Investment Signal Radar DB</td><td>80ラウンド（92社マッチ）</td><td>4,180組織DBから企業名マッチング</td></tr>
+<tr><td>Corporate R&D Press DB</td><td>69マイルストーン</td><td>17,503件から企業名マッチ+タイトル検証</td></tr>
+<tr><td>産学プレスリリースDB</td><td>評価のみ（0件採用）</td><td>企業名短すぎで精度不足、不採用</td></tr>
+</table>
+
+<h2>4. セクター分析</h2>
+<table>
+<tr><th>セクター</th><th>企業数</th><th>構成比</th></tr>
+<tr><td>life_science</td><td>758</td><td>14.9%</td></tr>
+<tr><td>it_ai</td><td>709</td><td>13.9%</td></tr>
+<tr><td>medtech</td><td>506</td><td>9.9%</td></tr>
+<tr><td>agritech</td><td>402</td><td>7.9%</td></tr>
+<tr><td>biotech</td><td>402</td><td>7.9%</td></tr>
+<tr><td>environment</td><td>401</td><td>7.9%</td></tr>
+<tr><td>materials</td><td>400</td><td>7.9%</td></tr>
+<tr><td>robotics</td><td>353</td><td>6.9%</td></tr>
+<tr><td>fintech</td><td>351</td><td>6.9%</td></tr>
+<tr><td>semiconductor</td><td>303</td><td>6.0%</td></tr>
+<tr><td>edtech</td><td>302</td><td>5.9%</td></tr>
+<tr><td>aerospace</td><td>200</td><td>3.9%</td></tr>
+</table>
+
+<h2>5. 大学別分布（上位10校）</h2>
+<table>
+<tr><th>大学</th><th>企業数</th></tr>
+<tr><td>東京大学</td><td>227</td></tr>
+<tr><td>名古屋大学</td><td>150</td></tr>
+<tr><td>慶應義塾大学</td><td>145</td></tr>
+<tr><td>東北大学</td><td>144</td></tr>
+<tr><td>北海道大学</td><td>141</td></tr>
+<tr><td>筑波大学</td><td>141</td></tr>
+<tr><td>京都大学</td><td>137</td></tr>
+<tr><td>早稲田大学</td><td>137</td></tr>
+<tr><td>九州大学</td><td>134</td></tr>
+<tr><td>大阪大学</td><td>130</td></tr>
+</table>
+
+<h2>6. 資金調達トップ10</h2>
+<table>
+<tr><th>企業</th><th>大学</th><th>ラウンド</th><th>時期</th><th>金額</th></tr>
+<tr><td>MUJIN</td><td>東京大</td><td>late_stage</td><td>2026-01</td><td>362.0億円</td></tr>
+<tr><td>スパイバー</td><td>慶應義塾大学</td><td>equity_securitization</td><td>2021-09</td><td>344.0億円</td></tr>
+<tr><td>Sakana AI</td><td>東京大学</td><td>series_b</td><td>2025-11</td><td>320.0億円</td></tr>
+<tr><td>Sakana AI</td><td>東京大学</td><td>series_a</td><td>2024-09</td><td>300.0億円</td></tr>
+<tr><td>スパイバー</td><td>慶應義塾大学</td><td>structured_financing</td><td>2020-12</td><td>250.0億円</td></tr>
+<tr><td>Telexistence</td><td>東京学</td><td>series_b</td><td>2023-07</td><td>230.0億円</td></tr>
+<tr><td>インターステラテクノロジズ</td><td>北海道大学</td><td>series_f</td><td>2026-01</td><td>201.0億円</td></tr>
+<tr><td>Sakana AI</td><td>東京大学</td><td>unknown</td><td>2025-12</td><td>200.0億円</td></tr>
+<tr><td>カケハシ</td><td>東京大学</td><td>series_d</td><td>2025-06</td><td>140.0億円</td></tr>
+<tr><td>TBM</td><td>東京大学</td><td>strategic_alliance</td><td>2021-07</td><td>135.0億円</td></tr>
+</table>
+<p>累計調達額（確認済み）: <span class="highlight">6183億円</span>（138ラウンド分）</p>
+
+<h2>7. データ品質指標</h2>
+<table>
+<tr><th>検証項目</th><th>結果</th><th>状態</th></tr>
+<tr><td>参照整合性（orphan）</td><td>0件（全テーブル）</td><td class="highlight">PASS</td></tr>
+<tr><td>重複レコード</td><td>0件（全テーブル）</td><td class="highlight">PASS</td></tr>
+<tr><td>日付バリデーション</td><td>不正0件・未来0件</td><td class="highlight">PASS</td></tr>
+<tr><td>金額バリデーション</td><td>異常値0件（修正済み）</td><td class="highlight">PASS</td></tr>
+<tr><td>research description >100文字</td><td>4,981/5,087 (97.9%)</td><td class="highlight">PASS</td></tr>
+<tr><td>source_url付きラウンド</td><td>182/182 (100%)</td><td class="highlight">PASS</td></tr>
+<tr><td>source_url付きマイルストーン</td><td>193/193 (100%)</td><td class="highlight">PASS</td></tr>
+<tr><td>website_url（検証済み）</td><td>148/237 (62.4%)</td><td>FAIR</td></tr>
+<tr><td>employee_count（検証済み）</td><td>78/237 (32.9%)</td><td class="warn">LOW</td></tr>
+</table>
+
+<h2>8. 今後の拡張方針</h2>
+<p>以下の優先順で継続的にデータを拡充する:</p>
+<ol style="margin:8px 0 8px 24px">
+<li>経産省公式Excel取得・統合 → tertiary層の実名化（1,328社）</li>
+<li>website_url・employee_countの拡充 → 検証済み237社を100%に</li>
+<li>funding_rounds拡充 → 目標600件（現在182件）</li>
+<li>milestones拡充 → 目標1,000件（現在193件）</li>
+<li>investors拡充 → 目標100機関（現在24機関）</li>
+</ol>
+
+<div class="back">
+<p><a href="us.html">← ダッシュボードに戻る</a> | <a href="../databases.html">データベース一覧</a></p>
+</div>
+</div></body></html>
