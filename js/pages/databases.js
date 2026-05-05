@@ -81,10 +81,11 @@ initAuthGuard(function(user) {
     if (dbItem.rows) meta += '<span>' + escapeHtml(dbItem.rows.toLocaleString()) + '\u884c</span>';
     if (dbItem.sizeMB) meta += '<span>' + escapeHtml(String(dbItem.sizeMB)) + 'MB</span>';
 
-    // Build link list (dashboard / textbook / timeline / report)
+    // Build link list (dashboard / textbook / summary / timeline / report)
     var links = [];
-    var dashLabel = dbItem.textbook ? '\u6559\u79d1\u66f8' : '\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9';
-    if (dbItem.dashboard) links.push('<a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">' + dashLabel + ' &rarr;</a>');
+    if (dbItem.dashboard) links.push('<a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9 &rarr;</a>');
+    if (dbItem.textbook) links.push('<a href="' + safeUrl(dbItem.textbook) + '" class="db-dashboard-link">\u6559\u79d1\u66f8 &rarr;</a>');
+    if (dbItem.summary) links.push('<a href="' + safeUrl(dbItem.summary) + '" class="db-dashboard-link">\u30b5\u30de\u30ea\u30fc &rarr;</a>');
     if (dbItem.timeline) links.push('<a href="' + safeUrl(dbItem.timeline) + '" class="db-dashboard-link">\u6642\u4ee3\u5909\u9077DB &rarr;</a>');
     if (dbItem.report) links.push('<a href="' + safeUrl(dbItem.report) + '" class="db-dashboard-link">\u30ec\u30dd\u30fc\u30c8 &rarr;</a>');
 
