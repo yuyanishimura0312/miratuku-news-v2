@@ -39,42 +39,36 @@ initAuthGuard(function(user) {
       layer.databases.forEach(function(dbItem) { html += renderDbEntry(dbItem); });
       html += '</div></div>';
     });
-    var hasSupp = (data.supplementary && data.supplementary.length > 0) ||
-                  (data.supplementaryGroups && data.supplementaryGroups.length > 0);
-    if (hasSupp) {
+    // \u88dc\u52a9\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\uff08\u65e2\u5b58\u306e\u30d5\u30e9\u30c3\u30c8\u30ea\u30b9\u30c8\uff09
+    if (data.supplementary && data.supplementary.length > 0) {
       html += '<div class="db-supplementary"><div class="db-supplementary-title">\u88dc\u52a9\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9</div>';
-
-      // Sub-grouped sections (e.g., \u4e8b\u696d\u5316)
-      if (data.supplementaryGroups) {
-        data.supplementaryGroups.forEach(function(group) {
-          html += '<div class="db-supplementary-group">' +
-            '<div class="db-supplementary-group-header">' +
-              '<div class="db-supplementary-group-title">' + escapeHtml(group.name) + '</div>' +
-              '<div class="db-supplementary-group-desc">' + escapeHtml(group.description || '') + '</div>' +
-            '</div>' +
-            '<div class="db-layer-grid">';
-          group.databases.forEach(function(dbItem) {
-            html += renderDbEntry(dbItem);
-          });
-          html += '</div></div>';
-        });
-      }
-
-      // Flat supplementary list (existing items)
-      if (data.supplementary && data.supplementary.length > 0) {
-        html += '<div class="db-supplementary-grid">';
-        data.supplementary.forEach(function(dbItem) {
-          html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa) + '</strong>' +
-            '<div>' + escapeHtml(dbItem.stat) + '</div>' +
-            '<div style="color:var(--text-muted);margin-top:2px">' + escapeHtml(dbItem.description) + '</div>' +
-            (dbItem.dashboard ? '<div style="margin-top:6px"><a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9 &rarr;</a></div>' : '') +
-            '</div>';
-        });
-        html += '</div>';
-      }
-
-      html += '</div>';
+      html += '<div class="db-supplementary-grid">';
+      data.supplementary.forEach(function(dbItem) {
+        html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa) + '</strong>' +
+          '<div>' + escapeHtml(dbItem.stat) + '</div>' +
+          '<div style="color:var(--text-muted);margin-top:2px">' + escapeHtml(dbItem.description) + '</div>' +
+          (dbItem.dashboard ? '<div style="margin-top:6px"><a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9 &rarr;</a></div>' : '') +
+          '</div>';
+      });
+      html += '</div></div>';
     }
+
+    // \u88dc\u52a9DB\u306e\u4e0b\u306b\u4e26\u3076\u72ec\u7acb\u30bb\u30af\u30b7\u30e7\u30f3\uff08\u4e8b\u696d\u5316\u306a\u3069\uff09
+    if (data.extraSections && data.extraSections.length > 0) {
+      data.extraSections.forEach(function(section) {
+        html += '<div class="db-extra-section">' +
+          '<div class="db-extra-header">' +
+            '<div class="db-extra-title">' + escapeHtml(section.name) + '</div>' +
+            (section.description ? '<div class="db-extra-desc">' + escapeHtml(section.description) + '</div>' : '') +
+          '</div>' +
+          '<div class="db-layer-grid">';
+        section.databases.forEach(function(dbItem) {
+          html += renderDbEntry(dbItem);
+        });
+        html += '</div></div>';
+      });
+    }
+
     container.innerHTML = html;
   }
 
