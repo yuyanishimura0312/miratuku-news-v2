@@ -44,10 +44,14 @@ initNav('databases');
       html += '<div class="db-supplementary"><div class="db-supplementary-title">\u88dc\u52a9\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9</div>';
       html += '<div class="db-supplementary-grid">';
       data.supplementary.forEach(function(dbItem) {
+        var supLinks = [];
+        if (dbItem.dashboard) supLinks.push('<a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9 &rarr;</a>');
+        if (dbItem.report) supLinks.push('<a href="' + safeUrl(dbItem.report) + '" class="db-dashboard-link">\u30ec\u30dd\u30fc\u30c8 &rarr;</a>');
+        if (dbItem.textbook) supLinks.push('<a href="' + safeUrl(dbItem.textbook) + '" class="db-dashboard-link">\u6559\u79d1\u66f8 &rarr;</a>');
         html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa) + '</strong>' +
           '<div>' + escapeHtml(dbItem.stat) + '</div>' +
           '<div style="color:var(--text-muted);margin-top:2px">' + escapeHtml(dbItem.description) + '</div>' +
-          (dbItem.dashboard ? '<div style="margin-top:6px"><a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9 &rarr;</a></div>' : '') +
+          (supLinks.length ? '<div style="margin-top:6px">' + supLinks.join(' ') + '</div>' : '') +
           '</div>';
       });
       html += '</div></div>';
