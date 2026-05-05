@@ -2,7 +2,7 @@
 var _dbRegistryLoaded = false;
 
 initNav('databases');
-initAuthGuard(function(user) {
+(function() {
   loadDatabaseRegistry();
 
   function loadDatabaseRegistry() {
@@ -97,4 +97,4 @@ initAuthGuard(function(user) {
       (meta ? '<div class="db-entry-meta">' + meta + '</div>' : '') +
       (links.length ? '<div class="db-entry-links">' + links.join('') + '</div>' : '') + '</div>';
   }
-});
+})();
