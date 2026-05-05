@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>言及検証DB | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif); color: var(--text); background: var(--bg);
+  line-height: 1.85; letter-spacing: 0.025em; font-feature-settings: "palt";
+  min-height: 100vh; transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg); border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border); padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 48px; position: sticky; top: 0; z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font); font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font);
+  letter-spacing: 0.05em; transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout {
+  display: grid; grid-template-columns: 240px 1fr;
+  max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 0;
+}
+.toc-sidebar {
+  position: sticky; top: 48px; height: calc(100vh - 48px);
+  overflow-y: auto; padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-label {
+  font-family: var(--font); font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary);
+  padding: 5px 8px 5px 0; line-height: 1.5;
+}
+.toc-list li a:hover { color: var(--accent-warm); }
+.toc-num { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); min-width: 24px; }
+
+main { padding: 60px 0 120px 40px; max-width: 760px; }
+
+.book-header { margin-bottom: 60px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+.book-eyebrow {
+  font-family: var(--font); font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent-warm);
+  margin-bottom: 12px;
+}
+.book-title {
+  font-family: var(--font-serif); font-size: 2.4rem; font-weight: 700;
+  color: var(--text); line-height: 1.4; margin-bottom: 20px;
+}
+.book-subtitle {
+  font-family: var(--font); font-size: 0.95rem; color: var(--text-secondary);
+  line-height: 1.7;
+}
+.book-meta {
+  font-family: var(--font); font-size: 0.7rem; color: var(--text-muted);
+  margin-top: 20px; letter-spacing: 0.05em;
+}
+
+.chapter-section { margin-bottom: 80px; padding-bottom: 32px; border-bottom: 1px solid var(--border-light); }
+.chapter-num {
+  font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-warm);
+  font-weight: 600; letter-spacing: 0.1em; margin-bottom: 8px;
+}
+.chapter-title {
+  font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700;
+  color: var(--text); line-height: 1.4; margin-bottom: 24px;
+}
+.chapter-body p {
+  text-indent: 1em; margin-bottom: 18px; font-size: 1rem; color: var(--text);
+}
+.chapter-body p:first-of-type { text-indent: 0; }
+
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px; margin: 24px 0;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border-light);
+  padding: 20px 18px; transition: all 0.2s;
+}
+.stat-card:hover { border-color: var(--accent-warm); }
+.stat-card-label {
+  font-family: var(--font); font-size: 0.7rem; color: var(--text-muted);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;
+}
+.stat-card-value {
+  font-family: var(--font-mono); font-size: 1.8rem; font-weight: 600;
+  color: var(--accent-warm); line-height: 1.1;
+}
+.stat-card-sub {
+  font-family: var(--font); font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;
+}
+
+.bar-block { margin: 24px 0; }
+.bar-block h4 {
+  font-family: var(--font); font-size: 0.85rem; font-weight: 700;
+  color: var(--text-secondary); margin-bottom: 12px; letter-spacing: 0.05em;
+}
+.bar-row {
+  display: grid; grid-template-columns: 160px 1fr 60px;
+  align-items: center; gap: 12px; padding: 4px 0;
+  font-family: var(--font); font-size: 0.78rem;
+}
+.bar-label { color: var(--text-secondary); }
+.bar-track { background: var(--surface); height: 16px; position: relative; border: 1px solid var(--border-light); }
+.bar-fill { height: 100%; transition: width 0.4s; }
+.bar-count { font-family: var(--font-mono); color: var(--text); text-align: right; font-size: 0.78rem; }
+
+.pilot-card {
+  background: var(--card); border: 1px solid var(--border-light);
+  padding: 24px; margin-bottom: 24px; transition: all 0.2s;
+}
+.pilot-card:hover { border-color: var(--accent-warm-soft); box-shadow: 0 2px 8px rgba(204,20,0,0.06); }
+.pilot-meta {
+  display: flex; gap: 16px; align-items: baseline; margin-bottom: 8px;
+  font-family: var(--font); font-size: 0.75rem;
+}
+.pilot-year { font-family: var(--font-mono); color: var(--accent-warm); font-weight: 600; letter-spacing: 0.05em; }
+.pilot-author { color: var(--text-secondary); font-weight: 500; }
+.pilot-title {
+  font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700;
+  color: var(--text); margin-bottom: 16px; line-height: 1.5;
+}
+.badge-row {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+  font-family: var(--font); font-size: 0.7rem;
+}
+.verdict-badge {
+  color: white; padding: 3px 10px; letter-spacing: 0.05em;
+  text-transform: uppercase; font-weight: 600;
+}
+.emp-badge {
+  background: var(--bg); border: 1px solid; padding: 3px 10px;
+  letter-spacing: 0.04em; font-weight: 600;
+}
+.error-badge {
+  background: var(--accent-muted); color: var(--accent-warm);
+  padding: 3px 10px; letter-spacing: 0.05em; font-weight: 600;
+}
+.horizon-badge {
+  background: var(--surface); color: var(--text-muted);
+  padding: 3px 10px; letter-spacing: 0.05em; font-family: var(--font-mono);
+}
+.pilot-pos {
+  font-size: 0.92rem; color: var(--text); line-height: 1.7; margin-bottom: 12px;
+}
+.pilot-comp {
+  font-family: var(--font); font-size: 0.78rem; color: var(--text-secondary);
+  padding: 8px 12px; background: var(--surface); margin-bottom: 12px;
+}
+.pilot-evidence {
+  font-family: var(--font); font-size: 0.78rem; color: var(--text-muted);
+  padding: 8px 12px; border-left: 2px solid var(--accent-warm);
+}
+.pilot-comp strong, .pilot-evidence strong { color: var(--text); margin-right: 6px; }
+
+.data-table {
+  width: 100%; border-collapse: collapse; font-family: var(--font);
+  font-size: 0.78rem; margin: 16px 0;
+}
+.data-table th, .data-table td {
+  text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+.data-table th {
+  font-weight: 600; color: var(--text-muted); font-size: 0.7rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+.data-table .num { font-family: var(--font-mono); text-align: right; color: var(--accent-warm); }
+.data-table .muted { color: var(--text-muted); }
+.data-table .src-year { font-family: var(--font-mono); color: var(--text-muted); width: 60px; }
+
+.framework-box {
+  border: 1px solid var(--border); padding: 24px; margin: 20px 0;
+  background: var(--surface);
+}
+.framework-box h4 {
+  font-family: var(--font); font-size: 0.85rem; font-weight: 700;
+  color: var(--accent-warm); margin-bottom: 12px; letter-spacing: 0.05em;
+}
+.framework-box ul { font-family: var(--font); font-size: 0.85rem; color: var(--text); padding-left: 18px; }
+.framework-box ul li { margin-bottom: 6px; }
+
+footer {
+  border-top: 1px solid var(--border); padding: 40px 0;
+  text-align: center; font-family: var(--font); font-size: 0.7rem;
+  color: var(--text-muted); letter-spacing: 0.08em;
+}
+
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; }
+  .toc-sidebar {
+    position: static; height: auto; border-right: none;
+    border-bottom: 1px solid var(--border-light); padding: 20px 0;
+  }
+  main { padding: 30px 0 80px; }
+  .book-title { font-size: 1.8rem; }
+  .bar-row { grid-template-columns: 100px 1fr 50px; font-size: 0.72rem; }
+}
+
+@media print {
+  .toc-sidebar, .top-bar, .theme-toggle { display: none; }
+  .book-layout { grid-template-columns: 1fr; }
+  main { padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="top-bar-brand">miratuku <span>news</span></div>
+  <div class="top-bar-actions">
+    <a class="back-link" href="../">← 戻る</a>
+    <button class="theme-toggle" id="themeToggle">DARK</button>
+  </div>
+</header>
+
+<div class="book-layout">
+  <aside class="toc-sidebar">
+    <div class="toc-label">目次</div>
+    <ul class="toc-list">
+      <li><a href="#ch01"><span class="toc-num">01</span> プロジェクト概要</a></li>
+      <li><a href="#ch02"><span class="toc-num">02</span> 統計サマリー</a></li>
+      <li><a href="#ch03"><span class="toc-num">03</span> Stage 1 経験的検証</a></li>
+      <li><a href="#ch04"><span class="toc-num">04</span> Stage 2 歴史検証</a></li>
+      <li><a href="#ch05"><span class="toc-num">05</span> 評価フレームワーク</a></li>
+      <li><a href="#ch06"><span class="toc-num">06</span> パイロット10件</a></li>
+      <li><a href="#ch07"><span class="toc-num">07</span> 主要発信者</a></li>
+      <li><a href="#ch08"><span class="toc-num">08</span> 公開データソース</a></li>
+      <li><a href="#ch09"><span class="toc-num">09</span> 言及間関係ネットワーク</a></li>
+    </ul>
+  </aside>
+
+  <main>
+    <div class="book-header">
+      <div class="book-eyebrow">Mention Verification DB</div>
+      <h1 class="book-title">言及検証データベース</h1>
+      <p class="book-subtitle">人類が長い歴史の中で行ってきた社会科学領域の理論的言及・予測的言及を、その後の歴史的事実によって検証する知的史料。本DBは「経験的検証（Stage 1）」と「歴史検証（Stage 2）」の二段階判定により、人類の理論的遺産がいかに機能し、変容し、失効してきたかを可視化する。</p>
+      <div class="book-meta">最終更新 2026-05-05 ／ 総mentions 32,606件 ／ Stage 2検証 1,877件</div>
+    </div>
+
+    <section class="chapter-section" id="ch01">
+      <div class="chapter-num">CHAPTER 01</div>
+      <h2 class="chapter-title">プロジェクト概要</h2>
+      <div class="chapter-body">
+        <p>本プロジェクトは、人類が産出してきた社会科学的言及——理論・予測・説明的命題——を体系的にアーカイブし、その後の歴史的事実によって二段階で検証することを目的とする。第一段階は経験的検証（Empirical Verification）であり、その後の社会的実際による適合・誤りを判定する。第二段階は歴史検証（Historical Verification）であり、長期的な学問的評価・パラダイム的位置・後代の再評価を含む。</p>
+        <p>従来のメタサイエンス研究は実験科学（特に心理学・医学）の再現性に集中してきた一方、社会科学の理論的言及の長期的妥当性は個別の批判論文に分散しており、統合的データ基盤がなかった。本プロジェクトは、Popper反証主義・Lakatos研究プログラム・Bhaskar批判的実在論・Turchin計量歴史学（Seshat）の系譜を統合し、人類の理論的遺産の知的アーカイブを構築する。</p>
+        <p>既存DBとの関係では、foresight-knowledge-base（23,162件）・verified_signals（7,250件）・marketing_predictions（237件）・great-figures-db（経営寄り）・futures-studies-db（学派論争）を吸収しつつ、Codex 40名による日本語社会科学言及の新規収集（1,482件）を加え、総計32,606件の母集団を構築した。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch02">
+      <div class="chapter-num">CHAPTER 02</div>
+      <h2 class="chapter-title">統計サマリー</h2>
+      <div class="chapter-body">
+        <p>2026-05-05 時点のDB全体規模を以下に示す。Stage 1検証は経験的データとの照合による判定、Stage 2は学問的評価を含む歴史的判定である。</p>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-label">Total Mentions</div>
+            <div class="stat-card-value">32,606</div>
+            <div class="stat-card-sub">言及総数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Claimants</div>
+            <div class="stat-card-value">138</div>
+            <div class="stat-card-sub">発信者</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Stage 1 Verified</div>
+            <div class="stat-card-value">24,942</div>
+            <div class="stat-card-sub">経験的検証付き</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Stage 2 Verified</div>
+            <div class="stat-card-value">1,877</div>
+            <div class="stat-card-sub">歴史検証付き</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Relations</div>
+            <div class="stat-card-value">157</div>
+            <div class="stat-card-sub">言及間関係</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Evidence Records</div>
+            <div class="stat-card-value">19</div>
+            <div class="stat-card-sub">公開データソース連携</div>
+          </div>
+        </div>
+
+        <div class="bar-block">
+          <h4>言及ソース分布</h4>
+          
+        <div class="bar-row">
+          <div class="bar-label">foresight-knowledge-base</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#CC1400;"></div></div>
+          <div class="bar-count">23,162</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">verified_signals</div>
+          <div class="bar-track"><div class="bar-fill" style="width:31.3%;background:#CC1400;"></div></div>
+          <div class="bar-count">7,250</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">codex40_collection</div>
+          <div class="bar-track"><div class="bar-fill" style="width:6.4%;background:#CC1400;"></div></div>
+          <div class="bar-count">1,482</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">codex40_western</div>
+          <div class="bar-track"><div class="bar-fill" style="width:1.7%;background:#CC1400;"></div></div>
+          <div class="bar-count">385</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">marketing_predictions</div>
+          <div class="bar-track"><div class="bar-fill" style="width:1.0%;background:#CC1400;"></div></div>
+          <div class="bar-count">237</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">fs_debates</div>
+          <div class="bar-track"><div class="bar-fill" style="width:0.3%;background:#CC1400;"></div></div>
+          <div class="bar-count">80</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">pilot</div>
+          <div class="bar-track"><div class="bar-fill" style="width:0.0%;background:#CC1400;"></div></div>
+          <div class="bar-count">10</div>
+        </div>
+        
+        </div>
+
+        <div class="bar-block">
+          <h4>言語分布</h4>
+          
+        <div class="bar-row">
+          <div class="bar-label">en</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#555555;"></div></div>
+          <div class="bar-count">31,120</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">ja</div>
+          <div class="bar-track"><div class="bar-fill" style="width:4.8%;background:#555555;"></div></div>
+          <div class="bar-count">1,482</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">de</div>
+          <div class="bar-track"><div class="bar-fill" style="width:0.0%;background:#555555;"></div></div>
+          <div class="bar-count">2</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">fr</div>
+          <div class="bar-track"><div class="bar-fill" style="width:0.0%;background:#555555;"></div></div>
+          <div class="bar-count">2</div>
+        </div>
+        
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch03">
+      <div class="chapter-num">CHAPTER 03</div>
+      <h2 class="chapter-title">Stage 1 経験的検証分布</h2>
+      <div class="chapter-body">
+        <p>Stage 1経験的検証では、その後の社会的・経済的・科学的データとの照合により、言及の適合・誤りを判定する。confirmed（適合）からdisconfirmed（反証）までの6段階で分類する。</p>
+        <div class="bar-block">
+          
+        <div class="bar-row">
+          <div class="bar-label">confirmed</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#2D7A3E;"></div></div>
+          <div class="bar-count">16,229</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">partially_confirmed</div>
+          <div class="bar-track"><div class="bar-fill" style="width:46.2%;background:#7DA050;"></div></div>
+          <div class="bar-count">7,495</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">pending</div>
+          <div class="bar-track"><div class="bar-fill" style="width:5.8%;background:#6B6B6B;"></div></div>
+          <div class="bar-count">944</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">too_early</div>
+          <div class="bar-track"><div class="bar-fill" style="width:1.4%;background:#5070A0;"></div></div>
+          <div class="bar-count">230</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">disconfirmed</div>
+          <div class="bar-track"><div class="bar-fill" style="width:0.3%;background:#CC1400;"></div></div>
+          <div class="bar-count">44</div>
+        </div>
+        
+        </div>
+        <p>foresight-knowledge-baseの予測群はトレンドキーワードに基づくヒューリスティック自動判定により、AI・気候変動・スマートフォン等の既実現トレンドに合致する予測を「confirmed」として9,631件分類した。AGI・意識アップロード等の長期予測は「too_early」として保留している。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch04">
+      <div class="chapter-num">CHAPTER 04</div>
+      <h2 class="chapter-title">Stage 2 歴史検証分布（重点）</h2>
+      <div class="chapter-body">
+        <p>Stage 2歴史検証は本プロジェクトの中核である。その後の学問的評価・パラダイム的位置・後代の再評価を含む7段階の判定（vindicated / partially_vindicated / contested / still_evolving / refuted / reinterpreted / superseded）を行う。</p>
+        <div class="bar-block">
+          
+        <div class="bar-row">
+          <div class="bar-label">vindicated</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#2D7A3E;"></div></div>
+          <div class="bar-count">751</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">partially_vindicated</div>
+          <div class="bar-track"><div class="bar-fill" style="width:90.3%;background:#7DA050;"></div></div>
+          <div class="bar-count">678</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">contested</div>
+          <div class="bar-track"><div class="bar-fill" style="width:29.3%;background:#A07020;"></div></div>
+          <div class="bar-count">220</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">still_evolving</div>
+          <div class="bar-track"><div class="bar-fill" style="width:13.3%;background:#5070A0;"></div></div>
+          <div class="bar-count">100</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">reinterpreted</div>
+          <div class="bar-track"><div class="bar-fill" style="width:11.7%;background:#806020;"></div></div>
+          <div class="bar-count">88</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">refuted</div>
+          <div class="bar-track"><div class="bar-fill" style="width:2.9%;background:#CC1400;"></div></div>
+          <div class="bar-count">22</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">superseded</div>
+          <div class="bar-track"><div class="bar-fill" style="width:2.4%;background:#6B6B6B;"></div></div>
+          <div class="bar-count">18</div>
+        </div>
+        
+        </div>
+        <p>検証時間スパンは4層に区分する。短期（10-30年）は心理学・行動経済学の検証が容易な領域、中期（30-60年）はマクロ経済・国際関係論、長期（80-150年）と超長期（150年超）は古典社会理論の領域である。</p>
+        <div class="bar-block">
+          <h4>検証時間スパン分布</h4>
+          
+        <div class="bar-row">
+          <div class="bar-label">short_10_30</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#806020;"></div></div>
+          <div class="bar-count">1,104</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">mid_30_60</div>
+          <div class="bar-track"><div class="bar-fill" style="width:43.2%;background:#806020;"></div></div>
+          <div class="bar-count">477</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">long_80_150</div>
+          <div class="bar-track"><div class="bar-fill" style="width:21.6%;background:#806020;"></div></div>
+          <div class="bar-count">238</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">very_long_150plus</div>
+          <div class="bar-track"><div class="bar-fill" style="width:2.0%;background:#806020;"></div></div>
+          <div class="bar-count">22</div>
+        </div>
+        
+        </div>
+        <p>誤りの類型化は、A2リサーチで抽出した6類型（過大評価・過小評価・タイミング誤差・方向性逆転・前提誤認・因果構造誤特定）に基づく。</p>
+        <div class="bar-block">
+          <h4>誤り類型分布（Stage 2 判定済みのみ）</h4>
+          
+        <div class="bar-row">
+          <div class="bar-label">none</div>
+          <div class="bar-track"><div class="bar-fill" style="width:100.0%;background:#A07020;"></div></div>
+          <div class="bar-count">127</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">causal_misspecification</div>
+          <div class="bar-track"><div class="bar-fill" style="width:77.2%;background:#A07020;"></div></div>
+          <div class="bar-count">98</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">assumption_failure</div>
+          <div class="bar-track"><div class="bar-fill" style="width:52.8%;background:#A07020;"></div></div>
+          <div class="bar-count">67</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">overestimation</div>
+          <div class="bar-track"><div class="bar-fill" style="width:47.2%;background:#A07020;"></div></div>
+          <div class="bar-count">60</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">timing_misalignment</div>
+          <div class="bar-track"><div class="bar-fill" style="width:16.5%;background:#A07020;"></div></div>
+          <div class="bar-count">21</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">underestimation</div>
+          <div class="bar-track"><div class="bar-fill" style="width:14.2%;background:#A07020;"></div></div>
+          <div class="bar-count">18</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">directional_reversal</div>
+          <div class="bar-track"><div class="bar-fill" style="width:3.1%;background:#A07020;"></div></div>
+          <div class="bar-count">4</div>
+        </div>
+        
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch05">
+      <div class="chapter-num">CHAPTER 05</div>
+      <h2 class="chapter-title">評価フレームワーク</h2>
+      <div class="chapter-body">
+        <p>本DBはA1事前リサーチに基づく3つの評価フレームワークを採用する。各言及の検証時に、対象の性質に応じて適切なフレームワークを選択する。</p>
+
+        <div class="framework-box">
+          <h4>Framework A: 段階的検証プロトコル</h4>
+          <ul>
+            <li>理論抽出フェーズ（提案時期・原仮説・前提条件の正確抽出）</li>
+            <li>メカニズム明示化（因果メカニズムの形式的再構成）</li>
+            <li>事前予測の明示（理論から導かれる帰結を3つ以上）</li>
+            <li>歴史データ収集（一次資料・統計・二次資料）</li>
+            <li>8軸マトリクス評価</li>
+            <li>競合仮説比較（同一現象を説明する複数理論）</li>
+            <li>限界明示（時空的有効範囲・適用不可条件）</li>
+          </ul>
+        </div>
+
+        <div class="framework-box">
+          <h4>Framework B: パラダイム別検証</h4>
+          <ul>
+            <li>ポジティビスト的検証（統計的再現性・効果量安定性）</li>
+            <li>解釈学的検証（意味構造の同型性・厚い記述の比較）</li>
+            <li>批判的実在論による検証（行為者の学習と理論の反射性）</li>
+          </ul>
+        </div>
+
+        <div class="framework-box">
+          <h4>Framework C: 長期妥当性スケール</h4>
+          <ul>
+            <li>5-10年: 経済政策の短期効果</li>
+            <li>10-50年: 制度・政策の世代間効果</li>
+            <li>50-200年: 歴史的インスティテューション変化</li>
+            <li>200年以上: 文明圏別の長期比較</li>
+          </ul>
+        </div>
+
+        <p>8軸評価マトリクス（反証可能性・内的整合性・外的妥当性・説明力・予測力・事後予測力・統計的堅牢性・メタ理論的位置）の各軸を1-4でスコアリングする。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch06">
+      <div class="chapter-num">CHAPTER 06</div>
+      <h2 class="chapter-title">パイロット10件 — 二段階検証の実例</h2>
+      <div class="chapter-body">
+        <p>本章では、領域・時代・誤り類型を多様化した10件のパイロット事例を、Stage 1経験的検証＋Stage 2歴史検証付きで提示する。各事例は8軸マトリクス評価と現時点の学問的評価を含む。</p>
+        
+        <article class="pilot-card" id="mvdb-pilot_001_malthus">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1798</span>
+              <span class="pilot-author">トマス・ロバート・マルサス</span>
+            </div>
+            <h3 class="pilot-title">人口は抑制されない限り幾何級数的に増加するが、食糧供給は算術級数的にしか増加しない。人口の力は地球の食糧生産力をはるかに凌ぐため、人類は何らかの形で早期の死を免れない。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#CC1400;">refuted</span>
+              <span class="emp-badge" style="border-color:#CC1400;color:#CC1400;">Stage1: disconfirmed</span>
+              <span class="error-badge">assumption_failure</span>
+              <span class="horizon-badge">+226年検証</span>
+            </div>
+            <p class="pilot-pos">古典派経済学の重要文献として歴史的価値は高いが、予測としては明確に外れた。&#x27;マルサスの罠&#x27;は産業革命以降の経済社会では破られたという認識が主流。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Boserup hypothesis (人口圧→技術革新) / Demographic transition theory / Endogenous growth theory</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> 1800年→2026年で世界人口は約8倍（10億→80億）に増加したが、農業生産はそれを上回るペースで増加。飢餓率は世界規模で大幅に低下（FAO統計）。緑の革命と農業技術革新が幾何級数的食糧増産を可能にした。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_002_marx_value">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1867</span>
+              <span class="pilot-author">カール・マルクス</span>
+            </div>
+            <h3 class="pilot-title">商品の価値は、その生産に社会的に必要な労働時間によって決定される。利潤の源泉である剰余価値は、労働が創造する価値と労働力の価値との差から生じる。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#A07020;">contested</span>
+              <span class="emp-badge" style="border-color:#7DA050;color:#7DA050;">Stage1: partially_confirmed</span>
+              <span class="error-badge">causal_misspecification</span>
+              <span class="horizon-badge">+159年検証</span>
+            </div>
+            <p class="pilot-pos">主流経済学では労働価値説は撤回されたが、政治経済学・社会理論の枠組みとしては依然影響力を持つ。実証的精度は低いが、資本主義の構造的不平等の説明枠組みとしては再評価の動きあり。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Marginalist theory (Jevons/Menger/Walras 1870s) / Sraffian production theory / Neoclassical price theory</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> Shaikh and Tonak (1994), Wolff, Mage 等の実証研究で、米国経済における労働価値と市場価格の相関は産業集計レベルでは中程度（資本集約的製造業で20-30%乖離）。剰余価値率は20世紀を通じて10-20%の変動範囲で安定。資本主義崩壊予測は外れた。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_004_durkheim">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1897</span>
+              <span class="pilot-author">エミール・デュルケム</span>
+            </div>
+            <h3 class="pilot-title">自殺率は社会統合度と逆相関する。自己本位・アノミー・集団本位・宿命的の4類型は、個人の心理ではなく社会的絆の破綻を反映する。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#7DA050;">partially_vindicated</span>
+              <span class="emp-badge" style="border-color:#7DA050;color:#7DA050;">Stage1: partially_confirmed</span>
+              
+              <span class="horizon-badge">+127年検証</span>
+            </div>
+            <p class="pilot-pos">基本的洞察は強く支持されるが、因果メカニズムは複雑化。社会学・公衆衛生学の基礎理論として現役だが、原典の経験的精度は限定的。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Psychiatric model (individual psychopathology) / Economic model (Hamermesh-Soss 1974) / Cultural-meaning approach (Douglas 1967)</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> 現代の自殺学では基本仮説（社会統合と自殺率の逆相関）は概ね支持される。ただし非線形性が発見：20世紀後半の西欧では近代化が続いても自殺率は安定/低下。デュルケムの原データの再検証では、女性自殺・軍隊内自殺など整合性に疑問。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_003_weber">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1905</span>
+              <span class="pilot-author">マックス・ウェーバー</span>
+            </div>
+            <h3 class="pilot-title">プロテスタンティズムの倫理、特にカルヴィニズムの世俗内禁欲が、北欧における近代資本主義の興隆の決定的文化要因であった。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#CC1400;">refuted</span>
+              <span class="emp-badge" style="border-color:#CC1400;color:#CC1400;">Stage1: disconfirmed</span>
+              <span class="error-badge">causal_misspecification</span>
+              <span class="horizon-badge">+121年検証</span>
+            </div>
+            <p class="pilot-pos">因果主張は計量的に反証されたが、文化と経済の相互作用を考える社会学的フレームワークとしては依然重要。古典として読まれるが現代の実証経済社会学では限定的役割。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Becker-Woessmann literacy hypothesis / Tawney economic-cultural co-evolution / Braudel longue durée commerce</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> Cantoni (2015) が1300-1900年のドイツ375都市データで検証、プロテスタント化と経済成長の有意な相関を発見せず。資本主義は14世紀のカトリック・イタリア（フィレンツェ・ヴェネツィア）で既に発展していた事実。逆因果の可能性も指摘される。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_005_keynes">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1936</span>
+              <span class="pilot-author">ジョン・メイナード・ケインズ</span>
+            </div>
+            <h3 class="pilot-title">短期的には総需要が雇用と生産の主要決定要因である。政府の財政政策は不況期の経済安定化に有効である。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#7DA050;">partially_vindicated</span>
+              <span class="emp-badge" style="border-color:#7DA050;color:#7DA050;">Stage1: partially_confirmed</span>
+              
+              <span class="horizon-badge">+89年検証</span>
+            </div>
+            <p class="pilot-pos">ニューケインジアン総合として現代マクロ経済学の主流の一翼。短期需要管理の理論枠組みとしては支持されるが、長期的影響・乗数の大きさには論争。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Monetarism (Friedman) / Real Business Cycle theory / New Classical (Lucas) / MMT</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> 戦後1945-1973黄金期はケインズ主義の実証的成功期。1970sスタグフレーションで動揺。Nelson 1972でARIMAがケインズモデルを上回る予測精度を示し、合理的期待革命の引き金。リーマン後・コロナ禍では理論再評価。財政乗数の推定値は0.5-1.5と研究により分散。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_010_levistrauss">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1955</span>
+              <span class="pilot-author">クロード・レヴィ＝ストロース</span>
+            </div>
+            <h3 class="pilot-title">すべての文化システム（神話・親族・儀式）の根底には、二項対立（生/火、自然/文化、聖/俗）に基づく共通の深層論理構造が存在する。これらの構造は人間精神の普遍的特性を反映している。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#6B6B6B;">superseded</span>
+              <span class="emp-badge" style="border-color:#CC1400;color:#CC1400;">Stage1: disconfirmed</span>
+              <span class="error-badge">assumption_failure</span>
+              <span class="horizon-badge">+71年検証</span>
+            </div>
+            <p class="pilot-pos">学派としての構造主義はほぼ消滅。ただし二項対立分析や神話論理の枠組みは部分的に継承（認知人類学・記号論）。古典として読まれるが現役の研究プログラムではない。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Interpretive anthropology (Geertz) / Practice theory (Bourdieu) / Cognitive anthropology / Post-structuralism (Foucault, Derrida)</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> Maybury-Lewis 1967, Schneider 1984 等が事例分析の恣意性を指摘。Geertz 1973以降の解釈学的人類学が構造主義の還元論を批判。認知人類学・進化心理学は普遍構造を異なる枠組みで再定義。1990s以降の人類学では構造主義は周縁化。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_008_meadows_limits">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1972</span>
+              <span class="pilot-author">ドネラ・メドウズら（ローマクラブ）</span>
+            </div>
+            <h3 class="pilot-title">現在の成長傾向が変わらず継続すれば、地球上の成長の限界は今後100年以内に到達する。最も確実な結果は、人口と工業生産能力の急速で制御不能な衰退となる。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#7DA050;">partially_vindicated</span>
+              <span class="emp-badge" style="border-color:#7DA050;color:#7DA050;">Stage1: partially_confirmed</span>
+              <span class="error-badge">timing_misalignment</span>
+              <span class="horizon-badge">+54年検証</span>
+            </div>
+            <p class="pilot-pos">BAU軌道予測は概ね正しかったとの再評価が定着。ただし崩壊時期の精度や具体的メカニズムには留保。気候・環境政策の言説の重要な参照点として役割を維持。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Simon-Ehrlich techno-optimism / Ecological economics (Daly) / IPCC integrated assessment models / Planetary Boundaries (Rockström 2009)</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> Turner 2008 (30年検証), Herrington 2020 (50年検証, Yale JIE) でBAUシナリオが現実データを高い精度で追跡していることが確認された。ただし崩壊時期は予測より後ずれ。資源枯渇は発生せず、汚染（特にCO2）が予想以上に増加。&#x27;シナリオ&#x27;を&#x27;予測&#x27;として読むことの是非も論点。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_009_kahneman_prospect">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1979</span>
+              <span class="pilot-author">ダニエル・カーネマン＆エイモス・トヴェルスキー</span>
+            </div>
+            <h3 class="pilot-title">リスク下の意思決定は期待効用理論から系統的に乖離する。結果は参照点との相対評価され、損失は利得より重く評価される（損失回避）。確率は主観的に歪曲される（確率加重）。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#2D7A3E;">vindicated</span>
+              <span class="emp-badge" style="border-color:#2D7A3E;color:#2D7A3E;">Stage1: confirmed</span>
+              
+              <span class="horizon-badge">+47年検証</span>
+            </div>
+            <p class="pilot-pos">社会科学理論で最も実証的に頑健な理論の一つ。再現性危機の中で例外的に高い再現率を維持。標準理論として教科書化。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Expected Utility Theory (Bernoulli/von Neumann-Morgenstern) / Regret Theory (Loomes-Sugden 1982) / Salience Theory (Bordalo-Gennaioli-Shleifer 2012)</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> Ruggeri et al. 2020 Nature Human Behaviour の19カ国13言語大規模再現研究で、1979年論文の経験的基盤の90%が再現。損失回避・確率加重・参照点依存が広範に確認。2002年Kahnemanノーベル経済学賞受賞。フィールド調査での効果量はラボより小さいとの留保あり。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_007_fukuyama">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1989</span>
+              <span class="pilot-author">フランシス・フクヤマ</span>
+            </div>
+            <h3 class="pilot-title">我々が目撃しているのは単なる冷戦の終結や戦後特定の時期の終わりではなく、歴史そのものの終わり——つまり人類のイデオロギー的進化の終点であり、人類最終の政治形態としての西欧型リベラル・デモクラシーの普遍化である。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#CC1400;">refuted</span>
+              <span class="emp-badge" style="border-color:#CC1400;color:#CC1400;">Stage1: disconfirmed</span>
+              <span class="error-badge">directional_reversal</span>
+              <span class="horizon-badge">+37年検証</span>
+            </div>
+            <p class="pilot-pos">イデオロギー終焉論は反証され、Fukuyama自身も後年の著作で修正。古典的言説としての歴史的価値は高いが、予測としては学術的に否定的。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Democratic backsliding theory (Bermeo, Levitsky) / Authoritarian resilience theory / Civilizational theory (Huntington) / Multipolar world theory</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> Freedom House指標で2006-2024年は19年連続の「自由の後退」。V-Dem Liberal Democracy Index（2023）も同様の趨勢。ハンガリー・ポーランド・米国・インドで民主主義浸食。中国の台頭、ロシアの権威主義化、イスラム主義の再興。Fukuyama自身も2014『政治の衰退』で部分的修正。
+            </div>
+          </div>
+        </article>
+        
+        <article class="pilot-card" id="mvdb-pilot_006_huntington">
+          <header class="pilot-head">
+            <div class="pilot-meta">
+              <span class="pilot-year">1993</span>
+              <span class="pilot-author">サミュエル・ハンティントン</span>
+            </div>
+            <h3 class="pilot-title">冷戦後世界における紛争の根本原因は文化的なものとなる。文明間の断層線（特に西欧とイスラム、西欧と儒教中華文明の間）がイデオロギーや経済的分断に代わって主要な紛争軸となる。</h3>
+          </header>
+          <div class="pilot-body">
+            <div class="badge-row">
+              <span class="verdict-badge" style="background:#CC1400;">refuted</span>
+              <span class="emp-badge" style="border-color:#CC1400;color:#CC1400;">Stage1: disconfirmed</span>
+              <span class="error-badge">directional_reversal</span>
+              <span class="horizon-badge">+33年検証</span>
+            </div>
+            <p class="pilot-pos">国際関係論主流では実証的に反証された。文明識別の恣意性も批判。ただし通俗的言説では依然影響力あり。学術的には9.11後の一時的注目期を経て批判的評価が定着。</p>
+            <div class="pilot-comp"><strong>競合理論:</strong> Liberal institutionalism (Keohane) / Constructivism (Wendt) / Democratic peace theory / Resource competition models</div>
+            <div class="pilot-evidence">
+              <strong>経験的検証根拠:</strong> Russett, Oneal &amp; Cox (2000) は1950-1992年データで「文明所属は紛争予測の有意変数ではない」と結論。Henderson &amp; Tucker (2001) も同様。Chiozza (2002) は文明境界線を超えた国家間紛争の増加を否定。むしろ伝統的紛争要因（領土・資源・権力）が主要因として残った。
+            </div>
+          </div>
+        </article>
+        
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch07">
+      <div class="chapter-num">CHAPTER 07</div>
+      <h2 class="chapter-title">主要発信者ランキング（Top 30）</h2>
+      <div class="chapter-body">
+        <p>言及件数の多い発信者を以下に示す。Codex 40名チームによる日本語社会科学言及収集の対象40思想家が上位を占める。</p>
+        <table class="data-table">
+          <thead><tr><th>発信者</th><th>専門</th><th>件数</th></tr></thead>
+          <tbody>
+      <tr>
+        <td>三浦展</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">48</td>
+      </tr>
+    
+      <tr>
+        <td>佐伯啓思</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">44</td>
+      </tr>
+    
+      <tr>
+        <td>玄田有史</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">44</td>
+      </tr>
+    
+      <tr>
+        <td>野口悠紀雄</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">44</td>
+      </tr>
+    
+      <tr>
+        <td>青木昌彦</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">44</td>
+      </tr>
+    
+      <tr>
+        <td>大塚英志</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">42</td>
+      </tr>
+    
+      <tr>
+        <td>東浩紀</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">42</td>
+      </tr>
+    
+      <tr>
+        <td>丸山眞男</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>古市憲寿</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>吉本隆明</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>大澤真幸</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>山口二郎</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>山口昌男</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>山田昌弘</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>浅田彰</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>猪木武徳</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>與那覇潤</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>西部邁</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>金子勝</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">40</td>
+      </tr>
+    
+      <tr>
+        <td>上野千鶴子</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>中根千枝</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>廣松渉</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>橋爪大三郎</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>水野和夫</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>神野直彦</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>落合恵美子</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>蓮實重彦</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>見田宗介</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>鶴見俊輔</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">36</td>
+      </tr>
+    
+      <tr>
+        <td>中野剛志</td>
+        <td class="muted">interdisciplinary</td>
+        <td class="num">32</td>
+      </tr>
+    </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch08">
+      <div class="chapter-num">CHAPTER 08</div>
+      <h2 class="chapter-title">公開データソース連携</h2>
+      <div class="chapter-body">
+        <p>歴史検証の根拠データとして、以下の公開データセット・公式報告を evidence_records に登録した。本プロジェクトはこれらと連携することで、検証の堅牢性を確保する。</p>
+        <table class="data-table">
+          <thead><tr><th>年</th><th>名称</th><th>著者・発行</th><th>内容</th></tr></thead>
+          <tbody>
+      <tr>
+        <td class="src-year">1961</td>
+        <td class="src-title"><a href="https://www.fao.org/faostat/" target="_blank" rel="noopener">FAOSTAT Agricultural Production Data</a></td>
+        <td class="src-authors">FAO Statistical Division</td>
+        <td class="src-summary">1961年以降の世界農業生産・収穫高・土地利用の国別時系列。食糧予測の検証に使用。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">1962</td>
+        <td class="src-title"><a href="https://www.icpsr.umich.edu/" target="_blank" rel="noopener">ICPSR (Inter-university Consortium for Political and Social Research)</a></td>
+        <td class="src-authors">University of Michigan</td>
+        <td class="src-summary">社会科学長期パネル・世論調査・人口統計の集合的アーカイブ。1960年代〜現在。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">1972</td>
+        <td class="src-title"><a href="https://correlatesofwar.org/" target="_blank" rel="noopener">Correlates of War Project</a></td>
+        <td class="src-authors">Singer, J.D., Bremer, S., et al.</td>
+        <td class="src-summary">1816年以降の国家間紛争・軍事同盟・国家間能力データ。文明衝突論・民主主義平和論の検証に使用。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">1973</td>
+        <td class="src-title"><a href="https://freedomhouse.org/report/freedom-world" target="_blank" rel="noopener">Freedom House Freedom in the World</a></td>
+        <td class="src-authors">Freedom House</td>
+        <td class="src-summary">1973年以降の世界各国の政治的自由・市民的自由の年次評価。民主主義検証に使用。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">1990</td>
+        <td class="src-title"><a href="https://www.ipcc.ch/reports/" target="_blank" rel="noopener">IPCC Assessment Reports (AR1-AR6)</a></td>
+        <td class="src-authors">Intergovernmental Panel on Climate Change</td>
+        <td class="src-summary">1990年以降の気候変動科学評価報告。温室効果ガス・気温・海面・極端気象の予測と検証。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2010</td>
+        <td class="src-title"><a href="https://www.rug.nl/ggdc/historicaldevelopment/maddison/" target="_blank" rel="noopener">Maddison Project Database</a></td>
+        <td class="src-authors">Maddison, A., Bolt, J., van Zanden, J.L.</td>
+        <td class="src-summary">西暦1年〜現在の世界各国GDP・人口の超長期時系列。経済成長理論の歴史検証。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2010</td>
+        <td class="src-title"><a href="https://www.rug.nl/ggdc/historicaldevelopment/maddison/" target="_blank" rel="noopener">Maddison Project Database</a></td>
+        <td class="src-authors">Maddison, A., Bolt, J., van Zanden, J.L.</td>
+        <td class="src-summary">西暦1年〜現在の世界各国GDP・人口の超長期時系列。経済成長理論の歴史検証。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2011</td>
+        <td class="src-title"><a href="https://dataverse.harvard.edu/dataverse/gjp" target="_blank" rel="noopener">Good Judgment Project (IARPA Tournament)</a></td>
+        <td class="src-authors">Tetlock, P., Mellers, B., et al.</td>
+        <td class="src-summary">2011-2015年IARPA予測トーナメントの500問題100万予測。専門家予測精度の実証分析、Brier score算出、superforecaster検出。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2011</td>
+        <td class="src-title"><a href="https://dataverse.harvard.edu/dataverse/gjp" target="_blank" rel="noopener">Good Judgment Project (IARPA Tournament)</a></td>
+        <td class="src-authors">Tetlock, P., Mellers, B., et al.</td>
+        <td class="src-summary">2011-2015年IARPA予測トーナメントの500問題100万予測。専門家予測精度の実証分析、Brier score算出、superforecaster検出。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2013</td>
+        <td class="src-title"><a href="https://www.gdeltproject.org/" target="_blank" rel="noopener">GDELT Project</a></td>
+        <td class="src-authors">Leetaru, K.H., Schrodt, P.A.</td>
+        <td class="src-summary">1979年以降の世界ニュース報道のイベントデータベース。1日250+言語×100M+イベント。社会変動・紛争分析。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2015</td>
+        <td class="src-title"><a href="https://seshatdatabank.info/" target="_blank" rel="noopener">Seshat: Global History Databank</a></td>
+        <td class="src-authors">Turchin, P., Whitehouse, H., et al.</td>
+        <td class="src-summary">紀元前4000年〜産業革命までの400+ポリティ（政治単位）の多次元歴史データ。社会複雑度・人口・宗教・組織化レベル等。社会進化理論の長期検証に使用可能。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2015</td>
+        <td class="src-title"><a href="https://seshatdatabank.info/" target="_blank" rel="noopener">Seshat: Global History Databank</a></td>
+        <td class="src-authors">Turchin, P., Whitehouse, H., et al.</td>
+        <td class="src-summary">紀元前4000年〜産業革命までの400+ポリティ（政治単位）の多次元歴史データ。社会複雑度・人口・宗教・組織化レベル等。社会進化理論の長期検証に使用可能。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2015</td>
+        <td class="src-title"><a href="https://osf.io/ezcuj/" target="_blank" rel="noopener">Open Science Collaboration Reproducibility Project: Psychology</a></td>
+        <td class="src-authors">Open Science Collaboration</td>
+        <td class="src-summary">心理学100研究の再現試験データ。元論文の効果量と再現効果量、統計的有意性の比較。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2015</td>
+        <td class="src-title"><a href="https://www.rug.nl/ggdc/productivity/pwt/" target="_blank" rel="noopener">Penn World Table</a></td>
+        <td class="src-authors">Feenstra, R.C., Inklaar, R., Timmer, M.P.</td>
+        <td class="src-summary">183カ国1950-2019年のGDP・労働・資本・生産性の比較可能データ。マクロ経済理論検証。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2017</td>
+        <td class="src-title"><a href="https://wid.world/" target="_blank" rel="noopener">WID.world (World Inequality Database)</a></td>
+        <td class="src-authors">Piketty, T., Saez, E., Zucman, G.</td>
+        <td class="src-summary">1820年代以降の世界各国の所得・富の不平等指標（top 1%/10%シェア等）。ピケティr&gt;g仮説の検証。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2018</td>
+        <td class="src-title"><a href="https://www.v-dem.net/" target="_blank" rel="noopener">V-Dem Dataset (Varieties of Democracy)</a></td>
+        <td class="src-authors">V-Dem Institute, University of Gothenburg</td>
+        <td class="src-summary">1789年以降の世界各国の民主主義指標（5次元・350指標）。民主主義論争の長期検証。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2022</td>
+        <td class="src-title"><a href="https://www.worldvaluessurvey.org/" target="_blank" rel="noopener">World Values Survey (WVS) Wave 7</a></td>
+        <td class="src-authors">World Values Survey Association</td>
+        <td class="src-summary">1981-2022年、100カ国以上の価値観変化縦断調査。近代化論・脱物質主義論・民主化論の長期検証に使用。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2024</td>
+        <td class="src-title"><a href="https://ourworldindata.org/hunger-and-undernourishment" target="_blank" rel="noopener">Our World in Data: Hunger and Malnutrition</a></td>
+        <td class="src-authors">Roser, M., Ritchie, H.</td>
+        <td class="src-summary">FAO・World Bank統計に基づく世界の飢餓・栄養不足の長期時系列。マルサス予測の検証等に使用。</td>
+      </tr>
+    
+      <tr>
+        <td class="src-year">2024</td>
+        <td class="src-title"><a href="https://ourworldindata.org/hunger-and-undernourishment" target="_blank" rel="noopener">Our World in Data: Hunger and Malnutrition</a></td>
+        <td class="src-authors">Roser, M., Ritchie, H.</td>
+        <td class="src-summary">FAO・World Bank統計に基づく世界の飢餓・栄養不足の長期時系列。マルサス予測の検証等に使用。</td>
+      </tr>
+    </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="ch09">
+      <div class="chapter-num">CHAPTER 09</div>
+      <h2 class="chapter-title">言及間関係ネットワーク</h2>
+      <div class="chapter-body">
+        <p>mention_relations テーブルは言及同士の関係（supports / refutes / extends / competes_with / inspired_by / succeeds / revises）を記録する。手動の主要関係（Marx-Smith、Keynes-Hayek、Fukuyama-Huntington等）に加え、同一発信者の時系列展開・同subdomain内の系譜・academic-knowledge-dbのcross_domain_relationsを取り込み、157件の関係を構築した。</p>
+        <p>今後の拡張として、言及テキストのベクトル類似度に基づく関係発見、引用ネットワーク（学術論文の被引用）の取り込み、競合理論ペアのマニュアル整備を予定する。</p>
+      </div>
+    </section>
+
+    <footer>
+      <p>言及検証DB v0.1 — Mention Verification Database<br>
+      生成: 2026-05-05 ／ オーケストレーター: Claude Opus 4.7（1M context）<br>
+      実行チーム: Opus + academic-db-builder + Codex 40 + 関連スクリプト</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+const toggle = document.getElementById('themeToggle');
+const root = document.documentElement;
+const stored = localStorage.getItem('mvdb_theme') || 'light';
+root.setAttribute('data-theme', stored);
+toggle.textContent = stored === 'dark' ? 'LIGHT' : 'DARK';
+toggle.addEventListener('click', () => {
+  const cur = root.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('mvdb_theme', next);
+  toggle.textContent = next === 'dark' ? 'LIGHT' : 'DARK';
+});
+</script>
+</body>
+</html>
