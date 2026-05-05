@@ -84,6 +84,16 @@ def main():
             'university': (row[5] or '')[:40],
         })
 
+    # Year distribution
+    year_dist = []
+    for row in c.execute("""
+        SELECT substr(published_at, 1, 4) as year, count(*) as cnt
+        FROM press_releases WHERE published_at IS NOT NULL
+        GROUP BY year ORDER BY year
+    """):
+        if row[0] and int(row[0]) >= 2020:
+            year_dist.append({'label': row[0], 'count': row[1]})
+
     stats = {
         'total_pr': total_pr,
         'total_companies': total_companies,
@@ -93,6 +103,7 @@ def main():
         'total_analyzed': total_analyzed,
         'full_text_count': full_text_count,
         'full_text_rate': round(100.0 * full_text_count / total_pr, 1) if total_pr > 0 else 0,
+        'year_distribution': year_dist,
         'by_industry': by_industry,
         'top_themes': top_themes,
         'gta_distribution': gta_dist,

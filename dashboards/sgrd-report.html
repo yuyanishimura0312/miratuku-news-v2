@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGRD 解析レポート - 産学R&Dプレスリリースデータベース</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #fff; --text: #1a1a1a; --accent: #CC1400; --border: #e0e0e0; --card-bg: #f8f8f8; --muted: #666; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1a1a1a; --text: #e0e0e0; --accent: #ff4433; --border: #333; --card-bg: #242424; --muted: #999; } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Serif JP', serif; background: var(--bg); color: var(--text); line-height: 1.9; }
+.container { max-width: 800px; margin: 0 auto; padding: 3rem 2rem; }
+header { border-bottom: 3px solid var(--accent); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+header h1 { font-size: 1.6rem; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; }
+header .meta { color: var(--muted); font-size: 0.85rem; margin-top: 0.5rem; font-family: 'Noto Sans JP', sans-serif; }
+header .nav-links { margin-top: 0.8rem; font-size: 0.85rem; font-family: 'Noto Sans JP', sans-serif; }
+header .nav-links a { color: var(--accent); text-decoration: none; margin-right: 1.5rem; }
+h2 { font-size: 1.3rem; font-weight: 700; margin: 2.5rem 0 1rem; border-left: 4px solid var(--accent); padding-left: 0.8rem; font-family: 'Noto Sans JP', sans-serif; }
+h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.8rem; font-family: 'Noto Sans JP', sans-serif; }
+p { margin-bottom: 1rem; text-align: justify; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0; font-family: 'Noto Sans JP', sans-serif; }
+th, td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); text-align: left; }
+th { font-weight: 600; background: var(--card-bg); }
+ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+li { margin-bottom: 0.3rem; }
+.highlight { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; }
+footer { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 3rem; font-size: 0.8rem; color: var(--muted); text-align: center; font-family: 'Noto Sans JP', sans-serif; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>SGRD 解析レポート</h1>
+  <div class="meta">産学R&Dプレスリリースデータベース構築・分析報告 | 2026年5月5日</div>
+  <div class="nav-links">
+    <a href="sgrd.html">ダッシュボード</a>
+    <a href="../databases.html">データベース一覧</a>
+  </div>
+</header>
+
+<h2>1. 概要</h2>
+
+<p>SGRD（Sangaku R&D Press Release Database）は、日本の上場企業3,872社を対象に、2020年以降の研究開発に関するプレスリリースを網羅的に収集・構造化したデータベースである。産学連携の実態を定量的に把握し、研究開発のトレンドをボトムアップに抽出することを目的として構築された。</p>
+
+<div class="highlight">
+<table>
+<tr><th>指標</th><th>値</th></tr>
+<tr><td>プレスリリース総数</td><td>36,734件</td></tr>
+<tr><td>対象企業</td><td>3,872社（うちR&D PR保有 2,141社）</td></tr>
+<tr><td>連携大学・研究機関</td><td>8,335</td></tr>
+<tr><td>研究テーマ（帰納分類）</td><td>23,762種</td></tr>
+<tr><td>GTAコード</td><td>48カテゴリ</td></tr>
+<tr><td>全文取得率</td><td>76.8%（28,213件）</td></tr>
+<tr><td>対象期間</td><td>2020年1月〜2026年5月</td></tr>
+<tr><td>DBサイズ</td><td>約210 MB</td></tr>
+</table>
+</div>
+
+<h2>2. 構築手法</h2>
+
+<h3>2.1 データ収集</h3>
+<p>収集は3段階で実施された。第1段階としてsangaku-matcherデータベースから上場企業3,872社のマスタ情報を取得し、第2段階として各企業のR&D関連プレスリリースをPR TIMES検索APIおよび企業公式サイトから網羅的に収集した。収集は10並列チーム体制で実行し、企業群をセグメント分割して同時並行でスクレイピングを行った。</p>
+
+<p>R&D関連の判定にはキーワードマッチング方式を採用し、「研究開発」「共同研究」「産学連携」「AI」「量子」「バイオ」「脱炭素」等50種のキーワードのいずれか1つ以上がタイトルまたは本文に含まれるものを対象とした。</p>
+
+<h3>2.2 分析パイプライン</h3>
+<p>収集したプレスリリースに対して、以下の3段階分析を実施した:</p>
+<ol>
+<li><strong>200文字概要生成</strong>: Claude Haiku APIにより各記事の構造化要約を生成</li>
+<li><strong>GTAコーディング</strong>: グラウンデッド・セオリー・アプローチに基づく48カテゴリへのルールベース分類。8つの上位カテゴリ（技術開発、AI・データ、環境・エネルギー、ヘルスケア、モビリティ、連携形態、製造、セキュリティ）に体系化</li>
+<li><strong>20文字研究テーマ付与</strong>: ボトムアップの帰納的分類により、各記事に20文字以内のテーマラベルを付与</li>
+</ol>
+
+<h3>2.3 大学・研究機関抽出</h3>
+<p>正規表現パターンマッチングにより、記事本文から大学名・研究機関名を自動抽出した。「〇〇大学」「〇〇研究所」「〇〇研究機構」「〇〇研究センター」のパターンに合致する固有名詞を抽出し、産学連携ネットワークの基礎データとした。</p>
+
+<h2>3. 主要な発見</h2>
+
+<h3>3.1 時系列トレンド</h3>
+<p>2020年から2026年にかけて、R&Dプレスリリースは急激な増加傾向を示している。2020年の791件から2025年には8,503件へと10倍以上に増加しており、企業の研究開発活動の積極的な対外発信が加速していることがわかる。特に2024年以降の急増は、生成AI関連の技術発表の増加が寄与している。</p>
+
+<h3>3.2 産業別特徴</h3>
+<p>業種別では情報・通信業（1,486件）が最多であり、サービス業（1,079件）、電気機器（972件）、輸送用機器（779件）、化学（655件）が続く。情報・通信業の突出は、AIおよびDX関連の研究開発発表が集中していることによる。</p>
+
+<h3>3.3 技術領域（GTAコード分析）</h3>
+<p>GTAコーディングの結果、最も頻度の高い技術領域は以下の通りである:</p>
+<table>
+<tr><th>コード</th><th>領域</th><th>件数</th></tr>
+<tr><td>AI06</td><td>データ基盤</td><td>8,656</td></tr>
+<tr><td>TD01</td><td>新規材料開発</td><td>6,217</td></tr>
+<tr><td>CL01</td><td>共同研究</td><td>5,004</td></tr>
+<tr><td>TD05</td><td>計測・分析技術</td><td>3,928</td></tr>
+<tr><td>MF01</td><td>スマート工場</td><td>3,549</td></tr>
+<tr><td>EN01</td><td>脱炭素技術</td><td>3,259</td></tr>
+<tr><td>CL05</td><td>国際連携</td><td>3,239</td></tr>
+<tr><td>TD04</td><td>ソフトウェア技術</td><td>3,155</td></tr>
+<tr><td>AI05</td><td>予測・最適化</td><td>2,910</td></tr>
+<tr><td>AI02</td><td>生成AI活用</td><td>2,675</td></tr>
+</table>
+
+<p>データ基盤（AI06）と新規材料開発（TD01）の2領域が突出しており、DXと素材イノベーションが日本企業のR&D主軸であることを示している。生成AI活用（AI02）は2024年以降に急増し、第10位に浮上した。</p>
+
+<h3>3.4 産学連携ネットワーク</h3>
+<p>大学言及率は27.0%（9,918件）であり、約4件に1件が大学・研究機関との連携に言及している。連携先として最も多いのは東京大学（321件）で、東北大学（147件）、京都大学（112件）、大阪大学（94件）、早稲田大学（92件）が続く。旧帝大と有力私大への集中が顕著である。</p>
+
+<h3>3.5 企業別活動量</h3>
+<p>R&Dプレスリリースの発信量上位はパナソニック（645件）、カゴメ（613件）、IHI（546件）、シーエムシー・リサーチ（508件）、KDDI（481件）である。業種を問わずR&D情報発信に積極的な企業が上位を占めている。</p>
+
+<h2>4. データ品質</h2>
+
+<table>
+<tr><th>品質指標</th><th>状態</th></tr>
+<tr><td>URL重複</td><td>0件（解消済み）</td></tr>
+<tr><td>GTA付与率</td><td>100%</td></tr>
+<tr><td>テーマ付与率</td><td>100%</td></tr>
+<tr><td>全文取得率</td><td>76.8%</td></tr>
+<tr><td>日付なし</td><td>2,147件（5.8%、企業サイト由来）</td></tr>
+<tr><td>大学名正規化</td><td>完了</td></tr>
+</table>
+
+<p>全文取得率76.8%は、PR TIMESのJavaScript遅延描画に起因する取得失敗が主因である。タイトルのみの記事についてもGTAコーディングは実施されているが、テーマ付与の精度は全文ありの記事と比べて低い可能性がある。</p>
+
+<h2>5. 活用方針</h2>
+
+<ul>
+<li><strong>sangaku-matcher連携</strong>: 企業のR&D方向性データとして、産学マッチングの精度向上に活用</li>
+<li><strong>技術トレンド検出</strong>: GTAコードの時系列分析により、技術領域の興隆・衰退を定量的に追跡</li>
+<li><strong>産学連携分析</strong>: 大学-企業の連携パターンの解明、地域別・業種別の連携傾向分析</li>
+<li><strong>フォーサイト基盤</strong>: R&Dプレスリリースをシグナルソースとして、技術的変化の早期検出に活用</li>
+</ul>
+
+<h2>6. テーブル構成</h2>
+
+<table>
+<tr><th>テーブル</th><th>件数</th><th>内容</th></tr>
+<tr><td>companies</td><td>3,872</td><td>企業マスタ（edinet_code, 業種, R&D費等）</td></tr>
+<tr><td>press_releases</td><td>36,734</td><td>PR全文（タイトル, URL, 日付, 本文, 大学言及）</td></tr>
+<tr><td>analysis</td><td>36,734</td><td>分析結果（要約, GTA, テーマ, 技術分野）</td></tr>
+<tr><td>gta_codebook</td><td>48</td><td>GTAコード定義（コード, ラベル, カテゴリ）</td></tr>
+<tr><td>collaborations</td><td>2,568</td><td>産学連携リンク</td></tr>
+<tr><td>research_themes</td><td>2,900</td><td>テーママスタ</td></tr>
+</table>
+
+<footer>
+  SGRD Analysis Report | miratuku-news-v2 | Generated 2026-05-05
+</footer>
+</div>
+</body>
+</html>
