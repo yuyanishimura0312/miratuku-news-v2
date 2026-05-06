@@ -1,629 +1,364 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="light">
+<html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>データベース | Insight News</title>
-<link rel="icon" href="https://esse-sense.com/favicon.ico">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/main.css">
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="js/shared/firebase-config.js"></script>
-<style>
-:root {
-  --bg: #FFFFFF;
-  --card: #FFFFFF;
-  --card-hover: #F7F7F5;
-  --accent: #121212;
-  --accent-soft: #555555;
-  --accent-warm: #CC1400;
-  --accent-warm-soft: #B01200;
-  --accent-muted: rgba(204,20,0,0.06);
-  --text: #121212;
-  --text-secondary: #555555;
-  --text-muted: #6B6B6B;
-  --border: #D9D9D9;
-  --border-light: #EEEEEE;
-  --highlight: #CC1400;
-  --surface: #F7F7F5;
-  --surface2: #F0F0EE;
-  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
-  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
-}
-[data-theme="dark"] {
-  --bg: #121212;
-  --card: #1A1A1A;
-  --card-hover: #222222;
-  --accent: #E0E0E0;
-  --accent-soft: #999999;
-  --accent-warm: #FF4030;
-  --accent-warm-soft: #FF6050;
-  --accent-light: #1A1A1A;
-  --accent-muted: rgba(255,64,48,0.10);
-  --text: #E0E0E0;
-  --text-secondary: #AAAAAA;
-  --text-muted: #8A8A8A;
-  --border: #333333;
-  --border-light: #2A2A2A;
-  --highlight: #FF4030;
-  --surface: #1A1A1A;
-  --surface2: #222222;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-body {
-  font-family: var(--font-serif);
-  color: var(--text);
-  background: var(--bg);
-  line-height: 1.95;
-  letter-spacing: 0.025em;
-  font-feature-settings: "palt";
-  min-height: 100vh;
-  transition: background 0.2s, color 0.2s;
-}
-a { color: var(--accent-warm); text-decoration: none; }
-a:hover { text-decoration: underline; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>データベース | Insight News</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/shared/firebase-config.js"></script>
+  <style>
+    /* ===== Page-specific styles for databases.html ===== */
+    .page-lead {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.85;
+      margin: 8px 0 18px;
+      max-width: 780px;
+    }
+    .page-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 14px 0;
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: 24px;
+    }
+    .page-meta strong { color: var(--text); font-weight: 700; }
 
-.top-bar {
-  background: var(--bg);
-  border-top: 3px solid var(--accent);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.top-bar-brand {
-  font-family: var(--font);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.top-bar-brand span { color: var(--accent-warm); }
-.top-bar-actions { display: flex; align-items: center; gap: 12px; }
-.back-link {
-  font-family: var(--font);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-.back-link:hover { color: var(--accent-warm); text-decoration: none; }
-.theme-toggle {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px 10px;
-  font-size: 0.72rem;
-  font-family: var(--font);
-  letter-spacing: 0.05em;
-  transition: all 0.2s;
-}
-.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    /* KPI overview row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      margin: 0 0 24px;
+    }
+    .kpi-cell { padding: 16px 18px; border-right: 1px solid var(--border); }
+    .kpi-cell:last-child { border-right: none; }
+    .kpi-label {
+      font-size: 0.66rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1.15;
+    }
 
-.book-layout {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  gap: 0;
-}
-.toc-sidebar {
-  position: sticky;
-  top: 48px;
-  height: calc(100vh - 48px);
-  overflow-y: auto;
-  padding: 40px 24px 40px 0;
-  border-right: 1px solid var(--border-light);
-}
-.toc-sidebar::-webkit-scrollbar { width: 4px; }
-.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
-.toc-label {
-  font-family: var(--font);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-}
-.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
-.toc-list li a {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-family: var(--font);
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  padding: 5px 8px 5px 0;
-  transition: color 0.15s;
-  line-height: 1.5;
-}
-.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
-.toc-num {
-  font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 0.65rem;
-  color: var(--accent-warm);
-  min-width: 22px;
-  flex-shrink: 0;
-  font-weight: 700;
-}
-.toc-cta {
-  display: block;
-  margin-top: 28px;
-  padding: 12px 14px;
-  border: 1px solid var(--accent-warm);
-  background: var(--accent-muted);
-  color: var(--accent-warm);
-  font-family: var(--font);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-align: center;
-  letter-spacing: 0.04em;
-  transition: all 0.15s;
-}
-.toc-cta:hover { background: var(--accent-warm); color: var(--bg); text-decoration: none; }
+    /* 4-layer architecture */
+    .arch-flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      align-items: stretch;
+      margin: 8px 0 24px;
+    }
+    .arch-cell {
+      padding: 16px 14px;
+      border: 1px solid var(--border);
+      border-right: none;
+      background: var(--card);
+      position: relative;
+    }
+    .arch-cell:last-child { border-right: 1px solid var(--border); }
+    .arch-cell::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      width: 9px;
+      height: 9px;
+      transform: translateY(-50%) rotate(45deg);
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      background: var(--card);
+      z-index: 1;
+    }
+    .arch-cell:last-child::after { display: none; }
+    .arch-layer-label {
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .arch-layer-name {
+      font-weight: 900;
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    .arch-layer-codes {
+      font-size: 0.66rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .arch-cell[data-layer="conceptual"] { border-top: 3px solid #6E2C2C; }
+    .arch-cell[data-layer="core"] { border-top: 3px solid #CC1400; }
+    .arch-cell[data-layer="structural"] { border-top: 3px solid #2C3E50; }
+    .arch-cell[data-layer="detection"] { border-top: 3px solid #1A5276; }
+    .arch-cell[data-layer="output"] { border-top: 3px solid #121212; background: var(--surface); }
+    @media (max-width: 880px) {
+      .arch-flow { grid-template-columns: 1fr; }
+      .arch-cell { border-right: 1px solid var(--border); }
+      .arch-cell::after { display: none; }
+    }
 
-.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+    /* Action links */
+    .action-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 0; }
+    .action-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--card);
+      transition: all 0.15s;
+    }
+    .action-link:hover { border-color: var(--accent-warm); color: var(--accent-warm); text-decoration: none; }
+    .action-link--primary {
+      background: var(--accent-warm);
+      border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .action-link--primary:hover { background: #B01200; border-color: #B01200; color: #fff; }
 
-.book-header {
-  margin-bottom: 64px;
-  padding-bottom: 48px;
-  border-bottom: 1px solid var(--border);
-}
-.book-eyebrow {
-  font-family: var(--font);
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent-warm);
-  font-weight: 700;
-  margin-bottom: 14px;
-}
-.book-title {
-  font-family: var(--font-serif);
-  font-size: 2.1rem;
-  font-weight: 900;
-  line-height: 1.4;
-  margin-bottom: 18px;
-  letter-spacing: 0;
-}
-.book-subtitle {
-  font-family: var(--font-serif);
-  font-size: 1.02rem;
-  color: var(--text-secondary);
-  font-weight: 400;
-  line-height: 1.85;
-  margin-bottom: 28px;
-}
-.book-meta {
-  font-family: var(--font);
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-.book-meta strong { color: var(--text); font-weight: 700; }
+    /* DB layer cards (rendered by databases.js) */
+    .db-overview { display: none; }
+    .db-layer {
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .db-layer-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
+      background: var(--surface);
+    }
+    .db-layer-title {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 900;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .db-layer-desc {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .db-layer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 0;
+    }
+    .db-entry {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border-light);
+      border-right: 1px solid var(--border-light);
+      transition: background 0.12s;
+    }
+    .db-entry:hover { background: var(--card-hover); }
+    .db-layer-grid > .db-entry:last-child { border-right: none; }
+    .db-entry-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+    .db-entry-id {
+      font-family: "SF Mono", monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--accent-warm);
+      background: var(--accent-muted);
+      padding: 2px 8px;
+      letter-spacing: 0.05em;
+    }
+    .db-entry-name { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .db-entry-stat {
+      font-family: var(--font-serif);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .db-entry-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.75; }
+    .db-entry-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .db-entry-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .db-dashboard-link {
+      display: inline-block;
+      padding: 4px 10px;
+      background: var(--accent-muted);
+      color: var(--accent-warm);
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .db-dashboard-link:hover { background: var(--accent-warm); color: #fff; text-decoration: none; }
 
-.chapter-section {
-  margin-bottom: 80px;
-  padding-bottom: 60px;
-  border-bottom: 1px solid var(--border-light);
-  scroll-margin-top: 64px;
-}
-.chapter-section:last-child { border-bottom: none; }
-.chapter-number-label {
-  font-family: var(--font);
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent-warm);
-  margin-bottom: 12px;
-  font-weight: 700;
-}
-.chapter-title {
-  font-family: var(--font-serif);
-  font-size: 1.55rem;
-  line-height: 1.5;
-  font-weight: 900;
-  margin-bottom: 28px;
-  letter-spacing: 0;
-}
-h3 {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  line-height: 1.6;
-  font-weight: 700;
-  margin: 48px 0 18px;
-  color: var(--text);
-}
-p { margin-bottom: 22px; text-indent: 1em; font-size: 0.94rem; }
-p:first-of-type, .lead { text-indent: 0; }
-.lead {
-  font-size: 1.02rem;
-  color: var(--text-secondary);
-  margin-bottom: 32px;
-  font-weight: 500;
-  line-height: 1.95;
-}
+    .db-supplementary { margin-top: 24px; padding: 22px; background: var(--surface); border: 1px solid var(--border); }
+    .db-supplementary-title {
+      font-family: var(--font-serif);
+      font-size: 0.92rem;
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--text);
+      display: inline-block;
+    }
+    .db-supplementary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .db-supplementary-item {
+      padding: 12px 14px;
+      background: var(--card);
+      border: 1px solid var(--border-light);
+      font-size: 0.78rem;
+      line-height: 1.7;
+    }
+    .db-supplementary-item strong { display: block; font-weight: 700; color: var(--text); margin-bottom: 4px; font-size: 0.84rem; }
 
-/* ============ KPI overview row ============ */
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  margin: 32px 0;
-}
-.kpi-cell {
-  padding: 18px 16px;
-  border-right: 1px solid var(--border);
-  text-align: left;
-}
-.kpi-cell:last-child { border-right: none; }
-.kpi-label {
-  font-family: var(--font);
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-.kpi-value {
-  font-family: var(--font-serif);
-  font-size: 1.55rem;
-  font-weight: 900;
-  color: var(--text);
-  line-height: 1.15;
-}
-.kpi-value-unit { font-size: 0.72rem; color: var(--text-secondary); margin-left: 3px; font-weight: 400; }
+    .db-extra-section { margin-top: 24px; }
+    .db-extra-header { margin-bottom: 14px; }
+    .db-extra-title { font-family: var(--font-serif); font-size: 1.02rem; font-weight: 900; color: var(--text); margin-bottom: 4px; }
+    .db-extra-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.7; }
+    .db-extra-section .db-layer-grid { border: 1px solid var(--border); background: var(--card); }
 
-/* ============ 4-layer architecture ============ */
-.arch-flow {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0;
-  align-items: stretch;
-  margin: 28px 0 12px;
-}
-.arch-cell {
-  padding: 16px 12px;
-  border: 1px solid var(--border);
-  border-right: none;
-  background: var(--card);
-  font-family: var(--font);
-  text-align: left;
-  position: relative;
-}
-.arch-cell:last-child { border-right: 1px solid var(--border); }
-.arch-cell::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  transform: translateY(-50%) rotate(45deg);
-  border-top: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  background: var(--card);
-  z-index: 1;
-}
-.arch-cell:last-child::after { display: none; }
-.arch-layer-label { font-size: 0.66rem; letter-spacing: 0.1em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
-.arch-layer-name { font-weight: 900; font-size: 0.9rem; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
-.arch-layer-codes { font-size: 0.66rem; color: var(--text-muted); line-height: 1.5; word-break: break-word; }
-.arch-cell[data-layer="conceptual"] { border-top: 3px solid #6E2C2C; }
-.arch-cell[data-layer="core"] { border-top: 3px solid #CC1400; }
-.arch-cell[data-layer="structural"] { border-top: 3px solid #2C3E50; }
-.arch-cell[data-layer="detection"] { border-top: 3px solid #1A5276; }
-.arch-cell[data-layer="output"] { border-top: 3px solid #121212; background: var(--surface); }
-@media (max-width: 880px) {
-  .arch-flow { grid-template-columns: 1fr; }
-  .arch-cell { border-right: 1px solid var(--border); border-bottom: none; }
-  .arch-cell:last-child { border-bottom: 1px solid var(--border); }
-  .arch-cell::after { display: none; }
-}
+    /* Books */
+    .book-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+    .book-card {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .book-card:last-child { border-bottom: none; }
+    .book-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .book-card-tag {
+      font-family: "SF Mono", monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent-warm);
+      background: var(--accent-muted);
+      padding: 2px 8px;
+      letter-spacing: 0.04em;
+    }
+    .book-card-name {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .book-card-stat {
+      font-family: "SF Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .book-card-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px; }
+    .book-card-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 12px; }
+    .book-card-meta span { padding: 2px 8px; border: 1px solid var(--border-light); }
+    .book-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .book-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .book-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); text-decoration: none; }
+    .book-btn--primary { background: var(--accent-warm); border-color: var(--accent-warm); color: #fff; }
+    .book-btn--primary:hover { background: #B01200; border-color: #B01200; color: #fff; }
 
-/* ============ Action links ============ */
-.action-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 32px 0; font-family: var(--font); }
-.action-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  border: 1px solid var(--border);
-  color: var(--text);
-  background: var(--card);
-  transition: all 0.15s;
-}
-.action-link:hover { border-color: var(--accent-warm); color: var(--accent-warm); text-decoration: none; }
-.action-link--primary {
-  background: var(--accent-warm);
-  border-color: var(--accent-warm);
-  color: #fff;
-}
-.action-link--primary:hover { background: var(--accent-warm-soft); border-color: var(--accent-warm-soft); color: #fff; }
+    /* Integrated dashboard CTA */
+    .dash-cta {
+      margin: 8px 0 0;
+      padding: 26px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent-warm);
+    }
+    .dash-cta-eyebrow {
+      font-size: 0.66rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-warm);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .dash-cta-title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .dash-cta-desc { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.85; margin-bottom: 18px; }
+    .dash-cta-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* ============ DB layer cards (rendered by databases.js) ============ */
-.db-overview { display: none; }
-.db-layer {
-  margin-bottom: 32px;
-  border: 1px solid var(--border);
-  background: var(--card);
-}
-.db-layer-header {
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--surface);
-}
-.db-layer-title {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  font-weight: 900;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-.db-layer-desc {
-  font-family: var(--font);
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-.db-layer-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 0;
-}
-.db-entry {
-  padding: 20px 22px;
-  border-bottom: 1px solid var(--border-light);
-  border-right: 1px solid var(--border-light);
-  font-family: var(--font);
-  transition: background 0.12s;
-}
-.db-entry:hover { background: var(--card-hover); }
-.db-layer-grid > .db-entry:last-child { border-right: none; }
-.db-entry-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
-.db-entry-id {
-  font-family: "SF Mono", monospace;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--accent-warm);
-  background: var(--accent-muted);
-  padding: 2px 8px;
-  letter-spacing: 0.05em;
-}
-.db-entry-name { font-size: 0.88rem; font-weight: 700; color: var(--text); }
-.db-entry-stat {
-  font-family: var(--font-serif);
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-.db-entry-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.75; }
-.db-entry-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-light);
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-.db-entry-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.db-dashboard-link {
-  display: inline-block;
-  padding: 5px 11px;
-  background: var(--accent-muted);
-  color: var(--accent-warm);
-  font-size: 0.74rem;
-  font-weight: 700;
-}
-.db-dashboard-link:hover { background: var(--accent-warm); color: #fff; text-decoration: none; }
-
-.db-supplementary { margin-top: 32px; padding: 24px; background: var(--surface); border: 1px solid var(--border); }
-.db-supplementary-title {
-  font-family: var(--font-serif);
-  font-size: 0.95rem;
-  font-weight: 900;
-  color: var(--text);
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--text);
-  display: inline-block;
-  letter-spacing: 0.02em;
-}
-.db-supplementary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-  font-family: var(--font);
-}
-.db-supplementary-item {
-  padding: 14px 16px;
-  background: var(--card);
-  border: 1px solid var(--border-light);
-  font-size: 0.78rem;
-  line-height: 1.7;
-}
-.db-supplementary-item strong { display: block; font-weight: 700; color: var(--text); margin-bottom: 4px; font-size: 0.84rem; }
-
-.db-extra-section { margin-top: 32px; }
-.db-extra-header { margin-bottom: 16px; }
-.db-extra-title {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  font-weight: 900;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-.db-extra-desc { font-family: var(--font); font-size: 0.8rem; color: var(--text-secondary); line-height: 1.7; }
-.db-extra-section .db-layer-grid { border: 1px solid var(--border); background: var(--card); }
-
-/* ============ Books section ============ */
-.book-grid { display: grid; grid-template-columns: 1fr; gap: 0; border: 1px solid var(--border); background: var(--card); }
-.book-card {
-  padding: 22px 24px;
-  border-bottom: 1px solid var(--border-light);
-  font-family: var(--font);
-}
-.book-card:last-child { border-bottom: none; }
-.book-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-.book-card-tag {
-  font-family: "SF Mono", monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--accent-warm);
-  background: var(--accent-muted);
-  padding: 2px 8px;
-  letter-spacing: 0.04em;
-}
-.book-card-name {
-  font-family: var(--font-serif);
-  font-size: 1.05rem;
-  font-weight: 900;
-  color: var(--text);
-}
-.book-card-stat {
-  font-family: "SF Mono", monospace;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-  margin-bottom: 8px;
-}
-.book-card-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px; }
-.book-card-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 12px; }
-.book-card-meta span { padding: 2px 8px; border: 1px solid var(--border-light); }
-.book-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.book-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  border: 1px solid var(--border);
-  color: var(--text);
-  background: var(--bg);
-  font-family: var(--font);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.book-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); text-decoration: none; }
-.book-btn--primary { background: var(--accent-warm); border-color: var(--accent-warm); color: #fff; }
-.book-btn--primary:hover { background: var(--accent-warm-soft); border-color: var(--accent-warm-soft); color: #fff; }
-
-/* ============ Dashboard CTA ============ */
-.dash-cta {
-  margin: 16px 0;
-  padding: 32px 28px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent-warm);
-  font-family: var(--font);
-}
-.dash-cta-eyebrow { font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-warm); font-weight: 700; margin-bottom: 8px; }
-.dash-cta-title { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 900; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
-.dash-cta-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.85; margin-bottom: 18px; }
-.dash-cta-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
-
-.loading-indicator { padding: 60px 0; text-align: center; color: var(--text-muted); font-family: var(--font); font-size: 0.85rem; }
-.loading-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent-warm); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-footer.page-footer {
-  margin-top: 80px;
-  padding: 40px 0;
-  border-top: 1px solid var(--border);
-  font-family: var(--font);
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  text-align: center;
-  line-height: 1.7;
-}
-
-@media (max-width: 1000px) {
-  .book-layout { grid-template-columns: 1fr; padding: 0 16px; }
-  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
-  .book-main { padding: 24px 0 60px; max-width: 100%; }
-  .book-title { font-size: 1.6rem; }
-  .chapter-title { font-size: 1.25rem; }
-}
-@media print {
-  .top-bar, .toc-sidebar, .theme-toggle, #app-nav, #app-footer { display: none !important; }
-  body { font-size: 11pt; line-height: 1.6; }
-  .book-layout { grid-template-columns: 1fr; padding: 0; max-width: 100%; }
-  .book-main { padding: 0; max-width: 100%; }
-  .chapter-section { page-break-inside: avoid; border-bottom: none; padding-bottom: 24px; margin-bottom: 24px; }
-}
-</style>
+    .loading-indicator { padding: 60px 0; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+    .loading-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent-warm); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
+  <div id="app-nav"></div>
 
-<div id="app-nav"></div>
+  <main class="container">
 
-<div class="top-bar">
-  <div class="top-bar-brand">MIRATUKU NEWS / <span>DATABASES</span></div>
-  <div class="top-bar-actions">
-    <a class="back-link" href="home.html">← Home</a>
-    <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
-  </div>
-</div>
-
-<div class="book-layout">
-
-  <nav class="toc-sidebar" aria-label="目次">
-    <div class="toc-label">CONTENTS</div>
-    <ol class="toc-list">
-      <li><a href="#overview"><span class="toc-num">01</span>パイプライン概要</a></li>
-      <li><a href="#architecture"><span class="toc-num">02</span>4層アーキテクチャ</a></li>
-      <li><a href="#dashboard"><span class="toc-num">03</span>統合ダッシュボード</a></li>
-      <li><a href="#databases"><span class="toc-num">04</span>データベース一覧</a></li>
-      <li><a href="#books"><span class="toc-num">05</span>書籍・レポート</a></li>
-      <li><a href="#tools"><span class="toc-num">06</span>関連ツール</a></li>
-    </ol>
-    <a href="integrated.html" class="toc-cta">統合ダッシュボード →</a>
-  </nav>
-
-  <main class="book-main">
-
-    <header class="book-header">
-      <div class="book-eyebrow">INTELLIGENCE PIPELINE</div>
-      <h1 class="book-title">データベース<br>— ミラツク・インテリジェンス・パイプラインを支える30+のデータソース</h1>
-      <p class="book-subtitle">基軸データベースが情報を蓄積し、構造理解が分析フレームを提供し、変化検出がセンサーとして機能し、概念基盤が知識の文脈を与える。4層に分類された統合知識インフラの全体像。</p>
-      <div class="book-meta">
+    <section class="app-section">
+      <div class="section-header">
+        <h1 class="section-title">データベース</h1>
+        <span class="section-subtitle">ミラツク・インテリジェンス・パイプラインを支える30+のデータソース</span>
+      </div>
+      <p class="page-lead">基軸データベースが情報を蓄積し、構造理解が分析フレームを提供し、変化検出がセンサーとして機能し、概念基盤が知識の文脈を与える。4層に分類された統合知識インフラの全体像。</p>
+      <div class="page-meta">
         <span><strong>30+</strong> データベース</span>
         <span><strong>4層</strong> アーキテクチャ</span>
         <span><strong>日次更新</strong></span>
         <span>v1.2 / 2026-05-06</span>
       </div>
-    </header>
-
-    <!-- Section 01: Overview -->
-    <section class="chapter-section" id="overview">
-      <div class="chapter-number-label">SECTION 01</div>
-      <h2 class="chapter-title">パイプライン概要</h2>
-      <p class="lead">ミラツク・インテリジェンス・パイプラインは、4つの層に分類されたデータベースで構成される。基軸データベースが日次で情報を蓄積し、構造理解が分析フレームを提供し、変化検出がセンサーとして機能し、概念基盤が知識の文脈を与える。各層は独立して機能しつつ相互参照し、有望領域の特定という一つの目的に向かって連携する。</p>
 
       <div id="kpiOverview" class="kpi-row" hidden></div>
 
@@ -635,11 +370,12 @@ footer.page-footer {
       </div>
     </section>
 
-    <!-- Section 02: Architecture -->
-    <section class="chapter-section" id="architecture">
-      <div class="chapter-number-label">SECTION 02</div>
-      <h2 class="chapter-title">4層アーキテクチャ</h2>
-      <p class="lead">概念基盤・基軸DB・構造理解・変化検出という4層のデータベース群が、有望領域の特定という最終出力に向かって流れる。各層は独立した役割を持ちつつ、互いに参照し合うことで、単独では捉えられない構造的変化を可視化する。</p>
+    <section class="app-section" id="architecture">
+      <div class="section-header">
+        <h2 class="section-title">4層アーキテクチャ</h2>
+        <span class="section-subtitle">概念基盤・基軸DB・構造理解・変化検出 — 有望領域の特定に向かうデータの流れ</span>
+      </div>
+      <p class="page-lead">概念基盤・基軸DB・構造理解・変化検出という4層のデータベース群が、有望領域の特定という最終出力に向かって流れる。各層は独立した役割を持ちつつ、互いに参照し合うことで、単独では捉えられない構造的変化を可視化する。</p>
 
       <div class="arch-flow">
         <div class="arch-cell" data-layer="conceptual">
@@ -670,11 +406,11 @@ footer.page-footer {
       </div>
     </section>
 
-    <!-- Section 03: Integrated Dashboard CTA -->
-    <section class="chapter-section" id="dashboard">
-      <div class="chapter-number-label">SECTION 03</div>
-      <h2 class="chapter-title">統合ダッシュボード</h2>
-      <p class="lead">31データベースを横断するライブKPI・レイヤー別分析・フィルタリング検索を備えた統合ダッシュボード。db-registry.json駆動で、新規DB追加が自動反映される。</p>
+    <section class="app-section" id="dashboard">
+      <div class="section-header">
+        <h2 class="section-title">統合ダッシュボード</h2>
+        <span class="section-subtitle">31DB横断・ライブKPI・全文検索</span>
+      </div>
 
       <div class="dash-cta">
         <div class="dash-cta-eyebrow">INTEGRATED DASHBOARD</div>
@@ -688,11 +424,12 @@ footer.page-footer {
       </div>
     </section>
 
-    <!-- Section 04: Database list -->
-    <section class="chapter-section" id="databases">
-      <div class="chapter-number-label">SECTION 04</div>
-      <h2 class="chapter-title">データベース一覧</h2>
-      <p class="lead">db-registry.json に基づく動的レンダリング。各DBは個別ダッシュボード・教科書・レポートへの直接リンクを持つ。</p>
+    <section class="app-section" id="databases">
+      <div class="section-header">
+        <h2 class="section-title">データベース一覧</h2>
+        <span class="section-subtitle">db-registry.json による動的レンダリング</span>
+      </div>
+      <p class="page-lead">各DBは個別ダッシュボード・教科書・レポートへの直接リンクを持つ。</p>
 
       <div class="db-overview" id="dbOverview"></div>
 
@@ -701,11 +438,11 @@ footer.page-footer {
       </div>
     </section>
 
-    <!-- Section 05: Books -->
-    <section class="chapter-section" id="books">
-      <div class="chapter-number-label">SECTION 05</div>
-      <h2 class="chapter-title">書籍・レポート</h2>
-      <p class="lead">データベースに基づく学術書籍・教科書・分析レポート。すべて赤白CIで統一されたtextbookスタイルで公開。</p>
+    <section class="app-section" id="books">
+      <div class="section-header">
+        <h2 class="section-title">書籍・レポート</h2>
+        <span class="section-subtitle">データベースに基づく学術書籍・教科書・分析レポート</span>
+      </div>
 
       <div class="book-grid">
 
@@ -857,11 +594,11 @@ footer.page-footer {
       </div>
     </section>
 
-    <!-- Section 06: Tools -->
-    <section class="chapter-section" id="tools">
-      <div class="chapter-number-label">SECTION 06</div>
-      <h2 class="chapter-title">関連ツール</h2>
-      <p class="lead">データベース上に構築された分析・調査・予測ツール群。</p>
+    <section class="app-section" id="tools">
+      <div class="section-header">
+        <h2 class="section-title">関連ツール</h2>
+        <span class="section-subtitle">データベース上に構築された分析・調査・予測ツール群</span>
+      </div>
 
       <div class="action-links">
         <a href="https://yuyanishimura0312.github.io/foresight-tools/" class="action-link">Foresight Tools →</a>
@@ -875,111 +612,91 @@ footer.page-footer {
       </div>
     </section>
 
-    <footer class="page-footer">
-      <p>© 2026 NPO法人ミラツク / Insight News — Intelligence Pipeline</p>
-      <p style="margin-top: 8px;">本ページは赤白CIデザインシステム準拠（textbook.html / 赤#CC1400）</p>
-    </footer>
-
   </main>
 
-</div>
+  <div id="app-footer"></div>
 
-<div id="app-footer"></div>
-
-<script>
-function toggleTheme() {
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
-}
-const saved = localStorage.getItem('theme');
-if (saved) document.documentElement.setAttribute('data-theme', saved);
-
-function renderKpiOverview(stats) {
-  if (!stats) return;
-  var el = document.getElementById('kpiOverview');
-  if (!el) return;
-  el.innerHTML =
-    '<div class="kpi-cell"><div class="kpi-label">DATABASES</div><div class="kpi-value">' + stats.totalDatabases + '</div></div>' +
-    '<div class="kpi-cell"><div class="kpi-label">TOTAL RECORDS</div><div class="kpi-value">' + stats.totalRecords + '</div></div>' +
-    '<div class="kpi-cell"><div class="kpi-label">LAYERS</div><div class="kpi-value">' + stats.layers + '</div></div>' +
-    '<div class="kpi-cell"><div class="kpi-label">UPDATE</div><div class="kpi-value" style="font-size:1.05rem">' + stats.updateFrequency + '</div></div>';
-  el.hidden = false;
-}
-
-fetch('data/db-registry.json')
-  .then(function(r) { return r.json(); })
-  .then(function(data) { renderKpiOverview(data.totalStats); })
-  .catch(function() {});
-</script>
-<script src="js/shared/utilities.js"></script>
-<script src="js/shared/nav.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var area = document.getElementById('authArea');
-  if (area) area.innerHTML = '';
-});
-</script>
-<script src="js/pages/databases.js"></script>
-<script>
-async function downloadSingleBookTXT(url, filename) {
-  var btn = event.target; btn.textContent = '...'; btn.disabled = true;
-  try {
-    var res = await fetch(url);
-    var html = await res.text();
-    var text = html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
-    text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
-    text = text.replace(/<svg[^>]*>[\s\S]*?<\/svg>/g, '[図]');
-    text = text.replace(/<h1[^>]*>(.*?)<\/h1>/g, '\n\n========== $1 ==========\n\n');
-    text = text.replace(/<h2[^>]*>(.*?)<\/h2>/g, '\n\n== $1 ==\n\n');
-    text = text.replace(/<h3[^>]*>(.*?)<\/h3>/g, '\n--- $1 ---\n\n');
-    text = text.replace(/<br\s*\/?>/g, '\n');
-    text = text.replace(/<\/p>/g, '\n\n');
-    text = text.replace(/<[^>]+>/g, '');
-    text = text.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&mdash;/g,'—').replace(/&rarr;/g,'→').replace(/&larr;/g,'←').replace(/&nbsp;/g,' ');
-    text = text.replace(/\n{3,}/g, '\n\n').trim();
-    var blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
-    var a = document.createElement('a'); a.download = filename; a.href = URL.createObjectURL(blob); a.click();
-  } catch(e) { alert('ダウンロード失敗: ' + e.message); }
-  btn.textContent = 'TXT'; btn.disabled = false;
-}
-
-function downloadSingleBookPDF(url, title) {
-  var w = window.open(url, '_blank');
-  setTimeout(function() { try { w.print(); } catch(e) {} }, 2000);
-}
-
-async function downloadTaBookTXT() {
-  var btn = event.target; btn.textContent = '...'; btn.disabled = true;
-  try {
-    var base = 'book/tech-acceleration/chapters/';
-    var chapters = ['ch01-introduction','ch02-theorists','ch03-density','ch04-lognormal','ch05-industrial-revolution','ch06-stagnation','ch07-three-groups','ch08-network','ch09-four-types','ch10-domains','ch11-scurves','ch12-lifecycle','ch13-science-paradox','ch14-catalyst-effect','ch15-timelag','ch16-bidirectional','ch17-future-map','ch18-investment','ch19-foresight','ch20-open-db','appendix-a','appendix-b','appendix-c','appendix-d'];
-    var fullText = '技術の未来\nNPO法人ミラツク 編\n\n';
-    for (var i = 0; i < chapters.length; i++) {
-      try {
-        var res = await fetch(base + chapters[i] + '.html');
-        var html = await res.text();
-        var art = html.match(/<div class="article">([\s\S]*?)<\/div>\s*(?:<div class="chapter-nav"|<footer)/);
-        var content = art ? art[1] : html;
-        content = content.replace(/<style[^>]*>[\s\S]*?<\/style>/g,'').replace(/<script[^>]*>[\s\S]*?<\/script>/g,'').replace(/<svg[^>]*>[\s\S]*?<\/svg>/g,'[図]');
-        content = content.replace(/<h2[^>]*>(.*?)<\/h2>/g,'\n\n== $1 ==\n\n').replace(/<h3[^>]*>(.*?)<\/h3>/g,'\n--- $1 ---\n\n');
-        content = content.replace(/<\/p>/g,'\n\n').replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'');
-        content = content.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&mdash;/g,'—').replace(/&nbsp;/g,' ');
-        content = content.replace(/\n{3,}/g,'\n\n').trim();
-        fullText += '\n\n' + '='.repeat(50) + '\n' + chapters[i] + '\n' + '='.repeat(50) + '\n\n' + content;
-      } catch(e) { fullText += '\n[' + chapters[i] + ': エラー]\n'; }
+  <script>
+    function renderKpiOverview(stats) {
+      var el = document.getElementById('kpiOverview');
+      if (!el) return;
+      el.innerHTML =
+        '<div class="kpi-cell"><div class="kpi-label">DATABASES</div><div class="kpi-value">' + stats.totalDatabases + '</div></div>' +
+        '<div class="kpi-cell"><div class="kpi-label">TOTAL RECORDS</div><div class="kpi-value">' + stats.totalRecords + '</div></div>' +
+        '<div class="kpi-cell"><div class="kpi-label">LAYERS</div><div class="kpi-value">' + stats.layers + '</div></div>' +
+        '<div class="kpi-cell"><div class="kpi-label">UPDATE</div><div class="kpi-value" style="font-size:1.05rem">' + stats.updateFrequency + '</div></div>';
+      el.hidden = false;
     }
-    var blob = new Blob([fullText], { type: 'text/plain; charset=utf-8' });
-    var a = document.createElement('a'); a.download = 'tech-acceleration.txt'; a.href = URL.createObjectURL(blob); a.click();
-  } catch(e) { alert('ダウンロード失敗: ' + e.message); }
-  btn.textContent = 'TXT'; btn.disabled = false;
-}
 
-function downloadTaBookPDF() {
-  var w = window.open('book/tech-acceleration/index.html', '_blank');
-  setTimeout(function() { try { w.print(); } catch(e) {} }, 2000);
-}
-</script>
+    fetch('data/db-registry.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) { renderKpiOverview(data.totalStats); })
+      .catch(function() {});
+  </script>
+  <script src="js/shared/utilities.js"></script>
+  <script src="js/shared/data-cache.js"></script>
+  <script src="js/shared/auth-guard.js"></script>
+  <script src="js/shared/nav.js"></script>
+  <script src="js/shared/article-modal.js"></script>
+  <script src="js/pages/databases.js"></script>
+  <script>
+    async function downloadSingleBookTXT(url, filename) {
+      var btn = event.target; btn.textContent = '...'; btn.disabled = true;
+      try {
+        var res = await fetch(url);
+        var html = await res.text();
+        var text = html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, '');
+        text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+        text = text.replace(/<svg[^>]*>[\s\S]*?<\/svg>/g, '[図]');
+        text = text.replace(/<h1[^>]*>(.*?)<\/h1>/g, '\n\n========== $1 ==========\n\n');
+        text = text.replace(/<h2[^>]*>(.*?)<\/h2>/g, '\n\n== $1 ==\n\n');
+        text = text.replace(/<h3[^>]*>(.*?)<\/h3>/g, '\n--- $1 ---\n\n');
+        text = text.replace(/<br\s*\/?>/g, '\n');
+        text = text.replace(/<\/p>/g, '\n\n');
+        text = text.replace(/<[^>]+>/g, '');
+        text = text.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&mdash;/g,'—').replace(/&rarr;/g,'→').replace(/&larr;/g,'←').replace(/&nbsp;/g,' ');
+        text = text.replace(/\n{3,}/g, '\n\n').trim();
+        var blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
+        var a = document.createElement('a'); a.download = filename; a.href = URL.createObjectURL(blob); a.click();
+      } catch(e) { alert('ダウンロード失敗: ' + e.message); }
+      btn.textContent = 'TXT'; btn.disabled = false;
+    }
+
+    function downloadSingleBookPDF(url, title) {
+      var w = window.open(url, '_blank');
+      setTimeout(function() { try { w.print(); } catch(e) {} }, 2000);
+    }
+
+    async function downloadTaBookTXT() {
+      var btn = event.target; btn.textContent = '...'; btn.disabled = true;
+      try {
+        var base = 'book/tech-acceleration/chapters/';
+        var chapters = ['ch01-introduction','ch02-theorists','ch03-density','ch04-lognormal','ch05-industrial-revolution','ch06-stagnation','ch07-three-groups','ch08-network','ch09-four-types','ch10-domains','ch11-scurves','ch12-lifecycle','ch13-science-paradox','ch14-catalyst-effect','ch15-timelag','ch16-bidirectional','ch17-future-map','ch18-investment','ch19-foresight','ch20-open-db','appendix-a','appendix-b','appendix-c','appendix-d'];
+        var fullText = '技術の未来\nNPO法人ミラツク 編\n\n';
+        for (var i = 0; i < chapters.length; i++) {
+          try {
+            var res = await fetch(base + chapters[i] + '.html');
+            var html = await res.text();
+            var art = html.match(/<div class="article">([\s\S]*?)<\/div>\s*(?:<div class="chapter-nav"|<footer)/);
+            var content = art ? art[1] : html;
+            content = content.replace(/<style[^>]*>[\s\S]*?<\/style>/g,'').replace(/<script[^>]*>[\s\S]*?<\/script>/g,'').replace(/<svg[^>]*>[\s\S]*?<\/svg>/g,'[図]');
+            content = content.replace(/<h2[^>]*>(.*?)<\/h2>/g,'\n\n== $1 ==\n\n').replace(/<h3[^>]*>(.*?)<\/h3>/g,'\n--- $1 ---\n\n');
+            content = content.replace(/<\/p>/g,'\n\n').replace(/<br\s*\/?>/g,'\n').replace(/<[^>]+>/g,'');
+            content = content.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&mdash;/g,'—').replace(/&nbsp;/g,' ');
+            content = content.replace(/\n{3,}/g,'\n\n').trim();
+            fullText += '\n\n' + '='.repeat(50) + '\n' + chapters[i] + '\n' + '='.repeat(50) + '\n\n' + content;
+          } catch(e) { fullText += '\n[' + chapters[i] + ': エラー]\n'; }
+        }
+        var blob = new Blob([fullText], { type: 'text/plain; charset=utf-8' });
+        var a = document.createElement('a'); a.download = 'tech-acceleration.txt'; a.href = URL.createObjectURL(blob); a.click();
+      } catch(e) { alert('ダウンロード失敗: ' + e.message); }
+      btn.textContent = 'TXT'; btn.disabled = false;
+    }
+
+    function downloadTaBookPDF() {
+      var w = window.open('book/tech-acceleration/index.html', '_blank');
+      setTimeout(function() { try { w.print(); } catch(e) {} }, 2000);
+    }
+  </script>
 </body>
 </html>
