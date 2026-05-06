@@ -48,9 +48,10 @@ initNav('databases');
         if (dbItem.dashboard) supLinks.push('<a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9 &rarr;</a>');
         if (dbItem.report) supLinks.push('<a href="' + safeUrl(dbItem.report) + '" class="db-dashboard-link">\u30ec\u30dd\u30fc\u30c8 &rarr;</a>');
         if (dbItem.textbook) supLinks.push('<a href="' + safeUrl(dbItem.textbook) + '" class="db-dashboard-link">\u6559\u79d1\u66f8 &rarr;</a>');
-        html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa) + '</strong>' +
-          '<div>' + escapeHtml(dbItem.stat) + '</div>' +
-          '<div style="color:var(--text-muted);margin-top:2px">' + escapeHtml(dbItem.description) + '</div>' +
+        var supAgentBadge = dbItem.agent ? ' <span class="db-entry-agent" title="Claude Code\u3067' + escapeHtml(dbItem.agent) + '\u3067\u8d77\u52d5">' + escapeHtml(dbItem.agent) + '</span>' : '';
+        html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa || dbItem.name_ja || dbItem.name) + '</strong>' + supAgentBadge +
+          '<div>' + escapeHtml(dbItem.stat || '') + '</div>' +
+          '<div style="color:var(--text-muted);margin-top:2px">' + escapeHtml(dbItem.description || '') + '</div>' +
           (supLinks.length ? '<div style="margin-top:6px">' + supLinks.join(' ') + '</div>' : '') +
           '</div>';
       });
@@ -93,9 +94,16 @@ initNav('databases');
     if (dbItem.timeline) links.push('<a href="' + safeUrl(dbItem.timeline) + '" class="db-dashboard-link">\u6642\u4ee3\u5909\u9077DB &rarr;</a>');
     if (dbItem.report) links.push('<a href="' + safeUrl(dbItem.report) + '" class="db-dashboard-link">\u30ec\u30dd\u30fc\u30c8 &rarr;</a>');
 
+    // Agent badge (Claude Code slash command)
+    var agentBadge = '';
+    if (dbItem.agent) {
+      agentBadge = '<span class="db-entry-agent" title="Claude Code\u3067' + escapeHtml(dbItem.agent) + '\u3067\u8d77\u52d5">' + escapeHtml(dbItem.agent) + '</span>';
+    }
+
     return '<div class="db-entry"><div class="db-entry-header">' +
       '<span class="db-entry-id">' + escapeHtml(dbItem.id) + '</span>' +
-      '<span class="db-entry-name">' + escapeHtml(dbItem.nameJa) + '</span></div>' +
+      '<span class="db-entry-name">' + escapeHtml(dbItem.nameJa) + '</span>' +
+      agentBadge + '</div>' +
       '<div class="db-entry-stat">' + escapeHtml(dbItem.stat) + '</div>' +
       '<div class="db-entry-desc">' + escapeHtml(dbItem.description) + '</div>' +
       (meta ? '<div class="db-entry-meta">' + meta + '</div>' : '') +

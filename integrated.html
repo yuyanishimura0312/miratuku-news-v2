@@ -21,6 +21,7 @@
       --layer-core:       #CC1400;
       --layer-structural: #2C3E50;
       --layer-detection:  #1A5276;
+      --layer-commercialization: #B8860B;
       --layer-supplementary: #6C3483;
     }
     [data-theme="dark"] {
@@ -28,6 +29,7 @@
       --layer-core:       #FF4444;
       --layer-structural: #7799BB;
       --layer-detection:  #5599CC;
+      --layer-commercialization: #DCB050;
       --layer-supplementary: #AA77CC;
     }
 
@@ -68,6 +70,7 @@
     .id-arch-cell[data-layer="core"] { border-top: 3px solid var(--layer-core); }
     .id-arch-cell[data-layer="structural"] { border-top: 3px solid var(--layer-structural); }
     .id-arch-cell[data-layer="detection"] { border-top: 3px solid var(--layer-detection); }
+    .id-arch-cell[data-layer="commercialization"] { border-top: 3px solid var(--layer-commercialization); }
     .id-arch-cell[data-layer="supplementary"] { border-top: 3px solid var(--layer-supplementary); }
     @media (max-width: 880px) { .id-arch-flow { grid-template-columns: 1fr; } .id-arch-cell { border-right: 1px solid var(--border); border-bottom: none; } .id-arch-cell:last-child { border-bottom: 1px solid var(--border); } .id-arch-cell::after { display: none; } }
 
@@ -101,6 +104,7 @@
     .id-db-card[data-layer="core"] { border-left-color: var(--layer-core); }
     .id-db-card[data-layer="structural"] { border-left-color: var(--layer-structural); }
     .id-db-card[data-layer="detection"] { border-left-color: var(--layer-detection); }
+    .id-db-card[data-layer="commercialization"] { border-left-color: var(--layer-commercialization); }
     .id-db-card[data-layer="supplementary"] { border-left-color: var(--layer-supplementary); }
     .id-db-card-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
     .id-db-id { font-family: "JetBrains Mono", "SF Mono", Consolas, monospace; font-size: 0.78rem; font-weight: 700; padding: 2px 7px; background: var(--surface); color: var(--text); letter-spacing: 0.04em; }
@@ -114,6 +118,9 @@
     .id-db-link { font-size: 0.78rem; color: var(--text); font-weight: 600; text-decoration: none; padding: 4px 10px; border: 1px solid var(--border); background: var(--card); transition: all 120ms; }
     .id-db-link:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
     .id-db-link.repo { color: var(--text-muted); }
+    .id-db-link.agent { font-family: "JetBrains Mono", "SF Mono", monospace; color: var(--accent-warm); border-color: var(--accent-warm); letter-spacing: 0.02em; }
+    .id-db-link.agent:hover { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+    .id-db-agent-badge { font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 0.68rem; font-weight: 600; color: var(--accent-warm); padding: 1px 6px; border: 1px solid var(--accent-warm); margin-left: 6px; letter-spacing: 0.02em; }
 
     .id-empty-state { padding: 60px 20px; text-align: center; color: var(--text-muted); border: 1px dashed var(--border); }
 
@@ -153,7 +160,7 @@
       <div class="id-hero-eyebrow">Intelligence Pipeline · Integrated View</div>
       <h1 class="id-hero-title">統合ダッシュボード</h1>
       <p class="id-hero-sub">
-        ミラツク・インテリジェンス・パイプラインを構成する全データベースを単一の画面で俯瞰する統合ビュー。<span id="kpiInline">31データベース・220万レコード超</span>を、概念基盤・基軸・構造理解・変化検出・補助の5レイヤーで構造化し、規模・更新頻度・接続関係を横断的に可視化します。
+        ミラツク・インテリジェンス・パイプラインを構成する全データベースを単一の画面で俯瞰する統合ビュー。<span id="kpiInline">39データベース・専門エージェント完全配備</span>を、概念基盤・基軸・構造理解・変化検出・補助の5レイヤーで構造化し、規模・更新頻度・接続関係・Claude Code slash commandを横断的に可視化します。
       </p>
     </section>
 
@@ -249,6 +256,7 @@
       core: '基軸DB',
       structural: '構造理解',
       detection: '変化検出',
+      commercialization: '事業化',
       supplementary: '補助DB'
     };
     var LAYER_DESC = {
@@ -256,9 +264,10 @@
       core: '日次更新で最新情報を蓄積する基軸データソース群',
       structural: '深層構造で分析するためのフレームワーク群',
       detection: '専門領域から変化兆候を検出するセンサー群',
+      commercialization: '事業創造・マネタイズ・経営判断を支える応用エンジン基盤',
       supplementary: 'マクロ経済・規制・特殊領域の補助データソース群'
     };
-    var LAYER_ORDER = ['conceptual', 'core', 'structural', 'detection', 'supplementary'];
+    var LAYER_ORDER = ['conceptual', 'core', 'structural', 'detection', 'commercialization', 'supplementary'];
 
     // ===== Init =====
     document.addEventListener('DOMContentLoaded', function() {
@@ -291,13 +300,29 @@
     // ===== Helpers =====
     function flattenDbs(reg) {
       var out = [];
+      var seen = {};
       (reg.layers || []).forEach(function(layer) {
         (layer.databases || []).forEach(function(db) {
+          if (db.id) seen[db.id] = 1;
           out.push(Object.assign({}, db, { layer: layer.id, layerName: layer.name }));
         });
       });
+      (reg.extraSections || []).forEach(function(section) {
+        (section.databases || []).forEach(function(db) {
+          // skip if already in layers (BM/MS/MPV duplicate)
+          if (db.id && seen[db.id]) return;
+          if (db.id) seen[db.id] = 1;
+          out.push(Object.assign({}, db, { layer: section.id, layerName: section.name }));
+        });
+      });
       (reg.supplementary || []).forEach(function(db) {
-        out.push(Object.assign({}, db, { layer: 'supplementary', layerName: '補助DB' }));
+        if (db.id && seen[db.id]) return;
+        if (db.id) seen[db.id] = 1;
+        out.push(Object.assign({}, db, {
+          layer: 'supplementary',
+          layerName: '補助DB',
+          nameJa: db.nameJa || db.name_ja || db.name
+        }));
       });
       return out;
     }
@@ -344,11 +369,16 @@
       var dailyCount = ALL_DBS.filter(function(d) { return classifyUpdate(d.update) === '日次'; }).length;
       var sqliteCount = ALL_DBS.filter(function(d) { return (d.storage || '').indexOf('SQLite') !== -1; }).length;
       var dashboardCount = ALL_DBS.filter(function(d) { return d.dashboard; }).length;
+      var agentCount = (function() {
+        var s = {};
+        ALL_DBS.forEach(function(d) { if (d.agent) s[d.agent] = 1; });
+        return Object.keys(s).length;
+      })();
 
       var kpis = [
         { label: 'Databases', value: ALL_DBS.length, unit: '' },
         { label: 'Total Records', value: fmtNum(totalRecords) + '+', unit: '' },
-        { label: 'Storage', value: (totalSize / 1024).toFixed(1), unit: 'GB' },
+        { label: 'Agents', value: agentCount, unit: '' },
         { label: 'Daily Updates', value: dailyCount, unit: 'DBs' },
         { label: 'Live Dashboards', value: dashboardCount, unit: '' }
       ];
@@ -360,7 +390,7 @@
 
       // Inline KPI in hero
       var inline = document.getElementById('kpiInline');
-      if (inline) inline.textContent = ALL_DBS.length + 'データベース・' + fmtNum(totalRecords) + '+レコード・約' + (totalSize / 1024).toFixed(1) + 'GB';
+      if (inline) inline.textContent = ALL_DBS.length + 'データベース・' + fmtNum(totalRecords) + '+レコード・' + agentCount + 'エージェント';
     }
 
     // ===== Architecture flow =====
@@ -499,6 +529,9 @@
       }
       if (d.url && (!d.dashboard || d.url !== d.dashboard)) {
         actions += '<a class="id-db-link" href="' + d.url + '" target="_blank" rel="noopener">サイト →</a>';
+      }
+      if (d.agent) {
+        actions += '<span class="id-db-link agent" title="Claude Codeで ' + d.agent + ' で起動">' + d.agent + '</span>';
       }
       if (d.repo) {
         actions += '<a class="id-db-link repo" href="https://github.com/yuyanishimura0312/' + d.repo + '" target="_blank" rel="noopener">repo</a>';
