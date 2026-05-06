@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>哲学概念知識DB / Philosophy Concepts DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "JetBrains Mono", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font); font-feature-settings: "palt";
+  letter-spacing: 0.025em; line-height: 1.85;
+}
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 48px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  border-top: 3px solid #121212;
+  display: flex; align-items: center; padding: 0 24px;
+  z-index: 100; justify-content: space-between;
+}
+.brand { font-weight: 700; font-size: 14px; color: var(--accent-warm); }
+.brand .sub { color: var(--text-muted); font-weight: 400; margin-left: 12px; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border); padding: 4px 12px;
+  border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--text);
+}
+.layout { display: grid; grid-template-columns: 240px 1fr; padding-top: 48px; min-height: 100vh; }
+.toc-sidebar {
+  border-right: 1px solid var(--border); padding: 32px 20px;
+  position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto;
+  font-size: 13px;
+}
+.toc-sidebar h3 { color: var(--text-muted); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 12px; }
+.toc-sidebar ol { list-style: none; padding: 0; margin: 0; }
+.toc-sidebar li { margin: 6px 0; }
+.toc-sidebar a { color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.toc-sidebar a .num { color: var(--text-muted); font-family: var(--font-mono); margin-right: 6px; font-size: 11px; }
+main { padding: 48px 64px; max-width: 1100px; }
+h1 { font-family: var(--font-serif); font-size: 36px; font-weight: 700; margin: 0 0 8px; line-height: 1.2; }
+h2 { font-family: var(--font-serif); font-size: 24px; font-weight: 700; margin: 64px 0 24px; padding-top: 32px; border-top: 1px solid var(--border-light); }
+h2 .num { color: var(--accent-warm); font-family: var(--font-mono); font-size: 14px; margin-right: 12px; vertical-align: middle; }
+.subtitle { color: var(--text-secondary); font-size: 15px; margin: 0 0 24px; }
+.metadata { color: var(--text-muted); font-size: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light); }
+section { margin-bottom: 64px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+.kpi { padding: 24px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); }
+.kpi-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.kpi-value { font-family: var(--font-serif); font-size: 36px; font-weight: 700; color: var(--accent-warm); }
+.kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); }
+th { background: var(--surface); font-weight: 700; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+.civ-bar { width: 30%; }
+.bar { height: 8px; background: var(--accent-warm); border-radius: 2px; }
+.civ-count, .civ-pct { font-family: var(--font-mono); }
+.en-name { color: var(--text-muted); font-size: 12px; font-style: italic; }
+.defn { font-size: 13px; color: var(--text-secondary); max-width: 400px; }
+p { text-indent: 1em; margin: 16px 0; line-height: 1.95; }
+p:first-of-type { text-indent: 0; }
+.note { background: var(--accent-muted); padding: 16px 20px; border-left: 3px solid var(--accent-warm); margin: 24px 0; font-size: 14px; }
+.theme-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.theme-item { padding: 12px 16px; border: 1px solid var(--border); border-radius: 4px; }
+.theme-item .label { font-weight: 700; font-size: 13px; color: var(--accent-warm); }
+.theme-item .desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+@media print {
+  .top-bar, .toc-sidebar, .theme-toggle { display: none; }
+  main { padding: 0; }
+  .layout { grid-template-columns: 1fr; padding-top: 0; }
+}
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  main { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+<header class="top-bar">
+  <div class="brand">PHIL — Philosophy Concepts DB <span class="sub">ミラツク学術知識基盤</span></div>
+  <button class="theme-toggle" onclick="toggleTheme()">テーマ切替</button>
+</header>
+<div class="layout">
+  <nav class="toc-sidebar">
+    <h3>目次</h3>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要</a></li>
+      <li><a href="#civilization"><span class="num">02</span>文明圏配分</a></li>
+      <li><a href="#subfield"><span class="num">03</span>サブフィールド</a></li>
+      <li><a href="#era"><span class="num">04</span>時代分布</a></li>
+      <li><a href="#relations"><span class="num">05</span>関係ネットワーク</a></li>
+      <li><a href="#philosophers"><span class="num">06</span>主要哲学者</a></li>
+      <li><a href="#ai_themes"><span class="num">07</span>AI時代テーマ</a></li>
+      <li><a href="#concepts"><span class="num">08</span>主要概念抜粋</a></li>
+      <li><a href="#methodology"><span class="num">09</span>方法論</a></li>
+    </ol>
+  </nav>
+  <main>
+    <h1>哲学概念知識データベース</h1>
+    <p class="subtitle">Philosophy Concepts Knowledge DB — 第四変容（AI時代）における概念再考の知的基盤</p>
+    <p class="metadata">最終更新: 2026-05-07 ／ 概念数: 304 ／ 関係数: 4396 ／ 関係比: 14.46x</p>
+
+    <section id="overview">
+      <h2><span class="num">01</span>概要</h2>
+      <p>本データベースは、枢軸時代・ルネサンス・産業革命を経て第四の変容期となるAI時代において、根源概念の問い直しを支える哲学知の基盤として構築されている。西洋哲学の偏重を補正するため、東洋哲学・非西欧グローバル哲学を等価に収録し、各概念について時代背景・原語表記・系譜の展開・現代的再解釈を体系化する。</p>
+      <p>収録対象は19のサブフィールド（西洋7・東洋5・グローバル4・横断3）と1つの横串インデックス（AI時代の哲学）から構成される。各概念には文明圏・時代区分・原語スクリプト・転写・主要原典が付与され、加えてAI時代の問い直しへの寄与度（transformation_relevance, 0-10）と該当テーマ（心・人格・知識・倫理・実在・自然・時間・社会・自他・技術）がタグ付けされる。</p>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">概念数</div><div class="kpi-value">304</div><div class="kpi-sub">目標 8,000-10,000</div></div>
+        <div class="kpi"><div class="kpi-label">関係数</div><div class="kpi-value">4396</div><div class="kpi-sub">概念比 14.46x</div></div>
+        <div class="kpi"><div class="kpi-label">サブフィールド</div><div class="kpi-value">15</div><div class="kpi-sub">19+1 サブフィールド</div></div>
+        <div class="kpi"><div class="kpi-label">文明圏</div><div class="kpi-value">9</div><div class="kpi-sub">西洋偏重補正済み</div></div>
+      </div>
+    </section>
+
+    <section id="civilization">
+      <h2><span class="num">02</span>文明圏配分</h2>
+      <p>哲学DBは伝統的な西洋偏重を是正するため、目標として西洋45%・東洋35%・非西欧グローバル20%の配分を採用している。下表は現時点の実配分である。</p>
+      <table>
+        <thead><tr><th>文明圏</th><th>件数</th><th>分布</th><th>比率</th></tr></thead>
+        <tbody>
+        <tr>
+          <td class="civ-name">西洋</td>
+          <td class="civ-count">140</td>
+          <td class="civ-bar"><div class="bar" style="width:100%"></div></td>
+          <td class="civ-pct">46.1%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">東アジア</td>
+          <td class="civ-count">62</td>
+          <td class="civ-bar"><div class="bar" style="width:44%"></div></td>
+          <td class="civ-pct">20.4%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">横断</td>
+          <td class="civ-count">22</td>
+          <td class="civ-bar"><div class="bar" style="width:15%"></div></td>
+          <td class="civ-pct">7.2%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">東アジア+南アジア</td>
+          <td class="civ-count">14</td>
+          <td class="civ-bar"><div class="bar" style="width:10%"></div></td>
+          <td class="civ-pct">4.6%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">南アジア</td>
+          <td class="civ-count">14</td>
+          <td class="civ-bar"><div class="bar" style="width:10%"></div></td>
+          <td class="civ-pct">4.6%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">先住民</td>
+          <td class="civ-count">14</td>
+          <td class="civ-bar"><div class="bar" style="width:10%"></div></td>
+          <td class="civ-pct">4.6%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">ラテン</td>
+          <td class="civ-count">13</td>
+          <td class="civ-bar"><div class="bar" style="width:9%"></div></td>
+          <td class="civ-pct">4.3%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">アフリカ</td>
+          <td class="civ-count">13</td>
+          <td class="civ-bar"><div class="bar" style="width:9%"></div></td>
+          <td class="civ-pct">4.3%</td>
+        </tr>
+        <tr>
+          <td class="civ-name">イスラーム圏</td>
+          <td class="civ-count">12</td>
+          <td class="civ-bar"><div class="bar" style="width:8%"></div></td>
+          <td class="civ-pct">3.9%</td>
+        </tr></tbody>
+      </table>
+    </section>
+
+    <section id="subfield">
+      <h2><span class="num">03</span>サブフィールド分布</h2>
+      <p>16の地域・時代別サブフィールド（横串タグとして倫理・応用・美学を含む）の概念配分を示す。各サブフィールドの目標件数は時代の知的生産量に応じて250-750で配分されている。</p>
+      <table>
+        <thead><tr><th>サブフィールド</th><th>件数</th></tr></thead>
+        <tbody><tr><td>western_ancient</td><td>114</td></tr><tr><td>chinese_philosophy</td><td>34</td></tr><tr><td>neo_confucianism</td><td>14</td></tr><tr><td>japanese_philosophy</td><td>14</td></tr><tr><td>indigenous_philosophy</td><td>14</td></tr><tr><td>indian_philosophy</td><td>14</td></tr><tr><td>buddhist_philosophy</td><td>14</td></tr><tr><td>western_medieval</td><td>13</td></tr><tr><td>western_early_modern</td><td>13</td></tr><tr><td>latin_decolonial</td><td>13</td></tr><tr><td>african_philosophy</td><td>13</td></tr><tr><td>islamic_philosophy</td><td>12</td></tr><tr><td>ethics_political</td><td>8</td></tr><tr><td>applied_philosophy</td><td>7</td></tr><tr><td>aesthetics</td><td>7</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="era">
+      <h2><span class="num">04</span>時代分布</h2>
+      <p>時代分布は、枢軸時代から現代までの哲学的生産を反映する。古典哲学（古代・中世）と現代哲学（20-21世紀）の両極に重みを置きつつ、間の時代も適切にカバーすることを意図している。</p>
+      <table>
+        <thead><tr><th>時代区分</th><th>件数</th></tr></thead>
+        <tbody><tr><td>古代(前枢軸)</td><td>19</td></tr><tr><td>古代</td><td>100</td></tr><tr><td>枢軸時代</td><td>61</td></tr><tr><td>古代後期</td><td>7</td></tr><tr><td>中世</td><td>37</td></tr><tr><td>ルネサンス・近世</td><td>21</td></tr><tr><td>19世紀</td><td>1</td></tr><tr><td>20世紀前半</td><td>9</td></tr><tr><td>20-21世紀</td><td>41</td></tr><tr><td>AI時代</td><td>8</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="relations">
+      <h2><span class="num">05</span>関係ネットワーク</h2>
+      <p>概念間の関係は10種以上の意味的関係タイプで表現される。派生・拡張・批判・統合・対立・復興・翻訳・応用・文脈化・再解釈・関連の各タイプは、思想史における概念の継承と変容を構造化する。</p>
+      <table>
+        <thead><tr><th>関係タイプ</th><th>件数</th></tr></thead>
+        <tbody><tr><td>reinterprets</td><td>2334</td></tr><tr><td>related_to</td><td>1258</td></tr><tr><td>contextualizes</td><td>466</td></tr><tr><td>extends</td><td>338</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="philosophers">
+      <h2><span class="num">06</span>主要哲学者</h2>
+      <p>本DBに収録された概念の創始者・展開者として最も多く登場する哲学者の上位を示す。複数の概念に貢献した思想家ほど高位となる。</p>
+      <table>
+        <thead><tr><th>哲学者</th><th>関与概念数</th></tr></thead>
+        <tbody><tr><td>Ancient Greek Philosophers</td><td>53</td></tr><tr><td>Ancient Philosophers</td><td>47</td></tr><tr><td>孔子</td><td>18</td></tr><tr><td>孟子</td><td>9</td></tr><tr><td>Aristotle</td><td>7</td></tr><tr><td>釈迦牟尼仏</td><td>5</td></tr><tr><td>Immanuel Kant</td><td>5</td></tr><tr><td>Thomas Aquinas</td><td>4</td></tr><tr><td>ウパニシャッド聖賢</td><td>4</td></tr><tr><td>朱熹</td><td>4</td></tr><tr><td>王陽明</td><td>4</td></tr><tr><td>西田幾多郎</td><td>3</td></tr><tr><td>Aboriginal traditions</td><td>3</td></tr><tr><td>René Descartes</td><td>3</td></tr><tr><td>曾子</td><td>3</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="ai_themes">
+      <h2><span class="num">07</span>AI時代テーマ別関連度</h2>
+      <p>第四変容期において再考が必要な10のテーマに沿って、関連する概念数の分布を示す。各概念は複数のテーマに該当する場合もあり、その合計は概念数を超えうる。</p>
+      <table>
+        <thead><tr><th>テーマ</th><th>関連概念数</th></tr></thead>
+        <tbody><tr><td>ontology (ontology)</td><td>72</td></tr><tr><td>reality (reality)</td><td>57</td></tr><tr><td>ethics (ethics)</td><td>41</td></tr><tr><td>知識・認識 (theme_knowledge)</td><td>36</td></tr><tr><td>knowledge (knowledge)</td><td>36</td></tr><tr><td>倫理・行為 (theme_ethics)</td><td>34</td></tr><tr><td>実在・存在論 (theme_reality)</td><td>32</td></tr><tr><td>emotion (emotion)</td><td>28</td></tr><tr><td>judgment (judgment)</td><td>28</td></tr><tr><td>人格・主体 (theme_personhood)</td><td>22</td></tr><tr><td>心・意識 (theme_mind)</td><td>19</td></tr><tr><td>自己と他者 (theme_self_other)</td><td>18</td></tr><tr><td>社会・正義 (theme_society)</td><td>16</td></tr><tr><td>fundamental (fundamental)</td><td>15</td></tr><tr><td>自然・人間の位置 (theme_nature)</td><td>13</td></tr><tr><td>技術哲学 (theme_technology)</td><td>10</td></tr><tr><td>時間・歴史 (theme_time)</td><td>7</td></tr><tr><td>personhood (personhood)</td><td>3</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="concepts">
+      <h2><span class="num">08</span>主要概念抜粋（AI時代関連度順）</h2>
+      <p>transformation_relevanceが高い順に主要概念を抜粋する。これらは第四変容期の問い直しに最も直接的に寄与すると評価された概念である。</p>
+      <table>
+        <thead><tr><th>概念</th><th>時代</th><th>文明圏</th><th>学派</th><th>定義</th><th>関連度</th></tr></thead>
+        <tbody>
+        <tr>
+          <td><strong>仁</strong> / 仁<br><span class="en-name">Ren</span></td>
+          <td>BC551</td>
+          <td>東アジア</td>
+          <td>儒家</td>
+          <td class="defn">人間的徳性の最高表現。他者への思いやりと慈愛に基づく道徳性。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>イデア論</strong> / Θεωρία τῶν ἰδεῶν<br><span class="en-name">Theory of Forms</span></td>
+          <td>BC380</td>
+          <td>西洋</td>
+          <td>プラトン主義</td>
+          <td class="defn">感覚世界の事物は永遠不変のイデア（理念）の不完全な模倣であるとする実在論。プラトンが『国家』『パイドン』『パイドロス』で展開した形而上学の核。現象界と超越的価値の二元論を確立。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>実体論・四原因説</strong> / οὐσία<br><span class="en-name">Substance Theory and Four Causes</span></td>
+          <td>BC340</td>
+          <td>西洋</td>
+          <td>アリストテレス主義</td>
+          <td class="defn">事物の本質は実体（ousia）であり、変化・生成は質料因・形相因・作用因・目的因の4つの原因で説明される。質料と形相の合成体として個別的事物が存在。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>普遍論争（実在論vs名目論）</strong> / Universalia<br><span class="en-name">Problem of Universals</span></td>
+          <td>AD1100</td>
+          <td>西洋</td>
+          <td>スコラ学派</td>
+          <td class="defn">普遍的なもの（人間性等）は個別的なもの（具体的人間）に先在するか、同時存在するか。個別と普遍の存在論的地位に関する根本的論争。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>物心二元論</strong> / Res cogitans / Res extensa<br><span class="en-name">Mind-Body Dualism</span></td>
+          <td>AD1641</td>
+          <td>西洋</td>
+          <td>大陸合理論</td>
+          <td class="defn">精神（思考実体）と物質（延長実体）は本質的に異なる。相互作用の問題を生じさせながら西洋近世の心身問題の原型を確立。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>人間の尊厳と道徳法則</strong> / Würde der Menschheit<br><span class="en-name">Human Dignity and Categorical Imperative</span></td>
+          <td>AD1785</td>
+          <td>西洋</td>
+          <td>ドイツ観念論</td>
+          <td class="defn">人間は手段ではなく目的自体として尊重される。普遍化可能性テストによる道徳性の判定。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>AI倫理における責任の分散と集中の問題</strong><br><span class="en-name">Distributed Responsibility</span></td>
+          <td>AD2010</td>
+          <td>横断</td>
+          <td></td>
+          <td class="defn">複数のアクターが関与する自動システムにおいて責任をどこに帰属させるか。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>アルゴリズムによる差別と自動意思決定の透明性</strong><br><span class="en-name">Algorithmic Fairness</span></td>
+          <td>AD2018</td>
+          <td>横断</td>
+          <td></td>
+          <td class="defn">データセットの偏り、アルゴリズムの差別性。ブラックボックスの問題。</td>
+          <td>9</td>
+        </tr>
+        <tr>
+          <td><strong>カントリー：土地との精神的関係</strong><br><span class="en-name">Country</span></td>
+          <td>BC40000</td>
+          <td>先住民</td>
+          <td></td>
+          <td class="defn">土地は生命体。人間は相互的責任をもつ。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>アンセストリズム：祖先との継続的関係</strong><br><span class="en-name">Ancestralism</span></td>
+          <td>BC1000</td>
+          <td>アフリカ</td>
+          <td></td>
+          <td class="defn">祖先は死後も社会的・精神的存在として機能。生存者との相互的関係性が継続。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>セブン・ジェネレーションズ：七世代先を見る視点</strong><br><span class="en-name">Seven Generations</span></td>
+          <td>BC1000</td>
+          <td>先住民</td>
+          <td></td>
+          <td class="defn">すべての決定は七世代後の影響を考慮すべき。長期志向的思考枠組み。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>スマック・カウサイ（十分な生活）</strong><br><span class="en-name">Sumak Kawsay</span></td>
+          <td>BC1000</td>
+          <td>先住民</td>
+          <td></td>
+          <td class="defn">自然との調和的共存。限定的消費。物質的充足ではなく精神的充足。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>アルケー</strong> / ἀρχή<br><span class="en-name">Arche</span></td>
+          <td>BC600</td>
+          <td>西洋</td>
+          <td>前ソクラテス派</td>
+          <td class="defn">万物の根本となる根源的要素または原理。ミレス派哲学では、水・空気・火などの物質的基層として考えられた。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>アナクシメネス</strong> / Ἀναξιμένης<br><span class="en-name">Anaximenes</span></td>
+          <td>BC588</td>
+          <td>西洋</td>
+          <td>ミレス派</td>
+          <td class="defn">ミレス派哲学者。空気をアルケー（根本原理）とし、凝縮と希薄化で説明。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>アペイロン</strong> / τὸ ἄπειρον<br><span class="en-name">Apeiron</span></td>
+          <td>BC580</td>
+          <td>西洋</td>
+          <td>ミレス派</td>
+          <td class="defn">アナクシマンドレスが提唱した、無限定で具体的な性質を持たない基本物質。すべての対立物を含む根源的物質。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>ピュタゴラス</strong> / Πυθαγόρας<br><span class="en-name">Pythagoras</span></td>
+          <td>BC570</td>
+          <td>西洋</td>
+          <td>前ソクラテス派</td>
+          <td class="defn">古代ギリシア哲学者。数学的調和と輪廻転生を説いた。神秘主義的伝統の創設者。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>クセノファネス</strong> / Ξενοφάνης<br><span class="en-name">Xenophanes</span></td>
+          <td>BC570</td>
+          <td>西洋</td>
+          <td>前ソクラテス派</td>
+          <td class="defn">古代ギリシア哲学者。一神論を示唆し、神学的真理と自然哲学を統合。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>義</strong> / 義<br><span class="en-name">Yi</span></td>
+          <td>BC551</td>
+          <td>東アジア</td>
+          <td>儒家</td>
+          <td class="defn">正義と道義。状況に応じて正しい行為を実践する能力。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>信</strong> / 信<br><span class="en-name">Xin</span></td>
+          <td>BC551</td>
+          <td>東アジア</td>
+          <td>儒家</td>
+          <td class="defn">誠実さと信頼。約束を守り言葉に責任を持つこと。儒家五常の第五。</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><strong>孝</strong> / 孝<br><span class="en-name">Xiao</span></td>
+          <td>BC551</td>
+          <td>東アジア</td>
+          <td>儒家</td>
+          <td class="defn">親への敬孝と祖先の祭祀。儒家の家族倫理の最基本。</td>
+          <td>8</td>
+        </tr></tbody>
+      </table>
+    </section>
+
+    <section id="methodology">
+      <h2><span class="num">09</span>方法論</h2>
+      <p>本データベースは7フェーズの構築プロセス（スコーピング→サーベイ→収集→検証→関係構築→成果物→公開）を経ている。Phase 0で19サブフィールドの目標件数マトリクスとパブリックドメイン原典マッピングを確定し、Phase 1で各サブフィールドの必須概念チェックリストを生成、Phase 2でCodex 20名並列収集による大規模拡張を実施した。</p>
+      <p>原文情報の精度確保のため、Project Gutenberg・Perseus Digital Library・CBETA・Chinese Text Project・GRETIL・Al-Maktaba al-Shamela・国立国会図書館デジタルコレクション等のパブリックドメイン原典を一次情報源として活用している。各概念のoriginal_termは原語スクリプト（古典ギリシア語polytonic / Devanagari / Han / Arabic / Tibetan等）を保持し、IAST・Pinyin・Hepburn等の標準転写法による補助表記を併記する。</p>
+      <p>本DBは経営学DB（3,369概念）・人類学DB（500概念）・詩学DB（1,121概念）・innovation DB（9,839概念）等の既存31の学術知識DBと cross_domain_relations を介して接続される。哲学概念は他学問分野の理論的基盤を提供し、逆に他分野の実証研究は哲学的問いの具体的文脈を提供する。</p>
+      <div class="note">
+        本DBは継続的に拡張されている。最終目標は概念8,000-10,000、関係24,000-50,000、サブフィールド配分の均等化（最大/最小 < 2倍）、原語充填率100%である。
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("phil-theme", next);
+}
+const saved = localStorage.getItem("phil-theme");
+if (saved) document.documentElement.setAttribute("data-theme", saved);
+</script>
+</body>
+</html>
