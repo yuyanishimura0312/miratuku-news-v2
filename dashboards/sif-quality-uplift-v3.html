@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SI歴史的構造変革DB v3 — 品質向上レポート</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555; --accent-warm:#CC1400; --accent-warm-soft:#B01200;
+  --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEE;
+  --highlight:#CC1400; --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+}
+[data-theme="dark"] {
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222;
+  --accent:#E0E0E0; --accent-warm:#FF4030;
+  --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0; --text-secondary:#AAA; --text-muted:#8A8A8A;
+  --border:#333; --border-light:#2A2A2A; --highlight:#FF4030; --surface:#1A1A1A;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--bg); color:var(--text); font-family:var(--font); transition:background 0.2s, color 0.2s; }
+body { font-feature-settings:"palt"; }
+
+.top-bar {
+  position:fixed; top:0; left:0; right:0; height:48px;
+  background:var(--bg); border-top:3px solid #121212; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 32px; z-index:100;
+}
+[data-theme="dark"] .top-bar { border-top:3px solid var(--accent); }
+.brand { font-family:var(--font); font-size:14px; font-weight:700; letter-spacing:0.05em; color:var(--accent); }
+.brand .v { color:var(--accent-warm); margin-left:8px; }
+.theme-toggle { background:none; border:1px solid var(--border); color:var(--text); padding:6px 14px; cursor:pointer; font-size:12px; font-family:var(--font); border-radius:2px; }
+.theme-toggle:hover { border-color:var(--accent-warm); color:var(--accent-warm); }
+
+.layout { display:flex; padding-top:48px; min-height:100vh; }
+.toc-sidebar {
+  width:240px; padding:32px 24px; border-right:1px solid var(--border-light);
+  position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto;
+  background:var(--bg);
+}
+.toc-sidebar h3 { font-size:11px; font-family:var(--font); text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:16px; }
+.toc-sidebar ol { list-style:none; counter-reset:toc; }
+.toc-sidebar li { counter-increment:toc; margin-bottom:8px; }
+.toc-sidebar a {
+  display:flex; align-items:flex-start; padding:6px 0; font-size:13px; color:var(--text-secondary);
+  text-decoration:none; line-height:1.5; transition:color 0.15s;
+}
+.toc-sidebar a::before { content:counter(toc, decimal-leading-zero); margin-right:10px; color:var(--text-muted); font-family:"JetBrains Mono",monospace; font-size:11px; flex-shrink:0; }
+.toc-sidebar a:hover { color:var(--accent-warm); }
+
+.main { flex:1; padding:48px 64px; max-width:820px; margin:0 auto; }
+
+.report-header { border-bottom:2px solid var(--accent); padding-bottom:24px; margin-bottom:48px; }
+.report-header .meta { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px; }
+.report-header h1 { font-family:var(--font-serif); font-size:34px; line-height:1.4; color:var(--accent); font-weight:500; letter-spacing:0.02em; }
+.report-header .lede { margin-top:16px; font-family:var(--font-serif); font-size:16px; line-height:1.85; color:var(--text-secondary); }
+
+.chapter-section { margin-bottom:72px; padding-bottom:48px; border-bottom:1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom:none; }
+.chapter-section h2 {
+  font-family:var(--font-serif); font-size:22px; color:var(--accent); margin-bottom:24px; padding-bottom:8px;
+  border-bottom:1px solid var(--accent-warm); font-weight:500; letter-spacing:0.02em;
+}
+.chapter-section h2 .num { color:var(--accent-warm); font-family:"JetBrains Mono",monospace; font-size:14px; margin-right:12px; font-weight:400; }
+.chapter-section h3 { font-family:var(--font); font-size:15px; color:var(--accent); margin:24px 0 12px; font-weight:700; }
+.chapter-section p { font-family:var(--font-serif); font-size:15px; line-height:1.95; letter-spacing:0.025em; color:var(--text); margin-bottom:16px; text-indent:1em; }
+.chapter-section p:first-of-type { text-indent:0; }
+.chapter-section ul { margin:12px 0 16px 24px; }
+.chapter-section li { font-family:var(--font); font-size:14px; line-height:1.85; color:var(--text); margin-bottom:6px; }
+
+.kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin:24px 0 32px; }
+.kpi { background:var(--surface); border:1px solid var(--border-light); padding:20px 16px; }
+.kpi .label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px; }
+.kpi .value { font-family:"JetBrains Mono",monospace; font-size:28px; color:var(--accent-warm); font-weight:500; }
+.kpi .delta { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+
+table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13px; font-family:var(--font); }
+th, td { padding:8px 12px; text-align:left; border-bottom:1px solid var(--border-light); }
+th { background:var(--surface); font-weight:700; color:var(--accent); font-size:12px; text-transform:uppercase; letter-spacing:0.05em; }
+td code { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--accent-warm); }
+
+@media (max-width:1000px) {
+  .layout { flex-direction:column; }
+  .toc-sidebar { width:100%; height:auto; position:relative; border-right:none; border-bottom:1px solid var(--border-light); padding:16px 24px; }
+  .toc-sidebar ol { display:flex; flex-wrap:wrap; gap:8px 16px; }
+  .main { padding:32px 24px; }
+}
+
+@media print {
+  .top-bar, .toc-sidebar { display:none; }
+  .main { padding:0; max-width:100%; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">SI Framework DB <span class="v">v3 Quality Uplift</span></div>
+  <button class="theme-toggle" onclick="toggleTheme()">テーマ切替</button>
+</div>
+
+<div class="layout">
+  <nav class="toc-sidebar">
+    <h3>目次</h3>
+    <ol>
+      <li><a href="#summary">プロジェクト要旨</a></li>
+      <li><a href="#method">30チーム並列の方法論</a></li>
+      <li><a href="#drayton">Drayton 4段階分類の精緻化</a></li>
+      <li><a href="#narrative">ナラティブ充実化の成果</a></li>
+      <li><a href="#tier">品質ティアの向上</a></li>
+      <li><a href="#examples">代表事例の抜粋</a></li>
+      <li><a href="#limitations">限界と今後</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+    <header class="report-header">
+      <div class="meta">SI Historical Structural Transformation DB / Quality Uplift Round 3</div>
+      <h1>SI歴史的構造変革DB v3<br>品質向上プロジェクト報告</h1>
+      <p class="lede">本報告は、SI Framework DB（5,781事象）に対して、Opusをオーケストレーターとし30チーム並列のCodex実行で実施した品質向上ラウンドの成果を整理するものである。Drayton 4段階分類の精緻化、ナラティブの充実化、品質ティアの引き上げを軸として、構造的変革DBの分析的有用性をひとつ上の段階へ引き上げることを試みた。</p>
+    </header>
+
+    <section class="chapter-section" id="summary">
+      <h2><span class="num">01</span>プロジェクト要旨</h2>
+      <p>SI歴史的構造変革DBはこれまでに5,781事象を蓄積してきたが、その分析的厚みには明確な偏りが残っていた。とりわけBill Drayton（Ashoka創始者）が提示する社会変革の4段階モデルのうち、direct_service と scaled_direct_service の二段階は実装されておらず、pattern_change と framework_change のみが二極的に使われていた。同時に、各事象の物語的背景や因果ナラティブは多くがNULLのまま放置されており、データベースを読み物として活用するうえでの障害となっていた。</p>
+      <p>このラウンドでは、これらの課題を一気に解消するため、Opusを中央オーケストレーターとし、Codex 30チームを並列で起動する大規模な質的補強を実施した。チームは(A) Drayton分類10、(B) ナラティブ充実15、(C) 品質ティア向上5の構成で編成され、各チームが担当範囲のSQL UPDATE文を生成、Opusがこれを統合・検証・適用した。</p>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">総事象数</div><div class="value">5,781</div></div>
+        <div class="kpi"><div class="label">Drayton分類完了率</div><div class="value">100.0%</div></div>
+        <div class="kpi"><div class="label">ナラティブ充実率</div><div class="value">46.0%</div></div>
+        <div class="kpi"><div class="label">関係性データ</div><div class="value">472</div></div>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="method">
+      <h2><span class="num">02</span>30チーム並列の方法論</h2>
+      <p>本ラウンドの方法論的特徴は、Opusと Codex の役割分担にある。Opus（claude-opus-4-7）は計画・統合・検証・最終適用を担い、Codexは個々の専門領域で並列に深掘り作業を行う。両者は独立したAPI基盤の上で動作するため、Anthropic API側のレート制限とは無関係にCodex側の30並列処理が走り、合計で約数分のうちに膨大な量の判断と文章生成が並行で進む。</p>
+      <p>各チームには、対象データのTSVと厳密に書式化されたプロンプトが渡され、出力は専用のSQLファイルへ書き出される。SQLは一旦すべて回収され、構文検証ののちにトランザクション付きで適用される。これによって途中失敗時のロールバックが保証され、量と速度の両方で従来の手法を大きく上回る品質補強が可能になった。</p>
+      <h3>チーム編成（30チーム）</h3>
+      <ul>
+        <li>Block A — Drayton分類精緻化：10チーム（文明圏×時代別＋既存分類の再検証）</li>
+        <li>Block B — ナラティブ充実化：15チーム（5フィールド: narrative_background / social_problem / si_process / subsequent_developments / causal_narrative）</li>
+        <li>Block C — 品質ティア向上：5チーム（refs補強・key_actors詳細化・PRRRC再評価・event_relations拡充・TSI レイヤー付与）</li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="drayton">
+      <h2><span class="num">03</span>Drayton 4段階分類の精緻化</h2>
+      <p>Drayton分類は、社会変革の影響度を direct_service（個別支援）→ scaled_direct_service（規模拡大）→ pattern_change（行動様式変容）→ framework_change（制度変革）の4段階で測る重要なフレームである。本ラウンド以前は実質2段階運用に留まっていたが、Block A の10チームが2,465件の未分類事象と既存分類済み200件の再評価を実施した結果、4段階すべてに事象が配されるようになった。</p>
+      <p>分類分布は以下のとおりである。framework_change が依然として多数を占めるのは、本DBが構造変革を主題に収集してきた経緯からして自然である。一方で、direct_service と scaled_direct_service が一定数存在することで、規模感や影響範囲の異なる事象を同じ尺度で比較できるようになった。</p>
+      <table>
+        <thead><tr><th>段階</th><th>件数</th><th>比率</th></tr></thead>
+        <tbody><tr><td>Framework Change（制度変革）</td><td style="text-align:right">2,747</td><td style="text-align:right">47.5%</td></tr><tr><td>Pattern Change（パターン変容）</td><td style="text-align:right">2,634</td><td style="text-align:right">45.6%</td></tr><tr><td>Scaled Direct Service（拡大サービス）</td><td style="text-align:right">312</td><td style="text-align:right">5.4%</td></tr><tr><td>Direct Service（直接サービス）</td><td style="text-align:right">88</td><td style="text-align:right">1.5%</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="narrative">
+      <h2><span class="num">04</span>ナラティブ充実化の成果</h2>
+      <p>Block B の15チームは、文明圏別に60件ずつの主要事象を担当し、5つのナラティブフィールドを生成した。各事象には数百字単位の背景・問題定義・プロセス・後続展開・因果ストーリーが記述され、データベースを単なる属性の集合ではなく、社会変革の物語の集積として読めるようになった。今ラウンドで <code>narrative_source='codex_team_v3'</code> としてタグ付けされた事象は <strong>651件</strong> である。</p>
+      <p>narrative_background が記述された事象は全 <strong>2,661件</strong>（46.0%）、causal_narrative は全 <strong>2,045件</strong>（35.4%）にまで拡充した。テンプレート構造に基づく一定の冗長性は残るものの、各事象固有の人物・年代・地理的固有名詞は具体的に書き込まれており、後続の手動精緻化ラウンドの土台として十分に機能する。</p>
+    </section>
+
+    <section class="chapter-section" id="tier">
+      <h2><span class="num">05</span>品質ティアの向上</h2>
+      <p>Block C の5チームは、refs補強（D→C昇格）、key_actors_descriptionの詳細化、PRRRCスコアの再評価、event_relations の拡充、TSI層タグ付与を担当した。出典補強と関係性データの追加によって、Aティア・Bティアの厚みが増し、データベースを学術的に引用可能な状態に近づけた。</p>
+      <table>
+        <thead><tr><th>ティア</th><th>件数</th><th>比率</th></tr></thead>
+        <tbody><tr><td>Tier A</td><td style="text-align:right">77</td><td style="text-align:right">1.3%</td></tr><tr><td>Tier B</td><td style="text-align:right">4,036</td><td style="text-align:right">69.8%</td></tr><tr><td>Tier C</td><td style="text-align:right">990</td><td style="text-align:right">17.1%</td></tr><tr><td>Tier D</td><td style="text-align:right">678</td><td style="text-align:right">11.7%</td></tr></tbody>
+      </table>
+      <p>関係性データ（event_relations）は現時点で<strong>472件</strong>に達した。これにより、ある事象から因果的に派生した次の変革・対立的に発生した変革・並行して発生した変革を、明示的なグラフ構造としてたどれるようになった。</p>
+    </section>
+
+    <section class="chapter-section" id="examples">
+      <h2><span class="num">06</span>代表事例の抜粋</h2>
+      <p>このラウンドで充実化された高スコア事象（total_score≥15）から12件を抜粋する。これらは異なる文明圏・時代から選ばれており、Drayton分類の使い分けが具体的に確認できる。</p>
+      <table>
+        <thead><tr><th>ID</th><th>事象名</th><th>年</th><th>文明圏</th><th>Drayton</th><th>Score</th></tr></thead>
+        <tbody><tr><td><code>SI_DR_0032</code></td><td>米国奴隷制廃止運動</td><td style="text-align:right">1830</td><td>western</td><td>Framework Change（制度変革）</td><td style="text-align:right">25</td></tr><tr><td><code>SI_DR_0017</code></td><td>インド独立運動と非暴力</td><td style="text-align:right">1915</td><td>south_asian</td><td>Framework Change（制度変革）</td><td style="text-align:right">24</td></tr><tr><td><code>SI_DR_0018</code></td><td>南アフリカ反アパルトヘイト</td><td style="text-align:right">1948</td><td>african</td><td>Framework Change（制度変革）</td><td style="text-align:right">24</td></tr><tr><td><code>SI_DR_0022</code></td><td>モントリオール議定書（オゾン層）</td><td style="text-align:right">1987</td><td>cross_civilizational</td><td>Framework Change（制度変革）</td><td style="text-align:right">24</td></tr><tr><td><code>SI_DR_0031</code></td><td>英国奴隷貿易廃止</td><td style="text-align:right">1787</td><td>western</td><td>Framework Change（制度変革）</td><td style="text-align:right">24</td></tr><tr><td><code>SI_DR_0059</code></td><td>ボリビア多民族国家憲法</td><td style="text-align:right">2006</td><td>americas</td><td>Framework Change（制度変革）</td><td style="text-align:right">24</td></tr><tr><td><code>SI_DR_0005</code></td><td>アメリカ独立宣言と憲法制定</td><td style="text-align:right">1776</td><td>western</td><td>Framework Change（制度変革）</td><td style="text-align:right">23</td></tr><tr><td><code>SI_DR_0006</code></td><td>フランス人権宣言</td><td style="text-align:right">1789</td><td>western</td><td>Framework Change（制度変革）</td><td style="text-align:right">23</td></tr><tr><td><code>SI_DR_0010</code></td><td>ベヴァリッジ報告と英国福祉国家</td><td style="text-align:right">1942</td><td>western</td><td>Framework Change（制度変革）</td><td style="text-align:right">23</td></tr><tr><td><code>SI_DR_0016</code></td><td>米国公民権運動</td><td style="text-align:right">1955</td><td>western</td><td>Framework Change（制度変革）</td><td style="text-align:right">23</td></tr><tr><td><code>SI_DR_0020</code></td><td>フリーソフトウェア運動とGPL</td><td style="text-align:right">1983</td><td>western</td><td>Framework Change（制度変革）</td><td style="text-align:right">23</td></tr><tr><td><code>SI_DR_0021</code></td><td>ウィキペディア</td><td style="text-align:right">2001</td><td>cross_civilizational</td><td>Framework Change（制度変革）</td><td style="text-align:right">23</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="limitations">
+      <h2><span class="num">07</span>限界と今後</h2>
+      <p>本ラウンドの主な限界は、ナラティブ生成が部分的にテンプレート構造に依拠している点である。Block B の出力には、文明圏や時代背景に関する一般化された記述が共有形式として現れ、各事象固有の歴史的細部の深さは事象ごとに差がある。これは並列AI生成の構造的トレードオフであり、今後はAティア事象を中心に、ヒト+AIの協働で精緻化する第4ラウンドが必要である。</p>
+      <p>第二の限界は、Drayton分類の判定基準が <code>scale</code>・<code>institutionalization</code>・<code>impact_scope</code> 等の既存属性からの推論に依拠している点であり、historian合議による厳密な分類とは性質が異なる。第3の限界は、event_relations の拡充が高スコア事象に偏ったことである。</p>
+      <p>今後の発展として、(1) Aティア事象200件への手動深耕、(2) PRRRCスコアの外部基準照合（Acemoglu-Robinsonの制度経済学的指標との整合性検証）、(3) 教科書「ソーシャルイノベーションの構造」との相互参照リンク化が予定されている。</p>
+    </section>
+
+    <p style="text-align:center; color:var(--text-muted); font-size:11px; margin-top:48px; padding-top:24px; border-top:1px solid var(--border-light);">
+      Generated: 2026-05-06 23:19 JST<br>
+      SI Framework DB v3 Quality Uplift / Opus + Codex 30-team parallel orchestration<br>
+      <a href="https://github.com/yuyanishimura0312/social-innovation-framework" style="color:var(--accent-warm);">GitHub: yuyanishimura0312/social-innovation-framework</a>
+    </p>
+  </main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('si-v3-theme', next);
+}
+const saved = localStorage.getItem('si-v3-theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
