@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SI歴史的構造変革DB v9 — ソトコト5メタ型統合</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#FFFFFF; --accent:#121212; --accent-warm:#CC1400;
+  --text:#121212; --text-secondary:#555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEE; --surface:#F7F7F5;
+  --font:"Noto Sans JP",sans-serif; --font-serif:"Noto Serif JP",Georgia,serif; }
+[data-theme="dark"] { --bg:#121212; --accent:#E0E0E0; --accent-warm:#FF4030;
+  --text:#E0E0E0; --text-secondary:#AAA; --text-muted:#8A8A8A;
+  --border:#333; --border-light:#2A2A2A; --surface:#1A1A1A; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--bg); color:var(--text); font-family:var(--font); }
+body { font-feature-settings:"palt"; }
+.top-bar { position:fixed; top:0; left:0; right:0; height:48px; background:var(--bg);
+  border-top:3px solid #121212; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 32px; z-index:100; }
+[data-theme="dark"] .top-bar { border-top:3px solid var(--accent); }
+.brand { font-size:14px; font-weight:700; letter-spacing:0.05em; }
+.brand .v { color:var(--accent-warm); margin-left:8px; }
+.theme-toggle { background:none; border:1px solid var(--border); color:var(--text);
+  padding:6px 14px; cursor:pointer; font-size:12px; border-radius:2px; }
+.theme-toggle:hover { border-color:var(--accent-warm); color:var(--accent-warm); }
+.layout { display:flex; padding-top:48px; min-height:100vh; }
+.toc-sidebar { width:240px; padding:32px 24px; border-right:1px solid var(--border-light);
+  position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto; }
+.toc-sidebar h3 { font-size:11px; text-transform:uppercase; letter-spacing:0.1em;
+  color:var(--text-muted); margin-bottom:16px; }
+.toc-sidebar ol { list-style:none; counter-reset:toc; }
+.toc-sidebar li { counter-increment:toc; margin-bottom:8px; }
+.toc-sidebar a { display:flex; padding:6px 0; font-size:13px;
+  color:var(--text-secondary); text-decoration:none; line-height:1.5; }
+.toc-sidebar a::before { content:counter(toc, decimal-leading-zero); margin-right:10px;
+  color:var(--text-muted); font-family:"JetBrains Mono",monospace; font-size:11px; }
+.toc-sidebar a:hover { color:var(--accent-warm); }
+.main { flex:1; padding:48px 64px; max-width:820px; margin:0 auto; }
+.report-header { border-bottom:2px solid var(--accent); padding-bottom:24px; margin-bottom:48px; }
+.report-header .meta { font-size:11px; color:var(--text-muted); text-transform:uppercase;
+  letter-spacing:0.15em; margin-bottom:12px; }
+.report-header h1 { font-family:var(--font-serif); font-size:34px; line-height:1.4;
+  color:var(--accent); font-weight:500; letter-spacing:0.02em; }
+.report-header .lede { margin-top:16px; font-family:var(--font-serif); font-size:16px;
+  line-height:1.85; color:var(--text-secondary); }
+.chapter-section { margin-bottom:72px; padding-bottom:48px; border-bottom:1px solid var(--border-light); }
+.chapter-section h2 { font-family:var(--font-serif); font-size:22px; color:var(--accent);
+  margin-bottom:24px; padding-bottom:8px; border-bottom:1px solid var(--accent-warm); font-weight:500; }
+.chapter-section h2 .num { color:var(--accent-warm); font-family:"JetBrains Mono",monospace;
+  font-size:14px; margin-right:12px; font-weight:400; }
+.chapter-section p { font-family:var(--font-serif); font-size:15px; line-height:1.95;
+  letter-spacing:0.025em; color:var(--text); margin-bottom:16px; text-indent:1em; }
+.chapter-section p:first-of-type { text-indent:0; }
+.kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin:24px 0 32px; }
+.kpi { background:var(--surface); border:1px solid var(--border-light); padding:20px 16px; }
+.kpi .label { font-size:11px; color:var(--text-muted); text-transform:uppercase;
+  letter-spacing:0.1em; margin-bottom:8px; }
+.kpi .value { font-family:"JetBrains Mono",monospace; font-size:28px;
+  color:var(--accent-warm); font-weight:500; }
+table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13px; }
+th, td { padding:8px 12px; text-align:left; border-bottom:1px solid var(--border-light); }
+th { background:var(--surface); font-weight:700; color:var(--accent); font-size:12px;
+  text-transform:uppercase; letter-spacing:0.05em; }
+@media (max-width:1000px) { .layout { flex-direction:column; } .toc-sidebar { width:100%; height:auto; position:relative; border-right:none; border-bottom:1px solid var(--border-light); padding:16px 24px; } .toc-sidebar ol { display:flex; flex-wrap:wrap; gap:8px 16px; } .main { padding:32px 24px; } }
+@media print { .top-bar, .toc-sidebar { display:none; } .main { padding:0; max-width:100%; } }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">SI Framework DB <span class="v">v9 Sotokoto Taxonomy Integration</span></div>
+  <button class="theme-toggle" onclick="toggleTheme()">テーマ切替</button>
+</div>
+<div class="layout">
+  <nav class="toc-sidebar">
+    <h3>目次</h3>
+    <ol>
+      <li><a href="#summary">プロジェクト要旨</a></li>
+      <li><a href="#typology">5メタ型の理論</a></li>
+      <li><a href="#integration">統合手法</a></li>
+      <li><a href="#meta_dist">メタ型分布</a></li>
+      <li><a href="#sub_dist">サブ型分布</a></li>
+      <li><a href="#cross">文明圏×メタ型</a></li>
+      <li><a href="#interpretation">解釈</a></li>
+      <li><a href="#future">今後の展開</a></li>
+    </ol>
+  </nav>
+  <main class="main">
+    <header class="report-header">
+      <div class="meta">SI Historical Structural Transformation DB / Round 9: Sotokoto Taxonomy Integration</div>
+      <h1>SI歴史的構造変革DB v9<br>ソトコト5メタ型タクソノミー統合</h1>
+      <p class="lede">v9ラウンドは、西村勇也の『ソトコト』連載「未来をつくるソーシャルイノベーション」全60回（2015年3月号〜2020年6月号）から抽出された5メタ型・15サブ型のSIタクソノミーを、SI Framework DB の 7,389 事象に統合した。これによりDBは、文明圏（10）・時代（5）・類型（6+）・Drayton 4段階・教科書20章に加えて、第6の分類軸としてソトコト型タクソノミーを獲得し、5,000年の社会変革史を「型の系譜」として読む基盤が成立した。</p>
+    </header>
+
+    <section class="chapter-section" id="summary">
+      <h2><span class="num">01</span>プロジェクト要旨</h2>
+      <p>本DBは v3〜v8 までで量的・構造的・整合性の3次元すべてで完備した学術データセットに到達した。v9は、これに第二の理論的装填を加える試みである。具体的には、独立した一次資料（『ソトコト』連載60回）から構築されたソトコト型タクソノミー（5メタ型×15サブ型）を、DB の 7,389 事象に対して機械的に分類し、新たに `sotokoto_meta_type` および `sotokoto_subtype` の2カラムを追加した。これにより、本DBは2つの独立した分類体系（Drayton モデルとソトコト型）を併走させ、社会変革を異なる視座から読む基盤を獲得する。</p>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">分類事象</div><div class="value">7,389</div></div>
+        <div class="kpi"><div class="label">メタ型</div><div class="value">5</div></div>
+        <div class="kpi"><div class="label">サブ型</div><div class="value">15</div></div>
+        <div class="kpi"><div class="label">カバー率</div><div class="value">100%</div></div>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="typology">
+      <h2><span class="num">02</span>5メタ型の理論</h2>
+      <p>ソトコト連載は、現代日本のソーシャルイノベーション事例（NOSIGNER、慶應SDM、芝の家、PIECES等41事例）と暮らしのモノ・コト（カフェ、百貨店、切手、トイレ、公園、石、星座、夢等19事例）の計60ケースから、社会変革の「型」を抽出した。5メタ型は、変革が生起する場面を〈場（場の発生）〉〈媒介者（媒介の創出）〉〈物語（物語と文脈の再結合）〉〈構造（インフラと規格の編集）〉〈拡散（複製と大衆化）〉の5つの局面に整理する。</p>
+      <p>これら5メタ型は、3つの底流——「『つくる』のではなく『生まれる』」（第18回 芝の家）、「文脈と新結合」（第57回 石）、「見えない領域への投資」（第2部全体）——によって貫かれている。本DBへの統合は、5,000年の社会変革史がこれら5型の繰り返しと組み合わせとして読めるかを実証する仮説検証である。</p>
+    </section>
+
+    <section class="chapter-section" id="integration">
+      <h2><span class="num">03</span>統合手法</h2>
+      <p>各事象の type / mechanism / scale / actors / name_jp / description のテキスト特徴に対して、5メタ型ごとのキーワード辞書でスコアリングし、最高スコアのメタ型を割り当てた。たとえば「community」「カフェ」「広場」「結社」等のキーワードは Meta 1（場の発生）に、「learning」「academic」「学派」「NPO」等は Meta 2（媒介の創出）に、「narrative」「物語」「権利章典」「和解」等は Meta 3（物語と文脈の再結合）に、「infrastructure」「規格」「法典」「上下水道」等は Meta 4（インフラと規格の編集）に、「印刷」「mass」「broadcast」「diffusion」等は Meta 5（複製と大衆化）にスコア加点する。</p>
+      <p>サブ型は、メタ型決定後の二次キーワードマッチで割り当てる。スコア同点や該当キーワードがない場合は、type に基づくデフォルトマッピング（civil_rights→Meta 3、public_goods→Meta 4 等）を採用する。これにより全 7,389 事象が機械的に分類された。本ラウンドは規則ベースの基準分類であり、サブ型の精緻化や境界事例の判定は v10 以降の人手レビューで対応する。</p>
+    </section>
+
+    <section class="chapter-section" id="meta_dist">
+      <h2><span class="num">04</span>メタ型分布</h2>
+      <p>5メタ型の分布は、社会変革史における「インフラと規格の編集」（Meta 4）の構造的優位を示す。法典・通貨・税制・公共インフラの整備が、5,000年の社会変革の中核を占めるという結果は、Drayton モデルにおいて framework_change が最多であった結果と整合する。</p>
+      <table>
+        <thead><tr><th>Meta</th><th>日本語</th><th>英語</th><th>件数</th><th>比率</th></tr></thead>
+        <tbody><tr><td>Meta 1</td><td>場の発生</td><td>Generative Spaces</td><td style="text-align:right">1,059</td><td style="text-align:right">14.3%</td></tr><tr><td>Meta 2</td><td>媒介の創出</td><td>Mediators & Stewards</td><td style="text-align:right">1,078</td><td style="text-align:right">14.6%</td></tr><tr><td>Meta 3</td><td>物語と文脈の再結合</td><td>Story & Context Re-binding</td><td style="text-align:right">1,398</td><td style="text-align:right">18.9%</td></tr><tr><td>Meta 4</td><td>インフラと規格の編集</td><td>Infrastructure & Standards</td><td style="text-align:right">2,508</td><td style="text-align:right">33.9%</td></tr><tr><td>Meta 5</td><td>複製と大衆化</td><td>Replication & Democratization</td><td style="text-align:right">1,346</td><td style="text-align:right">18.2%</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="sub_dist">
+      <h2><span class="num">05</span>サブ型分布（15カテゴリ）</h2>
+      <p>15サブ型の分布は、本ラウンドの規則ベース分類において .1 系（各メタ型の代表的サブ型）に偏る傾向を示す。これは、キーワード辞書が .2 と .3 系の細分化された区別を十分に捉えきれないため、デフォルトとして .1 系へ集約されることに由来する。サブ型の精緻化は、v10 以降、各メタ型ごとに 100 事象程度の人手サンプリング・レビューで補正していく予定である。</p>
+      <table>
+        <thead><tr><th>サブ型</th><th>名称</th><th>件数</th></tr></thead>
+        <tbody><tr><td>1.1</td><td>自発交流</td><td style="text-align:right">1,044</td></tr><tr><td>1.2</td><td>越境出会い</td><td style="text-align:right">5</td></tr><tr><td>1.3</td><td>余白確保</td><td style="text-align:right">10</td></tr><tr><td>2.1</td><td>市民専門家</td><td style="text-align:right">882</td></tr><tr><td>2.2</td><td>中間支援</td><td style="text-align:right">25</td></tr><tr><td>2.3</td><td>学問領域創出</td><td style="text-align:right">171</td></tr><tr><td>3.1</td><td>物語付加</td><td style="text-align:right">1,345</td></tr><tr><td>3.2</td><td>文脈再結合</td><td style="text-align:right">2</td></tr><tr><td>3.3</td><td>当事者主体回復</td><td style="text-align:right">51</td></tr><tr><td>4.1</td><td>規格・標準化</td><td style="text-align:right">2,490</td></tr><tr><td>4.2</td><td>見えないインフラ</td><td style="text-align:right">2</td></tr><tr><td>4.3</td><td>編集・並列化</td><td style="text-align:right">16</td></tr><tr><td>5.1</td><td>複製・伝達</td><td style="text-align:right">1,157</td></tr><tr><td>5.2</td><td>大衆化技術</td><td style="text-align:right">117</td></tr><tr><td>5.3</td><td>可視化メディア</td><td style="text-align:right">72</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="cross">
+      <h2><span class="num">06</span>文明圏 × メタ型のクロス集計</h2>
+      <p>10文明圏ごとに、5メタ型の分布が異なる構造的傾向を示すかを確認する。各文明圏で支配的なメタ型を見ることで、その地域の社会変革の構造的特性が浮かび上がる。</p>
+      <table>
+        <tbody>
+          <tr><th>文明圏 / Meta</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr><tr><td>african</td><td style='text-align:right'>126</td><td style='text-align:right'>73</td><td style='text-align:right'>82</td><td style='text-align:right'>286</td><td style='text-align:right'>113</td></tr><tr><td>americas</td><td style='text-align:right'>124</td><td style='text-align:right'>63</td><td style='text-align:right'>98</td><td style='text-align:right'>129</td><td style='text-align:right'>72</td></tr><tr><td>central_asian</td><td style='text-align:right'>61</td><td style='text-align:right'>82</td><td style='text-align:right'>75</td><td style='text-align:right'>234</td><td style='text-align:right'>89</td></tr><tr><td>cross_civilizational</td><td style='text-align:right'>56</td><td style='text-align:right'>86</td><td style='text-align:right'>42</td><td style='text-align:right'>174</td><td style='text-align:right'>249</td></tr><tr><td>east_asian</td><td style='text-align:right'>157</td><td style='text-align:right'>232</td><td style='text-align:right'>627</td><td style='text-align:right'>379</td><td style='text-align:right'>330</td></tr><tr><td>islamic</td><td style='text-align:right'>63</td><td style='text-align:right'>130</td><td style='text-align:right'>43</td><td style='text-align:right'>179</td><td style='text-align:right'>142</td></tr><tr><td>pacific</td><td style='text-align:right'>69</td><td style='text-align:right'>48</td><td style='text-align:right'>70</td><td style='text-align:right'>215</td><td style='text-align:right'>63</td></tr><tr><td>south_asian</td><td style='text-align:right'>81</td><td style='text-align:right'>62</td><td style='text-align:right'>93</td><td style='text-align:right'>139</td><td style='text-align:right'>78</td></tr><tr><td>southeast_asian</td><td style='text-align:right'>89</td><td style='text-align:right'>63</td><td style='text-align:right'>87</td><td style='text-align:right'>224</td><td style='text-align:right'>77</td></tr><tr><td>western</td><td style='text-align:right'>233</td><td style='text-align:right'>239</td><td style='text-align:right'>181</td><td style='text-align:right'>549</td><td style='text-align:right'>133</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="interpretation">
+      <h2><span class="num">07</span>解釈の方向</h2>
+      <p>v9で得られた分類は、以下のような問いに対する基盤的回答を可能にする。第一に、5,000年の社会変革史は、5メタ型のいずれかに偏るのか、それとも文明圏や時代によって支配型がシフトするのか。第二に、特定のメタ型の事象群は、Drayton モデルの4段階や教科書20章とどう共起するのか。第三に、ソトコト連載の60ケース（現代日本中心）から抽出された型が、古代・中世・非日本圏の事象にも妥当に適用できるのか——適用できる範囲こそが、5メタ型の普遍性の経験的証明である。</p>
+      <p>本ラウンドの初期結果は、5メタ型が文明圏・時代を越えて適用可能であることを示唆する。Meta 4（インフラと規格）が全文明圏で最多または上位を占めることは、人類社会の歴史的な制度的均衡への強い指向を示している。Meta 3（物語と文脈の再結合）が civil_rights 系事象に集中することは、社会変革の正当化が常に物語的構築を伴うという現代社会理論の知見と整合する。Meta 1（場の発生）の比較的低いシェアは、機械的分類が「場」の発生という現象を捉えにくいこと（多くの場の発生事象は他の型と複合的に記述される）を示し、これは v10 で人手レビューによって補正される。</p>
+    </section>
+
+    <section class="chapter-section" id="future">
+      <h2><span class="num">08</span>今後の展開</h2>
+      <p>v9の限界として、第一に、サブ型分類が .1 系に偏る点がある。これはキーワード辞書の制約であり、各メタ型ごとに100事象のサンプリング・レビューで人手補正することが必要である。第二に、メタ型の境界事例（Meta 1と Meta 3 の中間に位置する事象、Meta 4 と Meta 5 の中間に位置する事象等）の判定は機械的ロジックでは限界があり、複数メタ型のマルチラベル化が望ましい。第三に、ソトコト連載の60ケースとDB の 7,389 事象との直接マッピング（ソトコト連載の各ケースがDB のどの事象に対応するか）は本ラウンドでは未実施である。</p>
+      <p>v10 以降では、(1) サブ型のサンプリング・レビューと補正、(2) マルチラベル化（1事象に複数メタ型を許容）、(3) ソトコト60ケース ↔ DB 7,389事象の直接対応マッピング、(4) 5メタ型 × Drayton 4段階のクロス集計分析、(5) 後継連載「ソーシャルイノベーションの教養」全50回への執筆素材としての活用、を進める。本ラウンドは、SI Framework DB が単一の量的データセットから、複数の理論的タクソノミーを並走させる「多層的SIメタ知識基盤」へと変貌する第一歩である。</p>
+    </section>
+
+    <p style="text-align:center; color:var(--text-muted); font-size:11px; margin-top:48px; padding-top:24px; border-top:1px solid var(--border-light);">
+      Generated: 2026-05-07 15:28 JST<br>
+      SI Framework DB v9 / Sotokoto 5-meta-type taxonomy integration<br>
+      <a href="https://github.com/yuyanishimura0312/social-innovation-framework" style="color:var(--accent-warm);">GitHub: yuyanishimura0312/social-innovation-framework</a>
+    </p>
+  </main>
+</div>
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('si-v9-theme', next);
+}
+const saved = localStorage.getItem('si-v9-theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body></html>
