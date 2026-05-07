@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corporate Foundation Grants DB | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  gap: 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 5px 8px 5px 0;
+  transition: color 0.15s;
+  line-height: 1.5;
+}
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--accent-warm);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+
+.book-header {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.book-db-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.db-tag {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.book-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.book-meta {
+  margin-top: 32px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 60px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  line-height: 1.5;
+  font-weight: 700;
+  margin-bottom: 28px;
+  letter-spacing: 0;
+}
+h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+h4 {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 32px 0 12px;
+  color: var(--accent-warm);
+}
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  font-weight: 500;
+  text-indent: 0;
+}
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em {
+  font-style: normal;
+  background: linear-gradient(transparent 60%, var(--accent-muted) 60%);
+  padding: 0 2px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+th, td {
+  padding: 11px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+th { background: var(--surface); font-weight: 700; }
+
+.callout {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+  padding: 20px 24px;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+.callout-title {
+  font-weight: 700;
+  color: var(--accent-warm);
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+.stat-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-family: var(--font);
+  background: var(--card);
+}
+.stat-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+pre {
+  background: var(--surface);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 24px 0;
+  border-left: 3px solid var(--accent-warm);
+}
+pre code { background: none; padding: 0; }
+
+.bar { display: inline-block; height: 14px; background: var(--accent-warm); margin-right: 8px; vertical-align: middle; }
+.high { color: #2e7d32; font-weight: 700; }
+.low { color: var(--accent-warm); font-weight: 700; }
+
+footer {
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: 24px 0;
+  }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>CFG</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#ch1"><span class="toc-num">01</span>1. データベース全体像</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>2. 設立者形態×法人形態タクソノミー</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>3. 助成額ティア分布</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>4. 親企業ネットワーク</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>5. 都道府県別分布</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>6. 主要研究助成プログラム</a></li>
+<li><a href="#ch7"><span class="toc-num">07</span>7. 公募カレンダー</a></li>
+<li><a href="#ch8"><span class="toc-num">08</span>8. データソースとカバレッジ</a></li>
+<li><a href="#ch9"><span class="toc-num">09</span>9. 使い方とアクセス</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags"><span class="db-tag primary">CFG</span><span class="db-tag">研究助成</span><span class="db-tag">財団</span><span class="db-tag">JFC</span><span class="db-tag">公益法人info</span></div>
+<h1 class="book-title">Corporate Foundation Grants DB</h1>
+<p class="book-subtitle">日本の研究助成財団 1,091団体・研究助成プログラム 258件・公募 258件を構造化したデータベース。JFC助成財団センター・内閣府公益法人info由来の登録情報を統合し、分類タクソノミー（法人形態×設立者形態）と助成額ティアで意思決定を支援する。</p>
+<div class="book-meta"><span>更新日: 2026-05-08</span><span>団体数: 1,091</span><span>カバー率推定: 109%（目標 1,000団体）</span></div>
+</header>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">CHAPTER 01 — OVERVIEW</div>
+<h2 class="chapter-title">1. データベース全体像</h2>
+<p class="lead">本データベースは、日本の研究助成を行う財団を網羅的に収録する構造化データベースである。当初189団体・258プログラムから出発し、助成財団センター（JFC）と内閣府公益法人informationの登録情報を統合することで 1,091団体規模に拡張した。</p>
+
+<div class="stats-row">
+<div class="stat-box"><div class="stat-num">1,091</div><div class="stat-label">財団・団体</div></div>
+<div class="stat-box"><div class="stat-num">258</div><div class="stat-label">研究助成プログラム</div></div>
+<div class="stat-box"><div class="stat-num">258</div><div class="stat-label">公募</div></div>
+<div class="stat-box"><div class="stat-num">86</div><div class="stat-label">助成額判明</div></div>
+</div>
+
+<p>このうち、設立者形態は企業財団・個人財団・学術系・国際機関系・NPO系などに細分化されており、利用者は「自社の研究テーマに親和性のある財団」を分類軸から効率的に絞り込むことができる。法人形態（公益財団法人・一般財団法人・公益社団法人ほか）と設立者形態を組み合わせることで、研究助成エコシステム全体の構造を俯瞰する出発点として機能する。</p>
+
+<div class="callout">
+<div class="callout-title">DESIGN PRINCIPLE</div>
+本DBは「集約サイトに依存せず、各元サイトから直接収集する」方針を採る。JFCの助成・奨学金情報navi（2,539団体・8,091プログラム）と内閣府公益法人info（約3,000-4,000公益法人）を一次情報源とし、研究助成カテゴリで実質的に活動している団体を選別している。
+</div>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">CHAPTER 02 — TAXONOMY</div>
+<h2 class="chapter-title">2. 設立者形態 × 法人形態タクソノミー</h2>
+<p>財団は「設立者形態」と「法人形態」の二軸で分類される。設立者形態は資金源の構造を、法人形態は税制・公益認定の枠組みを示す。両者は独立した分類軸であり、たとえば「公益財団法人 × 個人財団」や「一般財団法人 × 企業財団」といった組み合わせが存在する。</p>
+
+<h3>設立者形態（foundation_subtype）</h3>
+<table>
+<thead><tr><th>分類</th><th>団体数</th><th>割合</th><th>分布</th></tr></thead>
+<tbody><tr><td>企業財団</td><td>451</td><td>41.3%</td><td><span class="bar" style="width:200px"></span></td></tr>
+<tr><td>その他・分類未確定</td><td>402</td><td>36.8%</td><td><span class="bar" style="width:178px"></span></td></tr>
+<tr><td>個人財団</td><td>124</td><td>11.4%</td><td><span class="bar" style="width:54px"></span></td></tr>
+<tr><td>学術系財団</td><td>64</td><td>5.9%</td><td><span class="bar" style="width:28px"></span></td></tr>
+<tr><td>国際機関系</td><td>44</td><td>4.0%</td><td><span class="bar" style="width:19px"></span></td></tr>
+<tr><td>グループ企業財団</td><td>5</td><td>0.5%</td><td><span class="bar" style="width:2px"></span></td></tr>
+<tr><td>NPO/NGO系</td><td>1</td><td>0.1%</td><td><span class="bar" style="width:0px"></span></td></tr></tbody>
+</table>
+
+<h3>法人形態（legal_form）</h3>
+<table>
+<thead><tr><th>法人形態</th><th>団体数</th><th>割合</th></tr></thead>
+<tbody><tr><td>公益財団法人</td><td>1,077</td><td>98.7%</td></tr>
+<tr><td>その他</td><td>13</td><td>1.2%</td></tr>
+<tr><td>一般社団法人</td><td>1</td><td>0.1%</td></tr></tbody>
+</table>
+
+<div class="callout">
+<div class="callout-title">分類精度の現状</div>
+名称ベースの自動推測ロジックで分類しているため、現時点では <em>その他・分類未確定</em> に分類された団体が存在する。今後の精緻化フェーズで、各団体の公式情報（設立趣旨書・寄付者情報・公益認定情報）から手動で分類を確定する予定である。
+</div>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">CHAPTER 03 — SCALE</div>
+<h2 class="chapter-title">3. 助成額ティア分布</h2>
+<p>JFCの2019年調査（985団体）では、年間助成額50億円超のT6に属する財団がわずか28団体（3%）であるにもかかわらず、累積資産シェアの約61%を占めるという二極化構造が確認されている。本DBで助成額が判明している 86団体について、JFCのティア区分に従って分布を集計した。</p>
+
+<h3>助成額ティア分布（86団体）</h3>
+<table>
+<thead><tr><th>ティア</th><th>団体数</th><th>割合</th><th>分布</th></tr></thead>
+<tbody><tr><td>T1: <5000万円</td><td>26</td><td>30.2%</td><td><span class="bar" style="width:148px"></span></td></tr>
+<tr><td>T2: 5000万-1億円</td><td>12</td><td>14.0%</td><td><span class="bar" style="width:68px"></span></td></tr>
+<tr><td>T3: 1-5億円</td><td>35</td><td>40.7%</td><td><span class="bar" style="width:200px"></span></td></tr>
+<tr><td>T4: 5-10億円</td><td>10</td><td>11.6%</td><td><span class="bar" style="width:57px"></span></td></tr>
+<tr><td>T5: 10-50億円</td><td>2</td><td>2.3%</td><td><span class="bar" style="width:11px"></span></td></tr>
+<tr><td>T6: 50億円以上</td><td>1</td><td>1.2%</td><td><span class="bar" style="width:5px"></span></td></tr></tbody>
+</table>
+
+<h3>助成額上位20団体</h3>
+<table>
+<thead><tr><th>財団名</th><th>親企業／設立者</th><th>所在地</th><th>年間助成額</th></tr></thead>
+<tbody><tr><td>ＪＫＡ</td><td>JKA（競輪・オートレース）</td><td>—</td><td>62.4億円</td></tr>
+<tr><td>公益財団法人武田科学振興財団</td><td>武田薬品工業</td><td>大阪府</td><td>27.1億円</td></tr>
+<tr><td>公益財団法人上原記念生命科学財団</td><td>—</td><td>東京都</td><td>14.6億円</td></tr>
+<tr><td>稲盛財団</td><td>京セラ（稲盛和夫）</td><td>—</td><td>9.9億円</td></tr>
+<tr><td>公益財団法人三菱みらい育成財団</td><td>三菱グループ</td><td>—</td><td>7.4億円</td></tr>
+<tr><td>公益財団法人業務スーパージャパンドリーム財団</td><td>神戸物産</td><td>—</td><td>7.4億円</td></tr>
+<tr><td>公益財団法人トヨタ・モビリティ基金</td><td>トヨタ自動車</td><td>—</td><td>7.2億円</td></tr>
+<tr><td>公益財団法人中谷財団</td><td>中谷医工計測技術振興</td><td>東京都</td><td>7.1億円</td></tr>
+<tr><td>三菱財団</td><td>三菱グループ</td><td>—</td><td>6.1億円</td></tr>
+<tr><td>公益財団法人内藤記念科学振興財団</td><td>—</td><td>東京都</td><td>5.8億円</td></tr>
+<tr><td>村田学術振興・教育財団</td><td>村田製作所</td><td>京都府</td><td>5.5億円</td></tr>
+<tr><td>セコム科学技術振興財団</td><td>セコム</td><td>東京都</td><td>5.5億円</td></tr>
+<tr><td>公益財団法人高橋産業経済研究財団</td><td>—</td><td>東京都</td><td>5.2億円</td></tr>
+<tr><td>公益財団法人旭硝子財団</td><td>AGC</td><td>東京都</td><td>5.0億円</td></tr>
+<tr><td>公益財団法人石橋財団</td><td>ブリヂストン</td><td>—</td><td>4.7億円</td></tr>
+<tr><td>市村清新技術財団</td><td>—</td><td>東京都</td><td>4.6億円</td></tr>
+<tr><td>公益財団法人持田記念医学薬学振興財団</td><td>持田製薬</td><td>東京都</td><td>4.5億円</td></tr>
+<tr><td>公益財団法人電通育英会</td><td>—</td><td>東京都</td><td>4.3億円</td></tr>
+<tr><td>住友財団</td><td>住友グループ</td><td>—</td><td>4.1億円</td></tr>
+<tr><td>公益財団法人小林財団</td><td>小林製薬</td><td>大阪府</td><td>3.8億円</td></tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">CHAPTER 04 — NETWORK</div>
+<h2 class="chapter-title">4. 親企業ネットワーク</h2>
+<p>企業財団の多くは複数の財団を傘下に持つ。同一企業グループが「自然科学」「人文社会」「文化芸術」「教育」など複数領域にまたがる財団を運営することも珍しくない。親企業（corporate_parent）別に集計することで、企業グループの研究助成戦略の輪郭が浮かび上がる。</p>
+
+<h3>親企業別 財団数（上位25）</h3>
+<table>
+<thead><tr><th>親企業／グループ</th><th>財団数</th><th>分布</th></tr></thead>
+<tbody><tr><td>三菱グループ</td><td>12</td><td><span class="bar" style="width:150px"></span></td></tr>
+<tr><td>トヨタグループ</td><td>7</td><td><span class="bar" style="width:87px"></span></td></tr>
+<tr><td>野村グループ</td><td>5</td><td><span class="bar" style="width:62px"></span></td></tr>
+<tr><td>日立製作所</td><td>5</td><td><span class="bar" style="width:62px"></span></td></tr>
+<tr><td>みずほFG</td><td>5</td><td><span class="bar" style="width:62px"></span></td></tr>
+<tr><td>三井グループ</td><td>4</td><td><span class="bar" style="width:50px"></span></td></tr>
+<tr><td>住友グループ</td><td>3</td><td><span class="bar" style="width:37px"></span></td></tr>
+<tr><td>ローム</td><td>3</td><td><span class="bar" style="width:37px"></span></td></tr>
+<tr><td>トヨタ自動車</td><td>3</td><td><span class="bar" style="width:37px"></span></td></tr>
+<tr><td>花王</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>日本生命保険</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>岩谷産業</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>小林製薬</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>大和証券グループ</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>大同生命保険</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>京セラ（稲盛和夫）</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>パナソニック</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>ソニーグループ</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>オムロン</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>JKA（競輪・オートレース）</td><td>2</td><td><span class="bar" style="width:25px"></span></td></tr>
+<tr><td>資生堂</td><td>1</td><td><span class="bar" style="width:12px"></span></td></tr>
+<tr><td>船井電機</td><td>1</td><td><span class="bar" style="width:12px"></span></td></tr>
+<tr><td>神戸物産</td><td>1</td><td><span class="bar" style="width:12px"></span></td></tr>
+<tr><td>武田薬品工業</td><td>1</td><td><span class="bar" style="width:12px"></span></td></tr>
+<tr><td>楽天グループ</td><td>1</td><td><span class="bar" style="width:12px"></span></td></tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">CHAPTER 05 — GEOGRAPHY</div>
+<h2 class="chapter-title">5. 都道府県別分布</h2>
+<p>研究助成財団は東京都に強く偏在する傾向がある。これは大企業本社・有力大学・公益法人主務官庁が東京に集積していることと整合する。一方で、地方独自の研究助成財団も一定数存在し、地域研究や地場産業に特化した助成プログラムを運営している。</p>
+
+<h3>都道府県別分布（上位15）</h3>
+<table>
+<thead><tr><th>都道府県</th><th>団体数</th><th>割合</th><th>分布</th></tr></thead>
+<tbody><tr><td>東京都</td><td>416</td><td>38.1%</td><td><span class="bar" style="width:200px"></span></td></tr>
+<tr><td>大阪府</td><td>68</td><td>6.2%</td><td><span class="bar" style="width:32px"></span></td></tr>
+<tr><td>京都府</td><td>55</td><td>5.0%</td><td><span class="bar" style="width:26px"></span></td></tr>
+<tr><td>愛知県</td><td>49</td><td>4.5%</td><td><span class="bar" style="width:23px"></span></td></tr>
+<tr><td>未設定</td><td>46</td><td>4.2%</td><td><span class="bar" style="width:22px"></span></td></tr>
+<tr><td>福岡県</td><td>33</td><td>3.0%</td><td><span class="bar" style="width:15px"></span></td></tr>
+<tr><td>神奈川県</td><td>30</td><td>2.7%</td><td><span class="bar" style="width:14px"></span></td></tr>
+<tr><td>兵庫県</td><td>28</td><td>2.6%</td><td><span class="bar" style="width:13px"></span></td></tr>
+<tr><td>香川県</td><td>20</td><td>1.8%</td><td><span class="bar" style="width:9px"></span></td></tr>
+<tr><td>北海道</td><td>20</td><td>1.8%</td><td><span class="bar" style="width:9px"></span></td></tr>
+<tr><td>広島県</td><td>19</td><td>1.7%</td><td><span class="bar" style="width:9px"></span></td></tr>
+<tr><td>岡山県</td><td>19</td><td>1.7%</td><td><span class="bar" style="width:9px"></span></td></tr>
+<tr><td>千葉県</td><td>18</td><td>1.6%</td><td><span class="bar" style="width:8px"></span></td></tr>
+<tr><td>新潟県</td><td>17</td><td>1.6%</td><td><span class="bar" style="width:8px"></span></td></tr>
+<tr><td>静岡県</td><td>15</td><td>1.4%</td><td><span class="bar" style="width:7px"></span></td></tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">CHAPTER 06 — PROGRAMS</div>
+<h2 class="chapter-title">6. 主要研究助成プログラム</h2>
+<p>本DBには 258件の研究助成プログラムが収録されている。プログラムは「公募テーマ」と「カテゴリ」で分類され、過去複数回開催されているシリーズは <code>is_recurring=1</code> として年次サイクルが追跡可能である。</p>
+
+<h3>主要研究助成プログラム（予算額順 上位25）</h3>
+<table>
+<thead><tr><th>プログラム名</th><th>運営財団</th><th>カテゴリ</th><th>総予算</th></tr></thead>
+<tbody><tr><td>デザイン助成プログラム</td><td>日本デザイン振興会</td><td>research</td><td>—</td></tr>
+<tr><td>デザイン研究・デザイン振興の助成事業「デザイン助成プログラム」を開始</td><td>日本デザイン振興会</td><td>research</td><td>—</td></tr>
+<tr><td>技術研究助成</td><td>ＮＥＸＣＯ東日本（東日本高速道路株式会社）</td><td>research</td><td>—</td></tr>
+<tr><td>啓発支援プログラムの構成·応募要項プログラムの詳細、応募要項、申請書類</td><td>公益財団法人旭硝子財団</td><td>research</td><td>—</td></tr>
+<tr><td>研究助成プログラムの構成</td><td>公益財団法人旭硝子財団</td><td>research</td><td>—</td></tr>
+<tr><td>奨学プログラムの構成奨学プログラムの詳細、応募要項、手引き</td><td>公益財団法人旭硝子財団</td><td>research</td><td>—</td></tr>
+<tr><td>研究助成</td><td>公益財団法人旭硝子財団</td><td>research</td><td>—</td></tr>
+<tr><td>奨励研究助成【B】実装型共同研究助成</td><td>ロッテ財団</td><td>research</td><td>—</td></tr>
+<tr><td>奨励研究助成【A】A個人研究助成</td><td>ロッテ財団</td><td>research</td><td>—</td></tr>
+<tr><td>研究者育成助成〈ロッテ重光学術賞〉</td><td>ロッテ財団</td><td>education</td><td>—</td></tr>
+<tr><td>奨励研究助成</td><td>ロッテ財団</td><td>research</td><td>—</td></tr>
+<tr><td>一般研究助成</td><td>セコム科学技術振興財団</td><td>research</td><td>—</td></tr>
+<tr><td>特定領域研究助成</td><td>セコム科学技術振興財団</td><td>research</td><td>—</td></tr>
+<tr><td>三菱財団 人文科学研究助成</td><td>三菱財団</td><td>culture</td><td>—</td></tr>
+<tr><td>三菱財団 自然科学研究助成</td><td>三菱財団</td><td>research</td><td>—</td></tr>
+<tr><td>自然科学研究助成応募要領</td><td>三菱財団</td><td>environment</td><td>—</td></tr>
+<tr><td>自然科学研究助成応募手順</td><td>三菱財団</td><td>environment</td><td>—</td></tr>
+<tr><td>自然科学研究助成申込書、助成申込内容（マイページ取得）</td><td>三菱財団</td><td>environment</td><td>—</td></tr>
+<tr><td>自然科学研究助成　助成申込内容　書式 (Microsoft Word)</td><td>三菱財団</td><td>environment</td><td>—</td></tr>
+<tr><td>>>「社会福祉事業・研究助成」実施のお知らせ</td><td>三菱財団</td><td>welfare</td><td>—</td></tr>
+<tr><td>自然科学研究特別助成（感染症）</td><td>三菱財団</td><td>environment</td><td>—</td></tr>
+<tr><td>振興事業補助「研究補助　国際交流」（機械振興補助事業）</td><td>JKA</td><td>international</td><td>—</td></tr>
+<tr><td>研究補助（公益事業振興補助事業）</td><td>JKA</td><td>research</td><td>—</td></tr>
+<tr><td>研究補助「複数年研究」（機械振興補助事業）</td><td>JKA</td><td>research</td><td>—</td></tr>
+<tr><td>研究補助「開発研究」（機械振興補助事業）</td><td>JKA</td><td>research</td><td>—</td></tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="ch7">
+<div class="chapter-number-label">CHAPTER 07 — CALENDAR</div>
+<h2 class="chapter-title">7. 公募カレンダー</h2>
+<p>研究助成は年度サイクルで運用されることが多く、応募締切は年4-6月に集中する。本DBでは応募締切（application_deadline）と現在ステータス（status: open/upcoming/closed）を保持し、研究者・研究機関のグラントオフィスが応募計画を立てる際の参照基盤として機能する。</p>
+
+<h3>応募受付中・予定の公募（締切順）</h3>
+<table>
+<thead><tr><th>締切</th><th>公募名</th><th>運営財団</th><th>助成額上限</th></tr></thead>
+<tbody><tr><td>2026-04-22</td><td>2026年度第一期　団体活動推進助成</td><td>ニッポンハム食の未来財団</td><td>500万円</td></tr>
+<tr><td>2026-04-22</td><td>2026年度 若手教育推進助成</td><td>ニッポンハム食の未来財団</td><td>300万円</td></tr>
+<tr><td>2026-05-15</td><td>啓発支援プログラムの構成·応募要項プログラムの詳細、応募要項、申請書類（旭硝子財団）</td><td>公益財団法人旭硝子財団</td><td>—</td></tr>
+<tr><td>2026-05-29</td><td>秋田ノーザンハピネッツ “グローカル・スタートアップ”支援基金</td><td>日本フィランソロピック財団</td><td>—</td></tr>
+<tr><td>2026-05-30</td><td>トヨタ財団 2026年度国際助成プログラム</td><td>トヨタ財団</td><td>1.0千万円</td></tr>
+<tr><td>2026-06-05</td><td>2026年度トヨタ財団研究助成プログラム「つながりがデザインする未来の社会システム」</td><td>トヨタ財団</td><td>800万円</td></tr>
+<tr><td>2026-06-09</td><td>第3回「がん研究フロンティア基金」研究助成</td><td>日本フィランソロピック財団</td><td>1.0千万円</td></tr>
+<tr><td>2026-06-14</td><td>第42回（2026年度）マツダ財団研究助成　ー青少年健全育成関係ー</td><td>マツダ財団</td><td>100万円</td></tr>
+<tr><td>2026-06-15</td><td>2026年度　研究助成</td><td>建設物価調査会</td><td>—</td></tr>
+<tr><td>2026-06-30</td><td>2026年度(第52回)丸紅基金社会福祉助成金</td><td>丸紅基金</td><td>300万円</td></tr>
+<tr><td>2026-07-01</td><td>第７回じりつチャレンジ基金</td><td>日本フィランソロピック財団</td><td>—</td></tr>
+<tr><td>2026-07-03</td><td>みずほ福祉助成財団　2026年度社会福祉助成金</td><td>みずほ福祉助成財団</td><td>200万円</td></tr>
+<tr><td>2026-10-01</td><td>高齢・地域共生社会助成［実践的課題研究・若手実践的課題研究助成］</td><td>日本生命財団(ニッセイ財団)</td><td>—</td></tr>
+<tr><td>2026-11-01</td><td>研究助成プログラム</td><td>トヨタ財団</td><td>—</td></tr>
+<tr><td>2027-01-31</td><td>調査研究助成のご案内（2026年度）</td><td>公益財団法人大和証券福祉財団</td><td>30万円</td></tr>
+<tr><td>2027-03-31</td><td>海外研究留学助成（武田科学振興財団）</td><td>公益財団法人武田科学振興財団</td><td>600万円</td></tr>
+<tr><td>2028-01-31</td><td>外国人留学助成（武田科学振興財団）</td><td>公益財団法人武田科学振興財団</td><td>20万円</td></tr>
+<tr><td>2028-10-31</td><td>研究助成プログラム（2026年度）</td><td>公益財団法人トヨタ財団</td><td>800万円</td></tr>
+<tr><td>２０２５-09-01</td><td>振興事業補助「研究補助　国際交流（第２回目）」（機械振興補助事業）</td><td>ＪＫＡ</td><td>—</td></tr>
+<tr><td>２０２６-04-01</td><td>研究補助「ステップアップ研究」（機械振興補助事業）</td><td>JKA</td><td>—</td></tr>
+<tr><td>２０２６-04-01</td><td>研究補助「個別研究」（機械振興補助事業）</td><td>JKA</td><td>—</td></tr>
+<tr><td>２０２６-04-01</td><td>公益の増進「自転車・モーターサイクル・スポーツ（障がい者スポーツを含む）」（公益事業振興補助事業）</td><td>ＪＫＡ</td><td>—</td></tr>
+<tr><td>２０２６-04-01</td><td>公益の増進「医療・公衆衛生」（公益事業振興補助事業）※検診車の整備のみ</td><td>ＪＫＡ</td><td>—</td></tr>
+<tr><td>２０２６-04-01</td><td>研究補助「開発研究」（機械振興補助事業）</td><td>JKA</td><td>—</td></tr>
+<tr><td>２０２６-04-01</td><td>振興事業補助「安全・安心、生活の質の向上及び防災・減災に関する事業」（機械振興補助事業）</td><td>ＪＫＡ</td><td>—</td></tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="ch8">
+<div class="chapter-number-label">CHAPTER 08 — PROVENANCE</div>
+<h2 class="chapter-title">8. データソースとカバレッジ</h2>
+<p>本DBは複数の一次情報源を統合して構築されている。各団体の <code>metadata.source</code> フィールドにデータソースが記録され、来歴の追跡が可能である。</p>
+
+<h3>データソース別カバレッジ</h3>
+<table>
+<thead><tr><th>ソース</th><th>団体数</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td>内閣府公益法人info（koeki_info）</td><td>987</td>
+<td>研究関連スコア3以上の公益法人を抽出</td></tr>
+<tr><td>JFC助成財団センター + その他</td><td>104</td>
+<td>研究助成プログラム情報を含む団体</td></tr>
+</tbody>
+</table>
+
+<h3>欠損率（improvement opportunity）</h3>
+<table>
+<thead><tr><th>項目</th><th>欠損数</th><th>欠損率</th></tr></thead>
+<tbody>
+<tr><td>公式URL</td><td>1,055</td>
+<td>96.7%</td></tr>
+<tr><td>所在都道府県</td><td>46</td>
+<td>4.2%</td></tr>
+<tr><td>年間助成額</td><td>1,005</td>
+<td>92.1%</td></tr>
+<tr><td>設立者形態</td><td>0</td>
+<td>0.0%</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<div class="callout-title">次フェーズ計画</div>
+今後、各団体の公式URLからの情報抽出（年次報告PDF・募集要項PDF・採択者リスト）を進め、欠損率の改善を図る。特に年間助成額の判明率向上は、利用者の意思決定支援に直結する重要課題である。
+</div>
+</section>
+
+<section class="chapter-section" id="ch9">
+<div class="chapter-number-label">CHAPTER 09 — USAGE</div>
+<h2 class="chapter-title">9. 使い方とアクセス</h2>
+<p>本DBは下記の用途で利用される想定で設計されている。</p>
+
+<h3>1. 助成金検索（個別研究者・グラントオフィス）</h3>
+<p>研究テーマと自身の所属（大学・企業・NPO）を入力すると、応募可能な助成プログラムが提示される。締切順・助成額順・分野マッチ度順でソート可能である。</p>
+
+<h3>2. 研究助成エコシステム分析（政策担当者・調査機関）</h3>
+<p>分類タクソノミー（設立者形態×法人形態×助成額ティア）の集計から、日本の研究助成エコシステムの構造的特徴と課題（東京偏在・大型財団への集中・若手研究者向け制度の手薄さ等）を抽出できる。</p>
+
+<h3>3. 産学連携・寄付戦略（企業）</h3>
+<p>同業他社の研究助成戦略（領域カバレッジ・採択分野傾向）を比較し、自社の研究助成プログラム設計の参考とする。</p>
+
+<h3>アクセス</h3>
+<ul>
+<li>ソースリポジトリ: <code>~/projects/apps/corporate-foundation-grants/</code></li>
+<li>SQLite DB: <code>corporate_research_grants.sqlite</code></li>
+<li>関連プロジェクト: <a href="https://grant-db.vercel.app">Grant DB</a>（4,552件の助成金・補助金DB、AIマッチング搭載）</li>
+<li>データソース: <a href="https://www.jfc.or.jp/">助成財団センター</a> / <a href="https://www.koeki-info.go.jp/">内閣府公益法人info</a></li>
+</ul>
+</section>
+
+<footer>
+Corporate Foundation Grants DB / 更新: 2026-05-08<br>© ミラツク（NPO法人ミラツク）<br><a href="../databases.html">← Databases一覧へ戻る</a>
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
