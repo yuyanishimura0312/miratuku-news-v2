@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世紀的連鎖モデル v2 — 図解レポート</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-warm:#CC1400; --accent-warm-soft:#B01200;
+  --text:#121212; --text-secondary:#555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEE; --surface:#F7F7F5;
+  --peak:#CC1400; --trough:#1A5276; --layer-p:#6E2C2C; --layer-t:#1A5276; --layer-i:#2C3E50;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif; }
+[data-theme="dark"] { --bg:#121212; --card:#1A1A1A; --accent:#E0E0E0; --accent-warm:#FF4030;
+  --text:#E0E0E0; --text-secondary:#AAA; --text-muted:#8A8A8A;
+  --border:#333; --border-light:#2A2A2A; --surface:#1A1A1A;
+  --peak:#FF4030; --trough:#5DADE2; --layer-p:#A0524D; --layer-t:#5DADE2; --layer-i:#5C7A99; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--bg); color:var(--text); font-family:var(--font); transition:background 0.2s, color 0.2s; }
+body { font-feature-settings:"palt"; }
+.top-bar { position:fixed; top:0; left:0; right:0; height:48px; background:var(--bg);
+  border-top:3px solid #121212; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 32px; z-index:100; }
+[data-theme="dark"] .top-bar { border-top:3px solid var(--accent); }
+.brand { font-size:14px; font-weight:700; letter-spacing:0.05em; }
+.brand .v { color:var(--accent-warm); margin-left:8px; }
+.theme-toggle { background:none; border:1px solid var(--border); color:var(--text);
+  padding:6px 14px; cursor:pointer; font-size:12px; border-radius:2px; }
+.theme-toggle:hover { border-color:var(--accent-warm); color:var(--accent-warm); }
+.layout { display:flex; padding-top:48px; min-height:100vh; }
+.toc-sidebar { width:260px; padding:32px 24px; border-right:1px solid var(--border-light);
+  position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto; }
+.toc-sidebar h3 { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:16px; }
+.toc-sidebar ol { list-style:none; counter-reset:toc; }
+.toc-sidebar li { counter-increment:toc; margin-bottom:8px; }
+.toc-sidebar a { display:flex; padding:6px 0; font-size:13px;
+  color:var(--text-secondary); text-decoration:none; line-height:1.5; }
+.toc-sidebar a::before { content:counter(toc, decimal-leading-zero); margin-right:10px;
+  color:var(--text-muted); font-family:"JetBrains Mono",monospace; font-size:11px; }
+.toc-sidebar a:hover { color:var(--accent-warm); }
+.main { flex:1; padding:48px 64px; max-width:880px; margin:0 auto; }
+.report-header { border-bottom:2px solid var(--accent); padding-bottom:32px; margin-bottom:56px; }
+.report-header .meta { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px; }
+.report-header h1 { font-family:var(--font-serif); font-size:34px; line-height:1.4; color:var(--accent); font-weight:500; }
+.report-header .lede { margin-top:18px; font-family:var(--font-serif); font-size:15px; line-height:1.95; color:var(--text-secondary); }
+.chapter-section { margin-bottom:80px; padding-bottom:48px; border-bottom:1px solid var(--border-light); }
+.chapter-section h2 { font-family:var(--font-serif); font-size:24px; color:var(--accent); margin-bottom:28px;
+  padding-bottom:12px; border-bottom:1px solid var(--accent-warm); font-weight:500; }
+.chapter-section h2 .num { color:var(--accent-warm); font-family:"JetBrains Mono",monospace; font-size:14px; margin-right:14px; }
+.chapter-section h3 { font-size:16px; color:var(--accent); margin:28px 0 12px; font-weight:700; }
+.chapter-section p { font-family:var(--font-serif); font-size:15px; line-height:1.95; letter-spacing:0.025em; color:var(--text); margin-bottom:18px; text-indent:1em; }
+.chapter-section p:first-of-type { text-indent:0; }
+.chapter-section p.lead { text-indent:0; font-size:15px; }
+
+/* Figure block */
+.figure { margin:30px 0; }
+.figure svg { width:100%; height:auto; display:block; }
+.figure-cap { font-size:12px; color:var(--text-muted); margin-top:10px; text-align:center; font-style:italic; line-height:1.6; }
+.fig-label { font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:0.15em; color:var(--accent-warm); text-transform:uppercase; margin-bottom:6px; text-align:center; }
+.fig-frame { padding:20px; background:var(--surface); border:1px solid var(--border-light); }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; margin:16px 0; font-size:13px; }
+th, td { padding:8px 12px; text-align:left; border-bottom:1px solid var(--border-light); vertical-align:top; }
+th { background:var(--surface); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; }
+
+@media (max-width:1080px) {
+  .layout { flex-direction:column; }
+  .toc-sidebar { width:100%; height:auto; position:relative; border-right:none; border-bottom:1px solid var(--border-light); padding:14px 24px; }
+  .toc-sidebar ol { display:flex; flex-wrap:wrap; gap:6px 14px; }
+  .main { padding:32px 22px; }
+}
+@media print { .top-bar, .toc-sidebar { display:none; } .main { padding:0; max-width:100%; } }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">Centennial Cascade <span class="v">Illustrated v2</span></div>
+  <button class="theme-toggle" onclick="toggleTheme()">テーマ切替</button>
+</div>
+<div class="layout">
+  <nav class="toc-sidebar">
+    <h3>目次</h3>
+    <ol>
+      <li><a href="#abstract">要旨</a></li>
+      <li><a href="#fig1-timeline">図解1：3000年タイムライン</a></li>
+      <li><a href="#fig2-cascade">図解2：三層連鎖</a></li>
+      <li><a href="#fig3-phases">図解3：4位相サイクル</a></li>
+      <li><a href="#fig4-civ">図解4：文明圏変動</a></li>
+      <li><a href="#fig5-mechanism">図解5：3メカニズム共鳴</a></li>
+      <li><a href="#fig6-trend">図解6：周期と長期トレンド</a></li>
+      <li><a href="#fig7-academic">図解7：既存理論の階層化</a></li>
+      <li><a href="#fig8-prediction">図解8：未来予測タイムライン</a></li>
+      <li><a href="#summary">統合サマリ</a></li>
+    </ol>
+  </nav>
+  <main class="main">
+    <header class="report-header">
+      <div class="meta">Centennial Cascade Model v2 — Illustrated Edition</div>
+      <h1>世紀的連鎖モデル v2<br>図解レポート</h1>
+      <p class="lede">本レポートは、4DB（SI Framework・偉人・技術進化・歴史統合ケース）から構築した社会変動サイクル理論「Centennial Cascade Model v2」を、8つの図解とともに解説する。100年周期、三層連鎖、4位相構造、文明圏変動、3メカニズム共鳴、長期トレンド分離、既存理論の階層化、未来予測——本モデルの中核要素を視覚的に提示する。</p>
+    </header>
+
+    <!-- 要旨 -->
+    <section class="chapter-section" id="abstract">
+      <h2><span class="num">01</span>要旨</h2>
+      <p>4つのデータベースから構築された<strong>世紀的連鎖モデル v2（Centennial Cascade Model v2）</strong> は、社会変動に関する3つの中核命題からなる。第一に、約100年周期が人類社会の構造的時定数として存在する。第二に、社会変革は個人層・技術層・制度層の3層連鎖として展開し、個人層が制度層を50-75年先行する。第三に、100年周期は内部に4位相（Crisis → Reconstruction → Innovation → Institutionalization）を持ち、三つのメカニズム（世代記憶・制度疲労・技術習熟）が相互強化的に働く。</p>
+      <p>本レポートはこれらを8つの図解で順次提示し、計算的歴史学の方法論的成果として可視化する。</p>
+    </section>
+
+    <!-- 図1: タイムライン -->
+    <section class="chapter-section" id="fig1-timeline">
+      <h2><span class="num">02</span>図解1：3000年タイムライン</h2>
+      <p>BC1000-AD2000の3000年にわたる社会変動の集積期と危機期を一望する。23のピーク（赤）と14の谷（青）が、約100年間隔で交互に出現する。深い谷ほど大きな歴史的危機（西ローマ崩壊、暗黒中世、黒死病後、17世紀の一般危機）に対応し、高いピークほど大きな建設期（枢軸時代、ヘレニズム、カロリング・アッバース、ルネサンス、産業革命）に対応する。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 1 / The 3000-Year Cascade</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 1200 380" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="peakGrad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#CC1400" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#CC1400" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="troughGrad" x1="0" x2="0" y1="1" y2="0">
+              <stop offset="0%" stop-color="#1A5276" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#1A5276" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- baseline -->
+          <line x1="40" y1="190" x2="1180" y2="190" stroke="#888" stroke-width="0.6"/>
+          <!-- year labels -->
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#888">
+            <text x="40" y="365">BC1000</text>
+            <text x="220" y="365">BC500</text>
+            <text x="400" y="365">AD0</text>
+            <text x="580" y="365">AD500</text>
+            <text x="760" y="365">AD1000</text>
+            <text x="940" y="365">AD1500</text>
+            <text x="1120" y="365">AD2000</text>
+          </g>
+          <!-- y-axis labels -->
+          <g font-family="JetBrains Mono, monospace" font-size="9" fill="#888">
+            <text x="10" y="55">+2.0</text>
+            <text x="10" y="125">+1.0</text>
+            <text x="10" y="193">  0</text>
+            <text x="10" y="258">-1.0</text>
+            <text x="10" y="325">-2.0</text>
+          </g>
+          <!-- gridlines -->
+          <g stroke="#ddd" stroke-width="0.3" stroke-dasharray="3,3">
+            <line x1="40" y1="55" x2="1180" y2="55"/>
+            <line x1="40" y1="125" x2="1180" y2="125"/>
+            <line x1="40" y1="258" x2="1180" y2="258"/>
+            <line x1="40" y1="325" x2="1180" y2="325"/>
+          </g>
+
+          <!-- Era backgrounds -->
+          <g opacity="0.04">
+            <rect x="40" y="20" width="180" height="350" fill="#888"/>
+            <rect x="220" y="20" width="180" height="350" fill="#444"/>
+            <rect x="400" y="20" width="180" height="350" fill="#888"/>
+            <rect x="580" y="20" width="180" height="350" fill="#444"/>
+            <rect x="760" y="20" width="180" height="350" fill="#888"/>
+            <rect x="940" y="20" width="180" height="350" fill="#444"/>
+          </g>
+          <g font-size="9" font-weight="700" fill="#888" text-anchor="middle">
+            <text x="130" y="35">青銅器後期</text>
+            <text x="310" y="35">古代ギリシア・春秋戦国</text>
+            <text x="490" y="35">ローマ帝政・後漢</text>
+            <text x="670" y="35">ビザンツ・初期イスラム</text>
+            <text x="850" y="35">中世盛期</text>
+            <text x="1030" y="35">近世</text>
+          </g>
+
+          <!-- Smooth approximation curve through detrended composite values -->
+          <!-- key data points (year, comp_value); convert: x = 40 + ((year+1000)/3000)*1140; y = 190 - comp*70 -->
+          <!-- BC900 +0.20: x=78 y=176 -->
+          <!-- BC825 -0.39: x=107 y=217 -->
+          <!-- BC700 +1.10: x=154 y=113 -->
+          <!-- BC500 +1.51: x=230 y=84 -->
+          <!-- BC300 +1.53: x=306 y=83 -->
+          <!-- BC175 -0.52: x=354 y=226 -->
+          <!-- AD0 +0.53: x=420 y=153 -->
+          <!-- AD75 -0.65: x=449 y=235 -->
+          <!-- AD225 -1.07: x=505 y=265 -->
+          <!-- AD300 +0.14: x=534 y=180 -->
+          <!-- AD450 -1.20: x=591 y=274 -->
+          <!-- AD600 +0.47: x=648 y=157 -->
+          <!-- AD725 -1.15: x=695 y=270 -->
+          <!-- AD800 +0.55: x=724 y=151 -->
+          <!-- AD875 -1.34: x=752 y=284 -->
+          <!-- AD975 -1.24: x=790 y=277 -->
+          <!-- AD1100 +0.40: x=838 y=162 -->
+          <!-- AD1175 -1.00: x=866 y=260 -->
+          <!-- AD1375 -0.98: x=942 y=259 -->
+          <!-- AD1500 +0.65: x=990 y=145 -->
+          <!-- AD1675 -0.55: x=1056 y=228 -->
+          <!-- AD1875 +1.72: x=1133 y=70 -->
+          <path d="M 78,176 Q 92,196 107,217 T 154,113 T 230,84 T 306,83 T 354,226 T 420,153 T 449,235 T 505,265 T 534,180 T 591,274 T 648,157 T 695,270 T 724,151 T 752,284 T 790,277 T 838,162 T 866,260 T 942,259 T 990,145 T 1056,228 T 1133,70"
+                fill="none" stroke="#CC1400" stroke-width="1.5" opacity="0.7"/>
+
+          <!-- Major peaks -->
+          <g fill="#CC1400">
+            <circle cx="230" cy="84" r="6"/>
+            <circle cx="306" cy="83" r="6"/>
+            <circle cx="724" cy="151" r="5"/>
+            <circle cx="990" cy="145" r="6"/>
+            <circle cx="1133" cy="70" r="7"/>
+          </g>
+          <!-- minor peaks -->
+          <g fill="#CC1400" opacity="0.6">
+            <circle cx="78" cy="176" r="3"/>
+            <circle cx="116" cy="164" r="3"/>
+            <circle cx="154" cy="113" r="4"/>
+            <circle cx="192" cy="111" r="4"/>
+            <circle cx="268" cy="141" r="3"/>
+            <circle cx="382" cy="139" r="3"/>
+            <circle cx="420" cy="153" r="3"/>
+            <circle cx="458" cy="148" r="3"/>
+            <circle cx="496" cy="156" r="3"/>
+            <circle cx="534" cy="180" r="3"/>
+            <circle cx="610" cy="180" r="3"/>
+            <circle cx="648" cy="157" r="3"/>
+            <circle cx="686" cy="168" r="3"/>
+            <circle cx="762" cy="171" r="3"/>
+            <circle cx="800" cy="168" r="3"/>
+            <circle cx="838" cy="162" r="3"/>
+            <circle cx="876" cy="178" r="3"/>
+            <circle cx="1028" cy="163" r="3"/>
+          </g>
+
+          <!-- Major troughs -->
+          <g fill="#1A5276">
+            <circle cx="591" cy="274" r="6"/>
+            <circle cx="752" cy="284" r="7"/>
+            <circle cx="942" cy="259" r="5"/>
+            <circle cx="1056" cy="228" r="5"/>
+          </g>
+          <g fill="#1A5276" opacity="0.6">
+            <circle cx="107" cy="217" r="3"/>
+            <circle cx="183" cy="204" r="3"/>
+            <circle cx="259" cy="192" r="2.5"/>
+            <circle cx="354" cy="226" r="4"/>
+            <circle cx="411" cy="222" r="3"/>
+            <circle cx="449" cy="235" r="3"/>
+            <circle cx="505" cy="265" r="5"/>
+            <circle cx="695" cy="270" r="5"/>
+            <circle cx="790" cy="277" r="5"/>
+            <circle cx="866" cy="260" r="4"/>
+          </g>
+
+          <!-- Annotations for major events -->
+          <g font-size="10" fill="#CC1400" font-weight="700" text-anchor="middle">
+            <text x="230" y="72">BC500 枢軸時代</text>
+            <text x="306" y="72">BC300 ヘレニズム</text>
+            <text x="724" y="139">800 大ルネサンス</text>
+            <text x="990" y="133">1500 ルネサンス</text>
+            <text x="1133" y="58">1875 工業化頂点</text>
+          </g>
+          <g font-size="10" fill="#1A5276" font-weight="700" text-anchor="middle">
+            <text x="591" y="296">450 西ローマ崩壊</text>
+            <text x="752" y="305">875 暗黒中世</text>
+            <text x="942" y="282">1375 黒死病</text>
+            <text x="1056" y="246">1675 一般危機</text>
+          </g>
+
+          <!-- Legend -->
+          <g font-size="11">
+            <circle cx="900" cy="16" r="5" fill="#CC1400"/>
+            <text x="912" y="20" fill="#CC1400">ピーク（集積期）</text>
+            <circle cx="1020" cy="16" r="5" fill="#1A5276"/>
+            <text x="1032" y="20" fill="#1A5276">谷（危機期）</text>
+          </g>
+        </svg>
+        </div>
+        <div class="figure-cap">図解1：BC1000-AD2000の社会変動指標。23ピーク（赤）と14谷（青）が約100年間隔で交互に出現。AD875の谷（中世暗黒期）が最深、AD1875のピーク（産業化頂点）が最高。</div>
+      </div>
+    </section>
+
+    <!-- 図2: 三層連鎖 -->
+    <section class="chapter-section" id="fig2-cascade">
+      <h2><span class="num">03</span>図解2：三層連鎖の時間構造</h2>
+      <p>社会変革は3つの層——個人層（偉人）・物質層（技術）・制度層（SI）——の連鎖的運動として展開する。データから検出された明確なリード・ラグ構造は次のとおりである。<strong>個人層が制度層を50年先行する場合に相関最大（r=0.900）</strong>、<strong>技術層は制度層と同時的（r=0.945）</strong>。これは、ある時代の文化的・物質的環境が次世代の人格形成を規定し、彼らが活動期に入る50年後に制度的革新として結晶化するという、世代継承メカニズムを示す。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 2 / Three-Layer Cascade</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg">
+          <!-- Time axis -->
+          <line x1="80" y1="320" x2="820" y2="320" stroke="#888" stroke-width="0.6"/>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#888">
+            <text x="80" y="340" text-anchor="middle">t-50</text>
+            <text x="245" y="340" text-anchor="middle">t-25</text>
+            <text x="410" y="340" text-anchor="middle">t (現在)</text>
+            <text x="575" y="340" text-anchor="middle">t+25</text>
+            <text x="740" y="340" text-anchor="middle">t+50</text>
+          </g>
+          <text x="450" y="355" font-size="11" fill="#888" text-anchor="middle">時間軸（年）</text>
+
+          <!-- Layer 1: Persons -->
+          <rect x="50" y="40" width="800" height="60" rx="4" fill="#6E2C2C" opacity="0.08" stroke="#6E2C2C" stroke-width="1"/>
+          <text x="60" y="58" font-size="11" fill="#6E2C2C" font-weight="700">PERSON LAYER</text>
+          <text x="60" y="74" font-size="13" fill="#6E2C2C" font-weight="700">個人層（偉人）</text>
+          <text x="60" y="90" font-size="11" fill="#6E2C2C">9,178人物</text>
+
+          <!-- Layer 2: Technology -->
+          <rect x="50" y="125" width="800" height="60" rx="4" fill="#1A5276" opacity="0.08" stroke="#1A5276" stroke-width="1"/>
+          <text x="60" y="143" font-size="11" fill="#1A5276" font-weight="700">TECH LAYER</text>
+          <text x="60" y="159" font-size="13" fill="#1A5276" font-weight="700">技術層</text>
+          <text x="60" y="175" font-size="11" fill="#1A5276">1,191技術</text>
+
+          <!-- Layer 3: Institutions -->
+          <rect x="50" y="210" width="800" height="60" rx="4" fill="#2C3E50" opacity="0.08" stroke="#2C3E50" stroke-width="1"/>
+          <text x="60" y="228" font-size="11" fill="#2C3E50" font-weight="700">INSTITUTION LAYER (SI)</text>
+          <text x="60" y="244" font-size="13" fill="#2C3E50" font-weight="700">制度層（SI事象）</text>
+          <text x="60" y="260" font-size="11" fill="#2C3E50">7,389事象</text>
+
+          <!-- Person event peaks (clustered around t-50) -->
+          <g fill="#6E2C2C">
+            <circle cx="100" cy="70" r="6"/>
+            <circle cx="80" cy="70" r="5"/>
+            <circle cx="120" cy="70" r="5"/>
+            <circle cx="65" cy="70" r="4"/>
+            <circle cx="140" cy="70" r="4"/>
+            <circle cx="155" cy="70" r="3"/>
+          </g>
+          <text x="100" y="40" font-size="11" fill="#6E2C2C" font-weight="700" text-anchor="middle">集積</text>
+
+          <!-- Tech peaks (around t) -->
+          <g fill="#1A5276">
+            <circle cx="410" cy="155" r="6"/>
+            <circle cx="395" cy="155" r="5"/>
+            <circle cx="425" cy="155" r="5"/>
+            <circle cx="380" cy="155" r="4"/>
+            <circle cx="440" cy="155" r="4"/>
+          </g>
+          <text x="410" y="125" font-size="11" fill="#1A5276" font-weight="700" text-anchor="middle">同時集積</text>
+
+          <!-- SI peaks (around t) -->
+          <g fill="#2C3E50">
+            <circle cx="410" cy="240" r="6"/>
+            <circle cx="395" cy="240" r="5"/>
+            <circle cx="425" cy="240" r="5"/>
+            <circle cx="375" cy="240" r="4"/>
+            <circle cx="445" cy="240" r="4"/>
+            <circle cx="465" cy="240" r="3"/>
+          </g>
+          <text x="410" y="290" font-size="11" fill="#2C3E50" font-weight="700" text-anchor="middle">結晶化</text>
+
+          <!-- Cascade arrows -->
+          <!-- Person -> SI: 50-year delay -->
+          <path d="M 100 90 C 200 130, 300 220, 405 235" stroke="#CC1400" stroke-width="2.5" fill="none" marker-end="url(#arrow1)"/>
+          <text x="240" y="160" font-size="12" fill="#CC1400" font-weight="700">r=0.900 (lag=-50y)</text>
+          <text x="240" y="178" font-size="11" fill="#CC1400">50年遅延 (世代継承)</text>
+
+          <!-- Tech -> SI: simultaneous -->
+          <path d="M 410 175 L 410 215" stroke="#1A5276" stroke-width="2.5" fill="none" marker-end="url(#arrow2)"/>
+          <text x="430" y="200" font-size="11" fill="#1A5276">r=0.945 (lag=0)</text>
+          <text x="430" y="216" font-size="10" fill="#1A5276">同時 (Perez Installation/Deployment)</text>
+
+          <!-- Markers -->
+          <defs>
+            <marker id="arrow1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#CC1400"/>
+            </marker>
+            <marker id="arrow2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#1A5276"/>
+            </marker>
+          </defs>
+        </svg>
+        </div>
+        <div class="figure-cap">図解2：三層連鎖の時間構造。個人層の集積（時刻t-50）→ 制度層の結晶化（時刻t）の50年遅延。技術層は制度層と同時的に集積する。</div>
+      </div>
+    </section>
+
+    <!-- 図3: 4位相 -->
+    <section class="chapter-section" id="fig3-phases">
+      <h2><span class="num">04</span>図解3：100年周期の4位相サイクル</h2>
+      <p>100年の主周期は内部に4つの位相を持つ。Strauss-Howe の世代理論に着想を得て、Turchin のクリオダイナミクスで構造的圧力を、Carlota Perez の Installation/Deployment 二相性を技術層に組み込んだ統合モデルである。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 3 / The Four-Phase Cycle</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 720 720" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer ring divided into 4 phases -->
+          <g transform="translate(360,360)">
+            <!-- Phase 1 (Crisis) - top right -->
+            <path d="M 0,0 L 0,-260 A 260,260 0 0 1 260,0 z" fill="#CC1400" opacity="0.12" stroke="#CC1400" stroke-width="2"/>
+            <!-- Phase 2 (Reconstruction) - bottom right -->
+            <path d="M 0,0 L 260,0 A 260,260 0 0 1 0,260 z" fill="#6E2C2C" opacity="0.12" stroke="#6E2C2C" stroke-width="2"/>
+            <!-- Phase 3 (Innovation) - bottom left -->
+            <path d="M 0,0 L 0,260 A 260,260 0 0 1 -260,0 z" fill="#1A5276" opacity="0.12" stroke="#1A5276" stroke-width="2"/>
+            <!-- Phase 4 (Institutionalization) - top left -->
+            <path d="M 0,0 L -260,0 A 260,260 0 0 1 0,-260 z" fill="#2C3E50" opacity="0.12" stroke="#2C3E50" stroke-width="2"/>
+
+            <!-- Inner circle (mechanism core) -->
+            <circle cx="0" cy="0" r="80" fill="#FFFFFF" stroke="#121212" stroke-width="1.5"/>
+            <text x="0" y="-15" font-size="13" font-weight="700" text-anchor="middle">100年</text>
+            <text x="0" y="5" font-size="10" text-anchor="middle">構造的</text>
+            <text x="0" y="20" font-size="10" text-anchor="middle">時定数</text>
+            <text x="0" y="50" font-size="9" text-anchor="middle" fill="#888">Centennial</text>
+
+            <!-- Phase labels and contents -->
+            <!-- Phase 1: Crisis (top right, 0-25y) -->
+            <text x="130" y="-200" font-size="13" font-weight="700" fill="#CC1400" text-anchor="middle">Phase 1</text>
+            <text x="130" y="-180" font-size="16" font-weight="700" fill="#CC1400" text-anchor="middle">Crisis</text>
+            <text x="130" y="-160" font-size="11" fill="#CC1400" text-anchor="middle">危機・制度崩壊</text>
+            <text x="130" y="-138" font-size="10" fill="#555" text-anchor="middle">0-25年</text>
+            <text x="130" y="-115" font-size="9" fill="#555" text-anchor="middle">Turchin 3圧力同時発火</text>
+            <text x="130" y="-100" font-size="9" fill="#555" text-anchor="middle">Polanyi 社会防衛活性</text>
+
+            <!-- Phase 2: Reconstruction (bottom right, 25-50y) -->
+            <text x="130" y="180" font-size="13" font-weight="700" fill="#6E2C2C" text-anchor="middle">Phase 2</text>
+            <text x="130" y="200" font-size="16" font-weight="700" fill="#6E2C2C" text-anchor="middle">Reconstruction</text>
+            <text x="130" y="220" font-size="11" fill="#6E2C2C" text-anchor="middle">再建・人物層集積</text>
+            <text x="130" y="240" font-size="10" fill="#555" text-anchor="middle">25-50年</text>
+            <text x="130" y="262" font-size="9" fill="#555" text-anchor="middle">新世代の登場</text>
+            <text x="130" y="277" font-size="9" fill="#555" text-anchor="middle">Schumpeter 創造的破壊</text>
+
+            <!-- Phase 3: Innovation (bottom left, 50-75y) -->
+            <text x="-130" y="180" font-size="13" font-weight="700" fill="#1A5276" text-anchor="middle">Phase 3</text>
+            <text x="-130" y="200" font-size="16" font-weight="700" fill="#1A5276" text-anchor="middle">Innovation</text>
+            <text x="-130" y="220" font-size="11" fill="#1A5276" text-anchor="middle">革新・技術層集積</text>
+            <text x="-130" y="240" font-size="10" fill="#555" text-anchor="middle">50-75年</text>
+            <text x="-130" y="262" font-size="9" fill="#555" text-anchor="middle">Perez Installation Phase</text>
+            <text x="-130" y="277" font-size="9" fill="#555" text-anchor="middle">技術革新クラスター</text>
+
+            <!-- Phase 4: Institutionalization (top left, 75-100y) -->
+            <text x="-130" y="-200" font-size="13" font-weight="700" fill="#2C3E50" text-anchor="middle">Phase 4</text>
+            <text x="-130" y="-180" font-size="16" font-weight="700" fill="#2C3E50" text-anchor="middle">Institutionalization</text>
+            <text x="-130" y="-160" font-size="11" fill="#2C3E50" text-anchor="middle">制度化・安定</text>
+            <text x="-130" y="-138" font-size="10" fill="#555" text-anchor="middle">75-100年</text>
+            <text x="-130" y="-115" font-size="9" fill="#555" text-anchor="middle">Perez Deployment</text>
+            <text x="-130" y="-100" font-size="9" fill="#555" text-anchor="middle">Modelski Hegemonic Stability</text>
+
+            <!-- Rotation arrows -->
+            <g fill="none" stroke="#888" stroke-width="2">
+              <path d="M 250 -90 A 280 280 0 0 1 250 90" marker-end="url(#cycarrow)"/>
+              <path d="M 90 250 A 280 280 0 0 1 -90 250" marker-end="url(#cycarrow)"/>
+              <path d="M -250 90 A 280 280 0 0 1 -250 -90" marker-end="url(#cycarrow)"/>
+              <path d="M -90 -250 A 280 280 0 0 1 90 -250" marker-end="url(#cycarrow)"/>
+            </g>
+          </g>
+          <defs>
+            <marker id="cycarrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#888"/>
+            </marker>
+          </defs>
+        </svg>
+        </div>
+        <div class="figure-cap">図解3：100年周期の4位相循環。Crisis（危機）→ Reconstruction（再建）→ Innovation（革新）→ Institutionalization（制度化）→ 次のCrisisへ。各位相は約25年。</div>
+      </div>
+    </section>
+
+    <!-- 図4: 文明圏変動 -->
+    <section class="chapter-section" id="fig4-civ">
+      <h2><span class="num">05</span>図解4：文明圏ごとの周期長変動</h2>
+      <p>100年は人類社会の<strong>下限</strong>かつ<strong>密集統合系の固有値</strong>として現れる。覇権・断片化・規模拡大は周期長を伸ばす方向に作用する。アメリカス先住諸文明（密集統合）と東アジア（連続統合）が短い周期を、西洋（拡張的覇権）が長い周期を示す。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 4 / Civilizational Variance</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg">
+          <!-- baseline -->
+          <line x1="180" y1="60" x2="180" y2="430" stroke="#888" stroke-width="0.6"/>
+          <!-- x-axis -->
+          <line x1="180" y1="430" x2="780" y2="430" stroke="#888" stroke-width="0.6"/>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#888">
+            <text x="180" y="450">100</text>
+            <text x="320" y="450">150</text>
+            <text x="460" y="450">200</text>
+            <text x="600" y="450">250</text>
+            <text x="740" y="450">300</text>
+          </g>
+          <text x="475" y="470" font-size="11" fill="#888" text-anchor="middle">中央値ピーク間隔（年）</text>
+          <!-- gridlines -->
+          <g stroke="#ddd" stroke-width="0.3" stroke-dasharray="3,3">
+            <line x1="320" y1="60" x2="320" y2="430"/>
+            <line x1="460" y1="60" x2="460" y2="430"/>
+            <line x1="600" y1="60" x2="600" y2="430"/>
+            <line x1="740" y1="60" x2="740" y2="430"/>
+          </g>
+
+          <!-- bars (each 35h with 6 spacing) sorted shortest to longest -->
+          <g font-family="Noto Sans JP" font-size="12">
+            <!-- Americas 100 -->
+            <rect x="180" y="80" width="0" height="32" fill="#CC1400"/>
+            <text x="170" y="100" text-anchor="end" fill="#CC1400" font-weight="700">アメリカス</text>
+            <text x="190" y="100" font-family="JetBrains Mono, monospace" font-size="11" fill="#CC1400" font-weight="700">100y</text>
+
+            <!-- East Asian 125 -->
+            <rect x="180" y="120" width="70" height="32" fill="#CC1400" opacity="0.85"/>
+            <text x="170" y="140" text-anchor="end" fill="#CC1400">東アジア</text>
+            <text x="260" y="140" font-family="JetBrains Mono, monospace" font-size="11" fill="#CC1400">125y</text>
+
+            <!-- Central Asian 125 -->
+            <rect x="180" y="160" width="70" height="32" fill="#CC1400" opacity="0.85"/>
+            <text x="170" y="180" text-anchor="end" fill="#555">中央アジア</text>
+            <text x="260" y="180" font-family="JetBrains Mono, monospace" font-size="11" fill="#555">125y</text>
+
+            <!-- Islamic 150 -->
+            <rect x="180" y="200" width="140" height="32" fill="#CC1400" opacity="0.7"/>
+            <text x="170" y="220" text-anchor="end" fill="#555">イスラム</text>
+            <text x="330" y="220" font-family="JetBrains Mono, monospace" font-size="11" fill="#555">150y</text>
+
+            <!-- SEA 150 -->
+            <rect x="180" y="240" width="140" height="32" fill="#CC1400" opacity="0.7"/>
+            <text x="170" y="260" text-anchor="end" fill="#555">東南アジア</text>
+            <text x="330" y="260" font-family="JetBrains Mono, monospace" font-size="11" fill="#555">150y</text>
+
+            <!-- African 175 -->
+            <rect x="180" y="280" width="210" height="32" fill="#CC1400" opacity="0.55"/>
+            <text x="170" y="300" text-anchor="end" fill="#555">アフリカ</text>
+            <text x="400" y="300" font-family="JetBrains Mono, monospace" font-size="11" fill="#555">175y</text>
+
+            <!-- Pacific 200 -->
+            <rect x="180" y="320" width="280" height="32" fill="#CC1400" opacity="0.45"/>
+            <text x="170" y="340" text-anchor="end" fill="#555">太平洋</text>
+            <text x="470" y="340" font-family="JetBrains Mono, monospace" font-size="11" fill="#555">200y</text>
+
+            <!-- South Asian 200 -->
+            <rect x="180" y="360" width="280" height="32" fill="#CC1400" opacity="0.45"/>
+            <text x="170" y="380" text-anchor="end" fill="#555">南アジア</text>
+            <text x="470" y="380" font-family="JetBrains Mono, monospace" font-size="11" fill="#555">200y</text>
+
+            <!-- Western 275 -->
+            <rect x="180" y="400" width="490" height="32" fill="#CC1400" opacity="0.35"/>
+            <text x="170" y="420" text-anchor="end" fill="#555" font-weight="700">西洋</text>
+            <text x="680" y="420" font-family="JetBrains Mono, monospace" font-size="11" fill="#555" font-weight="700">275y</text>
+          </g>
+
+          <!-- top labels for category bands -->
+          <g font-size="10" fill="#888">
+            <line x1="180" y1="64" x2="320" y2="64" stroke="#CC1400" stroke-width="2"/>
+            <text x="250" y="55" font-weight="700" fill="#CC1400" text-anchor="middle">密集統合系</text>
+            <text x="250" y="40" fill="#888" text-anchor="middle">100-125年</text>
+
+            <line x1="320" y1="64" x2="460" y2="64" stroke="#888" stroke-width="2"/>
+            <text x="390" y="55" font-weight="700" text-anchor="middle">中間圏</text>
+            <text x="390" y="40" text-anchor="middle">150年</text>
+
+            <line x1="460" y1="64" x2="780" y2="64" stroke="#888" stroke-width="2"/>
+            <text x="620" y="55" font-weight="700" text-anchor="middle">覇権・断片化系</text>
+            <text x="620" y="40" text-anchor="middle">175-275年</text>
+          </g>
+        </svg>
+        </div>
+        <div class="figure-cap">図解4：9文明圏の周期中央値分布。アメリカス(100y) → 西洋(275y) で2.75倍の差。密集統合度・規模・拡張性が周期長を規定する。</div>
+      </div>
+    </section>
+
+    <!-- 図5: 3メカニズム -->
+    <section class="chapter-section" id="fig5-mechanism">
+      <h2><span class="num">06</span>図解5：3メカニズムの共鳴</h2>
+      <p>なぜ100年なのか。本モデルは3つの相互独立なメカニズムが100年前後で共鳴する固有振動として説明する。世代記憶（25-30年×3世代≒80-90年）、制度疲労（80-120年）、技術習熟（Perez 1.5-2サイクル≒75-100年）——これらの異なる時間スケールが100年で共鳴し、社会変動の集中を生む。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 5 / Three-Mechanism Resonance</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
+          <!-- 3 sine waves overlapping -->
+          <!-- Wave 1: Generation memory (period 85y) -->
+          <text x="40" y="30" font-size="12" font-weight="700" fill="#6E2C2C">M1: 世代記憶</text>
+          <text x="40" y="46" font-size="10" fill="#6E2C2C">25年×3世代 ≒ 80-90年</text>
+          <path d="M 40 80 Q 90 50, 140 80 T 240 80 T 340 80 T 440 80 T 540 80 T 640 80 T 740 80"
+                fill="none" stroke="#6E2C2C" stroke-width="2.5" opacity="0.9"/>
+
+          <!-- Wave 2: Institutional decay (period 100y) -->
+          <text x="40" y="155" font-size="12" font-weight="700" fill="#1A5276">M2: 制度疲労</text>
+          <text x="40" y="171" font-size="10" fill="#1A5276">構造的疲労 ≒ 80-120年</text>
+          <path d="M 40 200 Q 100 170, 160 200 T 280 200 T 400 200 T 520 200 T 640 200 T 760 200"
+                fill="none" stroke="#1A5276" stroke-width="2.5" opacity="0.9"/>
+
+          <!-- Wave 3: Tech maturation (period 90y) -->
+          <text x="40" y="280" font-size="12" font-weight="700" fill="#2C3E50">M3: 技術習熟</text>
+          <text x="40" y="296" font-size="10" fill="#2C3E50">Perez 1.5-2サイクル ≒ 75-100年</text>
+          <path d="M 40 325 Q 92 295, 145 325 T 250 325 T 355 325 T 460 325 T 565 325 T 670 325 T 775 325"
+                fill="none" stroke="#2C3E50" stroke-width="2.5" opacity="0.9"/>
+
+          <!-- Resonance bands -->
+          <g opacity="0.15">
+            <rect x="135" y="40" width="20" height="320" fill="#CC1400"/>
+            <rect x="240" y="40" width="20" height="320" fill="#CC1400"/>
+            <rect x="345" y="40" width="20" height="320" fill="#CC1400"/>
+            <rect x="450" y="40" width="20" height="320" fill="#CC1400"/>
+            <rect x="555" y="40" width="20" height="320" fill="#CC1400"/>
+          </g>
+          <g font-size="10" fill="#CC1400" font-weight="700" text-anchor="middle">
+            <text x="145" y="370">共鳴</text>
+            <text x="250" y="370">共鳴</text>
+            <text x="355" y="370">共鳴</text>
+            <text x="460" y="370">共鳴</text>
+            <text x="565" y="370">共鳴</text>
+          </g>
+
+          <!-- Result wave at top -->
+          <text x="700" y="30" font-size="11" font-weight="700" fill="#CC1400">≒ 100年周期</text>
+          <text x="700" y="46" font-size="10" fill="#CC1400">人類社会の固有振動数</text>
+        </svg>
+        </div>
+        <div class="figure-cap">図解5：3つの相互独立なメカニズムが100年前後で共鳴する。これが「100年が人類社会の固有振動数である」理由。</div>
+      </div>
+    </section>
+
+    <!-- 図6: トレンド分離 -->
+    <section class="chapter-section" id="fig6-trend">
+      <h2><span class="num">07</span>図解6：周期成分と長期トレンドの分離</h2>
+      <p>観測される社会変革集積は、(1) Morris の Social Development Index と整合する人類社会の指数的長期トレンド、(2) 本モデルの100年周期成分、(3) ノイズ、の3つの加法的合成である。100年周期は進歩を否定するのではなく、進歩の上に重畳する振動として位置づけられる。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 6 / Trend + Cycle + Noise Decomposition</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 800 460" xmlns="http://www.w3.org/2000/svg">
+          <!-- Panel 1: Observed -->
+          <text x="20" y="30" font-size="11" font-weight="700" fill="#121212">A: 観測値（log-scale）</text>
+          <line x1="40" y1="100" x2="780" y2="100" stroke="#888" stroke-width="0.5"/>
+          <!-- Curve: increasing exponential with oscillation -->
+          <path d="M 40 95 Q 100 90, 160 88 Q 220 82, 280 78 Q 340 70, 400 60 Q 460 45, 520 40 Q 580 30, 640 25 Q 700 18, 780 12"
+                fill="none" stroke="#121212" stroke-width="2.2"/>
+          <!-- Add oscillations -->
+          <path d="M 40 88 Q 100 92, 160 80 Q 220 92, 280 70 Q 340 78, 400 50 Q 460 60, 520 32 Q 580 40, 640 18 Q 700 28, 780 20"
+                fill="none" stroke="#121212" stroke-width="0.8" opacity="0.4" stroke-dasharray="3,2"/>
+
+          <!-- Panel 2: Trend -->
+          <text x="20" y="160" font-size="11" font-weight="700" fill="#1A5276">B: 長期トレンド（指数成長, Morris）</text>
+          <line x1="40" y1="230" x2="780" y2="230" stroke="#888" stroke-width="0.5"/>
+          <path d="M 40 225 Q 100 220, 160 215 Q 220 208, 280 200 Q 340 188, 400 175 Q 460 158, 520 140 Q 580 118, 640 95 Q 700 75, 780 60"
+                fill="none" stroke="#1A5276" stroke-width="2.5"/>
+
+          <!-- Plus sign -->
+          <text x="400" y="265" font-size="22" font-weight="700" fill="#888" text-anchor="middle">+</text>
+
+          <!-- Panel 3: Cycle -->
+          <text x="20" y="285" font-size="11" font-weight="700" fill="#CC1400">C: 100年周期成分（v2の対象）</text>
+          <line x1="40" y1="335" x2="780" y2="335" stroke="#888" stroke-width="0.5"/>
+          <!-- Sine wave -->
+          <path d="M 40 335 C 70 320, 100 350, 130 335 S 190 320, 220 335 S 280 350, 310 335 S 370 320, 400 335 S 460 350, 490 335 S 550 320, 580 335 S 640 350, 670 335 S 730 320, 780 335"
+                fill="none" stroke="#CC1400" stroke-width="2.5"/>
+
+          <!-- Plus sign -->
+          <text x="400" y="370" font-size="22" font-weight="700" fill="#888" text-anchor="middle">+</text>
+
+          <!-- Panel 4: Noise -->
+          <text x="20" y="390" font-size="11" font-weight="700" fill="#888">D: ノイズ</text>
+          <line x1="40" y1="430" x2="780" y2="430" stroke="#888" stroke-width="0.5"/>
+          <path d="M 40 432 L 60 425 L 80 437 L 100 426 L 120 433 L 140 422 L 160 438 L 180 426 L 200 433 L 220 425 L 240 436 L 260 423 L 280 437 L 300 426 L 320 432 L 340 423 L 360 437 L 380 425 L 400 433 L 420 422 L 440 437 L 460 425 L 480 433 L 500 422 L 520 437 L 540 425 L 560 433 L 580 423 L 600 437 L 620 425 L 640 432 L 660 425 L 680 437 L 700 423 L 720 433 L 740 422 L 760 436 L 780 425"
+                fill="none" stroke="#888" stroke-width="1"/>
+        </svg>
+        </div>
+        <div class="figure-cap">図解6：観測値（A）= 長期トレンド（B, Morris）+ 100年周期（C, v2の対象）+ ノイズ（D）。本モデルは Morris の長期進歩観を否定せず、その上に重畳する振動として位置づける。</div>
+      </div>
+    </section>
+
+    <!-- 図7: 既存理論の階層化 -->
+    <section class="chapter-section" id="fig7-academic">
+      <h2><span class="num">08</span>図解7：既存サイクル理論の階層的位置づけ</h2>
+      <p>本モデルは10の主要サイクル理論（Spengler/Toynbee, Modelski, Turchin, Strauss-Howe, Kondratieff/Perez, Schumpeter, Polanyi, Acemoglu-Robinson, Goldstone）を時間スケールで階層化し、矛盾ではなく階層的補完関係として位置づける。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 7 / Theory Hierarchy by Timescale</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 800 460" xmlns="http://www.w3.org/2000/svg">
+          <!-- log scale x-axis: 5y to 2000y -->
+          <line x1="40" y1="420" x2="760" y2="420" stroke="#888" stroke-width="0.6"/>
+          <g font-family="JetBrains Mono, monospace" font-size="10" fill="#888">
+            <text x="40" y="440">5y</text>
+            <text x="160" y="440">20y</text>
+            <text x="280" y="440">50y</text>
+            <text x="400" y="440">100y</text>
+            <text x="520" y="440">200y</text>
+            <text x="640" y="440">500y</text>
+            <text x="760" y="440">2000y</text>
+          </g>
+          <text x="400" y="455" font-size="11" fill="#888" text-anchor="middle">時間スケール（log）</text>
+
+          <!-- Each theory as a horizontal band -->
+          <!-- Kitchin / Juglar -->
+          <g>
+            <rect x="40" y="50" width="120" height="22" fill="#888" opacity="0.3" rx="2"/>
+            <text x="170" y="65" font-size="11">Kitchin / Juglar (5-11y)</text>
+          </g>
+
+          <!-- Strauss-Howe (80y) -->
+          <g>
+            <rect x="345" y="80" width="55" height="22" fill="#1A5276" opacity="0.5" rx="2"/>
+            <text x="410" y="95" font-size="11" fill="#1A5276">Strauss-Howe世代理論 (80y)</text>
+          </g>
+
+          <!-- Kondratieff / Perez (50-60y) -->
+          <g>
+            <rect x="280" y="110" width="80" height="22" fill="#1A5276" opacity="0.6" rx="2"/>
+            <text x="370" y="125" font-size="11" fill="#1A5276">Kondratieff / Perez (50-60y)</text>
+          </g>
+
+          <!-- Schumpeter clusters -->
+          <g>
+            <rect x="220" y="140" width="180" height="22" fill="#1A5276" opacity="0.4" rx="2"/>
+            <text x="410" y="155" font-size="11" fill="#1A5276">Schumpeter Innovation Clusters</text>
+          </g>
+
+          <!-- Modelski Long Cycles (100y) -->
+          <g>
+            <rect x="395" y="170" width="15" height="22" fill="#CC1400" opacity="0.85" rx="2"/>
+            <text x="420" y="185" font-size="11" fill="#CC1400" font-weight="700">★ Modelski Long Cycles (100y)</text>
+          </g>
+
+          <!-- v2 Centennial Cascade (THIS WORK) -->
+          <g>
+            <rect x="395" y="200" width="15" height="22" fill="#CC1400" rx="2"/>
+            <text x="420" y="215" font-size="11" fill="#CC1400" font-weight="700">★ v2 Centennial Cascade (100y, this work)</text>
+          </g>
+
+          <!-- Turchin Cliodynamics (100-200y) -->
+          <g>
+            <rect x="395" y="230" width="125" height="22" fill="#CC1400" opacity="0.6" rx="2"/>
+            <text x="530" y="245" font-size="11" fill="#CC1400">Turchin Cliodynamics (100-200y)</text>
+          </g>
+
+          <!-- Goldstone State Breakdown (100-200y) -->
+          <g>
+            <rect x="395" y="260" width="125" height="22" fill="#CC1400" opacity="0.4" rx="2"/>
+            <text x="530" y="275" font-size="11" fill="#555">Goldstone State Breakdown (100-200y)</text>
+          </g>
+
+          <!-- Polanyi Double Movement (~150y) -->
+          <g>
+            <rect x="430" y="290" width="60" height="22" fill="#888" opacity="0.4" rx="2"/>
+            <text x="500" y="305" font-size="11" fill="#555">Polanyi Double Movement (~150y)</text>
+          </g>
+
+          <!-- Acemoglu-Robinson Critical Junctures (irregular ~100-200y) -->
+          <g>
+            <rect x="395" y="320" width="200" height="22" fill="#888" opacity="0.3" rx="2" stroke="#888" stroke-dasharray="3,2"/>
+            <text x="600" y="335" font-size="11" fill="#555">Acemoglu-Robinson Critical Junctures (不規則)</text>
+          </g>
+
+          <!-- Spengler / Toynbee (1000-1500y) -->
+          <g>
+            <rect x="700" y="370" width="50" height="22" fill="#2C3E50" opacity="0.5" rx="2"/>
+            <text x="700" y="365" font-size="11" fill="#2C3E50" text-anchor="middle">Spengler / Toynbee (1000-1500y)</text>
+          </g>
+
+          <!-- Vertical line at 100y to highlight v2 position -->
+          <line x1="400" y1="40" x2="400" y2="430" stroke="#CC1400" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+          <text x="400" y="35" font-size="10" fill="#CC1400" font-weight="700" text-anchor="middle">100y</text>
+        </svg>
+        </div>
+        <div class="figure-cap">図解7：本モデル（v2）は100年スケールに位置し、Modelski Long Cycles と完全一致、Turchin Cliodynamics と整合。Kondratieff/Perez は1サイクル下、Spengler/Toynbee は1サイクル上の階層。</div>
+      </div>
+    </section>
+
+    <!-- 図8: 未来予測 -->
+    <section class="chapter-section" id="fig8-prediction">
+      <h2><span class="num">09</span>図解8：未来予測タイムライン</h2>
+      <p>2008年の金融危機を100年周期の Crisis 起点と仮定すると、現代（2025年）は Phase 1（Crisis）の終盤に位置する。今後の予測は次のとおり——2025-2033年が政治不安定の最大化期、2033-2058年が再建期、2058-2083年がAI制度結晶化期。Turchin の "Ages of Discord" 予測（2010-2030年の不安定期）と独立に整合する。</p>
+      <div class="figure">
+        <div class="fig-label">Figure 8 / Predictive Timeline (2008-2108)</div>
+        <div class="fig-frame">
+        <svg viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg">
+          <!-- timeline -->
+          <line x1="40" y1="200" x2="860" y2="200" stroke="#888" stroke-width="0.6"/>
+
+          <!-- 4 phases -->
+          <!-- Phase 1: Crisis 2008-2033 -->
+          <rect x="40" y="100" width="200" height="100" fill="#CC1400" opacity="0.18" stroke="#CC1400" stroke-width="1.5"/>
+          <text x="140" y="140" font-size="13" fill="#CC1400" font-weight="700" text-anchor="middle">Phase 1</text>
+          <text x="140" y="158" font-size="14" fill="#CC1400" font-weight="700" text-anchor="middle">Crisis</text>
+          <text x="140" y="178" font-size="11" fill="#CC1400" text-anchor="middle">2008-2033</text>
+          <text x="140" y="220" font-size="10" fill="#888" text-anchor="middle">2008金融危機</text>
+          <text x="140" y="234" font-size="10" fill="#888" text-anchor="middle">2025-2030</text>
+          <text x="140" y="248" font-size="10" fill="#CC1400" font-weight="700" text-anchor="middle">不安定最大化</text>
+
+          <!-- Phase 2: Reconstruction 2033-2058 -->
+          <rect x="240" y="100" width="200" height="100" fill="#6E2C2C" opacity="0.18" stroke="#6E2C2C" stroke-width="1.5"/>
+          <text x="340" y="140" font-size="13" fill="#6E2C2C" font-weight="700" text-anchor="middle">Phase 2</text>
+          <text x="340" y="158" font-size="14" fill="#6E2C2C" font-weight="700" text-anchor="middle">Reconstruction</text>
+          <text x="340" y="178" font-size="11" fill="#6E2C2C" text-anchor="middle">2033-2058</text>
+          <text x="340" y="220" font-size="10" fill="#888" text-anchor="middle">人物層集積</text>
+          <text x="340" y="234" font-size="10" fill="#888" text-anchor="middle">新世代台頭</text>
+
+          <!-- Phase 3: Innovation 2058-2083 -->
+          <rect x="440" y="100" width="200" height="100" fill="#1A5276" opacity="0.18" stroke="#1A5276" stroke-width="1.5"/>
+          <text x="540" y="140" font-size="13" fill="#1A5276" font-weight="700" text-anchor="middle">Phase 3</text>
+          <text x="540" y="158" font-size="14" fill="#1A5276" font-weight="700" text-anchor="middle">Innovation</text>
+          <text x="540" y="178" font-size="11" fill="#1A5276" text-anchor="middle">2058-2083</text>
+          <text x="540" y="220" font-size="10" fill="#888" text-anchor="middle">AI制度結晶化</text>
+          <text x="540" y="234" font-size="10" fill="#888" text-anchor="middle">技術革命完成</text>
+
+          <!-- Phase 4: Institutionalization 2083-2108 -->
+          <rect x="640" y="100" width="200" height="100" fill="#2C3E50" opacity="0.18" stroke="#2C3E50" stroke-width="1.5"/>
+          <text x="740" y="140" font-size="13" fill="#2C3E50" font-weight="700" text-anchor="middle">Phase 4</text>
+          <text x="740" y="158" font-size="14" fill="#2C3E50" font-weight="700" text-anchor="middle">Institutionalization</text>
+          <text x="740" y="178" font-size="11" fill="#2C3E50" text-anchor="middle">2083-2108</text>
+          <text x="740" y="220" font-size="10" fill="#888" text-anchor="middle">新ヘゲモン安定</text>
+          <text x="740" y="234" font-size="10" fill="#888" text-anchor="middle">次のCrisisへ</text>
+
+          <!-- Year markers -->
+          <g font-family="JetBrains Mono, monospace" font-size="11" fill="#888">
+            <text x="40" y="270" text-anchor="middle">2008</text>
+            <text x="240" y="270" text-anchor="middle">2033</text>
+            <text x="440" y="270" text-anchor="middle">2058</text>
+            <text x="640" y="270" text-anchor="middle">2083</text>
+            <text x="840" y="270" text-anchor="middle">2108</text>
+          </g>
+
+          <!-- "現在" pointer -->
+          <text x="180" y="60" font-size="13" font-weight="700" fill="#CC1400" text-anchor="middle">↓ 現在 (2026)</text>
+          <line x1="180" y1="65" x2="180" y2="200" stroke="#CC1400" stroke-width="2" stroke-dasharray="4,3"/>
+
+          <!-- Historical analogy -->
+          <text x="450" y="320" font-size="12" fill="#888" text-anchor="middle" font-weight="700">100年前の歴史的アナロジー：1925-2025 = 1825-1925</text>
+          <text x="450" y="340" font-size="11" fill="#888" text-anchor="middle">1825-1850 (Crisis: 革命期/南北戦争前夜) → 1850-1875 (Reconstruction) → 1875-1900 (Innovation) → 1900-1925 (Institutionalization)</text>
+        </svg>
+        </div>
+        <div class="figure-cap">図解8：v2モデルが提示する2008-2108年予測。現在は Phase 1 終盤、2025-2030年が不安定最大化期と予測される（Turchin予測と独立に整合）。</div>
+      </div>
+    </section>
+
+    <!-- 統合 -->
+    <section class="chapter-section" id="summary">
+      <h2><span class="num">10</span>統合サマリ</h2>
+      <p>世紀的連鎖モデル v2 は、4つのデータベースから経験的に検出された100年周期を、既存10理論との階層的対話を通じて理論化したものである。本レポートで提示した8つの図解は、本モデルの中核要素を視覚化したものとして総合的に読まれるべきである。</p>
+      <p><strong>図解1</strong> が3000年の振動の存在を、<strong>図解2</strong> が3層の時間構造を、<strong>図解3</strong> が周期内部の4位相を示し、<strong>図解4</strong> が文明圏ごとの変動を、<strong>図解5</strong> が3メカニズムの共鳴を示す。<strong>図解6</strong> は本モデルが進歩観を否定しないことを、<strong>図解7</strong> は既存理論との階層的補完関係を、<strong>図解8</strong> は予測的含意を提示する。</p>
+      <p>本モデルの核心メッセージは単純である：人類社会は約100年を周期に振動する固有振動数を持ち、その振動は世代記憶・制度疲労・技術習熟という3つのメカニズムが共鳴する結果である。我々はいま100年周期の Crisis 局面の終盤にあり、2030年代から2058年までの再建期、2058-2083年の革新期、2083-2108年の制度化期を経て、次の Crisis（2108年前後）に向かうと予測される。この長い時間視角は、現在の混乱を「終わりの始まり」ではなく「次の周期の始まり」として読み直す手がかりを提供する。</p>
+    </section>
+
+    <p style="text-align:center; color:var(--text-muted); font-size:11px; margin-top:48px; padding-top:24px; border-top:1px solid var(--border-light);">
+      Generated: 2026-05-07 / 4DB integrated cycle theory — Illustrated Edition<br>
+      <a href="social-cycles-theory-v2.html" style="color:var(--accent-warm);">→ 理論レポート（テキスト版）</a> /
+      <a href="social-cycles-dashboard.html" style="color:var(--accent-warm);">→ データダッシュボード</a><br>
+      <a href="https://github.com/yuyanishimura0312/social-cycles-theory" style="color:var(--accent-warm);">GitHub</a>
+    </p>
+  </main>
+</div>
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('cycles-theme', next);
+}
+const saved = localStorage.getItem('cycles-theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
