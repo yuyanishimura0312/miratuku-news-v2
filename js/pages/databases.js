@@ -90,6 +90,7 @@ initNav('databases');
         if (dbItem.dashboard) supLinks.push('<a href="' + safeUrl(dbItem.dashboard) + '" class="db-dashboard-link">\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9 &rarr;</a>');
         if (dbItem.report) supLinks.push('<a href="' + safeUrl(dbItem.report) + '" class="db-dashboard-link">\u30ec\u30dd\u30fc\u30c8 &rarr;</a>');
         if (dbItem.textbook) supLinks.push('<a href="' + safeUrl(dbItem.textbook) + '" class="db-dashboard-link">\u6559\u79d1\u66f8 &rarr;</a>');
+        if (dbItem.network) supLinks.push('<a href="' + safeUrl(dbItem.network) + '" class="db-dashboard-link">\u30cd\u30c3\u30c8\u30ef\u30fc\u30af &rarr;</a>');
         var supAgentBadge = dbItem.agent ? ' <span class="db-entry-agent" title="Claude Code\u3067' + escapeHtml(dbItem.agent) + '\u3067\u8d77\u52d5">' + escapeHtml(dbItem.agent) + '</span>' : '';
         html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa || dbItem.name_ja || dbItem.name) + '</strong>' + supAgentBadge +
           '<div style="color:var(--text);font-weight:600">' + escapeHtml(dbItem.stat || '') + '</div>' +
