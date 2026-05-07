@@ -31,17 +31,59 @@ initNav('databases');
 
     var container = document.getElementById('dbLayersContent');
     var html = '';
+    var layerEyebrows = { core: 'CORE', structural: 'STRUCTURAL', detection: 'DETECTION', conceptual: 'CONCEPTUAL' };
     data.layers.forEach(function(layer) {
-      html += '<div class="db-layer"><div class="db-layer-header">' +
-        '<div class="db-layer-title">' + escapeHtml(layer.name) + '</div>' +
-        '<div class="db-layer-desc">' + escapeHtml(layer.description) + '</div></div>' +
+      var eyebrow = layerEyebrows[layer.id] || layer.id.toUpperCase();
+      var count = layer.databases.length;
+      html += '<div class="db-layer" data-layer-id="' + escapeHtml(layer.id) + '">' +
+        '<div class="db-layer-header">' +
+          '<div class="db-layer-header-main">' +
+            '<div class="db-layer-eyebrow">' + escapeHtml(eyebrow) + '</div>' +
+            '<div class="db-layer-title">' + escapeHtml(layer.name) + '</div>' +
+            '<div class="db-layer-desc">' + escapeHtml(layer.description) + '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="db-layer-count">' + count + '</div>' +
+            '<div class="db-layer-count-label">DATABASES</div>' +
+          '</div>' +
+        '</div>' +
         '<div class="db-layer-grid">';
       layer.databases.forEach(function(dbItem) { html += renderDbEntry(dbItem); });
       html += '</div></div>';
     });
-    // \u88dc\u52a9\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\uff08\u65e2\u5b58\u306e\u30d5\u30e9\u30c3\u30c8\u30ea\u30b9\u30c8\uff09
+
+    // \u4e8b\u696d\u5316\u30bb\u30af\u30b7\u30e7\u30f3
+    if (data.extraSections && data.extraSections.length > 0) {
+      data.extraSections.forEach(function(section) {
+        var secCount = section.databases.length;
+        html += '<div class="db-extra-section">' +
+          '<div class="db-extra-header">' +
+            '<div class="db-layer-header" style="background:transparent;border:none;padding:0;margin:0">' +
+              '<div class="db-layer-header-main">' +
+                '<div class="db-extra-eyebrow">' + escapeHtml(section.id.toUpperCase()) + '</div>' +
+                '<div class="db-extra-title">' + escapeHtml(section.name) + '</div>' +
+                (section.description ? '<div class="db-extra-desc">' + escapeHtml(section.description) + '</div>' : '') +
+              '</div>' +
+              '<div>' +
+                '<div class="db-layer-count">' + secCount + '</div>' +
+                '<div class="db-layer-count-label">DATABASES</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="db-layer-grid">';
+        section.databases.forEach(function(dbItem) {
+          html += renderDbEntry(dbItem);
+        });
+        html += '</div></div>';
+      });
+    }
+
+    // \u88dc\u52a9\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9
     if (data.supplementary && data.supplementary.length > 0) {
-      html += '<div class="db-supplementary"><div class="db-supplementary-title">\u88dc\u52a9\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9</div>';
+      html += '<div class="db-supplementary">' +
+        '<div class="db-supplementary-eyebrow">SUPPLEMENTARY</div>' +
+        '<div class="db-supplementary-title">\u88dc\u52a9\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9 (' + data.supplementary.length + ')</div>' +
+        '<div class="db-supplementary-desc">4\u5c64\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u3068\u4e8b\u696d\u5316\u30bb\u30af\u30b7\u30e7\u30f3\u3092\u88dc\u8db3\u3059\u308b\u9818\u57df\u7279\u5316\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u7fa4\u3002</div>';
       html += '<div class="db-supplementary-grid">';
       data.supplementary.forEach(function(dbItem) {
         var supLinks = [];
@@ -50,28 +92,12 @@ initNav('databases');
         if (dbItem.textbook) supLinks.push('<a href="' + safeUrl(dbItem.textbook) + '" class="db-dashboard-link">\u6559\u79d1\u66f8 &rarr;</a>');
         var supAgentBadge = dbItem.agent ? ' <span class="db-entry-agent" title="Claude Code\u3067' + escapeHtml(dbItem.agent) + '\u3067\u8d77\u52d5">' + escapeHtml(dbItem.agent) + '</span>' : '';
         html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa || dbItem.name_ja || dbItem.name) + '</strong>' + supAgentBadge +
-          '<div>' + escapeHtml(dbItem.stat || '') + '</div>' +
-          '<div style="color:var(--text-muted);margin-top:2px">' + escapeHtml(dbItem.description || '') + '</div>' +
-          (supLinks.length ? '<div style="margin-top:6px">' + supLinks.join(' ') + '</div>' : '') +
+          '<div style="color:var(--text);font-weight:600">' + escapeHtml(dbItem.stat || '') + '</div>' +
+          '<div style="color:var(--text-muted);margin-top:4px">' + escapeHtml(dbItem.description || '') + '</div>' +
+          (supLinks.length ? '<div style="margin-top:8px">' + supLinks.join(' ') + '</div>' : '') +
           '</div>';
       });
       html += '</div></div>';
-    }
-
-    // \u88dc\u52a9DB\u306e\u4e0b\u306b\u4e26\u3076\u72ec\u7acb\u30bb\u30af\u30b7\u30e7\u30f3\uff08\u4e8b\u696d\u5316\u306a\u3069\uff09
-    if (data.extraSections && data.extraSections.length > 0) {
-      data.extraSections.forEach(function(section) {
-        html += '<div class="db-extra-section">' +
-          '<div class="db-extra-header">' +
-            '<div class="db-extra-title">' + escapeHtml(section.name) + '</div>' +
-            (section.description ? '<div class="db-extra-desc">' + escapeHtml(section.description) + '</div>' : '') +
-          '</div>' +
-          '<div class="db-layer-grid">';
-        section.databases.forEach(function(dbItem) {
-          html += renderDbEntry(dbItem);
-        });
-        html += '</div></div>';
-      });
     }
 
     container.innerHTML = html;
