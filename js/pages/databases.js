@@ -92,6 +92,7 @@ initNav('databases');
         if (dbItem.textbook) supLinks.push('<a href="' + safeUrl(dbItem.textbook) + '" class="db-dashboard-link">\u6559\u79d1\u66f8 &rarr;</a>');
         if (dbItem.network) supLinks.push('<a href="' + safeUrl(dbItem.network) + '" class="db-dashboard-link">\u30cd\u30c3\u30c8\u30ef\u30fc\u30af &rarr;</a>');
         if (dbItem.essay) supLinks.push('<a href="' + safeUrl(dbItem.essay) + '" class="db-dashboard-link">\u8ad6\u8003 &rarr;</a>');
+        if (dbItem.essay2) supLinks.push('<a href="' + safeUrl(dbItem.essay2) + '" class="db-dashboard-link">\u7d9a\u8ad6 &rarr;</a>');
         var supAgentBadge = dbItem.agent ? ' <span class="db-entry-agent" title="Claude Code\u3067' + escapeHtml(dbItem.agent) + '\u3067\u8d77\u52d5">' + escapeHtml(dbItem.agent) + '</span>' : '';
         html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa || dbItem.name_ja || dbItem.name) + '</strong>' + supAgentBadge +
           '<div style="color:var(--text);font-weight:600">' + escapeHtml(dbItem.stat || '') + '</div>' +
