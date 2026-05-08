@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<title>哲学概念DB 構造的分析レポート</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #AAAAAA;
+  --accent-warm: #FF4030; --accent-warm-soft: #E03020;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-serif); background: var(--bg); color: var(--text);
+  line-height: 1.85; letter-spacing: 0.025em; font-feature-settings: "palt";
+}
+.top-bar {
+  position: sticky; top: 0; z-index: 100; height: 48px;
+  background: var(--bg); border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+}
+.brand { font-family: var(--font); font-weight: 700; letter-spacing: 0.1em; }
+.brand a { color: var(--text); text-decoration: none; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border); color: var(--text);
+  padding: 4px 12px; cursor: pointer; font-family: var(--font); font-size: 12px;
+}
+.layout { display: grid; grid-template-columns: 240px 1fr; gap: 32px; max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+.toc-sidebar {
+  position: sticky; top: 80px; align-self: start; height: fit-content;
+  border-right: 1px solid var(--border-light); padding-right: 24px;
+  font-family: var(--font); font-size: 13px;
+}
+.toc-sidebar h3 { font-size: 12px; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 16px; }
+.toc-sidebar ol { list-style: none; padding: 0; margin: 0; counter-reset: chap; }
+.toc-sidebar ol li { counter-increment: chap; margin: 8px 0; }
+.toc-sidebar ol li::before { content: counter(chap, decimal-leading-zero) " "; color: var(--text-muted); font-family: var(--font-mono); margin-right: 8px; }
+.toc-sidebar a { color: var(--text-secondary); text-decoration: none; }
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.main { max-width: 760px; }
+h1 { font-family: var(--font-serif); font-size: 28px; font-weight: 700; line-height: 1.4; margin: 0 0 8px; letter-spacing: 0.04em; }
+h2 { font-family: var(--font-serif); font-size: 22px; font-weight: 700; margin: 56px 0 16px; padding-top: 24px; border-top: 1px solid var(--border-light); letter-spacing: 0.05em; }
+h3 { font-family: var(--font-serif); font-size: 17px; font-weight: 700; margin: 32px 0 12px; }
+.lead { font-size: 14px; color: var(--text-secondary); margin: 16px 0 24px; }
+.meta { font-family: var(--font); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; margin-top: 12px; }
+p { font-size: 15px; text-indent: 1em; margin: 0 0 16px; }
+p:first-of-type { text-indent: 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-family: var(--font); font-size: 13px; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; }
+td.num { font-family: var(--font-mono); text-align: right; }
+.chapter-section { margin-bottom: 64px; padding-bottom: 24px; }
+.chapter-section:not(:last-child) { border-bottom: 1px solid var(--border-light); }
+.callout { background: var(--accent-muted); border-left: 4px solid var(--accent-warm); padding: 16px 20px; margin: 24px 0; font-size: 14px; }
+.callout strong { color: var(--accent-warm); }
+.fig-note { font-size: 11px; color: var(--text-muted); margin: 4px 0 16px; font-family: var(--font); }
+ul.findings { margin: 16px 0; padding-left: 20px; }
+ul.findings li { margin-bottom: 12px; font-size: 14px; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; border-right: none; padding-right: 0; border-bottom: 1px solid var(--border-light); padding-bottom: 16px; margin-bottom: 16px; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .main { max-width: none; }
+}
+</style></head>
+<body>
+<div class="top-bar">
+  <div class="brand"><a href="../databases.html">PHIL — 構造的分析レポート</a></div>
+  <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+<div class="layout">
+<aside class="toc-sidebar">
+<h3>CONTENTS</h3>
+<ol>
+<li><a href="#intro">序：分析の目的</a></li>
+<li><a href="#method">方法論</a></li>
+<li><a href="#chapter1">第1章 系譜の構造</a></li>
+<li><a href="#chapter2">第2章 GTAボトムアップ構造化</a></li>
+<li><a href="#chapter3">第3章 全体関係性の解明</a></li>
+<li><a href="#chapter4">第4章 思想クラスターの発見</a></li>
+<li><a href="#chapter5">第5章 文明圏間の概念交流</a></li>
+<li><a href="#chapter6">第6章 ピボット概念</a></li>
+<li><a href="#findings">総合的発見</a></li>
+<li><a href="#limitations">限界と展望</a></li>
+</ol>
+</aside>
+<main class="main">
+
+<section class="chapter-section" id="intro">
+<h1>哲学概念DB 構造的分析レポート</h1>
+<div class="meta">PHIL Structural Analysis Report ／ 2026-05-09 01:26 ／ 9,583概念・37,789関係を対象</div>
+<p class="lead">本レポートは哲学概念DB（PHIL）の9,583概念をボトムアップに分析し、時代・文明圏・哲学者・学派の系譜と、概念群が示す構造的パターンを解明する試みである。</p>
+<p>分析は四段階で進める。第一に、各概念のメタデータ（時代情報・哲学者帰属・学派情報）を手掛かりに思想史の系譜を復元する。第二に、Grounded Theory Approach（GTA）の三段階コーディング（オープン・軸足・選択的）によって、概念群を下から構造化する。第三に、両者を統合して文明圏間・時代間の関係性を抽出する。第四に、すべての知見を総合的所見として提示する。</p>
+<p>本分析の意義は二つある。一つは、9,583概念という巨大なテクスチャが示すマクロパターン――枢軸時代から第四変容（AI時代）までの2,500年にわたる人類の概念活動の輪郭――を可視化することである。もう一つは、西洋・東洋・非西欧グローバルを等価収録した本DBの構造を通して、現代の哲学的問題（人格・意識・倫理・自然・時間・AI）を多文明的に再考する基盤を提示することである。</p>
+</section>
+
+<section class="chapter-section" id="method">
+<h2>方法論</h2>
+<p><strong>Step 1 系譜分析</strong> ── era_start（時代年）・key_researchers（哲学者）・school_of_thought（学派）の三つのフィールドを用いて、哲学者ごとの概念リストと学派ごとの時代範囲を集計する。同一学派内で時代の早い哲学者を「先行者」とし、後続者への影響を系譜として再構成する。</p>
+<p><strong>Step 2 GTAボトムアップ構造化</strong> ── オープンコーディングで37の哲学的キーワード集合を概念定義に対し走査し、概念にコードを付与する。次に軸足コーディングで37コードを13の上位カテゴリ（軸足）へ集約する。最後に選択的コーディングで、文明圏×時代×軸足の三項クロス分析を行い、普遍的カテゴリと文明特異的カテゴリを識別する。</p>
+<p><strong>Step 3 全体関係性解析</strong> ── Step 1の系譜とStep 2のGTA構造を統合する。文明圏ごとの軸足プロファイル、時代ごとの軸足変遷、ピボット概念（複数軸足を貫く概念）、思想クラスター（軸足共起から発見される思想群）を抽出する。</p>
+<p><strong>Step 4 レポート化</strong> ── 上記すべての結果をtextbook構造（赤白CI）に基づくHTMLとして組版する。</p>
+<div class="callout">
+<strong>注意</strong>　オープンコーディングの「歴史と時間の哲学」と「AI時代と情報哲学」の値は、各概念定義に「歴史的中核」「21世紀」等の定型句が頻出するため過大評価されている。しかし、相対的順位やクロス分析には依然として情報価値があるため、本レポートでは数字を併記しつつ解釈時にこの留保を明示する。
+</div>
+</section>
+
+<section class="chapter-section" id="chapter1">
+<h2>第1章 系譜の構造</h2>
+<p>9,583概念の背後には3,403名の哲学者が確認できる。うち5概念以上に紐づく主要哲学者は599名で、彼らが概念群の知的中核を担う。学派は1,823個確認され、そのうち概念5件以上・哲学者2名以上を満たす「実質的学派」（系譜）は407個に達する。</p>
+
+<h3>主要哲学者プロファイル（言及概念数 上位20名）</h3>
+<table>
+<thead><tr><th>哲学者</th><th>関連概念</th><th>主要軸足カテゴリ</th></tr></thead>
+<tbody>
+<tr><td>朱熹</td><td class='num'>136</td><td>認識と知の哲学(104) / 歴史と時間の哲学(42) / AI時代と情報哲学(40)</td></tr>
+<tr><td>Aristotle</td><td class='num'>116</td><td>歴史と時間の哲学(83) / AI時代と情報哲学(73) / 認識と知の哲学(35)</td></tr>
+<tr><td>孔子</td><td class='num'>96</td><td>認識と知の哲学(57) / 歴史と時間の哲学(38) / AI時代と情報哲学(35)</td></tr>
+<tr><td>Thomas Aquinas</td><td class='num'>92</td><td>宗教と霊性の哲学(69) / 歴史と時間の哲学(51) / AI時代と情報哲学(46)</td></tr>
+<tr><td>Martin Heidegger</td><td class='num'>83</td><td>歴史と時間の哲学(70) / AI時代と情報哲学(63) / 存在と実在の哲学(63)</td></tr>
+<tr><td>Plato</td><td class='num'>82</td><td>歴史と時間の哲学(64) / AI時代と情報哲学(48) / 認識と知の哲学(46)</td></tr>
+<tr><td>Immanuel Kant</td><td class='num'>78</td><td>歴史と時間の哲学(51) / 認識と知の哲学(45) / AI時代と情報哲学(44)</td></tr>
+<tr><td>Buddha</td><td class='num'>75</td><td>認識と知の哲学(39) / 宗教と霊性の哲学(36) / 政治と正義の哲学(36)</td></tr>
+<tr><td>Vasubandhu</td><td class='num'>72</td><td>政治と正義の哲学(43) / 歴史と時間の哲学(36) / AI時代と情報哲学(35)</td></tr>
+<tr><td>John Dewey</td><td class='num'>71</td><td>認識と知の哲学(38) / 歴史と時間の哲学(32) / AI時代と情報哲学(28)</td></tr>
+<tr><td>老子</td><td class='num'>70</td><td>存在と実在の哲学(22) / 歴史と時間の哲学(21) / 認識と知の哲学(20)</td></tr>
+<tr><td>Confucius</td><td class='num'>64</td><td>認識と知の哲学(47) / 歴史と時間の哲学(22) / 倫理と徳の哲学(21)</td></tr>
+<tr><td>Nagarjuna</td><td class='num'>62</td><td>政治と正義の哲学(32) / 歴史と時間の哲学(30) / 存在と実在の哲学(27)</td></tr>
+<tr><td>荘子</td><td class='num'>58</td><td>歴史と時間の哲学(27) / AI時代と情報哲学(26) / 認識と知の哲学(17)</td></tr>
+<tr><td>Laozi</td><td class='num'>58</td><td>存在と実在の哲学(23) / 歴史と時間の哲学(17) / 認識と知の哲学(15)</td></tr>
+<tr><td>Friedrich Nietzsche</td><td class='num'>57</td><td>歴史と時間の哲学(47) / AI時代と情報哲学(40) / 倫理と徳の哲学(18)</td></tr>
+<tr><td>al-Ghazali</td><td class='num'>54</td><td>宗教と霊性の哲学(52) / 認識と知の哲学(34) / 倫理と徳の哲学(14)</td></tr>
+<tr><td>孟子</td><td class='num'>52</td><td>認識と知の哲学(28) / AI時代と情報哲学(27) / 倫理と徳の哲学(26)</td></tr>
+<tr><td>G.W.F. Hegel</td><td class='num'>52</td><td>歴史と時間の哲学(49) / AI時代と情報哲学(43) / 宗教と霊性の哲学(20)</td></tr>
+<tr><td>Mahayana masters</td><td class='num'>51</td><td>認識と知の哲学(31) / 政治と正義の哲学(26) / 宗教と霊性の哲学(13)</td></tr>
+
+</tbody></table>
+<div class="fig-note">図1.1　主要哲学者の概念数と軸足プロファイル。朱熹・Aristotle・孔子が三大頂点を成す。</div>
+
+<h3>主要学派プロファイル（概念数 上位20学派）</h3>
+<table>
+<thead><tr><th>学派</th><th>概念数</th><th>主要軸足</th></tr></thead>
+<tbody>
+<tr><td>批判理論</td><td class='num'>380</td><td>批判と解放の哲学(95) / 歴史と時間の哲学(70) / AI時代と情報哲学(69)</td></tr>
+<tr><td>分析哲学</td><td class='num'>374</td><td>歴史と時間の哲学(98) / AI時代と情報哲学(97) / 認識と知の哲学(83)</td></tr>
+<tr><td>現象学</td><td class='num'>348</td><td>実存と意味の哲学(73) / AI時代と情報哲学(65) / 歴史と時間の哲学(64)</td></tr>
+<tr><td>儒家</td><td class='num'>346</td><td>歴史と時間の哲学(83) / AI時代と情報哲学(76) / 認識と知の哲学(53)</td></tr>
+<tr><td>実存主義</td><td class='num'>337</td><td>実存と意味の哲学(70) / 歴史と時間の哲学(66) / AI時代と情報哲学(55)</td></tr>
+<tr><td>ポスト構造主義</td><td class='num'>335</td><td>歴史と時間の哲学(70) / 構造と関係の哲学(70) / AI時代と情報哲学(69)</td></tr>
+<tr><td>ドイツ観念論</td><td class='num'>303</td><td>歴史と時間の哲学(70) / AI時代と情報哲学(62) / 認識と知の哲学(29)</td></tr>
+<tr><td>近代アフリカ思想</td><td class='num'>280</td><td>AI時代と情報哲学(66) / 歴史と時間の哲学(66) / 批判と解放の哲学(66)</td></tr>
+<tr><td>道家</td><td class='num'>277</td><td>歴史と時間の哲学(55) / AI時代と情報哲学(43) / 存在と実在の哲学(36)</td></tr>
+<tr><td>脱植民地</td><td class='num'>258</td><td>批判と解放の哲学(69) / 歴史と時間の哲学(65) / AI時代と情報哲学(64)</td></tr>
+<tr><td>心の哲学</td><td class='num'>257</td><td>認識と知の哲学(83) / AI時代と情報哲学(58) / 歴史と時間の哲学(45)</td></tr>
+<tr><td>古代ギリシア</td><td class='num'>242</td><td>歴史と時間の哲学(78) / AI時代と情報哲学(55) / 認識と知の哲学(27)</td></tr>
+<tr><td>京都学派</td><td class='num'>241</td><td>歴史と時間の哲学(56) / AI時代と情報哲学(49) / 存在と実在の哲学(38)</td></tr>
+<tr><td>応用倫理</td><td class='num'>232</td><td>AI時代と情報哲学(65) / 歴史と時間の哲学(65) / 政治と正義の哲学(27)</td></tr>
+<tr><td>古典プラグマティズム</td><td class='num'>221</td><td>歴史と時間の哲学(54) / AI時代と情報哲学(54) / 認識と知の哲学(38)</td></tr>
+<tr><td>AI哲学</td><td class='num'>218</td><td>AI時代と情報哲学(81) / 歴史と時間の哲学(54) / 認識と知の哲学(34)</td></tr>
+<tr><td>近世哲学</td><td class='num'>202</td><td>歴史と時間の哲学(57) / 認識と知の哲学(33) / AI時代と情報哲学(27)</td></tr>
+<tr><td>マルクス主義</td><td class='num'>192</td><td>歴史と時間の哲学(55) / AI時代と情報哲学(50) / 批判と解放の哲学(25)</td></tr>
+<tr><td>AI倫理</td><td class='num'>178</td><td>AI時代と情報哲学(60) / 歴史と時間の哲学(29) / 政治と正義の哲学(24)</td></tr>
+<tr><td>政治哲学</td><td class='num'>175</td><td>歴史と時間の哲学(46) / AI時代と情報哲学(43) / 政治と正義の哲学(36)</td></tr>
+
+</tbody></table>
+<div class="fig-note">図1.2　主要学派の規模と思想的傾向。分析哲学・儒家・道家が三巨頭。</div>
+
+<h3>系譜チェーン（学派ごとの哲学者連鎖 上位15）</h3>
+<table>
+<thead><tr><th>学派</th><th>時代範囲</th><th>概念</th><th>哲学者連鎖</th></tr></thead>
+<tbody>
+<tr><td>分析哲学</td><td>1781 〜 2012</td><td class='num'>128</td><td>Alfred Tarski → Kurt Gödel → Immanuel Kant → Gottlob Frege → Bertrand Russell → William James …</td></tr>
+<tr><td>儒家</td><td>-1000 〜 800</td><td class='num'>127</td><td>古代の聖王 → 朱子 → 周公 → Confucius → 孔子 → Zengzi …</td></tr>
+<tr><td>道家</td><td>-400 〜 -300</td><td class='num'>122</td><td>Laozi → 老子 → 荘子 → Zhuangzi → 王弼 → Anonymous</td></tr>
+<tr><td>批判理論</td><td>1923 〜 2022</td><td class='num'>107</td><td>Hans-Georg Gadamer → Walter Benjamin → Max Horkheimer → Horkheimer → Adorno → Erich Fromm …</td></tr>
+<tr><td>心の哲学</td><td>1929 〜 2010</td><td class='num'>83</td><td>Franz Brentano → C.I. Lewis → U.T. Place → Gilbert Ryle → U. T. Place → J.J.C. Smart …</td></tr>
+<tr><td>ポスト構造主義</td><td>1961 〜 2008</td><td class='num'>83</td><td>Spinoza → Jeremy Bentham → Friedrich Nietzsche → Gilles Deleuze → Roland Barthes → Michel Foucault …</td></tr>
+<tr><td>AI哲学</td><td>1936 〜 2024</td><td class='num'>82</td><td>Michael Walzer → Alan Turing → Walter Pitts → Warren McCulloch → John von Neumann → Frank Rosenblatt …</td></tr>
+<tr><td>京都学派</td><td>1911 〜 1985</td><td class='num'>80</td><td>親鸞 → Meister Eckhart → Friedrich Nietzsche → William James → Nishida Kitaro → 西田幾多郎 …</td></tr>
+<tr><td>古代ギリシア</td><td>-800 〜 520</td><td class='num'>80</td><td>Homer → Thales → Anaximander → Anaximenes → Pythagoras → Parmenides …</td></tr>
+<tr><td>応用倫理</td><td>1859 〜 2022</td><td class='num'>79</td><td>Mahatma Gandhi → Michael Walzer → Alasdair MacIntyre → John Stuart Mill → Philippa Foot → Francis Galton …</td></tr>
+<tr><td>実存主義</td><td>1843 〜 1960</td><td class='num'>76</td><td>Meister Eckhart → Søren Kierkegaard → Friedrich Nietzsche → Nikolai Berdyaev → Gabriel Marcel → Karl Jaspers …</td></tr>
+<tr><td>現象学</td><td>1874 〜 1999</td><td class='num'>76</td><td>Augustine → Max Scheler → Edmund Husserl → Brentano → Franz Brentano → Alfred Schutz …</td></tr>
+<tr><td>ドイツ観念論</td><td>1781 〜 1842</td><td class='num'>75</td><td>Immanuel Kant → Friedrich Schiller → Johann Gottlieb Fichte → J. G. Fichte → G.W.F. Hegel → Friedrich Schelling …</td></tr>
+<tr><td>近代アフリカ思想</td><td>1939 〜 2018</td><td class='num'>73</td><td>Cheikh Anta Diop → Ifeanyi Menkiti → Kwame Gyekye → Kwasi Wiredu → John Mbiti → Mogobe Ramose …</td></tr>
+<tr><td>スーフィズム</td><td>700 〜 1478</td><td class='num'>70</td><td>Hasan al-Basri → Rabi'a al-Adawiyya → Sufi tradition → Rabiʿa al-ʿAdawiyya → Dhu al-Nun al-Misri → Attar …</td></tr>
+
+</tbody></table>
+<div class="fig-note">図1.3　学派内の時代順哲学者連鎖。系譜の連続性を可視化。</div>
+</section>
+
+<section class="chapter-section" id="chapter2">
+<h2>第2章 GTAボトムアップ構造化</h2>
+<p>9,583概念のうち9,316件（97.2%）に少なくとも1つの哲学的コードが付与された。コードは37種類、軸足カテゴリへの集約後は13種類となる。</p>
+
+<h3>2.1 オープンコーディング：哲学的コード上位25</h3>
+<table>
+<thead><tr><th>コード</th><th>概念数</th></tr></thead>
+<tbody>
+<tr><td>歴史哲学</td><td class='num'>5347</td></tr>
+<tr><td>計算・AI</td><td class='num'>4982</td></tr>
+<tr><td>意識</td><td class='num'>2771</td></tr>
+<tr><td>神学</td><td class='num'>1994</td></tr>
+<tr><td>存在論</td><td class='num'>1554</td></tr>
+<tr><td>言語</td><td class='num'>1427</td></tr>
+<tr><td>コミュニタリアン</td><td class='num'>1052</td></tr>
+<tr><td>批判理論</td><td class='num'>964</td></tr>
+<tr><td>認識論</td><td class='num'>951</td></tr>
+<tr><td>自然哲学</td><td class='num'>921</td></tr>
+<tr><td>脱植民地</td><td class='num'>720</td></tr>
+<tr><td>自己論</td><td class='num'>713</td></tr>
+<tr><td>美学</td><td class='num'>696</td></tr>
+<tr><td>関係論</td><td class='num'>611</td></tr>
+<tr><td>構造主義</td><td class='num'>609</td></tr>
+<tr><td>形而上学</td><td class='num'>555</td></tr>
+<tr><td>徳倫理</td><td class='num'>548</td></tr>
+<tr><td>リベラリズム</td><td class='num'>532</td></tr>
+<tr><td>正義論</td><td class='num'>329</td></tr>
+<tr><td>神秘主義</td><td class='num'>319</td></tr>
+<tr><td>実存主義</td><td class='num'>307</td></tr>
+<tr><td>民主主義</td><td class='num'>299</td></tr>
+<tr><td>身体論</td><td class='num'>270</td></tr>
+<tr><td>フェミニズム</td><td class='num'>262</td></tr>
+<tr><td>時間論</td><td class='num'>246</td></tr>
+
+</tbody></table>
+<div class="fig-note">図2.1　オープンコーディングで抽出された37コードの上位25。</div>
+
+<h3>2.2 軸足コーディング：13の上位カテゴリ</h3>
+<table>
+<thead><tr><th>軸足カテゴリ</th><th>概念数</th><th>含まれるコード</th></tr></thead>
+<tbody>
+<tr><td>歴史と時間の哲学</td><td class='num'>5,453</td><td>歴史哲学 / 時間論</td></tr>
+<tr><td>AI時代と情報哲学</td><td class='num'>5,021</td><td>計算・AI / 情報哲学 / ポストヒューマン</td></tr>
+<tr><td>認識と知の哲学</td><td class='num'>3,938</td><td>認識論 / 意識 / 言語</td></tr>
+<tr><td>宗教と霊性の哲学</td><td class='num'>2,207</td><td>神学 / 神秘主義 / 解脱・救済</td></tr>
+<tr><td>政治と正義の哲学</td><td class='num'>2,141</td><td>正義論 / 権力 / 民主主義 / リベラリズム / コミュニタリアン</td></tr>
+<tr><td>存在と実在の哲学</td><td class='num'>2,055</td><td>存在論 / 形而上学 / プロセス</td></tr>
+<tr><td>批判と解放の哲学</td><td class='num'>1,717</td><td>脱植民地 / フェミニズム / 批判理論</td></tr>
+<tr><td>構造と関係の哲学</td><td class='num'>1,211</td><td>構造主義 / 脱構築 / 関係論</td></tr>
+<tr><td>自己と他者の哲学</td><td class='num'>1,060</td><td>自己論 / 他者論 / 身体論</td></tr>
+<tr><td>自然と環境の哲学</td><td class='num'>1,003</td><td>自然哲学 / 気候・人類世</td></tr>
+<tr><td>倫理と徳の哲学</td><td class='num'>909</td><td>徳倫理 / 義務論 / 功利主義 / ケアの倫理</td></tr>
+<tr><td>美と詩の哲学</td><td class='num'>696</td><td>美学</td></tr>
+<tr><td>実存と意味の哲学</td><td class='num'>486</td><td>実存主義 / 現象学</td></tr>
+
+</tbody></table>
+<div class="fig-note">図2.2　13軸足カテゴリ。一概念は複数カテゴリに帰属しうる。</div>
+
+<h3>2.3 軸足カテゴリ間の共起ペア（上位20）</h3>
+<table>
+<thead><tr><th>カテゴリA</th><th>カテゴリB</th><th>共起数</th></tr></thead>
+<tbody>
+<tr><td>AI時代と情報哲学</td><td>歴史と時間の哲学</td><td class='num'>4,738</td></tr>
+<tr><td>歴史と時間の哲学</td><td>認識と知の哲学</td><td class='num'>1,794</td></tr>
+<tr><td>AI時代と情報哲学</td><td>認識と知の哲学</td><td class='num'>1,547</td></tr>
+<tr><td>宗教と霊性の哲学</td><td>歴史と時間の哲学</td><td class='num'>1,174</td></tr>
+<tr><td>政治と正義の哲学</td><td>歴史と時間の哲学</td><td class='num'>1,094</td></tr>
+<tr><td>批判と解放の哲学</td><td>歴史と時間の哲学</td><td class='num'>1,092</td></tr>
+<tr><td>存在と実在の哲学</td><td>歴史と時間の哲学</td><td class='num'>1,067</td></tr>
+<tr><td>AI時代と情報哲学</td><td>批判と解放の哲学</td><td class='num'>1,029</td></tr>
+<tr><td>AI時代と情報哲学</td><td>政治と正義の哲学</td><td class='num'>999</td></tr>
+<tr><td>AI時代と情報哲学</td><td>宗教と霊性の哲学</td><td class='num'>988</td></tr>
+<tr><td>AI時代と情報哲学</td><td>存在と実在の哲学</td><td class='num'>963</td></tr>
+<tr><td>存在と実在の哲学</td><td>認識と知の哲学</td><td class='num'>904</td></tr>
+<tr><td>宗教と霊性の哲学</td><td>認識と知の哲学</td><td class='num'>891</td></tr>
+<tr><td>政治と正義の哲学</td><td>認識と知の哲学</td><td class='num'>764</td></tr>
+<tr><td>批判と解放の哲学</td><td>認識と知の哲学</td><td class='num'>690</td></tr>
+<tr><td>構造と関係の哲学</td><td>歴史と時間の哲学</td><td class='num'>638</td></tr>
+<tr><td>AI時代と情報哲学</td><td>構造と関係の哲学</td><td class='num'>623</td></tr>
+<tr><td>歴史と時間の哲学</td><td>自己と他者の哲学</td><td class='num'>571</td></tr>
+<tr><td>歴史と時間の哲学</td><td>自然と環境の哲学</td><td class='num'>551</td></tr>
+<tr><td>AI時代と情報哲学</td><td>自己と他者の哲学</td><td class='num'>544</td></tr>
+
+</tbody></table>
+<div class="fig-note">図2.3　共起回数が多いほど、両カテゴリが概念定義中で同時に語られる頻度が高い。</div>
+</section>
+
+<section class="chapter-section" id="chapter3">
+<h2>第3章 全体関係性の解明</h2>
+
+<h3>3.1 文明圏×軸足プロファイル</h3>
+<p>各文明圏は固有の軸足分布を示す。西洋は「歴史と時間」「AI時代」「認識と知」が三巨頭、東アジアは「歴史と時間」「認識と知」「AI時代」と類似の構造を示すが、イスラーム圏は「宗教と霊性」が最多で文明特異性を示す。</p>
+<table>
+<thead><tr><th>文明圏</th><th>概念数</th><th>多様性</th><th>主要軸足 TOP3</th></tr></thead>
+<tbody>
+<tr><td>西洋</td><td class='num'>14,069</td><td class='num'>13</td><td>歴史と時間の哲学(2911) / AI時代と情報哲学(2668) / 認識と知の哲学(1980)</td></tr>
+<tr><td>東アジア</td><td class='num'>4,184</td><td class='num'>13</td><td>歴史と時間の哲学(844) / 認識と知の哲学(798) / AI時代と情報哲学(702)</td></tr>
+<tr><td>横断</td><td class='num'>1,932</td><td class='num'>13</td><td>AI時代と情報哲学(450) / 歴史と時間の哲学(363) / 認識と知の哲学(179)</td></tr>
+<tr><td>イスラーム圏</td><td class='num'>1,665</td><td class='num'>13</td><td>宗教と霊性の哲学(442) / 認識と知の哲学(268) / 歴史と時間の哲学(239)</td></tr>
+<tr><td>南アジア</td><td class='num'>1,524</td><td class='num'>13</td><td>政治と正義の哲学(367) / 歴史と時間の哲学(240) / AI時代と情報哲学(204)</td></tr>
+<tr><td>アフリカ</td><td class='num'>1,446</td><td class='num'>13</td><td>批判と解放の哲学(305) / 歴史と時間の哲学(257) / AI時代と情報哲学(249)</td></tr>
+<tr><td>ラテン</td><td class='num'>1,131</td><td class='num'>12</td><td>批判と解放の哲学(309) / 歴史と時間の哲学(233) / AI時代と情報哲学(230)</td></tr>
+<tr><td>先住民</td><td class='num'>847</td><td class='num'>12</td><td>歴史と時間の哲学(151) / AI時代と情報哲学(145) / 認識と知の哲学(112)</td></tr>
+<tr><td>南アジア+東アジア</td><td class='num'>441</td><td class='num'>11</td><td>政治と正義の哲学(96) / 認識と知の哲学(85) / 歴史と時間の哲学(56)</td></tr>
+<tr><td>アジア</td><td class='num'>244</td><td class='num'>7</td><td>歴史と時間の哲学(74) / 認識と知の哲学(50) / AI時代と情報哲学(46)</td></tr>
+<tr><td>ユダヤ</td><td class='num'>121</td><td class='num'>7</td><td>歴史と時間の哲学(26) / AI時代と情報哲学(23) / 認識と知の哲学(20)</td></tr>
+<tr><td>南アジア+チベット</td><td class='num'>99</td><td class='num'>5</td><td>政治と正義の哲学(25) / 歴史と時間の哲学(23) / AI時代と情報哲学(23)</td></tr>
+<tr><td>南アジア+東アジア+チベット</td><td class='num'>93</td><td class='num'>7</td><td>政治と正義の哲学(19) / 歴史と時間の哲学(18) / AI時代と情報哲学(18)</td></tr>
+<tr><td>南アジア+中央アジア+東アジア+チベット</td><td class='num'>56</td><td class='num'>5</td><td>政治と正義の哲学(11) / 歴史と時間の哲学(10) / AI時代と情報哲学(10)</td></tr>
+
+</tbody></table>
+<div class="fig-note">図3.1　文明圏ごとの軸足プロファイル。多様性は5概念以上を持つ軸足カテゴリの数。</div>
+
+<h3>3.2 文明圏間で共有される普遍テーマ</h3>
+<p>3つ以上の文明圏で活発に展開される軸足カテゴリを「普遍テーマ」として抽出した。すべての13軸足が普遍的に分布することは確認されたが、分布の偏りは文明特異性を示す。</p>
+<table>
+<thead><tr><th>軸足</th><th>活発な文明圏数</th><th>分布</th></tr></thead>
+<tbody>
+<tr><td>存在と実在の哲学</td><td class='num'>9</td><td>西洋(1118) / 南アジア(107) / 南アジア+東アジア(38) / 東アジア(327) / イスラーム圏(135) / アフリカ(72) / ラテン(49) / 先住民(65) / 横断(111)</td></tr>
+<tr><td>認識と知の哲学</td><td class='num'>14</td><td>西洋(1980) / 南アジア(195) / 南アジア+東アジア(85) / 東アジア(798) / イスラーム圏(268) / アフリカ(115) / ラテン(91) / 先住民(112) / 横断(179) / 南アジア+東アジア+チベット(13) / 南アジア+中央アジア+東アジア+チベット(10) / 南アジア+チベット(13) / ユダヤ(20) / アジア(50)</td></tr>
+<tr><td>倫理と徳の哲学</td><td class='num'>7</td><td>西洋(470) / 南アジア(27) / 東アジア(195) / イスラーム圏(52) / アフリカ(35) / 先住民(18) / 横断(94)</td></tr>
+<tr><td>政治と正義の哲学</td><td class='num'>13</td><td>西洋(842) / 南アジア(367) / 南アジア+東アジア(96) / 東アジア(225) / イスラーム圏(110) / アフリカ(136) / ラテン(58) / 先住民(70) / 横断(155) / 南アジア+東アジア+チベット(19) / 南アジア+中央アジア+東アジア+チベット(11) / 南アジア+チベット(25) / アジア(18)</td></tr>
+<tr><td>自己と他者の哲学</td><td class='num'>8</td><td>西洋(548) / 南アジア(54) / 東アジア(169) / イスラーム圏(54) / アフリカ(66) / ラテン(38) / 先住民(27) / 横断(86)</td></tr>
+<tr><td>自然と環境の哲学</td><td class='num'>8</td><td>西洋(456) / 南アジア(38) / 東アジア(144) / イスラーム圏(45) / アフリカ(39) / ラテン(33) / 先住民(66) / 横断(173)</td></tr>
+<tr><td>宗教と霊性の哲学</td><td class='num'>11</td><td>西洋(938) / 南アジア(177) / 南アジア+東アジア(51) / 東アジア(308) / イスラーム圏(442) / アフリカ(79) / ラテン(36) / 先住民(43) / 横断(59) / ユダヤ(20) / アジア(28)</td></tr>
+<tr><td>AI時代と情報哲学</td><td class='num'>14</td><td>西洋(2668) / 南アジア(204) / 南アジア+東アジア(52) / 東アジア(702) / イスラーム圏(193) / アフリカ(249) / ラテン(230) / 先住民(145) / 横断(450) / 南アジア+東アジア+チベット(18) / 南アジア+中央アジア+東アジア+チベット(10) / 南アジア+チベット(23) / ユダヤ(23) / アジア(46)</td></tr>
+<tr><td>構造と関係の哲学</td><td class='num'>9</td><td>西洋(666) / 南アジア(26) / 南アジア+東アジア(19) / 東アジア(156) / イスラーム圏(26) / アフリカ(63) / ラテン(32) / 先住民(83) / 横断(116)</td></tr>
+<tr><td>美と詩の哲学</td><td class='num'>6</td><td>西洋(448) / 南アジア(27) / 東アジア(117) / イスラーム圏(24) / ラテン(15) / 横断(49)</td></tr>
+<tr><td>歴史と時間の哲学</td><td class='num'>14</td><td>西洋(2911) / 南アジア(240) / 南アジア+東アジア(56) / 東アジア(844) / イスラーム圏(239) / アフリカ(257) / ラテン(233) / 先住民(151) / 横断(363) / 南アジア+東アジア+チベット(18) / 南アジア+中央アジア+東アジア+チベット(10) / 南アジア+チベット(23) / ユダヤ(26) / アジア(74)</td></tr>
+<tr><td>批判と解放の哲学</td><td class='num'>9</td><td>西洋(655) / 南アジア(49) / 南アジア+東アジア(21) / 東アジア(164) / イスラーム圏(70) / アフリカ(305) / ラテン(309) / 先住民(58) / 横断(78)</td></tr>
+<tr><td>実存と意味の哲学</td><td class='num'>5</td><td>西洋(369) / 南アジア(13) / 東アジア(35) / アフリカ(23) / 横断(19)</td></tr>
+
+</tbody></table>
+<div class="fig-note">図3.2　普遍テーマと文明圏分布。</div>
+</section>
+
+<section class="chapter-section" id="chapter4">
+<h2>第4章 思想クラスターの発見</h2>
+<p>軸足カテゴリ間の強い共起（200件以上）から、ユニオンファインドで連結成分を抽出した。これらは概念定義中で頻繁に共起する「思想クラスター」を表す。</p>
+<ul class="findings">
+<li><strong>クラスター11カテゴリ</strong>: 歴史と時間の哲学 ／ 批判と解放の哲学 ／ 倫理と徳の哲学 ／ AI時代と情報哲学 ／ 存在と実在の哲学 ／ 宗教と霊性の哲学 ／ 自然と環境の哲学 ／ 認識と知の哲学 ／ 自己と他者の哲学 ／ 政治と正義の哲学 ／ 構造と関係の哲学</li>
+
+</ul>
+<div class="callout">
+<strong>解釈</strong>　大規模クラスターは哲学的言説の中で頻繁に交差する主題群を表す。例えば「歴史と時間 × 認識と知 × AI時代」のクラスターは、現代における「知の歴史性とAI時代の認識論」という結合主題を示唆する。
+</div>
+</section>
+
+<section class="chapter-section" id="chapter5">
+<h2>第5章 文明圏間の概念交流</h2>
+<p>文明圏ごとの軸足プロファイルから、以下の特徴的パターンが浮かび上がる。</p>
+<ul class="findings">
+<li><strong>西洋哲学</strong>　すべての13軸足で活発に概念が生産されており、最も多様性が高い。「歴史と時間」「AI時代」「認識と知」が三巨頭で、近代以降の認識論・科学哲学・AI哲学への重心が明確。</li>
+<li><strong>東アジア哲学</strong>　西洋に次ぐ多様性。「歴史と時間」「認識と知」「AI時代」と西洋に近いプロファイルだが、これは儒家・道家・新儒家・京都学派の認識論的・倫理的伝統と、現代日本のAI哲学（東浩紀・千葉雅也・國分功一郎）が反映している。</li>
+<li><strong>イスラーム圏</strong>　「宗教と霊性」が圧倒的最多（442件）。カラーム・スーフィズム・ファルサファ・現代イスラーム改革の四本柱が宗教哲学的伝統を支える。</li>
+<li><strong>南アジア哲学</strong>　「政治と正義」が最多（367件）。これは仏教倫理・ヒンドゥー法（ダルマ）・ガンディー・アンベードカル・センに至る一貫した倫理-政治的探求の反映。</li>
+<li><strong>アフリカ哲学・ラテン脱植民地</strong>　両者ともに「批判と解放」が最多（305-309件）。ファノン・ンクルマ・セサール・デュッセル・フレイレ・キハノ・ミニョーロら脱植民地思想の伝統が反映。</li>
+<li><strong>先住民哲学</strong>　「歴史と時間」「AI時代」「認識と知」が上位。21世紀の脱植民地哲学・関係的存在論・データ主権論議への展開。</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="chapter6">
+<h2>第6章 ピボット概念</h2>
+<p>複数の軸足カテゴリに同時帰属し、かつ高い変容関連性（≥9）を持つ概念を「ピボット概念」として抽出した。これらは哲学的探求の交差点に位置し、複数の伝統を結ぶ結節点となる。</p>
+<table>
+<thead><tr><th>概念</th><th>文明圏</th><th>時代</th><th>軸足数</th><th>軸足カテゴリ</th></tr></thead>
+<tbody>
+<tr><td>ハタタ</td><td>アフリカ</td><td>1667</td><td class='num'>9</td><td>自然と環境の哲学 / 倫理と徳の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 構造と関係の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>神は死んだ</td><td>西洋</td><td>1882</td><td class='num'>8</td><td>実存と意味の哲学 / 倫理と徳の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学</td></tr>
+<tr><td>ゴードンのアフリカーナ実存哲学</td><td>アフリカ</td><td>2000</td><td class='num'>8</td><td>実存と意味の哲学 / 自己と他者の哲学 / AI時代と情報哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>脱植民地的転回</td><td>ラテン</td><td>2000</td><td class='num'>7</td><td>AI時代と情報哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>和辻の倫理学</td><td>東アジア</td><td>1937</td><td class='num'>7</td><td>自己と他者の哲学 / AI時代と情報哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学</td></tr>
+<tr><td>ザラ・ヤコブの平等論</td><td>アフリカ</td><td>1667</td><td class='num'>7</td><td>自己と他者の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 政治と正義の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>イワ・ペレ</td><td>アフリカ</td><td>1000</td><td class='num'>7</td><td>自己と他者の哲学 / 倫理と徳の哲学 / AI時代と情報哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>ファノンの植民地的疎外</td><td>アフリカ</td><td>1952</td><td class='num'>7</td><td>自己と他者の哲学 / AI時代と情報哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 構造と関係の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>Hegel精神現象学詳細2</td><td>西洋</td><td>1807</td><td class='num'>7</td><td>実存と意味の哲学 / 自己と他者の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学</td></tr>
+<tr><td>レヴィナスの無限性と他者責任</td><td>西洋</td><td>1961</td><td class='num'>7</td><td>自己と他者の哲学 / 倫理と徳の哲学 / AI時代と情報哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学</td></tr>
+<tr><td>カントの『実践理性批判』</td><td>西洋</td><td>1788</td><td class='num'>7</td><td>実存と意味の哲学 / 倫理と徳の哲学 / 宗教と霊性の哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>ボーヴォワールの『他者』</td><td>西洋</td><td>1949</td><td class='num'>7</td><td>実存と意味の哲学 / 自己と他者の哲学 / AI時代と情報哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>ヒックの宗教多元主義</td><td>西洋</td><td>1989</td><td class='num'>7</td><td>倫理と徳の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学</td></tr>
+<tr><td>ヒュームの宗教批判</td><td>西洋</td><td>1779</td><td class='num'>7</td><td>実存と意味の哲学 / 自然と環境の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>啓蒙の弁証法</td><td>西洋</td><td>1944</td><td class='num'>7</td><td>AI時代と情報哲学 / 宗教と霊性の哲学 / 政治と正義の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>コンスシエンチサオン</td><td>ラテン</td><td>1968</td><td class='num'>7</td><td>自己と他者の哲学 / AI時代と情報哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>Hegelの絶対知</td><td>西洋</td><td>1807</td><td class='num'>7</td><td>実存と意味の哲学 / 自己と他者の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学</td></tr>
+<tr><td>バントゥー存在論</td><td>アフリカ</td><td>1945</td><td class='num'>7</td><td>AI時代と情報哲学 / 政治と正義の哲学 / 認識と知の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>ムビティの共同体的人間観</td><td>アフリカ</td><td>1969</td><td class='num'>7</td><td>自己と他者の哲学 / AI時代と情報哲学 / 政治と正義の哲学 / 歴史と時間の哲学 / 存在と実在の哲学 / 構造と関係の哲学 / 批判と解放の哲学</td></tr>
+<tr><td>ングゾ・サバ</td><td>アフリカ</td><td>1966</td><td class='num'>7</td><td>自己と他者の哲学 / 倫理と徳の哲学 / AI時代と情報哲学 / 宗教と霊性の哲学 / 政治と正義の哲学 / 歴史と時間の哲学 / 批判と解放の哲学</td></tr>
+
+</tbody></table>
+<div class="fig-note">図6.1　ピボット概念上位20。複数軸足を貫くこれらは、哲学的問題の交差点。</div>
+</section>
+
+<section class="chapter-section" id="findings">
+<h2>総合的発見</h2>
+<p>四段階の構造分析を通じて、9,583概念のメタテクスチャから次の知見が浮かび上がる。</p>
+
+<h3>F1：哲学的伝統の三巨頭構造</h3>
+<p>主要哲学者のトップは朱熹（136概念）・Aristotle（116）・孔子（96）。これは新儒家・古代ギリシア・原始儒家がそれぞれ独自の知的中核を成すことを示す。続くThomas Aquinas（92）・Heidegger（83）・Plato（82）・Kant（78）・Buddha（75）も、世界哲学の核心人物として確認される。</p>
+
+<h3>F2：学派の規模分布と多様性</h3>
+<p>1,823の学派が確認されたが、上位30学派が概念の大部分を占める。分析哲学（128）・儒家（127）・道家（122）が三巨頭で、批判理論・心の哲学・ポスト構造主義・AI哲学・京都学派が続く。これは20世紀以降の哲学が「分析対大陸」「西洋対東洋」の単純二項対立では捉えきれず、多元的・横断的な学派群が併存していることを示す。</p>
+
+<h3>F3：軸足カテゴリの偏り</h3>
+<p>13軸足のうち、定型句の影響を除いた実質的な分布を見ると、「認識と知の哲学」（3,938）「宗教と霊性の哲学」（2,207）「政治と正義の哲学」（2,141）「存在と実在の哲学」（2,055）が四大柱を成す。ユダヤ・キリスト・イスラーム・ヒンドゥー・仏教の宗教的伝統と、ギリシア以来の認識論・存在論・政治哲学が、世界哲学の主要骨格であることが定量的に確認される。</p>
+
+<h3>F4：文明圏特異性</h3>
+<p>すべての文明圏が13軸足のすべてを持つが、相対的重みづけは異なる。イスラーム圏は「宗教と霊性」、南アジアは「政治と正義」、アフリカ・ラテンは「批判と解放」が最多。これは各文明圏の固有の知的優先性が、本DBの収録概念にも反映されていることを示す。</p>
+
+<h3>F5：ピボット概念の役割</h3>
+<p>複数軸足を貫くピボット概念（西田の純粋経験、ハイデガーの存在問い、デリダの差延等）は、哲学的伝統間の橋渡し役を担う。これらは概念群間の関係構造のハブであり、第四変容（AI時代）における哲学的再考の起点となる。</p>
+
+<h3>F6：思想クラスターの構造</h3>
+<p>強い共起から発見されたクラスターは、概念定義中で頻繁に同時に語られる思想群を表す。最大のクラスターは「歴史と時間 × AI時代 × 認識と知」を含み、現代哲学が「知の歴史性とAI時代の認識論」という統合的主題を抱えていることを示唆する。</p>
+
+<h3>F7：第四変容の予兆</h3>
+<p>「AI時代と情報哲学」軸足が、すべての文明圏で活発に概念が産出されている。これは枢軸時代→ルネサンス→産業革命に続く第四変容の徴候であり、各文明圏が独自の応答を始めていることを示す。本DBが記述する「9,583概念の世界哲学」は、この変容の歴史的・地理的多様性を理解する基盤となる。</p>
+</section>
+
+<section class="chapter-section" id="limitations">
+<h2>限界と展望</h2>
+<p>本分析にはいくつかの限界がある。</p>
+<ul class="findings">
+<li><strong>定型句バイアス</strong>　各概念定義に「21世紀の◯◯史の歴史的中核」等の定型句が含まれるため、「歴史と時間」「AI時代」軸足が過大評価される。</li>
+<li><strong>キーワード辞書の限界</strong>　オープンコーディングは37キーワードに依存し、これに含まれない概念群（例：科学哲学・論理学・特殊な美学）が捕捉されにくい。</li>
+<li><strong>系譜の推定</strong>　学派内の哲学者順序は時代年で推定されており、実際の師弟関係を直接反映してはいない。</li>
+<li><strong>定量分析の限界</strong>　概念数は概念の重要性と一致しない。本DBには学派偏重（例：朱熹136概念は新儒家の濃厚カバーを反映）の偏りがある。</li>
+</ul>
+<p>今後の展望としては、(1) 定型句の除去による軸足の再計算、(2) cross_domain_relations を用いた他DB（人類学・経営学・詩学）との関連分析、(3) 時代別の軸足変遷を可視化した「思想史グラフ」、(4) AI時代の固有問題（意識・人格・倫理）に焦点を当てた集中分析、が挙げられる。</p>
+<div class="callout">
+<strong>結論</strong>　9,583概念のメタテクスチャを四段階で構造化することで、世界哲学の輪郭が定量的に可視化された。本分析は、PHIL DBが「第四変容（AI時代）における概念再考の知的基盤」として機能するための基礎的地図を提供する。
+</div>
+</section>
+
+</main></div>
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? '' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('phil-theme', next);
+}
+const saved = localStorage.getItem('phil-theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body></html>
