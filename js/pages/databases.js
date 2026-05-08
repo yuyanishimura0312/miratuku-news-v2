@@ -94,6 +94,7 @@ initNav('databases');
         if (dbItem.essay) supLinks.push('<a href="' + safeUrl(dbItem.essay) + '" class="db-dashboard-link">\u8ad6\u8003 &rarr;</a>');
         if (dbItem.essay2) supLinks.push('<a href="' + safeUrl(dbItem.essay2) + '" class="db-dashboard-link">\u7d9a\u8ad6 &rarr;</a>');
         if (dbItem.gta) supLinks.push('<a href="' + safeUrl(dbItem.gta) + '" class="db-dashboard-link">GTA\u5206\u6790 &rarr;</a>');
+        if (dbItem.paper) supLinks.push('<a href="' + safeUrl(dbItem.paper) + '" class="db-dashboard-link">\u8ad6\u6587 &rarr;</a>');
         var supAgentBadge = dbItem.agent ? ' <span class="db-entry-agent" title="Claude Code\u3067' + escapeHtml(dbItem.agent) + '\u3067\u8d77\u52d5">' + escapeHtml(dbItem.agent) + '</span>' : '';
         html += '<div class="db-supplementary-item"><strong>' + escapeHtml(dbItem.id) + ': ' + escapeHtml(dbItem.nameJa || dbItem.name_ja || dbItem.name) + '</strong>' + supAgentBadge +
           '<div style="color:var(--text);font-weight:600">' + escapeHtml(dbItem.stat || '') + '</div>' +
