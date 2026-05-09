@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>概念エクスプローラー | Academic Knowledge DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&family=Fira+Code&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200; --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", SFMono-Regular, Menlo, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font); color: var(--text); background: var(--bg);
+  line-height: 1.7; letter-spacing: 0.025em; font-feature-settings: "palt";
+  min-height: 100vh; transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg); border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border); padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 48px; position: sticky; top: 0; z-index: 100;
+}
+.brand { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.brand span { color: var(--accent-warm); }
+.actions { display: flex; gap: 12px; align-items: center; }
+.actions a, .actions button {
+  font-family: var(--font); font-size: 0.72rem; color: var(--text-muted);
+  background: none; border: 1px solid var(--border); padding: 4px 10px;
+  cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s;
+}
+.actions a:hover, .actions button:hover { color: var(--accent-warm); border-color: var(--accent-warm); text-decoration: none; }
+
+.container { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+.hero { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border-light); }
+.hero h1 { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; letter-spacing: 0.04em; }
+.hero p { font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
+.hero-stats { display: flex; gap: 24px; margin-top: 12px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+.hero-stats strong { color: var(--accent-warm); }
+
+.controls {
+  display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 16px;
+  background: var(--surface); padding: 20px; border: 1px solid var(--border-light); margin-bottom: 24px;
+}
+.control-group label {
+  display: block; font-size: 0.7rem; color: var(--text-muted);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px;
+}
+.control-group select, .control-group input {
+  width: 100%; padding: 8px 12px; background: var(--bg);
+  border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font); font-size: 0.85rem;
+}
+.control-group select:focus, .control-group input:focus { outline: none; border-color: var(--accent-warm); }
+
+.layout { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+.concept-list {
+  border: 1px solid var(--border-light); background: var(--surface);
+  max-height: 80vh; overflow-y: auto;
+}
+.concept-list-header {
+  padding: 12px 16px; background: var(--accent-muted); border-bottom: 1px solid var(--border-light);
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent-warm);
+  text-transform: uppercase;
+  position: sticky; top: 0;
+}
+.concept-item {
+  padding: 10px 16px; border-bottom: 1px solid var(--border-light); cursor: pointer;
+  font-size: 0.82rem; color: var(--text); transition: all 0.1s;
+}
+.concept-item:hover { background: var(--accent-muted); }
+.concept-item.active { background: var(--accent-muted); border-left: 3px solid var(--accent-warm); padding-left: 13px; }
+.concept-item .name-en { font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px; }
+.concept-item .meta { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+.detail {
+  border: 1px solid var(--border-light); padding: 32px;
+  background: var(--bg); min-height: 80vh;
+}
+.detail-empty { color: var(--text-muted); text-align: center; margin-top: 80px; font-size: 0.9rem; }
+.detail-name-ja { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; letter-spacing: 0.03em; }
+.detail-name-en { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+.detail-meta {
+  display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0 24px;
+  padding: 12px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+  font-size: 0.75rem; color: var(--text-muted); font-family: var(--font);
+}
+.detail-meta span strong { color: var(--accent-warm); margin-right: 6px; font-weight: 600; }
+
+.detail-section { margin: 20px 0; }
+.detail-section h3 {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--accent-warm);
+  margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dotted var(--border);
+}
+.detail-section p {
+  font-family: var(--font-serif); font-size: 0.9rem; line-height: 1.85;
+  color: var(--text); text-indent: 1em;
+}
+.detail-section .keywords span {
+  display: inline-block; font-family: var(--font-mono); font-size: 0.72rem;
+  padding: 2px 10px; margin: 2px 4px 2px 0; background: var(--accent-muted);
+  color: var(--accent-warm); border-radius: 2px;
+}
+
+#loading {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: center; align-items: center;
+  background: var(--bg); z-index: 999;
+}
+#loading.hidden { display: none; }
+#loading::after {
+  content: 'データ読み込み中…'; color: var(--accent-warm); font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr; }
+  .concept-list { max-height: 50vh; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading"></div>
+
+<header class="top-bar">
+  <div class="brand"><span>AK</span> Academic Knowledge Explorer</div>
+  <div class="actions">
+    <a href="ak.html">← AK ダッシュボード</a>
+    <button onclick="toggleTheme()">DARK</button>
+  </div>
+</header>
+
+<div class="container">
+
+<div class="hero">
+  <h1>概念エクスプローラー</h1>
+  <p>5分野・96サブフィールドの18,090概念をプルダウンで探索。各概念の定義・学派・時代・キーワードを表示。</p>
+  <div class="hero-stats">
+    <span>分野: <strong id="stat-domains">5</strong></span>
+    <span>サブフィールド: <strong id="stat-subs">96</strong></span>
+    <span>概念: <strong id="stat-concepts">18,090</strong></span>
+    <span>表示中: <strong id="stat-shown">0</strong></span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <label>分野 (Domain)</label>
+    <select id="select-domain">
+      <option value="">— 選択 —</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <label>サブフィールド (Subfield)</label>
+    <select id="select-subfield" disabled>
+      <option value="">— 先に分野を選択 —</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <label>キーワード検索 (Filter)</label>
+    <input type="text" id="search-input" placeholder="例: 量子、現象学、AI">
+  </div>
+</div>
+
+<div class="layout">
+  <div class="concept-list">
+    <div class="concept-list-header" id="list-header">概念一覧</div>
+    <div id="concept-items">
+      <div class="concept-item" style="text-align:center; color: var(--text-muted);">サブフィールドを選択してください</div>
+    </div>
+  </div>
+
+  <div class="detail" id="detail">
+    <div class="detail-empty">
+      左の概念リストから項目を選択すると、ここに詳細が表示されます。<br>
+      上のプルダウンから分野・サブフィールドを絞り込めます。
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let DATA = null;
+let currentConcepts = [];
+let currentIndex = -1;
+
+const DOMAIN_KEYS = ["humanities_concept", "social_theory", "natural_discovery", "engineering_method", "arts_question"];
+
+async function load() {
+  const res = await fetch('explorer_data.json');
+  DATA = await res.json();
+  document.getElementById('loading').classList.add('hidden');
+
+  // Populate domain dropdown
+  const sel = document.getElementById('select-domain');
+  let totalSubs = 0, totalConcepts = 0;
+  for (const k of DOMAIN_KEYS) {
+    const d = DATA.domains[k];
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = `${d.label} (${d.total.toLocaleString()})`;
+    sel.appendChild(opt);
+    totalSubs += d.subfields.length;
+    totalConcepts += d.total;
+  }
+  document.getElementById('stat-subs').textContent = totalSubs;
+  document.getElementById('stat-concepts').textContent = totalConcepts.toLocaleString();
+}
+
+function onDomainChange() {
+  const domain = document.getElementById('select-domain').value;
+  const subSel = document.getElementById('select-subfield');
+  subSel.innerHTML = '<option value="">— 全サブフィールド —</option>';
+  if (!domain) {
+    subSel.disabled = true;
+    showConcepts([]);
+    return;
+  }
+  subSel.disabled = false;
+  const d = DATA.domains[domain];
+  for (const sub of d.subfields) {
+    const opt = document.createElement('option');
+    opt.value = sub.name;
+    opt.textContent = `${sub.name} (${sub.count})`;
+    subSel.appendChild(opt);
+  }
+  // Show all concepts for this domain by default
+  let all = [];
+  for (const sub of d.subfields) {
+    for (const c of sub.concepts) {
+      all.push({...c, _subfield: sub.name});
+    }
+  }
+  showConcepts(all);
+}
+
+function onSubfieldChange() {
+  const domain = document.getElementById('select-domain').value;
+  const sub = document.getElementById('select-subfield').value;
+  if (!domain) return;
+  const d = DATA.domains[domain];
+  if (!sub) {
+    let all = [];
+    for (const s of d.subfields) {
+      for (const c of s.concepts) all.push({...c, _subfield: s.name});
+    }
+    showConcepts(all);
+  } else {
+    const subObj = d.subfields.find(s => s.name === sub);
+    if (subObj) showConcepts(subObj.concepts.map(c => ({...c, _subfield: sub})));
+  }
+}
+
+function onSearchChange() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  if (!q) { onSubfieldChange(); return; }
+  const domain = document.getElementById('select-domain').value;
+  const sub = document.getElementById('select-subfield').value;
+  let pool = [];
+  if (!domain) {
+    // search all
+    for (const k of DOMAIN_KEYS) {
+      const d = DATA.domains[k];
+      for (const s of d.subfields) {
+        for (const c of s.concepts) pool.push({...c, _subfield: s.name, _domain: d.label});
+      }
+    }
+  } else {
+    const d = DATA.domains[domain];
+    for (const s of d.subfields) {
+      if (sub && s.name !== sub) continue;
+      for (const c of s.concepts) pool.push({...c, _subfield: s.name, _domain: d.label});
+    }
+  }
+  const filtered = pool.filter(c => {
+    return (c.name_ja || '').toLowerCase().includes(q) ||
+           (c.name_en || '').toLowerCase().includes(q) ||
+           (c.kw_ja || '').toLowerCase().includes(q) ||
+           (c.kw_en || '').toLowerCase().includes(q) ||
+           (c.school || '').toLowerCase().includes(q);
+  });
+  showConcepts(filtered);
+}
+
+function showConcepts(list) {
+  currentConcepts = list;
+  currentIndex = -1;
+  const container = document.getElementById('concept-items');
+  document.getElementById('list-header').textContent = `概念一覧 (${list.length.toLocaleString()})`;
+  document.getElementById('stat-shown').textContent = list.length.toLocaleString();
+  if (list.length === 0) {
+    container.innerHTML = '<div class="concept-item" style="text-align:center; color: var(--text-muted);">該当なし</div>';
+    return;
+  }
+  // Display first 500 to avoid DOM explosion
+  const display = list.slice(0, 500);
+  container.innerHTML = display.map((c, i) => {
+    const era = c.era ? `${c.era}` : '—';
+    const sub = c._subfield || '';
+    const dom = c._domain ? `[${c._domain}] ` : '';
+    return `<div class="concept-item" data-i="${i}" onclick="selectConcept(${i})">
+      <div>${escapeHtml(c.name_ja)}</div>
+      <div class="name-en">${escapeHtml(c.name_en || '')}</div>
+      <div class="meta">${dom}${escapeHtml(sub)} · ${era}</div>
+    </div>`;
+  }).join('') + (list.length > 500 ? `<div class="concept-item" style="text-align:center; color: var(--text-muted); font-style: italic;">…他 ${list.length - 500} 件（絞り込んでください）</div>` : '');
+  // Auto-select first
+  selectConcept(0);
+}
+
+function selectConcept(i) {
+  currentIndex = i;
+  document.querySelectorAll('.concept-item').forEach(el => el.classList.remove('active'));
+  const target = document.querySelector(`.concept-item[data-i="${i}"]`);
+  if (target) target.classList.add('active');
+  const c = currentConcepts[i];
+  if (!c) return;
+  const detail = document.getElementById('detail');
+  const era = c.era ? (c.era < 0 ? `BC${-c.era}` : `${c.era}`) : '—';
+  const era_end = c.era_end ? (c.era_end < 0 ? `BC${-c.era_end}` : `${c.era_end}`) : '';
+  const era_str = era_end ? `${era}〜${era_end}` : era;
+  const kws = (c.kw_ja || '').split(',').filter(k => k.trim()).map(k => `<span>${escapeHtml(k.trim())}</span>`).join('') +
+              (c.kw_en || '').split(',').filter(k => k.trim()).map(k => `<span>${escapeHtml(k.trim())}</span>`).join('');
+  detail.innerHTML = `
+    <div class="detail-name-ja">${escapeHtml(c.name_ja || '')}</div>
+    ${c.name_en ? `<div class="detail-name-en">${escapeHtml(c.name_en)}</div>` : ''}
+    <div class="detail-meta">
+      ${c._domain ? `<span><strong>分野:</strong>${escapeHtml(c._domain)}</span>` : ''}
+      <span><strong>サブフィールド:</strong>${escapeHtml(c._subfield || '')}</span>
+      <span><strong>時代:</strong>${era_str}</span>
+      ${c.school ? `<span><strong>学派:</strong>${escapeHtml(c.school)}</span>` : ''}
+    </div>
+    ${c.definition ? `<div class="detail-section"><h3>定義</h3><p>${escapeHtml(c.definition)}</p></div>` : ''}
+    ${c.impact ? `<div class="detail-section"><h3>影響・重要性</h3><p>${escapeHtml(c.impact)}</p></div>` : ''}
+    ${kws ? `<div class="detail-section"><h3>キーワード</h3><div class="keywords">${kws}</div></div>` : ''}
+  `;
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toggleTheme() {
+  const r = document.documentElement;
+  const cur = r.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  r.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  document.querySelector('.actions button').textContent = next === 'dark' ? 'LIGHT' : 'DARK';
+}
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+document.getElementById('select-domain').addEventListener('change', onDomainChange);
+document.getElementById('select-subfield').addEventListener('change', onSubfieldChange);
+document.getElementById('search-input').addEventListener('input', onSearchChange);
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('.actions button').textContent = savedTheme === 'dark' ? 'LIGHT' : 'DARK';
+  load();
+});
+</script>
+</body>
+</html>
