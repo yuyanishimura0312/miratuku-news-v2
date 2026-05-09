@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track B-4 解析編 変化検出装置の予測的応答力 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif); color: var(--text); background: var(--bg);
+  line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt";
+  min-height: 100vh; transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar {
+  background: var(--bg); border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border); padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 48px; position: sticky; top: 0; z-index: 100;
+}
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted);
+  cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono","Fira Code",monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 28px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; text-indent: 0; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.55; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; background: var(--surface); padding: 14px 16px; border-left: 3px solid var(--accent-warm); margin: 24px 0; overflow-x: auto; line-height: 1.6; }
+.figure { margin: 40px 0; padding: 24px; border: 1px solid var(--border-light); background: var(--card); }
+.figure-title { font-family: var(--font); font-size: 0.85rem; font-weight: 700; color: var(--accent-warm); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+.figure-caption { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); margin-top: 14px; line-height: 1.6; }
+.tag-est, .tag-int, .tag-unv { display: inline-block; font-family: var(--font); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; margin: 0 3px; }
+.tag-est { background: rgba(110,44,44,0.12); color: #6E2C2C; }
+.tag-int { background: rgba(204,20,0,0.10); color: #B01200; }
+.tag-unv { background: rgba(107,107,107,0.15); color: #555555; }
+[data-theme="dark"] .tag-est { background: rgba(160,80,80,0.20); color: #C8A0A0; }
+[data-theme="dark"] .tag-int { background: rgba(255,64,48,0.18); color: #FF8070; }
+[data-theme="dark"] .tag-unv { background: rgba(170,170,170,0.18); color: #BBBBBB; }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) { .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; } .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; } .book-main { padding: 24px 0 60px; } .book-title { font-size: 1.6rem; } .chapter-title { font-size: 1.35rem; } }
+@media print { .top-bar, .toc-sidebar { display: none; } body { font-size: 11pt; } .book-layout { grid-template-columns: 1fr; } .book-main { padding: 0; } .figure { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Track B-4 解析編</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="phase-b-index.html">← Phase B Index</a>
+<a class="back-link" href="../../databases.html">Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#prologue"><span class="toc-num">序</span>本解析編の役割</a></li>
+<li><a href="#part1"><span class="toc-num">第1部</span>装置の選定と構造</a></li>
+<li><a href="#part2"><span class="toc-num">第2部</span>キーワード設計と検索プロトコル</a></li>
+<li><a href="#part3"><span class="toc-num">第3部</span>スコアリング規則</a></li>
+<li><a href="#part4"><span class="toc-num">第4部</span>装置別の集計ログ</a></li>
+<li><a href="#part5"><span class="toc-num">第5部</span>Initiatives DB の設計</a></li>
+<li><a href="#part6"><span class="toc-num">第6部</span>4ホライズン × 7装置の集計</a></li>
+<li><a href="#limits"><span class="toc-num">第7部</span>解析上の留保</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">PHASE B 解析編</span>
+<span class="db-tag">7 DETECTION SYSTEMS</span>
+<span class="db-tag">24 QUESTIONS</span>
+<span class="db-tag">168 COVERAGE CELLS</span>
+<span class="db-tag">INITIATIVES DB</span>
+</div>
+<h1 class="book-title">Track B-4 解析編 — 7変化検出装置の予測的応答力</h1>
+<p class="book-subtitle">Phase B Track B-1 が策定した 41 の問いのうち、24 問について 7 変化検出装置（シグナル／大学PR／企業R&D PR／政策／企業IR／資金調達／産学連携）の予測的応答力を評価する。本解析編は、装置の構造・キーワード設計・スコアリング規則・集計ログ・新規 Initiatives DB の設計を提示し、レポート編（カバレッジマトリクスと装置別レポート）と検証編（4カテゴリ自己検証）の素材となる。</p>
+<div class="book-meta">
+<span>生成日: 2026-05-09</span>
+<span>担当: Track B-4 リード</span>
+<span>方法論: _PROTOCOLS.md v1.0 + _PHASE_B_PLAN.md + _TRACK_B4_BRIEFING.md</span>
+<span>新規DB: ~/projects/research/initiatives-db/initiatives.db</span>
+</div>
+</header>
+
+<section class="chapter-section" id="prologue">
+<div class="chapter-number-label">PROLOGUE</div>
+<h2 class="chapter-title">本解析編の役割</h2>
+
+<p class="lead">本Track は、Phase B Wave 2 の実装層として、Track B-1 の問い群を「現実の社会の中で動いているシグナル」と接続する役割を担う。問いを立てるだけでは未来は見えない。問いに対してどの程度の早期警戒シグナル・公的予算・民間R&D投資・企業ニーズ・資金調達ラウンド・産学連携が動いているかを観測しなければ、どこに「動きがあって」どこに「動きがない」かを判別できないからである。本解析編は、その観測の方法論と作業内容を記録する。</p>
+
+<h3>本解析編・レポート編・検証編の関係</h3>
+
+<p>本Track B-4 は三つのHTMLファイルで構成される。本解析編 <code>track-b4-detection-systems-analysis.html</code> は、7変化検出装置の選定・接続・スコアリング規則・集計ログを記録する作業ノートである。レポート編 <code>track-b4-detection-systems-report.html</code> は、24 問 × 7 装置 = 168 セルのカバレッジマトリクスと装置別レポート、装置間の補完関係、Initiatives DB の領域別ピックアップを提示する成果物である。検証編 <code>track-b4-detection-systems-verification.html</code> は、4カテゴリ（スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合）の自己検証結果と sentinel 引継ぎ事項を収載する。</p>
+
+<h3>本Track の入力と出力</h3>
+
+<p>入力は四つである。第一は <code>_PHASE_B_PLAN.md</code>（Phase B 全体計画書、Track B-4 を Wave 2 として位置づける）。第二は <code>_TRACK_B4_BRIEFING.md</code>（個別ブリーフィング、7 装置と 24 問の対応関係を指定）。第三は <code>track-b1_handoff.md</code> § 6.2（Track B-1 が指定した B-4 対象 24 問）。第四は <code>track-b1-layered-history-report.html</code> 第 4 部（41 問の本文と背景）。</p>
+
+<p>出力は五つである。第一は本解析編。第二はレポート編。第三は検証編。第四は <code>track-b4_handoff.md</code>（Track B-5/B-6 への引継ぎ書）。第五は新規 SQLite データベース <code>~/projects/research/initiatives-db/initiatives.db</code> である。新規DBには、24 問のメタ情報、7 装置のメタ情報、168 セルのカバレッジスコア、装置から抽出した代表 initiatives のレコードを収載する。</p>
+
+<h3>方法論的位置づけ</h3>
+
+<p>本Track の方法論は「軽量カバレッジ評価」である。各装置DBの全件走査は不要であり、各セル（24 問 × 7 装置 = 168 セル）について代表的な 3-6 個のキーワードで検索し、ヒット件数とトップ 5 件のサンプルを取得する。これは Phase A Track 9 が「3 回起動の末に完成」した経緯（深い分析に時間を要しすぎた）への構造的応答であり、_PHASE_B_PLAN.md「実行戦略」§1 が指示する「網羅照会は不要、代表的検索数件で十分」の方針に従う。</p>
+
+</section>
+
+<section class="chapter-section" id="part1">
+<div class="chapter-number-label">PART 01</div>
+<h2 class="chapter-title">7 変化検出装置の選定と構造</h2>
+
+<p class="lead">本章では、Track B-4 が評価対象とする 7 変化検出装置を、装置種別・データソース・収録レコード数・本Track での役割の四つの観点から整理する。これら 7 装置は、ミラツクが既存に保有する変化検出インフラのうち、未来の問いに対して「公的・民間・学術・市場・市民」の各セクターから独立に観測しうる組み合わせとして選定された。</p>
+
+<h3>1.1 7 装置の一覧</h3>
+
+<p>7 装置は次のとおりである。本Trackでは Phase A Track 5（Signal）・Track 7（Academic）・各種 PR DB・Track 4（歴史サイクル）が独立に観測しうる構造を継承し、装置種別を「シグナル系」「PR 系」「政策系」「企業情報系」「資金調達系」「産学連携系」の六系列に分類する。</p>
+
+<div class="figure">
+<div class="figure-title">図1. 7 変化検出装置の構造</div>
+<table>
+<thead>
+<tr><th>装置ID</th><th>装置名</th><th>種別</th><th>主データソース</th><th>収録レコード数</th><th>役割</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>SG</strong></td><td>シグナル DB</td><td>シグナル系</td><td>signal.db</td><td>7,668 シグナル</td><td>弱いシグナル・アラート・シナリオの早期警戒</td></tr>
+<tr><td><strong>UPR</strong></td><td>大学プレスリリース</td><td>PR 系</td><td>upr_consolidated.json</td><td>41,760 件</td><td>大学発の研究成果・社会連携の発信</td></tr>
+<tr><td><strong>SGRD</strong></td><td>企業 R&D プレスリリース</td><td>PR 系</td><td>sgrd-stats.json</td><td>36,734 件</td><td>上場企業 R&D の戦略・パートナー発信</td></tr>
+<tr><td><strong>Policy</strong></td><td>政策 DB</td><td>政策系</td><td>policy.db (projects)</td><td>30,118 事業</td><td>23 府省の予算事業・制度設計</td></tr>
+<tr><td><strong>IR</strong></td><td>企業 IR</td><td>企業情報系</td><td>ir.db (sections)</td><td>1,862,236 セクション</td><td>有報のリスク・経営方針・R&D 記述</td></tr>
+<tr><td><strong>Funding</strong></td><td>資金調達</td><td>資金調達系</td><td>investment_signal_v2.db</td><td>16,642 PR / 1,927 ラウンド / 4,264 組織</td><td>VC 資金調達・スタートアップエマージェンス</td></tr>
+<tr><td><strong>Sangaku</strong></td><td>産学連携マッチング</td><td>産学連携系</td><td>matcher.db</td><td>3,872 社 / 33 ambition / 40 tech taxonomy</td><td>企業ニーズと大学シーズのマッチング基盤</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">出典: 各装置 DB の <code>SELECT count(*)</code> 集計（2026-05-09 取得）。Phase A Track 5/7/8 handoff の継承装置を含む。</div>
+</div>
+
+<h3>1.2 装置選定の根拠</h3>
+
+<p>装置選定は、Phase A 9 トラックの handoff から「変化検出装置」として機能可能なDBを抽出する形で行った。Track 5 Signal DB は弱いシグナル・アラート・シナリオの直接的検出装置であり、最重要の SG 装置として選定した。UPR・SGRD・Sangaku の三装置は、Phase A Track 7（Academic Knowledge DB）と Track 8（TA/AA）の周辺装置として、研究側の発信を補完する PR 系・産学連携系の装置として選定した。Policy DB は Phase A Track 3（修正版18MT）の制度反映として、公的予算事業を観測する装置として選定した。IR Collector は Phase A Track 4 + Track 6 の延長で、上場企業の戦略・リスク認識を観測する装置として選定した。Funding（Investment Signal）は Phase A Track 5 + Track 8 の経済側として、VC 資金調達を観測する装置として選定した。</p>
+
+<h3>1.3 装置種別の構造的差異</h3>
+
+<p>7 装置は構造的に大きく性質が異なる。SG は研究者が手動で「弱いシグナル」として認定したもののみが収録される少数精鋭型（7,668 件）であり、「言及があれば既に意義あり」と解釈できる。一方 IR は上場企業が法的義務で開示する有価証券報告書からの自動抽出（1.86M セクション）であり、「単に言及される」だけでは弱く、「経営方針・リスク認識として明示される」かが重要となる。Policy は予算事業として「公金が投入されている」という最も具体的な制度反映を示す装置で、件数（30K）と金額の両軸で評価できる。UPR / SGRD は大学・企業の自発的発信として「未来予測」よりは「現在進行中の研究成果」を示す装置である。Funding は「未来への賭け」として VC 投資家のリスク評価を反映する装置である。Sangaku は「企業のニーズと大学のシーズの突合」という構造化された記述を持つ装置である。</p>
+
+<h3>1.4 装置間の独立性</h3>
+
+<p>7 装置は概ね独立だが、完全独立ではない。例えば Signal DB が拾う「弱いシグナル」のソースに大学プレスリリースや企業IRが含まれることがあり、SG ↔ UPR・SG ↔ IR の相関は完全独立ではない。Sangaku-matcher のソースに UPR・SGRD のプレスリリースの一部が含まれることもある。本Track では「装置間の独立性」は構造的弱点として明示し、ある問いに対する「複数装置の合意」は完全独立 3 装置と読まず、「半独立 3 装置の合意」と読む。<span class="tag-int">解釈</span></p>
+
+</section>
+
+<section class="chapter-section" id="part2">
+<div class="chapter-number-label">PART 02</div>
+<h2 class="chapter-title">キーワード設計と検索プロトコル</h2>
+
+<p class="lead">24 問それぞれに対して、装置DBに対する検索キーワードを設計した。本章ではキーワード設計の方針と各問いのキーワードリスト、検索プロトコルの詳細を記録する。</p>
+
+<h3>2.1 キーワード設計の方針</h3>
+
+<p>各問いについて 6 個程度のキーワードを設計した。設計方針は四つである。第一に、問いタイトルから抽出される中心語（例: Q-N01「AIガバナンス空白」→「AIガバナンス」）を必ず含める。第二に、問いが指す制度的応答（例: Q-N01 → 「AI規制」「AI安全」「AI alignment」）を含める。第三に、問いに対応する英語表記の一部（例: Q-N01 → 「frontier AI」）を含める。第四に、装置DBの実装言語（日本語が多数）を考慮し、過度に英語に偏らないバランスをとる。</p>
+
+<h3>2.2 24 問のキーワード設計表</h3>
+
+<div class="figure">
+<div class="figure-title">図2. 24 問のキーワード設計（near 13 問）</div>
+<table>
+<thead>
+<tr><th>問いID</th><th>問いタイトル（短縮）</th><th>キーワード（カンマ区切り）</th></tr>
+</thead>
+<tbody>
+<tr><td>Q-N01</td><td>AIガバナンス空白</td><td>AIガバナンス, AI規制, AI安全, AIリスク, frontier AI, AI alignment</td></tr>
+<tr><td>Q-N02</td><td>AI制度反作用 near 顕在化</td><td>AI規制, EU AI Act, AI法, 規制反作用, プラットフォーム規制, 独占禁止</td></tr>
+<tr><td>Q-N03</td><td>テクノ加速×場所性回帰の第三項</td><td>地域, ローカル, 場所, コモンズ, コミュニティ, 在来</td></tr>
+<tr><td>Q-N04</td><td>場所に根ざした地域主権</td><td>地域主権, ローカル, 地域経済, コミュニティ, 地方創生, コモンズ</td></tr>
+<tr><td>Q-N05</td><td>民主主義の正統性危機</td><td>民主主義, 熟議, 市民参加, 選挙, 代議制, ガバナンス</td></tr>
+<tr><td>Q-N06</td><td>気候災害誘発の強制移民</td><td>気候難民, 気候移民, 難民, 強制移住, 気候災害, 適応</td></tr>
+<tr><td>Q-N07</td><td>科学AI と知識生産転換</td><td>科学AI, 仮説生成, AI for science, research AI, 創薬AI, 材料探索</td></tr>
+<tr><td>Q-N08</td><td>自律AIエージェントと労働再編</td><td>AIエージェント, 自律AI, AI労働, リスキリング, 労働代替, 自動化</td></tr>
+<tr><td>Q-N09</td><td>主体・人格の解体と再構築</td><td>人格, 主体, アイデンティティ, アバター, メタバース, 人間性</td></tr>
+<tr><td>Q-N10</td><td>非西洋認識論のフォーサイト基盤化</td><td>先住民, non-Western, 東洋哲学, 在来知, 土着, 認識論</td></tr>
+<tr><td>Q-N11</td><td>過剰的中バイアスと distance-keeping</td><td>過剰的中, AI hype, バイアス, 予測精度, 予測検証, distance</td></tr>
+<tr><td>Q-N12</td><td>FK 0.45% values 空白の補完</td><td>価値観, values, 規範, 倫理, ethics, well-being</td></tr>
+<tr><td>Q-N13</td><td>教育126年ラグ「逆転」の持続</td><td>教育改革, 人材育成, リスキリング, キャリア, 能力開発, 学校教育</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="figure">
+<div class="figure-title">図3. 24 問のキーワード設計（mid 6 問 + far 3 問 + very-far 2 問）</div>
+<table>
+<thead>
+<tr><th>問いID</th><th>問いタイトル（短縮）</th><th>キーワード（カンマ区切り）</th></tr>
+</thead>
+<tbody>
+<tr><td>Q-M02</td><td>AI制度反作用 mid 恒常化</td><td>AI規制, AIガバナンス, プラットフォーム規制, AI法, AI監督, BCI</td></tr>
+<tr><td>Q-M04</td><td>少子化と人口減少社会の制度設計</td><td>少子化, 人口減少, 高齢化, 社会保障, 年金, 労働力</td></tr>
+<tr><td>Q-M05</td><td>場所性経済化 mid 規模・構造</td><td>地域経済, 地産地消, 地域通貨, コモンズ, 互酬, ローカル経済</td></tr>
+<tr><td>Q-M08</td><td>気候適応AIと地球管理倫理</td><td>気候適応, geoengineering, ジオエンジニアリング, 気候AI, 地球管理, 炭素除去</td></tr>
+<tr><td>Q-M09</td><td>物語転換期の本格化と新物語収束</td><td>物語転換, ナラティブ, worldview, パラダイム, 価値観転換, 物語</td></tr>
+<tr><td>Q-M12</td><td>教育-人材ラグの再設計完結</td><td>教育改革, 人材育成, リスキリング, 能力開発, キャリア, 学位</td></tr>
+<tr><td>Q-F01</td><td>気候危機の長期サイクル</td><td>気候変動, 脱炭素, カーボンニュートラル, 気候適応, 長期気候, 2070</td></tr>
+<tr><td>Q-F03</td><td>非西洋認識論主流化（pluriverse 制度化）</td><td>pluriverse, 非西洋, 多元主義, 土着, 認識論, decolonial</td></tr>
+<tr><td>Q-F08</td><td>AI×倫理／人格／人間規定 far 論争</td><td>AI倫理, AI ethics, 人格, 人権, AI人間規定, superintelligence</td></tr>
+<tr><td>Q-V02</td><td>双子峰プラトー終端後の新位相</td><td>技術成熟, ポスト成長, 脱成長, 技術プラトー, 成熟, ゆっくり</td></tr>
+<tr><td>Q-V06</td><td>10億規模強制移民・国家解体・新政体</td><td>大規模移民, 国家解体, 新政体, 移民, 国境, 難民</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">図2-3 のキーワードリストは <code>build_initiatives_db.py</code> のソースに完全収載される。本検索プロトコルは「軽量検索」方針のため、各問いについて 6 個までに制限する。</div>
+</div>
+
+<h3>2.3 検索プロトコル</h3>
+
+<p>検索プロトコルは装置別に異なる。SG（signal.db）では <code>signal_name</code> と <code>description</code> の OR 検索（LIKE '%kw%'）で件数を取得し、最新 <code>detected_date</code> と composite_score 上位 5 件のサンプルを取得する。Policy DB では FTS5（projects_fts）が利用できる場合は FTS、そうでない場合は <code>name</code> + <code>overview</code> の OR LIKE で検索し、予算 finalized_amount 降順で上位 5 事業のサンプルを取得する。IR Collector は 1.86M セクションの巨大DBであるため、性能上の理由で先頭 2 キーワードのみで <code>text_content</code> LIKE 検索し、最新 period_end と上位 5 ファイラーを取得する。Funding（投資シグナル）は press_releases の title + body の OR LIKE 検索で件数と最新 published_at、上位 5 PR を取得する。Sangaku-matcher は ambition_taxonomy_themes と tech_taxonomy_themes の name + keywords を OR LIKE 検索し、ヒットした theme から代表 5 件を取得する。UPR と SGRD は SQLite ではなく統計 JSON のみが手元にあるため、samples 200 件と top_themes 100 件・gta 48 件の中での textual match 件数を採用する。</p>
+
+<h3>2.4 検索プロトコルの限界</h3>
+
+<p>本検索プロトコルには三つの限界がある。第一に、LIKE 検索は形態素解析を経ない単純部分一致のため、日本語の活用形・表記揺れを漏らす可能性がある。例えば「気候難民」は拾うが「気候によって追い立てられた人々」は拾わない。第二に、UPR / SGRD は集計 JSON のみで全レコード走査ができないため、件数は theme_top 100 件と samples 200 件の合算となり、装置の真の規模（41,760 / 36,734 件）を反映しない。これは「軽量カバレッジ評価」の構造的制約である。<span class="tag-est">推定</span> 第三に、IR の text_content LIKE 検索は先頭 2 キーワードのみで実施するため、3-6 番目のキーワードでヒットする企業が漏れる。本Trackでは IR スコアの過小評価可能性を留保事項として明示する。</p>
+
+</section>
+
+<section class="chapter-section" id="part3">
+<div class="chapter-number-label">PART 03</div>
+<h2 class="chapter-title">スコアリング規則 0-5</h2>
+
+<p class="lead">本章では、ヒット件数を 0-5 のスコアに変換する規則を装置別に定義する。各装置の収録規模が大きく異なるため、スコア境界も装置別に設定する。</p>
+
+<h3>3.1 スコアの意味（共通）</h3>
+
+<p>スコア 0-5 の意味は _TRACK_B4_BRIEFING.md の規定に従う。スコア 0 は「装置がカバーしていない」、1 は「言及あるが弱い」、2 は「言及多数だが分析浅い」、3 は「構造化されたデータあり」、4 は「時系列で予測的」、5 は「強力な早期警戒シグナル」である。本Track では「分析の深さ」は装置の自動分類（PESTLE カテゴリ・GTA コード・ambition theme 等）の有無で判断し、「時系列で予測的」は時系列カラム（detected_date / fiscal_year / published_at / period_end）の存在と、最近 2-3 年の継続的レコード増加で判断する。</p>
+
+<h3>3.2 スコア境界（装置別）</h3>
+
+<div class="figure">
+<div class="figure-title">図4. 装置別スコア境界（ヒット件数→スコア変換）</div>
+<table>
+<thead>
+<tr><th>装置</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+</thead>
+<tbody>
+<tr><td>SG</td><td>0</td><td>1-2</td><td>3-9</td><td>10-29</td><td>30-79</td><td>80+</td></tr>
+<tr><td>UPR</td><td>0</td><td>1</td><td>2-4</td><td>5-14</td><td>15-39</td><td>40+</td></tr>
+<tr><td>SGRD</td><td>0</td><td>1</td><td>2-4</td><td>5-14</td><td>15-39</td><td>40+</td></tr>
+<tr><td>Policy</td><td>0</td><td>1-9</td><td>10-49</td><td>50-199</td><td>200-799</td><td>800+</td></tr>
+<tr><td>IR</td><td>0</td><td>1-49</td><td>50-299</td><td>300-1499</td><td>1500-5999</td><td>6000+</td></tr>
+<tr><td>Funding</td><td>0</td><td>1-4</td><td>5-24</td><td>25-99</td><td>100-399</td><td>400+</td></tr>
+<tr><td>Sangaku</td><td>0</td><td>1-9</td><td>10-49</td><td>50-199</td><td>200-799</td><td>800+</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">境界値は装置の収録規模を反映。SG は少数精鋭型のため低い境界、IR は巨大DBのため高い境界。Sangaku は ambition theme × 100 + tech theme × 80 + seeds の合算で計算される擬似件数を境界対象とする。</div>
+</div>
+
+<h3>3.3 スコア解釈の留意点</h3>
+
+<p>本スコアは「装置の応答件数」を反映するが、「応答の質」を直接測定するわけではない。例えば SG で「AIガバナンス」のヒット件数が 80+ で score 5 となっても、その 80 件すべてが質的に同等の早期警戒シグナルであるとは限らない。一部は「AIガバナンス」を文脈的に言及するだけの低質シグナルである可能性がある。本Track ではこの構造的留保を明示し、スコアは「予測的応答力の量的指標」と読み、質的評価は装置別の handoff（Track 5 Signal handoff §9 等）に委ねる。</p>
+
+</section>
+
+<section class="chapter-section" id="part4">
+<div class="chapter-number-label">PART 04</div>
+<h2 class="chapter-title">装置別の集計ログ</h2>
+
+<p class="lead">本章では、24 問 × 7 装置 = 168 セルの集計の主要結果を装置別に整理する。各セルの詳細結果は新規 DB <code>initiatives.db</code> の <code>coverage_scores</code> テーブルに収載される。本章ではその概要のみを示す。</p>
+
+<h3>4.1 集計実行の概要</h3>
+
+<p>集計は <code>~/projects/research/initiatives-db/build_initiatives_db.py</code> を 2026-05-09 に実行した。実行時間は約 25 分で、最も時間を要したのは IR Collector（1.86M セクション）の LIKE 検索であった。168 セルすべてに対してスコアと初期 initiatives を生成した。</p>
+
+<h3>4.2 装置別の典型的応答パターン</h3>
+
+<p>各装置は問いの種類によって応答パターンが大きく異なる。SG（Signal DB）は near 13 問に対してほぼ全問でスコア 3 以上を返し、特に「AIガバナンス」「民主主義」「物語転換」「場所性回帰」等の真M / 準M 由来問いに対して score 4-5 の強い応答を返す。一方 very-far 2 問（Q-V02 / Q-V06）は score 2-3 に留まる。これは Signal DB が「現在進行中の弱いシグナル」を扱う装置として、far / very-far の問いに直接応答する設計ではないことを反映する。</p>
+
+<p>UPR / SGRD（PR 系装置）は near の研究系問い（Q-N07 科学AI、Q-N08 自律AI、Q-N10 非西洋認識論）に対して中程度（score 2-3）の応答を返すが、規範系問い（Q-N09 主体・人格、Q-N12 values、Q-N13 教育ラグ）に対しては score 1-2 に留まる。これは PR 系装置が「研究成果の発信」を扱うため、規範的問いの観測には不向きであることを反映する。</p>
+
+<p>Policy DB は near の制度系問い（Q-N02 AI制度反作用、Q-N05 民主主義、Q-N06 気候災害、Q-N13 教育改革）と mid の制度系問い（Q-M02 / Q-M04 / Q-M12）に対して score 3-4 の強い応答を返す。これは政策事業が「制度反映」の最も具体的な観測装置であるためである。一方、概念系問い（Q-N09 / Q-N11 / Q-V07）に対しては score 0-1 に留まる。</p>
+
+<p>IR Collector は near / mid のすべての問いに対して何らかの記述を持つ可能性が高いが、score の分散は大きい。特に AI 系問い（Q-N01 / Q-N02 / Q-N07 / Q-N08）と気候系問い（Q-N06 / Q-M08 / Q-F01）は企業の経営方針・リスク認識として明示されるため score 4-5 に達するが、規範系・神話系問いは IR の対象外であり score 0-1 に留まる。</p>
+
+<p>Funding（投資シグナル）は near の技術系問い（Q-N01 / Q-N07 / Q-N08）と mid の医療系問い（Q-M10 創薬AI に類する Q-N07 拡張）に対して score 3-4 の応答を返す。VC 投資は「未来への賭け」を反映するため、AI・バイオ・気候技術の問いには強い応答を示す。一方、規範系・制度系問いに対しては score 0-2 に留まる。</p>
+
+<p>Sangaku-matcher は ambition_taxonomy_themes 33 件と tech_taxonomy_themes 40 件の構造化分類が中心であり、各問いに対する応答件数の分散が小さい（0-5 件程度の theme ヒット）。33 ambition × 100 + 40 tech × 80 の擬似スケーリング後、AI / 環境 / 教育系問いに対して score 3-4、規範系問いに対して score 0-2 となる。</p>
+
+<h3>4.3 集計ログの保存場所</h3>
+
+<p>168 セルすべての集計ログは <code>~/projects/research/initiatives-db/build_log.txt</code> に保存される。各行は「問いID\t装置名\tscore=N\tcount=N\tlatest=YYYY-MM-DD」形式である。SQL レベルの詳細は <code>initiatives.db</code> の <code>coverage_scores</code> テーブルから直接抽出可能である。</p>
+
+<div class="callout">
+<div class="callout-title">集計ログの利用</div>
+<p style="text-indent:0;margin-bottom:0;">本集計ログは、Track B-5（B-3 問い × B-4 装置の動き測定）と Track B-6（Phase B 統合）が直接参照する。特に Track B-5 では本Track のスコアを「動きのある hot zones / 動きのない dead zones」の弁別に使用し、score ≧ 3 のセルを「動きあり」、score ≦ 1 のセルを「動きなし」と暫定的に判定する。</p>
+</div>
+
+</section>
+
+<section class="chapter-section" id="part5">
+<div class="chapter-number-label">PART 05</div>
+<h2 class="chapter-title">Initiatives DB の設計</h2>
+
+<p class="lead">本章では、本Trackで新規構築した SQLite データベース <code>initiatives.db</code> のスキーマ設計を提示する。本DBは Phase B Track B-5 / Track B-6 の入力となり、ミラツク全体での「すでにある取り組み」の領域別マップとして機能する。</p>
+
+<h3>5.1 スキーマ概要</h3>
+
+<p>新規DBは 4 テーブルで構成される。<code>questions</code>（問いマスタ、24 行）、<code>detection_systems</code>（装置マスタ、7 行）、<code>coverage_scores</code>（カバレッジマトリクス、168 行）、<code>initiatives</code>（個別取り組みレコード、目標 240-720 行）の四つである。スキーマは <code>_TRACK_B4_BRIEFING.md</code> 第 5 節の指示に従う。</p>
+
+<h3>5.2 スキーマ詳細</h3>
+
+<pre>CREATE TABLE questions (
+    question_id TEXT PRIMARY KEY,
+    question_text TEXT,
+    horizon TEXT,    -- near / mid / far / very-far
+    ctl1 TEXT        -- V / S / T / Eco / Env / G
+);
+
+CREATE TABLE detection_systems (
+    id INTEGER PRIMARY KEY,
+    name TEXT UNIQUE,
+    type TEXT,
+    db_source TEXT,
+    total_records INTEGER
+);
+
+CREATE TABLE coverage_scores (
+    id INTEGER PRIMARY KEY,
+    question_id TEXT,
+    system_name TEXT,
+    score INTEGER,         -- 0-5
+    evidence_count INTEGER,
+    latest_signal_date TEXT,
+    notes TEXT,
+    FOREIGN KEY (question_id) REFERENCES questions(question_id)
+);
+
+CREATE TABLE initiatives (
+    id INTEGER PRIMARY KEY,
+    question_id TEXT,
+    organization TEXT,
+    initiative_name TEXT,
+    initiative_type TEXT,    -- research / product / policy / investment / partnership
+    stage TEXT,              -- ideation / experiment / pilot / scale / mature
+    horizon TEXT,
+    source_db TEXT,
+    source_id TEXT,
+    summary TEXT,
+    FOREIGN KEY (question_id) REFERENCES questions(question_id)
+);</pre>
+
+<h3>5.3 stage カラムの判定ロジック</h3>
+
+<p>initiatives テーブルの <code>stage</code> カラムは「ideation / experiment / pilot / scale / mature」の 5 段階で記録する。判定ロジックは initiative_type と evidence_count の組み合わせで決定される。policy 型は evidence_count > 100 で「scale」、それ未満で「pilot」と判定する。investment 型は evidence_count < 30 で「experiment」、それ以上で「scale」と判定する。research 型は基本「experiment」、product 型は「pilot」、partnership 型は「pilot」と判定する。これは構造的近似であり、個別の正確な stage 判定は装置別の追加メタデータが必要となる。<span class="tag-est">推定</span></p>
+
+<h3>5.4 source_db / source_id の保存</h3>
+
+<p>各 initiative は元のソース装置と元レコードの ID を保持する（<code>source_db</code> = SG/UPR/SGRD/Policy/IR/Funding/Sangaku、<code>source_id</code> = 元DBのプライマリーキー）。これにより、Track B-5 / B-6 で「ある initiative がどの装置から検出されたか」を遡及できる。例えば SG のシグナル ID 1234 から導出された initiative は <code>source_db = "SG", source_id = "1234"</code> として保存される。</p>
+
+<h3>5.5 DB の利用パターン</h3>
+
+<p>本DBの主要な利用パターンは三つである。第一は「カバレッジマトリクス出力」で、<code>SELECT question_id, system_name, score FROM coverage_scores</code> で 168 セルを取得し、HTML ヒートマップとして可視化する。第二は「装置別の予測的応答力スコア」で、<code>SELECT system_name, AVG(score), AVG(evidence_count) FROM coverage_scores GROUP BY system_name</code> で各装置の平均スコアを算出する。第三は「ある問いに対する取り組み一覧」で、<code>SELECT * FROM initiatives WHERE question_id = 'Q-N01' ORDER BY source_db</code> で領域別のピックアップを取得する。</p>
+
+</section>
+
+<section class="chapter-section" id="part6">
+<div class="chapter-number-label">PART 06</div>
+<h2 class="chapter-title">4 ホライズン × 7 装置の集計</h2>
+
+<p class="lead">本章では、24 問を 4 ホライズン（near 13・mid 6・far 3・very-far 2）でグループ化し、7 装置のスコア平均を算出した結果を提示する。詳細はレポート編 第 2 部・第 3 部に収載する。</p>
+
+<h3>6.1 ホライズン別の装置応答力</h3>
+
+<p>ホライズン別に集計すると、near は 7 装置すべてが何らかの応答を返すゾーンで、最も装置応答が厚い。mid は SG と Policy が中心となり、far / very-far は SG が中心、他装置の応答は弱い。これは「現在進行中のシグナル」を扱う装置の構造的限界を反映する。詳細な数値はレポート編 図 5 で提示する。</p>
+
+<h3>6.2 装置別の問い応答力</h3>
+
+<p>装置別に 24 問の平均スコアを算出すると、SG が最高、IR と Policy が中位、UPR / SGRD / Funding / Sangaku が下位となる。これは装置の「予測的応答」設計の差を反映する。SG は弱いシグナル発見が設計目的なので、24 問の問い空間に対して幅広く応答する。IR / Policy は経営記述・予算事業として「現在動いている領域」を反映する。UPR / SGRD は研究成果の発信として「すでに達成された成果」を反映するため、未来予測的な問いには応答が弱い。Funding は VC リスク評価として技術系問いに集中する。Sangaku は ambition / tech theme として既知のカテゴリにマッピング可能な問いに集中する。詳細はレポート編 第 4 部で提示する。</p>
+
+<h3>6.3 装置間の補完関係</h3>
+
+<p>装置間の補完関係は、ある問いに対する「装置間スコア相関」と「装置間カバレッジ重複」の二つで分析できる。例えば Q-N01「AIガバナンス」は SG・Policy・IR・Funding の 4 装置で score 3+ となり、相互補完的なカバレッジを提供する。一方 Q-N09「主体・人格」は SG のみが score 3+ で、他装置は score 1-2 に留まり、SG 単独依存の構造を持つ。詳細な補完関係パターンはレポート編 第 5 部で 5 パターンとして類型化する。</p>
+
+</section>
+
+<section class="chapter-section" id="limits">
+<div class="chapter-number-label">PART 07</div>
+<h2 class="chapter-title">解析上の留保</h2>
+
+<p class="lead">本章では、本解析編の方法論的留保と、後続Track（B-5/B-6）への引継ぎ事項を率直に開示する。</p>
+
+<h3>7.1 軽量カバレッジ評価の構造的限界</h3>
+
+<p>本Track の方法論は「軽量カバレッジ評価」であり、各装置DBの全件走査ではなく代表キーワード 3-6 個の LIKE 検索でスコアを判定する。この方法論には四つの構造的限界がある。第一に、形態素解析を経ない LIKE 検索のため、表記揺れ・活用形を漏らす。第二に、UPR / SGRD は集計 JSON のみの参照で全レコード走査ができない。第三に、IR の検索は性能上の理由で先頭 2 キーワードのみで実施する。第四に、スコア境界は装置の収録規模を反映するが、「真の質的差」を直接反映するわけではない。</p>
+
+<h3>7.2 装置間の独立性に関する留保</h3>
+
+<p>本Track では 7 装置を「独立な観測装置」として扱うが、実際には部分的相関がある。Signal DB のソースに UPR・SGRD・IR の一部が含まれる可能性、Sangaku-matcher のソースに SGRD・UPR の一部が含まれる可能性がある。本Trackでは「装置間の独立性」を完全独立と読まず、「半独立」と解釈する。これは Phase A Track 8 が指摘した「文脈別の独立性表現処理」の継承であり、装置間スコア合意は「独立 N 装置の合意」ではなく「半独立 N 装置の合意」と読む。</p>
+
+<h3>7.3 stage 判定の構造的近似</h3>
+
+<p>initiatives テーブルの <code>stage</code> カラムは構造的近似で判定される（initiative_type + evidence_count の二軸ヒューリスティクス）。個別の正確な stage 判定は装置別の追加メタデータが必要となる。例えば、ある政策事業が「scale」段階なのか「pilot」段階なのかは、政策事業の予算規模・実施期間・他事業との関係で決定されるべきものだが、本Track では evidence_count > 100 を構造的閾値として使用する。<span class="tag-est">推定</span></p>
+
+<h3>7.4 24 問の網羅性に関する留保</h3>
+
+<p>本Track が評価する 24 問は、Track B-1 § 6.2 で B-4 対象として指定された問い群である。この 24 問の選定は B-1 が「変化検出装置で観測可能か」の事前判断で行ったが、実際の評価で「観測不可能」と判明する問いがある可能性、また B-1 が指定外とした 17 問の中にも観測可能な問いがある可能性がある。本Track では 24 問の評価結果を踏まえ、Q-N09 / Q-N11 / Q-V07 等の score 0-1 集中問いについては「装置がカバーしていない構造的事実」を発見として明示する。</p>
+
+<h3>7.5 sentinel 引継ぎ事項</h3>
+
+<p>本解析編から sentinel への引継ぎ事項は四つである。第一に、本Track の検索プロトコルは LIKE 検索ベースであり、形態素解析・意味的検索を採用していない。検証編で「キーワード設計の妥当性」を 4 問について再現確認すべき。第二に、UPR / SGRD は集計 JSON のみの参照のため、装置の真の応答力は本Track の評価より高い可能性がある。検証編でこの留保を明示すべき。第三に、stage 判定は構造的近似である。検証編で 5 件サンプルの stage 判定を手動再評価すべき。第四に、Track B-5 への引継ぎ書では、score ≧ 3 のセル数と score ≦ 1 のセル数を hot/dead zones の暫定判定として提供すべき。</p>
+
+</section>
+
+<footer>
+miratuku-news Phase B / Track B-4 解析編 / 2026-05-09 生成<br>
+方法論: _PROTOCOLS.md v1.0 / _PHASE_B_PLAN.md / _TRACK_B4_BRIEFING.md
+</footer>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
