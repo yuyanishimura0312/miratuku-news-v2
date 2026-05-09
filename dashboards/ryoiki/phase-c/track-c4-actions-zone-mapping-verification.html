@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-4 検証編 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border-light);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  font-family: var(--font);
+}
+.top-bar .brand { font-weight: 700; font-size: 14px; color: var(--accent); }
+.top-bar .brand span { color: var(--accent-warm); }
+.top-bar .theme-toggle {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  border-radius: 2px;
+}
+.top-bar .theme-toggle:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  padding: 0 24px;
+  border-right: 1px solid var(--border-light);
+  font-family: var(--font);
+  font-size: 13px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.toc-sidebar h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.toc-sidebar a {
+  display: block;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-light);
+  transition: color 0.15s;
+}
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.toc-sidebar a .num {
+  display: inline-block;
+  width: 24px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.main {
+  max-width: 760px;
+  padding: 0 32px;
+}
+.doc-header {
+  margin-bottom: 64px;
+  padding-bottom: 32px;
+  border-bottom: 2px solid var(--accent);
+}
+.doc-header .meta {
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.doc-header h1 {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  color: var(--accent);
+}
+.doc-header .subtitle {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-section h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+.chapter-section h2 .num {
+  color: var(--accent-warm);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 16px;
+  margin-right: 12px;
+  font-weight: 500;
+}
+.chapter-section h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  color: var(--accent);
+}
+.chapter-section h4 {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+}
+.chapter-section p {
+  margin-bottom: 16px;
+  text-indent: 1em;
+  font-size: 15px;
+  line-height: 1.95;
+}
+.chapter-section p:first-of-type { text-indent: 0; }
+.chapter-section ul, .chapter-section ol {
+  margin: 16px 0 16px 32px;
+  font-size: 14px;
+}
+.chapter-section ul li, .chapter-section ol li {
+  margin-bottom: 6px;
+  line-height: 1.85;
+}
+.chapter-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+  font-family: var(--font);
+}
+.chapter-section table th {
+  background: var(--surface);
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--accent);
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+.chapter-section table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+.chapter-section table tr:hover td { background: var(--card-hover); }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 2px;
+  margin: 0 2px;
+  letter-spacing: 0.05em;
+}
+.tag-est { background: rgba(204,20,0,0.08); color: var(--accent-warm); }
+.tag-int { background: rgba(85,85,85,0.10); color: var(--text-secondary); }
+.tag-unv { background: rgba(0,0,0,0.05); color: var(--text-muted); border: 1px dashed var(--border); }
+.tag-warn { background: rgba(204,20,0,0.15); color: var(--accent-warm); border: 1px solid var(--accent-warm); font-weight: 600; }
+.tag-opp { background: rgba(85,85,85,0.10); color: var(--accent); border: 1px solid var(--text-secondary); font-weight: 600; }
+.tag-hot { background: rgba(204,20,0,0.20); color: var(--accent-warm); font-weight: 600; }
+.tag-warm { background: rgba(204,20,0,0.10); color: var(--accent-warm); }
+.tag-cool { background: rgba(85,85,85,0.10); color: var(--text-secondary); }
+.tag-na { background: rgba(0,0,0,0.05); color: var(--text-muted); }
+blockquote {
+  margin: 24px 0;
+  padding: 16px 24px;
+  border-left: 3px solid var(--accent-warm);
+  background: var(--accent-muted);
+  font-size: 14px;
+  font-style: normal;
+  color: var(--text-secondary);
+}
+.figure {
+  margin: 32px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 2px;
+}
+.figure-title {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+}
+.figure-caption {
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  line-height: 1.7;
+}
+.code-block {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--text-secondary);
+}
+.bar-chart { width: 100%; margin: 16px 0; }
+.bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 50px;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  font-family: var(--font);
+  font-size: 12px;
+}
+.bar-label { color: var(--text-secondary); }
+.bar-value-cell { text-align: right; color: var(--text-muted); }
+.bar-fill {
+  height: 16px;
+  background: var(--accent-warm);
+  border-radius: 1px;
+}
+.bar-fill.dim { background: var(--text-muted); opacity: 0.5; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: relative; top: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 16px; max-height: 200px; }
+  .main { padding: 0 16px; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  .layout { grid-template-columns: 1fr; }
+  .main { max-width: 100%; padding: 0; }
+}
+</style>
+</head>
+<body>
+<header class="top-bar">
+<div class="brand">miratuku<span>-news</span> / Phase C / Track C-4</div>
+<button class="theme-toggle">Theme</button>
+</header>
+<div class="layout">
+<aside class="toc-sidebar">
+<h3>目次</h3>
+<a href="#sec1"><span class="num">1</span>検証スコープ</a>
+<a href="#sec2"><span class="num">2</span>スナップショット不整合検証</a>
+<a href="#sec3"><span class="num">3</span>ハルシネーション検証</a>
+<a href="#sec4"><span class="num">4</span>カバレッジギャップ検証</a>
+<a href="#sec5"><span class="num">5</span>チーム間不整合検証</a>
+<a href="#sec6"><span class="num">6</span>判定結果集約</a>
+<a href="#sec7"><span class="num">7</span>自己発見問題と未検証事項</a>
+</aside>
+<main class="main">
+
+<div class="doc-header">
+<div class="meta">Track C-4 検証編 / Phase C Wave 3 / 2026-05-09</div>
+<h1>偉業 zone マッピング 4 カテゴリ検証</h1>
+<div class="subtitle">スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合の自己検証</div>
+</div>
+
+<section class="chapter-section" id="sec1">
+<h2><span class="num">1</span>検証スコープ</h2>
+<p>本検証編は Track C-4 出力（great_actions.db v0.2 + analysis.html + report.html）に対して、4 カテゴリ × 計 16 項目の自己検証を実行する。検証カテゴリは（一）スナップショット不整合（Phase A〜B 確定値との整合）、（二）ハルシネーション（典拠なき記述）、（三）カバレッジギャップ（必須要素の欠落）、（四）チーム間不整合（C-1/C-2/C-3/C-5 出力との非整合）である。</p>
+
+<p>検証は本トラック自身が実行する自己検証であるため、外部レビュー（doc-verify エージェント）への引き継ぎを前提とする。判定は PASS / WARN / FAIL の三値で、FAIL は即時修正、WARN は handoff.md で次トラックへ申し送る。</p>
+</section>
+
+<section class="chapter-section" id="sec2">
+<h2><span class="num">2</span>スナップショット不整合検証</h2>
+<p>Phase A 数値継承（_PHASE_A_INHERITANCE_AUDIT.md）と Phase B 確定値（B-4 463 / B-5 zone 弁別 4-9-9-0-8 / B-6 TOP10）に対する整合検証。</p>
+
+<table>
+<thead><tr><th>項目</th><th>判定</th><th>確認内容</th></tr></thead>
+<tbody>
+<tr><td>S-1: B-4 463 initiatives 全件数</td><td>PASS</td><td>initiatives.db SELECT COUNT(*) = 463 を確認、全件投入</td></tr>
+<tr><td>S-2: B-5 zone 弁別 4-9-9-0-8</td><td>PASS</td><td>ZONE_MAP 辞書で Hot 4 / Warm 9 / Cool 9 / N/A 8 を完全継承</td></tr>
+<tr><td>S-3: B-6 TOP10 ランキング順序</td><td>PASS</td><td>TOP10_RANK 辞書で 1-10 位を完全継承（G-M04→G-F02）</td></tr>
+<tr><td>S-4: 戦略的空白 13 問の継承</td><td>PASS</td><td>STRATEGIC_GAPS セットで 13 問完全保持</td></tr>
+<tr><td>S-5: great_actions 140 件の保持</td><td>PASS</td><td>v0.1 既存 140 件を破壊せず c4_* カラム上書き層として追加</td></tr>
+<tr><td>S-6: B-1 41 問のカバレッジ</td><td>WARN</td><td>Q-N11 / Q-M10 の 2 問は B-3 マッピング不在のため initiatives 紐付け不成立 — _TRACK_LINKAGE_MATRIX 推定値継承の限界</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec3">
+<h2><span class="num">3</span>ハルシネーション検証</h2>
+<p>本トラック出力中の数値・固有名詞・判定根拠が一次出典に裏付けられているかの検証。</p>
+
+<table>
+<thead><tr><th>項目</th><th>判定</th><th>確認内容</th></tr></thead>
+<tbody>
+<tr><td>H-1: 463 initiatives 件数</td><td>PASS</td><td>initiatives.db SQL 実値、装置別内訳（SG 115 / IR 105 / Policy 102 / Funding 88 / SGRD 24 / UPR 15 / Sangaku 14）と一致</td></tr>
+<tr><td>H-2: warning 17 件と opportunity 50 件</td><td>PASS</td><td>migrate_c4_v02.py 実行結果ログを analysis.html §8/§9 と一致確認</td></tr>
+<tr><td>H-3: maturity_score 算定アルゴリズム</td><td>PASS</td><td>migrate_c4_v02.py 該当ロジックを analysis.html §6.1 で完全再現</td></tr>
+<tr><td>H-4: zone × scenario × archetype 集計</td><td>PASS</td><td>action_zone_mapping テーブル SQL 集計で再現可能</td></tr>
+<tr><td>H-5: B-3 → B-1 マッピング推定</td><td>WARN</td><td>_TRACK_LINKAGE_MATRIX §1.1〜1.4 推定値依拠で B-3 リード未確認 — 全 推定 タグで明示</td></tr>
+<tr><td>H-6: G-M01 が happening 判定</td><td>WARN</td><td>Q-M09→G-M01 ブリッジによる構造的副作用で、規範的には expected 寄り — analysis.html §7 で開示済</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec4">
+<h2><span class="num">4</span>カバレッジギャップ検証</h2>
+<p>ブリーフィング §6 で要請された必須要素の欠落確認。</p>
+
+<table>
+<thead><tr><th>項目</th><th>判定</th><th>確認内容</th></tr></thead>
+<tbody>
+<tr><td>C-1: 既存 vs 期待差分マップ</td><td>PASS</td><td>report.html §3 で実装、status_dist 6 区分で可視化</td></tr>
+<tr><td>C-2: TOP10 × 偉業マッピング</td><td>PASS</td><td>report.html §5 で 10 課題 × 平均 6.8 偉業 = 68 件配分</td></tr>
+<tr><td>C-3: warning 偉業弁別</td><td>PASS</td><td>report.html §6 で 4 定義 × 17 件 + critical 4 件を提示</td></tr>
+<tr><td>C-4: opportunity 偉業弁別</td><td>PASS</td><td>report.html §7 で 50 件 + 該当問い別内訳を提示</td></tr>
+<tr><td>C-5: 463 × 100-150 紐付け表</td><td>PASS</td><td>analysis.html §3 + DB action_initiatives_links 2,030 リンクとして実装</td></tr>
+<tr><td>C-6: zone 別偉業分布</td><td>PASS</td><td>report.html §4 + DB action_zone_mapping 43 セルとして実装</td></tr>
+<tr><td>C-7: 連結 ID（C-1/C-2/C-3/C-5/C-6 接続）</td><td>PASS</td><td>report.html §10 で各 Track 接続点を明示</td></tr>
+<tr><td>C-8: 研究の限界</td><td>PASS</td><td>report.html §11 で 3 点提示 + analysis.html §10 で補強</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec5">
+<h2><span class="num">5</span>チーム間不整合検証</h2>
+<p>C-1 サイクル / C-2 71 問 / C-3 偉業 140 件 / C-5 担い手特性（並列走行中）との整合確認。</p>
+
+<table>
+<thead><tr><th>項目</th><th>判定</th><th>確認内容</th></tr></thead>
+<tbody>
+<tr><td>T-1: C-3 great_actions 140 件保持</td><td>PASS</td><td>v0.1 既存データを破壊せず ALTER TABLE のみで層追加</td></tr>
+<tr><td>T-2: C-3 装置応答型 vs 期待型 接続</td><td>PASS</td><td>derivation_method（C-3 設定）と c4_status_override（C-4 上書き）の二層保持で双方参照可能</td></tr>
+<tr><td>T-3: C-2 71 問独立 ID 整合</td><td>PASS</td><td>c4_b5_zone は B-3 30 問 G-prefixed 単位で付与、C-2 71 問空間と独立</td></tr>
+<tr><td>T-4: C-1 サイクル概念の組込</td><td>WARN</td><td>本トラックでは C-1 サイクル A/B/C と great_actions の直接マッピング未実施 — C-6 統合段階での実施を引継ぎ</td></tr>
+<tr><td>T-5: C-5 担い手特性領域不可侵</td><td>PASS</td><td>archetype フィールドの読み取りのみで C-5 作業領域には書き込みなし</td></tr>
+<tr><td>T-6: Phase A Mサイン階層整合</td><td>PASS</td><td>opportunity 条件 3 で Mサイン階層接続を明示判定基準に組込</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec6">
+<h2><span class="num">6</span>判定結果集約</h2>
+<table>
+<thead><tr><th>カテゴリ</th><th>項目数</th><th>PASS</th><th>WARN</th><th>FAIL</th></tr></thead>
+<tbody>
+<tr><td>スナップショット不整合</td><td>6</td><td>5</td><td>1</td><td>0</td></tr>
+<tr><td>ハルシネーション</td><td>6</td><td>4</td><td>2</td><td>0</td></tr>
+<tr><td>カバレッジギャップ</td><td>8</td><td>8</td><td>0</td><td>0</td></tr>
+<tr><td>チーム間不整合</td><td>6</td><td>5</td><td>1</td><td>0</td></tr>
+<tr><td><strong>合計</strong></td><td><strong>26</strong></td><td><strong>22</strong></td><td><strong>4</strong></td><td><strong>0</strong></td></tr>
+</tbody>
+</table>
+
+<p>全 26 項目中 PASS 22（84.6%）/ WARN 4（15.4%）/ FAIL 0（0%）。WARN 4 件はすべて「マッピング推定値依拠」「C-1 サイクル統合は C-6 へ引継ぎ」等の明示的に追跡可能な事項であり、本トラックの完了を妨げる FAIL 項目はゼロである。</p>
+</section>
+
+<section class="chapter-section" id="sec7">
+<h2><span class="num">7</span>自己発見問題と未検証事項</h2>
+
+<h3>7.1 自己発見問題 4 件</h3>
+<table>
+<thead><tr><th>ID</th><th>内容</th><th>追跡先</th></tr></thead>
+<tbody>
+<tr><td>P-1</td><td>B-3 → B-1 マッピング推定値の B-3 リード未確認</td><td>Phase D 段階で再評価</td></tr>
+<tr><td>P-2</td><td>Q-N11 / Q-M10 の 2 問は B-3 マッピング不在で initiatives 紐付け不成立</td><td>C-6 統合 + Phase D</td></tr>
+<tr><td>P-3</td><td>G-M01 が happening 判定（Q-M09 ブリッジ副作用）— 規範的には expected 寄り</td><td>C-6 統合 + Phase D</td></tr>
+<tr><td>P-4</td><td>C-1 サイクル A/B/C と great_actions の直接マッピング未実施</td><td>C-6 統合トラック</td></tr>
+</tbody>
+</table>
+
+<h3>7.2 未検証事項 6 件</h3>
+<table>
+<thead><tr><th>ID</th><th>内容</th><th>追跡先</th></tr></thead>
+<tbody>
+<tr><td>U-1</td><td>warning 4 定義の閾値設計（experiment 80% / wisdom 5 件未満等）の妥当性</td><td>C-6 / C-7</td></tr>
+<tr><td>U-2</td><td>warning 候補問い 8 問の選定（事前リサーチ 6 + 拡張 2）の包括性</td><td>外部レビュー（doc-verify）</td></tr>
+<tr><td>U-3</td><td>maturity_score 5 ゼロ件の構造的解釈の正当性</td><td>外部レビュー（doc-verify）</td></tr>
+<tr><td>U-4</td><td>SG signal 75 件を weak link で扱う妥当性</td><td>C-6 / Phase D</td></tr>
+<tr><td>U-5</td><td>action_zone_mapping 集計テーブルの週次再計算プロトコル</td><td>Phase D 運用設計</td></tr>
+<tr><td>U-6</td><td>warning 比率 1:2.94 が opportunity 偏重で楽観的すぎないかの規範的吟味</td><td>外部レビュー</td></tr>
+</tbody>
+</table>
+
+<p>WARN 判定 4 件 + 自己発見問題 4 件 + 未検証事項 6 件、合計 14 件は本トラック完了状態として handoff.md に記録し、次トラック（C-6 統合）と Phase D（deep-knowledge 統合）へ申し送る。</p>
+</section>
+
+</main>
+</div>
+<script>
+const t = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', t);
+document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+});
+</script>
+</body>
+</html>

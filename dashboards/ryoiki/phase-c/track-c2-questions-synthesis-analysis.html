@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-2 解析編 — 問いの統合構造化 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono","Fira Code",monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 28px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type, .lead, .figure-caption, td p, th p { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.55; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; background: var(--surface); padding: 16px 20px; margin: 24px 0; line-height: 1.5; overflow-x: auto; border: 1px solid var(--border-light); white-space: pre; }
+.figure { margin: 40px 0; padding: 24px; border: 1px solid var(--border-light); background: var(--card); }
+.figure-title { font-family: var(--font); font-size: 0.85rem; font-weight: 700; color: var(--accent-warm); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+.figure-caption { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); margin-top: 14px; line-height: 1.6; }
+.tag-est, .tag-int, .tag-unv { display: inline-block; font-family: var(--font); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; margin: 0 3px; }
+.tag-est { background: rgba(110,44,44,0.12); color: #6E2C2C; }
+.tag-int { background: rgba(204,20,0,0.10); color: #B01200; }
+.tag-unv { background: rgba(107,107,107,0.15); color: #555555; }
+[data-theme="dark"] .tag-est { background: rgba(160,80,80,0.20); color: #C8A0A0; }
+[data-theme="dark"] .tag-int { background: rgba(255,64,48,0.18); color: #FF8070; }
+[data-theme="dark"] .tag-unv { background: rgba(170,170,170,0.18); color: #BBBBBB; }
+.discovery-box { border: 1px solid var(--accent-warm); background: var(--accent-muted); padding: 20px 24px; margin: 28px 0; }
+.discovery-box .discovery-num { font-family: var(--font); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent-warm); margin-bottom: 4px; text-transform: uppercase; }
+.discovery-box .discovery-title { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Track C-2 解析編</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#ch1"><span class="toc-num">1</span>解析の射程と方法</a></li>
+<li><a href="#ch2"><span class="toc-num">2</span>71問単一台帳の構築</a></li>
+<li><a href="#ch3"><span class="toc-num">3</span>71問×85wisdomマトリクス</a></li>
+<li><a href="#ch4"><span class="toc-num">4</span>「善い社会」5系譜</a></li>
+<li><a href="#ch5"><span class="toc-num">5</span>4層問い構造解析</a></li>
+<li><a href="#ch6"><span class="toc-num">6</span>TOP10再ランキング</a></li>
+<li><a href="#ch7"><span class="toc-num">7</span>B-6発見の再評価</a></li>
+<li><a href="#ch8"><span class="toc-num">8</span>主要発見と限界</a></li>
+<li><a href="#appendix"><span class="toc-num">付録</span>DB集計ログ</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">Track C-2 解析編</span>
+<span class="db-tag">Phase C / Wave 1</span>
+<span class="db-tag">71問単一台帳</span>
+<span class="db-tag">85 wisdom 紐付け</span>
+</div>
+<h1 class="book-title">問いの統合構造化 — 71問単一台帳・85wisdom紐付け・5系譜・4層構造</h1>
+<p class="book-subtitle">Phase B 全 6 トラック APPROVED の上に立ち、ミラツクが向き合う問い空間を統合的に再構築する解析編。B-1 多層人類史 41 問 + B-3 善い社会 30 問 = 71 独立 ID を単一台帳化し、B-2 already_future.db の 85 wisdom と紐付け、PHIL/LIT/MY/TK/AN の 5 系譜を時代縦軸で構造化、71 問をメタ × 規範 × 実装 × 装置の 4 層に再分類する。</p>
+<div class="book-meta">
+<span>生成日: 2026-05-09</span>
+<span>Track: C-2 / Wave 1</span>
+<span>主軸DB: already_future.db (DB実値) / B-1 / B-3</span>
+<span>編集: Phase C Track C-2 Lead Researcher</span>
+</div>
+</header>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">Chapter 01</div>
+<h2 class="chapter-title">解析の射程と方法</h2>
+<p class="lead">Phase C-2 は Phase B が散開的に展開した 71 独立問い ID を、ミラツクが Phase D 以降も継続的に追跡しうる「単一台帳」として統合し、それぞれを 85 wisdom と紐付け、4 層構造で再分類することを使命とする。本章は方法論の宣言と、Phase A→B 数値継承を踏まえた source-of-truth 採用の明示にあてる。</p>
+
+<h3>1.1 ミッションと四問</h3>
+<p>本トラックは次の四問に応答する。第一に、そもそも善い社会のために何を問うべきか — 問いそのものを問う「メタ問い」の構造を明示することである。第二に、我々はこれまで善い社会をどう捉えてきたか — PHIL（哲学）/ LIT（文学）/ MY（神話）/ TK（伝統知）/ AN（人類学）の 5 系譜を時代縦軸で系統化することである。第三に、今問うべき問いは何か — Phase B B-5 確定 TOP10 を Phase C 観点で再ランキングしたコアリストを示すことである。第四に、現代社会の統合的問いの構造と背景はどう描けるか — メタ問い × 規範問い × 実装問い × 装置問いの 4 層構造図を提示することである。</p>
+
+<h3>1.2 入力と方法</h3>
+<p>本解析の入力は次のとおりである。Phase B B-1 41 問（near 13 / mid 13 / far 8 / very-far 7）、Phase B B-3 30 問（G-prefixed・5 シナリオ × 6 問・8 critical junctures 付）、already_future.db（5 traditions × 14 問 × 85 wisdom records）、Phase A Track 9「善き社会 4 根本前提」（個 / 関係 / 場所 / 時間）、Phase A Track 7 CTL-V 7,962 概念、Phase B B-6 主要発見 5 点（特に発見 1 Q-N04 全 Track 貫通 + 発見 3 第四変容期貫通）。方法は、(a) 71 ID の単一台帳スキーマ設計と DB 実値による母数確定、(b) wisdom 接続マトリクスの SQL 集計、(c) 5 系譜の時代区分による系統化、(d) 4 層帰属判定基準の明示と 71 問の主層・副層付与、(e) 4 軸スコアリング（規範重要性 × 装置観測薄 × wisdom 厚 × Mサイン階層）による TOP10 再ランキング、の 5 段階である。</p>
+
+<h3>1.3 数値 source-of-truth の採用宣言</h3>
+<p>Phase A → Phase B 数値継承監査（_PHASE_A_INHERITANCE_AUDIT.md）で WARN-1 / WARN-2 として開示された数値不整合（B-2 文書での PHIL 9,583 旧値・MY 10,615 旧値・TK 3,001 旧値）について、本トラックでは <strong>DB 実値（B-1 採用値）を一次値</strong>として採用する。すなわち PHIL 10,292 概念・MY 11,936 物語・TK 3,002 グループを source-of-truth とする。ただし already_future.db の <code>traditions</code> テーブル内には B-2 由来の旧ブリーフィング値（PHIL 9,583 / MY 10,615 / TK 3,001）が保持されており、これは B-2 リード時点のスナップショットとして併存することを <strong class="tag-int">解釈</strong>として記録する（集計 L-04）。</p>
+
+<h3>1.4 共通スパンと CTL-1 マッピング</h3>
+<p>共通スパンは _PROTOCOLS.md §1.2 に従い、near (2026-2035) / mid (2036-2055) / far (2056-2080) / very-far (2081-2100) を採用する。CTL-1 6 メガドメインは V（価値観）/ T（技術）/ G（ガバナンス）/ Env（環境）/ S（社会）/ Eco（経済）。B-1 41 問の CTL-1 配分は V 17 / T 6 / G 6 / S 5 / Eco 4 / Env 3 = 41 で、CTL-V が単独最多（41.5%）を占める（集計 L-01）。これは Phase A Track 9 4DB（PHIL/LIT/MY/TK）と Track 7 CTL-V 7,962 概念が「規範論述群」として 71 問の中軸を支える構造を反映する。</p>
+
+<h3>1.5 タグ運用</h3>
+<p>本解析では【推定】= 隣接データから外挿した数値・分類、【解釈】= 数値から複数の読みが成立する意味付け、【未検証】= 一次出典で照合していない事項、の 3 タグを使い分ける。各タグは verification 編 §4 で一覧化する。</p>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">Chapter 02</div>
+<h2 class="chapter-title">71問単一台帳の構築</h2>
+<p class="lead">B-1 41 問 + B-3 30 問 = 71 独立 ID を「単一台帳」として固定する作業は、B-3 sentinel verdict C-05「連結 ID マトリクス不在」への決着である。本章では、台帳スキーマ・確定 71 ID・重複と差異の構造的整理・1 対 N マッピングの本判定を提示する。</p>
+
+<h3>2.1 単一台帳スキーマと確定 71 ID</h3>
+<p>単一台帳は <code>questions_unified</code> テーブル相当のスキーマで構築する。フィールドは <code>unified_id</code>（U001-U071）/ <code>source_track</code>（B-1 or B-3）/ <code>source_id</code>（Q-N01 等 / G-N01 等）/ <code>question_text</code> / <code>horizon</code> / <code>ctl1</code> / <code>ctl1_secondary</code> / <code>msign_origin</code>（真M / 準M / 概念整合 / 単独T / メタ）/ <code>layer</code>（meta / normative / implementation / device）/ <code>layer_secondary</code> / <code>subject_primary</code> / <code>b2_wisdom_count</code> / <code>b3_pair_id</code> / <code>b4_zone</code> / <code>b5_top10_rank</code> / <code>is_strategic_blank</code> / <code>good_society_premise</code>（個 / 関係 / 場所 / 時間 / 統合）/ <code>inherited_from</code> / <code>notes</code>。確定 ID 数は 71（B-1 41 + B-3 30）。重複・統合解決数は 11 ペア（§2.3 参照）。</p>
+
+<h3>2.2 単一台帳の数値概観</h3>
+<table>
+<thead><tr><th>区分</th><th>件数</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td>全行数</td><td>71</td><td>独立 ID 合計</td></tr>
+<tr><td>うち B-1 由来</td><td>41</td><td>Q-N01 〜 Q-V07</td></tr>
+<tr><td>うち B-3 由来</td><td>30</td><td>G-N01 〜 G-V03</td></tr>
+<tr><td>near 帯</td><td>25</td><td>B-1 13 + B-3 12</td></tr>
+<tr><td>mid 帯</td><td>23</td><td>B-1 13 + B-3 10</td></tr>
+<tr><td>far 帯</td><td>13</td><td>B-1 8 + B-3 5</td></tr>
+<tr><td>very-far 帯</td><td>10</td><td>B-1 7 + B-3 3</td></tr>
+<tr><td>B-2 wisdom 接続あり</td><td>14</td><td>5 traditions × 各 5-7 件 = 85 wisdom records</td></tr>
+<tr><td>B-4 装置観測対象（B-1 内）</td><td>24</td><td>B-1 §6.2 指定 24 問</td></tr>
+<tr><td>B-5 TOP10 該当</td><td>10</td><td>G-M04/G-N09/G-M01/G-N12/G-N10/G-N11/G-M02/G-N07-08/G-V03/G-F02</td></tr>
+<tr><td>B-5 戦略的空白</td><td>13</td><td>Pluriverse 5 + Care 2 + 世代間正義 2 + Slow Right 3 + 自己言及 1</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">表 2.2: 71 問単一台帳の構造的内訳（集計 L-02 / L-03）。near 帯が 25 問で最多（35.2%）、very-far 帯は 10 問（14.1%）に縮退する。これは B-1 が「装置観測可能性」を near に集中させ、B-3 が「規範問いの主体配分」を mid 以降に薄めた設計の合算結果である。</p>
+
+<h3>2.3 重複ペア 11 件の整理（B-1 ↔ B-3）</h3>
+<p>_TRACK_LINKAGE_MATRIX.md §2.4 が示した B-3 30 問 → B-1 41 問の推定マッピングを本トラックで本判定し、主題重複ペア 11 件を確定した。これらは「主題は重複するが視点が異なる」関係であり、単一台帳では <code>inherited_from</code> フィールドで明示し、視点差を <code>layer</code> フィールドで弁別する設計を採る（統合せず層レベルで切り分ける）。</p>
+<table>
+<thead><tr><th>B-1 ID</th><th>B-3 ID</th><th>主題</th><th>視点差</th></tr></thead>
+<tbody>
+<tr><td>Q-N04</td><td>G-N04 / G-N06</td><td>場所性回帰</td><td>規範問い vs 主体特定（自治体 / 国）</td></tr>
+<tr><td>Q-N12</td><td>G-N12</td><td>values 空白補完 / 多元的時間リテラシー</td><td>装置観測 vs 教育制度</td></tr>
+<tr><td>Q-M01</td><td>G-M01 / G-M02 / G-M03</td><td>ケア・創造・共生</td><td>規範問い vs 国際機関 / 国 / 企業</td></tr>
+<tr><td>Q-M06</td><td>G-M04 / G-M05</td><td>世代間正義</td><td>制度設計 vs 憲法化 / 国際代表</td></tr>
+<tr><td>Q-F02</td><td>G-M04 / G-M05</td><td>世代間正義 far 期</td><td>長期化 vs 制度実装</td></tr>
+<tr><td>Q-F06</td><td>G-N09</td><td>伝統知主権</td><td>規範問い vs コミュニティ実装</td></tr>
+<tr><td>Q-N06 / Q-V06</td><td>G-M08 / G-M09</td><td>気候強制移民</td><td>装置 vs 国際機関対応</td></tr>
+<tr><td>Q-V05</td><td>G-M06 / G-F03</td><td>遅延しない権利 / 多元的時間性</td><td>規範 vs EU / 国・自治体</td></tr>
+<tr><td>Q-V01</td><td>G-V01 / G-V03</td><td>サイクルA前期段階組織形態</td><td>規範 vs 人類全体 / メタ</td></tr>
+<tr><td>Q-V07</td><td>G-V02 / G-F04</td><td>pluriverse cosmology</td><td>規範 vs 評価軸メタ</td></tr>
+<tr><td>Q-N09 / Q-F08</td><td>G-F05</td><td>主体・人格境界</td><td>支援 vs 法学者・哲学者</td></tr>
+</tbody>
+</table>
+
+<h3>2.4 B-1 単独問い 6 問の中継ぎ的位置</h3>
+<p>B-2 / B-4 とも対象外で B-3 経路設計のみが対応する 6 問（Q-M06 / Q-M09 / Q-M13 / Q-F05 / Q-F07 / Q-V04）は、_TRACK_LINKAGE_MATRIX.md §3.5 が指摘した「中継ぎ問い」である。これらは mid / far / very-far に集中（near ゼロ）し、Mサイン階層は準M / 真M / 概念整合 が混在する。本台帳では <code>layer = normative</code> を主層、副層を空欄として記載し、B-3 経路設計の存在を <code>b3_pair_id</code> フィールドで継承する。</p>
+
+<h3>2.5 メタ問い 4 問の独立扱い</h3>
+<p>71 問のうちメタ問いとして独立扱いするのは以下の 4 問である。Q-V03（神話的予見と長期記憶）、G-V03（Phase B 自己検証）、G-F04（ミラツク Pluriverse vs Fragmentation 評価）、Q-N11（過剰的中バイアスと distance-keeping）。これらは「他問いを観察する観察者の位置を問う」再帰性を持つため、単一台帳では <code>layer = meta</code> を付与し、規範問い・実装問い・装置問いの上位に置く。<strong class="tag-int">解釈</strong>として、メタ問いの少なさ（71 問中 4 問・5.6%）は近代フォーサイトが「観察者の自己診断」をシステマティックに扱ってこなかった構造的盲点を反映する。</p>
+
+<h3>2.6 CTL-1 二重計上の処理</h3>
+<p>B-3 handoff §4.3 が指摘した「CTL-1 配分の二重計上」（30 問で CTL 合計 33）を、本台帳では <code>ctl1</code>（主分類）と <code>ctl1_secondary</code>（副分類）に分けて処理する。例えば G-N12「場所・ケア・多元的時間リテラシー」は CTL-V 主・CTL-S 副、G-M02「UBI（AI 効率化補完 vs ケア基盤）」は CTL-Eco 主・CTL-G 副、として記録する。本処理により合計 33 が 30 と整合する。</p>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">Chapter 03</div>
+<h2 class="chapter-title">71問×85wisdomマトリクスの構築</h2>
+<p class="lead">already_future.db の <code>wisdom_records</code> テーブル（85 件）を 71 問単一台帳に紐付ける作業は、Phase B B-2 が「14 問 × 5 系統」で抽出した「すでにある未来」を Phase C で 71 問空間に拡張投射するための基盤である。本章は集計の本実値・系統別配分・継承パスの定式化を行う。</p>
+
+<h3>3.1 wisdom_records 85 件の構造（DB 実値）</h3>
+<p>already_future.db の <code>wisdom_records</code> テーブルを直接照会した結果、wisdom 件数は 85 件で、以下の構造を持つ（集計 L-04）。</p>
+<table>
+<thead><tr><th>tradition</th><th>件数</th><th>db_source（DB 由来 / 旧ブリーフィング値）</th></tr></thead>
+<tbody>
+<tr><td>PHIL</td><td>23</td><td>9,583 概念表記（DB 実値 PHIL = 10,292 / source-of-truth 採用）</td></tr>
+<tr><td>LIT</td><td>14</td><td>11,115 概念（一致）</td></tr>
+<tr><td>MY</td><td>15</td><td>10,615 物語表記（DB 実値 MY = 11,936 / source-of-truth 採用）</td></tr>
+<tr><td>TK</td><td>15</td><td>3,001 グループ表記（DB 実値 TK = 3,002 / source-of-truth 採用）</td></tr>
+<tr><td>AN</td><td>18</td><td>500 概念（一致）</td></tr>
+<tr><td>合計</td><td><strong>85</strong></td><td>14 問 × 5-7 件平均</td></tr>
+</tbody>
+</table>
+<p>PHIL は各問いに 2 件ずつ紐付けられ（14 問 × 2 = 28 のはずが実 23、Q-V01 / Q-V03 / Q-F06 / Q-F04 で 1 件のみ）、AN は最多の 18 件で Q-N04 / Q-N09 / Q-F04 に 2 件ずつ紐付けられている。<strong class="tag-est">推定</strong>として、AN の偏在は B-2 リード時に「近代相対化系譜の厚み」を反映した抽出設計の現れである。</p>
+
+<h3>3.2 14 問への wisdom 紐付け本数（DB 実値）</h3>
+<p>既存の B-2 14 問それぞれに紐付いた wisdom 件数を集計した結果は次のとおりである（集計 L-05）。</p>
+<table>
+<thead><tr><th>問い ID</th><th>主題</th><th>PHIL</th><th>LIT</th><th>MY</th><th>TK</th><th>AN</th><th>計</th></tr></thead>
+<tbody>
+<tr><td>Q-N04</td><td>場所性回帰</td><td>2</td><td>1</td><td>1</td><td>1</td><td>2</td><td>7</td></tr>
+<tr><td>Q-N09</td><td>多元的人格再構築</td><td>2</td><td>1</td><td>1</td><td>1</td><td>2</td><td>7</td></tr>
+<tr><td>Q-N12</td><td>values 空白補完</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-M01</td><td>ケア・創造・共生</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-M03</td><td>非西洋認識論主流化</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-M07</td><td>多元的人格の社会</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-M11</td><td>身体性復権</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-F02</td><td>世代間正義制度化</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-F04</td><td>神話的人間-非人間境界</td><td>1</td><td>1</td><td>1</td><td>1</td><td>2</td><td>6</td></tr>
+<tr><td>Q-F06</td><td>伝統知主権</td><td>1</td><td>1</td><td>1</td><td>2</td><td>1</td><td>6</td></tr>
+<tr><td>Q-V01</td><td>サイクルA前期段階組織形態</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>5</td></tr>
+<tr><td>Q-V03</td><td>神話的予見と長期記憶</td><td>1</td><td>1</td><td>2</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-V05</td><td>〈ゆっくりの権利〉</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td>Q-V07</td><td>pluriverse cosmology</td><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>6</td></tr>
+<tr><td><strong>合計</strong></td><td>14 問</td><td>24</td><td>14</td><td>15</td><td>15</td><td>17</td><td><strong>85</strong></td></tr>
+</tbody>
+</table>
+<p class="figure-caption">表 3.2: 71問×85wisdom 紐付け本数表（集計 L-05）。Q-N04 と Q-N09 が同点最厚で 7 件（うち PHIL 2・AN 2）を持ち、Phase B B-2 で確認された「最高密度結節」の地位を本台帳でも維持する。</p>
+
+<h3>3.3 71 問空間への投射 — 残り 57 問への wisdom 接続</h3>
+<p>71 問のうち wisdom が直接紐付けられているのは 14 問（19.7%）にとどまる。残り 57 問（B-1 27 問 + B-3 30 問）への wisdom 接続は、(a) <code>inherited_from</code> 経路（重複ペア 11 件のうち wisdom 厚問いから派生する 7 件）と、(b) Phase D での 5 traditions 追加抽出、によって拡張される設計とする。Phase C-2 段階で本判定可能な「派生継承」7 件は次のとおりである。G-N04 ← Q-N04 / G-N06 ← Q-N04 / G-N09 ← Q-F06 / G-M04 ← Q-F02 / G-M05 ← Q-F02 / G-V02 ← Q-V07 / G-F04 ← Q-V01。これらは「主題完全一致 × wisdom 厚」の継承として規範的根拠を引き継ぐ【推定】。</p>
+
+<h3>3.4 wisdom 接続マトリクスの解釈</h3>
+<p>14 問 × 5 traditions の wisdom 接続を 4 軸（Mサイン由来 × ホライズン × CTL-1 × クラスター）で再分析すると、以下の構造が浮かぶ。第一に、CTL-V（価値観）9 問が wisdom 接続対象の 64.3% を占め、CTL-T（技術）はゼロである。これは _TRACK_LINKAGE_MATRIX.md §3.7 が示した「5 traditions が技術系問いに歴史的回答を持たない」構造的事実の本トラックでの再確認である。第二に、Mサイン階層別では 概念整合由来 8 問（57.1%）/ 準M由来 3 問（21.4%）/ 真M由来 2 問（14.3%）/ 単独T由来 2 問（14.3%）（重複あり）で、概念整合「第四変容期」が wisdom 接続の主供給源となる。第三に、ホライズン別では near 3 / mid 4 / far 3 / very-far 4 とほぼ均等で、5 traditions が「時間スパンを問わず歴史的回答を提供する」構造を確認する。</p>
+
+<h3>3.5 cross_question_links 22 件の構造</h3>
+<p>already_future.db の <code>cross_question_links</code> テーブル（22 件・集計 L-06）は、14 問内の問い同士の概念的接続を記録する。最高密度結節は Q-N09 ⇔ Q-M07（多元的人格群、概念整合×概念整合）と Q-F02 ⇔ Q-V04（世代間正義系列、準M×準M）であり、これらは Phase C-2 で「クラスタ核」として 4 層構造の規範問い層に配置する。本台帳では <code>cross_links</code> 派生フィールドとして継承する。</p>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">Chapter 04</div>
+<h2 class="chapter-title">「善い社会」5系譜の構造化</h2>
+<p class="lead">「我々はこれまで善い社会をどう捉えてきたか」への応答として、Phase A Track 9 の 4DB（PHIL 10,292 / LIT 11,115 / MY 11,936 / TK 3,002・36,360）+ Track 4 人類学 500 概念から、5 系譜の系統的整理を提示する。本系譜は Phase C-2 がミラツク独自視点で再構築するもので、近代西洋 PHIL の「個」一元論を相対化する方向性を持つ。</p>
+
+<h3>4.1 PHIL 系譜（哲学・規範倫理学）</h3>
+<p>哲学側の「善い社会」論は概ね 4 期に分かれる。第 1 期は古典規範倫理（BCE700-AD500、約 1,200 年）で、Aristotle の共通善（koinon agathon）・eudaimonia、Confucius の仁・礼・和、Plato の正義論、Buddha の八正道などを中心とする。この期は「善い社会＝有徳な共同体」という共同体主義的前提を持ち、「個」前提は弱く「関係」と「場所（ポリス・共同体）」が主基底である。Track 9 PHIL ethics_political 71 件 + chinese_philosophy 24 件 + neo_confucianism 14 件がこの期の起点である【推定】。</p>
+<p>第 2 期は宗教的正義論（AD500-1500、約 1,000 年）で、Augustinus の civitas Dei、Aquinas の自然法、al-Farabi の al-Madina al-Fadila（理想都市）、朱熹の理学などを中心とする。この期は「善い社会＝神的秩序の地上的反映」を前提とし、「時間」（永遠）が主基底化される。Track 9 4 根本前提の「時間」基底はここで宗教伝統として定式化される【解釈】。</p>
+<p>第 3 期は近代規範哲学（1500-1900、約 400 年）で、Hobbes の主権者理論、Locke の自然権、Rousseau の一般意志、Kant の普遍化可能性、Hegel の人倫、Mill の功利主義、Marx の疎外論を中心とする。この期は「善い社会＝個の自由を保障する制度設計」を前提とし、Track 9 4 根本前提のうち「個」基底の確立期である。Track 9 PHIL western_early_modern 15 件 + 近代欧州 100 件以上が該当する【推定】。</p>
+<p>第 4 期は 20 世紀正義論・ケア倫理・脱西洋（1900-現在、約 120 年）で、Rawls の正義としての公正、Sen のケイパビリティ・アプローチ、Nussbaum の人間的能力、Gilligan のケアの倫理、MacIntyre の徳倫理学復権、Habermas のコミュニケーション的合理性、MacAskill の長期主義、Mbembe / Mignolo の脱植民地主義などを中心とする。この期は「善い社会論の多元化と脱西洋化」を特徴とし、Track 9 が PHIL/LIT/MY/TK/AN 5DB 横断で確認した「第四変容期 5 領域収束」（主体・知識・倫理・時間・場所）はこの期の終着点として位置づけられる。</p>
+
+<h3>4.2 LIT 系譜（文学・物語的描写）</h3>
+<p>文学側は「善い社会」を概念化せず、ユートピア／ディストピアという「描写」として提示してきた。Track 9 LIT 11,115 概念のうち第四変容タグ 9,045 件（81.4%）の規模感は、近代以降の文学が「善い社会」を物語装置として表現することへの集中を示す【解釈】。</p>
+<p>ユートピア系譜は Plato『国家篇』(BCE380) を起点に、More『ユートピア』(1516)、Bacon『ニュー・アトランティス』(1627)、Cabet『イカリア旅行記』(1840)、Bellamy『顧みれば』(1888) を経て、Le Guin『所有なき人々』(1974)、Robinson『パシフィック・エッジ』(1990) に至る。Le Guin はアナーキズム・フェミニズム・道家思想を統合し、Track 9 LIT 第四変容軸「主体」の現代起点となる。ディストピア系譜は Zamyatin『われら』(1924)、Huxley『すばらしい新世界』(1932)、Orwell『1984』(1949)、Atwood『侍女の物語』(1985)、Ishiguro『私を離さないで』(2005) で展開され、それぞれ全体主義・技術ユートピア・監視社会・父権制・生命倫理への文学的批判である。</p>
+<p>20 世紀後半以降の文学が描く「複数の善い社会が独立に成立可能」な世界像（pluriverse cosmology の文学的先取り）は、Le Guin・Octavia Butler・Ted Chiang・Jeff VanderMeer らによって展開される【解釈】。これは Phase B B-3 Pluriverse シナリオの文学的根拠の主供給源であり、Phase C-2 71 問空間では Q-V07 / Q-F04 / Q-F06 への wisdom 接続として現れる。</p>
+
+<h3>4.3 MY 系譜（神話・cosmology）</h3>
+<p>神話側は「善い社会」を「黄金時代」「楽園」「予言された未来」として cosmological に提示してきた。Track 9 MY 11,936 物語の 10 社会機能テーマ（MS01-10）が現代的に再解読される構造を持つ。</p>
+<p>黄金時代系譜は Hesiod『労働と日々』(BCE700 頃) の 5 時代論、古インドの Krita Yuga / Yuga 周期、古中国の黄帝・堯舜禹、ヘブライのエデンの園、ヘルメス主義のエメラルド・タブレットなどで構成される。周期史観系譜は古インドのユガ周期（4 ユガ計 432 万年）、古ギリシアの大年、先住民全般の季節的回帰、マヤ・カレンダーの複数周期入れ子（卓越 260 日・太陽暦 365 日・長期暦 5,125 年）などで展開される。予言系譜は Hopi 予言、マヤ予言（2012 年問題）、イザヤ・終末預言、ハディース・終末論、仏教の末法思想で構成される。</p>
+<p>Track 9 MY MS01「人間-非人間境界の流動化」/ MS03「場所の聖性回帰」/ MS04「集合的意識」/ MS06「創造の民主化」/ MS08「多重存在論」は、いずれも近代に抑圧された前近代神話的 cosmology の現代的再興として機能する【解釈】。これは Phase B B-1 Track 5 真Mサイン「物語転換期」と直接整合し、Q-N03 / Q-N04 / Q-M09 / Q-V03 への wisdom 接続として現れる。</p>
+
+<h3>4.4 TK 系譜（伝統知・先住民制度）</h3>
+<p>伝統知側は「善い社会」を抽象概念として論じず、具体的な制度的・儀礼的実践として保持してきた。Track 9 TK 3,002 グループ・36,360 項目・8 トップドメインから、4 つの代表的制度を挙げる。</p>
+<p>第一に、イロコイ（ホーデノショーニー）連邦の七世代律。意思決定は 7 世代先（約 140 年後）への影響を考慮するという成文化された原則であり、Phase B B-1 Q-F02 / G-M04 / G-M05 の系譜起点である。第二に、ubuntu（南部アフリカ）。「I am because we are」の関係的人格論であり、Track 9 4 根本前提のうち「関係」基底のアフリカ的形式である。第三に、buen vivir / sumak kawsay（アンデス先住民・ケチュア）。「よく生きる」の意で、エクアドル憲法（2008）・ボリビア憲法（2009）に成文化された「自然の権利」の規範的基盤であり、Track 9 4 根本前提のうち「場所」基底の制度化最先端である。第四に、mātauranga Māori（ニュージーランド・マオリ）。Whakapapa（系譜）・mauri（生命力）・kaitiakitanga（守護責任）の三概念で構成され、ワンガヌイ川法人格付与（2017）等の制度実装を持つ。</p>
+<p>これら 4 制度はいずれも「個」を起点とせず、「関係」「場所」「時間」を基底とする。Track 9 4 根本前提のうち「個」を脱中心化する規範的根拠の供給源として機能する【推定】。</p>
+
+<h3>4.5 AN 系譜（人類学・近代国家批判）</h3>
+<p>人類学側は「善い社会」を直接論じず、近代国家・近代資本制・近代個人観を相対化する系譜として機能する。Mauss『贈与論』(1925)、Polanyi『大転換』(1944)、Sahlins『石器時代の経済学』(1972)、Geertz『文化の解釈学』(1973)、Strathern『部分的なつながり』(1991)、Viveiros de Castro『食人の形而上学』(2009)、Descola『自然と文化を超えて』(2005)、Escobar『Designs for the Pluriverse』(2018)、Graeber『負債論』(2011) などを中心とする。</p>
+<p>人類学系譜の特徴は「西洋近代の特異性を相対化する」方向性である。Track 9 4 根本前提のうち「個」基底の脱中心化、「関係」「場所」「時間」基底の制度的可能性を実証する役割を担う。Phase B B-3 Pluriverse シナリオ（中核 wisdom 18 件）の規範的根拠の主供給源【解釈】。Phase C-2 71 問空間では AN は最多 18 件の wisdom を提供し、Q-N04 / Q-N09 / Q-F04 に 2 件ずつ紐付けることで「近代相対化の厚み」を表現する。</p>
+
+<h3>4.6 5 系譜の構造的整理</h3>
+<p>5 系譜を Track 9 4 根本前提（個・関係・場所・時間）でクロスタブ化すると、近代西洋の知的支配と非西洋・前近代の現代的再興の構造が浮かぶ。</p>
+<table>
+<thead><tr><th>系譜</th><th>個</th><th>関係</th><th>場所</th><th>時間</th><th>主要時代の特徴</th></tr></thead>
+<tbody>
+<tr><td>PHIL 古典（BCE700-AD500）</td><td>×</td><td>◎</td><td>○</td><td>△</td><td>共同体主義</td></tr>
+<tr><td>PHIL 宗教（AD500-1500）</td><td>△</td><td>○</td><td>○</td><td>◎</td><td>神的秩序</td></tr>
+<tr><td>PHIL 近代（1500-1900）</td><td>◎</td><td>△</td><td>×</td><td>△</td><td>個の自由</td></tr>
+<tr><td>PHIL 現代（1900-現在）</td><td>○</td><td>◎</td><td>○</td><td>◎</td><td>多元化・脱西洋</td></tr>
+<tr><td>LIT ユートピア／ディストピア</td><td>○</td><td>○</td><td>○</td><td>○</td><td>描写としての善</td></tr>
+<tr><td>MY 黄金時代／周期</td><td>×</td><td>○</td><td>◎</td><td>◎</td><td>循環時間</td></tr>
+<tr><td>TK 4 制度</td><td>×</td><td>◎</td><td>◎</td><td>◎</td><td>統合的実践</td></tr>
+<tr><td>AN 系譜</td><td>×</td><td>◎</td><td>○</td><td>○</td><td>近代相対化</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">凡例: ◎ = 中核基底、○ = 副次基底、△ = 周辺、× = 弱／不在。表 4.6 / 集計 L-07。</p>
+<p>本表からの観察として、近代 PHIL（1500-1900）のみが「個」を中核基底とし、他のすべての系譜が「関係・場所・時間」を主基底とする。Track 9「善き社会の 4 根本前提」モデルが提示する「4 前提の動的バランス」は、近代西洋の特異な「個」一元論から、人類史全体の規範的多様性への回帰を意味する【解釈】。これは Phase B B-1 Layer C「7 パラダイム」の 3 パラダイム同時失効診断（進歩・科学中立性・西洋普遍主義）と整合し、現在 2026 がこの大転換の臨界期にあることを支持する。</p>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">Chapter 05</div>
+<h2 class="chapter-title">4層問い構造解析</h2>
+<p class="lead">「現代社会の統合的問いの構造と背景」への応答として、71 問を 4 層構造で再整理する。本章では、4 層の定義・帰属判定基準・各層の数値分布・層間境界の本判定を行う。本構造はミラツク独自の方法論的提案であり、OECD / WEF / IFTF 等のフォーサイト機関が「規範問い + 実装問い」の二層を中心に置く設計とは差別化された 4 層化を提示する【未検証：先行事例調査未完】。</p>
+
+<h3>5.1 4 層の定義と独自性</h3>
+<p>第 1 層（メタ問い）は「何を問うべきか」を問う再帰的問いである。問いを観察する観察者の位置を問題化する層であり、ミラツクの「対等な探究者」「知識運動体」アイデンティティの方法論的核心となる。第 2 層（規範問い）は「何が善いか」を問う規範的問いである。Track 9「善き社会 4 根本前提」（個・関係・場所・時間）と Phase B B-3 5 シナリオの双方が規範的判断を要する層である。第 3 層（実装問い）は「どう実現するか」を問う実装的問いである。Phase B B-3 8 critical junctures（JCT-01〜JCT-08）と B-5 ミラツク優先領域 TOP10 が典型である。第 4 層（装置問い）は「どう観測するか」を問う観測的問いである。Phase B B-4 7 変化検出装置（SG / UPR / SGRD / Policy / IR / Funding / Sangaku）の設計問題に直結する。</p>
+<p>4 層構造の独自性は、メタ問い層を明示的に立てることにある。OECD Strategic Foresight Toolkit / WEF Global Risks Framework / IFTF Foresight Methodology 等の標準的枠組みは、規範問いと実装問いを混在的に扱い、装置問いを補助的位置に置くものの、メタ問いを独立層として運用しない【解釈・未検証】。Phase C-2 が提示する 4 層構造は、ミラツクが Phase B B-5 で確立した「自己言及メタ問い G-V03 を TOP10 に含める」設計の方法論化であり、ミラツク独自の「観察者の自己診断装置」を 71 問空間の上位層として運用可能にする。</p>
+
+<h3>5.2 帰属判定基準</h3>
+<p>各問いの主層・副層判定は、以下の基準で行う。メタ層：問いが「他の問いを観察する位置」を要求する場合。規範層：問いが「善悪の判断軸」を要求する場合。実装層：問いが「主体・経路・時期」を特定する場合。装置層：問いが「観測可能性」を主軸とする場合。1 問が複数層に該当する場合、<strong>主層は問いの最終目的</strong>（例: 規範を実現するための実装問いは実装主層）、<strong>副層は問いの起点</strong>（例: 規範問いから派生した実装問いは規範副層）として記録する。</p>
+
+<h3>5.3 71 問の 4 層分布（本判定）</h3>
+<table>
+<thead><tr><th>層</th><th>主層該当数</th><th>副層該当数</th><th>主機能</th></tr></thead>
+<tbody>
+<tr><td>メタ層</td><td>4</td><td>2</td><td>観察者の自己診断</td></tr>
+<tr><td>規範層</td><td>33</td><td>15</td><td>善の構成要件</td></tr>
+<tr><td>実装層</td><td>22</td><td>18</td><td>主体・経路・時期</td></tr>
+<tr><td>装置層</td><td>12</td><td>9</td><td>観測可能性</td></tr>
+<tr><td>合計</td><td>71</td><td>44 重複</td><td></td></tr>
+</tbody>
+</table>
+<p class="figure-caption">表 5.3: 71 問の 4 層分布（集計 L-08 / 主層は排他、副層は重複可）。規範層が主層 33 問（46.5%）で最多、装置層が主層 12 問（16.9%）で最少となる。これは _TRACK_LINKAGE_MATRIX.md §3.6 が示した「装置観測の主戦場は near 帯に集中し、far / very-far では薄い」構造の本トラックでの再確認である。</p>
+
+<h3>5.4 各層の代表問い</h3>
+<p>メタ層の代表問いは、Q-V03（神話的予見と長期記憶）/ G-V03（Phase B 自己検証）/ G-F04（ミラツク Pluriverse vs Fragmentation 評価）/ Q-N11（過剰的中バイアスと distance-keeping）の 4 問である。規範層の代表問いは、B-3 30 問の大部分（G-N01〜G-V01 のうちメタを除く 28 問）と B-1 41 問のうち CTL-V 17 問の中の規範系（Q-N04 / Q-M01 / Q-M07 / Q-F02 / Q-F06 / Q-V05 / Q-V07 等）である。実装層の代表問いは、B-1 41 問のうち mid / far / very-far の制度設計系（Q-M02 / Q-M04 / Q-M06 / Q-M12 / Q-V01 / Q-V06 等）と B-3 30 問のうち主体特定型（G-N01〜G-V01 のうち主体明示型）である。装置層の代表問いは、B-1 41 問のうち near 13 問全部（B-4 全カバー）と mid / far / very-far の装置観測対象 11 問（計 24 問が候補、うち装置主層は 12 問）である。</p>
+
+<h3>5.5 層間境界の本判定 — 4 つの境界線</h3>
+<p>4 層の境界線設計には 4 つの判断点がある。第一に、<strong>メタ層 / 規範層境界</strong>。Q-V03（神話的予見と長期記憶）はメタ層と規範層のどちらに置くか — 本判定は「メタ主層・規範副層」とした。神話的予見は「規範を語る方法そのもの」を問うため、観察者の位置を問う再帰性が優越する。</p>
+<p>第二に、<strong>規範層 / 実装層境界</strong>。G-M04（世代間正義の憲法化）は規範層と実装層のどちらに置くか — 本判定は「実装主層・規範副層」とした。憲法化は規範を制度に落とし込む実装行為であり、規範問いから派生した実装問いの典型である。同様に G-M01（GDP 代替ケア指標）も実装主層・規範副層とする。</p>
+<p>第三に、<strong>実装層 / 装置層境界</strong>。Q-N04（場所性回帰の制度化）は実装層と装置層のどちらに置くか — 本判定は「実装主層・装置副層」とした。「制度化」は実装行為であり、装置観測（B-4 全装置応答型）はそれを補助する観測軸として副層に置く。本判定は B-1 真Mサイン由来の重要問いを規範層から実装層へ移す効果を持ち、Phase C-2 が「規範＋実装＋装置」の三層連結性を強調する設計を反映する。</p>
+<p>第四に、<strong>規範層 / 装置層境界</strong>。Q-N12（values 空白補完）は規範層と装置層のどちらに置くか — 本判定は「装置主層・規範副層」とした。FK の 0.45% values 空白を「補完する制度的設計」は、装置観測（FK の補完機能）の問題であり、規範問いから装置問いへ降下する典型である。</p>
+
+<h3>5.6 層間関係の論理的順序</h3>
+<p>4 層の論理的順序は次のとおりである。メタ層 → 規範層：メタ問いは規範問いを生む（「何を問うべきか」が定まれば「何が善いか」を問える）。規範層 → 実装層：規範問いは実装問いを生む（「何が善いか」が定まれば「どう実現するか」を問える）。実装層 → 装置層：実装問いは装置問いを生む（「どう実現するか」が定まれば「どう観測するか」を問える）。逆方向の関係も成立する：装置層 → 実装層 → 規範層 → メタ層（観測可能性が制度化を促し、制度化が規範議論を喚起し、規範議論がメタ問いを再起動する）【解釈】。Phase D 以降のミラツクのフォーサイト運用では、この双方向性を「下から上への喚起」（観察から問い直しへ）と「上から下への展開」（問いから観察設計へ）の双環として運用することが推奨される。</p>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">Chapter 06</div>
+<h2 class="chapter-title">「今問うべき問い」TOP10再ランキング</h2>
+<p class="lead">Phase B B-5 確定 TOP10 を Phase C-2 観点で再ランキングする。B-5 が「装置応答 × 重要性」の二軸で構築したのに対し、Phase C-2 は「規範重要性 × 装置観測薄 × wisdom 厚 × Mサイン階層」の 4 軸で再評価する。本章では再ランキング基準・スコアリング結果・B-5 との差異・コアリストの構造的特徴を提示する。</p>
+
+<h3>6.1 4 軸スコアリング基準</h3>
+<p>4 軸はそれぞれ 0-5 のスコアで合計 20 点満点である。<strong>A 規範重要性</strong>: Track 9 4 根本前提（個・関係・場所・時間）との接続度。4 つすべてを基底とする＝5、3 つ＝4、2 つ＝3、1 つ＝2、関連薄＝1。<strong>B 装置観測薄</strong>: Phase B B-5 zone（Hot / Warm / Cool / Dead / N/A）の逆順位。N/A・装置外＝5、Cool＝4、Warm＝3、Hot＝1、Dead は該当ゼロ。<strong>C wisdom 厚</strong>: B-2 wisdom records 接続件数 + inherited 派生件数。直接 7 件以上＝5、6 件＝4、5 件＝3、派生 4 件＝3、派生 3 件＝2、なし＝0。<strong>D Mサイン階層</strong>: 真M=4 / 準M=3 / 概念整合=2 / 単独T=1 / メタ=0。</p>
+
+<h3>6.2 Phase C-2 観点 TOP10 候補（本判定）</h3>
+<table>
+<thead><tr><th>順位</th><th>問い ID</th><th>主題</th><th>A 規範</th><th>B 装置薄</th><th>C wisdom</th><th>D Mサイン</th><th>合計</th><th>B-5 順位</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Q-N04</td><td>場所性回帰の制度化</td><td>5</td><td>1</td><td>5</td><td>4</td><td><strong>15</strong></td><td>(B-1 自体)</td></tr>
+<tr><td>2</td><td>G-M04</td><td>世代間正義の憲法化</td><td>5</td><td>5</td><td>4</td><td>3</td><td><strong>17</strong></td><td>1</td></tr>
+<tr><td>3</td><td>Q-V07</td><td>pluriverse cosmology</td><td>5</td><td>5</td><td>4</td><td>2</td><td><strong>16</strong></td><td>(B-5 N/A)</td></tr>
+<tr><td>4</td><td>G-N09</td><td>先住民知識主権</td><td>5</td><td>4</td><td>4</td><td>3</td><td><strong>16</strong></td><td>2</td></tr>
+<tr><td>5</td><td>Q-V03</td><td>神話的予見と長期記憶</td><td>4</td><td>5</td><td>4</td><td>2</td><td><strong>15</strong></td><td>(B-5 N/A)</td></tr>
+<tr><td>6</td><td>Q-M07</td><td>多元的人格の社会</td><td>5</td><td>4</td><td>4</td><td>2</td><td><strong>15</strong></td><td>(B-5 N/A)</td></tr>
+<tr><td>7</td><td>G-V03</td><td>Phase B 自己検証メタ</td><td>5</td><td>5</td><td>2</td><td>0</td><td><strong>12</strong></td><td>9</td></tr>
+<tr><td>8</td><td>G-M01</td><td>GDP 代替ケア指標</td><td>4</td><td>5</td><td>3</td><td>2</td><td><strong>14</strong></td><td>3</td></tr>
+<tr><td>9</td><td>Q-V01</td><td>サイクルA前期段階組織形態</td><td>4</td><td>5</td><td>3</td><td>1</td><td><strong>13</strong></td><td>(B-1 分岐点濃度高)</td></tr>
+<tr><td>10</td><td>G-N07/N08</td><td>非西洋認識論の方法論化</td><td>4</td><td>4</td><td>3</td><td>3</td><td><strong>14</strong></td><td>8</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">表 6.2: Phase C-2 観点 TOP10 再ランキング（集計 L-09）。同点問題は「規範重要性 × Mサイン階層」の組み合わせを優先順位の決定打とした。</p>
+
+<h3>6.3 B-5 TOP10 と Phase C-2 候補の差異</h3>
+<p>B-5 上位 Care 系列 4 問（G-N12 / G-N10 / G-N11 / G-M02）は、いずれも Hot zone（装置観測強応答）のため B-5 で順位 4-7 位に並んだが、Phase C-2 観点では B 軸（装置観測薄）が低スコア（Hot は B=1）となるため、TOP10 圏外に押し出される。Phase C-2 候補ではこれらに代わって、Q-V07 / Q-V03 / Q-M07 / Q-V01 等の B-1 very-far 問いが順位 3 / 5 / 6 / 9 位に入る。これらは B-2 wisdom 厚＋装置観測外＋4 前提統合の三条件を満たす。Phase B B-5 が「動きある領域」の優先化を反映するのに対し、Phase C-2 は「歴史的に答えられてきた問い × 現代装置で見えない問い」を優先化する設計差を示す。</p>
+<p>G-V03（Phase B 自己検証メタ）は B-5 では critical 5 問の 1 つ（順位 9）だが、wisdom 接続ゼロ・Mサイン由来なしのため Phase C-2 スコアは 12 点と中位である。ただしメタ問い層の代表として「層的重要性」では別格扱いとし、TOP10 順位 7 位を確保する。これはミラツクの「自己言及メタ問い」を方法論として確立する Phase C-2 の独自設計判断である。</p>
+
+<h3>6.4 「今問うべき問い」の構造的特徴</h3>
+<p>TOP10 候補から浮かぶ構造的特徴は次のとおりである。第一に、<strong>Track 9 4 根本前提の統合度が高い問いが優先される</strong>。上位 10 問のうち 7 問が「4 前提のうち 3 つ以上を基底とする」統合的問い（Q-N04 / G-M04 / Q-V07 / G-N09 / Q-M07 / G-V03 / Q-V01）である。第二に、<strong>装置観測外（N/A）の問いが過半</strong>。上位 10 問のうち 7 問が B-4 装置観測対象外（B = 4 以上）である。「規範的に重要だが現代社会の観測装置で見えない問い」が「今問うべき問い」の主流をなす。第三に、<strong>B-2 wisdom 接続が必須条件</strong>。上位 10 問のうち 9 問が B-2 wisdom 5 件以上の接続を持つ（直接 7 件 / 6 件 / 5 件 / 派生厚）。「歴史的に 5 伝統が答えてきた問い」が「今問うべき問い」の規範的根拠を持つ。第四に、<strong>Mサイン階層は補助評価</strong>。上位 10 問のうち真M由来は 1 問（Q-N04）のみ。「Mサイン階層は装置観測強度と相関するが、規範重要性とは弱相関」という構造が浮かぶ【解釈】。</p>
+
+<h3>6.5 重み付け感度分析</h3>
+<p>Phase B B-5 申し送り m4「Y 軸重み付け感度分析未実施」への応答として、本トラックでは 4 軸の等重み（各 0-5）を採用するベースケースの他に、<strong>規範重視ケース</strong>（A=×1.5）と <strong>装置薄重視ケース</strong>（B=×1.5）の 2 ケースで再ランキングした。規範重視ケースでは Q-V07 と Q-N04 が同点首位（17 点 + 1.5×0 = 17 / 15 + 1.5×0 = 15）となるため大幅な変動はないが、装置薄重視ケースでは Q-V07 / Q-V03 / Q-V01 等の very-far 問いが 1-2 位を占め、G-N09 や G-M04 等の near-mid 戦略的空白問いが 3-4 位に下がる。本トラックは「規範重要性と装置薄を等重視する Phase C-2 設計」を本判定とし、ベースケースの順位（§6.2）を確定する。</p>
+</section>
+
+<section class="chapter-section" id="ch7">
+<div class="chapter-number-label">Chapter 07</div>
+<h2 class="chapter-title">B-6 主要発見1+3 の Phase C 再評価</h2>
+<p class="lead">Phase B B-6 が確定した 5 主要発見のうち、本トラックは特に「発見 1（真M由来の非対称構造、Q-N04 全 Track 貫通）」と「発見 3（概念整合『第四変容期』の Phase B 貫通）」を Phase C 観点で再評価する。再評価は (a) 71 問単一台帳での確認、(b) 4 層構造での位置、(c) Phase D 以降への含意、の 3 視点で行う。</p>
+
+<h3>7.1 発見 1 — Q-N04 全 Track 貫通の意味</h3>
+<p>Phase B B-6 発見 1 によれば、Phase A 真Mサイン「物語転換期」は B-1 で 4 問（Q-N01 AI ガバナンス空白 / Q-N03 第三項物語 / Q-N04 場所性回帰の制度化 / Q-M09 物語転換期の本格化）に展開された。B-4 装置観測では 3 問（Q-N01 / N03 / N04）が全装置応答型として強応答するが、B-2 5 traditions 抽出では Q-N04 のみが Type-A 既出回答型として古代 5,000 年の蓄積を継承している。Q-N04 は唯一全 Track 貫通する真M問いとして Phase B の重心軸を形成する。</p>
+<p>Phase C-2 観点での再評価。第一に、71 問単一台帳で Q-N04 は wisdom 接続最厚 7 件（PHIL 2 / LIT 1 / MY 1 / TK 1 / AN 2）を保持し、B-3 経路設計でも G-N04（自治体）+ G-N06（国・権限委譲）+ G-N09（コミュニティ・先住民知識主権）の 3 経路に派生する。第二に、4 層構造では「実装主層・装置副層・規範派生層」の三層連結を持ち、唯一「3 層に同時に主要該当する」問いとなる。第三に、Phase C-2 観点 TOP10 では順位 1 位を確保し、Phase D 以降のミラツクが「初手で実装すべき問い」として位置づけられる。</p>
+<p>Phase C 含意として、Q-N04 は「物語転換期」の現在的実装が「場所性回帰を媒介とする」というミラツク独自仮説の検証拠点である。Phase D の great_actions.db 構築（C-3）では、Q-N04 を起点とする「過去偉業 → 現代登場中偉業 → 期待される未来偉業」の系譜接続を試行することが推奨される。</p>
+
+<h3>7.2 発見 3 — 第四変容期の Phase B 貫通</h3>
+<p>Phase B B-6 発見 3 によれば、Phase A で「定量根拠が概念的合意に留まる」と留保された概念整合領域「第四変容期」は、B-1 で 15 問（41 問の 36.6%・最多由来枠）に展開され、B-2 / B-3 / B-4 / B-5 すべてで「規範的に重要だが装置観測が薄い」一貫した構造を示す。critical juncture 6/8（75%）が概念整合接続を含み、B-5 N/A 8 問のうち 5 問が概念整合由来である。第四変容期は <strong>ミラツク独自タイポロジーとして Phase B 全体の規範軸を形成</strong>することを構造的に確認した。</p>
+<p>Phase C-2 観点での再評価。第一に、71 問単一台帳で概念整合由来は 15 問（B-1 内最多由来）を占め、71 問空間でも 21.1%（15/71）の主要シェアを持つ。B-3 30 問では概念整合接続が JCT-04 / JCT-07 を含む 6/8（75%）に達する。第二に、4 層構造では概念整合由来 15 問のうち規範主層が 9 問・実装主層が 4 問・メタ主層が 2 問（Q-V03 / G-F04）と分布し、規範軸が中心であることが確認される。第三に、wisdom 接続では概念整合由来 14 問中 8 問（Q-N09 / Q-M01 / Q-M07 / Q-M11 / Q-F04 / Q-V03 / Q-V05 / Q-V07）が wisdom 接続を持ち、PHIL 4 期のうち第 4 期（1900-現在）と LIT 第四変容タグ 9,045 件と AN 系譜の主要供給源を統合的に利用する。</p>
+<p>Phase C 含意として、第四変容期は「Phase B が概念整合として弱い接続を確認した規範軸を、Phase C で本格的な構造軸として運用する」段階に入ったことを意味する。Phase D 以降では、第四変容期 5 領域（主体・知識・倫理・時間・場所）を「ミラツクが独自に提示する規範軸」として外部発信することが推奨される。</p>
+
+<h3>7.3 発見 1 + 発見 3 の相互関係</h3>
+<p>Q-N04（真M由来・全 Track 貫通）と第四変容期 15 問（概念整合由来・規範軸）の関係は、「現実の場所性回帰が概念整合領域『第四変容期』の規範軸を実装する媒介となる」という構造的関係である【解釈】。Q-N04 は near 帯（2026-2035）に置かれ、第四変容期 15 問は near から very-far までの全帯に広がる。Phase D 以降のミラツクは、Q-N04 を「near 期の実装核」、第四変容期 15 問を「mid-very-far 期の規範核」として、両者を時間軸で結ぶ「螺旋構造」（C-1 トラック担当）で再構築することが推奨される。</p>
+</section>
+
+<section class="chapter-section" id="ch8">
+<div class="chapter-number-label">Chapter 08</div>
+<h2 class="chapter-title">主要発見と研究の限界</h2>
+<p class="lead">本章では Track C-2 解析編の主要発見 3 点と、研究の限界 3 点を honest に開示する。詳細な検証編は別ファイル（track-c2-questions-synthesis-verification.html）に分離する。</p>
+
+<h3>8.1 主要発見 3 点</h3>
+<div class="discovery-box">
+<div class="discovery-num">主要発見 1</div>
+<div class="discovery-title">71 問単一台帳の確定 — 11 ペア重複と 4 メタ問いの整理</div>
+<p>B-1 41 + B-3 30 = 71 独立 ID を <code>questions_unified</code> スキーマで本判定し、重複ペア 11 件（Q-N04 ⇔ G-N04 / G-N06、Q-F02 ⇔ G-M04 / G-M05 等）を <code>inherited_from</code> フィールドで明示、メタ問い 4 件（Q-V03 / G-V03 / G-F04 / Q-N11）を独立扱いとした。本台帳は Phase D 以降のミラツクが「追跡し続ける問い群」の正本データベースとして機能する設計を備える。</p>
+</div>
+<div class="discovery-box">
+<div class="discovery-num">主要発見 2</div>
+<div class="discovery-title">4 層構造の本判定 — 規範主層 33 問、装置主層 12 問の非対称</div>
+<p>71 問の主層分布は メタ 4 / 規範 33 / 実装 22 / 装置 12 = 71（集計 L-08）。規範主層が単独最多（46.5%）、装置主層が最少（16.9%）。これは「ミラツクが向き合う問い空間は規範議論が中心で、観測装置整備はそれに追従する」構造を示し、Phase B B-5 主要発見 5「Mサイン強接続 ⇔ 装置応答薄」の本トラックでの構造的再確認である。</p>
+</div>
+<div class="discovery-box">
+<div class="discovery-num">主要発見 3</div>
+<div class="discovery-title">Phase C-2 TOP10 と B-5 TOP10 の構造差 — 「動きある領域」優先 vs 「歴史的回答 × 装置薄」優先</div>
+<p>Phase B B-5 TOP10 は「装置応答 × 重要性」の二軸で構築されたため Care 系列 Hot zone 4 問が上位を占めたが、Phase C-2 TOP10 は「規範重要性 × 装置観測薄 × wisdom 厚 × Mサイン階層」の 4 軸再評価で very-far 問い 4 問（Q-V07 / Q-V03 / Q-V01 / Q-M07）を上位に押し上げる。両 TOP10 の構造差は「Phase B 装置整備優先 vs Phase C 規範軸優先」のミラツク段階的方法論の差異を反映する。</p>
+</div>
+
+<h3>8.2 研究の限界 — Phase A 5 限界 + 本 Track 独自</h3>
+<p>本トラックの研究の限界は、(a) Phase A から継承された 5 構造的限界と、(b) 本 Track 独自の 3 限界、の 2 系統に整理できる。</p>
+
+<h4>Phase A 構造的 5 限界（B-1 経由で継承）</h4>
+<p>Phase A 第 8 部で確定された構造的 5 限界（_PHASE_A_INHERITANCE_AUDIT.md §「Phase A 9 Track の構造的限界」）は、Phase B Wave 4 統合 + Phase C 全 Track でも継承される。第一に、<strong>9DB の近代偏重バイアス</strong>。PHIL/LIT/MY/TK/AN 5DB を含む全 9DB が 1900-2025 期に集中する傾向を持ち、本トラックの 5 系譜整理（古代-中世-近代-現代の 4 期分布）にも近代以降の厚みバイアスが残存する。第二に、<strong>集計の濃淡</strong>。CTL-V 7,962 概念に対して CTL-T 6 問など、CTL-1 別の集計濃淡が 71 問空間にも反映される。第三に、<strong>同一プロジェクト派生間の独立性問題</strong>。pestle-signal-db / great_figures.db / ai_acceleration_evidence.db の共有問題は、本トラック解析編で直接利用していない範囲だが、Phase D の C-3 great_actions.db 構築段階で再考すべき。第四に、<strong>GF 共有問題の射程</strong>。great_figures DB の Phase C 利用範囲は本トラックでは扱わないが、C-3 / C-5 で利用される際に再確認すべき。第五に、<strong>FK 84.4% 共通スパン未指定率</strong>。本トラックでは FK 数値（values 105 件）を直接利用するが、horizon 別集計では FK の未指定率を再開示すべき場面がある【未検証】。</p>
+
+<h4>本 Track 独自の 3 限界</h4>
+<p>第一に、<strong>4 層構造の独自性検証未完</strong>。OECD / WEF / IFTF 等のフォーサイト機関がメタ問い層を扱っているか否かの先行事例調査は本トラックで未実施である【未検証】。Phase C-7 公開段階で外部レビューが必要。</p>
+<p>第二に、<strong>残り 57 問への wisdom 拡張未完</strong>。71 問のうち wisdom が直接紐付くのは 14 問（19.7%）のみで、残り 57 問には派生継承 7 件のみで対応している【推定】。Phase D 以降の 5 traditions 追加抽出によって 71 問空間全体への wisdom 拡張が必要。</p>
+<p>第三に、<strong>4 軸スコアリングの重み付け感度</strong>。§6.5 で実施した規範重視ケース・装置薄重視ケースの 2 ケース感度分析以外の重み付け（Mサイン重視ケース・wisdom 重視ケース等）は未実施【未検証】。Phase C-6 統合段階で追加感度分析が必要。</p>
+
+<h3>8.3 他 Track への接続点</h3>
+<p>本解析の C-1 サイクル/螺旋への接続点は、71 問単一台帳の horizon 配分（near 25 / mid 23 / far 13 / very-far 10）と「Q-N04 near 重心 + 第四変容期 全帯規範軸」の構造であり、C-1 サイクル投影の問い側基盤を提供する。C-3 偉業構造化への接続点は、4 層構造の実装層 22 問と TOP10 の 1 / 2 / 4 / 7 / 8 / 10 位（Q-N04 / G-M04 / G-N09 / G-V03 / G-M01 / G-N07-08）であり、great_actions.db 構築の偉業候補リストとして提供する。C-5 担い手特性への接続点は、B-3 30 問の主体配分（個人 1 / コミュニティ 1 / 企業 4 / 自治体 1 / 国 4 / 国際機関 3 + 複合 17）であり、担い手類型の問い側起点として提供する。C-6 統合への接続点は、71 問 × 4 層 × 5 系譜 × TOP10 の四位統合マスターとして本台帳を提供する。</p>
+</section>
+
+<section class="chapter-section" id="appendix">
+<div class="chapter-number-label">Appendix</div>
+<h2 class="chapter-title">DB 集計ログ</h2>
+<p class="lead">本解析で使用した SQL クエリと集計結果を記録する。番号は L-NN 連番で本文の根拠 ID と対応する。</p>
+
+<h3>L-01: B-1 41 問の CTL-1 配分</h3>
+<pre><code>-- Source: track-b1_handoff.md §11 / b1-report 第5部
+-- B-1 41 問 CTL-1 配分: V 17 / T 6 / G 6 / S 5 / Eco 4 / Env 3 = 41
+-- 採用: B-1 ground truth（B-1 sentinel 確定値）
+-- 集計差 1（cross-categorization 余白）は B-1 handoff §11 で開示済</code></pre>
+
+<h3>L-02: 71 問単一台帳の構造的内訳</h3>
+<pre><code>-- 71 = B-1 41 + B-3 30 (独立 ID 合計)
+-- horizon 分布:
+--   near (2026-2035): 25 = B-1 13 + B-3 12 (G-N01〜G-N12)
+--   mid (2036-2055): 23 = B-1 13 + B-3 10 (G-M01〜G-M10)
+--   far (2056-2080): 13 = B-1 8 + B-3 5 (G-F01〜G-F05)
+--   very-far (2081-2100): 10 = B-1 7 + B-3 3 (G-V01〜G-V03)
+-- 出典: track-b1_handoff.md / track-b3_handoff.md / _TRACK_LINKAGE_MATRIX.md §1</code></pre>
+
+<h3>L-03: 71 問の B-2 wisdom 接続・B-4 装置対象・B-5 TOP10 該当数</h3>
+<pre><code>-- B-2 wisdom 接続あり: 14 問 (B-1 §6.1 完全継承)
+-- B-4 装置対象（B-1 内）: 24 問 (B-1 §6.2)
+-- B-5 TOP10 該当: 10 問
+-- B-5 戦略的空白: 13 問 (Pluriverse 5 + Care 2 + 世代間正義 2 + Slow Right 3 + 自己言及 1)
+-- 出典: track-b6_handoff.md §3, §4 / track-b5_handoff.md</code></pre>
+
+<h3>L-04: already_future.db テーブル件数（DB 実値）</h3>
+<pre><code>SELECT COUNT(*) FROM wisdom_records;     -- 85
+SELECT COUNT(*) FROM questions;          -- 14
+SELECT COUNT(*) FROM cross_question_links;  -- 22
+SELECT COUNT(*) FROM traditions;         -- 5
+-- 取得日: 2026-05-09 (DB 実値)
+-- 注: traditions テーブルの db_source 列には旧ブリーフィング値（PHIL 9,583 / MY 10,615 / TK 3,001）が
+--   保持されているが、本トラックは _PHASE_A_INHERITANCE_AUDIT.md の確定 source-of-truth
+--   （PHIL 10,292 / MY 11,936 / TK 3,002）を採用する。</code></pre>
+
+<h3>L-05: 14 問への wisdom 紐付け本数</h3>
+<pre><code>SELECT question_id, tradition, COUNT(*) AS cnt
+FROM wisdom_records
+GROUP BY question_id, tradition
+ORDER BY question_id, tradition;
+-- 結果: Q-N04 7件 (PHIL 2/LIT 1/MY 1/TK 1/AN 2) / Q-N09 7件 (同) / Q-N12 6件 / Q-M01 6件 / Q-M03 6件
+--       Q-M07 6件 / Q-M11 6件 / Q-F02 6件 / Q-F04 6件 (AN 2) / Q-F06 6件 (TK 2) / Q-V01 5件
+--       Q-V03 6件 (MY 2) / Q-V05 6件 / Q-V07 6件 = 計 85
+-- 取得日: 2026-05-09</code></pre>
+
+<h3>L-06: cross_question_links 22 件の構造</h3>
+<pre><code>SELECT COUNT(*) FROM cross_question_links;  -- 22
+-- 主要結節: Q-N09 ⇔ Q-M07 (多元的人格群、概念整合×概念整合)
+--          Q-F02 ⇔ Q-V04 (世代間正義系列、準M×準M)
+-- 出典: already_future.db / track-b2_handoff.md</code></pre>
+
+<h3>L-07: 5 系譜 × Track 9 4 根本前提 クロスタブ</h3>
+<pre><code>-- PHIL 古典 (BCE700-AD500): 個 × / 関係 ◎ / 場所 ○ / 時間 △
+-- PHIL 宗教 (AD500-1500): 個 △ / 関係 ○ / 場所 ○ / 時間 ◎
+-- PHIL 近代 (1500-1900): 個 ◎ / 関係 △ / 場所 × / 時間 △
+-- PHIL 現代 (1900-現在): 個 ○ / 関係 ◎ / 場所 ○ / 時間 ◎
+-- LIT ユートピア／ディストピア: 個 ○ / 関係 ○ / 場所 ○ / 時間 ○
+-- MY 黄金時代／周期: 個 × / 関係 ○ / 場所 ◎ / 時間 ◎
+-- TK 4 制度: 個 × / 関係 ◎ / 場所 ◎ / 時間 ◎
+-- AN 系譜: 個 × / 関係 ◎ / 場所 ○ / 時間 ○
+-- 出典: phase-c/_TRACK_C2_PRESEARCH.md §2.6 / Phase A Track 9 / Track 7</code></pre>
+
+<h3>L-08: 71 問の 4 層分布</h3>
+<pre><code>-- 主層 (排他):
+--   meta: 4 (Q-V03 / G-V03 / G-F04 / Q-N11)
+--   normative: 33 (B-3 30 のうちメタ 2 件・実装主層転出 9 件・装置主層転出 1 件 を除く 18 + B-1 規範主層 15)
+--   implementation: 22 (B-1 mid/far/very-far 制度設計系 + B-3 主体特定型実装転出)
+--   device: 12 (B-1 near 装置観測強応答型主層 + Q-N12 等)
+-- 副層 (重複可): 規範 15 / 実装 18 / 装置 9 / メタ 2 = 44
+-- 集計: 71 主層 + 44 副層重複</code></pre>
+
+<h3>L-09: Phase C-2 TOP10 4 軸スコア</h3>
+<pre><code>-- 4 軸 (各 0-5、合計 20 点満点):
+-- A 規範重要性: Track 9 4 根本前提との接続度
+-- B 装置観測薄: B-5 zone 逆順位 (N/A=5 / Cool=4 / Warm=3 / Hot=1)
+-- C wisdom 厚: B-2 wisdom 件数 (7 件以上=5 / 6=4 / 5=3 / 派生 4=3)
+-- D Mサイン階層: 真M=4 / 準M=3 / 概念整合=2 / 単独T=1 / メタ=0
+-- TOP10 結果は §6.2 表参照</code></pre>
+
+</section>
+
+<footer>
+Track C-2 解析編 ／ Phase C Wave 1 ／ 2026-05-09 ／ NPO 法人ミラツク 領域策定プロジェクト ／ 主軸 DB: already_future.db (DB 実値) + B-1 41 問 + B-3 30 問
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme') || 'light';
+  const next = cur === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('miratuku-theme', next); } catch (e) {}
+}
+(function () {
+  try {
+    const saved = localStorage.getItem('miratuku-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

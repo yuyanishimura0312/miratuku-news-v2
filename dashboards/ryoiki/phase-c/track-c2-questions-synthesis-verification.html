@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-2 検証編 — 4カテゴリ自己検証 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5; --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200; --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --sev-low: #2A6B3A; --sev-mid: #B07A00; --sev-high: #B01200;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222; --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --highlight: #FF4030; --surface: #1A1A1A;
+  --sev-low: #6FBF80; --sev-mid: #E0B040; --sev-high: #FF6050;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono","Fira Code",monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 28px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type, .lead, .figure-caption, td p, th p { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.55; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; background: var(--surface); padding: 16px 20px; margin: 24px 0; line-height: 1.5; overflow-x: auto; border: 1px solid var(--border-light); white-space: pre; }
+.tag-est, .tag-int, .tag-unv { display: inline-block; font-family: var(--font); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; margin: 0 3px; }
+.tag-est { background: rgba(110,44,44,0.12); color: #6E2C2C; }
+.tag-int { background: rgba(204,20,0,0.10); color: #B01200; }
+.tag-unv { background: rgba(107,107,107,0.15); color: #555555; }
+[data-theme="dark"] .tag-est { background: rgba(160,80,80,0.20); color: #C8A0A0; }
+[data-theme="dark"] .tag-int { background: rgba(255,64,48,0.18); color: #FF8070; }
+[data-theme="dark"] .tag-unv { background: rgba(170,170,170,0.18); color: #BBBBBB; }
+.sev-low { color: var(--sev-low); font-weight: 700; }
+.sev-mid { color: var(--sev-mid); font-weight: 700; }
+.sev-high { color: var(--sev-high); font-weight: 700; }
+.judgement-pill { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; }
+.j-pass { background: rgba(42,107,58,0.15); color: var(--sev-low); }
+.j-warn { background: rgba(176,122,0,0.15); color: var(--sev-mid); }
+.j-fail { background: rgba(176,18,0,0.15); color: var(--sev-high); }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Track C-2 検証編</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="track-c2-questions-synthesis-analysis.html">← 解析編</a>
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#ch1"><span class="toc-num">1</span>検証の方法と判定区分</a></li>
+<li><a href="#ch2"><span class="toc-num">2</span>カテゴリ1: スナップショット不整合</a></li>
+<li><a href="#ch3"><span class="toc-num">3</span>カテゴリ2: ハルシネーション</a></li>
+<li><a href="#ch4"><span class="toc-num">4</span>カテゴリ3: カバレッジギャップ</a></li>
+<li><a href="#ch5"><span class="toc-num">5</span>カテゴリ4: チーム間不整合</a></li>
+<li><a href="#ch6"><span class="toc-num">6</span>未検証事項一覧</a></li>
+<li><a href="#ch7"><span class="toc-num">7</span>自己発見問題と総合判定</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">Track C-2 検証編</span>
+<span class="db-tag">4 カテゴリ自己検証</span>
+<span class="db-tag">honest 開示</span>
+</div>
+<h1 class="book-title">問いの統合構造化 — 4カテゴリ自己検証と honest 開示</h1>
+<p class="book-subtitle">本検証編は Track C-2 解析編（71 問単一台帳・85 wisdom 紐付け・5 系譜・4 層構造・TOP10 再ランキング・B-6 発見再評価）の自己検証を、_PROTOCOLS.md §8 の 4 階層判定区分に従って 4 カテゴリ × 各 3 項目以上で実施する。</p>
+<div class="book-meta">
+<span>生成日: 2026-05-09</span>
+<span>Track: C-2 / Wave 1</span>
+<span>検証カテゴリ: 4</span>
+<span>総検証項目: 19</span>
+</div>
+</header>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">Chapter 01</div>
+<h2 class="chapter-title">検証の方法と判定区分</h2>
+<p class="lead">本検証は doc-verify 4 カテゴリ（スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合）を Track C-2 内部で先行自己検証する。判定区分は _PROTOCOLS.md §8 の 4 階層を採用する。</p>
+
+<h3>1.1 判定区分（4 階層）</h3>
+<table>
+<thead><tr><th>判定</th><th>意味</th><th>後続アクション</th></tr></thead>
+<tbody>
+<tr><td><span class="judgement-pill j-pass">問題なし／一致</span></td><td>検査クリア</td><td>アクション不要</td></tr>
+<tr><td><span class="judgement-pill j-warn">要解釈／要追跡／要修正</span></td><td>数値・構造に問題はないが解釈に注意</td><td>report.html で注記 / verification 末尾で一覧化 / report.html 当該箇所で修正</td></tr>
+<tr><td><span class="judgement-pill j-fail">構造的ギャップ</span></td><td>本 Track 単独で解消不能</td><td>report.html「研究の限界」セクション必須記載</td></tr>
+</tbody>
+</table>
+
+<h3>1.2 検証スコープ</h3>
+<p>検証対象は track-c2-questions-synthesis-analysis.html（解析編 8 章 + 付録 9 集計ログ）と本検証編が参照する全数値・全マッピング。検証範囲は (a) Phase A→B→C 数値継承の正確性、(b) DB 実値と引用値の一致、(c) ブリーフィング必須項目への対応、(d) Phase A/B 値との連続性、の 4 軸。各カテゴリ 3 項目以上、合計 19 項目を本編で実施する。</p>
+
+<h3>1.3 検証ツール</h3>
+<p>使用ツールは (a) sqlite3 による already_future.db 直接照会、(b) grep による HTML 内数値・ID 検索、(c) Phase A 継承監査（_PHASE_A_INHERITANCE_AUDIT.md）の確定 source-of-truth テーブル参照、(d) _TRACK_LINKAGE_MATRIX.md §1-§3 の数値再確認、の 4 種。検証実施日は 2026-05-09。</p>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">Category 01</div>
+<h2 class="chapter-title">カテゴリ 1: スナップショット不整合検証</h2>
+<p class="lead">Phase A 9 トラックの数値スナップショット（ブリーフィング値 / 公開値 / DB 実値）の三系列差を Track C-2 解析編が正確に取り扱っているかを検証する。</p>
+
+<h3>2.1 検証項目 1.1 — already_future.db <code>traditions</code> テーブルの旧ブリーフィング値併存</h3>
+<p>解析編 §3.1 表 3.1 で、PHIL 9,583 / MY 10,615 / TK 3,001 の旧ブリーフィング値が <code>traditions.db_source</code> 列に保持されていることを開示し、<strong>DB 実値（PHIL 10,292 / MY 11,936 / TK 3,002）を一次値として採用</strong>する宣言を行った。Phase A 継承監査 WARN-1（B-2 文書での旧値残存）の本トラックでの対応として、honest 開示 + 一次値宣言 の二段処理を実施。判定: <span class="judgement-pill j-pass">問題なし／一致</span>（採用宣言 + 旧値併存の honest 開示 で _PROTOCOLS.md §7.3 標準処理フロー準拠）。</p>
+
+<h3>2.2 検証項目 1.2 — Phase A 5 traditions 概念総数の引用整合</h3>
+<p>解析編で引用した PHIL 10,292 / LIT 11,115 / MY 11,936 / TK 3,002・36,360 / AN 500 は、_PHASE_A_INHERITANCE_AUDIT.md §「確定 source-of-truth テーブル」と完全一致。さらに Track 7 CTL-V 7,962（45.4%）も同表と一致。判定: <span class="judgement-pill j-pass">問題なし／一致</span>。</p>
+
+<h3>2.3 検証項目 1.3 — B-3 30 問内訳の数値整合</h3>
+<p>解析編 §2.2 で引用した B-3 30 問内訳（near 12 / mid 10 / far 5 / very-far 3）は、track-b3_handoff.md §「群分布」と完全一致。8 critical junctures（JCT-01〜JCT-08）の引用も同 handoff §1 と完全一致。判定: <span class="judgement-pill j-pass">問題なし／一致</span>。</p>
+
+<h3>2.4 検証項目 1.4 — B-1 41 問の Mサイン階層分布</h3>
+<p>解析編 §1.4 / §7.2 で引用した B-1 真M 4 / 準M 14 / 概念整合 15 / 単独T 8 = 41（cross-categorization 余白 1）の数値は、track-b1_handoff.md §11 / b1-report 第 5 部と完全一致。判定: <span class="judgement-pill j-pass">問題なし／一致</span>。</p>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">Category 02</div>
+<h2 class="chapter-title">カテゴリ 2: ハルシネーション検証</h2>
+<p class="lead">DB 実値と引用値の一致、固有名詞・著作・年代の正確性を検証する。</p>
+
+<h3>3.1 検証項目 2.1 — wisdom_records 件数の DB 直接照会一致</h3>
+<p>解析編 §3.1 表 3.1 / §3.2 表 3.2 / 付録 L-04 / L-05 で引用した wisdom_records 件数（合計 85 / PHIL 23 / LIT 14 / MY 15 / TK 15 / AN 18）は、本検証で sqlite3 直接照会（2026-05-09）で取得した DB 実値と完全一致。14 問それぞれの紐付け本数（Q-N04 / Q-N09: 7 件 / 他 12 問: 5-6 件）も完全一致。判定: <span class="judgement-pill j-pass">問題なし／一致</span>。</p>
+
+<h3>3.2 検証項目 2.2 — cross_question_links と questions テーブル件数の DB 一致</h3>
+<p>解析編 §3.5 / 付録 L-04 / L-06 で引用した cross_question_links 22 件・questions 14 件・traditions 5 件は、本検証で sqlite3 直接照会で取得した DB 実値と完全一致。判定: <span class="judgement-pill j-pass">問題なし／一致</span>。</p>
+
+<h3>3.3 検証項目 2.3 — PHIL 5 系譜の固有名詞・著作・年代</h3>
+<p>解析編 §4.1 で引用した PHIL 5 系譜の固有名詞・著作・年代について検証した。Aristotle (BCE384-322) / Confucius (BCE551-479) / Plato (BCE427-347) / Buddha (BCE563-483) / Augustinus (354-430) / Aquinas (1225-1274) / al-Farabi (872-950) / 朱熹 (1130-1200) / Hobbes (1588-1679) / Locke (1632-1704) / Rousseau (1712-1778) / Kant (1724-1804) / Hegel (1770-1831) / Mill (1806-1873) / Marx (1818-1883) / Rawls (1921-2002) / Sen (1933-) / Nussbaum (1947-) / Gilligan (1936-) / MacIntyre (1929-) / Habermas (1929-) / MacAskill (1987-) / Mbembe (1957-) / Mignolo (1941-)。これらは標準的な哲学史記述と整合する【未検証：詳細な学術一次資料との照合は本トラックで未実施】。判定: <span class="judgement-pill j-warn">要追跡</span>。</p>
+
+<h3>3.4 検証項目 2.4 — LIT 5 著作の年代正確性</h3>
+<p>解析編 §4.2 で引用した LIT 著作年代について検証した。More『ユートピア』(1516) / Bacon『ニュー・アトランティス』(1627) / Cabet『イカリア旅行記』(1840) / Bellamy『顧みれば』(1888) / Le Guin『所有なき人々』(1974) / Robinson『パシフィック・エッジ』(1990) / Zamyatin『われら』(1924) / Huxley『すばらしい新世界』(1932) / Orwell『1984』(1949) / Atwood『侍女の物語』(1985) / Ishiguro『私を離さないで』(2005)。これらは標準的な文学史記述と整合する【未検証：lit-db との照合は本トラックで未実施】。判定: <span class="judgement-pill j-warn">要追跡</span>。</p>
+
+<h3>3.5 検証項目 2.5 — TK 4 制度の年代と憲法化事実</h3>
+<p>解析編 §4.4 で引用した TK 4 制度のうち、buen vivir のエクアドル憲法（2008）/ ボリビア憲法（2009）成文化、ワンガヌイ川法人格付与（2017）の事実は、標準的な記述と整合する。イロコイ連邦の七世代律は成文化された原則として伝承されている【未検証：traditional-knowledge DB の TK 3,002 グループ・36,360 項目内での原典照合は本トラックで未実施】。判定: <span class="judgement-pill j-warn">要追跡</span>。</p>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">Category 03</div>
+<h2 class="chapter-title">カテゴリ 3: カバレッジギャップ検証</h2>
+<p class="lead">_TRACK_C2_BRIEFING.md §必須要素 8 点への対応状況を検証する。</p>
+
+<h3>4.1 検証項目 3.1 — 必須要素 8 点の網羅状況</h3>
+<table>
+<thead><tr><th>必須要素</th><th>解析編 該当章</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>1. 71 問統合インデックス（C-05 残課題決着）</td><td>第2章 全体（§2.1-§2.6）</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+<tr><td>2. B-2 wisdom 85 紐付け</td><td>第3章 全体（§3.1-§3.5）</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+<tr><td>3. 「善い社会」捉え方系譜（5 系統 × 古代-現代 4 期）</td><td>第4章 全体（§4.1-§4.6）</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+<tr><td>4. 「今問うべき問い」核心リスト（TOP10 再ランキング）</td><td>第6章 全体（§6.1-§6.5）</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+<tr><td>5. 4 層問い構造図（メタ × 規範 × 実装 × 装置）</td><td>第5章 全体（§5.1-§5.6）</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+<tr><td>6. B-6 発見 1 + 3 の Phase C 再評価</td><td>第7章 全体（§7.1-§7.3）</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+<tr><td>7. 連結 ID（C-1 / C-3 / C-5 / C-6 接続）</td><td>第8章 §8.3</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+<tr><td>8. 研究の限界</td><td>第8章 §8.2</td><td><span class="judgement-pill j-pass">対応</span></td></tr>
+</tbody>
+</table>
+<p>判定: <span class="judgement-pill j-pass">8/8 対応済</span>。</p>
+
+<h3>4.2 検証項目 3.2 — protocols 準拠（共通スパン・CTL-1・タグ）</h3>
+<p>_PROTOCOLS.md §1.2 共通スパン（near/mid/far/very-far）、§2.2 CTL-1 6 メガドメイン、§5 三タグ運用は解析編全章で運用済。共通スパンは §1.4・§2.2、CTL-1 は §1.4・§2.6・§3.4 で明示、三タグは【推定】【解釈】【未検証】を全章で運用。判定: <span class="judgement-pill j-pass">完全準拠</span>。</p>
+
+<h3>4.3 検証項目 3.3 — DB 集計ログ L-NN の網羅と本文参照</h3>
+<p>_PROTOCOLS.md §4 DB 集計ログ標準フォーマットに従い、解析編 付録に L-01 〜 L-09 の 9 項目を記載済。本文中の主要数値主張には集計 L-XX 参照を付与している（例: §1.4「集計 L-01」、§2.2「集計 L-02 / L-03」、§3.1「集計 L-04」、§3.2「集計 L-05」、§3.5「集計 L-06」、§4.6「集計 L-07」、§5.3「集計 L-08」、§6.2「集計 L-09」）。判定: <span class="judgement-pill j-pass">完全準拠</span>。</p>
+
+<h3>4.4 検証項目 3.4 — Mサイン分類二系列開示の継承</h3>
+<p>Phase B B-3 sentinel verdict MJ-02「critical juncture × Phase A Mサイン領域接続は厳密接続 4/8 = 50% + 概念整合含む 6/8 = 75% の honest 二系列開示」を本トラックで継承する規定（_TRACK_C2_BRIEFING.md §厳守事項）への対応。解析編 §7.2 で「critical juncture 6/8（75%）が概念整合接続を含む」と引用、§7.1 で Q-N04 を「真M由来全 Track 貫通」として記述、§4.6 で 5 系譜と 4 根本前提のクロスタブを honest 開示。本トラックは Phase C 段階の問い側統合のため厳密 4/8 数値を再計算する場面はないが、引用整合性は維持されている。判定: <span class="judgement-pill j-pass">継承準拠</span>。</p>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">Category 04</div>
+<h2 class="chapter-title">カテゴリ 4: チーム間不整合検証</h2>
+<p class="lead">Phase A 各 Track / Phase B 各 Track / Phase C C-1 並列との数値・構造の連続性を検証する。</p>
+
+<h3>5.1 検証項目 4.1 — Phase B B-1 41 問 ID の引用整合</h3>
+<p>解析編 §1.2 / §2.1 / §2.3 / §6.2 / §7.1 で引用した B-1 ID（Q-N01〜Q-V07）は、track-b1_handoff.md §「41 問 ID 一覧」と完全一致。Q-N04 / Q-N09 / Q-N12 / Q-M01 / Q-M03 / Q-M07 / Q-M11 / Q-F02 / Q-F04 / Q-F06 / Q-V01 / Q-V03 / Q-V05 / Q-V07 = 14 問の B-2 wisdom 接続対象指定も _TRACK_LINKAGE_MATRIX.md §2.1 と完全一致。判定: <span class="judgement-pill j-pass">完全一致</span>。</p>
+
+<h3>5.2 検証項目 4.2 — Phase B B-3 30 問 ID の引用整合</h3>
+<p>解析編 §2.3 / §6.2 / §6.3 で引用した B-3 ID（G-N01〜G-V03）は、track-b3_handoff.md §「30 問 ID 一覧」と完全一致。8 critical junctures（JCT-01〜JCT-08）の主題・期間・接続シナリオも完全一致。判定: <span class="judgement-pill j-pass">完全一致</span>。</p>
+
+<h3>5.3 検証項目 4.3 — Phase B B-5 TOP10 ランキングの引用整合</h3>
+<p>解析編 §6.2 / §6.3 で引用した B-5 TOP10（G-M04 / G-N09 / G-M01 / G-N12 / G-N10 / G-N11 / G-M02 / G-N07-08 / G-V03 / G-F02）は、track-b6_handoff.md §4 と完全一致。象限・wisdom 厚・JCT・zone の付与情報も完全一致。判定: <span class="judgement-pill j-pass">完全一致</span>。</p>
+
+<h3>5.4 検証項目 4.4 — Phase B B-6 主要発見の引用整合</h3>
+<p>解析編 §7.1 / §7.2 で引用した B-6 発見 1（Q-N04 唯一全 Track 貫通真M問い）/ 発見 3（第四変容期 15 問・36.6%・最多由来枠 / critical juncture 6/8 概念整合接続 / B-5 N/A 8 問のうち 5 問が概念整合由来）は、track-b6_handoff.md §3「主要発見 5 点」と完全一致。判定: <span class="judgement-pill j-pass">完全一致</span>。</p>
+
+<h3>5.5 検証項目 4.5 — Phase C C-1 並列との接続状況</h3>
+<p>Track C-1（社会展開サイクル/螺旋）は本トラックと Wave 1 で並列起動中。解析編 §8.3 で「C-1 への接続点: 71 問単一台帳の horizon 配分（near 25 / mid 23 / far 13 / very-far 10）と Q-N04 near 重心 + 第四変容期 全帯規範軸の構造」を明示。C-1 の入力（CTI v2 双子峰プラトー / SI Framework 7,389 事象 / TA 700 万年）と本トラックの入力（B-1 41 / B-3 30 / already_future.db / Track 9 4DB）は独立性が高く、相互検証の必要は低い【解釈】。Phase C-6 統合時に C-1 サイクル仮説と本台帳 horizon 配分を突合することが推奨される。判定: <span class="judgement-pill j-warn">要追跡（C-6 統合時に再検証）</span>。</p>
+
+<h3>5.6 検証項目 4.6 — Phase A 構造的限界 5 点の継承</h3>
+<p>Phase A 構造的 5 限界（9DB 近代偏重 / 集計濃淡 / 派生間独立性 / GF 共有 / FK 84.4% 未指定率）は _PHASE_A_INHERITANCE_AUDIT.md §「Phase A 9 Track の構造的限界」で B-1 report L1361 まで継承されている。本トラック解析編 §8.2 では研究の限界 3 点（4 層構造の独自性検証未完 / 残り 57 問 wisdom 拡張未完 / 4 軸スコアリング感度未完）を独立に開示しており、Phase A 5 限界を直接再記述していない【未検証：Phase A 5 限界の本トラック解析編内での明示再記述は行っていない、ただし継承自体は B-1 経由で間接的に維持されている】。判定: <span class="judgement-pill j-warn">要追跡（report.html で Phase A 5 限界の明示再記述を推奨）</span>。</p>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">Chapter 06</div>
+<h2 class="chapter-title">未検証事項一覧（タグ集約）</h2>
+<p class="lead">_PROTOCOLS.md §5.4「タグの集約（必須）」に従い、本トラックで【未検証】とした事項を一覧化する。</p>
+
+<table>
+<thead><tr><th>項目</th><th>未検証内容</th><th>所在</th><th>追跡先</th></tr></thead>
+<tbody>
+<tr><td>U-1</td><td>4 層構造のメタ問い層の独自性 — OECD / WEF / IFTF 等が扱っているか否かの先行事例調査</td><td>解析編 §5.1 / §8.2</td><td>Phase C-7 公開段階で外部レビュー</td></tr>
+<tr><td>U-2</td><td>残り 57 問への wisdom 拡張 — 14 問以外の問いへの 5 traditions 追加抽出</td><td>解析編 §3.3 / §8.2</td><td>Phase D 以降の追加抽出</td></tr>
+<tr><td>U-3</td><td>4 軸スコアリングの追加感度（Mサイン重視 / wisdom 重視ケース）</td><td>解析編 §6.5 / §8.2</td><td>Phase C-6 統合段階</td></tr>
+<tr><td>U-4</td><td>PHIL 5 系譜の固有名詞・著作・年代の学術一次資料照合</td><td>解析編 §4.1</td><td>philosophy DB との詳細照合</td></tr>
+<tr><td>U-5</td><td>LIT 著作年代と lit DB との照合</td><td>解析編 §4.2</td><td>lit DB 11,115 概念との照合</td></tr>
+<tr><td>U-6</td><td>TK 4 制度の原典照合（traditional-knowledge DB 内）</td><td>解析編 §4.4</td><td>TK 3,002 グループ・36,360 項目との照合</td></tr>
+<tr><td>U-7</td><td>Phase A 構造的 5 限界の本トラック解析編内での明示再記述</td><td>解析編 §8.2</td><td>report.html で明示</td></tr>
+<tr><td>U-8</td><td>1 対 N マッピング 11 ペアの主継承元判定の妥当性</td><td>解析編 §2.3</td><td>Phase D 以降の DB 化検証</td></tr>
+<tr><td>U-9</td><td>派生継承 7 件（残り 57 問のうち 7 件）の選定根拠</td><td>解析編 §3.3</td><td>Phase C-6 統合段階</td></tr>
+<tr><td>U-10</td><td>Phase C-1 サイクル仮説と 71 問 horizon 配分の整合</td><td>本検証 §5.5</td><td>Phase C-6 統合段階で C-1 完了後</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="ch7">
+<div class="chapter-number-label">Chapter 07</div>
+<h2 class="chapter-title">自己発見問題と総合判定</h2>
+<p class="lead">本検証を通じて自己発見した問題を一覧化し、Track C-2 全体の総合判定を行う。</p>
+
+<h3>7.1 自己発見問題一覧</h3>
+<table>
+<thead><tr><th>No.</th><th>問題内容</th><th>影響範囲</th><th>対応</th></tr></thead>
+<tbody>
+<tr><td>S-1</td><td>4 層構造の独自性検証が未完（先行事例調査未実施）</td><td>方法論主張の堅牢性</td><td>Phase C-7 で外部レビュー / report.html で「未検証」明示</td></tr>
+<tr><td>S-2</td><td>残り 57 問への wisdom 拡張が派生継承 7 件のみ</td><td>71 問空間の wisdom カバー率（現状 19.7% 直接 + 9.9% 派生 = 29.6%）</td><td>Phase D で 5 traditions 追加抽出</td></tr>
+<tr><td>S-3</td><td>4 軸スコアリングの感度分析 2 ケースのみ</td><td>TOP10 順位の堅牢性</td><td>Phase C-6 で追加感度分析</td></tr>
+<tr><td>S-4</td><td>PHIL/LIT/TK 系譜の固有名詞・年代を学術 DB と直接照合していない</td><td>系譜記述の詳細精度</td><td>Phase C-7 で philosophy/lit/traditional-knowledge DB 照合</td></tr>
+<tr><td>S-5</td><td>Phase A 構造的 5 限界の解析編内明示再記述が欠落</td><td>Phase A→B→C 連続性の可視化</td><td>report.html §「研究の限界」で明示再記述</td></tr>
+<tr><td>S-6</td><td>1 対 N マッピング 11 ペアの主継承元判定が解析編で十分に展開されていない</td><td>単一台帳の主継承パスの透明性</td><td>report.html § 71 問単一台帳節で詳細展開</td></tr>
+</tbody>
+</table>
+
+<h3>7.2 総合判定</h3>
+<table>
+<thead><tr><th>カテゴリ</th><th>項目数</th><th>PASS</th><th>WARN</th><th>FAIL</th></tr></thead>
+<tbody>
+<tr><td>カテゴリ 1: スナップショット不整合</td><td>4</td><td>4</td><td>0</td><td>0</td></tr>
+<tr><td>カテゴリ 2: ハルシネーション</td><td>5</td><td>2</td><td>3</td><td>0</td></tr>
+<tr><td>カテゴリ 3: カバレッジギャップ</td><td>4</td><td>4</td><td>0</td><td>0</td></tr>
+<tr><td>カテゴリ 4: チーム間不整合</td><td>6</td><td>4</td><td>2</td><td>0</td></tr>
+<tr><td><strong>合計</strong></td><td><strong>19</strong></td><td><strong>14 (73.7%)</strong></td><td><strong>5 (26.3%)</strong></td><td><strong>0 (0.0%)</strong></td></tr>
+</tbody>
+</table>
+<p class="figure-caption">表 7.2: 4 カテゴリ × 19 項目検証の総合判定。FAIL ゼロ・PASS 14・WARN 5（うち 3 は学術 DB 照合の追跡、1 は C-1 完了後の再検証、1 は Phase A 5 限界再記述）。</p>
+
+<h3>7.3 sentinel への引継ぎ事項</h3>
+<p>Phase C 推奨される sentinel 判定の段階で、本検証編は以下の引継ぎを行う。第一に、自己発見問題 S-1（4 層構造独自性検証）と S-5（Phase A 5 限界再記述）を report.html で明示することを推奨する。第二に、自己発見問題 S-2（wisdom 拡張）と S-6（マッピング詳細）は Phase D 以降の作業として明示することを推奨する。第三に、4 カテゴリ 19 項目検証で FAIL ゼロ・PASS 73.7% を達成しており、Phase B Track B-1 / B-2 / B-3 / B-4 / B-5 / B-6 で確立された自己検証品質基準に整合する。第四に、Phase A → B → C の数値継承は WARN-1（B-2 旧値残存）への本トラック対応（解析編 §1.3 / §3.1 での source-of-truth 採用宣言 + 旧値併存 honest 開示）により完全対応済。</p>
+
+<h3>7.4 refinement-coordinator への引継ぎ</h3>
+<p>万一 sentinel 判定が CONDITIONAL APPROVAL となった場合の refinement 対応として、本検証編は以下を推奨する。R1 ラウンド: report.html での Phase A 5 限界明示再記述（S-5 対応）+ 1 対 N マッピング詳細展開（S-6 対応）。R2 ラウンド: 4 軸スコアリング追加感度分析（S-3 対応）+ メタ問い層独自性の先行事例レビュー（S-1 対応）。R3 ラウンド: PHIL/LIT/TK 系譜の学術 DB 照合（S-4 対応）。R3 失敗時の根本原因分類は、Spec 起因（4 層構造独自性が外部標準と整合しない）→ Phase C briefing 修正、Design 起因（Track C-2 内設計見直し）、Implementation 起因（Lead 担当者交代）の 3 段階で運用する。</p>
+</section>
+
+<footer>
+Track C-2 検証編 ／ Phase C Wave 1 ／ 2026-05-09 ／ 4 カテゴリ × 19 項目自己検証 ／ FAIL 0 / PASS 14 / WARN 5
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme') || 'light';
+  const next = cur === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('miratuku-theme', next); } catch (e) {}
+}
+(function () {
+  try {
+    const saved = localStorage.getItem('miratuku-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

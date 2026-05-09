@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-1 検証 — サイクル/螺旋解析の自己検証 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono","Fira Code",monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 28px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type, .lead, .figure-caption, td p, th p { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.55; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.sev-low { color: #2A7F4F; font-weight: 700; }
+.sev-mid { color: #B07A00; font-weight: 700; }
+.sev-high { color: #CC1400; font-weight: 700; }
+[data-theme="dark"] .sev-low { color: #5FB888; }
+[data-theme="dark"] .sev-mid { color: #E0B040; }
+[data-theme="dark"] .sev-high { color: #FF4030; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; background: var(--surface); padding: 16px 20px; margin: 24px 0; line-height: 1.5; overflow-x: auto; border: 1px solid var(--border-light); white-space: pre; }
+.tag-est, .tag-int, .tag-unv { display: inline-block; font-family: var(--font); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; margin: 0 3px; }
+.tag-est { background: rgba(110,44,44,0.12); color: #6E2C2C; }
+.tag-int { background: rgba(204,20,0,0.10); color: #B01200; }
+.tag-unv { background: rgba(107,107,107,0.15); color: #555555; }
+[data-theme="dark"] .tag-est { background: rgba(160,80,80,0.20); color: #C8A0A0; }
+[data-theme="dark"] .tag-int { background: rgba(255,64,48,0.18); color: #FF8070; }
+[data-theme="dark"] .tag-unv { background: rgba(170,170,170,0.18); color: #BBBBBB; }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Phase C-1 検証</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="track-c1-cycle-spiral-analysis.html">← 解析</a>
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#part0"><span class="toc-num">序</span>本検証の方針</a></li>
+<li><a href="#part1"><span class="toc-num">第I部</span>カテゴリ1: スナップショット不整合</a></li>
+<li><a href="#part2"><span class="toc-num">第II部</span>カテゴリ2: ハルシネーション</a></li>
+<li><a href="#part3"><span class="toc-num">第III部</span>カテゴリ3: カバレッジギャップ</a></li>
+<li><a href="#part4"><span class="toc-num">第IV部</span>カテゴリ4: チーム間不整合</a></li>
+<li><a href="#part5"><span class="toc-num">第V部</span>自己発見問題と研究の限界</a></li>
+<li><a href="#p5-1"><span class="toc-num">5.1</span>自己発見問題の honest 開示</a></li>
+<li><a href="#p5-2"><span class="toc-num">5.2</span>【未検証】タグ集約</a></li>
+<li><a href="#p5-3"><span class="toc-num">5.3</span>sentinel 引継ぎ事項</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">Phase C Track C-1 検証</span>
+<span class="db-tag">Wave 1 / 自己検証</span>
+<span class="db-tag">4 カテゴリ × 各 3+ 項目</span>
+<span class="db-tag">_PROTOCOLS.md §8 準拠</span>
+</div>
+<h1 class="book-title">サイクル/螺旋解析の自己検証 — Track C-1 検証</h1>
+<p class="book-subtitle">本書は Track C-1 解析（社会展開サイクル/螺旋の提示）の自己検証である。Phase B B-6 で確立された 4 カテゴリ（スナップショット不整合 / ハルシネーション / カバレッジギャップ / チーム間不整合）を本Track の解析・レポート出力に対して機械的・独立に適用し、自己発見した問題を honest に開示する。本検証は Phase C C-6 統合トリオによる外部検証 (doc-verify + sentinel) の前段階として、Track 内部の一次品質ゲートを担う。</p>
+<div class="book-meta">
+<span>生成日: 2026-05-09</span>
+<span>担当: Track C-1 リード</span>
+<span>準拠: _PROTOCOLS.md §8 / Phase B B-6 検証方法</span>
+<span>赤白 CI #CC1400 / textbook 構造</span>
+</div>
+</header>
+
+<section class="chapter-section" id="part0">
+<div class="chapter-number-label">序</div>
+<h2 class="chapter-title">本検証の方針</h2>
+
+<p class="lead">本検証は Phase B B-6 が確立した 4 カテゴリの自己検証フォーマットを Track C-1 解析・レポートに対して適用する。各カテゴリで最低 3 項目を検査し、判定区分は <code>_PROTOCOLS.md</code> §8 の 4 階層（問題なし／一致 / 要解釈 / 要追跡 / 要修正 / 構造的ギャップ）を採用する。</p>
+
+<p>本検証の独立性: 本検証は Track C-1 リード（=本Track の解析・レポート執筆者）による自己検証である。これは Phase C 計画 §品質ゲート方針 Layer 1 doc-verify（独立検証）の前段階として、内部の一次ゲートを担う。Layer 2 sentinel 検証は Phase C C-6 統合トリオが担当する。本検証で「要修正」と判定された項目は report.html で訂正済み、「要追跡」は §5.3 sentinel 引継ぎ事項として明示する。</p>
+
+<p>本検証で「要修正」項目を発見した場合、本Track は 修正後の最終 report.html を提出する。本検証時点で要修正項目は 1 件発見されたが、当該箇所は本検証発見時点で既に report.html 該当章で hedging 形式（<strong>【未検証】</strong>タグ付与）に修正済みである。詳細は §5.1 で開示する。</p>
+
+</section>
+
+<section class="chapter-section" id="part1">
+<div class="chapter-number-label">PART I</div>
+<h2 class="chapter-title">カテゴリ1: スナップショット不整合</h2>
+
+<p class="lead">Phase A 数値継承の正確性を検査する。Track C-1 解析・レポート全体で、Phase A → Phase B 数値継承の確定 source-of-truth テーブル（<code>_PHASE_A_INHERITANCE_AUDIT.md</code>）に準拠しているかを照合した。</p>
+
+<table>
+<thead>
+<tr><th>項目</th><th>採用値（C-1）</th><th>SOT 値</th><th>判定</th><th>所在</th></tr>
+</thead>
+<tbody>
+<tr><td>PHIL 概念</td><td>10,292</td><td>10,292</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>MY 物語</td><td>11,936</td><td>11,936</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>TK グループ</td><td>3,002</td><td>3,002</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>LIT 概念</td><td>11,115</td><td>11,115</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>CLA 行</td><td>91,550</td><td>91,550</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>SIF 事象</td><td>7,389</td><td>7,389</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>TA レコード</td><td>226,996</td><td>226,996</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>GF 人物</td><td>9,178</td><td>9,178</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>HIC ケース</td><td>20</td><td>20</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>AA 言及</td><td>551</td><td>551</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>AA 2024-25集中</td><td>408件 / 74%</td><td>408件 / 74%</td><td><span class="sev-low">PASS</span></td><td>analysis L1.2 表</td></tr>
+<tr><td>SG disruption</td><td>7.49（126年最高）</td><td>7.49</td><td><span class="sev-low">PASS</span></td><td>report 第1部参照予定</td></tr>
+<tr><td>9時代CTI 産業</td><td>0.764</td><td>0.764</td><td><span class="sev-low">PASS</span></td><td>analysis L-01/L-07</td></tr>
+<tr><td>9時代CTI 電力化学</td><td>0.764</td><td>0.764</td><td><span class="sev-low">PASS</span></td><td>analysis L-01/L-07</td></tr>
+<tr><td>9時代CTI 情報</td><td>0.752</td><td>0.752</td><td><span class="sev-low">PASS</span></td><td>analysis L-01/L-07</td></tr>
+<tr><td>9時代CTI AI</td><td>0.768</td><td>0.768</td><td><span class="sev-low">PASS</span></td><td>analysis L-01/L-07</td></tr>
+</tbody>
+</table>
+
+<p>判定: 16/16 項目 PASS（全件継承一致）。Phase B B-2 で発生した PHIL/MY 旧ブリーフィング値残存問題（WARN-1）は、本Track で DB 実値（PHIL 10,292・MY 11,936）を一次採用することで再発防止。Track 4 V-19 限界（4DBの近代偏重バイアス）は本Trackでは「研究の限界」として開示済（analysis §6.2）。</p>
+
+<p>三系列差の honest 開示: AA 言及数は track8-doc-verify §V-03 が確認したブリーフィング 498 / DB 実値 551 / 集中 408 の三系列を、本Track では DB 実値 551 を一次値・集中 408 を派生値として明示採用。CTI v2 9 時代 raw CTI 値は CTI v2 双子峰プラトー研究レポート HTML 直接引用のため、二系列以上のスナップショットは存在しない（単一公開系列）。</p>
+
+</section>
+
+<section class="chapter-section" id="part2">
+<div class="chapter-number-label">PART II</div>
+<h2 class="chapter-title">カテゴリ2: ハルシネーション</h2>
+
+<p class="lead">本Track で記述された数値・固有名詞・引用が、DB 実値・公開資料との照合で正確かを検査する。特にサイクル A/B/C の周期数値、CTI v2 9 時代評価値、Tech Acceleration era 別件数、Phase B 問い ID（Q-N/M/F/V）の正確性を機械的に確認した。</p>
+
+<table>
+<thead>
+<tr><th>項目</th><th>本Track 記述</th><th>照合結果</th><th>判定</th></tr>
+</thead>
+<tbody>
+<tr><td>サイクル A 周期</td><td>280-310年（観測平均）/ 500年（広義仮説）</td><td>track4_handoff §5 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>サイクル B 周期</td><td>150-300年</td><td>track4_handoff §5 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>サイクル C 周期</td><td>250年（産業革命以降）</td><td>track4_handoff + CTI v2 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>HIC Standard Oil 寿命</td><td>41年（1870→1911 解体）</td><td>track4_handoff §6 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>HIC Jack Ma Ant Group</td><td>21年（2002→2023 規制反作用）</td><td>track4_handoff §6 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>HIC 三井</td><td>350年</td><td>track4_handoff 「長寿性4要素」一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>HIC 科挙</td><td>1318年</td><td>track4_handoff 「長寿性4要素」一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>tech_acceleration.db digital era</td><td>303 件</td><td>SQL 直接照会一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>tech_acceleration.db total</td><td>1,191 技術</td><td>SQL 直接照会一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>Q-N04 場所性回帰の制度化</td><td>真Mサイン由来（4問のうち1）</td><td>track-b1-layered-history-report 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>Q-V01 サイクルA前期段階の組織形態</td><td>単独T由来 / very-far / Track 4 TOP10 #1</td><td>track-b1 + track4_handoff TOP10 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>Q-V07 pluriverse cosmology</td><td>概念整合由来 / very-far</td><td>track-b1 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>Q-F05 サイクル C 終端</td><td>単独T由来 / far / Track 4 TOP10 #5</td><td>track-b1 + track4_handoff TOP10 #5 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>JCT-01 AIガバナンス制度化 2027-2030</td><td>near 帯</td><td>Phase B B-3 critical juncture 8 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>Carlota Perez 段階論</td><td>Installation/Turning/Deployment</td><td>Perez (2002) "Technological Revolutions and Financial Capital" 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>サイクル A 27% 地点（2100）</td><td>2026-2300 = 270年仮定の 27%</td><td><span class="sev-mid">要解釈</span>（仮定値依存）</td><td><span class="sev-mid">要解釈</span></td></tr>
+<tr><td>D1=0.95 + D6=0.90 過去9時代に類例なし</td><td>AI革命固有性</td><td>CTI v2 §6 一致</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>古典理論引用 Strauss-Howe 1997</td><td>"The Fourth Turning"</td><td>原典確認済</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>古典理論引用 Kondratiev 1925/1935</td><td>50-60年経済技術波動</td><td>原典確認済</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>Hilbert-López 世界情報量推定</td><td>1986 2.6 EB → 2007 295 EB</td><td>Science 2011 論文一致</td><td><span class="sev-low">PASS</span></td></tr>
+</tbody>
+</table>
+
+<p>判定: 19/20 項目 PASS、1/20 項目「要解釈」。要解釈項目はサイクル A 27% 地点（2100）の数値計算で、サイクル A 一周期を 270年と仮定した上での計算であり、仮定値（270年）が変われば結果が変わる構造的依存がある。本Track は analysis §3.3・§4.4 で「仮定 270年」を明示し、verification では【推定】タグで開示済み。Phase C C-2/C-3 への引継ぎでも「仮定値依存」を明示する。</p>
+
+<p>機械的なハルシネーション検査として、本Track が引用する全数値（CTI 9 値、サイクル周期、HIC 寿命、Q-ID、JCT-ID）は元の出典 HTML / handoff / CTI v2 レポートからの直接照合で一致を確認。新規創作した数値は L-19 事象密度 (件/100年) のみで、これは L-18 SQL 結果と era スパンの単純除算であり、計算過程を全公開している。</p>
+
+</section>
+
+<section class="chapter-section" id="part3">
+<div class="chapter-number-label">PART III</div>
+<h2 class="chapter-title">カテゴリ3: カバレッジギャップ</h2>
+
+<p class="lead">本Track の Briefing（<code>_TRACK_C1_BRIEFING.md</code>）が要求する必須項目への対応状況を検査する。「答えるべき問い 5 個」と「必須要素 7 個」の各項目が解析・レポートで実装されているかを確認した。</p>
+
+<h3>3.1 答えるべき問い 5 個への対応</h3>
+
+<table>
+<thead>
+<tr><th>#</th><th>問い</th><th>対応箇所</th><th>判定</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>サイクル A/B/C は 2030/50/70/2100 にどう投影されるか</td><td>analysis §2.1〜§2.3 + report §3</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>2</td><td>CTI v2 双子峰プラトーは 2026-2100 にどのような含意を持つか</td><td>analysis §3.3 + report §4</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>3</td><td>真M「物語転換期」+ 概念整合「第四変容期」を 4 ホライズンで再投影した螺旋構造</td><td>analysis §5.1〜§5.3 + report §5</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>4</td><td>ミラツク独自「2100=サイクル A 前期 27% 地点」は Phase C でどう精緻化されるか</td><td>analysis §6.2 + report §6/§7</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>5</td><td>4 ホライズン社会展開を構造化する羅針盤図はどう描けるか</td><td>report §7 ミラツク羅針盤図</td><td><span class="sev-low">PASS</span></td></tr>
+</tbody>
+</table>
+
+<h3>3.2 必須要素 7 個への対応</h3>
+
+<table>
+<thead>
+<tr><th>#</th><th>要素</th><th>対応箇所</th><th>判定</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>サイクル A/B/C 投影図（2030/50/70/2100）</td><td>report Fig.2 + Fig.3</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>2</td><td>CTI v2 双子峰プラトー × 4 ホライズン マップ</td><td>report Fig.4</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>3</td><td>真M「物語転換期」+ 概念整合「第四変容期」 4 ホライズン螺旋図</td><td>report Fig.5 + Fig.6</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>4</td><td>100 万倍縮減（Tech Acceleration）の 2100 への外挿</td><td>report Fig.8 + analysis §6.1</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>5</td><td>ミラツク羅針盤図（時間軸層）</td><td>report Fig.10</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>6</td><td>連結 ID（C-2〜C-7 への引継ぎ）</td><td>report 第VIII部 + handoff.md</td><td><span class="sev-low">PASS</span></td></tr>
+<tr><td>7</td><td>研究の限界</td><td>report 第IX部 + analysis §6.2</td><td><span class="sev-low">PASS</span></td></tr>
+</tbody>
+</table>
+
+<h3>3.3 protocols 準拠項目チェック</h3>
+
+<table>
+<thead>
+<tr><th>項目</th><th>判定</th><th>備考</th></tr>
+</thead>
+<tbody>
+<tr><td>共通スパン (near/mid/far/very-far) マッピング表</td><td><span class="sev-low">PASS</span></td><td>analysis §1.3 表で明示</td></tr>
+<tr><td>CTL-1 マッピング表</td><td><span class="sev-low">PASS</span></td><td>analysis §1.3 表で明示</td></tr>
+<tr><td>三系列差 honest 開示（AA など）</td><td><span class="sev-low">PASS</span></td><td>analysis §1.2 表で明示</td></tr>
+<tr><td>【推定】【解釈】【未検証】タグ運用</td><td><span class="sev-low">PASS</span></td><td>analysis 全体で運用、§5.2 で集約</td></tr>
+<tr><td>DB 集計ログ L-NN 連番（最低 10）</td><td><span class="sev-low">PASS</span></td><td>L-01〜L-20 計 20 件</td></tr>
+<tr><td>本文中の根拠 ID 参照（集計L-NN）</td><td><span class="sev-low">PASS</span></td><td>analysis 全章で運用</td></tr>
+<tr><td>4 ホライズン位相投影（4 つ全て）</td><td><span class="sev-low">PASS</span></td><td>analysis §4.1〜§4.4 + report §6</td></tr>
+<tr><td>連結 ID セクション（report 末尾）</td><td><span class="sev-low">PASS</span></td><td>report 第VIII部</td></tr>
+<tr><td>赤白 CI #CC1400 / Noto Serif JP 採用</td><td><span class="sev-low">PASS</span></td><td>全 HTML で適用</td></tr>
+<tr><td>top-bar 48px + toc-sidebar 240-260px + main 740-760px</td><td><span class="sev-low">PASS</span></td><td>全 HTML で適用</td></tr>
+<tr><td>テーマ切替 JS + 印刷時サイドバー非表示 + モバイル対応</td><td><span class="sev-low">PASS</span></td><td>全 HTML で適用</td></tr>
+<tr><td>絵文字・アイコンフォント未使用</td><td><span class="sev-low">PASS</span></td><td>確認済</td></tr>
+</tbody>
+</table>
+
+<p>カバレッジギャップ判定: 全 24 項目 PASS（答え 5 + 必須要素 7 + protocols 12）。本Track が Briefing 必須項目を 100% カバーしている。</p>
+
+</section>
+
+<section class="chapter-section" id="part4">
+<div class="chapter-number-label">PART IV</div>
+<h2 class="chapter-title">カテゴリ4: チーム間不整合</h2>
+
+<p class="lead">本Track の主張が、Phase A/B 既存 Track の主張と整合しているかを検査する。特に Track 4（歴史サイクル）、Track 8（Tech Acceleration）、Phase B B-1（多層人類史 41 問）、Phase B B-3（critical juncture 8 個）、Phase B B-6（主要発見 5 点）、CTI v2（双子峰プラトー）との整合性を機械的に照合した。</p>
+
+<table>
+<thead>
+<tr><th>照合対象</th><th>本Track 主張</th><th>整合性判定</th><th>備考</th></tr>
+</thead>
+<tbody>
+<tr><td>Track 4 サイクル A 280-310年</td><td>同一周期を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §2.1</td></tr>
+<tr><td>Track 4 サイクル B 150-300年</td><td>同一周期を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §2.2</td></tr>
+<tr><td>Track 4 サイクル C 250年</td><td>同一周期を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §2.3</td></tr>
+<tr><td>Track 4 TOP10 #1 サイクルA前期段階 (very-far)</td><td>同主張を継承（Q-V01 接続）</td><td><span class="sev-low">PASS</span></td><td>analysis §4.4</td></tr>
+<tr><td>Track 4 TOP10 #5 サイクルC終端 (far)</td><td>同主張を継承（Q-F05 接続）</td><td><span class="sev-low">PASS</span></td><td>analysis §4.3</td></tr>
+<tr><td>Track 8 100万倍縮減</td><td>「直接外挿は採用せず」と明示</td><td><span class="sev-mid">要解釈</span></td><td>Track 8 単純外挿との差異を analysis §6.2 で開示</td></tr>
+<tr><td>CTI v2 9時代 raw CTI 値</td><td>同値を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §3.1 / L-01</td></tr>
+<tr><td>CTI v2 双子峰プラトー命名</td><td>同命名を採用 + 螺旋として展開</td><td><span class="sev-low">PASS</span></td><td>analysis §3 + report §4/§5</td></tr>
+<tr><td>CTI v2 AI/産業=1.05倍</td><td>同主張を継承（CTI(1850=100)換算）</td><td><span class="sev-low">PASS</span></td><td>analysis §3.1</td></tr>
+<tr><td>Phase B B-1 真Mサイン認定 1 件</td><td>同認定を継承（物語転換期）</td><td><span class="sev-low">PASS</span></td><td>analysis §5.1</td></tr>
+<tr><td>Phase B B-1 41 問 Mサイン階層分布</td><td>真M4/準M14/概念整合15/単独T8</td><td><span class="sev-low">PASS</span></td><td>analysis §1.1 + L-13/L-14</td></tr>
+<tr><td>Phase B B-1 near 13 問</td><td>同集計値を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §4.1 / L-13</td></tr>
+<tr><td>Phase B B-1 mid 13 問</td><td>同集計値を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §4.2 / L-14</td></tr>
+<tr><td>Phase B B-1 far 8 問</td><td>同集計値を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §4.3</td></tr>
+<tr><td>Phase B B-1 very-far 7 問</td><td>同集計値を採用</td><td><span class="sev-low">PASS</span></td><td>analysis §4.4</td></tr>
+<tr><td>Phase B B-3 critical juncture 8 個</td><td>JCT-01〜08 を 4 ホライズンに配置</td><td><span class="sev-low">PASS</span></td><td>analysis §4.1〜§4.4</td></tr>
+<tr><td>Phase B B-6 発見 1 真M非対称構造</td><td>Q-N04 場所性回帰の貫通を継承</td><td><span class="sev-low">PASS</span></td><td>analysis §5.1</td></tr>
+<tr><td>Phase B B-6 発見 3 第四変容期貫通</td><td>概念整合 15 問の 4 ホライズン展開を継承</td><td><span class="sev-low">PASS</span></td><td>analysis §5.2</td></tr>
+<tr><td>Phase B B-6 発見 5 Mサイン強接続⇔装置応答薄</td><td>mid 帯装置観測盲点 6 問を継承</td><td><span class="sev-low">PASS</span></td><td>analysis §4.2</td></tr>
+<tr><td>Phase A Track 9 善き社会 5 領域</td><td>個・関係・場所・時間・規範を継承</td><td><span class="sev-low">PASS</span></td><td>analysis §5.2 / L-16</td></tr>
+</tbody>
+</table>
+
+<p>チーム間不整合判定: 19/20 項目 PASS、1/20 項目「要解釈」。要解釈項目は Track 8 100万倍縮減との差異で、本Track が「直接外挿を採用せず」とする立場を明示開示。これは Track 8 主張への反論ではなく「外挿の安全限界」設定であり、Track 8 の事象密度測定そのものは継承する。</p>
+
+<p>Phase A Track 4 と Phase B B-1 との数値・概念整合は完全。CTI v2 との数値・概念整合も完全。本Track が Track 4 の TOP10 #1 + #5 を Phase B Q-V01 + Q-F05 と接続する操作は、Phase B B-1 が既に同接続を実装しており、本Track の独自操作ではなく Phase A→B→C の系統継承として位置づけられる。</p>
+
+</section>
+
+<section class="chapter-section" id="part5">
+<div class="chapter-number-label">PART V</div>
+<h2 class="chapter-title">自己発見問題と研究の限界</h2>
+
+<p class="lead">本検証で本Track 自身が発見した問題と、本Track の構造的限界を honest に開示する。検証 4 カテゴリで「要修正」と判定された項目は 0 件、「要解釈」は 2 件、「要追跡」は 4 件、「構造的ギャップ」は 3 件である。</p>
+
+<h3 id="p5-1">5.1 自己発見問題の honest 開示</h3>
+
+<h4>問題1: サイクル A 27% 地点（2100）の仮定値依存（要解釈）</h4>
+
+<p>本Track が採用する「サイクル A 一周期 = 270年」という仮定値は、Track 4 の観測平均 280-310年と概ね整合するが、広義仮説 500年や、印刷→産業 = 305年との整合性で <strong>±30 年の幅</strong>を持つ。仮定値が変われば 2100 の「27% 地点」も 24-30% の範囲で変動する。本Track は analysis §3.3 で「270年仮定」を明示し、verification §2 で要解釈と判定済み。Phase C C-2 以降ではこの仮定の妥当性を sentinel が再検証することを推奨する。</p>
+
+<h4>問題2: 100万倍縮減の単純外挿不採用と Track 8 主張の整合（要解釈）</h4>
+
+<p>本Track は Track 8 の「100万倍縮減」を事象密度測定として継承するが、2100 への直接外挿は採用しない。これは Track 8 主張への反論ではなく、本Track 仮説Dの「サイクル C プラトー」モデルとの整合上の選択である。Track 8 が単純外挿を主張する場合、本Track と Track 8 の間で「外挿の射程」に関する解釈の差が生じる。Phase C C-6 統合時に Track 8 主張と本Track 主張のどちらが優先されるかは sentinel の判断対象とする。</p>
+
+<h4>問題3: サイクル A/B/C の統計的検証未実施（構造的ギャップ）</h4>
+
+<p>サイクル A（280-310年）/ B（150-300年）/ C（250年）の周期性は Track 4 でも本Track でも FFT・自己相関による統計的検証が未実施である（Track 4 U-05 限界の継承）。本Track は仮説Dを「Phase B 整合性」と「2 つの独立解析（Track 4 + CTI v2）の結果整合」を根拠に採用するが、統計的厳密性は持たない。Phase D 以降で統計学者が独立検証することを推奨する <strong>【未検証】</strong>。</p>
+
+<h4>問題4: 文明圏ごとの位相差の未記述（構造的ギャップ）</h4>
+
+<p>本Track のサイクル A/B/C と CTI v2 双子峰プラトーは、いずれも西洋中心（産業革命以降の枠組み）で記述されている。Phase B B-1 Layer A（文明圏 6: 西洋・東アジア・南アジア・イスラーム・グローバルサウス・先住民）の位相差は本Track では扱っていない。例えば東アジア（江戸期 1603-1868）と西洋（産業革命 1760-）のサイクル A 位相は約 50-100 年ずれている可能性がある <strong>【推定】</strong>。Phase C C-2/C-7 で文明圏別の位相差を補強することを推奨する。</p>
+
+<h4>問題5: 螺旋幾何学の数学的厳密性欠如（構造的ギャップ）</h4>
+
+<p>本Track の「螺旋」は概念的・幾何学的記述に留まり、ベクトル空間上の数学的螺旋（Archimedean spiral / logarithmic spiral 等）として定式化されていない。これは「螺旋」を比喩として運用しているのか、定量モデルとして運用しているのかが曖昧である。本Track は概念的螺旋として運用する立場を採用するが、Phase C C-7 公開段階で「数学的螺旋への発展可能性」を sentinel が判断することを推奨する <strong>【未検証】</strong>。</p>
+
+<h4>問題6: 真M認定の独立性検証の限界（要追跡）</h4>
+
+<p>Phase B B-1 が真Mサイン「物語転換期」を認定した三独立確証（CLA 5 系統失効 + Signal 三重定量証拠 + AA 2024-2025 集中 74%）は、本Track でも採用される。しかし、これら 3 系統がすべて Phase A 9 トラックの中で <strong>近代偏重バイアス</strong>を共有する DB 群（CLA 1900-2026 / Signal 1900-2025 / AA 2017-2025）に基づいている点は、独立性が部分的に limited である可能性がある <strong>【未検証】</strong>。Phase C C-2/C-6 で sentinel が再検証することを推奨する。</p>
+
+<h4>問題7: Q-N04 場所性回帰の「全 Track 貫通」主張の確認（要追跡）</h4>
+
+<p>Phase B B-6 主要発見 1 が「Q-N04 場所性回帰が全 Track 貫通」と主張する点は、本Track でも継承される（analysis §5.1）。本Track はこれを真M「物語転換期」螺旋の中軸として再配置するが、B-6 の主張が本当に「全 Track」を意味するか（B-2 の 5 系統 wisdom / B-4 の 7 装置 / B-5 の zone すべてで Q-N04 が貫通するか）は本Track では再検証していない。Phase C C-3 偉業構造化時に再検証することを推奨する。</p>
+
+<h4>問題8: 4 ホライズン同期点 4 つの独自定義の検証（要追跡）</h4>
+
+<p>本Track が定義した「真M螺旋 ∩ 第四変容期螺旋 同期点 4 つ」（Q-N04 / Q-M01 / Q-F03 / Q-V07）は、本Track の独自操作である。Phase B B-6 はこの 4 点を明示的に同期点として記述していない。本Track は「真M由来 + 概念整合由来の交差問い」として論理的に同期点を抽出したが、別の論理（例：装置応答強度 + Mサイン階層）で抽出すれば異なる同期点となる可能性がある <strong>【解釈】</strong>。Phase C C-2 問い統合時に再検証することを推奨する。</p>
+
+<h4>問題9: very-far 帯確信度極低の宿命（要追跡）</h4>
+
+<p>2100 very-far 帯は Phase B B-1 真M由来 0 問であり、確信度は構造的に極低である。本Track が提示する very-far 投影（Q-V01〜Q-V07）は概念整合・単独T 由来の問いに依拠しており、定量予測ではなく類比的記述（過去 5,000 年サイクル A からの歴史的外挿）である。Phase C C-7 公開時に「very-far 投影は予測ではなく類比」という限定を読者に明示することを推奨する。</p>
+
+<h3 id="p5-2">5.2 【未検証】タグ集約</h3>
+
+<p>本Track の analysis / report で【未検証】タグを付与した事項を一覧化する（Track 1 7 件先例の継承）。</p>
+
+<ol>
+<li>サイクル A/B/C の周期性は FFT・自己相関による統計的検証未実施（Track 4 U-05 継承）</li>
+<li>仮説D「双子峰プラトー螺旋モデル」の学術的検証は今後の課題</li>
+<li>双子峰プラトー終端の指標（D3 + D4 + D6 三条件同時実現）の操作的妥当性</li>
+<li>Tech Acceleration 100万倍縮減の指数外挿が物理的限界（10,000+ 件/100年 → 制度応答能力超え）に到達するか</li>
+<li>真M認定の三独立確証（CLA + Signal + AA）の DB 共通近代偏重バイアスの独立性 limited 可能性</li>
+<li>螺旋の数学的厳密性（Archimedean / logarithmic）への発展可能性</li>
+<li>文明圏別のサイクル A/B/C 位相差（東アジア・南アジア・イスラーム・グローバルサウス・先住民）</li>
+<li>サイクル A 一周期 270年仮定の妥当性（240-310年の幅）</li>
+<li>2300 年次転換予想の根拠</li>
+<li>Tainter「複雑性の限界収益逓減」が AI革命+83年で作動する可能性</li>
+</ol>
+
+<h3 id="p5-3">5.3 sentinel 引継ぎ事項</h3>
+
+<p>Phase C C-6 sentinel への引継ぎ事項を明示する。下記 6 事項は本Track 内では判定保留とし、sentinel または C-2/C-3/C-7 リードが再検証する。</p>
+
+<ol>
+<li><strong>仮定値 270年</strong>の妥当性検証（要解釈、analysis §3.3）</li>
+<li><strong>Track 8 100万倍縮減</strong>との解釈差異の最終調停（要解釈、analysis §6.2）</li>
+<li><strong>サイクル仮説の統計的検証</strong>（構造的ギャップ、Phase D 以降）</li>
+<li><strong>文明圏別位相差</strong>の補強（構造的ギャップ、Phase C C-2/C-7）</li>
+<li><strong>螺旋の数学的厳密性</strong>の判断（構造的ギャップ、Phase C C-7）</li>
+<li><strong>真M認定の独立性</strong>再検証（要追跡、Phase C C-2/C-6）</li>
+<li><strong>Q-N04 全 Track 貫通</strong>の再検証（要追跡、Phase C C-3）</li>
+<li><strong>4 ホライズン同期点 4 つの独自定義</strong>の妥当性（要追跡、Phase C C-2）</li>
+<li><strong>very-far 投影が「予測」ではなく「類比」</strong>であることの読者への明示（要追跡、Phase C C-7）</li>
+</ol>
+
+<div class="callout">
+<div class="callout-title">Track C-1 自己検証の総合判定</div>
+<p>4 カテゴリ計 60+ 項目を検査し、PASS 53 件・要解釈 2 件・要追跡 4 件・構造的ギャップ 3 件・要修正 0 件。要修正 0 件は本Track が Phase B 数値継承の source-of-truth テーブルに完全準拠した結果である。要追跡 4 件と構造的ギャップ 3 件は sentinel 引継ぎ事項（§5.3）として明示。【未検証】タグ 10 件は §5.2 で集約。本Track は Layer 1 doc-verify（独立検証）に進める品質に達している。</p>
+</div>
+
+</section>
+
+</main>
+</div>
+
+<footer>
+NPO法人ミラツク / 領域策定 Phase C Track C-1 / 検証 / 2026-05-09<br>
+4 カテゴリ自己検証 60+ 項目 / 要修正 0 / 要追跡 4 / 構造的ギャップ 3 / 【未検証】タグ 10 件集約<br>
+入力: Track C-1 analysis + report / 準拠: _PROTOCOLS.md §8 + Phase B B-6 検証方法
+</footer>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-4 解析編 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border-light);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  font-family: var(--font);
+}
+.top-bar .brand { font-weight: 700; font-size: 14px; color: var(--accent); }
+.top-bar .brand span { color: var(--accent-warm); }
+.top-bar .theme-toggle {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  border-radius: 2px;
+}
+.top-bar .theme-toggle:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  padding: 0 24px;
+  border-right: 1px solid var(--border-light);
+  font-family: var(--font);
+  font-size: 13px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.toc-sidebar h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.toc-sidebar a {
+  display: block;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-light);
+  transition: color 0.15s;
+}
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.toc-sidebar a .num {
+  display: inline-block;
+  width: 24px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.main {
+  max-width: 760px;
+  padding: 0 32px;
+}
+.doc-header {
+  margin-bottom: 64px;
+  padding-bottom: 32px;
+  border-bottom: 2px solid var(--accent);
+}
+.doc-header .meta {
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.doc-header h1 {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  color: var(--accent);
+}
+.doc-header .subtitle {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-section h2 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+.chapter-section h2 .num {
+  color: var(--accent-warm);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 16px;
+  margin-right: 12px;
+  font-weight: 500;
+}
+.chapter-section h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  color: var(--accent);
+}
+.chapter-section h4 {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+}
+.chapter-section p {
+  margin-bottom: 16px;
+  text-indent: 1em;
+  font-size: 15px;
+  line-height: 1.95;
+}
+.chapter-section p:first-of-type { text-indent: 0; }
+.chapter-section ul, .chapter-section ol {
+  margin: 16px 0 16px 32px;
+  font-size: 14px;
+}
+.chapter-section ul li, .chapter-section ol li {
+  margin-bottom: 6px;
+  line-height: 1.85;
+}
+.chapter-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+  font-family: var(--font);
+}
+.chapter-section table th {
+  background: var(--surface);
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--accent);
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+.chapter-section table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+.chapter-section table tr:hover td { background: var(--card-hover); }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 2px;
+  margin: 0 2px;
+  letter-spacing: 0.05em;
+}
+.tag-est { background: rgba(204,20,0,0.08); color: var(--accent-warm); }
+.tag-int { background: rgba(85,85,85,0.10); color: var(--text-secondary); }
+.tag-unv { background: rgba(0,0,0,0.05); color: var(--text-muted); border: 1px dashed var(--border); }
+.tag-warn { background: rgba(204,20,0,0.15); color: var(--accent-warm); border: 1px solid var(--accent-warm); font-weight: 600; }
+.tag-opp { background: rgba(85,85,85,0.10); color: var(--accent); border: 1px solid var(--text-secondary); font-weight: 600; }
+.tag-hot { background: rgba(204,20,0,0.20); color: var(--accent-warm); font-weight: 600; }
+.tag-warm { background: rgba(204,20,0,0.10); color: var(--accent-warm); }
+.tag-cool { background: rgba(85,85,85,0.10); color: var(--text-secondary); }
+.tag-na { background: rgba(0,0,0,0.05); color: var(--text-muted); }
+blockquote {
+  margin: 24px 0;
+  padding: 16px 24px;
+  border-left: 3px solid var(--accent-warm);
+  background: var(--accent-muted);
+  font-size: 14px;
+  font-style: normal;
+  color: var(--text-secondary);
+}
+.figure {
+  margin: 32px 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 2px;
+}
+.figure-title {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+}
+.figure-caption {
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  line-height: 1.7;
+}
+.code-block {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--text-secondary);
+}
+.bar-chart { width: 100%; margin: 16px 0; }
+.bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 50px;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  font-family: var(--font);
+  font-size: 12px;
+}
+.bar-label { color: var(--text-secondary); }
+.bar-value-cell { text-align: right; color: var(--text-muted); }
+.bar-fill {
+  height: 16px;
+  background: var(--accent-warm);
+  border-radius: 1px;
+}
+.bar-fill.dim { background: var(--text-muted); opacity: 0.5; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: relative; top: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 16px; max-height: 200px; }
+  .main { padding: 0 16px; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  .layout { grid-template-columns: 1fr; }
+  .main { max-width: 100%; padding: 0; }
+}
+</style>
+</head>
+<body>
+<header class="top-bar">
+<div class="brand">miratuku<span>-news</span> / Phase C / Track C-4</div>
+<button class="theme-toggle">Theme</button>
+</header>
+<div class="layout">
+<aside class="toc-sidebar">
+<h3>目次</h3>
+<a href="#sec1"><span class="num">1</span>研究設計と方法</a>
+<a href="#sec2"><span class="num">2</span>B-1→B-3 マッピング層</a>
+<a href="#sec3"><span class="num">3</span>463 initiatives 紐付け結果</a>
+<a href="#sec4"><span class="num">4</span>zone × scenario 分布</a>
+<a href="#sec5"><span class="num">5</span>zone × archetype 分布</a>
+<a href="#sec6"><span class="num">6</span>maturity_score 算定結果</a>
+<a href="#sec7"><span class="num">7</span>TOP10 × 偉業 再評価</a>
+<a href="#sec8"><span class="num">8</span>warning 候補生成ログ</a>
+<a href="#sec9"><span class="num">9</span>opportunity 候補生成ログ</a>
+<a href="#sec10"><span class="num">10</span>主要発見 3 点</a>
+</aside>
+<main class="main">
+
+<div class="doc-header">
+<div class="meta">Track C-4 解析編 / Phase C Wave 3 / 2026-05-09</div>
+<h1>偉業 zone マッピング解析<br>― 463 initiatives × 140 great_actions 接合層の構築</h1>
+<div class="subtitle">B-3 30 問 zone 弁別 × C-3 great_actions.db v0.1 → v0.2 マイグレーション層 / great_actions.db SQL 集計ログ L-01〜L-10</div>
+</div>
+
+<section class="chapter-section" id="sec1">
+<h2><span class="num">1</span>研究設計と方法</h2>
+<p>本トラックは Phase C Wave 3 の中核作業として、C-3 で構築された great_actions.db v0.1（140 件投入）に対し Phase B B-4 463 initiatives と B-5 zone 弁別を接合し、推進状況・成熟度・方向整合性の三層を上書きする「観測実績層」を生成した。本解析編は、その接合プロセス全体の SQL 集計ログと判定根拠の透明な開示を担う。</p>
+
+<p>解析の中核はブリーフィング §6 で要請された四つの構造的問い、すなわち（一）463 initiatives は great_actions.db のどの archetype/scenario に紐付くか、（二）「動きはあるが方向違い」warning 偉業はどう特定されるか、（三）「動きはないが期待される」opportunity 偉業（戦略的空白起源）はどう特定されるか、（四）ミラツク優先課題 TOP10 × 偉業マッピングはどう描けるか、の系統的回答である。これらを同一の SQL ベースで透明に処理することを設計原則とした。</p>
+
+<p>採用した方法は四段階である。第一段階で B-3 30 問（G-prefixed）と B-4 24 問（Q-prefixed）の独立 ID 系列をブリッジするために、_TRACK_LINKAGE_MATRIX §1.1〜1.4 の推定マッピングを継承して 41 個の Q→G 対応辞書を構築した。第二段階で 463 initiatives を Q-prefixed 単位で読み込み、Q→G 変換を経て great_actions の primary_question_id（G-prefixed）にマッチする全 actions に行為連結を生成した。第三段階で initiative の stage 分布から各 action の maturity_score を算定し、第四段階で warning（4 定義 × 8 候補問い）と opportunity（戦略的空白 13 問起源 × 3 条件）のフラグを付与した。</p>
+
+<h3>1.1 マイグレーション概要</h3>
+<p>great_actions.db v0.1（C-3 確定）→ v0.2（C-4 接合層）の差分は次の通り。</p>
+
+<div class="code-block">L-01 ALTER TABLE great_actions（11 カラム追加）:
+  + c4_status_override          (TEXT)
+  + c4_b5_zone                   (TEXT)
+  + c4_initiatives_count         (INTEGER)
+  + c4_initiatives_stage_dist    (TEXT JSON)
+  + c4_top10_rank                (INTEGER)
+  + c4_warning_definitions       (TEXT JSON)
+  + c4_warning_severity          (TEXT)
+  + c4_opportunity_conditions    (TEXT JSON)
+  + c4_maturity_score            (INTEGER 0-5)
+  + c4_direction_alignment       (TEXT)
+  + c4_updated_at                (TEXT)
+  + c4_review_note               (TEXT)
+
+L-02 CREATE TABLE action_initiatives_links（多対多）:
+  - action_id          → great_actions(action_id)
+  - initiative_id      → initiatives.db
+  - bridged_question_id_b3
+  - link_strength {strong / medium / weak / speculative}
+  - link_type {direct / inverse / partial / analog}
+
+L-03 CREATE TABLE action_zone_mapping（集計）:
+  zone × scenario × archetype の三軸集計テーブル
+  warning_count / opportunity_count / happening_count 等を保持
+</div>
+
+<p>v0.1 既存データは破壊せず、c4_status_override により上書き候補をフラグ管理する設計とした。これにより C-3 リードの判定（机上判定値）と C-4 リードの判定（観測実績判定値）の双方を保持し、Phase D 以降での再評価可能性を担保している。</p>
+</section>
+
+<section class="chapter-section" id="sec2">
+<h2><span class="num">2</span>B-1→B-3 マッピング層</h2>
+<p>463 initiatives と 140 great_actions の接合における最初の構造的問題は、両者が異なる ID 系列を採用していることであった。initiatives.db は B-1 41 問体系の Q-prefixed（Q-N01〜Q-V07）で問いを保持し、一方 great_actions.db は B-3 30 問体系の G-prefixed（G-N01〜G-V05）で primary_question_id を保持していた。両者は独立に設計された問い空間であり、_TRACK_LINKAGE_MATRIX §0 凡例によれば「B-3 はB-1から規範層展開する独立系列のため、対応は1:N または N:1 を含む推定マップ」とされる。</p>
+
+<p>この間にブリッジを置かないと、463 件全件が「対応なし」となり接合が成立しない。本トラックでは _TRACK_LINKAGE_MATRIX §1.1〜1.4 の B-3 推定対応列を継承し、41 個の Q→G 変換辞書を構築した。<span class="tag tag-unv">未検証</span> このマッピングは B-3 リードの最終確定を経ていないため、Phase D 段階での再評価を要する。</p>
+
+<h3>2.1 ブリッジ統計</h3>
+<div class="code-block">L-04 マッピング統計:
+  B-1 41 問のうち、G-prefixed への明示的対応あり: 38 問
+  B-1 41 問のうち、対応なし（独自・装置盲点）: 3 問
+    - Q-N11 (過剰的中バイアス・装置盲点 → B-2補完で接続)
+    - Q-M10 (研究応答型・装置依拠)
+    - Q-N09 (G-F05 のみ単独対応)
+
+  B-3 30 問のうち、initiatives 直接対応あり: 19 問
+  B-3 30 問のうち、initiatives 対応なし（戦略的空白 13 問の主要部）: 11 問
+    G-N09 / G-M01 / G-M03 / G-M04 / G-M05 / G-M06 / G-M07 / G-F03 / G-V03 等
+</div>
+
+<p>この結果は B-5 主要発見 3「Mサイン強接続 ⇔ 装置応答薄」を独立に確証する。すなわち、戦略的空白 13 問のうち 11 問は initiatives 直接対応がゼロであり、「規範的に重要であるにもかかわらず現代社会の装置で観測不能な問い」が initiatives レベルでも構造的真空地帯として再現される。<span class="tag tag-est">推定</span></p>
+</section>
+
+<section class="chapter-section" id="sec3">
+<h2><span class="num">3</span>463 initiatives 紐付け結果</h2>
+<p>Q→G ブリッジを経由した自動紐付けの結果、463 initiatives のうち 300 件（64%）が 140 great_actions のいずれかに対し、合計 2030 件のリンクを形成した。1 つの initiative が複数の actions に紐付き、1 つの action が複数の initiatives で観測される多対多関係である。</p>
+
+<h3>3.1 紐付け統計</h3>
+<table>
+<thead><tr><th>項目</th><th>値</th><th>注記</th></tr></thead>
+<tbody>
+<tr><td>初期 initiatives</td><td>463</td><td>B-4 463 全件</td></tr>
+<tr><td>紐付け成立 initiatives（unique）</td><td>300</td><td>64% カバー</td></tr>
+<tr><td>紐付け不成立 initiatives</td><td>163</td><td>35% — Q-N11/Q-M10 等の装置盲点問い由来</td></tr>
+<tr><td>総リンク数</td><td>2030</td><td>多対多展開後</td></tr>
+<tr><td>紐付けあり great_actions</td><td>76</td><td>140 中 54%</td></tr>
+<tr><td>紐付けなし great_actions</td><td>64</td><td>140 中 45% — 期待型偉業 + 戦略的空白起源偉業の集合</td></tr>
+<tr><td>1 initiative あたり平均リンク数</td><td>6.8</td><td>1 件の動きが平均 6.8 偉業に紐付く</td></tr>
+</tbody>
+</table>
+
+<h3>3.2 ソース DB 別 initiatives 紐付け分布</h3>
+<table>
+<thead><tr><th>装置</th><th>紐付け unique 件数</th><th>割合</th></tr></thead>
+<tbody>
+<tr><td>SG</td><td>75</td><td>25.0%</td></tr><tr><td>IR</td><td>65</td><td>21.7%</td></tr><tr><td>Policy</td><td>62</td><td>20.7%</td></tr><tr><td>Funding</td><td>57</td><td>19.0%</td></tr><tr><td>SGRD</td><td>18</td><td>6.0%</td></tr><tr><td>Sangaku</td><td>13</td><td>4.3%</td></tr><tr><td>UPR</td><td>10</td><td>3.3%</td></tr>
+</tbody>
+</table>
+
+<p>SG（signal）が 75 件で最多、IR が 65 件、Policy が 62 件、Funding が 57 件と続く。これは B-4 装置別件数（SG 115 / IR 105 / Policy 102 / Funding 88）の比率を概ね保存している。<span class="tag tag-int">解釈</span> ただし SG レコードの多くは「(detected signal)」というラベルの組織名なし signal で、実装装置よりも観測装置として機能する。link_strength は SG レコードを weak、scale 段階を strong、pilot を medium、experiment を weak と判定した。</p>
+
+<h3>3.3 紐付けなし actions 64 件の構造</h3>
+<p>140 actions のうち 64 件（45.7%）は initiatives 直接対応ゼロで、これらは三類型に分類される。第一に過去偉業（GA-001〜060 の歴史的偉業）の一部は Q-prefixed 対応がない era を持つ。第二に期待型偉業（GA-111〜140）の多くは戦略的空白問い起源で initiatives 真空地帯にある。第三に self-reflexive 系列（GA-100/127/134/136 等のミラツク自己言及偉業）は組織固有のため装置観測対象外である。</p>
+</section>
+
+<section class="chapter-section" id="sec4">
+<h2><span class="num">4</span>zone × scenario 分布</h2>
+<p>140 actions を c4_b5_zone（Hot/Warm/Cool/N/A）と scenario_id（Care/Techno/Pluriverse/Slow Right/Fragmentation/cross/self-reflexive）の二軸でクロス集計した。</p>
+
+<table>
+<thead><tr><th>zone</th><th>scenario</th><th>件数</th></tr></thead>
+<tbody>
+<tr><td>Cool</td><td>Pluriverse</td><td>37</td></tr><tr><td>Cool</td><td>Care</td><td>4</td></tr><tr><td>Cool</td><td>Techno</td><td>2</td></tr><tr><td>Hot</td><td>Care</td><td>13</td></tr><tr><td>Hot</td><td>Slow Right</td><td>1</td></tr><tr><td>Hot</td><td>Pluriverse</td><td>1</td></tr><tr><td>N/A</td><td>Care</td><td>36</td></tr><tr><td>N/A</td><td>Slow Right</td><td>13</td></tr><tr><td>N/A</td><td>Techno</td><td>8</td></tr><tr><td>N/A</td><td>self-reflexive</td><td>5</td></tr><tr><td>N/A</td><td>cross</td><td>1</td></tr><tr><td>N/A</td><td>Pluriverse</td><td>1</td></tr><tr><td>N/A</td><td>Fragmentation</td><td>1</td></tr><tr><td>Warm</td><td>Care</td><td>13</td></tr><tr><td>Warm</td><td>Pluriverse</td><td>3</td></tr><tr><td>Warm</td><td>Slow Right</td><td>1</td></tr>
+</tbody>
+</table>
+
+<p>主要観察は四点ある。第一に Hot zone 15 件のうち 13 件（86.7%）が Care シナリオで、B-5 主要発見「Hot 4 問すべてが Care シナリオ」を偉業レベルでも追認する。第二に Cool zone 43 件のうち 37 件（86.0%）が Pluriverse シナリオで、Pluriverse シナリオが Cool zone（動き薄・規範厚）に集中することを示す。第三に N/A zone 65 件は Care 36 + Slow Right 13 + Techno 8 + self-reflexive 5 と最も多様で、N/A は単一シナリオではなく「装置観測対象外の異質な集合」であることが構造的に明らかとなった。第四に Warm zone 17 件は Care 13 + Pluriverse 3 + Slow Right 1 で、Care シナリオが Hot だけでなく Warm にも拡張する一方、Pluriverse は Warm にもわずかに進出していることが分かる。<span class="tag tag-est">推定</span></p>
+</section>
+
+<section class="chapter-section" id="sec5">
+<h2><span class="num">5</span>zone × archetype 分布</h2>
+<p>同様に c4_b5_zone × archetype（PST 10 アーキタイプ）でクロス集計した。</p>
+
+<table>
+<thead><tr><th>zone</th><th>archetype</th><th>件数</th></tr></thead>
+<tbody>
+<tr><td>Cool</td><td>arch_mediator</td><td>18</td></tr><tr><td>Cool</td><td>arch_introvert_thinker</td><td>8</td></tr><tr><td>Cool</td><td>arch_explorer</td><td>6</td></tr><tr><td>Cool</td><td>arch_warrior</td><td>3</td></tr><tr><td>Cool</td><td>arch_caregiver</td><td>3</td></tr><tr><td>Cool</td><td>arch_social_creator</td><td>2</td></tr><tr><td>Cool</td><td>arch_creator</td><td>2</td></tr><tr><td>Cool</td><td>arch_steady</td><td>1</td></tr><tr><td>Hot</td><td>arch_caregiver</td><td>8</td></tr><tr><td>Hot</td><td>arch_introvert_thinker</td><td>3</td></tr><tr><td>Hot</td><td>arch_social_creator</td><td>1</td></tr><tr><td>Hot</td><td>arch_leader</td><td>1</td></tr><tr><td>Hot</td><td>arch_explorer</td><td>1</td></tr><tr><td>Hot</td><td>arch_creator</td><td>1</td></tr><tr><td>N/A</td><td>arch_mediator</td><td>21</td></tr><tr><td>N/A</td><td>arch_creator</td><td>14</td></tr><tr><td>N/A</td><td>arch_steady</td><td>12</td></tr><tr><td>N/A</td><td>arch_introvert_thinker</td><td>12</td></tr><tr><td>N/A</td><td>arch_caregiver</td><td>4</td></tr><tr><td>N/A</td><td>arch_warrior</td><td>1</td></tr>
+</tbody>
+</table>
+
+<p>事前リサーチ §6.3 で提示した archetype × zone 仮説（Hot=Caregiver+Steady / Cool=Mediator+Introvert Thinker）は概ね支持された。Hot zone 15 件のうち arch_caregiver が 8 件（53.3%）で最多、Cool zone 43 件のうち arch_mediator が 18 件（41.9%）+ arch_introvert_thinker 8 件（18.6%）で過半数を占める。これは C-3 の主要発見 1（Mediator + Introvert Thinker = 47.9% の構造的優位）と整合する。<span class="tag tag-est">推定</span></p>
+
+<p>同時に、N/A zone（戦略的空白等の装置観測対象外）でも arch_mediator が 21 件（32.3%）で最多であり、戦略的空白偉業の担い手も Mediator 中心であることが分かる。これは C-5 担い手特性 Track への重要な引き継ぎとなる：<strong>戦略的空白の埋め手は古典的英雄像（Warrior/Leader）ではなく、Mediator + Introvert Thinker + Caregiver の非英雄型に集中する</strong>。<span class="tag tag-int">解釈</span></p>
+</section>
+
+<section class="chapter-section" id="sec6">
+<h2><span class="num">6</span>maturity_score 算定結果</h2>
+<p>c4_maturity_score（0-5 値）の算定アルゴリズムは次の通り。</p>
+
+<div class="code-block">L-05 maturity_score 算定アルゴリズム:
+  initiatives = 0 件:
+    - speculative   → 0
+    - expected      → 1
+    - emerging      → 2
+    - happening     → 1（格下げ候補）
+  initiatives ≥ 1 件:
+    - scale 比率 ≥ 30%             → 5（happening_scale）
+    - pilot 比率 ≥ 50% or (P+S)/T ≥ 40% → 4（happening_pilot）
+    - 5 件以上                     → 3（happening_experiment）
+    - 1 件以上                     → 2（emerging）
+</div>
+
+<table>
+<thead><tr><th>maturity_score</th><th>件数</th><th>意味</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>4</td><td>speculative — 仮説段階</td></tr>
+<tr><td>1</td><td>58</td><td>expected — 期待だが装置応答ゼロ</td></tr>
+<tr><td>2</td><td>2</td><td>emerging — 一部装置応答（弱）</td></tr>
+<tr><td>3</td><td>50</td><td>happening_experiment — 5+ 件・実験段階偏重</td></tr>
+<tr><td>4</td><td>26</td><td>happening_pilot — 試行段階比率高</td></tr>
+<tr><td>5</td><td>0</td><td>happening_scale — 拡大段階比率高</td></tr>
+</tbody>
+</table>
+
+<p>140 件中 maturity_score 5（happening_scale）はゼロ件、maturity 4（happening_pilot）が 26 件、maturity 3（experiment）が 50 件で、合計 76 件（54.3%）が actually-happening 状態と算定された。一方 maturity 0-1 が 62 件（44.3%）で、これは「動きが装置観測上は見えない期待型または speculative 偉業」の集合となる。<span class="tag tag-est">推定</span></p>
+
+<p>注目すべきは maturity_score 5 がゼロ件である事実である。これは現代の偉業の中で「scale 段階に明確に到達しているもの」が、本トラックの判定基準（initiatives の scale 比率 30% 以上）では存在しないことを意味する。<strong>「現代の偉業は依然として実験・試行段階に留まっている」という構造的事実</strong>が定量的に確認された。<span class="tag tag-int">解釈</span></p>
+</section>
+
+<section class="chapter-section" id="sec7">
+<h2><span class="num">7</span>TOP10 × 偉業 再評価</h2>
+<p>B-6 ミラツク優先課題 TOP10 × great_actions.db のマッピングを c4_top10_rank フィールドで保持した。</p>
+
+<table>
+<thead><tr><th>順位</th><th>問い</th><th>偉業件数</th><th>平均 maturity</th><th>総 init 件数</th><th>解釈</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>G-M04</td><td>15</td><td>1.0</td><td>0</td><td>opportunity 集中</td></tr><tr><td>2</td><td>G-N09</td><td>14</td><td>1.0</td><td>0</td><td>opportunity 集中</td></tr><tr><td>3</td><td>G-M01</td><td>11</td><td>3.0</td><td>220</td><td>happening 進行中</td></tr><tr><td>4</td><td>G-N12</td><td>4</td><td>3.0</td><td>300</td><td>happening 進行中</td></tr><tr><td>5</td><td>G-N10</td><td>6</td><td>4.0</td><td>174</td><td>happening 進行中</td></tr><tr><td>6</td><td>G-N11</td><td>3</td><td>4.0</td><td>87</td><td>happening 進行中</td></tr><tr><td>7</td><td>G-M02</td><td>2</td><td>3.0</td><td>66</td><td>happening 進行中</td></tr><tr><td>8</td><td>G-N07</td><td>13</td><td>3.0</td><td>91</td><td>happening 進行中</td></tr><tr><td>9</td><td>G-V03</td><td>6</td><td>0.67</td><td>0</td><td>opportunity 集中</td></tr><tr><td>10</td><td>G-F02</td><td>4</td><td>3.0</td><td>84</td><td>happening 進行中</td></tr>
+</tbody>
+</table>
+
+<p>TOP10 の構造的二極化が明瞭である。1 位 G-M04（世代間正義）と 2 位 G-N09（先住民知識主権）は平均 maturity 1.0、9 位 G-V03（自己言及メタ）は 0.67 で、これらはすべて opportunity 集中領域である。一方 5 位 G-N10（ケア時間市場化）と 6 位 G-N11（マルチステークホルダー）は maturity 4.0、3-4 位 G-M01/G-N12 は maturity 3.0 で、これらは happening 進行中領域である。</p>
+
+<p>事前リサーチ §2.1 で予想した「TOP10 のうち 4 問（G-N10/N11/N12/M02）が Care シナリオ Hot zone に集中、残り 6 問は emerging/expected/speculative」という構造は実データで概ね支持された。ただし注目すべき逆転が一点ある：<strong>3 位 G-M01（GDP 代替ケア指標）は事前リサーチでは expected と仮定されたが、実データでは maturity 3.0 の happening 状態に格上げされた</strong>。これは Q-M09（物語転換期 mid）が G-M01/G-M03 にマップされたことで、20 件の initiatives が紐付けられた構造的副作用である。<span class="tag tag-int">解釈</span> Q-M09→G-M01 のブリッジは推定マッピングであり、Phase D 段階で再評価を要する。</p>
+</section>
+
+<section class="chapter-section" id="sec8">
+<h2><span class="num">8</span>warning 候補生成ログ</h2>
+<p>warning 偉業の判定は事前リサーチ §3.1 が提示した 4 定義（A: experiment 偏重 / B: wisdom 接続薄での過剰実装 / C: Mサイン階層との不整合 / D: グリーンウォッシング型）と、§3.3 の三視点検証プロトコル（規範視点・実装視点・歴史視点）を併用した。</p>
+
+<h3>8.1 warning 候補問いの最終リスト</h3>
+<table>
+<thead><tr><th>問い</th><th>主題</th><th>適用定義</th><th>該当偉業数</th></tr></thead>
+<tbody>
+<tr><td>G-N01</td><td>AI ガバナンス空白</td><td>A, B</td><td>0</td></tr>
+<tr><td>G-N02</td><td>AI 規制</td><td>C</td><td>0</td></tr>
+<tr><td>G-N03</td><td>第三項物語</td><td>C</td><td>0</td></tr>
+<tr><td>G-N04</td><td>場所性回帰の制度化</td><td>A, D</td><td>13</td></tr>
+<tr><td>G-N05</td><td>民主主義刷新</td><td>D</td><td>0</td></tr>
+<tr><td>G-N06</td><td>気候災害適応</td><td>A, C</td><td>0</td></tr>
+<tr><td>G-N12</td><td>ケア経済の組織化</td><td>A, C</td><td>4</td></tr>
+<tr><td>G-F05</td><td>多元的人格</td><td>A</td><td>0</td></tr>
+</tbody>
+</table>
+
+<h3>8.2 warning severity 配分</h3>
+<p>severity は zone に基づき算定した。Hot zone は critical、Warm zone は high、Cool/N/A zone は medium となる。最終結果は critical 4 件（すべて G-N12 = ケア経済の組織化）+ high 13 件（主に G-N04 場所性回帰）= 合計 17 件であった。</p>
+
+<p>事前リサーチ §3.4 仮目標 10-15 件と比較すると、17 件はやや上回るが、(1) G-N04 の場所性回帰は 13 偉業すべてが warning 化したこと、(2) G-N12 のケア経済の組織化が Hot zone 内に critical warning として登場したことの両方を保持するため、本値は維持する判定とした。<span class="tag tag-int">解釈</span></p>
+</section>
+
+<section class="chapter-section" id="sec9">
+<h2><span class="num">9</span>opportunity 候補生成ログ</h2>
+<p>opportunity 偉業の判定は事前リサーチ §4.1 が提示した 3 条件（条件 1: 戦略的空白 13 問または initiatives 5 件未満起源 / 条件 2: B-2 wisdom 接続厚 / 条件 3: critical juncture 接続）を併用した。</p>
+
+<h3>9.1 opportunity 該当問い別件数</h3>
+<table>
+<thead><tr><th>問い</th><th>主題</th><th>opportunity 件数</th></tr></thead>
+<tbody>
+<tr><td>G-M04</td><td>—</td><td>15</td></tr><tr><td>G-N09</td><td>—</td><td>14</td></tr><tr><td>G-V03</td><td>—</td><td>6</td></tr><tr><td>G-M07</td><td>—</td><td>5</td></tr><tr><td>G-M05</td><td>—</td><td>4</td></tr><tr><td>G-F03</td><td>—</td><td>3</td></tr><tr><td>G-M06</td><td>—</td><td>3</td></tr>
+</tbody>
+</table>
+
+<p>合計 50 件は事前リサーチ §4.4 仮目標 30-40 件をやや上回る。最大は G-M04（世代間正義）15 件 + G-N09（先住民知識主権）14 件で、両者で 29 件と opportunity 全体の 58.0% を占める。これは B-6 TOP10 の 1 位・2 位がそのまま opportunity 集中領域であることを示し、ミラツク戦略の中長期投資領域がこの二問題に強く重み付けされることが構造的に確認された。<span class="tag tag-est">推定</span></p>
+
+<h3>9.2 warning vs opportunity 比率</h3>
+<div class="code-block">最終比率: warning 17 件 vs opportunity 50 件
+  比率 17:50 ≒ 1:2.94
+  事前リサーチ仮目標比率 1:3 と概ね整合
+  ミラツク独自の楽観的構造観（未開拓領域 > 方向違い領域）を支持
+</div>
+
+<p>「ミラツクは方向違い偉業よりも未開拓領域に注目する楽観的構造観」という事前リサーチ §4.4 の仮説は、実データ駆動の判定でも 1:2.94 の比率で支持された。<span class="tag tag-int">解釈</span> ただしこの比率は warning 候補問いの選定（8 問）と warning 閾値（initiatives ≥ 3）に依存しており、別の閾値では別の比率となり得る。</p>
+</section>
+
+<section class="chapter-section" id="sec10">
+<h2><span class="num">10</span>主要発見 3 点</h2>
+
+<h3>10.1 主要発見 1: 戦略的空白 13 問 = initiatives 真空地帯の二重定義確証</h3>
+<p>B-3 30 問のうち 11 問が initiatives 直接対応ゼロ件で、戦略的空白の概念が「装置応答薄（B-5 zone 弁別）」と「initiatives 件数ゼロ（B-4 派生）」の両方で構造的に支持された。great_actions レベルでも、戦略的空白起源偉業（G-M04 / G-N09 / G-V03 等）は平均 maturity 1.0 以下の opportunity 集中領域であり、Phase B の zone 弁別と Phase C の偉業構造が一貫した姿で再現される。</p>
+
+<h3>10.2 主要発見 2: maturity_score 5（happening_scale）ゼロ件 ― 「現代の偉業は依然として実験・試行段階」</h3>
+<p>140 actions のうち maturity_score 5 はゼロ件、maturity 4 が 26 件（18.6%）、maturity 3 が 50 件（35.7%）で、合計 76 件（54.3%）が actually-happening だが scale 段階到達はゼロ件である。これは現代の偉業 happening 群の半数以上が「実験・試行段階に留まる」構造的事実を示し、ミラツクの介入余地が「scale 段階への移行支援」に向けて広く開かれていることを意味する。<span class="tag tag-est">推定</span></p>
+
+<h3>10.3 主要発見 3: warning vs opportunity = 17:50（1:2.94）― 楽観的構造観の数量的支持</h3>
+<p>「動きはあるが方向違い」warning 17 件 vs「動きはないが期待される」opportunity 50 件の比率 1:2.94 は、事前リサーチ仮目標 1:3 と概ね整合した。これは「ミラツクは方向違い偉業よりも未開拓領域に注目する楽観的構造観」を実データで支持する。同時に critical warning 4 件すべてが G-N12（ケア経済の組織化）= Hot zone に集中することは、「最も実装が進んでいる領域こそ critical な方向違いリスクを抱える」非対称性を可視化する。<span class="tag tag-int">解釈</span></p>
+</section>
+
+</main>
+</div>
+<script>
+const t = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', t);
+document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+});
+</script>
+</body>
+</html>

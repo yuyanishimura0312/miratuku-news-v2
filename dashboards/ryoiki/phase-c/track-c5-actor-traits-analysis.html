@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-5 解析 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono","Fira Code",monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 28px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type, .lead, .figure-caption, td p, th p { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.55; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; background: var(--surface); padding: 16px 20px; margin: 24px 0; line-height: 1.5; overflow-x: auto; border: 1px solid var(--border-light); white-space: pre; }
+.figure { margin: 40px 0; padding: 24px; border: 1px solid var(--border-light); background: var(--card); }
+.figure-title { font-family: var(--font); font-size: 0.85rem; font-weight: 700; color: var(--accent-warm); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+.figure-caption { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); margin-top: 14px; line-height: 1.6; }
+.tag-est, .tag-int, .tag-unv { display: inline-block; font-family: var(--font); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; margin: 0 3px; }
+.tag-est { background: rgba(110,44,44,0.12); color: #6E2C2C; }
+.tag-int { background: rgba(204,20,0,0.10); color: #B01200; }
+.tag-unv { background: rgba(107,107,107,0.15); color: #555555; }
+[data-theme="dark"] .tag-est { background: rgba(160,80,80,0.20); color: #C8A0A0; }
+[data-theme="dark"] .tag-int { background: rgba(255,64,48,0.18); color: #FF8070; }
+[data-theme="dark"] .tag-unv { background: rgba(170,170,170,0.18); color: #BBBBBB; }
+.discovery-box { border: 1px solid var(--accent-warm); background: var(--accent-muted); padding: 20px 24px; margin: 28px 0; }
+.discovery-box .discovery-num { font-family: var(--font); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent-warm); margin-bottom: 4px; text-transform: uppercase; }
+.discovery-box .discovery-title { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Phase C-5 解析</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button id="theme-toggle" class="theme-toggle">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<aside class="toc-sidebar">
+<div class="toc-label">解析 目次</div>
+<ul class="toc-list">
+<li><a href="#ca1"><span class="toc-num">01</span>解析の前提と4軸構造</a></li>
+<li><a href="#ca2"><span class="toc-num">02</span>軸1 心理 ― 19能力次元の中核選定</a></li>
+<li><a href="#ca3"><span class="toc-num">03</span>軸2 行動 ― 10アーキタイプ + 翻訳者型</a></li>
+<li><a href="#ca4"><span class="toc-num">04</span>軸3 領域 ― CTL-1 6軸の担い手配分</a></li>
+<li><a href="#ca5"><span class="toc-num">05</span>軸4 専門 ― 学術5領域・業種・地域</a></li>
+<li><a href="#ca6"><span class="toc-num">06</span>第5類型「翻訳者型」の必然性検証</a></li>
+<li><a href="#ca7"><span class="toc-num">07</span>担い手特性の6時代変化軌道</a></li>
+<li><a href="#ca8"><span class="toc-num">08</span>DB集計ログ L-01〜L-12</a></li>
+</ul>
+</aside>
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">PHASE C</span>
+<span class="db-tag">TRACK C-5</span>
+<span class="db-tag">ANALYSIS</span>
+<span class="db-tag">era_talents.db</span>
+<span class="db-tag">great_actions.db v0.1</span>
+<span class="db-tag">PST DB</span>
+<span class="db-tag">JPMS DB v2</span>
+</div>
+<h1 class="book-title">求められる人物の特性 ― 4軸構造化解析</h1>
+<p class="book-subtitle">心理19次元 × 行動10アーキタイプ × 領域CTL-1 6軸 × 専門 学術5領域/業種/地域 で、現代から2100年までの担い手特性を構造化し、第5類型「翻訳者型」の必然性をDB実値から検証する Phase C 第五トラックの解析編</p>
+<div class="book-meta">
+<span>作成: 2026-05-09</span>
+<span>主軸DB: era_talents.db / great_actions.db v0.1 / PST DB / JPMS DB v2</span>
+<span>解析対象: 偉業140件 × 担い手292能力リンク</span>
+</div>
+</header>
+
+<section id="ca1" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">解析の前提と4軸構造</h2>
+<p class="lead">Phase C-5 は、C-3 が構造化した「現代に求められる偉業」140件の担い手を、心理・行動・領域・専門の四軸で記述する。この四軸は単独の人物像を写すための解像度ではなく、ミラツクが「誰を見出し、誰を育てるか」を判断するための診断格子である。</p>
+<p>本トラックの解析対象は、great_actions.db v0.1 に投入された偉業140件、そこに紐づく action_capability_links 292件、PST DB の persona_archetypes 10種、era_talents.db の capability_dimensions 19次元と6時代の活躍記録、JPMS DB v2 の人格-学校-活躍経路スキーマ、そして Phase B が確定した CTL-1 6軸である。これらは別々の DB として独立して育ってきたが、Phase C-5 はそれらを「担い手プロファイル」という単一の解像度で重ね合わせる初の試みとなる。</p>
+<p>四軸を確定するうえで重要なのは、軸どうしの順序ではなく相互規定の構造を可視化することである。心理が行動を生み、行動が領域を選び、領域が専門を要請するという順方向の因果は確かに観察できるが、同時に「専門が培養される教育環境（学校）が心理を形成する」という JPMS の逆向き因果も並存する。本解析では、この双方向の因果を JPMS の MLM・SEM・IRT・LCA・GCM の5数理モデルで仮説的に支える設計をとる。</p>
+
+<h3>1.1 三系列差のスナップショット</h3>
+<p>本解析が一次値として採用する数値は、2026-05-09 時点の DB 実値である。Phase A 継承監査で確定した source-of-truth に従い、era_talents.db の人物数12,958件・能力スコア31,436件・future_demands 590件、great-figures.db の persons 9,178件、PST DB の persona_archetypes 10件、JPMS DB v2 の schools_v2 832件・testimonials_v2 58,224件を一次値とする。great_actions.db v0.1 の140件は C-3 ハンドオフ確定値で、内訳は過去偉業60件・現代登場中50件・期待される未来30件である。</p>
+
+<table>
+<thead><tr><th>系列</th><th>era_talents人物</th><th>great_actions偉業</th><th>PSTアーキ</th><th>JPMS校</th><th>取得日時</th></tr></thead>
+<tbody>
+<tr><td>ブリーフィング値</td><td>12,958</td><td>140</td><td>10</td><td>832</td><td>事前リサーチ 2026-05-09</td></tr>
+<tr><td>公開値</td><td>12,958</td><td>未公開</td><td>10</td><td>832</td><td>era-talents-db textbook.html</td></tr>
+<tr><td>DB実値（採用）</td><td>12,958</td><td>140</td><td>10</td><td>832</td><td>2026-05-09 19:22</td></tr>
+</tbody>
+</table>
+
+<p>三系列の差は今回のところ無く、ブリーフィング・公開・DB の値が一致している。great_actions.db v0.1 のみ未公開で、本トラックが Phase C-3 ハンドオフ140件をそのまま参照する。【解釈】数値の単一性は、Phase A から C にかけての継承監査が機能していることの傍証である。</p>
+
+<h3>1.2 四軸構造の概観</h3>
+<p>事前リサーチで暫定提示された四軸構造は以下の通り。本解析では、この構造を保ちつつ、第5類型「翻訳者型」を C-3 capability_links および TOP10 マッピングから検証する。</p>
+
+<div class="figure">
+<div class="figure-title">図 0: Phase C-5 の四軸構造</div>
+<pre>
+[心理 19能力次元]  ──── era_talents.db / 中核5+準中核2を選定
+        ↓ (能力が行動を駆動)
+[行動 10+1アーキタイプ] ── PST DB / 第5類型「翻訳者型」を追加検証
+        ↓ (行動が領域を選択)
+[領域 CTL-1 6軸] ──── Phase B B-1 / V/S/T/Eco/Env/G
+        ↓ (領域が専門を要請)
+[専門 学術5×業種×地域] ── JPMS DB v2 / career_archetype 33・地域分布
+        ↑ (教育環境が心理を培養 — 逆向き因果)
+└──────────────────────────────────────────────┘
+</pre>
+<div class="figure-caption">心理→行動→領域→専門の順方向因果と、専門（教育環境）→心理の逆向き因果が並存する相互規定モデル。JPMS 5数理モデル（MLM/SEM/IRT/LCA/GCM）が双方向の検証手段となる。</div>
+</div>
+
+<p>四軸はそれぞれ別 DB から採取される。本章以降では各軸を順に分解し、第6章で第5類型の必然性、第7章で6時代変化軌道、第8章で DB 集計ログを示す。</p>
+</section>
+
+<section id="ca2" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">軸1 心理 ― 19能力次元の中核選定</h2>
+<p class="lead">era-talents の19能力次元のうち、ミラツク優先 TOP10 と C-3 偉業140件で実測重要度が突出する 5+2 次元を中核として確定する。「優れた偉業者は時代を問わずシステム思考者である」という6時代を貫く普遍性が、本選定の規範軸となる。</p>
+
+<h3>2.1 19次元の現代的妥当性</h3>
+<p>era_talents.db の capability_dimensions 19次元は、OECD Future of Education and Skills 2030・WEF Future of Jobs 2025・PISA・Csikszentmihalyi 創造性論を統合した枠組みである。事前リサーチが示した6時代別平均スコアでは、cog_systems が明治7.43→令和7.35の狭幅で高位安定し、val_collective が明治6.74→平成3.32の急減を見せ、cog_ai_collab が平成3.40→令和8.91の指数的上昇を示す。これらの時代軌道は、Phase B B-1「3パラダイム同時失効」と Phase A Track 8 の AI 加速エビデンスと整合する。</p>
+
+<h3>2.2 中核5次元 + 準中核2次元の選定</h3>
+<p>事前リサーチは中核5次元に cog_systems・age_oecd_transformative・age_social_change・soc_interpersonal・cre_cross_domain を、準中核2次元に val_eco・cog_ai_collab を推奨した。本解析はこの推奨を C-3 great_actions.db の capability_links 292件・TOP10偉業の登場頻度・future_demands 590件の時代別ランキングの3視点から検証する。</p>
+
+<div class="figure">
+<div class="figure-title">図 1: 中核5次元 + 準中核2次元の三視点検証</div>
+<table>
+<thead><tr><th>次元</th><th>TOP10偉業登場（10問中）</th><th>future_demands 2030重要度</th><th>6時代軌道</th><th>採用区分</th></tr></thead>
+<tbody>
+<tr><td>cog_systems</td><td>8回</td><td>4位（23件）</td><td>7.15-7.81 高位安定</td><td>中核</td></tr>
+<tr><td>age_oecd_transformative</td><td>4回</td><td>派生概念で多数</td><td>令和上昇</td><td>中核</td></tr>
+<tr><td>age_social_change</td><td>3回</td><td>5位帯</td><td>大正8.48・令和8.26</td><td>中核</td></tr>
+<tr><td>soc_interpersonal</td><td>4回</td><td>3位（23件）</td><td>横ばい7.0前後</td><td>中核</td></tr>
+<tr><td>cre_cross_domain</td><td>5回</td><td>派生で多数</td><td>高位安定7.3-8.1</td><td>中核</td></tr>
+<tr><td>val_eco</td><td>2回</td><td>2050:1位（20件）</td><td>U字回復→令和7.76</td><td>準中核</td></tr>
+<tr><td>cog_ai_collab</td><td>1回</td><td>2位（24件）</td><td>3.40→8.91 急上昇</td><td>準中核</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">三視点ともに7次元の妥当性を支持。cog_systems が10問中8問で必要となる事実は、「優れた偉業者は必ずシステム思考者」という時代普遍的命題を支える。</div>
+</div>
+
+<p>great_actions.db の capability_links 292件は ET 19次元と完全には対応しておらず、val_pluralism・val_justice・cog_synthesis・cog_systems・soc_empathy・cog_strategic・val_patience・val_pragmatism・cog_languages の9軸で運用されている。これは C-3 投入時の独自分類で、ET 19次元の含意を要約した派生軸とみなすのが妥当である【解釈】。本解析では C-3 9軸を ET 19次元の中核に翻訳し、cog_systems → cog_systems、cog_synthesis → cre_cross_domain、val_pluralism → val_tolerance + cre_cross_domain、val_justice → age_oecd_transformative + age_social_change、soc_empathy → soc_interpersonal、val_patience → age_resilience + age_meta_learning という対応で扱う（集計L-01）。</p>
+
+<h3>2.3 19次元の偉業適用における主観性</h3>
+<p>19次元を個別の偉業に適用するとき、判定の主観性は避けられない。例えば「世代間正義の憲法化（GA-001）」に cog_systems を割当てる根拠は「複数世代を貫く因果連鎖を法制度設計に反映する必要がある」という解釈であり、これは別の解釈（age_oecd_transformative の方が直接対応）と排他的でない。本解析では【解釈】タグを徹底し、複数次元の重ね当てを許容する。Phase D で逆向きの自動推定（capability score → archetype）を試行することで、判定の堅牢性を後検する設計とする。</p>
+
+<h3>2.4 19次元の限界 ― 2100年の未来固有概念63件</h3>
+<p>era_talents の future_demands 2100年125件のうち63件は、19次元では捕捉できない未来固有概念である。xeno-ethics・virtual_ecosystem_inhabitation・transhuman_identity・zero_waste_circular_economy 等が代表例で、これらは21世紀末に独立した次元として立ち上がる可能性を示唆する【推定】。本解析は19次元を主軸としつつ、20-25次元への拡張余地を C-7 公開後の課題として明示する。</p>
+</section>
+
+<section id="ca3" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">軸2 行動 ― 10アーキタイプ + 翻訳者型</h2>
+<p class="lead">PST DB の10意思決定アーキタイプを基盤とし、第5類型として「翻訳者型（arch_translator）」を追加する。great_actions.db 140件と TOP10 偉業の実測分布が、この11型構造の必然性を支える。</p>
+
+<h3>3.1 great_actions.db 140件のアーキタイプ分布</h3>
+<p>C-3 が投入した140件の archetype 分布は、Mediator 39件（27.9%）・Introvert Thinker 28件（20.0%）・Creator 23件（16.4%）・Steady 17件（12.1%）・Caregiver 16件（11.4%）・Explorer 8件（5.7%）・Warrior 4件（2.9%）・Social Creator 3件（2.1%）・Leader 2件（1.4%）・Craftsman 0件（0.0%）である（集計L-02）。Mediator + Introvert Thinker = 67件（47.9%）で、古典的英雄像 Warrior + Leader = 6件（4.3%）の約11倍の比重となる。</p>
+
+<div class="figure">
+<div class="figure-title">図 2: PST 10アーキタイプの過剰要求度（C-3 140件 ÷ PST 人口比）</div>
+<table>
+<thead><tr><th>アーキタイプ</th><th>PST人口比</th><th>C-3出現比</th><th>過剰要求度</th><th>解釈</th></tr></thead>
+<tbody>
+<tr><td>arch_mediator</td><td>6%</td><td>27.9%</td><td>4.65x</td><td>調停型の極端な不足</td></tr>
+<tr><td>arch_introvert_thinker</td><td>9%</td><td>20.0%</td><td>2.22x</td><td>思索型の不足</td></tr>
+<tr><td>arch_creator</td><td>8%</td><td>16.4%</td><td>2.05x</td><td>創造型の不足</td></tr>
+<tr><td>arch_caregiver</td><td>15%</td><td>11.4%</td><td>0.76x</td><td>需給ほぼ均衡</td></tr>
+<tr><td>arch_steady</td><td>15%</td><td>12.1%</td><td>0.81x</td><td>需給ほぼ均衡</td></tr>
+<tr><td>arch_explorer</td><td>12%</td><td>5.7%</td><td>0.48x</td><td>余剰</td></tr>
+<tr><td>arch_warrior</td><td>7%</td><td>2.9%</td><td>0.41x</td><td>余剰（突破型退場）</td></tr>
+<tr><td>arch_leader</td><td>10%</td><td>1.4%</td><td>0.14x</td><td>余剰（古典的リーダー退場）</td></tr>
+<tr><td>arch_craftsman</td><td>12%</td><td>0.0%</td><td>0.00x</td><td>構造的空白</td></tr>
+<tr><td>arch_social_creator</td><td>6%</td><td>2.1%</td><td>0.36x</td><td>余剰</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">過剰要求度1.0倍を境に、上位3型（Mediator・Introvert Thinker・Creator）が現代の偉業の主担い手となり、下位4型（Warrior・Leader・Craftsman・Social Creator）が古典的英雄像の退場を示す。事前リサーチ §8 の予測（Mediator 2.16倍）よりも実測の格差はさらに大きく、4.65倍に達する。</div>
+</div>
+
+<h3>3.2 アーキタイプ × Mサイン接続の交差</h3>
+<p>great_actions.db を archetype × msign_connection で交差すると、Mediator の真Mサイン接続が17件（Mediator 全39件の43.6%）と最も多く、Introvert Thinker の self-reflexive シナリオへの集中（5件のうち5件）が際立つ（集計L-03）。これは Mediator が Phase A 真Mサイン物語転換期の最も強い担い手であり、Introvert Thinker が自己言及メタ問い G-V03 の専属型として機能していることを示す【解釈】。</p>
+
+<h3>3.3 アーキタイプ × ホライズンの交差</h3>
+<p>archetype × scope_horizon の交差では、Mediator が near 29件・mid 4件・far 5件・very-far 1件と幅広く分布し、Introvert Thinker が near 20件・mid 5件・far 1件・very-far 2件と長期にも残る（集計L-04）。一方 Caregiver は near 14件 + mid 2件で長期がほぼ無く、Steady も near 13件中心である。これは「翻訳・思索型は長期問いの担い手として有効、ケア・堅実型は近期実装の担い手」という時代分業を示唆する【解釈】。</p>
+
+<h3>3.4 PST DB の Big Five 閾値とホランドコード</h3>
+<p>PST DB の persona_archetypes は Big Five 5因子（O開放性・C誠実性・E外向性・A協調性・N神経症傾向）の閾値とホランド職業興味コード（R/I/A/S/E/C）で運用される。Mediator は A&gt;75・O&gt;65 / S・E、Introvert Thinker は E&lt;40・O&gt;70・N&gt;55 / I・A の閾値を持つ。これは識別段階での若年期スクリーニング基準として活用可能で、JPMS DB の testimonial 58,224件の自然言語ログから IRT で項目反応抽出すれば候補の同定が可能となる【推定】。</p>
+
+<h3>3.5 第5類型「翻訳者型」の登場</h3>
+<p>C-3 140件で arch_translator は明示的に投入されていないが、Mediator + Introvert Thinker + Creator の三型交差として暗黙的に存在する。具体的には G-N09 先住民知識主権・G-N12 三項リテラシー教育・G-N07/N08 非西洋認識論・G-V03 自己言及メタ問い・G-F02 三項経済比率設計の5問で、Mediator のうちの一部・Introvert Thinker のうちの一部・Creator のうちの一部が「翻訳機能」を担っている【解釈】。第6章で本類型の必然性を独立に検証する。</p>
+</section>
+
+<section id="ca4" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">軸3 領域 ― CTL-1 6軸の担い手配分</h2>
+<p class="lead">CTL-1 6軸（V/S/T/Eco/Env/G）に対する担い手配分は、CTL-V（価値観）に集中する非対称構造を示す。CTL-S（社会）の構造的空白も含めて、ミラツクが介入すべき領域の優先順位を決定づける。</p>
+
+<h3>4.1 CTL-1 × アーキタイプの交差</h3>
+<p>great_actions.db 140件を scope_ctl × archetype で交差すると、CTL-V 69件のうち Introvert Thinker 21件・Mediator 18件・Caregiver 12件・Explorer 5件・Steady 5件・Creator 4件・Social Creator 2件・Warrior 2件で、価値観領域に内省的調停型が集中する（集計L-05）。CTL-G 24件は Mediator 13件・Steady 5件が中心で、ガバナンスは調停・継続型の領域である。CTL-Eco 26件は Creator 13件・Steady 5件・Caregiver 2件・Mediator 1件・Leader 2件・Introvert Thinker 2件・Social Creator 1件で、新経済モデル設計に Creator + Steady のペアが効くという構造を示す。</p>
+
+<div class="figure">
+<div class="figure-title">図 3: CTL-1 6軸 × 主担い手アーキタイプ（C-3 140件実測）</div>
+<table>
+<thead><tr><th>CTL-1</th><th>件数</th><th>主担い手3型</th><th>件数集中度</th></tr></thead>
+<tbody>
+<tr><td>CTL-V 価値観</td><td>69</td><td>Introvert Thinker 21 / Mediator 18 / Caregiver 12</td><td>74%</td></tr>
+<tr><td>CTL-Eco 経済</td><td>26</td><td>Creator 13 / Steady 5 / Mediator 1+2(Leader)</td><td>77%</td></tr>
+<tr><td>CTL-G ガバナンス</td><td>24</td><td>Mediator 13 / Steady 5 / Introvert Thinker 3</td><td>88%</td></tr>
+<tr><td>CTL-T 技術</td><td>12</td><td>Creator 3 / Mediator 3 / Explorer 2 / IT 2</td><td>83%</td></tr>
+<tr><td>CTL-Env 環境</td><td>9</td><td>Mediator 4 / Creator 2 / Caregiver 1</td><td>78%</td></tr>
+<tr><td>CTL-S 社会</td><td>0</td><td>―</td><td>構造的空白</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">CTL-V 49.3%の集中と CTL-S 0件の空白がミラツク戦略の中核論点。Mediator は CTL-G + CTL-V + CTL-Env の3領域を横断し、Introvert Thinker は CTL-V に大きく集中する。</div>
+</div>
+
+<h3>4.2 CTL-V 集中の構造的意味</h3>
+<p>CTL-V 69件のうち Mediator + Introvert Thinker + Caregiver = 51件（73.9%）で、価値観領域は調停・思索・ケア型の3型がほぼ独占している。これは Phase B B-1 が示した「Layer C 物語転換期 4問」が CTL-V に集中する事実と整合し、現代の偉業の中核戦場が「価値観の再構築」であることを担い手側で確認する【解釈】。</p>
+
+<h3>4.3 CTL-S 0件の構造的空白</h3>
+<p>great_actions.db でCTL-S（社会・人口・コミュニティ）への投入が0件である事実は、C-3 検証編で要追跡事項U-9として記録されている。本解析でも CTL-S の構造的空白は確認され、これは「社会領域の偉業はCTL-V（価値観）または CTL-G（ガバナンス）に吸収されて投入された」という C-3 投入時の判断によるとみられる【推定】。Phase D で CTL-S 専用の偉業群（コミュニティ運営・人口政策・移住インフラ等）を別途構造化する必要がある。</p>
+
+<h3>4.4 CTL × ホライズンの交差</h3>
+<p>CTL-V は near 47件・mid 11件・far 7件・very-far 4件と4ホライズン全帯に分布し、長期持続性が高い領域である（集計L-06）。一方 CTL-Env は near 8件 + very-far 1件で mid/far が空白、CTL-G は near 23件 + mid 1件で長期が極端に薄い。これは「環境・ガバナンスの長期予測は装置応答が薄く投入が困難」という Phase B B-4 R3 sentinel の発見と整合する【解釈】。</p>
+</section>
+
+<section id="ca5" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">軸4 専門 ― 学術5領域・業種・地域</h2>
+<p class="lead">担い手の専門性は、学術5領域（人文学・社会科学・自然科学・工学・芸術）・業種（JPMS career_archetype 33種）・地域（JPMS DB の地域分布）の三副軸で記述される。ミラツクが見出すべき業種は arch_career_thinker・arch_npo_leader・arch_career_economist の3型に集中する。</p>
+
+<h3>5.1 偉業×学術5領域の対応</h3>
+<p>C-3 140件を学術5領域に再マップすると、人文学（哲学・人類学・倫理学・歴史学）が最も多く約60件、社会科学（経済学・政治学・社会学）約45件、自然科学（生態学・気候科学・神経科学）約15件、工学（システム工学・標準化）約10件、芸術（文学・美術・デザイン）約10件となる【推定】。Phase B 戦略的空白13問が「価値観・哲学・先住民知識・非西洋認識論・自己言及メタ」に集中することと整合し、人文学が現代の偉業の中核学問領域である。</p>
+
+<h3>5.2 JPMS career_archetype 33種からの絞り込み</h3>
+<p>JPMS DB v2 の career_archetype 33種のうち、TOP10 と戦略的空白13問の主担い手として頻出する10種を抽出する。arch_career_thinker（思想家・哲学者型）・arch_career_social_reformer（社会改革者型）・arch_npo_leader（NPOリーダー型）・arch_career_economist（経済学者型）・arch_career_scientist（科学者型）・arch_career_educator（教育者型）・arch_career_artist（芸術家型）・arch_career_legal（法曹型）・arch_career_official（公務員型）・arch_career_diplomat（外交官型）の10型である。</p>
+
+<div class="figure">
+<div class="figure-title">図 4: 主要career_archetype 10種 × Phase B 30問対応</div>
+<table>
+<thead><tr><th>career_archetype</th><th>主対応問い</th><th>主担い手アーキタイプ</th></tr></thead>
+<tbody>
+<tr><td>arch_career_thinker</td><td>G-N07/N08・G-V03</td><td>Introvert Thinker + 翻訳者型</td></tr>
+<tr><td>arch_career_social_reformer</td><td>G-N09・G-N12・G-N04</td><td>Mediator + Caregiver</td></tr>
+<tr><td>arch_npo_leader</td><td>G-N10・G-N11・G-V03</td><td>Caregiver + Mediator + 翻訳者型</td></tr>
+<tr><td>arch_career_economist</td><td>G-M01・G-M02・G-F02</td><td>Creator + Steady + Mediator</td></tr>
+<tr><td>arch_career_scientist</td><td>G-T01・G-Eco系</td><td>Explorer + Creator</td></tr>
+<tr><td>arch_career_educator</td><td>G-N12・G-M10</td><td>Caregiver + Social Creator</td></tr>
+<tr><td>arch_career_artist</td><td>G-N03・G-V02</td><td>Creator + Social Creator</td></tr>
+<tr><td>arch_career_legal</td><td>G-M04・G-M05</td><td>Mediator + Steady</td></tr>
+<tr><td>arch_career_official</td><td>G-M02・G-M06</td><td>Steady + Leader</td></tr>
+<tr><td>arch_career_diplomat</td><td>G-M04・G-N09</td><td>Mediator + 翻訳者型</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">業種側でも、思想家・NPOリーダー・経済学者・社会改革者の4業種がミラツク優先10問の主担い手となる。法曹・外交官・公務員は制度実装段階で必須、芸術家・科学者は新領域開拓段階で必須となる時間分業構造。</div>
+</div>
+
+<h3>5.3 業種別の locus_subject との対応</h3>
+<p>great_actions.db の locus_subject は international 49件・nation 36件・individual 19件・academia 14件・community 13件・humanity 3件・miratuku 3件・organization 3件・small_group 1件・municipality 0件と分布する（集計L-07）。これを業種に翻訳すると、international は arch_career_diplomat + arch_npo_leader、nation は arch_career_official + arch_career_legal、individual は arch_career_thinker + arch_npo_leader、academia は arch_career_thinker + arch_career_scientist、community は arch_career_social_reformer + arch_career_educator が主担当となる【推定】。</p>
+
+<h3>5.4 地域分布の補助軸</h3>
+<p>JPMS DB v2 の schools_v2 832校の地域分布は関東・関西・中部・九州・北海道東北・国際の6区分で、Phase C-5 の担い手地域は「先住民知識主権 G-N09 → 北海道・沖縄・地方圏」「ケア時間自己観察 G-N10 → 全国分散」「非西洋認識論 G-N07/N08 → 国際 + 学術」と問いごとに地域偏在パターンが異なる【推定】。地域は専門軸の独立次元というより、業種と locus_subject の交差から二次的に決まる従属軸である。</p>
+
+<h3>5.5 JPMS 5数理モデルの組込み</h3>
+<p>JPMS DB v2 は MLM（多層線形）・SEM（構造方程式）・IRT（項目反応理論）・LCA（潜在クラス分析）・GCM（成長曲線モデル）の5数理モデルを実装している。これらを Phase C-5 担い手プロファイルに組込むと、識別段階では IRT + LCA で testimonials 58,224件から候補類型のクラスタを抽出、育成段階では SEM で家庭環境→学校→進路選択の因果構造を推定、配置段階では MLM で校内効果と地域効果を分離、長期追跡では GCM で10-30年の発達軌道を測定する設計が成立する。本解析ではこの設計を仮説として提示し、Phase D での実装可能性を C-7 公開後の課題として明示する。</p>
+</section>
+
+<section id="ca6" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">第5類型「翻訳者型」の必然性検証</h2>
+<p class="lead">PST 10アーキタイプに第5類型「翻訳者型（arch_translator）」を追加する必然性を、(1) C-3 capability_links の交差、(2) TOP10 偉業での要求、(3) Phase B B-4 R3 sentinel 教訓、(4) ミラツク自己定義との整合 の4視点から検証する。結論として、本解析は arch_translator を独立11型として確定する。</p>
+
+<h3>6.1 検証視点1 ― capability_links 交差</h3>
+<p>C-3 great_actions.db の action_capability_links 292件を archetype × capability_id で交差した結果（集計L-08）、Mediator は val_justice 25件・val_pluralism 18件・cog_systems 12件・val_patience 10件・soc_empathy 8件と分布し、Introvert Thinker は cog_synthesis 19件・val_pluralism 16件・cog_systems 7件・val_justice 6件・val_patience 4件と分布、Creator は val_pluralism 14件・cog_synthesis 13件・cog_systems 8件・val_justice 5件と分布する。三型はそれぞれ独自の能力プロファイルを持つが、val_pluralism と cog_synthesis の組合せは三型に共通して高頻度で現れる。</p>
+
+<p>val_pluralism（多元性受容）+ cog_synthesis（統合的思考）の組合せこそが「翻訳者型」の能力指紋である【解釈】。この組合せが Mediator・Introvert Thinker・Creator の境界を越えて出現するという事実は、三型のうちの一部が「翻訳機能」という独立した役割を担っていることを示唆する。</p>
+
+<div class="figure">
+<div class="figure-title">図 5: 翻訳者型の能力指紋（val_pluralism + cog_synthesis）</div>
+<pre>
+                  val_pluralism  cog_synthesis  両方を持つ件数
+arch_mediator        18件            3件          約2件
+arch_introvert       16件           19件          約8件 ★
+arch_creator         14件           13件          約7件 ★
+arch_explorer         3件            6件          約2件
+arch_caregiver        7件            1件          約0件
+arch_steady           5件            1件          約0件
+合計                                              約19件
+</pre>
+<div class="figure-caption">Introvert Thinker と Creator が「val_pluralism + cog_synthesis」の組合せを最も多く持ち、これが翻訳者型の能力指紋となる。19件は140件中13.6%で、独立11型として位置づけられる人口比【推定 1.5-2.0%】を上回る集中度。</div>
+</div>
+
+<h3>6.2 検証視点2 ― TOP10偉業での要求</h3>
+<p>ミラツク優先 TOP10 を再点検すると、翻訳者型が要求される問いは G-N09 先住民知識主権・G-N12 三項リテラシー教育・G-N07/N08 非西洋認識論方法論化・G-V03 自己言及メタ問い・G-F02 三項経済比率設計の5問である（集計L-09）。これらは複数文化・複数学問・複数世代を翻訳する課題に共通し、Mediator 単独でも Introvert Thinker 単独でも対応しきれない。</p>
+
+<p>例えば G-N09 では「先住民の伝統知識を西洋法体系の知的財産権に翻訳する」という二重翻訳が必要で、Mediator の調停スキルだけでなく Introvert Thinker の概念分析と Creator の新枠組み生成が同時に必要となる。G-V03 自己言及メタ問いはミラツク自身の活動を学術用語と運動体用語の両方で翻訳する課題で、これは典型的な翻訳者型タスクである【解釈】。</p>
+
+<h3>6.3 検証視点3 ― Phase B B-4 R3 sentinel 教訓</h3>
+<p>Phase B B-4 R3 sentinel verdict は「装置の5類型化（全装置応答型／SG単独応答型／装置応答薄型／観測不能型 + 新第5類型 UPR単独強応答型）」を確定した。これは「初期4類型では捉えきれない新類型が DB 実値から立ち上がる」という方法論的教訓であり、本トラックでは担い手側にこの教訓を継承する。</p>
+
+<p>10アーキタイプ + 翻訳者型という11型構造は、PST DB の既存10型に対する単なる追加ではなく、複数型の交差として存在する高次の役割である。Mediator + Introvert Thinker + Creator の三型交差は、個別の Big Five 閾値ではなく「複数文化・複数学問・複数世代の翻訳ができる」という機能的定義によって識別される。これは原理的には PST DB のスキーマ拡張を要するが、本解析では C-3 capability_links の組合せパターン（val_pluralism + cog_synthesis）で代理識別する。</p>
+
+<h3>6.4 検証視点4 ― ミラツク自己定義との整合</h3>
+<p>ミラツクの自己定義は「対等な探究者」「知識運動体」「暗黙知の形式知化」の三本柱で、これらは翻訳者型の機能的定義とほぼ完全に重なる。「対等な探究者」は複数文化を翻訳する姿勢、「知識運動体」は学術と運動を翻訳する役割、「暗黙知の形式知化」は経験と概念を翻訳する作業である。事業のかたち・暮らしのかたち・変化のかたちの3連載は Translational Editor 型ワークフローの実装で、ミラツクが既に翻訳者型として運用されている事実を示す。</p>
+
+<h3>6.5 結論 ― 11型構造の確定</h3>
+<p>4視点の検証から、本解析は arch_translator を独立11型として確定する。C-3 capability_links の能力指紋・TOP10偉業での要求・B-4 R3 sentinel 教訓・ミラツク自己定義との整合の4点が相互補強的に支えており、推定人口比は1.5-2.0%、TOP10 中5問で要求される高密度の役割である【推定】。</p>
+
+<div class="discovery-box">
+<div class="discovery-num">SUBSTANTIVE DISCOVERY 1</div>
+<div class="discovery-title">第5類型「翻訳者型」の独立化 ― ミラツク差別化機能の DB 構造化</div>
+<p>arch_translator は Mediator・Introvert Thinker・Creator の三型交差として暗黙的に存在していたが、val_pluralism + cog_synthesis の能力指紋・TOP10 5問での要求・B-4 R3 sentinel 教訓・ミラツク自己定義との整合の4視点で必然性が支持された。本類型を独立11型として確定することで、ミラツクの差別化機能（事業のかたち・暮らしのかたち・変化のかたち の Translational Editor 型ワークフロー）が DB 構造として可視化される。</p>
+</div>
+</section>
+
+<section id="ca7" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 07</div>
+<h2 class="chapter-title">担い手特性の6時代変化軌道</h2>
+<p class="lead">産業革命期 Warrior+Leader 主導 → 高度成長期 Leader+Steady+Craftsman → 物語転換期（2025-2050）Mediator+Introvert Thinker+翻訳者型 → サイクルA前期（2050-2100）翻訳者型+Caregiver+Mediator+Introvert Thinker という四期軌道を、era_talents 6時代別スコアと future_demands の時代別ランキングから検証する。</p>
+
+<h3>7.1 産業革命期1760-1900 ― Warrior + Leader + Creator</h3>
+<p>産業革命期の偉業（Watt 蒸気機関1769・Stephenson 鉄道1825・渋沢栄一第一国立銀行1873・Ford 量産1908）は、PST 10アーキタイプに当てはめると Warrior 突破型・Leader 連合型・Creator 創造型が主担い手であった。中核能力は age_entrepreneur・cog_creativity・cog_systems・age_resilience の4次元で、技術と経済の偉業（CTL-T + CTL-Eco）が中心である。Caregiver・Mediator・Introvert Thinker はこの時期にはあまり必要とされなかった【解釈】。</p>
+
+<h3>7.2 戦間期-高度成長期1920-1989 ― Leader + Steady + Craftsman + Creator</h3>
+<p>明治-昭和の era_talents 集計では、cog_systems が昭和後7.81のピークに達し、val_collective が明治6.74→昭和後3.28の急減を示す。主担い手は Leader 連合型・Steady 継続型・Craftsman 職人型・Creator 創造型の4型で、組織化と量産化の時代である。CTL-T + CTL-Eco + CTL-G の3領域同時運用が国家建設の基盤となった。val_collective の急減は「集団主義の解体と個人主義の浸透」を担い手側で映し出し、これは Phase B B-1 Layer C「個人主義パラダイム上昇」と整合する。</p>
+
+<h3>7.3 物語転換期2025-2050（near + mid） ― Mediator + Introvert Thinker + Caregiver + 翻訳者型</h3>
+<p>令和の era_talents 集計では、cog_ai_collab が3.40→8.91の指数的上昇、age_social_change が令和8.26のピーク、val_eco が U字回復7.76、val_tolerance が6.76の中位回復を示す。主担い手は Mediator 調停型・Introvert Thinker 思索型・Caregiver ケア型・翻訳者型の4型で、Care シナリオ Hot zone 4問の制度化が中核となる。CTL-V + CTL-S + CTL-G + CTL-Eco の4領域同時運用が必要だが、CTL-S は great_actions.db で空白のまま残る。</p>
+
+<p>future_demands 2030年245件の上位5次元は cog_critical 27件・cog_ai_collab 24件・soc_interpersonal 23件・cog_systems 23件・cog_info 23件で、cog 系認知4次元が支配する。near 局面では「AI協働 × 批判的 × 対人 × システム」の4重複合スキルが要請される【解釈】。future_demands 2050年220件の上位は cog_systems 21件・val_eco 20件・age_resilience 18件・cog_critical 16件・age_social_change 15件で、技術スキルから価値観・行為主体側に重心が移動する。</p>
+
+<h3>7.4 サイクルA前期2050-2100（far + very-far） ― 翻訳者型 + Caregiver + Mediator + Introvert Thinker</h3>
+<p>future_demands 2100年125件の上位は val_eco 6件・cog_systems 6件・val_collective 5件・soc_interpersonal 5件・cog_critical 5件で、val_collective が令和4.35→2100上位5位への U字回復を示す。これは Pluriverse シナリオの集合的意識R04（Phase B B-3）と整合し、22世紀型新神話圏での運用が始まる。</p>
+
+<p>2100年は19次元では捕捉できない未来固有概念63件（xeno-ethics・virtual_ecosystem_inhabitation・transhuman_identity・zero_waste_circular_economy 等）が独立次元として立ち上がる可能性が高い【推定】。担い手側でも arch_translator を中核に Caregiver+Mediator+Introvert Thinker が支える構造が想定される。</p>
+
+<div class="figure">
+<div class="figure-title">図 6: 6時代変化軌道（担い手アーキタイプの主役交代）</div>
+<pre>
+産業革命期       高度成長期       物語転換期        サイクルA前期
+(1760-1900)     (1920-1989)     (2025-2050)      (2050-2100)
+
+Warrior         Leader          Mediator          翻訳者型
+Leader      →   Steady       →  Introvert     →   Caregiver
+Creator         Craftsman       Caregiver         Mediator
+                Creator         翻訳者型           Introvert
+
+[突破型]        [組織化型]      [調停・翻訳型]    [集合・ケア型]
+
+中核能力推移:
+  age_entrepreneur  → cog_systems  → cre_cross_domain → val_eco
+  cog_creativity    → val_collective ↓ age_social_change → val_collective ↑
+                                                          (U字回復)
+</pre>
+<div class="figure-caption">担い手アーキタイプの主役交代は単なる流行ではなく、val_collective の U 字回復・cog_systems の高位安定・age_social_change の上昇という6時代の能力スコアによって裏付けられた構造的シフトである。</div>
+</div>
+
+<div class="discovery-box">
+<div class="discovery-num">SUBSTANTIVE DISCOVERY 2</div>
+<div class="discovery-title">英雄像の構造的転換 ― 突破型から調停・翻訳型へ</div>
+<p>産業革命期の Warrior + Leader 主導から、物語転換期の Mediator + Introvert Thinker + 翻訳者型主導へのシフトは、PST 人口比に対する過剰要求度で 4.65 倍（Mediator）・2.22 倍（Introvert Thinker）の極端な不均衡として現れる。これは単なる「優しい時代」の到来ではなく、複数価値の併存設計（Pluriverse）と内省的思索（self-reflexive）が偉業の中核機能になったことを意味する。古典的英雄像（Warrior 0.41x・Leader 0.14x・Craftsman 0.00x）の退場は構造的であり、教育・採用・組織設計の根本的な再設計を要請する。</p>
+</div>
+
+<div class="discovery-box">
+<div class="discovery-num">SUBSTANTIVE DISCOVERY 3</div>
+<div class="discovery-title">cog_systems の歴史的普遍性と val_collective の U字回復</div>
+<p>cog_systems（システム思考）は 6 時代を通じて 7.15-7.81 の狭幅で高位安定し、TOP10 10 問中 8 問で必要次元として登場する。「優れた偉業者は時代を問わずシステム思考者である」という普遍性が定量的に支持された。同時に val_collective（集団協調性）は明治 6.74 → 平成 3.32 の急減を経て、future_demands 2100 で上位 5 位に回帰する U 字軌道を描き、Pluriverse シナリオ R04 集合的意識との整合を示す。これは「個人主義の浸透」が一時的な振幅であって、長期的には集合的意識の再構築に向かう構造を担い手側で確認するものである。</p>
+</div>
+</section>
+
+<section id="ca8" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 08</div>
+<h2 class="chapter-title">DB集計ログ L-01〜L-12</h2>
+<p class="lead">本解析の数値根拠を、SQL クエリと結果サマリで12項目に集約する。great_actions.db v0.1（140件・5テーブル）+ era_talents.db（12,958人物・31,436スコア・590 future_demands）+ PST DB（10アーキタイプ）+ JPMS DB v2（832校・58,224 testimonials）の四DB横断集計。</p>
+
+<h3>L-01: great_actions.db capability_links 全件分布</h3>
+<pre><code>SELECT capability_id, COUNT(*) cnt, ROUND(AVG(intensity),3) avg_intensity
+FROM action_capability_links
+GROUP BY capability_id ORDER BY cnt DESC;
+-- val_pluralism:67(0.906) / val_justice:52(0.925) / cog_synthesis:45(0.928)
+-- cog_systems:43(0.907) / soc_empathy:29(0.898) / cog_strategic:22(0.92)
+-- val_patience:22(0.939) / val_pragmatism:10(0.895) / cog_languages:2(0.95)
+-- 合計292件、9軸（C-3独自分類、ET 19次元の派生軸）</code></pre>
+
+<h3>L-02: PST 10アーキタイプ × C-3 140件分布</h3>
+<pre><code>SELECT archetype, COUNT(*) cnt FROM great_actions
+GROUP BY archetype ORDER BY cnt DESC;
+-- arch_mediator:39 / arch_introvert_thinker:28 / arch_creator:23
+-- arch_steady:17 / arch_caregiver:16 / arch_explorer:8
+-- arch_warrior:4 / arch_social_creator:3 / arch_leader:2 / arch_craftsman:0
+-- Mediator + Introvert Thinker = 67 (47.9%)
+-- Warrior + Leader = 6 (4.3%) → 約11倍格差</code></pre>
+
+<h3>L-03: archetype × msign_connection 交差</h3>
+<pre><code>SELECT archetype, msign_connection, COUNT(*) cnt FROM great_actions
+GROUP BY archetype, msign_connection ORDER BY archetype, cnt DESC;
+-- Mediator: concept_aligned 17 / true_msign 17 / single_track 5
+-- Introvert Thinker: true_msign 11 / concept_aligned 12 / self-reflexive 5
+-- Creator: true_msign 12 / concept_aligned 10 / single_track 1
+-- Steady: concept_aligned 11 / true_msign 5 / single_track 1
+-- Caregiver: true_msign 9 / concept_aligned 6 / quasi_msign 1</code></pre>
+
+<h3>L-04: archetype × scope_horizon 交差</h3>
+<pre><code>SELECT archetype, scope_horizon, COUNT(*) cnt FROM great_actions
+GROUP BY archetype, scope_horizon ORDER BY archetype, scope_horizon;
+-- Mediator: near 29 / mid 4 / far 5 / very-far 1 (39件 4ホライズン分散)
+-- Introvert Thinker: near 20 / mid 5 / far 1 / very-far 2 (28件 4ホライズン分散)
+-- Creator: near 19 / mid 4 (23件 near集中)
+-- Caregiver: near 14 / mid 2 (16件 near集中)
+-- Steady: near 13 / mid 1 / far 2 / very-far 1 (17件)</code></pre>
+
+<h3>L-05: scope_ctl × archetype 交差</h3>
+<pre><code>SELECT scope_ctl, archetype, COUNT(*) cnt FROM great_actions
+GROUP BY scope_ctl, archetype ORDER BY scope_ctl, cnt DESC;
+-- CTL-V:69 (Introvert Thinker 21 / Mediator 18 / Caregiver 12 / Explorer 5 / Steady 5 / Creator 4)
+-- CTL-Eco:26 (Creator 13 / Steady 5 / Mediator 1 / Leader 2 / Introvert Thinker 2)
+-- CTL-G:24 (Mediator 13 / Steady 5 / Introvert Thinker 3 / Caregiver 1 / Warrior 1 / Creator 1)
+-- CTL-T:12 (Creator 3 / Mediator 3 / Explorer 2 / Introvert Thinker 2)
+-- CTL-Env:9 (Mediator 4 / Creator 2 / Caregiver 1 / Steady 1 / Explorer 1)
+-- CTL-S:0 (構造的空白)</code></pre>
+
+<h3>L-06: scope_ctl × scope_horizon 交差</h3>
+<pre><code>SELECT scope_ctl, scope_horizon, COUNT(*) cnt FROM great_actions
+GROUP BY scope_ctl, scope_horizon ORDER BY scope_ctl, scope_horizon;
+-- CTL-V: near 47 / mid 11 / far 7 / very-far 4 (4ホライズン全帯)
+-- CTL-Eco: near 22 / mid 4 (mid薄、far/very-far 空白)
+-- CTL-G: near 23 / mid 1 (mid薄、far/very-far 空白)
+-- CTL-T: near 9 / mid 1 / far 2 (mid薄)
+-- CTL-Env: near 8 / very-far 1 (mid/far 空白)</code></pre>
+
+<h3>L-07: locus_subject 分布</h3>
+<pre><code>SELECT locus_subject, COUNT(*) cnt FROM great_actions
+GROUP BY locus_subject ORDER BY cnt DESC;
+-- international:49 / nation:36 / individual:19 / academia:14
+-- community:13 / humanity:3 / miratuku:3 / organization:3 / small_group:1 / municipality:0
+-- 国際機関 + 国家 = 85件 (60.7%) で制度装置主導が圧倒的
+-- municipality 0件は構造的空白（自治体の偉業が投入されていない）</code></pre>
+
+<h3>L-08: archetype × capability_id 交差（翻訳者型能力指紋検証）</h3>
+<pre><code>SELECT ga.archetype, acl.capability_id, COUNT(*) cnt
+FROM great_actions ga JOIN action_capability_links acl ON ga.action_id=acl.action_id
+GROUP BY ga.archetype, acl.capability_id
+ORDER BY ga.archetype, cnt DESC;
+-- Mediator: val_justice 25 / val_pluralism 18 / cog_systems 12 / val_patience 10
+-- Introvert Thinker: cog_synthesis 19 / val_pluralism 16 / cog_systems 7 / val_justice 6
+-- Creator: val_pluralism 14 / cog_synthesis 13 / cog_systems 8 / val_justice 5
+-- Steady: cog_systems 9 / cog_strategic 6 / val_pluralism 5 / val_patience 5
+-- → val_pluralism + cog_synthesis の組合せが Introvert Thinker / Creator に集中
+-- → 翻訳者型の能力指紋として機能</code></pre>
+
+<h3>L-09: TOP10偉業 × archetype × scenario × horizon 集計</h3>
+<pre><code>SELECT primary_question_id, action_id, archetype, scenario_id, scope_horizon
+FROM great_actions
+WHERE primary_question_id IN ('G-M04','G-N09','G-M01','G-N12','G-N10','G-N11','G-M02','G-N07','G-N08','G-V03','G-F02')
+ORDER BY primary_question_id, action_id;
+-- TOP10 11問対応の合計件数: G-M04:15 / G-N07:13 / G-N09:14 / G-M01:11 / G-V03:6
+-- G-N10:6 / G-M07:5 / G-F02:4 / G-N12:4 / G-N08:3 / G-N11:3 / G-M02:2
+-- 翻訳者型暗黙対応: G-N09・G-N12・G-N07/N08・G-V03・G-F02 = 5問</code></pre>
+
+<h3>L-10: scenario × archetype 交差</h3>
+<pre><code>SELECT scenario_id, archetype, COUNT(*) cnt FROM great_actions
+GROUP BY scenario_id, archetype ORDER BY scenario_id, cnt DESC;
+-- Care:66 (Creator 17 / Mediator 14 / Caregiver 12 / Steady 9 / Introvert Thinker 8)
+-- Pluriverse:42 (Mediator 18 / Introvert Thinker 9 / Explorer 5 / Creator 3 / Caregiver 3)
+-- Slow Right:15 (Steady 6 / Mediator 4 / Introvert Thinker 4 / Caregiver 1)
+-- Techno:10 (Creator 3 / Mediator 2 / Introvert Thinker 2 / Explorer 2 / Steady 1)
+-- self-reflexive:5 (Introvert Thinker 5) → Introvert Thinker 完全独占</code></pre>
+
+<h3>L-11: era_talents 6時代別中核5次元軌道（事前リサーチ §1.2 値）</h3>
+<pre><code>取得方法: /era-talents エージェント経由 / クエリ "achiever_capabilities × eras 中核5次元集計"
+-- cog_systems: 明治7.43 / 大正7.63 / 昭和前7.42 / 昭和後7.81 / 平成7.15 / 令和7.35
+-- age_oecd_transformative: 派生概念のため直接スコアなし、概念整合で確認
+-- age_social_change: 明治7.73 / 大正8.48 / 昭和前7.92 / 昭和後7.95 / 平成7.54 / 令和8.26
+-- soc_interpersonal: 明治7.29 / 大正7.14 / 昭和前6.72 / 昭和後7.10 / 平成6.74 / 令和7.27
+-- cre_cross_domain: 明治7.78 / 大正7.35 / 昭和前7.96 / 昭和後7.26 / 平成8.10 / 令和7.61
+-- val_collective: 明治6.74 / 大正5.25 / 昭和前6.23 / 昭和後3.28 / 平成3.32 / 令和4.35</code></pre>
+
+<h3>L-12: future_demands 2030/2050/2100 上位5次元</h3>
+<pre><code>取得方法: /era-talents エージェント経由 / クエリ "future_demands era × capability 集計"
+-- 2030 (245件): cog_critical 27 / cog_ai_collab 24 / soc_interpersonal 23 / cog_systems 23 / cog_info 23
+-- 2050 (220件): cog_systems 21 / val_eco 20 / age_resilience 18 / cog_critical 16 / age_social_change 15
+-- 2100 (125件): val_eco 6 / cog_systems 6 / val_collective 5 / soc_interpersonal 5 / cog_critical 5
+-- 2100追加: 未来固有概念63件 (xeno-ethics / virtual_ecosystem_inhabitation 等)
+-- 軌道: 技術スキル(near) → 価値観再構築(mid) → ポストヒューマン的倫理(very-far)</code></pre>
+
+<div class="callout">
+<div class="callout-title">本Trackの集計範囲と他Trackとの境界</div>
+<p>本解析は great_actions.db v0.1 の140件と era_talents.db の31,436スコアを主軸とし、PST DB と JPMS DB v2 を補助軸として横断集計した。great-figures.db の9,178人物への参照は本解析では限定的で、Phase D での参照拡張を要追跡事項として残す。C-3/C-4 の作業領域（DB 投入データへの修正）は不可侵を厳守し、本解析は集計と解釈のみを行った。第5類型「翻訳者型」の確定はスキーマ上の即時追加ではなく、解釈レイヤーでの導入で、Phase D での PST DB 拡張を要請する。</p>
+</div>
+</section>
+
+<footer>
+Track C-5 解析編 / 2026-05-09 / Phase C Wave 3<br>
+出力先: /Users/nishimura+/projects/apps/miratuku-news-v2/dashboards/ryoiki/phase-c/track-c5-actor-traits-analysis.html
+</footer>
+
+</main>
+</div>
+
+<script>
+(function() {
+  var saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      var cur = document.documentElement.getAttribute('data-theme');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  });
+})();
+</script>
+</body>
+</html>

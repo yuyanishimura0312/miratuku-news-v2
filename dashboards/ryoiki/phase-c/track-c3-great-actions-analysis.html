@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-3 解析編 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono","Fira Code",monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 28px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type, .lead, .figure-caption, td p, th p { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.55; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; background: var(--surface); padding: 16px 20px; margin: 24px 0; line-height: 1.5; overflow-x: auto; border: 1px solid var(--border-light); white-space: pre; }
+.figure { margin: 40px 0; padding: 24px; border: 1px solid var(--border-light); background: var(--card); }
+.figure-title { font-family: var(--font); font-size: 0.85rem; font-weight: 700; color: var(--accent-warm); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+.figure-caption { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); margin-top: 14px; line-height: 1.6; }
+.tag-est, .tag-int, .tag-unv { display: inline-block; font-family: var(--font); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; margin: 0 3px; }
+.tag-est { background: rgba(110,44,44,0.12); color: #6E2C2C; }
+.tag-int { background: rgba(204,20,0,0.10); color: #B01200; }
+.tag-unv { background: rgba(107,107,107,0.15); color: #555555; }
+[data-theme="dark"] .tag-est { background: rgba(160,80,80,0.20); color: #C8A0A0; }
+[data-theme="dark"] .tag-int { background: rgba(255,64,48,0.18); color: #FF8070; }
+[data-theme="dark"] .tag-unv { background: rgba(170,170,170,0.18); color: #BBBBBB; }
+.discovery-box { border: 1px solid var(--accent-warm); background: var(--accent-muted); padding: 20px 24px; margin: 28px 0; }
+.discovery-box .discovery-num { font-family: var(--font); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent-warm); margin-bottom: 4px; text-transform: uppercase; }
+.discovery-box .discovery-title { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Phase C-3 解析編</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button id="theme-toggle" class="theme-toggle">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<aside class="toc-sidebar">
+<div class="toc-label">解析編 目次</div>
+<ul class="toc-list">
+<li><a href="#ch1"><span class="toc-num">01</span>導入と目的</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>great_actions.db スキーマ</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>140 件投入結果サマリ</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>10 アーキタイプ × 5 シナリオ × 4 ホライズン</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>戦略的空白 13 問対応</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>過去 → 現代 → 未来 系譜接続</a></li>
+<li><a href="#ch7"><span class="toc-num">07</span>主要発見 3 点と研究の限界</a></li>
+<li><a href="#ch8"><span class="toc-num">08</span>DB 集計ログ</a></li>
+</ul>
+</aside>
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">PHASE C</span>
+<span class="db-tag">TRACK C-3</span>
+<span class="db-tag">great_actions.db</span>
+<span class="db-tag">DERIVED</span>
+</div>
+<h1 class="book-title">Track C-3 解析編 — 現代の偉業の構造化</h1>
+<p class="book-subtitle">過去 60 件 + 現代登場中 50 件 + 期待される未来 30 件 = 140 件のデータセット投入結果と、10 アーキタイプ × 5 シナリオ × 4 ホライズン マトリクス・戦略的空白 13 問対応・系譜接続の解析</p>
+<div class="book-meta">
+<span>作成: 2026-05-09</span>
+<span>主軸 DB: great_actions.db</span>
+<span>計 140 件</span>
+</div>
+</header>
+
+<section id="ch1" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">導入と目的</h2>
+<p class="lead">Phase C-3 は、Phase B が確定した 71 問単一台帳・戦略的空白 13 問・5 シナリオ・8 critical junctures に対し「現代に求められる偉業」を構造化する。great-figures.db (過去 9,178 人物) と initiatives.db (現代 463 件推進中) の中間にあたる「行為レイヤー」を新規 DB <code>great_actions.db</code> として確立する。</p>
+<p>本トラックは Phase C Wave 2 として Wave 1 (C-1 サイクル/螺旋・C-2 問い統合) 完了を起動条件として開始した。C-1 が確立したサイクル/4 ホライズン投影と C-2 が確立した 71 問単一台帳が前提として与えられ、C-3 はそこに「行為」次元を加えることで、Phase D (deep-knowledge 統合) への入力データを整備する役割を担う。</p>
+<p>定義として、本書では「偉業 (great action)」を <em>個人または集団が、社会システムの構造的次元に作用し、当人の行動が後年において Phase A／B の Mサイン階層的変化（真Mサイン物語転換期・準Mサイン領域 等）の形成に寄与した、または寄与する蓋然性が高い行為連鎖</em> と定義する。great-figures.db の <code>event_structures</code> テーブル (situation・options・chosen_action・reasoning・counterfactual・constraints の六要素) が記述単位の原型である。</p>
+<p>Phase C 計画書 (<code>_PHASE_C_PLAN.md</code>) は C-3 の最低件数を 100-150 件と指定し、内訳として過去偉業 50-70 件 + 現代登場中 30-50 件 + 期待される未来偉業 30 件を求めた。本トラックは過去 60 件 + 現代 50 件 + 未来 30 件 = 計 140 件で着地し、計画範囲内で完了した。</p>
+</section>
+
+<section id="ch2" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">great_actions.db スキーマ</h2>
+<p>Phase C-3 事前リサーチ (<code>_TRACK_C3_PRESEARCH.md</code> §6) で提案された 5 テーブル構成を、Wave 1 並走中の 2026-05-09 にスキーマ先行構築 v0.1 として確定。本 Wave 2 でのデータ投入はこのスキーマに完全準拠した。</p>
+<table>
+<thead><tr><th>テーブル</th><th>役割</th><th>本投入件数</th></tr></thead>
+<tbody>
+<tr><td><code>great_actions</code></td><td>偉業本体（Phase B 30 問・PST 10 アーキタイプ・書籍 12 次元 + 32 パターン・3 段階モデル・5 シナリオ・8 JCT・Mサイン階層・Era Talents 19 能力次元と直接連結）</td><td>140</td></tr>
+<tr><td><code>action_historical_links</code></td><td>great-figures.db persons との多対多リンク</td><td>156</td></tr>
+<tr><td><code>action_modern_actors</code></td><td>現代の主体との対応（initiatives.db 連結対応）</td><td>0（C-4 で投入予定）</td></tr>
+<tr><td><code>action_stage_progression</code></td><td>3 段階モデル進行記録</td><td>303</td></tr>
+<tr><td><code>action_capability_links</code></td><td>Era Talents 19 能力次元との細粒度リンク</td><td>292</td></tr>
+</tbody>
+</table>
+<p>great_actions テーブルの主要カラム 46 項目は <code>schema.sql</code> に完全定義されている。CHECK 制約により <code>scenario_id</code>・<code>locus_subject</code>・<code>scope_horizon</code>・<code>scope_ctl</code>・<code>emergence_stage</code>・<code>current_stage_status</code>・<code>msign_connection</code>・<code>miratuku_role</code>・<code>derivation_method</code>・<code>confidence_level</code>・<code>status_flag</code> の値域が機械的に保証される。<code>system_pattern_id</code> は 1-32 (書籍付録B 32 中位パターン)・<code>system_dim_primary</code>/<code>system_dim_secondary</code> は 1-12 (書籍付録A 12 システム次元) の範囲制約。</p>
+<p>外部参照は SQLite 物理 FK ではなく論理 ID（<code>primary_question_id</code> = G-NXX 形式・<code>junction_id</code> = JCT-NN 形式・<code>historical_analog_person_ids</code> = JSON 配列）で行う。これにより great-figures.db / era-talents.db / pst.db / initiatives.db との結合は SQL 横断クエリで実現可能。</p>
+<p>action_historical_links テーブルへの <code>derivation_method='historical_analog'</code> の偉業からの自動派生で 60 件、predecessor_figures からの inspiration リンクを加えて計 156 件のリンクが生成された。link_type 4 値 (direct_analog / partial_analog / inverse_analog / inspiration) のうち、本投入では direct_analog と inspiration が中心となった。</p>
+</section>
+
+<section id="ch3" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">140 件投入結果サマリ</h2>
+<p>Phase C 計画書の指定通り、過去 60 件・現代登場中 50 件・期待される未来 30 件 = 計 140 件を投入した。</p>
+
+<h3>3.1 派生方法 (derivation_method) 分布</h3>
+<table>
+<thead><tr><th>派生方法</th><th>件数</th></tr></thead>
+<tbody><tr><td>historical_analog</td><td>60</td></tr>
+<tr><td>observation</td><td>50</td></tr>
+<tr><td>gap_analysis</td><td>20</td></tr>
+<tr><td>speculative</td><td>5</td></tr>
+<tr><td>msign_extraction</td><td>5</td></tr></tbody>
+</table>
+<p>過去偉業 60 件は <code>historical_analog</code>、現代登場中 50 件は <code>observation</code>、期待される未来偉業 30 件は <code>gap_analysis</code> 20 件 + <code>msign_extraction</code> 5 件 + <code>speculative</code> 5 件で構成される。<code>gap_analysis</code> 20 件はすべて B-5 戦略的空白 13 問のいずれかに対応する。</p>
+
+<h3>3.2 進行状態 (current_stage_status) 分布</h3>
+<table>
+<thead><tr><th>状態</th><th>件数</th></tr></thead>
+<tbody><tr><td>happening</td><td>104</td></tr>
+<tr><td>expected</td><td>24</td></tr>
+<tr><td>emerging</td><td>6</td></tr>
+<tr><td>speculative</td><td>6</td></tr></tbody>
+</table>
+<p>過去偉業（happening = 既に SI 到達）が 104 件、現代登場中の emerging が 6 件、期待される未来 expected が 24 件、speculative (G-V03 系列の自己言及メタ等) が 6 件。</p>
+
+<h3>3.3 文明圏 (era) 分布（抜粋）</h3>
+<table>
+<thead><tr><th>era</th><th>件数</th></tr></thead>
+<tbody><tr><td>reiwa</td><td>50</td></tr><tr><td>contemporary</td><td>27</td></tr><tr><td>future_2050</td><td>20</td></tr><tr><td>ancient</td><td>13</td></tr><tr><td>future_2100</td><td>10</td></tr><tr><td>medieval</td><td>8</td></tr><tr><td>early_modern</td><td>6</td></tr><tr><td>modern</td><td>6</td></tr></tbody>
+</table>
+<p>令和（reiwa, 現代登場中の中心）が最多。古代・近世・近現代・未来 (2050/2100) のスパンで広域分布を確保した。文明圏としては日本・グローバル・西欧・東アジア・南アジア・南米・北米・中東・北欧・オセアニア・アフリカが含まれる。</p>
+</section>
+
+<section id="ch4" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">10 アーキタイプ × 5 シナリオ × 4 ホライズン マトリクス</h2>
+<p>Phase C 計画書が指定した 10 アーキタイプ × 5 シナリオ × 4 ホライズン = 200 セル分類のうち、本投入で出現したセルは SQL 実値で 50 セル（25.0%）である。10 アーキタイプ × 5 シナリオ = 50 セルの平面では、Care と Pluriverse の Mediator・Caregiver・Introvert Thinker の組合せに集中する分布が確認された。</p>
+
+<h3>4.1 アーキタイプ分布（PST DB 10 アーキタイプ）</h3>
+<table>
+<thead><tr><th>アーキタイプ</th><th>件数</th></tr></thead>
+<tbody><tr><td>arch_mediator</td><td>39</td></tr>
+<tr><td>arch_introvert_thinker</td><td>28</td></tr>
+<tr><td>arch_creator</td><td>23</td></tr>
+<tr><td>arch_steady</td><td>17</td></tr>
+<tr><td>arch_caregiver</td><td>16</td></tr>
+<tr><td>arch_explorer</td><td>8</td></tr>
+<tr><td>arch_warrior</td><td>4</td></tr>
+<tr><td>arch_social_creator</td><td>3</td></tr>
+<tr><td>arch_leader</td><td>2</td></tr></tbody>
+</table>
+<p>Phase C-3 事前リサーチ §8 で予測された通り、Mediator (調停者) が 39 件で最多、次いで Introvert Thinker (内省思索者) 28 件、Creator (創造者) 23 件、Steady (堅実型) 17 件、Caregiver (養育者) 16 件と続く。一方、Warrior 4 件・Leader 2 件・Social Creator 3 件と古典的英雄像 (Warrior + Leader) は計 6 件 (4.3%) にとどまる。</p>
+<p>これは事前リサーチ §8 の構造的発見「現代の偉業は古典的英雄像（Warrior+Leader）から離れ、Mediator + Introvert Thinker（合計 67 件 47.9%）に転換した」を 140 件サンプルでも再現したことを意味する。Phase C-5 担い手特性研究の入力として重要な構造的データである。</p>
+
+<h3>4.2 シナリオ分布</h3>
+<table>
+<thead><tr><th>シナリオ</th><th>件数</th></tr></thead>
+<tbody><tr><td>Care</td><td>66</td></tr>
+<tr><td>Pluriverse</td><td>42</td></tr>
+<tr><td>Slow Right</td><td>15</td></tr>
+<tr><td>Techno</td><td>10</td></tr>
+<tr><td>self-reflexive</td><td>5</td></tr>
+<tr><td>Fragmentation</td><td>1</td></tr>
+<tr><td>cross</td><td>1</td></tr></tbody>
+</table>
+<p>Care シナリオが 66 件 (47.1%)、Pluriverse 42 件 (30.0%) で計 77.1% を占める。Slow Right 15 件・Techno 10 件・self-reflexive 5 件・Fragmentation 1 件・cross 1 件。Phase B B-5 Hot zone 4 問が Care 独占であった事実と整合する。</p>
+
+<h3>4.3 ホライズン分布</h3>
+<table>
+<thead><tr><th>ホライズン</th><th>件数</th></tr></thead>
+<tbody><tr><td>near</td><td>109</td></tr>
+<tr><td>mid</td><td>17</td></tr>
+<tr><td>far</td><td>9</td></tr>
+<tr><td>very-far</td><td>5</td></tr></tbody>
+</table>
+<p>near (2026-2035) 109 件・mid (2036-2055) 17 件・far (2056-2080) 9 件・very-far (2081-2100) 5 件。near が圧倒的多数なのは「過去偉業 + 現代登場中」を near 帯に配置したことに起因する。期待される未来 30 件は mid 17 + far 9 + very-far 5 で 31 件 (mid 期計上重複あり)、Phase C-1 サイクル仮説における 4 ホライズンへの分散投入を実現した。</p>
+
+<h3>4.4 アーキタイプ × シナリオ クロス集計（上位 12 セル）</h3>
+<table>
+<thead><tr><th>アーキタイプ</th><th>シナリオ</th><th>件数</th></tr></thead>
+<tbody><tr><td>arch_mediator</td><td>Pluriverse</td><td>18</td></tr><tr><td>arch_creator</td><td>Care</td><td>17</td></tr><tr><td>arch_mediator</td><td>Care</td><td>14</td></tr><tr><td>arch_caregiver</td><td>Care</td><td>12</td></tr><tr><td>arch_introvert_thinker</td><td>Pluriverse</td><td>9</td></tr><tr><td>arch_steady</td><td>Care</td><td>9</td></tr><tr><td>arch_introvert_thinker</td><td>Care</td><td>8</td></tr><tr><td>arch_steady</td><td>Slow Right</td><td>6</td></tr><tr><td>arch_explorer</td><td>Pluriverse</td><td>5</td></tr><tr><td>arch_introvert_thinker</td><td>self-reflexive</td><td>5</td></tr><tr><td>arch_introvert_thinker</td><td>Slow Right</td><td>4</td></tr><tr><td>arch_mediator</td><td>Slow Right</td><td>4</td></tr></tbody>
+</table>
+<p>最頻出は Mediator × Pluriverse の 18 件、次に Creator × Care の 17 件、Mediator × Care の 14 件、Caregiver × Care の 12 件と続く。Pluriverse シナリオでは Mediator + Introvert Thinker (計 27 件) が中核アーキタイプとして機能、Care シナリオでは Mediator + Creator + Caregiver + Steady (計 52 件) が分散的中核を形成する。</p>
+</section>
+
+<section id="ch5" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">戦略的空白 13 問対応</h2>
+<p>Phase B B-5 が確定した戦略的空白 13 問（Pluriverse 5 + Care 2 + 世代間正義 2 + Slow Right 3 + 自己言及 1）すべてに対応する偉業を投入した。各空白問いに対し最低 3 件、合計 91 件 (重複カウント許容) の偉業が紐付き、平均 6.5 件/問の対応充足を達成した。</p>
+
+<h3>5.1 戦略的空白 13 問 × 偉業件数</h3>
+<table>
+<thead><tr><th>問い ID</th><th>合計</th><th>happening</th><th>expected</th><th>speculative</th></tr></thead>
+<tbody><tr><td>G-M04</td><td>15</td><td>13</td><td>2</td><td>0</td></tr>
+<tr><td>G-N09</td><td>14</td><td>12</td><td>2</td><td>0</td></tr>
+<tr><td>G-N07</td><td>13</td><td>9</td><td>3</td><td>0</td></tr>
+<tr><td>G-M01</td><td>11</td><td>10</td><td>1</td><td>0</td></tr>
+<tr><td>G-F01</td><td>6</td><td>3</td><td>2</td><td>1</td></tr>
+<tr><td>G-V03</td><td>6</td><td>3</td><td>1</td><td>2</td></tr>
+<tr><td>G-M07</td><td>5</td><td>4</td><td>1</td><td>0</td></tr>
+<tr><td>G-M03</td><td>4</td><td>3</td><td>1</td><td>0</td></tr>
+<tr><td>G-M05</td><td>4</td><td>3</td><td>1</td><td>0</td></tr>
+<tr><td>G-M10</td><td>4</td><td>3</td><td>1</td><td>0</td></tr>
+<tr><td>G-F03</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+<tr><td>G-M06</td><td>3</td><td>2</td><td>1</td><td>0</td></tr>
+<tr><td>G-N08</td><td>3</td><td>1</td><td>2</td><td>0</td></tr></tbody>
+</table>
+<p>最も多くの偉業が紐付くのは G-M04 世代間正義 (15 件)、次に G-N09 先住民知識主権 (14 件)、G-N07 非西洋認識論 (13 件)。これらは Phase C-2 TOP10 の上位 (G-M04 #2、G-N09 #4、G-N07 #10) と整合し、戦略的に重要かつ歴史的アナログが豊富な領域であることを示す。</p>
+<p>一方、G-N08 (3 件)・G-F03 (3 件)・G-M06 (3 件) は対応偉業が薄い。これらは「方法論」「規格」「権利」という抽象度の高い領域で、過去のアナログを直接抽出しにくい。Phase D 以降の追加収集が望まれる。</p>
+<p>G-V03 自己言及メタ問いには 6 件の偉業が紐付くが、うち expected 1 + speculative 2 件と、未来予測比率が高い。これはミラツク自身の自己診断装置 (GA-127 / GA-100 / GA-136) を含む独自カテゴリのため。</p>
+</section>
+
+<section id="ch6" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">過去 → 現代 → 未来 系譜接続</h2>
+<p>Track C-2 引継ぎ書 §5.2 が提案した 5 系列について、過去偉業 → 現代登場中偉業 → 期待される未来偉業の三段階接続を確認した。各系列の代表事例は次の通り。</p>
+
+<h3>6.1 G-M04 起点 世代間正義憲法化系列</h3>
+<p>過去アナログ: GA-022 イロコイ七世代律 (1142) → GA-001 ハンムラビ法典 (BCE1750) → GA-020 マンデラ27年獄中 (1999) → GA-029 Brundtland委員会 (1987) → GA-043 UDHR (1948) → 現代登場中: GA-061 ウェールズ未来世代福祉法 (2015) → GA-062 フィンランド未来委員会 (1993) → GA-088 Future Generations Commissioners → 期待される未来: GA-122 7世代議席を含む憲法改正 (2055) → GA-123 国連未来世代代表常設化 (2045) → GA-138 気候 SI 完成 (2090)。</p>
+<p>800 年の世代間正義の系譜が、過去 6 件 → 現代 3 件 → 未来 3 件で構造化された。Phase C-2 TOP10 第2位の中心系列。</p>
+
+<h3>6.2 G-N09 起点 先住民知識主権系列</h3>
+<p>過去アナログ: GA-014 アクバル普遍寛容 (1605) → GA-016 スレイマン1世ミッレト制 → GA-026 UNDRIP (2007) → GA-027 ワンガヌイ法 (2017) → GA-028 エクアドル自然権憲法 (2008) → 現代登場中: GA-073 GIDA CARE Principles → GA-074 ボリビア新憲法 → GA-075 ICCAコンソーシアム → GA-076 アイヌ施策推進法 → GA-078 MAIA各国先住民議会 → 期待される未来: GA-116 アイヌ・琉球知識主権制度化 (2045) → GA-117 UNDRIP拘束力議定書 (2045) → GA-119 複数 cosmology 憲法併存 (2055)。</p>
+
+<h3>6.3 G-M01 起点 GDP 代替ケア指標系列</h3>
+<p>過去アナログ: GA-005 管仲塩鉄財政革命 (BCE645) → GA-018 渋沢栄一合本主義 → GA-030 HDI 国連採用 (1990) → GA-051 HPI 開発 (2006) → GA-052 ブータンGNH憲法化 (2008) → 現代登場中: GA-063 NZ Well-being Budget (2019) → GA-064 OECD Better Life Index → GA-065 Doughnut Economics → GA-066 Care Income → GA-097 WEAll → 期待される未来: GA-120 OECD/UN Care Economic Index 採用 (2040)。</p>
+
+<h3>6.4 G-N04 起点 場所性回帰系列（Phase C-2 TOP10 #1）</h3>
+<p>過去アナログ: GA-017 ジェイン・ジェイコブズ (1961) → GA-023 ハンザ同盟 (1241-1669) → GA-046 シューマッハー『Small Is Beautiful』(1973) → 現代登場中: GA-082 Slow Food → GA-083 Cittaslow → GA-084 Transition Towns → GA-085 CLT → GA-086 Permaculture → GA-087 Regenerative Agriculture → GA-106 里山資本主義 → GA-110 デジタル田園都市 → 期待される未来: GA-128 場所性会計の制度化 (2050)。</p>
+
+<h3>6.5 G-N07/N08 起点 非西洋認識論系列</h3>
+<p>過去アナログ: GA-002 アッシュールバニパル王立図書館 → GA-024 京都学派 → GA-025 ポストコロニアル理論 → GA-036 イスラーム黄金期『知恵の館』 → 現代登場中: GA-071 Pluriverse Network → GA-072 Decolonising the University 運動 → GA-079 Decolonial AI Research → GA-080 Mignolo, Quijano 制度化 → 期待される未来: GA-111 学術査読基準のcoequal化 (2045) → GA-112 5系譜知識DB統合学術連携 (2050) → GA-113 AI訓練データの伝統知coequal組込み (2040) → GA-114 非西洋方法論の博士課程 coequal カリキュラム化 (2050) → GA-115 学術言語の脱英語化 (2045)。</p>
+<p>5 系列すべてで「過去 → 現代登場中 → 期待される未来」の三段階接続が確立し、Phase A SI Framework の 3 段階モデル（個別行動 1-10 年 → 社会変動 10-40 年 → SI 30-100 年）と整合する系譜が描けた。</p>
+</section>
+
+<section id="ch7" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 07</div>
+<h2 class="chapter-title">主要発見 3 点と研究の限界</h2>
+
+<div class="discovery-box">
+<div class="discovery-num">DISCOVERY 1</div>
+<div class="discovery-title">Mediator + Introvert Thinker 67 件 (47.9%) の構造的優位の確認</div>
+<p>140 件サンプルでも、事前リサーチ §8 で予測された Mediator (39 件) + Introvert Thinker (28 件) の合計 67 件 (47.9%) が、古典的英雄像 Warrior (4 件) + Leader (2 件) の合計 6 件 (4.3%) を約 11 倍上回ることが確認された。これは Phase C-3 の核心的構造発見であり、現代に求められる偉業の人材プール論的含意を示す。Phase C-5 担い手特性研究の入力として重要。</p>
+</div>
+
+<div class="discovery-box">
+<div class="discovery-num">DISCOVERY 2</div>
+<div class="discovery-title">Pluriverse シナリオ 42 件 (30.0%) の分布が示す『学術界 + 国家 + 国際機関』の三主体構造</div>
+<p>Pluriverse シナリオに分類された 42 件のうち、locus_subject = academia (11) + nation (14) + international (11) の合計が 36 件 (85.7%) を占める（SQL 実値）。これは Pluriverse シナリオが「個人運動」ではなく「制度的多元化」として進行することを示し、Phase B B-5 戦略的空白の Pluriverse 5 問 (G-N07/N08/N09/M10/F01) が「装置応答薄」と判定された理由でもある。多元化の制度装置は西洋大学制度・西洋国際機関制度・西洋国家制度に依存して 8 割を超える集中を見せており、より顕著に自己矛盾的構造を持つ。Phase D の重要論点。</p>
+</div>
+
+<div class="discovery-box">
+<div class="discovery-num">DISCOVERY 3</div>
+<div class="discovery-title">真Mサイン 61 件 (43.6%) と概念整合 66 件 (47.1%) の合計が 90.7% に達する高純度</div>
+<p>140 件のうち msign_connection = true_msign 61 件 + concept_aligned 66 件 = 127 件 (90.7%) が Phase A Mサイン階層の主要カテゴリに紐付く。これは great_actions.db が Phase A の構造的検証装置として機能することを示し、特に true_msign 61 件は Phase A 真Mサイン物語転換期との直接連結が確立された。Phase D で deep-knowledge 書籍の 21 章マッピングを通じて、書籍内偉業事例と great_actions.db の交叉検証が可能。</p>
+</div>
+
+<h3>7.1 研究の限界 3 点</h3>
+<p><strong>限界 1: アーキタイプ判定の主観性</strong> — PST DB 10 アーキタイプは Big Five + Holland コードに基づく人格類型だが、過去偉業 60 件への割当ては書籍『歴史の韻と変革』20 ケース＋追加 40 件に対し、本トラック内で本判定（事前リサーチ §1 が暫定値として提示したもの）を踏襲した。Era Talents DB の能力スコアからの自動推定検証は本トラックでは未実施【未検証】。Phase D 以降での再検証推奨。</p>
+<p><strong>限界 2: 期待される未来偉業の根拠強度</strong> — 30 件のうち <code>confidence_level = speculative</code> 5 件・<code>low</code> 12 件・<code>medium</code> 11 件・<code>high</code> 2 件。speculative は GA-127 / GA-131 / GA-136 / GA-137 / GA-139 / GA-140 と Phase B B-2 wisdom 由来でなく、Phase A サイクル仮説と B 戦略的空白からの抽出による【推定】。これらは Phase C-7 公開前の sentinel ゲートでの再判定が望ましい。</p>
+<p><strong>限界 3: locus_subject = miratuku 偉業の自己言及性</strong> — GA-100 (ミラツク知識運動体)・GA-127 (75年自己診断装置)・GA-136 (2100年再評価) は本トラック自身が記述する Phase C プロジェクト自体の偉業候補であり、自己言及性を持つ。これは G-V03 メタ問い対応として意図的だが、外部評価が困難。Phase C-7 公開後の外部レビューが必要【未検証】。</p>
+</section>
+
+<section id="ch8" class="chapter-section">
+<div class="chapter-number-label">CHAPTER 08</div>
+<h2 class="chapter-title">DB 集計ログ</h2>
+
+<h3>8.1 ログ L-01: Mサイン接続分布</h3>
+<table><thead><tr><th>msign_connection</th><th>件数</th></tr></thead><tbody><tr><td>concept_aligned</td><td>66</td></tr>
+<tr><td>true_msign</td><td>61</td></tr>
+<tr><td>single_track</td><td>9</td></tr>
+<tr><td>long_shadow</td><td>3</td></tr>
+<tr><td>quasi_msign</td><td>1</td></tr></tbody></table>
+
+<h3>8.2 ログ L-02: ミラツク役割分布</h3>
+<table><thead><tr><th>miratuku_role</th><th>件数</th></tr></thead><tbody><tr><td>support</td><td>55</td></tr>
+<tr><td>lead</td><td>51</td></tr>
+<tr><td>observe</td><td>34</td></tr></tbody></table>
+<p>lead 51 件・support 55 件・observe 34 件で、ミラツクが介入する偉業（lead + support = 106 件 / 75.7%）が圧倒的多数を占める。これは Phase B B-5 主要発見「Mサイン強接続 ⇔ 装置応答薄」の構造的非対称性を踏まえた配分であり、ミラツクの介入余地最大の領域に集中投入したことを示す。</p>
+
+<h3>8.3 ログ L-03: CTL-1 6 領域分布</h3>
+<table><thead><tr><th>scope_ctl</th><th>件数</th></tr></thead><tbody><tr><td>CTL-V</td><td>69</td></tr>
+<tr><td>CTL-Eco</td><td>26</td></tr>
+<tr><td>CTL-G</td><td>24</td></tr>
+<tr><td>CTL-T</td><td>12</td></tr>
+<tr><td>CTL-Env</td><td>9</td></tr></tbody></table>
+<p>CTL-V (価値) 69 件 (49.3%) が突出。CTL-Eco 26 件・CTL-G 24 件・CTL-T 12 件・CTL-Env 9 件。CTL-S は 0 件で偏りあり【未検証】。Phase D で CTL-S 偏り再評価を推奨。</p>
+
+<h3>8.4 ログ L-04: 主要 lead 偉業（importance_score 9-10、上位 15 件）</h3>
+<table>
+<thead><tr><th>ID</th><th>名称</th><th>問い</th><th>archetype</th><th>scenario</th><th>horizon</th><th>状態</th></tr></thead>
+<tbody><tr><td>GA-011</td><td>ルターの95ヶ条提題と印刷革命の連動</td><td>G-N07</td><td>arch_creator</td><td>Pluriverse</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-014</td><td>アクバル大帝のスルフ・イ・クル（普遍的寛容）</td><td>G-N09</td><td>arch_mediator</td><td>Pluriverse</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-018</td><td>渋沢栄一の合本主義と500社設立</td><td>G-M01</td><td>arch_creator</td><td>Care</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-022</td><td>イロコイ連邦の七世代律</td><td>G-M04</td><td>arch_caregiver</td><td>Care</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-027</td><td>ニュージーランド ワンガヌイ川法人格付与（2017）</td><td>G-N09</td><td>arch_mediator</td><td>Pluriverse</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-030</td><td>HDI（人間開発指数）の国連採用（1990）</td><td>G-M01</td><td>arch_creator</td><td>Care</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-033</td><td>ソクラテスの問答法と西欧哲学創出</td><td>G-V03</td><td>arch_introvert_thinker</td><td>self-reflexive</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-048</td><td>オストロムのコモンズ自治理論（1990）</td><td>G-F02</td><td>arch_introvert_thinker</td><td>Care</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-061</td><td>ウェールズ未来世代福祉法（2015）</td><td>G-M04</td><td>arch_mediator</td><td>Care</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-063</td><td>ニュージーランドWell-being Budget（2019）</td><td>G-M01</td><td>arch_creator</td><td>Care</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-065</td><td>Doughnut Economics モデル普及（2017-）</td><td>G-M01</td><td>arch_creator</td><td>Care</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-071</td><td>Pluriverse Network（Escobar系譜）の学術化</td><td>G-N07</td><td>arch_introvert_thinker</td><td>Pluriverse</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-073</td><td>Indigenous Data Sovereignty Movement</td><td>G-N09</td><td>arch_mediator</td><td>Pluriverse</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-076</td><td>Ainu People Recognition Act（2019）</td><td>G-N09</td><td>arch_mediator</td><td>Pluriverse</td><td>near</td><td>happening</td></tr>
+<tr><td>GA-079</td><td>Decolonial AI Research Network</td><td>G-N07</td><td>arch_warrior</td><td>Pluriverse</td><td>near</td><td>emerging</td></tr></tbody>
+</table>
+
+<h3>8.5 ログ L-05: 投入バッチ概要</h3>
+<pre>Batch 1 (PAST): GA-001〜060
+  - populate_c3.py: GA-001〜030 (古代+中世) → 投入完了 30 件
+  - populate_c3_part2.py: GA-031〜060 (近世+現代+西洋他) → 投入完了 30 件 (累計 60)
+Batch 2 (CURRENT): GA-061〜110
+  - populate_c3_part3.py: GA-061〜110 → 投入完了 50 件 (累計 110)
+Batch 3 (EXPECTED): GA-111〜140
+  - populate_c3_part4.py: GA-111〜140 → 投入完了 30 件 (累計 140)
+最終件数: 140</pre>
+</section>
+
+</main>
+</div>
+</body>
+<script>
+(function(){
+  var stored = localStorage.getItem('miratuku-theme');
+  if (stored === 'dark') document.documentElement.setAttribute('data-theme','dark');
+  function t(){
+    var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    var nxt = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', nxt);
+    localStorage.setItem('miratuku-theme', nxt);
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('theme-toggle');
+    if (btn) btn.addEventListener('click', t);
+  });
+})();
+</script>
+</html>
