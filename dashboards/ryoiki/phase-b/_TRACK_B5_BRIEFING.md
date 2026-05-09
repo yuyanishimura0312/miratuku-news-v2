@@ -47,3 +47,16 @@ B-3 善い社会問い群（30-40問） × 7装置 = 210-280セル
 
 ## デザイン規約
 赤白CI、Noto Serif JP/Sans JP、textbook、絵文字なし、Phase B Track B-1 参照モデル
+
+## B-3 sentinel verdict 申し送り（必読）
+- **MJ-02 解消済**: critical juncture × Phase A Mサイン領域接続は「厳密接続 4/8 = 50% (真M+準M)」+「概念整合含む 6/8 = 75%」で honest 開示済
+- **C-05 残課題**: B-3 30問 ↔ B-1 41問 ↔ B-2 14問 の連結IDマトリクスは B-5 で構築する責任あり
+- **MJ-01/m1 解消済**: 主体配分は実体集計値で確定（個人1/コミュニティ1/企業4/自治体1/国4/国際機関3 + 複合17）
+
+## B-4 doc-verify 申し送り（B-4 sentinel 後に最終確定）
+- **B-4 重大ハルシネーション B-02**: 全装置不応答型 Q-N07/Q-M02 は実際 UPR で score 5 獲得。max_score≤2 問いは 24問中 0問
+- **B-4 IR sections**: 1,769,821 が正、1,862,236 は誤
+- **B-4 24問評価対象**: B-1 41問のうち near 13全 + mid M02/M04/M05/M08/M09/M12 + far F01/F03/F08 + very-far V02/V06。Q-V07 は対象外
+
+## 入力データ pre-build
+- `_TRACK_B5_INPUT_TEMPLATE.md` に B-3 30問 × B-4 7装置 = 210セルマトリクス雛形 + 連結IDマトリクス + 5シナリオ × wisdom系列マッピング を pre-build 済
