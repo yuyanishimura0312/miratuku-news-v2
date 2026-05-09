@@ -55,7 +55,7 @@
 
 | Agent ID | Track | 状態 | 担当 |
 |----------|-------|------|------|
-| ac8d9623040ef0637 | B-4 doc-verify | 走行中 | 4カテゴリ品質検証 |
+| a8a27149da6396690 | B-4 軽微追補 | 走行中 | Critical C1+Major M1+M2 修正 |
 | bcvbwqp22 (bash) | ファイル監視 | 走行中 | 完了検出 |
 
 ## 完了済み拡張チーム成果
@@ -75,7 +75,9 @@
 - B-3 軽微追補 ✓ (ALL_RESOLVED)
 - B-3 sentinel ✓ (CONDITIONAL → ホットフィックス後 APPROVED)
 - B-3 MJ-02 ✓ (5/8表現揺れ統一)
-- B-4 doc-verify 🔄 走行中
+- B-4 doc-verify ✓ (CONDITIONAL PASS — 重大1+要修正3+WARN4)
+- B-4 sentinel ✓ (CONDITIONAL APPROVAL — Wave 3起動は必須修正後)
+- B-4 軽微追補 🔄 走行中（C1/M1/M2 修正中）
 
 ## 次工程（順序）
 
