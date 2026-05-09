@@ -7,9 +7,9 @@
 
 ## 1. 判定
 
-**CONDITIONAL APPROVAL → 追補 ホットフィックス で APPROVED へ昇格**
+**CONDITIONAL APPROVAL → 全申し送り解消で APPROVED 確定**
 
-主要修正4件（A-10/A-11/D-02/D-03）の核心部分は反映確認、A-10 伝播漏れ（analysis §7.4 / typo m1）は本verdict直後にホットフィックスで解消済。MJ-02（5/8表現揺れ）は申し送りとして B-5 リード起動前または B-3 doc-verify 再走で対応。
+主要修正4件（A-10/A-11/D-02/D-03）の核心部分は反映確認、A-10 伝播漏れ（analysis §7.4 / typo m1）はホットフィックスで解消済。**MJ-02（5/8表現揺れ）も後追補で全4ファイル honest 開示形式（厳密接続 4/8 = 50% / 概念整合含む 6/8 = 75%）に統一済**（commit 04ff4f5/dd364c1）。Wave 3 起動 GO。
 
 ## 2. 要約
 

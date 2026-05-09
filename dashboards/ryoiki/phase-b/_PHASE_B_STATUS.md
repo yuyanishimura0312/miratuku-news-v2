@@ -51,11 +51,14 @@
   - briefing: `_TRACK_B6_BRIEFING.md` 準備済
   - 想定成果: 統合HTML 4ファイル + ryoiki-index 更新
 
-## 現在の並列エージェント
+## 現在の並列エージェント（5並列拡張）
 
 | Agent ID | Track | 状態 | 担当 |
 |----------|-------|------|------|
 | a8a27149da6396690 | B-4 軽微追補 | 走行中 | Critical C1+Major M1+M2 修正 |
+| ad170ee726c4a82a7 | B-5 入力データ確定版 | 走行中 | 210セルマトリクス + hot/dead zones暫定 |
+| aa6a55af20a29715c | C-05 連結IDマトリクス | 走行中 | B-1×B-2×B-3×B-4 全問い対応 |
+| aaff278355cdc11d0 | B-6 verification枠組み | 走行中 | 統合検証HTML雛形 |
 | bcvbwqp22 (bash) | ファイル監視 | 走行中 | 完了検出 |
 
 ## 完了済み拡張チーム成果
