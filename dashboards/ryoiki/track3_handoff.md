@@ -3,7 +3,8 @@
 ## 1. メタ情報
 - Track番号: 3
 - トラック・タイトル: 18メガトレンド10年検証と現代版18MT策定
-- 主軸DB: foresight_taxonomy.db (5MD/18MT/3H/5EP) + futurology_data.json (553カード/19書籍/18大項目)
+- 主軸DB: taxonomy.db (5MD/18MT/3H/5EP, ~/projects/research/foresight-taxonomy/) + futurology_data.json (553カード/19書籍/18大項目, ~/projects/apps/app-launcher/data/futurology/)
+- 注: 旧handoff記載の `foresight_taxonomy.db` は0バイトの空ファイル、実体は `taxonomy.db`（doc-verify指摘により訂正）
 - 担当: Track 3 リード
 - 完了日: 2026-05-09
 - 検証ステータス: 自己検証完了（14項目・問題なし7・要解釈2・要追跡2・要修正0・構造的ギャップ3） / doc-verify 待機 / sentinel 待機
