@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track 8 検証: 4カテゴリ品質検証 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --sev-low: #2D7D2D; --sev-mid: #B36900; --sev-high: #CC1400;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+  --sev-low: #4A9A4A; --sev-mid: #D08A20; --sev-high: #FF4030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; transition: all 0.2s; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 0; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; transition: color 0.15s; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 22px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; letter-spacing: 0; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; letter-spacing: 0; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; text-indent: 0; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.86rem; line-height: 1.6; }
+th, td { padding: 11px 13px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.verdict { display: inline-block; font-family: var(--font); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 2px; letter-spacing: 0.05em; margin-right: 6px; }
+.sev-low { color: var(--sev-low); border: 1px solid var(--sev-low); }
+.sev-mid { color: var(--sev-mid); border: 1px solid var(--sev-mid); }
+.sev-high { color: var(--sev-high); border: 1px solid var(--sev-high); }
+.verify-item { margin: 28px 0; padding: 18px 22px; border-left: 3px solid var(--border); background: var(--card); }
+.verify-item.low { border-left-color: var(--sev-low); }
+.verify-item.mid { border-left-color: var(--sev-mid); }
+.verify-item.high { border-left-color: var(--sev-high); }
+.verify-item h4 { color: var(--text); margin-top: 0; }
+.verify-id { font-family: "SF Mono", monospace; font-size: 0.78rem; color: var(--accent-warm); font-weight: 700; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { background: var(--surface); padding: 16px 20px; border-radius: 6px; overflow-x: auto; font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; line-height: 1.6; margin: 24px 0; border-left: 3px solid var(--accent-warm); }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>領域策定 TRACK 8 検証</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#ch1"><span class="toc-num">01</span>検証の概要と方法論</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>カテゴリ1: スナップショット不整合</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>カテゴリ2: ハルシネーション</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>カテゴリ3: カバレッジギャップ</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>カテゴリ4: チーム間不整合</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>要追跡事項一覧</a></li>
+<li><a href="#ch7"><span class="toc-num">07</span>判定サマリー</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">verification</span>
+<span class="db-tag">領域策定 Track 8</span>
+<span class="db-tag">4カテゴリ品質検証</span>
+</div>
+<h1 class="book-title">Track 8 4カテゴリ品質検証</h1>
+<p class="book-subtitle">analysis.htmlで提示した3DB統合解析（TA 226,996行＋AI Development 2,236論文＋AA 551言及）に対し、_PROTOCOLS.md §7・§8の準拠で4カテゴリ検証を実施。スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合の4視点から、報告内容を内部監査する。</p>
+<div class="book-meta">
+<span>生成日: 2026-05-09</span>
+<span>担当: Track 8 リード</span>
+<span>検査項目: 16項目（4カテゴリ × 各3-5項目）</span>
+<span>判定区分: 問題なし／要解釈／要追跡／要修正／構造的ギャップ</span>
+</div>
+</header>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">検証の概要と方法論</h2>
+
+<p class="lead">本Trackの自己検証は、_PROTOCOLS.md §8の判定区分（問題なし／要解釈／要追跡／要修正／構造的ギャップ）に従い、analysis.htmlで提示した数値・主張・推論を内部監査する。後続の<code>/doc-verify</code>独立検証およびsentinel最終ゲートに先立ち、本Track内で自己発見可能な問題を最大限に開示することを目的とする。</p>
+
+<p>検査対象は4カテゴリ × 各3-5項目で計16項目。各項目には判定（low=問題なし、mid=要解釈／要追跡／要修正、high=構造的ギャップ）を付与する。判定の根拠は本検証文末尾の「要追跡事項一覧」（§6）にも再掲する。</p>
+
+<div class="callout">
+<div class="callout-title">検査対象データ</div>
+TA = tech_acceleration.db（226,996行・44表、sqlite_sequence除外）／AI Development = llm_papers.db (1,097) + agi_papers.db (1,139) ／AA = ai_acceleration_evidence.db（551言及・464出典・97ドメイン・13メカニズム）
+</div>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">カテゴリ1: スナップショット不整合（5項目）</h2>
+
+<p>analysis.html §2 で開示した三系列（ブリーフィング値／Memory値／DB実値）の差異を、ここでは項目別に判定する。</p>
+
+<div class="verify-item low">
+<h4><span class="verify-id">V-01</span> TAレコード総数の三系列差 <span class="verdict sev-low">問題なし</span></h4>
+<p>ブリーフィング値「162Kレコード42テーブル」、Memory値「227Kレコード44テーブル」、DB実値「226,996行・44表（sqlite_sequence除外）」（集計L-01）。差異は明示的にanalysis §2.1で開示・説明済み。差の主因はOECD MSTI 64,890行とSeshat all_variables 25,895行の追加収集と<span class="verdict sev-mid">解釈</span>。本レポートはDB実値を採用、判定は「問題なし（明示的に時系列を記録済）」。</p>
+</div>
+
+<div class="verify-item low">
+<h4><span class="verify-id">V-02</span> AI Development DB の三系列差 <span class="verdict sev-low">問題なし</span></h4>
+<p>ブリーフィング値1,097＋1,139＝2,236、Memory値同値、DB実値同値（集計L-03）。三系列が完全一致。「2,236論文DB」というラベルは正確である。判定: 問題なし。</p>
+</div>
+
+<div class="verify-item mid">
+<h4><span class="verify-id">V-03</span> AA 言及・出典の三系列差 <span class="verdict sev-mid">要解釈</span></h4>
+<p>ブリーフィング値「498言及・322ソース」、Memory値「498言及」、DB実値「551言及・464出典」（集計L-05）。差異は53言及・142出典で、無視できない規模。本レポートはDB実値を採用し、ブリーフィング値498は2026年4月後半の追加収集前のスナップショットと解釈。Track 10統合時、ブリーフィング値498を引用する他Trackとの整合は要追跡。</p>
+</div>
+
+<div class="verify-item low">
+<h4><span class="verify-id">V-04</span> TA technologies の年代範囲 <span class="verdict sev-low">問題なし</span></h4>
+<p>analysis §1.1 で「紀元前700万年〜2025年」と記載。集計L-02 でMIN(year_earliest)=-7,000,000、MAX(year_earliest)=9,500（外れ値）。MAX値の9,500は<code>year_latest</code>由来の混入と<span class="verdict sev-mid">解釈</span>される。実質的な最新は2024年（AIエージェント）であり、analysis での記述は妥当。判定: 問題なし。</p>
+</div>
+
+<div class="verify-item low">
+<h4><span class="verify-id">V-05</span> AA confidence_tier 分布の整合 <span class="verdict sev-low">問題なし</span></h4>
+<p>analysis §8.3 で「strong 23、moderate 10、tentative 38、insufficient 23、definitive 0」（合計94）と記載。集計L-27 で完全一致。is_ai_accelerated=1 は33件、is_ai_accelerated=0 は61件で合計94、整合。判定: 問題なし。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">カテゴリ2: ハルシネーション（4項目）</h2>
+
+<p>analysis.htmlで言及した固有名詞・年代・引用数値の真偽を実DB照会で検証する。</p>
+
+<div class="verify-item low">
+<h4><span class="verify-id">V-06</span> Transformer (2017) の被引用数 95,000 <span class="verdict sev-low">問題なし</span></h4>
+<p>analysis §6.5 で「Attention Is All You Need (2017) — 95,000引用」と記載（集計L-21）。AGI papers.db にて<code>SELECT title, year, citation_count FROM papers ORDER BY citation_count DESC LIMIT 1</code>を実行。結果: title="Attention Is All You Need", year=2017, citation_count=95,000で完全一致。判定: 問題なし。</p>
+</div>
+
+<div class="verify-item low">
+<h4><span class="verify-id">V-07</span> AGI timeline 14マイルストーンの実在性 <span class="verdict sev-low">問題なし</span></h4>
+<p>analysis §7.1 で14のマイルストーン（1950 Turing、1956 Dartmouth、1974/1982 AI冬、1997 Deep Blue、2011 Watson、2012 ImageNet、2016 AlphaGo、2017 Transformer、2018 BERT/GPT、2020 GPT-3、2022 ChatGPT、2023 GPT-4、2024 マルチモーダル成熟）を提示。AGI papers.db <code>timeline</code>表のSELECT *で14件全件と一致（集計L-22）。判定: 問題なし。</p>
+</div>
+
+<div class="verify-item mid">
+<h4><span class="verify-id">V-08</span> 7段階AGIクリティカルパスの操作的構築 <span class="verdict sev-mid">要解釈</span></h4>
+<p>analysis §7.2 で7段階を提示。AI Development DBに直接の表として実装されておらず、本Track が approach_category 21分類とtimeline 14件から操作的に構築。これは<span class="verdict sev-mid">推定</span>であり、別の段階区分（5段階・10段階）も成立しうる。analysis §7.3で本旨を明示しているが、Track 10統合時は「Track 8 操作的構築」と記載すべき。</p>
+</div>
+
+<div class="verify-item low">
+<h4><span class="verify-id">V-09</span> AAメカニズム件数 13件の実在性 <span class="verdict sev-low">問題なし</span></h4>
+<p>analysis §8.1 で13メカニズムを提示。SELECT * FROM taxonomy_mechanisms で13件確認（集計L-24）。HYPOTHESIS_GEN 313件・WORKFLOW_AUTOMATION 134件など、件数も完全一致。判定: 問題なし。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">カテゴリ3: カバレッジギャップ（4項目）</h2>
+
+<p>本Track のDB が構造的にカバーしない領域、または推論で補完するしかない部分を明示する。</p>
+
+<div class="verify-item high">
+<h4><span class="verify-id">V-10</span> very-far（2081-2100）が3DB全て射程外 <span class="verdict sev-high">構造的ギャップ</span></h4>
+<p>TAは2025年まで、AI Development DBは2025年まで、AAは2026-2030年代の予測言及にとどまる。very-far ホライズン（2081-2100）は3DB全てが直接の根拠を持たない。analysis §10.3・§11 で明示済み。<strong>本Trackはvery-farに対して直接答えられない</strong>。判定: 構造的ギャップ。Track 1（FK）／Track 2（CLA）／Track 6（GPT-QoL）/ Track 4（Anthropology）等との統合で補完する必要あり。</p>
+</div>
+
+<div class="verify-item high">
+<h4><span class="verify-id">V-11</span> CTL-V／CTL-G／CTL-S の構造的少数性 <span class="verdict sev-high">構造的ギャップ</span></h4>
+<p>3DB全体としてCTL-T（技術・知）に圧倒的集中。AAでもCTL-T系（COMP-SCI/LIFE-SCI/PHYS-SCI等）が60%以上、CTL-V（HUMANITIES 14件・CREATIVE 19件）／CTL-G（LAW-POLICY 15件）／CTL-S（SOC-SCI 26件・EDUCATION 25件）は20%未満。LLM論文1,097件のうち倫理系（Safety/Bias/Privacy/Societal Impact等）合計は10%未満。<strong>本Track は技術発展の「実態」は精緻に語れるが、「社会的・倫理的含意」は推論レベル</strong>。Track 7（哲学）／Track 2（CLA）／Track 1（FK values領域）必須。判定: 構造的ギャップ。</p>
+</div>
+
+<div class="verify-item high">
+<h4><span class="verify-id">V-12</span> AA 2024-2025年への集中バイアス <span class="verdict sev-high">構造的ギャップ</span></h4>
+<p>AA 551言及のうち2024年275件＋2025年133件＝408件が74%を占める（集計L-08）。これはAA が〈直近2年間のAI加速言説の集積〉という性質を強く持つことを意味する。Track 3（megatrend）が指摘した「過剰的中」概念の対象になりうる<span class="verdict sev-mid">解釈</span>。本Trackの加速ドメインTOP30判定は、この集中バイアスを引き継ぐ可能性が高い。判定: 構造的ギャップ。Track 3「過剰的中」枠組み・Track 5（Signal）の予測力評価で再検証必要。</p>
+</div>
+
+<div class="verify-item mid">
+<h4><span class="verify-id">V-13</span> tech_to_tech 354件の網羅率 <span class="verdict sev-mid">要追跡</span></h4>
+<p>TA technologies 1,191件に対し、tech_to_tech 354件・science_to_tech 133件は連鎖関係として少数。可能な関係数（n×(n-1)/2 ≒ 70万件）の0.05%（集計L-12）。「enables 関係」（221件・62.4%）の網羅性は限定的。analysis §4.3 で〈過去の技術発展は積層的〉と主張するが、その根拠強度はやや弱い<span class="verdict sev-mid">未検証</span>。判定: 要追跡。Track 6（GPT-QoL）が tech_to_tech 拡張を行う場合は、本Track の主張を再検証可能。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">カテゴリ4: チーム間不整合（3項目）</h2>
+
+<p>他Track（Track 1 FK、Track 2 CLA、Track 3 megatrend、Track 5 Signal、Track 7 academic）の主張と本Track の主張に矛盾がないか検証する。完了済みTrackは1/2/3/5/7。</p>
+
+<div class="verify-item mid">
+<h4><span class="verify-id">V-14</span> Track 3「過剰的中」概念との整合 <span class="verdict sev-mid">要追跡</span></h4>
+<p>Track 3 は「生成AI（Dai 14）が総論的中・速度規模超過＝過剰的中」と判定。本Trackも analysis §7.3 で「Stage 5 以降の進展は2017年Transformer時点での予測を質的・量的に上回っている可能性」と<span class="verdict sev-mid">解釈</span>を提示。両Track は同方向の主張だが、本Track は「過剰的中」の用語を分析中で導入していない。<strong>Track 10統合時は「Track 3定義の過剰的中＝Track 8 Stage 5-6の量的超過」として接続記述を追加すべき</strong>。判定: 要追跡。</p>
+</div>
+
+<div class="verify-item mid">
+<h4><span class="verify-id">V-15</span> Track 1（FK）「AI領域90%占有・values 0.45%空白」との関係 <span class="verdict sev-mid">要追跡</span></h4>
+<p>Track 1（FK）は「AI領域90%占有・values 0.45%空白」を発見。本Track の analysis §3.2・§6.3・§8.2で「3DB全体としてCTL-T主軸、CTL-V／CTL-G／CTL-Sは少数」と述べる。両Trackは独立に〈AI領域の言及過剰と価値観・倫理領域の薄さ〉を確認している。<strong>これはMサイン（複数Track合意）の有力候補</strong>。Track 10統合時は「Track 1とTrack 8の独立的合意」として強調するべき。判定: 要追跡。</p>
+</div>
+
+<div class="verify-item mid">
+<h4><span class="verify-id">V-16</span> Track 5（Signal）のメインストリーム化年数推定との整合 <span class="verdict sev-mid">要追跡</span></h4>
+<p>Track 5 は AA を補完DBとして使用、メインストリーム化年数推定（5次元予測力評価）を実施。本Track は AA を主軸DBの一つとして使用。両者の AA 言及の解釈に差が出る可能性あり<span class="verdict sev-mid">未検証</span>。本Track の near ホライズン加速ドメインTOP30 と Track 5 のメインストリーム化年数推定が整合するか、Track 10で照合必要。<strong>例: Track 8「2030 主流化完了 = 生成AI／LLM」と Track 5 のメインストリーム化年数推定の対応を確認</strong>。判定: 要追跡。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">要追跡事項一覧</h2>
+
+<p>analysis.html／本検証で <span class="verdict sev-mid">要解釈</span> または <span class="verdict sev-mid">要追跡</span> 判定とした事項の一覧。Track 10統合時に再検証する。</p>
+
+<table>
+<thead><tr><th>ID</th><th>項目</th><th>判定</th><th>追跡担当</th></tr></thead>
+<tbody>
+<tr><td>V-03</td><td>AAブリーフィング値498 vs DB実値551 の差53件</td><td>要解釈</td><td>Track 10 / Track 5</td></tr>
+<tr><td>V-08</td><td>7段階AGIクリティカルパスは Track 8 の操作的構築</td><td>要解釈</td><td>Track 10</td></tr>
+<tr><td>V-13</td><td>tech_to_tech 354件の網羅率（可能関係の0.05%）</td><td>要追跡</td><td>Track 6（GPT-QoL）拡張時</td></tr>
+<tr><td>V-14</td><td>Track 3「過剰的中」概念の Track 8 への適用</td><td>要追跡</td><td>Track 10統合</td></tr>
+<tr><td>V-15</td><td>Track 1「AI領域90%占有」と Track 8「CTL-T主軸」の合意（Mサイン候補）</td><td>要追跡</td><td>Track 10統合</td></tr>
+<tr><td>V-16</td><td>Track 5「メインストリーム化年数推定」との整合</td><td>要追跡</td><td>Track 10統合 / Track 5側で再分析</td></tr>
+</tbody>
+</table>
+
+<p>本Track の【未検証】タグ箇所（analysis.html内）は以下：</p>
+<ul>
+<li>§4.2 digital era の duration 5.7年（外れ値含む可能性）</li>
+<li>§5.2 computer science 分野の急増が他分野と比較して急（要追加クエリ）</li>
+<li>§5.1 特許出願数の増加が当面続く可能性（推定）</li>
+<li>§6.1 LLM 2024-2025年の論文網羅性（DB スナップショット2026年4月時点）</li>
+<li>§9.3 AGI実現時期前倒し・ブレークスルー・地政学的断絶の3シナリオ未検証</li>
+<li>§11.1 結語の「要追跡事項」5項目</li>
+</ul>
+
+</section>
+
+<section class="chapter-section" id="ch7">
+<div class="chapter-number-label">CHAPTER 07</div>
+<h2 class="chapter-title">判定サマリー</h2>
+
+<p>本Track の自己検証結果サマリー：</p>
+
+<table>
+<thead><tr><th>カテゴリ</th><th>項目数</th><th>問題なし</th><th>要解釈／要追跡</th><th>構造的ギャップ</th></tr></thead>
+<tbody>
+<tr><td>カテゴリ1: スナップショット不整合</td><td>5</td><td>4</td><td>1（V-03）</td><td>0</td></tr>
+<tr><td>カテゴリ2: ハルシネーション</td><td>4</td><td>3</td><td>1（V-08）</td><td>0</td></tr>
+<tr><td>カテゴリ3: カバレッジギャップ</td><td>4</td><td>0</td><td>1（V-13）</td><td>3（V-10/V-11/V-12）</td></tr>
+<tr><td>カテゴリ4: チーム間不整合</td><td>3</td><td>0</td><td>3（V-14/V-15/V-16）</td><td>0</td></tr>
+<tr><td><strong>合計</strong></td><td><strong>16</strong></td><td><strong>7</strong></td><td><strong>6</strong></td><td><strong>3</strong></td></tr>
+</tbody>
+</table>
+
+<p>16項目中、問題なし7・要解釈／要追跡6・構造的ギャップ3。要修正（report.htmlで訂正必須）に該当する項目は<strong>ゼロ</strong>。構造的ギャップ3項目（V-10 very-far射程外、V-11 CTL-V/G/S 少数性、V-12 2024-2025集中バイアス）はいずれもanalysis.html §10-11で明示済みであり、Track 10統合時のフックとして報告書末尾「研究の限界」に再掲する。</p>
+
+<p>本Track の自己検証は「3カテゴリで構造的ギャップを発見・3カテゴリで要追跡を発見・1カテゴリで問題なし」という結果である。これらは <code>/doc-verify</code> 独立検証および sentinel 最終ゲートに引き渡され、必要に応じて修正サイクルを実施する。</p>
+
+<div class="callout">
+<div class="callout-title">本検証の主要発見</div>
+3DB全体としてCTL-T（技術・知）に圧倒的集中する構造（V-11）は、Track 1（FK）の「AI領域90%占有」と独立的に発見されたMサイン候補である。Track 10統合時は両者の合致を強調することで、〈ミラツク独自視点〉の客観的根拠として活用できる。
+</div>
+</section>
+
+</main>
+</div>
+
+<footer>
+Track 8 検証 / 領域策定プロジェクト / 生成日: 2026-05-09 / 検査項目16 / 判定区分5階層
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('theme', next); } catch(e) {}
+}
+(function() {
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

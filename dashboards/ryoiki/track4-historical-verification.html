@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track 4 検証 — 4DB横断統合の自己検証 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --sev-low: #2e7d32;
+  --sev-mid: #ED6C02;
+  --sev-high: #CC1400;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+  --sev-low: #66BB6A; --sev-mid: #FFA726; --sev-high: #FF4030;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; transition: all 0.2s; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 0; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; transition: color 0.15s; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 22px; flex-shrink: 0; font-weight: 700; }
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; letter-spacing: 0; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; letter-spacing: 0; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; text-indent: 0; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.6; }
+th, td { padding: 11px 13px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.sev-low, .sev-mid, .sev-high { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 2px; display: inline-block; }
+.sev-low { background: rgba(46,125,50,0.10); color: var(--sev-low); border: 1px solid var(--sev-low); }
+.sev-mid { background: rgba(237,108,2,0.10); color: var(--sev-mid); border: 1px solid var(--sev-mid); }
+.sev-high { background: var(--accent-muted); color: var(--accent-warm); border: 1px solid var(--accent-warm); }
+
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>領域策定 / Track 4 検証</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#exec"><span class="toc-num">00</span>本検証の目的</a></li>
+<li><a href="#cat1"><span class="toc-num">01</span>カテゴリ1: スナップショット不整合</a></li>
+<li><a href="#cat2"><span class="toc-num">02</span>カテゴリ2: ハルシネーション</a></li>
+<li><a href="#cat3"><span class="toc-num">03</span>カテゴリ3: カバレッジギャップ</a></li>
+<li><a href="#cat4"><span class="toc-num">04</span>カテゴリ4: チーム間不整合</a></li>
+<li><a href="#untracked"><span class="toc-num">05</span>未検証事項一覧</a></li>
+<li><a href="#summary"><span class="toc-num">06</span>検証サマリーとTrack 10送り</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">verification</span>
+<span class="db-tag">4カテゴリ検証</span>
+<span class="db-tag">Track 4</span>
+<span class="db-tag">SIF/HIC/GF/TA</span>
+<span class="db-tag">自己検証</span>
+</div>
+<h1 class="book-title">Track 4 検証 — 4DB横断統合の自己検証</h1>
+<p class="book-subtitle">スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合の4カテゴリ独立検証</p>
+<div class="book-meta">
+<span>検証実施: 2026-05-09</span>
+<span>検証項目数: 16項目</span>
+<span>4カテゴリ × 各3項目以上</span>
+</div>
+</header>
+
+<section class="chapter-section" id="exec">
+<div class="chapter-number-label">CHAPTER 00</div>
+<h2 class="chapter-title">本検証の目的</h2>
+<p class="lead">本書は <a href="track4-historical-analysis.html">track4-historical-analysis.html</a>（解析レポート）に対する自己検証文書である。Track 1（FK）verification.html、Track 3（MT）verification.html を参照モデルとし、4カテゴリ16項目の独立検査を実施する。</p>
+<p>検証カテゴリは次の4つ。<strong>カテゴリ1（スナップショット不整合）</strong>では、ブリーフィング値・公開値・DB実値の三系列差を再記録し、各系列の判定（問題なし／要解釈／要追跡／要修正／構造的ギャップ）を付与する。<strong>カテゴリ2（ハルシネーション）</strong>では、analysis.html 本文中の固有名詞・数値・引用が DB に実在するかを照合する。<strong>カテゴリ3（カバレッジギャップ）</strong>では、4DBが構造的に扱えない領域・時代・文明圏を開示する。<strong>カテゴリ4（チーム間不整合）</strong>では、Track 1/2/3 との数値・解釈の矛盾候補を提示する。</p>
+<p>本検証はLead Researcher自身が実施しているため、独立性は限定的である。後続の <code>/doc-verify</code> エージェントおよび <code>sentinel</code> エージェントによる完全独立検証を経て、最終的に Track 10 統合の入力となる。</p>
+</section>
+
+<section class="chapter-section" id="cat1">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">カテゴリ1: スナップショット不整合</h2>
+<p>主軸4DBについて、ブリーフィング値・既存ダッシュボード値・DB実値の三系列を再記録する。</p>
+
+<h3>V-01: SIF 件数の三系列差</h3>
+<table>
+<thead><tr><th>系列</th><th>値</th><th>取得元</th><th>取得日時</th></tr></thead>
+<tbody>
+<tr><td>ブリーフィング値</td><td>1,096事象</td><td><code>_TRACK4_HISTORICAL.md</code></td><td>2026-05-09 ブリーフィング作成時</td></tr>
+<tr><td>Memory値</td><td>7,389事象</td><td><code>project_si_framework_db.md</code></td><td>「SIF v9完了。7,389事象」</td></tr>
+<tr><td>DB実値</td><td>7,389事象</td><td><code>si_events.db</code> 直接照会</td><td>2026-05-09 集計L-01</td></tr>
+</tbody>
+</table>
+<p>判定: <span class="sev-mid">要解釈</span>。Memory値とDB実値は完全一致（7,389）し、ブリーフィング値（1,096）が古いスナップショットを反映。analysis.html 第1章で三系列を併記し、DB実値を採用済み。Track 10統合時に基準値を選定する場合は、ブリーフィング書を更新する必要があるが、本Trackの範囲では「DB実値が一次値」として処理した。</p>
+
+<h3>V-02: HIC 字数の三系列差</h3>
+<table>
+<thead><tr><th>系列</th><th>値</th><th>取得元</th></tr></thead>
+<tbody>
+<tr><td>ブリーフィング値</td><td>184K字</td><td><code>_TRACK4_HISTORICAL.md</code></td></tr>
+<tr><td>DB実値（バイト）</td><td>458,236バイト</td><td><code>wc -c</code> samples*/*.md 集計L-63</td></tr>
+<tr><td>DB実値（推定字数）</td><td>~152K字</td><td>UTF-8日本語=3バイト/字 換算</td></tr>
+</tbody>
+</table>
+<p>判定: <span class="sev-mid">要解釈</span>。ブリーフィング「184K字」と推定字数「152K字」は近いが完全一致せず、計測単位（文字／バイト／単語）の差異と<span class="tag-int">解釈</span>される。analysis.html ではDB実値458,236バイトを採用。</p>
+
+<h3>V-03: GF 件数の三系列差</h3>
+<table>
+<thead><tr><th>項目</th><th>ブリーフィング値</th><th>DB実値</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>persons</td><td>9,178</td><td>9,178</td><td><span class="sev-low">問題なし</span></td></tr>
+<tr><td>events</td><td>10,033</td><td>10,033</td><td><span class="sev-low">問題なし</span></td></tr>
+<tr><td>concepts</td><td>568</td><td>568</td><td><span class="sev-low">問題なし</span></td></tr>
+<tr><td>links</td><td>741</td><td>knowledge_graph_edges=2 / event_concept_links=741</td><td><span class="sev-low">解明済（OK）</span></td></tr>
+</tbody>
+</table>
+<p>persons・events・conceptsの3指標は完全一致。links については、Memory「741リンク」と <code>knowledge_graph_edges</code> の2行は大きく異なる。<strong>doc-verify 独立照会（2026-05-09）により <code>event_concept_links</code> テーブルに741行が存在することが確認された</strong>。links は <code>knowledge_graph_edges</code> ではなく <code>event_concept_links</code> テーブルに実装されており、Memory記載の「741リンク」と完全一致する。本項目は要追跡から「解明済」へ昇格。U-04 も解決済として閉じる（後述）。</p>
+
+<h3>V-04: TA 件数とテーブル数の三系列差</h3>
+<table>
+<thead><tr><th>項目</th><th>ブリーフィング値</th><th>DB実値</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>テーブル数</td><td>42</td><td>44</td><td><span class="sev-mid">要解釈</span></td></tr>
+<tr><td>レコード数</td><td>162K</td><td>226,996</td><td><span class="sev-mid">要解釈</span></td></tr>
+</tbody>
+</table>
+<p>差分の主要因はOECD MSTI（64,890行）・OWID CO2（50,411行）等の大型テーブルが追加された結果と<span class="tag-int">解釈</span>。analysis.html 第6章でDB実値を採用済み。</p>
+
+<h3>V-05: CTI v2 9時代スコアの単一系列性</h3>
+<p>CTI v2 は専用DBではなく、Memory <code>project_cti_v2.md</code> に記録された9時代手計算スコアのみが現存する。三系列差は適用不可。判定: <span class="sev-mid">要解釈</span>（手計算指標を実DB値と並列で扱うことの方法論的留保）。analysis.html 第9章でその旨を明示済み。</p>
+</section>
+
+<section class="chapter-section" id="cat2">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">カテゴリ2: ハルシネーション</h2>
+<p>analysis.html 本文中の固有名詞・数値・引用が、本Trackで照会した4DBに実在するかを再照合する。</p>
+
+<h3>V-06: 「米国奴隷制廃止運動 1830 prrrc=25」の確認</h3>
+<p>SIF DBに対して以下のSQLで照合した：</p>
+<pre style="font-size:0.78rem;background:var(--surface);padding:12px;border-left:3px solid var(--accent-warm);overflow-x:auto;"><code>SELECT name_jp, year_start, civilization, type, prrrc_score FROM si_events
+WHERE name_jp LIKE '%米国奴隷制%' OR name_jp LIKE '%奴隷制廃止%';
+-- 結果: 米国奴隷制廃止運動 / 1830 / western / civil_rights / 25</code></pre>
+<p>判定: <span class="sev-low">問題なし</span>。analysis.html L-17・L-20 の記述と完全一致。</p>
+
+<h3>V-07: 「シュメール粘土板 BC3300 cognition_change=5」の確認</h3>
+<pre style="font-size:0.78rem;background:var(--surface);padding:12px;border-left:3px solid var(--accent-warm);overflow-x:auto;"><code>SELECT name_jp, year_start, civilization, cognition_change FROM si_events
+WHERE name_jp LIKE '%シュメール%' AND cognition_change=5;
+-- 結果: シュメールの記録粘土板 / -3300 / islamic / 5</code></pre>
+<p>判定: <span class="sev-mid">要解釈</span>。年代・cognition_change=5は一致。ただし civilization=「islamic」は不適切（シュメールはBC3300、イスラム成立はAD7世紀）。SIF DB側の分類エラーで、本Trackのハルシネーションではない。verification.html 第3章で構造的ギャップとして再記録。</p>
+
+<h3>V-08: HIC「20ケース合計 458,236バイト」の確認</h3>
+<pre style="font-size:0.78rem;background:var(--surface);padding:12px;border-left:3px solid var(--accent-warm);overflow-x:auto;"><code>find ~/projects/research/great-figures-db/integrated-cases/samples*/*.md -type f -exec wc -c {} \; | awk '{sum+=$1} END {print sum}'
+-- 結果: 458,236</code></pre>
+<p>判定: <span class="sev-low">問題なし</span>。L-63 の合計値と一致。最長 08_napoleonic_code.md=36,590B、最短 03_rockefeller.md=16,486B もファイル単位で再確認済み。</p>
+
+<h3>V-09: 「TA publication_counts 2026=19.9M件」の確認</h3>
+<pre style="font-size:0.78rem;background:var(--surface);padding:12px;border-left:3px solid var(--accent-warm);overflow-x:auto;"><code>SELECT year, SUM(count) FROM publication_counts WHERE year=2026 GROUP BY year;
+-- 結果: 2026 / 19,884,429</code></pre>
+<p>判定: <span class="sev-low">問題なし</span>。19,884,429 ≒ 19.9M で一致。</p>
+
+<h3>V-10: 「CTI v2 産業革命=0.764, AI革命=0.768」の確認</h3>
+<p>取得元: <code>~/.claude/projects/-Users-nishimura-/memory/project_cti_v2.md</code>。Memory ファイル内の「9時代スコア（CTI raw）」セクションに以下を確認：「産業革命 1760-1840: 0.764」「AI革命 2017-現在: 0.768」「双子峰プラトー: AI革命/産業革命 = 1.05倍」。判定: <span class="sev-low">問題なし</span>。</p>
+
+<h3>V-11: 「軸の時代 D4=0.95 最大値」の確認</h3>
+<p>同 Memory ファイル「9時代スコア」項目に「枢軸時代 BC800-200: 0.636（D4=0.95 最大値）」と明記。判定: <span class="sev-low">問題なし</span>。</p>
+
+<h3>V-12: 「サイクル A 500年周期」の主張</h3>
+<p>本Track独自の仮説として提示した。<strong>4DB集計に直接の根拠はあるが、500年という周期性は外挿的解釈</strong>である。analysis.html 第7章で <span style="border:1px solid var(--accent-warm);padding:1px 6px;color:var(--accent-warm);font-size:0.65rem;">推定</span>タグを付して提示済み。判定: <span class="sev-mid">要追跡</span>。Track 10統合時に CLA（Track 2）・SI Framework（Track 2）・Megatrend（Track 3）の独立観察と照合する必要がある。</p>
+
+<h3>V-13: 「サイクル C 終端の最有力候補は2070年」の主張</h3>
+<p>同様に外挿的推定。analysis.html 第10章で <span style="border:1px solid var(--accent-warm);padding:1px 6px;color:var(--accent-warm);font-size:0.65rem;">推定</span>タグ付与。CTI v2 自体は「2070年終端」を明示していないため、本Track独自の延伸的解釈となる。判定: <span class="sev-mid">要追跡</span>。</p>
+</section>
+
+<section class="chapter-section" id="cat3">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">カテゴリ3: カバレッジギャップ</h2>
+
+<h3>V-14: SIF 2027-2029 未来日付レコードの品質課題</h3>
+<p>SIF DB に対して以下を実行：</p>
+<pre style="font-size:0.78rem;background:var(--surface);padding:12px;border-left:3px solid var(--accent-warm);overflow-x:auto;"><code>SELECT name_jp, year_start, type FROM si_events
+WHERE year_start>=2027 ORDER BY year_start DESC LIMIT 20;
+-- 平手友梨奈による女性社会運動 / 2029 / civil_rights
+-- 樋口新葉による女性社会運動 / 2029 / civil_rights
+-- 本田真凜による女性社会運動 / 2029 / civil_rights
+-- 山下美夢有による女性社会運動 / 2029 / civil_rights
+-- 廣中璃梨佳による女性社会運動 / 2028 / civil_rights
+-- ... (推定数十件)</code></pre>
+<p>これらは <strong>女性スポーツ選手の名前と将来日付がペアで civil_rights に分類された</strong>レコード群。内容と類型のミスマッチ、未来日付（DB作成時点で未来）の含有は、SIF収集パイプラインのテストデータ混入または分類器エラーと<span class="tag-est">推定</span>される。判定: <span class="sev-high">構造的ギャップ</span>。本Track 4ではこれらを除外せずそのまま使用したが、Track 10統合時には除外推奨。</p>
+
+<h3>V-15: SIF civilization ラベルの異常分類（doc-verify 追加確認: 体系的問題）</h3>
+<p>analysis.html 第3章 L-17・L-18 で確認したように、ジョン・デューイ（米国）・W.E.B.デュボイス（米国）・ベーデン＝パウエル（英国）等の <strong>欧米の知識民主化人物が civilization=east_asian に分類</strong>されている。デューイ（1859-1952）はバーモント州出身、デュボイス（1868-1963）はマサチューセッツ州出身であり、east_asian 分類は明確に誤りである。シュメール（V-07）の islamic 分類と合わせ、SIF DBは <em>civilization カラムに体系的なラベリングエラーが存在する</em>と判定される。判定: <span class="sev-high">構造的ギャップ</span>。</p>
+<p><strong>doc-verify 独立照会による追加確認（2026-05-09）</strong>: SIF prrrc TOP10 を独立照会した結果、<strong>TOP10中8件が east_asian に誤分類</strong>されていることが確認された。具体的には、マハトマ・ガンディー（正: south_asian）・W.E.B.デュボイス（正: western/americas）・ジョン・デューイ（正: western）・ブッカー・T・ワシントン（正: western/americas）・カーター・G・ウッドソン（正: western/americas）・ヤヌシュ・コルチャック（正: western）・レイチェル・マクミラン（正: western）・マーガレット・マクミラン（正: western）の8件が east_asian に誤分類されており、唯一正しいのは南梅吉（east_asian 実在）の1件のみであった。知識民主化（knowledge_democracy）系で Western pioneers が east_asian に集中的に誤分類される傾向が確認されている。誤分類の規模は10%前後と推定されるが、knowledge_democracy 系で特に高頻度であり非一様分布である。</p>
+<p>影響: 本Trackの「文明圏分布」（集計L-03）の east_asian=1,725 は実際には誤分類が含まれるため、東アジアの真の事象数は推定値より少ない可能性がある<span class="tag-int">解釈</span>。とくに <strong>TOP10 #03「非西洋認識論」の C=4 評価への影響: 軽微〜中程度（SIF civilization 誤分類により C=4 は上限値、実質的には C=3〜4 の範囲。east_asian 過大計上を含む可能性があるため、非西洋系シェア計算への SIF civilization カラムの直接使用は慎重を要する）</strong>。Track 10 統合時には「SIF civilization カラムは要正規化、非西洋系シェア計算には civilization カラムを使用しない」のフラグを立てることを推奨する。</p>
+
+<h3>V-16: SIF type ラベルの過剰分類</h3>
+<p>L-04 の SI類型分布で、<strong>複数の小カテゴリ（power=52 / knowledge=32 / rights=31 / identity=28 / crisis_response=28 / rules=26 / rule=13 / knowledge_production=9 / resource=8 / infrastructure=8 / technology=5 / redistribution=3 / resource_change=2）</strong>が存在する。これらは元来「公共財型／社会的保護型／市民権型／知識民主化型／民主的意思決定型／複合型」の6類型に整理されるべきだが、後発の収集パイプラインで新カテゴリが追加された結果と<span class="tag-est">推定</span>される。合計245件（3.3%）。判定: <span class="sev-mid">要追跡</span>。Track 10統合時に正規化が必要。</p>
+
+<h3>V-17: HIC の文明圏偏り</h3>
+<p>HIC 20ケースの地域分布を再集計すると：欧米8（Medici/VOC/Rockefeller/Carnegie/Coca-Cola/Disney/Bogle/Newton/Copernicus/Luther/Napoleonic/Apollo＝12ケース）／東アジア5（Mitsui/Iwasaki/Keju/JackMa/Jam一部）／中東・古代地中海3（Alexander/Christianity/Gandhi はインド）／南アジア1（Gandhi）。<strong>欧米偏重（60%以上）</strong>であり、Track 3 修正版18MT R18「非西洋認識論」を補強する材料は限定的。判定: <span class="sev-high">構造的ギャップ</span>。</p>
+
+<h3>V-18: GF 文明圏偏り</h3>
+<p>L-27 の region_primary 分布で Europe + North America = 3,705人物（40.4%）、アジア合計 2,730（29.7%）、アフリカ・中南米合計 1,011（11.0%）。<strong>欧米偏重</strong>はSIFよりも強い。判定: <span class="sev-high">構造的ギャップ</span>。</p>
+
+<h3>V-19: TA 古代技術の薄さ</h3>
+<p>L-43 で paleolithic+neolithic+prehistoric = 93件（7.8%）に対し、digital+industrial+modern = 793件（66.6%）。<strong>古代5万年（旧石器時代）が93件</strong>、<strong>近代250年が793件</strong>という極端な記録偏差。これは「歴史記述自体の近代偏重」と「DB収集アクセシビリティの差」が重なる結果と<span class="tag-int">解釈</span>される。判定: <span class="sev-high">構造的ギャップ</span>。</p>
+
+<h3>V-20: CTL-Env（環境・気候）の薄さ</h3>
+<p>4DB横断で環境・気候を直接扱うレコードは TA owid_co2 50,411行・owid_energy 23,232行に限られ、これらも1750年以降の単一系列指標である。<strong>過去5,000年スパンの環境変動が DBレベルで構造化されていない</strong>。SIF にも環境SIタイプは存在しない（type=resource は8件のみ）。判定: <span class="sev-high">構造的ギャップ</span>。</p>
+
+<h3>V-21: 共通スパン（near/mid/far/very-far）の直接マップ困難</h3>
+<p>本Trackの主軸4DBはほぼ全件が「過去」であり、共通スパン4ホライズンに直接マップできるレコードはほぼ存在しない。SIF 2027-2029 レコードは V-14 の品質課題により実質的に使用不能。本Trackは <em>過去サイクルからの外挿</em>を主たる手法とせざるを得ない。判定: <span class="sev-high">構造的ギャップ</span>。これは本Trackの方法論的特性であり、Track 1（FK 23,274予測）・Track 8（PESTLE 196,714ニュース）等とは根本的に異なる。Track 10統合時に「歴史外挿型」と「実DB件数型」の方法論的差異を明示する必要がある。</p>
+</section>
+
+<section class="chapter-section" id="cat4">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">カテゴリ4: チーム間不整合</h2>
+
+<h3>V-22: Track 1 「FK 23,274予測の2030近傍56.4%集中」と本Track 「過去5,000年で1700-1900に57.2%集中」</h3>
+<p>両者は <strong>異なる時間軸での「集中」現象</strong>を別々に観察している。Track 1は <em>未来予測の集中</em>、本Trackは <em>過去事象の集中</em>。両者は矛盾しないが、Track 10統合時に「集中の二重構造（過去近代＋未来近傍）」として整理する必要がある。</p>
+<p>判定: <span class="sev-mid">要追跡</span>（Track 10統合時に二重構造として明示）。</p>
+
+<h3>V-23: Track 2 (CLA) 「物語の交代期（5系統失効＋5系統萌芽）」と本Track 「サイクル A 500年認知転換」</h3>
+<p>両者は方法論が異なるが、<strong>「現代がパラダイム転換期である」</strong>という結論で部分的に一致する。Track 2は1900-2026年の127年スパン、本Trackは過去5,000年スパン。Track 2の「物語の交代期」を本Trackのサイクル A の文脈に位置づけると、<em>AI革命2017以降の認知転換が4-50年の急速な変化として進行中</em>と<span class="tag-int">解釈</span>できる。両者の連動を深く検証することは Track 10 の課題。</p>
+<p>判定: <span class="sev-low">問題なし</span>（むしろ補完関係）。</p>
+
+<h3>V-24: Track 3 (修正版18MT) 「過剰的中（生成AI）パターン」と本Track 「双子峰プラトー (AI革命=産業革命×1.05倍)」</h3>
+<p>Track 3は「生成AIが総論的中・速度規模超過」と判定したが、本TrackはCTI v2を引いて「AI革命は産業革命を1.05倍だけ上回るに過ぎない（双子峰）」と提示する。<strong>2つの主張は時間スケールで両立する</strong>：Track 3は短期（10年）の現象、本Trackは長期（5,000年）の構造変革強度。</p>
+<p>判定: <span class="sev-mid">要解釈</span>（両論を併置し、Track 10で「AI革命の評価軸が時間スケールで変わる」として整理する）。</p>
+
+<h3>V-25: Track 3 R17「世代間正義」R18「非西洋認識論」と本Track 「サイクル A 認知転換軸」</h3>
+<p>Track 3が新設したR17・R18は、本Trackのサイクル A（500年認知転換）の射程上で <em>2070-2100年に顕在化するテーマ群</em>として位置づけられる。とくに <strong>R18「非西洋認識論」</strong>は本Trackの「Asia + Africa + Americas + Pacific 計2,624件（SIF 35.5%）」と接続する基盤がある（V-18の欧米偏重課題はあるが、SIFはGFよりも非西洋を厚く扱う設計）。本Trackは Track 3 の R17・R18 と <strong>強連結</strong>。</p>
+<p>判定: <span class="sev-low">問題なし</span>（Track 3との連結は M サイン候補）。</p>
+
+<h3>V-26: Track 3 R5「少子化加速・人口減少社会」と本Track 「サイクル B 帝国・組織興亡」</h3>
+<p>Track 3はR5を「near/mid/far/very-far 全ホライズンで重要度H」と評価。本TrackのサイクルB（150-300年制度興亡）の射程に入るが、SIF・HIC・GFには直接「人口減少」を扱う事象が極めて少ない（SIFで「人口」キーワード検索でも限定的）。本Trackは Track 3 R5 を補強する力が弱い。</p>
+<p>判定: <span class="sev-mid">要追跡</span>（Track 6（人材軌道）または Track 8（PESTLE）が補完するべき）。</p>
+
+<h3>V-27: 本Track「TA technologies AI=10件」とTrack 1「Generative AIに関する予測」</h3>
+<p>本Trackは TA technologies のAI領域がわずか10件と確認した（L-44）。一方Track 1のFKでは生成AIに関する予測が多数記録されている。これは <strong>「TAの技術記録は学術論文・特許起点（既成立技術）、FKは将来予測（未成立技術）」</strong>という収集設計の差異を反映する<span class="tag-int">解釈</span>。両者は矛盾せず、相補的に機能する。</p>
+<p>判定: <span class="sev-low">問題なし</span>（収集設計の差異）。</p>
+</section>
+
+<section class="chapter-section" id="untracked">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">未検証事項一覧（要追跡）</h2>
+<p>本Trackが <span style="border:1px solid #B01200;padding:1px 6px;color:#B01200;font-size:0.65rem;">未検証</span>タグを付与した事項を一覧化する。後続の <code>/doc-verify</code>・<code>sentinel</code> エージェント、または Track 10 統合リードがフォローアップする対象。</p>
+<table>
+<thead><tr><th>ID</th><th>項目</th><th>検証範囲外の理由</th><th>送り先</th></tr></thead>
+<tbody>
+<tr><td>U-01</td><td>SIF 2027-2029レコードのテストデータ判定</td><td>除外作業がTrack 4 のスコープを超える</td><td>SIF DB管理者 / Track 10</td></tr>
+<tr><td>U-02</td><td>SIF civilization ラベル誤分類の全件特定</td><td>9,000件以上のレコード逐一検査が必要</td><td>SIF DB管理者</td></tr>
+<tr><td>U-03</td><td>SIF type ラベル過剰分類の正規化</td><td>分類体系の再設計が必要</td><td>SIF DB管理者 / Track 10</td></tr>
+<tr><td>U-04</td><td>GF knowledge_graph_edges 2行のみの真偽</td><td><strong>解決済（2026-05-09 doc-verify確認）</strong>: event_concept_links テーブルに741行が存在、Memory「741リンク」と完全一致。knowledge_graph_edges は別テーブル</td><td>解決済</td></tr>
+<tr><td>U-05</td><td>サイクル A の500年周期性の統計的検証</td><td>本Trackは数値根拠＋外挿的解釈、統計的有意性は未検証</td><td>Track 10 / 統計家</td></tr>
+<tr><td>U-06</td><td>サイクル C 終端2070年の蓋然性</td><td>過去サイクルからの外挿のみ、独立検証手段なし</td><td>Track 10 / Track 1</td></tr>
+<tr><td>U-07</td><td>HIC 20ケースの「長寿性4要素」が現代AI企業に適用可能か</td><td>適用は仮説段階、実証には Track 5（投資シグナル）連携が必要</td><td>Track 5 / Track 10</td></tr>
+<tr><td>U-08</td><td>「印刷革命→啓蒙時代」と「AI革命→2200年」の類比妥当性</td><td>歴史的類比は強い解釈であり、別の類比も成立しうる</td><td>Track 9 (哲学・worldview) / Track 10</td></tr>
+<tr><td>U-09</td><td>CTL-Env が4DBで薄いことの政策的含意</td><td>4DBの構造的限界、Track 8（PESTLE）・Track 6（GPT-QoL）と連携必要</td><td>Track 6 / Track 8</td></tr>
+<tr><td>U-10</td><td>SIF・GF 共通の「1900年代ピーク」が記録バイアスか実態か</td><td>近代偏重の正常性検証は本Track範囲外</td><td>Track 10 / 統計家</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="summary">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">検証サマリーとTrack 10送り</h2>
+
+<h3>6.1 4カテゴリ × 各3項目以上の検査結果</h3>
+<table>
+<thead><tr><th>カテゴリ</th><th>項目数</th><th>問題なし</th><th>要解釈</th><th>要追跡</th><th>構造的ギャップ</th></tr></thead>
+<tbody>
+<tr><td>1. スナップショット不整合</td><td>5</td><td>0</td><td>5</td><td>1<sup>*</sup></td><td>0</td></tr>
+<tr><td>2. ハルシネーション</td><td>8</td><td>5</td><td>1</td><td>2</td><td>0</td></tr>
+<tr><td>3. カバレッジギャップ</td><td>8</td><td>0</td><td>0</td><td>1</td><td>7</td></tr>
+<tr><td>4. チーム間不整合</td><td>6</td><td>3</td><td>1</td><td>2</td><td>0</td></tr>
+<tr><td>合計</td><td>27</td><td>8</td><td>7</td><td>5</td><td>7</td></tr>
+</tbody>
+</table>
+<p>※V-03の「knowledge_graph_edges 件数」のみ要追跡として重複計上。</p>
+
+<h3>6.2 主要発見</h3>
+<p>第一に、<strong>4DB全てに「近代以降に集中する記録バイアス」</strong>が存在することが共通して確認された。SIF（1700-1900で57.2%）、GF（1800-1900で35%）、TA（digital+industrial+modern で66.6%）、HIC（1500-1900で14ケース・70%）。これは本Trackの方法論を制約する基底条件である。</p>
+<p>第二に、<strong>SIF DB に体系的なラベリングエラー</strong>（civilization の異常分類、type の過剰分類、未来日付レコード）が確認された。本Trackではこれらを除外せずに集計したため、analysis.html の数値には軽度のノイズが含まれる。Track 10統合時には、SIF DB管理者と協働して正規化することが望ましい。</p>
+<p>第三に、<strong>本Track独自の長期サイクル仮説（A・B・C）はいずれも外挿的解釈</strong>を含む。500年認知転換サイクル、150-300年制度興亡サイクル、産業革命以降250年プラトーは、4DB集計から数値的根拠を持つが、その「周期性」自体は時系列分析の統計的検証を経ていない。Track 10で必要に応じて統計家による独立検証を求める。</p>
+
+<h3>6.3 Track 10 統合への送り（VETO候補）</h3>
+<p>本Trackから Track 10 統合プロセスへ送る重要事項：</p>
+<ol>
+<li><strong>SIF DB品質課題の認知</strong>（V-14・V-15・V-16）：Track 4 の数値はノイズを含むため、Track 10 のメタ統合で SIF を引用する際は注意喚起が必要。</li>
+<li><strong>4DBの「近代偏重バイアス」</strong>（V-19）：歴史記述自体の構造的偏りを Track 10 メタ統合レポートで明示すべき。</li>
+<li><strong>本Trackの「歴史外挿型」方法論</strong>（V-21）：Track 1（実DB件数型）・Track 8（リアルタイムニュース型）と異なる方法論であることを Track 10 で類別する必要がある。</li>
+<li><strong>サイクル仮説の独立検証</strong>（U-05・U-06）：500年サイクル・250年プラトー終端の蓋然性検証は Track 10 の課題。</li>
+<li><strong>Track 3 R17/R18 との強連結</strong>（V-25）：「世代間正義」「非西洋認識論」は Track 3 と本Track が独立に提示しており、準Mサイン候補（数値根拠の質が3トラックで異なるため準Mサイン。真Mサイン昇格には Track 6/8/9 からの数値レベル独立確証を要する）。</li>
+</ol>
+
+<div class="callout">
+<div class="callout-title">本検証の限界</div>
+本書はLead Researcher自身による自己検証である。完全独立検証は <code>/doc-verify</code> エージェントおよび <code>sentinel</code> エージェントによる後続プロセスに委ねる。とくに(a)ハルシネーション検査は本Trackで照会したクエリ結果との照合のみで、4DBの全件検査ではない。(b)カバレッジギャップは「気づいた範囲」の開示であり、未認識のギャップが残存する可能性がある。(c)チーム間不整合は Track 1/2/3 の handoff/report のみとの比較で、Track 5-9 の handoff が未着の段階での部分検証である。
+</div>
+</section>
+
+<footer>
+<div>領域策定プロジェクト Track 4 検証レポート / 2026-05-09 / Lead Researcher</div>
+<div>検証カテゴリ: スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合</div>
+<div>関連: <a href="track4-historical-analysis.html">analysis.html</a> / <a href="track4-historical-report.html">report.html</a></div>
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
