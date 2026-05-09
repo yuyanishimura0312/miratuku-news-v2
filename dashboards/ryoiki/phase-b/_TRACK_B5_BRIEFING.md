@@ -58,5 +58,22 @@ B-3 善い社会問い群（30-40問） × 7装置 = 210-280セル
 - **B-4 IR sections**: 1,769,821 が正、1,862,236 は誤
 - **B-4 24問評価対象**: B-1 41問のうち near 13全 + mid M02/M04/M05/M08/M09/M12 + far F01/F03/F08 + very-far V02/V06。Q-V07 は対象外
 
-## 入力データ pre-build
-- `_TRACK_B5_INPUT_TEMPLATE.md` に B-3 30問 × B-4 7装置 = 210セルマトリクス雛形 + 連結IDマトリクス + 5シナリオ × wisdom系列マッピング を pre-build 済
+## 入力データ pre-build（Wave 3 起動高速化用）
+
+- `_TRACK_B5_INPUT_TEMPLATE.md` — 雛形構造
+- `_TRACK_B5_INPUT_DATA.md` — **210セル動きスコア確定版** (coverage_scores DB直接参照)
+  - Hot zones 4問 (G-N10/N11/N12/M02 全Care系列)
+  - Warm 9 / Cool 9 / Dead 0 / N/A 8 (B-4 24問対象外)
+  - 戦略的空白13問 (43.3%)
+  - 最重要構造的非対称性: mid 10問のうち6問が装置観測不能 (Care核心 G-M01・世代間正義 G-M04/M05 含む)
+  - ミラツク優先領域TOP10 暫定ランキング
+- `_TRACK_LINKAGE_MATRIX.md` — **B-1 41 × B-2 14 × B-3 30 × B-4 24 連結IDマトリクス** (C-05 解消)
+  - B-2×B-4交差わずか3問 (Q-N04/N09/N12 全near帯) = Phase B最重点
+  - B-3 30問のうち6問はB-1/B-2/B-4対象外の独立 (mid/far/very-far集中)
+  - B-1 §6.1×§6.2 補完設計の構造的観察
+
+## B-5 リードへの実装指針（pre-build 成果統合後）
+
+1. `_TRACK_B5_INPUT_DATA.md` の暫定弁別を起点とし、5シナリオ評価 (B-3) と組み合わせて優先順位を再構築
+2. `_TRACK_LINKAGE_MATRIX.md` を活用して連結IDを確定 (C-05 解消の基盤)
+3. B-3 sentinel verdict MJ-02 解消値「critical juncture × Phase A Mサイン領域接続 = 4/8 = 50% (厳密) / 6/8 = 75% (概念整合含む)」を継承
