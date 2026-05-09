@@ -24,14 +24,15 @@
 - **B-4**: 🔄 リード走行中（agent a4f6465a6d863517b）
   - 想定成果: 7変化検出装置 × 24問評価 + initiatives.db
 
-### Wave 3: B-3 善い社会経路 — 軽微追補完了 → sentinel検証中
-- **B-3**: ✅ 軽微追補 ALL_RESOLVED → 🔄 sentinel最終ゲート中
-  - 4ファイル完成（analysis 38KB / verification 26KB / report 73KB+ / handoff 10.8KB+）
+### Wave 3: B-3 善い社会経路 — ✅ 完全完了
+- **B-3**: ✅ 全品質ゲート通過
+  - 4ファイル完成（analysis 39KB / verification 26KB / report 73KB / handoff 11KB）
   - 5シナリオ × 30問 × 8 critical junctures
-  - doc-verify: CONDITIONAL PASS（WARN 6件、FAIL 0）
-  - 軽微追補完了: A-10主体配分 / A-11 CTL-1配分 / D-02 三大クラスター継承 / D-03 Type-A/B/C継承
-  - 任意申し送り（未対応）: A-08 5/8表現揺れ / C-05 連結IDマトリクス
-  - sentinel agent: aeb797dec301ca28c 走行中
+  - doc-verify: CONDITIONAL PASS（WARN 6件、FAIL 0）→ 軽微追補 ALL_RESOLVED
+  - sentinel: CONDITIONAL APPROVAL → ホットフィックス後 APPROVED
+    - MJ-01: analysis §7.4 主体配分を実体集計値に同期完了
+    - m1: typo「全シナリオ底通底」→「全シナリオ底通」修正完了
+  - 申し送り（未対応・Wave 3後対応可）: MJ-02 5/8表現揺れ統一 / C-05 連結IDマトリクス
 
 ### Wave 3: B-5 動き状況測定 — Wave 3 待機中
 - **B-5**: pending
@@ -45,12 +46,15 @@
   - briefing: `_TRACK_B6_BRIEFING.md` 準備済
   - 想定成果: 統合HTML 4ファイル + ryoiki-index 更新
 
-## 現在の並列エージェント
+## 現在の並列エージェント（5並列）
 
 | Agent ID | Track | 状態 | 担当 |
 |----------|-------|------|------|
 | a4f6465a6d863517b | B-4 リード | 走行中 | 7変化検出装置DB構築 |
-| aeb797dec301ca28c | B-3 sentinel | 走行中 | 最終ゲート検証 |
+| a91aaca1e83163cbf | B-5 入力テンプレ | 走行中 | 30×7セル雛形・連結ID |
+| ae8e15bb5dae7e24c | B-6 構造設計 | 走行中 | 統合HTML章立て・図表設計 |
+| ae08fb430c02d2304 | Phase A 継承監査 | 走行中 | Phase A数値の継承検証 |
+| bcvbwqp22 (bash) | ファイル監視 | 走行中 | B-3/B-4完了検出 |
 
 ## 完了済み品質ゲート
 
@@ -60,6 +64,7 @@
 - B-2 sentinel ✓ (CONDITIONAL → 追補後 APPROVED)
 - B-3 doc-verify ✓ (CONDITIONAL PASS)
 - B-3 軽微追補 ✓ (ALL_RESOLVED)
+- B-3 sentinel ✓ (CONDITIONAL → ホットフィックス後 APPROVED)
 
 ## 次工程（順序）
 
