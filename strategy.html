@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>戦略 | Insight News</title>
+  <title>戦略＆コンテンツ | Insight News</title>
   <link rel="icon" href="https://esse-sense.com/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,12 +14,44 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="js/shared/firebase-config.js"></script>
   <style>
-    /* Sub-tab navigation */
+    /* Top-level segmented control */
+    .strategy-toplevel {
+      display: inline-flex;
+      gap: 0;
+      border: 1px solid var(--border, #d9d9d9);
+      margin-bottom: 28px;
+      background: var(--card, #fff);
+    }
+    .strategy-top-btn {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .82rem;
+      font-weight: 500;
+      padding: 10px 28px;
+      cursor: pointer;
+      color: var(--text-secondary, #666);
+      background: transparent;
+      border: none;
+      transition: background .15s, color .15s;
+    }
+    .strategy-top-btn:not(:last-child) {
+      border-right: 1px solid var(--border, #d9d9d9);
+    }
+    .strategy-top-btn:hover { color: var(--text, #121212); }
+    .strategy-top-btn.active {
+      background: var(--accent-warm, #CC1400);
+      color: #fff;
+      font-weight: 700;
+    }
+    .strategy-top-panel { display: none; }
+    .strategy-top-panel.active { display: block; }
+
+    /* Sub-tab navigation (used inside both 戦略 and コンテンツ) */
     .strategy-tabs {
       display: flex;
       gap: 0;
       border-bottom: 1px solid var(--border, #d9d9d9);
       margin-bottom: 32px;
+      flex-wrap: wrap;
     }
     .strategy-tab {
       font-family: 'Noto Sans JP', sans-serif;
@@ -35,20 +67,15 @@
       border-right: none;
       transition: color .15s, border-color .15s;
     }
-    .strategy-tab:hover {
-      color: var(--text, #121212);
-    }
+    .strategy-tab:hover { color: var(--text, #121212); }
     .strategy-tab.active {
       color: var(--text, #121212);
       border-bottom-color: var(--accent-warm, #CC1400);
       font-weight: 700;
     }
-    .strategy-panel {
-      display: none;
-    }
-    .strategy-panel.active {
-      display: block;
-    }
+    .strategy-panel { display: none; }
+    .strategy-panel.active { display: block; }
+
     .strategy-coming-soon {
       text-align: center;
       padding: 80px 24px;
@@ -63,62 +90,267 @@
       margin-bottom: 12px;
     }
 
-    /* Report list (mirroring analysis-reports card style) */
-    .str-report-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    /* Strategy report list (existing) */
+    .str-report-list { display: flex; flex-direction: column; gap: 12px; }
     .str-report-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
+      display: flex; align-items: flex-start; gap: 16px;
       padding: 16px 20px;
       background: var(--card, #fff);
       border: 1px solid var(--border, #d9d9d9);
-      text-decoration: none;
-      color: inherit;
+      text-decoration: none; color: inherit;
       transition: border-color .15s;
     }
-    .str-report-card:hover {
-      border-color: var(--accent-warm, #CC1400);
-    }
+    .str-report-card:hover { border-color: var(--accent-warm, #CC1400); }
     .str-report-date {
       font-family: 'Noto Sans JP', sans-serif;
-      font-size: .68rem;
-      color: var(--text-muted, #999);
-      white-space: nowrap;
-      min-width: 80px;
-      padding-top: 2px;
+      font-size: .68rem; color: var(--text-muted, #999);
+      white-space: nowrap; min-width: 80px; padding-top: 2px;
     }
-    .str-report-body {
-      flex: 1;
-    }
+    .str-report-body { flex: 1; }
     .str-report-title {
       font-family: 'Noto Serif JP', serif;
-      font-size: .95rem;
-      font-weight: 700;
-      line-height: 1.4;
-      margin-bottom: 4px;
+      font-size: .95rem; font-weight: 700;
+      line-height: 1.4; margin-bottom: 4px;
     }
     .str-report-desc {
       font-family: 'Noto Sans JP', sans-serif;
-      font-size: .78rem;
-      color: var(--text-secondary, #666);
+      font-size: .78rem; color: var(--text-secondary, #666);
       line-height: 1.6;
     }
     .str-report-tags {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-      flex-wrap: wrap;
+      display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
     }
     .str-report-tag {
       font-family: 'Noto Sans JP', sans-serif;
-      font-size: .65rem;
-      padding: 2px 8px;
+      font-size: .65rem; padding: 2px 8px;
       border: 1px solid var(--border, #d9d9d9);
       color: var(--text-muted, #999);
+    }
+
+    /* Content (100-article series) */
+    .series-hero {
+      background: var(--card, #fff);
+      border: 1px solid var(--border, #d9d9d9);
+      border-left: 4px solid var(--accent-warm, #CC1400);
+      padding: 28px 32px;
+      margin-bottom: 32px;
+    }
+    .series-hero-eyebrow {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--accent-warm, #CC1400);
+      margin-bottom: 10px;
+    }
+    .series-hero-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--text, #121212);
+      margin-bottom: 12px; line-height: 1.45;
+    }
+    .series-hero-desc {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .82rem; color: var(--text-secondary, #555);
+      line-height: 1.85;
+      margin-bottom: 18px;
+    }
+    .series-hero-meta {
+      display: flex; flex-wrap: wrap; gap: 20px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-light, #eee);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .72rem;
+      color: var(--text-muted, #999);
+    }
+    .series-meta-item { display: flex; gap: 6px; align-items: baseline; }
+    .series-meta-item strong { color: var(--text, #121212); font-weight: 700; }
+
+    .content-part-nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      margin-bottom: 36px;
+      padding: 16px;
+      background: var(--surface, #f7f7f5);
+      border: 1px solid var(--border-light, #eee);
+    }
+    .content-part-nav-item {
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 10px 12px;
+      background: var(--card, #fff);
+      border: 1px solid var(--border, #d9d9d9);
+      text-decoration: none; color: inherit;
+      transition: border-color .15s;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .content-part-nav-item:hover { border-color: var(--accent-warm, #CC1400); }
+    .content-part-nav-item span:first-child {
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--accent-warm, #CC1400);
+    }
+    .content-part-nav-item span:last-child {
+      font-size: .76rem; font-weight: 500;
+      color: var(--text, #121212);
+      line-height: 1.4;
+    }
+
+    .content-part {
+      margin-bottom: 48px;
+      scroll-margin-top: 80px;
+    }
+    .content-part-header {
+      display: flex; align-items: baseline; gap: 16px;
+      padding: 12px 0;
+      border-bottom: 2px solid var(--text, #121212);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .content-part-label {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: 0.22em;
+      color: var(--accent-warm, #CC1400);
+    }
+    .content-part-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text, #121212);
+      flex: 1;
+    }
+    .content-part-count {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .68rem;
+      color: var(--text-muted, #999);
+      letter-spacing: 0.1em;
+    }
+    .content-ep-list {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column;
+      gap: 4px;
+    }
+    .content-ep { padding: 0; }
+    .content-ep-link {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 12px 14px;
+      background: var(--card, #fff);
+      border: 1px solid transparent;
+      border-bottom: 1px solid var(--border-light, #eee);
+      text-decoration: none; color: inherit;
+      transition: background .12s, border-color .12s;
+    }
+    .content-ep-link:not(.content-ep-disabled):hover {
+      background: var(--surface, #f7f7f5);
+      border-color: var(--accent-warm, #CC1400);
+    }
+    .content-ep-disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+    .content-ep-num {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .72rem; font-weight: 700;
+      color: var(--accent-warm, #CC1400);
+      min-width: 36px;
+      letter-spacing: 0.04em;
+      padding-top: 2px;
+    }
+    .content-ep-body {
+      flex: 1;
+      display: flex; flex-direction: column;
+      gap: 3px;
+    }
+    .content-ep-eyebrow {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .62rem; font-weight: 500;
+      color: var(--text-muted, #999);
+      letter-spacing: 0.08em;
+    }
+    .content-ep-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: .9rem; font-weight: 700;
+      color: var(--text, #121212);
+      line-height: 1.5;
+    }
+    .content-ep-sub {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .72rem;
+      color: var(--text-secondary, #555);
+      line-height: 1.65;
+    }
+    .content-ep-domain {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .62rem;
+      color: var(--text-muted, #999);
+      margin-top: 2px;
+    }
+    .content-ep-status {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .58rem;
+      padding: 2px 8px;
+      align-self: flex-start;
+      border: 1px solid var(--border, #d9d9d9);
+      letter-spacing: 0.06em;
+    }
+    .content-ep-status-published {
+      color: var(--accent-warm, #CC1400);
+      border-color: var(--accent-warm, #CC1400);
+    }
+    .content-ep-status-upcoming {
+      color: var(--text-muted, #999);
+    }
+    .content-ep-upcoming .content-ep-num { color: var(--text-muted, #999); }
+
+    /* Content series cards (for non-detailed series) */
+    .series-card-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .series-card {
+      display: block;
+      padding: 22px 24px;
+      background: var(--card, #fff);
+      border: 1px solid var(--border, #d9d9d9);
+      text-decoration: none; color: inherit;
+      transition: border-color .15s, transform .15s;
+    }
+    .series-card:hover {
+      border-color: var(--accent-warm, #CC1400);
+      transform: translateY(-2px);
+    }
+    .series-card-eyebrow {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--accent-warm, #CC1400);
+      margin-bottom: 8px;
+    }
+    .series-card-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--text, #121212);
+      margin-bottom: 10px; line-height: 1.5;
+    }
+    .series-card-desc {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .76rem;
+      color: var(--text-secondary, #555);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .series-card-status {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .68rem;
+      color: var(--text-muted, #999);
+      letter-spacing: 0.06em;
+    }
+
+    @media (max-width: 720px) {
+      .strategy-tab { padding: 10px 14px; }
+      .strategy-top-btn { padding: 10px 16px; }
+      .series-hero { padding: 22px 20px; }
+      .content-ep-num { min-width: 30px; }
     }
   </style>
 </head>
@@ -128,41 +360,448 @@
   <main class="container">
     <section class="app-section">
       <div class="section-header">
-        <h2 class="section-title">戦略</h2>
-        <span class="section-subtitle">Strategic Planning &amp; Roadmap</span>
+        <h2 class="section-title">戦略＆コンテンツ</h2>
+        <span class="section-subtitle">Strategy &amp; Content — 戦略レポートと連載アーカイブ</span>
       </div>
 
-      <!-- Sub-tabs -->
-      <div class="strategy-tabs">
-        <button class="strategy-tab active" data-panel="miratuku">ミラツク</button>
-        <button class="strategy-tab" data-panel="esse-sense">esse-sense</button>
+      <!-- Top-level: 戦略 / コンテンツ -->
+      <div class="strategy-toplevel">
+        <button class="strategy-top-btn active" data-top="strategy">戦略</button>
+        <button class="strategy-top-btn" data-top="content">コンテンツ</button>
       </div>
 
-      <!-- Panel: ミラツク -->
-      <div class="strategy-panel active" id="panel-miratuku">
-        <div class="str-report-list">
-          <a href="reports/strategy-miratuku-2026-summer.html" class="str-report-card">
-            <div class="str-report-date">2026-05-02</div>
-            <div class="str-report-body">
-              <div class="str-report-title">ミラツク戦略 2026夏 — データ駆動型未来洞察の社会実装</div>
-              <div class="str-report-desc">3つの柱（データ駆動型シンクタンク/イノベーション・シンクタンク/未来を見るコミュニティ）の構築。連載・メンバーシップ・編集自動化・サイト改修・対外発信の統合戦略。</div>
-              <div class="str-report-tags">
-                <span class="str-report-tag">コミュニティ</span>
-                <span class="str-report-tag">メンバーシップ</span>
-                <span class="str-report-tag">データ駆動型</span>
-                <span class="str-report-tag">連載</span>
-                <span class="str-report-tag">方法論刷新</span>
+      <!-- =========================== 戦略 =========================== -->
+      <div class="strategy-top-panel active" id="top-strategy">
+        <div class="strategy-tabs">
+          <button class="strategy-tab active" data-panel="miratuku">ミラツク</button>
+          <button class="strategy-tab" data-panel="esse-sense">esse-sense</button>
+        </div>
+
+        <div class="strategy-panel active" id="panel-miratuku">
+          <div class="str-report-list">
+            <a href="reports/strategy-miratuku-2026-summer.html" class="str-report-card">
+              <div class="str-report-date">2026-05-02</div>
+              <div class="str-report-body">
+                <div class="str-report-title">ミラツク戦略 2026夏 — データ駆動型未来洞察の社会実装</div>
+                <div class="str-report-desc">3つの柱（データ駆動型シンクタンク/イノベーション・シンクタンク/未来を見るコミュニティ）の構築。連載・メンバーシップ・編集自動化・サイト改修・対外発信の統合戦略。</div>
+                <div class="str-report-tags">
+                  <span class="str-report-tag">コミュニティ</span>
+                  <span class="str-report-tag">メンバーシップ</span>
+                  <span class="str-report-tag">データ駆動型</span>
+                  <span class="str-report-tag">連載</span>
+                  <span class="str-report-tag">方法論刷新</span>
+                </div>
               </div>
-            </div>
-          </a>
+            </a>
+          </div>
+        </div>
+
+        <div class="strategy-panel" id="panel-esse-sense">
+          <div class="strategy-coming-soon">
+            <h3>esse-sense 戦略</h3>
+            <p>準備中</p>
+          </div>
         </div>
       </div>
 
-      <!-- Panel: esse-sense -->
-      <div class="strategy-panel" id="panel-esse-sense">
-        <div class="strategy-coming-soon">
-          <h3>esse-sense 戦略</h3>
-          <p>準備中</p>
+      <!-- =========================== コンテンツ =========================== -->
+      <div class="strategy-top-panel" id="top-content">
+        <div class="strategy-tabs">
+          <button class="strategy-tab active" data-cpanel="kurashi">暮らしのかたち</button>
+          <button class="strategy-tab" data-cpanel="henka">変化のかたち</button>
+          <button class="strategy-tab" data-cpanel="other">事業・経営・いとなみ</button>
+        </div>
+
+        <div class="strategy-panel active" id="cpanel-kurashi">
+
+        <div class="series-hero">
+          <div class="series-hero-eyebrow">SERIES — KURASHI NO KATACHI</div>
+          <h3 class="series-hero-title">暮らしのかたち ― 学術が日々の暮らしに出会うとき</h3>
+          <p class="series-hero-desc">学術 × 暮らしのシーン27の100話連載。日本人研究者114名・典拠約500・SIGNAL 300。Translational Editor視点で学術と暮らしを翻訳する。</p>
+          <div class="series-hero-meta">
+            <span class="series-meta-item"><strong>100</strong>話</span>
+            <span class="series-meta-item"><strong>公開済</strong>全100話</span>
+            <span class="series-meta-item"><strong>公開先</strong> <a href="https://yuyanishimura0312.github.io/kurashi-no-katachi/" target="_blank" rel="noopener">kurashi-no-katachi</a></span>
+          </div>
+        </div>
+
+<div class="content-part-nav">
+<a href="#kurashi-prologue" class="content-part-nav-item"><span>PROLOGUE — 序 章</span><span>学問を暮らしの言葉に翻訳する</span></a>
+<a href="#kurashi-part-i" class="content-part-nav-item"><span>PART I</span><span>衣食住 ― 身体を包む環境</span></a>
+<a href="#kurashi-part-ii" class="content-part-nav-item"><span>PART II</span><span>暮らしの基盤 ― 一日を成り立たせるもの</span></a>
+<a href="#kurashi-part-iii" class="content-part-nav-item"><span>PART III</span><span>関係 ― 人と人のあいだ</span></a>
+<a href="#kurashi-part-iv" class="content-part-nav-item"><span>PART IV</span><span>ケアと遊 ― 身体・健康・余白</span></a>
+<a href="#kurashi-part-v" class="content-part-nav-item"><span>PART V</span><span>文化と公共 ― 共有されるもの</span></a>
+<a href="#kurashi-final" class="content-part-nav-item"><span>FINAL — 終 章</span><span>読者の100話を編む</span></a>
+</div>
+<div class="content-part" id="kurashi-prologue">
+<div class="content-part-header">
+<div class="content-part-label">PROLOGUE — 序 章</div>
+<h4 class="content-part-title">学問を暮らしの言葉に翻訳する</h4>
+<div class="content-part-count">5話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep001.html" target="_blank" rel="noopener"><span class="content-ep-num">001</span><span class="content-ep-body"><span class="content-ep-eyebrow">序章</span><span class="content-ep-title">学問のドアは、暮らしから開けることができる</span><span class="content-ep-sub">― なぜこの連載では、4,000の研究領域を27のシーンから読み解くのか</span><span class="content-ep-domain">メタ / 連載序論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep002.html" target="_blank" rel="noopener"><span class="content-ep-num">002</span><span class="content-ep-body"><span class="content-ep-eyebrow">序章</span><span class="content-ep-title">情報は増えたのに、賢くなった気がしないのはなぜか</span><span class="content-ep-sub">― 情報過多と認知負荷の研究が解像する、知の手応えの正体</span><span class="content-ep-domain">社会科学 / 知識社会学・認知心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep003.html" target="_blank" rel="noopener"><span class="content-ep-num">003</span><span class="content-ep-body"><span class="content-ep-eyebrow">序章</span><span class="content-ep-title">1万分の1の解像度で、学問は暮らしと出会う</span><span class="content-ep-sub">― 粒度の問題が、知と日々の関係を決めていた</span><span class="content-ep-domain">人文学 / 科学方法論・分類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep004.html" target="_blank" rel="noopener"><span class="content-ep-num">004</span><span class="content-ep-body"><span class="content-ep-eyebrow">序章</span><span class="content-ep-title">暮らしの27シーンが、学問の地図になる</span><span class="content-ep-sub">― ミラツク「暮らしのシーンカード」が示す、日々と知の接点</span><span class="content-ep-domain">人文学 / 暮らしの分類学・日常生活論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep005.html" target="_blank" rel="noopener"><span class="content-ep-num">005</span><span class="content-ep-body"><span class="content-ep-eyebrow">序章</span><span class="content-ep-title">学問の系譜を読むことが、いまの問いの輪郭を変える</span><span class="content-ep-sub">― 4部構成で歴史を辿る理由を、思想史と科学哲学から考える</span><span class="content-ep-domain">人文学 / 思想史・科学哲学</span></span></a></li>
+</ol>
+</div>
+<div class="content-part" id="kurashi-part-i">
+<div class="content-part-header">
+<div class="content-part-label">PART I</div>
+<h4 class="content-part-title">衣食住 ― 身体を包む環境</h4>
+<div class="content-part-count">18話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep006.html" target="_blank" rel="noopener"><span class="content-ep-num">006</span><span class="content-ep-body"><span class="content-ep-eyebrow">食事レストラン #01</span><span class="content-ep-title">気分を決めているのは、おなかかもしれない</span><span class="content-ep-sub">― 腸内細菌叢と心の状態をつなぐ研究が示しはじめたこと</span><span class="content-ep-domain">自然科学 / 腸脳軸研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep007.html" target="_blank" rel="noopener"><span class="content-ep-num">007</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">部屋のかたちが、感じ方を変えていた</span><span class="content-ep-sub">― 建築環境心理学が示す、住まいと心の見えない対話</span><span class="content-ep-domain">社会科学 / 環境心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep008.html" target="_blank" rel="noopener"><span class="content-ep-num">008</span><span class="content-ep-body"><span class="content-ep-eyebrow">ファッション #01</span><span class="content-ep-title">服が変えていたのは、見た目ではなかった</span><span class="content-ep-sub">― 身体化認知が示す、着るものと思考のあいだの見えない対話</span><span class="content-ep-domain">社会科学 / 身体化認知・社会心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep009.html" target="_blank" rel="noopener"><span class="content-ep-num">009</span><span class="content-ep-body"><span class="content-ep-eyebrow">食事レストラン #02</span><span class="content-ep-title">料理が文化を編むとき</span><span class="content-ep-sub">― 火・発酵・生食をめぐる人類学の系譜</span><span class="content-ep-domain">人文学 / 食の人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep010.html" target="_blank" rel="noopener"><span class="content-ep-num">010</span><span class="content-ep-body"><span class="content-ep-eyebrow">食事レストラン #03</span><span class="content-ep-title">朝食を食べるかどうかで、一日の脳が変わる</span><span class="content-ep-sub">― 概日リズム栄養学が解像する、食事と時間の関係</span><span class="content-ep-domain">自然科学 / クロノニュートリション</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep011.html" target="_blank" rel="noopener"><span class="content-ep-num">011</span><span class="content-ep-body"><span class="content-ep-eyebrow">食事レストラン #04</span><span class="content-ep-title">「ほしい」と「いい」のあいだ</span><span class="content-ep-sub">― 快楽神経科学が示す、欲望と判断の見えない境界</span><span class="content-ep-domain">自然科学 / 報酬系神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep012.html" target="_blank" rel="noopener"><span class="content-ep-num">012</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">小さな部屋ほど、想像力が育つ説</span><span class="content-ep-sub">― 空間認知研究が示す、制約と創造性のあいだ</span><span class="content-ep-domain">社会科学 / 空間認知</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep013.html" target="_blank" rel="noopener"><span class="content-ep-num">013</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">家具の配置が、家族の話し方を変えていた</span><span class="content-ep-sub">― プロクセミクスから読む、距離と関係の設計</span><span class="content-ep-domain">人文学 / 近接学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep014.html" target="_blank" rel="noopener"><span class="content-ep-num">014</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">採光が決めていた、私たちのリズム</span><span class="content-ep-sub">― 光生物学が示す、光と身体の見えない対話</span><span class="content-ep-domain">自然科学 / 光生物学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep015.html" target="_blank" rel="noopener"><span class="content-ep-num">015</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">観葉植物のあるところに、なぜ人は集まるのか</span><span class="content-ep-sub">― バイオフィリア仮説が示す、緑と人間の本能</span><span class="content-ep-domain">自然科学 / バイオフィリア</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep016.html" target="_blank" rel="noopener"><span class="content-ep-num">016</span><span class="content-ep-body"><span class="content-ep-eyebrow">ファッション #02</span><span class="content-ep-title">服の色は、自分の感情にも響いていた</span><span class="content-ep-sub">― 色彩心理学が解像した、色と気分の対話</span><span class="content-ep-domain">社会科学 / 色彩心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep017.html" target="_blank" rel="noopener"><span class="content-ep-num">017</span><span class="content-ep-body"><span class="content-ep-eyebrow">ファッション #03</span><span class="content-ep-title">「制服を着る」という現象</span><span class="content-ep-sub">― 役割理論が示す、服装と自己の生成</span><span class="content-ep-domain">社会科学 / 役割理論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep018.html" target="_blank" rel="noopener"><span class="content-ep-num">018</span><span class="content-ep-body"><span class="content-ep-eyebrow">食事レストラン #05</span><span class="content-ep-title">食卓の形と、誰が話すかの関係</span><span class="content-ep-sub">― 集団力学が読む、テーブルと会話の構造</span><span class="content-ep-domain">社会科学 / 集団力学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep019.html" target="_blank" rel="noopener"><span class="content-ep-num">019</span><span class="content-ep-body"><span class="content-ep-eyebrow">食事レストラン #06</span><span class="content-ep-title">発酵食品は、人類の認知を拡張してきた</span><span class="content-ep-sub">― 発酵食人類学が示す、微生物との共進化</span><span class="content-ep-domain">人文学 / 発酵人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep020.html" target="_blank" rel="noopener"><span class="content-ep-num">020</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">「片付け」が、なぜ気分を変えるのか</span><span class="content-ep-sub">― 秩序の心理学が解く、整える行為の意味</span><span class="content-ep-domain">社会科学 / 秩序の心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep021.html" target="_blank" rel="noopener"><span class="content-ep-num">021</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">香りが記憶を呼ぶしくみ</span><span class="content-ep-sub">― プルースト効果と嗅覚記憶の神経科学</span><span class="content-ep-domain">自然科学 / 嗅覚記憶</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep022.html" target="_blank" rel="noopener"><span class="content-ep-num">022</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">玄関のかたちが、家族の関係を整える</span><span class="content-ep-sub">― 閾の人類学が示す、内と外のあいだ</span><span class="content-ep-domain">人文学 / 閾の人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep023.html" target="_blank" rel="noopener"><span class="content-ep-num">023</span><span class="content-ep-body"><span class="content-ep-eyebrow">住宅</span><span class="content-ep-title">古民家がいまも人を癒す理由</span><span class="content-ep-sub">― 木造建築環境論が示す、素材と身体の対話</span><span class="content-ep-domain">社会科学 / 建築環境論</span></span></a></li>
+</ol>
+</div>
+<div class="content-part" id="kurashi-part-ii">
+<div class="content-part-header">
+<div class="content-part-label">PART II</div>
+<h4 class="content-part-title">暮らしの基盤 ― 一日を成り立たせるもの</h4>
+<div class="content-part-count">18話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep024.html" target="_blank" rel="noopener"><span class="content-ep-num">024</span><span class="content-ep-body"><span class="content-ep-eyebrow">睡眠 #01</span><span class="content-ep-title">眠っているあいだに、もう一人の自分が働いている</span><span class="content-ep-sub">― 睡眠科学が示す、夜のあいだに記憶が編集される時間</span><span class="content-ep-domain">自然科学 / 睡眠神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep025.html" target="_blank" rel="noopener"><span class="content-ep-num">025</span><span class="content-ep-body"><span class="content-ep-eyebrow">家事 #01</span><span class="content-ep-title">家事は労働ではなく、家庭の生態系の整備工事だった</span><span class="content-ep-sub">― フェミニスト経済学とケアの倫理が示す、見えない労働の意味</span><span class="content-ep-domain">社会科学 / フェミニスト経済学・ケアの倫理</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep026.html" target="_blank" rel="noopener"><span class="content-ep-num">026</span><span class="content-ep-body"><span class="content-ep-eyebrow">睡眠 #02</span><span class="content-ep-title">睡眠負債は、感情の調整能力を低下させる</span><span class="content-ep-sub">― 睡眠と感情の研究が示す、寝不足が変えるもの</span><span class="content-ep-domain">自然科学 / 感情と睡眠</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep027.html" target="_blank" rel="noopener"><span class="content-ep-num">027</span><span class="content-ep-body"><span class="content-ep-eyebrow">家事 #02</span><span class="content-ep-title">「掃除瞑想」の科学</span><span class="content-ep-sub">― マインドフルネス研究が解像する、所作と心</span><span class="content-ep-domain">社会科学 / マインドフルネス</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep028.html" target="_blank" rel="noopener"><span class="content-ep-num">028</span><span class="content-ep-body"><span class="content-ep-eyebrow">はたらく #02</span><span class="content-ep-title">通勤時間は、無駄ではなかったかもしれない</span><span class="content-ep-sub">― 移動と認知の研究が示す、空白の時間の役割</span><span class="content-ep-domain">社会科学 / 認知地理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep029.html" target="_blank" rel="noopener"><span class="content-ep-num">029</span><span class="content-ep-body"><span class="content-ep-eyebrow">はたらく #03</span><span class="content-ep-title">「やる気」を生む脳の場所</span><span class="content-ep-sub">― モチベーションの神経科学が解像した、行動の起点</span><span class="content-ep-domain">自然科学 / モチベーション神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep030.html" target="_blank" rel="noopener"><span class="content-ep-num">030</span><span class="content-ep-body"><span class="content-ep-eyebrow">教育 #01</span><span class="content-ep-title">学習は、教える側にも変化を起こす</span><span class="content-ep-sub">― 共同学習研究が示す、教え学ぶ関係の双方向性</span><span class="content-ep-domain">社会科学 / 共同学習</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep031.html" target="_blank" rel="noopener"><span class="content-ep-num">031</span><span class="content-ep-body"><span class="content-ep-eyebrow">はたらく #04</span><span class="content-ep-title">創造性は孤独からではなく、適度な雑音から生まれる</span><span class="content-ep-sub">― 創造性研究が示す、ノイズと創発の関係</span><span class="content-ep-domain">社会科学 / 創造性研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep032.html" target="_blank" rel="noopener"><span class="content-ep-num">032</span><span class="content-ep-body"><span class="content-ep-eyebrow">はたらく #01</span><span class="content-ep-title">集中力は意志ではなく、設計の問題だった</span><span class="content-ep-sub">― 注意の認知科学が示す、集中が生まれる場と生まれない場</span><span class="content-ep-domain">社会科学 / 認知心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep033.html" target="_blank" rel="noopener"><span class="content-ep-num">033</span><span class="content-ep-body"><span class="content-ep-eyebrow">教育 #02</span><span class="content-ep-title">失敗の記憶が、学びの深さを決めていた</span><span class="content-ep-sub">― エラー学習研究が解像する、失敗と熟達のあいだ</span><span class="content-ep-domain">社会科学 / エラー学習</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep034.html" target="_blank" rel="noopener"><span class="content-ep-num">034</span><span class="content-ep-body"><span class="content-ep-eyebrow">教育 #03</span><span class="content-ep-title">大人の脳も、いつまでも変わり続ける</span><span class="content-ep-sub">― 神経可塑性研究が示す、生涯学習の科学的根拠</span><span class="content-ep-domain">自然科学 / 神経可塑性</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep035.html" target="_blank" rel="noopener"><span class="content-ep-num">035</span><span class="content-ep-body"><span class="content-ep-eyebrow">睡眠 #03</span><span class="content-ep-title">朝型と夜型は、遺伝子に刻まれていた</span><span class="content-ep-sub">― クロノタイプ遺伝学が示す、体質と社会の相性</span><span class="content-ep-domain">自然科学 / クロノタイプ遺伝学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep036.html" target="_blank" rel="noopener"><span class="content-ep-num">036</span><span class="content-ep-body"><span class="content-ep-eyebrow">教育 #04</span><span class="content-ep-title">「教えない教育」の系譜</span><span class="content-ep-sub">― 構成主義教育学が示す、学びは引き出すもの</span><span class="content-ep-domain">社会科学 / 構成主義教育学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep037.html" target="_blank" rel="noopener"><span class="content-ep-num">037</span><span class="content-ep-body"><span class="content-ep-eyebrow">はたらく #05</span><span class="content-ep-title">質問の質が、組織の知性を決めていた</span><span class="content-ep-sub">― 問いの設計研究が示す、組織の探究力</span><span class="content-ep-domain">社会科学 / 組織論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep038.html" target="_blank" rel="noopener"><span class="content-ep-num">038</span><span class="content-ep-body"><span class="content-ep-eyebrow">はたらく #06</span><span class="content-ep-title">雑談に隠れていた、学習の機会</span><span class="content-ep-sub">― インフォーマル学習研究が解像する、職場の知の流れ</span><span class="content-ep-domain">社会科学 / インフォーマル学習</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep039.html" target="_blank" rel="noopener"><span class="content-ep-num">039</span><span class="content-ep-body"><span class="content-ep-eyebrow">はたらく #07</span><span class="content-ep-title">「働きすぎ」は、文化ではなく構造の問題</span><span class="content-ep-sub">― 労働社会学が示す、長時間労働の経路依存性</span><span class="content-ep-domain">社会科学 / 労働社会学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep040.html" target="_blank" rel="noopener"><span class="content-ep-num">040</span><span class="content-ep-body"><span class="content-ep-eyebrow">家事 #03</span><span class="content-ep-title">一日の終わりに、何を書き留めるか</span><span class="content-ep-sub">― ジャーナリング研究が示す、書く行為の効用</span><span class="content-ep-domain">社会科学 / ジャーナリング研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep041.html" target="_blank" rel="noopener"><span class="content-ep-num">041</span><span class="content-ep-body"><span class="content-ep-eyebrow">睡眠 #04</span><span class="content-ep-title">仮眠は、脳の最強のリセット装置</span><span class="content-ep-sub">― パワーナップ研究が示す、短い眠りの威力</span><span class="content-ep-domain">自然科学 / 仮眠研究</span></span></a></li>
+</ol>
+</div>
+<div class="content-part" id="kurashi-part-iii">
+<div class="content-part-header">
+<div class="content-part-label">PART III</div>
+<h4 class="content-part-title">関係 ― 人と人のあいだ</h4>
+<div class="content-part-count">18話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep042.html" target="_blank" rel="noopener"><span class="content-ep-num">042</span><span class="content-ep-body"><span class="content-ep-eyebrow">恋愛 #01</span><span class="content-ep-title">愛着のかたちは、人生のはじまりに編まれていた</span><span class="content-ep-sub">― 愛着理論の系譜が示す、関係を結ぶ自分の癖の起源</span><span class="content-ep-domain">社会科学 / 愛着理論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep043.html" target="_blank" rel="noopener"><span class="content-ep-num">043</span><span class="content-ep-body"><span class="content-ep-eyebrow">恋愛 #02</span><span class="content-ep-title">共感は、生まれつきではなく学習され続けている</span><span class="content-ep-sub">― ミラーニューロン研究が解像した、他者を感じるしくみ</span><span class="content-ep-domain">自然科学 / 共感の神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep044.html" target="_blank" rel="noopener"><span class="content-ep-num">044</span><span class="content-ep-body"><span class="content-ep-eyebrow">恋愛 #03</span><span class="content-ep-title">沈黙が、関係を深めることがある</span><span class="content-ep-sub">― 関係性心理学が示す、語らない時間の意味</span><span class="content-ep-domain">社会科学 / 関係性心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep045.html" target="_blank" rel="noopener"><span class="content-ep-num">045</span><span class="content-ep-body"><span class="content-ep-eyebrow">贈り物 #01</span><span class="content-ep-title">贈り物は、もらった人より贈る人を変えていた</span><span class="content-ep-sub">― 利他行動の研究が示す、与えることの内的効果</span><span class="content-ep-domain">社会科学 / 利他行動研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep046.html" target="_blank" rel="noopener"><span class="content-ep-num">046</span><span class="content-ep-body"><span class="content-ep-eyebrow">結婚 #01</span><span class="content-ep-title">結婚という制度が、私たちの脳に何をしているか</span><span class="content-ep-sub">― 関係科学が解像する、長期パートナーシップの神経生物学</span><span class="content-ep-domain">社会科学 / 関係科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep047.html" target="_blank" rel="noopener"><span class="content-ep-num">047</span><span class="content-ep-body"><span class="content-ep-eyebrow">夫婦 #01</span><span class="content-ep-title">喧嘩のあとに、関係はむしろ深まる</span><span class="content-ep-sub">― 葛藤研究が示す、修復のメカニズム</span><span class="content-ep-domain">社会科学 / 葛藤研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep048.html" target="_blank" rel="noopener"><span class="content-ep-num">048</span><span class="content-ep-body"><span class="content-ep-eyebrow">夫婦 #02</span><span class="content-ep-title">「7年ごと」に変わると言われた夫婦の謎</span><span class="content-ep-sub">― 関係発達学が解像する、長期関係の節目</span><span class="content-ep-domain">社会科学 / 関係発達学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep049.html" target="_blank" rel="noopener"><span class="content-ep-num">049</span><span class="content-ep-body"><span class="content-ep-eyebrow">ペット #01</span><span class="content-ep-title">ペットと暮らす人の脳が変わる</span><span class="content-ep-sub">― 動物介在療法研究が示す、共生の効用</span><span class="content-ep-domain">自然科学 / 動物介在療法</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep050.html" target="_blank" rel="noopener"><span class="content-ep-num">050</span><span class="content-ep-body"><span class="content-ep-eyebrow">育児 #02</span><span class="content-ep-title">子どもは、親をも育てている</span><span class="content-ep-sub">― 相互発達研究が示す、育てる側の変化</span><span class="content-ep-domain">社会科学 / 相互発達</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep051.html" target="_blank" rel="noopener"><span class="content-ep-num">051</span><span class="content-ep-body"><span class="content-ep-eyebrow">贈り物 #02</span><span class="content-ep-title">「ありがとう」と言うことが、自分を変える</span><span class="content-ep-sub">― 感謝研究が示す、感謝表現の自己効果</span><span class="content-ep-domain">社会科学 / 感謝研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep052.html" target="_blank" rel="noopener"><span class="content-ep-num">052</span><span class="content-ep-body"><span class="content-ep-eyebrow">恋愛 #04</span><span class="content-ep-title">友情と恋愛のあいだに、ほんとうに線はあるのか</span><span class="content-ep-sub">― 関係分類学が示す、関係の連続性</span><span class="content-ep-domain">社会科学 / 関係分類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep053.html" target="_blank" rel="noopener"><span class="content-ep-num">053</span><span class="content-ep-body"><span class="content-ep-eyebrow">結婚 #02</span><span class="content-ep-title">別れの作法には、文化的な系譜がある</span><span class="content-ep-sub">― 離別の人類学が解像する、関係の終わり方</span><span class="content-ep-domain">人文学 / 離別の人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep054.html" target="_blank" rel="noopener"><span class="content-ep-num">054</span><span class="content-ep-body"><span class="content-ep-eyebrow">育児 #01</span><span class="content-ep-title">子どもは「小さな大人」ではなく、別の知性だった</span><span class="content-ep-sub">― 発達心理学の系譜が示す、子ども独自の世界の見方</span><span class="content-ep-domain">社会科学 / 発達心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep055.html" target="_blank" rel="noopener"><span class="content-ep-num">055</span><span class="content-ep-body"><span class="content-ep-eyebrow">育児 #03</span><span class="content-ep-title">抱っこの時間が、その後30年に効く</span><span class="content-ep-sub">― 接触科学が示す、皮膚接触の長期効果</span><span class="content-ep-domain">自然科学 / 接触科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep056.html" target="_blank" rel="noopener"><span class="content-ep-num">056</span><span class="content-ep-body"><span class="content-ep-eyebrow">育児 #04</span><span class="content-ep-title">「祖父母の関わり」が、孫の脳を変える</span><span class="content-ep-sub">― 世代間関係の研究が解像する、第三の保育者の役割</span><span class="content-ep-domain">社会科学 / 世代間関係</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep057.html" target="_blank" rel="noopener"><span class="content-ep-num">057</span><span class="content-ep-body"><span class="content-ep-eyebrow">ペット #02</span><span class="content-ep-title">犬と人間の絆は、1万5,000年前に始まった</span><span class="content-ep-sub">― 人犬共進化研究が示す、長い関係の起源</span><span class="content-ep-domain">自然科学 / 人犬共進化</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep058.html" target="_blank" rel="noopener"><span class="content-ep-num">058</span><span class="content-ep-body"><span class="content-ep-eyebrow">ペット #03</span><span class="content-ep-title">猫を飼うと、私たちの何が変わるのか</span><span class="content-ep-sub">― 猫科学が示す、独立した同居者との関係</span><span class="content-ep-domain">自然科学 / 猫科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep059.html" target="_blank" rel="noopener"><span class="content-ep-num">059</span><span class="content-ep-body"><span class="content-ep-eyebrow">夫婦 #03</span><span class="content-ep-title">「他人の声で目覚める」が、家族のかたちを編む</span><span class="content-ep-sub">― 朝の儀式の家族社会学</span><span class="content-ep-domain">社会科学 / 家族社会学</span></span></a></li>
+</ol>
+</div>
+<div class="content-part" id="kurashi-part-iv">
+<div class="content-part-header">
+<div class="content-part-label">PART IV</div>
+<h4 class="content-part-title">ケアと遊 ― 身体・健康・余白</h4>
+<div class="content-part-count">18話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep060.html" target="_blank" rel="noopener"><span class="content-ep-num">060</span><span class="content-ep-body"><span class="content-ep-eyebrow">医療</span><span class="content-ep-title">痛みは身体の信号ではなく、脳が編集する経験だった</span><span class="content-ep-sub">― 痛みの神経科学が解像した、痛みのかたちと意味の生まれかた</span><span class="content-ep-domain">自然科学 / 痛みの神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep061.html" target="_blank" rel="noopener"><span class="content-ep-num">061</span><span class="content-ep-body"><span class="content-ep-eyebrow">医療</span><span class="content-ep-title">プラセボは「気のせい」ではなく、脳の現象である</span><span class="content-ep-sub">― プラセボ研究が解像した、期待が身体に作用するしくみ</span><span class="content-ep-domain">自然科学 / プラセボ神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep062.html" target="_blank" rel="noopener"><span class="content-ep-num">062</span><span class="content-ep-body"><span class="content-ep-eyebrow">看護介護 #01</span><span class="content-ep-title">看取りの作法には、文化が刻まれている</span><span class="content-ep-sub">― 死生学が示す、最期の時間の人類史</span><span class="content-ep-domain">人文学 / 死生学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep063.html" target="_blank" rel="noopener"><span class="content-ep-num">063</span><span class="content-ep-body"><span class="content-ep-eyebrow">旅</span><span class="content-ep-title">旅は気分転換ではなく、記憶を編集する装置だった</span><span class="content-ep-sub">― 海馬と場所細胞の研究が示す、移動が脳に何をしているか</span><span class="content-ep-domain">自然科学 / 空間認知</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep064.html" target="_blank" rel="noopener"><span class="content-ep-num">064</span><span class="content-ep-body"><span class="content-ep-eyebrow">スポーツ観戦 #01</span><span class="content-ep-title">スポーツ観戦のとき、脳は何をしているのか</span><span class="content-ep-sub">― 共感の神経科学が解像する、観るという行為</span><span class="content-ep-domain">自然科学 / 共感の神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep065.html" target="_blank" rel="noopener"><span class="content-ep-num">065</span><span class="content-ep-body"><span class="content-ep-eyebrow">祭り #01</span><span class="content-ep-title">「お祭り」は、社会の整体だった</span><span class="content-ep-sub">― 儀礼の人類学が示す、祭りの社会的機能</span><span class="content-ep-domain">人文学 / 儀礼の人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep066.html" target="_blank" rel="noopener"><span class="content-ep-num">066</span><span class="content-ep-body"><span class="content-ep-eyebrow">医療</span><span class="content-ep-title">笑いは、薬になりうるのか</span><span class="content-ep-sub">― 笑い研究が示す、感情と免疫の対話</span><span class="content-ep-domain">自然科学 / 精神神経免疫学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep067.html" target="_blank" rel="noopener"><span class="content-ep-num">067</span><span class="content-ep-body"><span class="content-ep-eyebrow">看護介護 #02</span><span class="content-ep-title">老いは、進化の失敗ではなく機能だった</span><span class="content-ep-sub">― 老化生物学が示す、長寿の意味</span><span class="content-ep-domain">自然科学 / 老化生物学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep068.html" target="_blank" rel="noopener"><span class="content-ep-num">068</span><span class="content-ep-body"><span class="content-ep-eyebrow">旅</span><span class="content-ep-title">観光地で人は、なぜいい人になりがちなのか</span><span class="content-ep-sub">― 旅と道徳の研究が解像する、非日常の倫理</span><span class="content-ep-domain">社会科学 / 観光社会学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep069.html" target="_blank" rel="noopener"><span class="content-ep-num">069</span><span class="content-ep-body"><span class="content-ep-eyebrow">旅</span><span class="content-ep-title">「歩く」だけで、脳のかたちが変わる</span><span class="content-ep-sub">― 運動と認知の研究が示す、徒歩の効用</span><span class="content-ep-domain">自然科学 / 運動神経科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep070.html" target="_blank" rel="noopener"><span class="content-ep-num">070</span><span class="content-ep-body"><span class="content-ep-eyebrow">祭り #02</span><span class="content-ep-title">祭りのあとの脱力には、意味があった</span><span class="content-ep-sub">― ターナーのコムニタス論が示す、リミナリティの機能</span><span class="content-ep-domain">人文学 / コムニタス研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep071.html" target="_blank" rel="noopener"><span class="content-ep-num">071</span><span class="content-ep-body"><span class="content-ep-eyebrow">看護介護 #03</span><span class="content-ep-title">介護は、する側もされる側も変容させる</span><span class="content-ep-sub">― ケアの倫理が示す、依存と相互性のあいだ</span><span class="content-ep-domain">人文学 / ケアの倫理</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep072.html" target="_blank" rel="noopener"><span class="content-ep-num">072</span><span class="content-ep-body"><span class="content-ep-eyebrow">スポーツ観戦 #02</span><span class="content-ep-title">応援することが、自分の身体に効いていた</span><span class="content-ep-sub">― 応援の心理学が示す、観るという身体行為</span><span class="content-ep-domain">社会科学 / 応援の心理学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep073.html" target="_blank" rel="noopener"><span class="content-ep-num">073</span><span class="content-ep-body"><span class="content-ep-eyebrow">医療</span><span class="content-ep-title">病気になることが、人生の物語を書き換える</span><span class="content-ep-sub">― ナラティブ医療が示す、語り直しの治療効果</span><span class="content-ep-domain">社会科学 / ナラティブ医療</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep074.html" target="_blank" rel="noopener"><span class="content-ep-num">074</span><span class="content-ep-body"><span class="content-ep-eyebrow">旅</span><span class="content-ep-title">「巡礼」は、現代の暮らしのなかにも生きている</span><span class="content-ep-sub">― 聖地巡礼の人類学が示す、移動と意味の系譜</span><span class="content-ep-domain">人文学 / 巡礼研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep075.html" target="_blank" rel="noopener"><span class="content-ep-num">075</span><span class="content-ep-body"><span class="content-ep-eyebrow">医療</span><span class="content-ep-title">治療より、予防より、ケアの時代が来る</span><span class="content-ep-sub">― ケア論が示す、医療パラダイムの転換</span><span class="content-ep-domain">人文学 / ケア論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep076.html" target="_blank" rel="noopener"><span class="content-ep-num">076</span><span class="content-ep-body"><span class="content-ep-eyebrow">スポーツ観戦 #03</span><span class="content-ep-title">ゲーム実況に、なぜ人は時間を溶かすのか</span><span class="content-ep-sub">― 二次的経験の研究が示す、観ることの新しいかたち</span><span class="content-ep-domain">社会科学 / メディア研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep077.html" target="_blank" rel="noopener"><span class="content-ep-num">077</span><span class="content-ep-body"><span class="content-ep-eyebrow">看護介護 #04</span><span class="content-ep-title">死を語る言葉が、暮らしから消えたとき</span><span class="content-ep-sub">― 死の人類学が示す、近代の死の不可視化</span><span class="content-ep-domain">人文学 / 死の人類学</span></span></a></li>
+</ol>
+</div>
+<div class="content-part" id="kurashi-part-v">
+<div class="content-part-header">
+<div class="content-part-label">PART V</div>
+<h4 class="content-part-title">文化と公共 ― 共有されるもの</h4>
+<div class="content-part-count">18話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep078.html" target="_blank" rel="noopener"><span class="content-ep-num">078</span><span class="content-ep-body"><span class="content-ep-eyebrow">芸術</span><span class="content-ep-title">「美しい」と感じるしくみが、ようやく解像されはじめた</span><span class="content-ep-sub">― 神経美学が示す、美の経験はどこで生まれているのか</span><span class="content-ep-domain">自然科学 / 神経美学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep079.html" target="_blank" rel="noopener"><span class="content-ep-num">079</span><span class="content-ep-body"><span class="content-ep-eyebrow">メディア #01</span><span class="content-ep-title">メディアの選び方が、脳のかたちを変えていた</span><span class="content-ep-sub">― メディア生態学が解像する、媒体と認知の見えない対話</span><span class="content-ep-domain">社会科学 / メディア生態学・認知科学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep080.html" target="_blank" rel="noopener"><span class="content-ep-num">080</span><span class="content-ep-body"><span class="content-ep-eyebrow">図書館</span><span class="content-ep-title">図書館は、なぜ人を落ち着かせるのか</span><span class="content-ep-sub">― サードプレイス論が示す、第3の場の機能</span><span class="content-ep-domain">社会科学 / サードプレイス論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep081.html" target="_blank" rel="noopener"><span class="content-ep-num">081</span><span class="content-ep-body"><span class="content-ep-eyebrow">公園</span><span class="content-ep-title">公園のかたちが、街の犯罪率を変える</span><span class="content-ep-sub">― 環境犯罪学が示す、空間と治安のあいだ</span><span class="content-ep-domain">社会科学 / 環境犯罪学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep082.html" target="_blank" rel="noopener"><span class="content-ep-num">082</span><span class="content-ep-body"><span class="content-ep-eyebrow">ショッピング #01</span><span class="content-ep-title">ショッピングは、消費ではなく社会的儀礼である</span><span class="content-ep-sub">― 消費の人類学が示す、買うという行為の意味</span><span class="content-ep-domain">人文学 / 消費の人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep083.html" target="_blank" rel="noopener"><span class="content-ep-num">083</span><span class="content-ep-body"><span class="content-ep-eyebrow">工場</span><span class="content-ep-title">工場は、人間の身体を再設計してきた</span><span class="content-ep-sub">― 労働の身体論が示す、近代産業の人間改造</span><span class="content-ep-domain">人文学 / 労働の身体論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep084.html" target="_blank" rel="noopener"><span class="content-ep-num">084</span><span class="content-ep-body"><span class="content-ep-eyebrow">農耕</span><span class="content-ep-title">田んぼは、地域の関係を編んできた装置</span><span class="content-ep-sub">― 水田社会論が示す、稲作と共同体</span><span class="content-ep-domain">人文学 / 水田社会論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep085.html" target="_blank" rel="noopener"><span class="content-ep-num">085</span><span class="content-ep-body"><span class="content-ep-eyebrow">漁業 #01</span><span class="content-ep-title">漁場の選び方には、長い知恵が編まれている</span><span class="content-ep-sub">― 海洋人類学が示す、海と人間の対話</span><span class="content-ep-domain">人文学 / 海洋人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep086.html" target="_blank" rel="noopener"><span class="content-ep-num">086</span><span class="content-ep-body"><span class="content-ep-eyebrow">牧畜 #01</span><span class="content-ep-title">牧畜の身体感覚は、現代の都市にも生きている</span><span class="content-ep-sub">― 動物関係論が示す、家畜と人間の共進化</span><span class="content-ep-domain">人文学 / 動物関係論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep087.html" target="_blank" rel="noopener"><span class="content-ep-num">087</span><span class="content-ep-body"><span class="content-ep-eyebrow">図書館</span><span class="content-ep-title">「博物館」が誕生したとき、世界の見方が変わった</span><span class="content-ep-sub">― 博物館学が示す、収集と展示の系譜</span><span class="content-ep-domain">人文学 / 博物館学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep088.html" target="_blank" rel="noopener"><span class="content-ep-num">088</span><span class="content-ep-body"><span class="content-ep-eyebrow">芸術</span><span class="content-ep-title">美術館は、近代が発明した装置だった</span><span class="content-ep-sub">― 美術館の歴史学が示す、近代の視覚装置</span><span class="content-ep-domain">人文学 / 美術館史</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep089.html" target="_blank" rel="noopener"><span class="content-ep-num">089</span><span class="content-ep-body"><span class="content-ep-eyebrow">芸術</span><span class="content-ep-title">音楽が、社会を結びつけるしくみ</span><span class="content-ep-sub">― 音楽人類学が解像する、リズムと共同性</span><span class="content-ep-domain">人文学 / 音楽人類学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep090.html" target="_blank" rel="noopener"><span class="content-ep-num">090</span><span class="content-ep-body"><span class="content-ep-eyebrow">祭り #03</span><span class="content-ep-title">民俗芸能は、なぜいまも残るのか</span><span class="content-ep-sub">― 民俗芸能論が示す、地域の身体文化</span><span class="content-ep-domain">人文学 / 民俗芸能論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep091.html" target="_blank" rel="noopener"><span class="content-ep-num">091</span><span class="content-ep-body"><span class="content-ep-eyebrow">公園</span><span class="content-ep-title">公園のベンチは、誰のために設計されているのか</span><span class="content-ep-sub">― 排除のデザイン論が示す、公共空間の政治</span><span class="content-ep-domain">社会科学 / 排除のデザイン論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep092.html" target="_blank" rel="noopener"><span class="content-ep-num">092</span><span class="content-ep-body"><span class="content-ep-eyebrow">メディア #02</span><span class="content-ep-title">SNSのタイムラインが、私たちの世界の窓になった</span><span class="content-ep-sub">― プラットフォーム研究が解像する、表示順序の権力</span><span class="content-ep-domain">社会科学 / プラットフォーム研究</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep093.html" target="_blank" rel="noopener"><span class="content-ep-num">093</span><span class="content-ep-body"><span class="content-ep-eyebrow">メディア #03</span><span class="content-ep-title">ニュースの選び方が、政治の見え方を変える</span><span class="content-ep-sub">― フィルターバブル研究が示す、情報環境と民主主義</span><span class="content-ep-domain">社会科学 / メディア政治学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep094.html" target="_blank" rel="noopener"><span class="content-ep-num">094</span><span class="content-ep-body"><span class="content-ep-eyebrow">ショッピング #02</span><span class="content-ep-title">商店街と街のかたち</span><span class="content-ep-sub">― 街路論が示す、商業と都市の対話</span><span class="content-ep-domain">社会科学 / 都市計画学</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep095.html" target="_blank" rel="noopener"><span class="content-ep-num">095</span><span class="content-ep-body"><span class="content-ep-eyebrow">図書館</span><span class="content-ep-title">公共図書館の歴史と未来</span><span class="content-ep-sub">― 公共圏論が示す、知の共有の場の系譜</span><span class="content-ep-domain">人文学 / 公共圏論</span></span></a></li>
+</ol>
+</div>
+<div class="content-part" id="kurashi-final">
+<div class="content-part-header">
+<div class="content-part-label">FINAL — 終 章</div>
+<h4 class="content-part-title">読者の100話を編む</h4>
+<div class="content-part-count">5話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep096.html" target="_blank" rel="noopener"><span class="content-ep-num">096</span><span class="content-ep-body"><span class="content-ep-eyebrow">終章</span><span class="content-ep-title">暮らしのかたちを俯瞰する</span><span class="content-ep-sub">― 100の系譜が示すもの</span><span class="content-ep-domain">メタ / 連載総括</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep097.html" target="_blank" rel="noopener"><span class="content-ep-num">097</span><span class="content-ep-body"><span class="content-ep-eyebrow">終章</span><span class="content-ep-title">学問が見落としてきた暮らし、暮らしが見落としてきた学問</span><span class="content-ep-sub">― 相互の死角を照らしあう</span><span class="content-ep-domain">メタ / 相互翻訳論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep098.html" target="_blank" rel="noopener"><span class="content-ep-num">098</span><span class="content-ep-body"><span class="content-ep-eyebrow">終章</span><span class="content-ep-title">翻訳の方法論</span><span class="content-ep-sub">― 専門家でない読み手にどう橋を架けるか</span><span class="content-ep-domain">メタ / 翻訳方法論</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep099.html" target="_blank" rel="noopener"><span class="content-ep-num">099</span><span class="content-ep-body"><span class="content-ep-eyebrow">終章</span><span class="content-ep-title">次の100話への問い</span><span class="content-ep-sub">― まだ書かれていない、これからの問い</span><span class="content-ep-domain">メタ / 次の問い</span></span></a></li>
+<li class="content-ep"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/kurashi-no-katachi/ep100.html" target="_blank" rel="noopener"><span class="content-ep-num">100</span><span class="content-ep-body"><span class="content-ep-eyebrow">終章</span><span class="content-ep-title">暮らしの実践へ</span><span class="content-ep-sub">― 読者ひとりひとりの100話を編む</span><span class="content-ep-domain">メタ / 実践への招待</span></span></a></li>
+</ol>
+</div>
+        </div>
+
+        <div class="strategy-panel" id="cpanel-henka">
+
+        <div class="series-hero">
+          <div class="series-hero-eyebrow">SERIES — HENKA NO KATACHI</div>
+          <h3 class="series-hero-title">変化のかたち ― 未来をつくる100の型</h3>
+          <p class="series-hero-desc">ソーシャルイノベーションの新しい読み方。5メタ型 × 15サブ型 × 3底流のSI論。NPO法人ミラツク代表理事・西村勇也による全100回連載。</p>
+          <div class="series-hero-meta">
+            <span class="series-meta-item"><strong>100</strong>話</span>
+            <span class="series-meta-item"><strong>公開済</strong>5話</span>
+            <span class="series-meta-item"><strong>公開先</strong> <a href="https://yuyanishimura0312.github.io/henka-no-katachi/" target="_blank" rel="noopener">henka-no-katachi</a></span>
+          </div>
+        </div>
+
+<div class="content-part-nav">
+<a href="#henka-part-0" class="content-part-nav-item"><span>01</span><span>序 章 ― なぜ「かたち」で読むのか</span></a>
+<a href="#henka-part-1" class="content-part-nav-item"><span>02</span><span>場のかたち ― 集まりが価値を生む</span></a>
+<a href="#henka-part-2" class="content-part-nav-item"><span>03</span><span>媒介のかたち ― つなぎ手が社会を変える</span></a>
+<a href="#henka-part-3" class="content-part-nav-item"><span>04</span><span>物語のかたち ― 価値はどこに宿るか</span></a>
+<a href="#henka-part-4" class="content-part-nav-item"><span>05</span><span>支えのかたち ― 見えないものが社会を支える</span></a>
+<a href="#henka-part-5" class="content-part-nav-item"><span>06</span><span>開きのかたち ― 特権を多くの人に開く</span></a>
+<a href="#henka-part-6" class="content-part-nav-item"><span>07</span><span>終 章 ― これまでとこれから</span></a>
+</div>
+<div class="content-part" id="henka-part-0">
+<div class="content-part-header">
+<h4 class="content-part-title">序 章 ― なぜ「かたち」で読むのか</h4>
+<div class="content-part-count">5話 / 公開済 5話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep content-ep-published"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/henka-no-katachi/ep001.html" target="_blank" rel="noopener"><span class="content-ep-num">001</span><span class="content-ep-body"><span class="content-ep-title">なぜいま「型」でソーシャルイノベーションを読むのか</span><span class="content-ep-status content-ep-status-published">公開中</span></span></a></li>
+<li class="content-ep content-ep-published"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/henka-no-katachi/ep002.html" target="_blank" rel="noopener"><span class="content-ep-num">002</span><span class="content-ep-body"><span class="content-ep-title">「つくる」と「生まれる」― 創発の系譜</span><span class="content-ep-status content-ep-status-published">公開中</span></span></a></li>
+<li class="content-ep content-ep-published"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/henka-no-katachi/ep003.html" target="_blank" rel="noopener"><span class="content-ep-num">003</span><span class="content-ep-body"><span class="content-ep-title">文脈と新結合 ― シュンペーターの種</span><span class="content-ep-status content-ep-status-published">公開中</span></span></a></li>
+<li class="content-ep content-ep-published"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/henka-no-katachi/ep004.html" target="_blank" rel="noopener"><span class="content-ep-num">004</span><span class="content-ep-body"><span class="content-ep-title">見えないものへの投資 ― 公共性の思想史</span><span class="content-ep-status content-ep-status-published">公開中</span></span></a></li>
+<li class="content-ep content-ep-published"><a class="content-ep-link" href="https://yuyanishimura0312.github.io/henka-no-katachi/ep005.html" target="_blank" rel="noopener"><span class="content-ep-num">005</span><span class="content-ep-body"><span class="content-ep-title">ソトコト60回が見せてくれたこと ― 5つのかたちと3つの底流の発見</span><span class="content-ep-status content-ep-status-published">公開中</span></span></a></li>
+</ol>
+</div>
+<div class="content-part" id="henka-part-1">
+<div class="content-part-header">
+<h4 class="content-part-title">場のかたち ― 集まりが価値を生む</h4>
+<div class="content-part-count">18話 / 公開済 0話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">006</span><span class="content-ep-body"><span class="content-ep-title">アゴラから第三の場へ ― 集会の人類史</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">007</span><span class="content-ep-body"><span class="content-ep-title">コーヒーハウスと啓蒙 ― 知識の流通装置</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">008</span><span class="content-ep-body"><span class="content-ep-title">サードプレイスの社会学 ― オルデンバーグ再読</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">009</span><span class="content-ep-body"><span class="content-ep-title">茶室の哲学 ― 一期一会と場の凝縮</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">010</span><span class="content-ep-body"><span class="content-ep-title">銭湯と公共性 ― 日本的な開きの場</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">011</span><span class="content-ep-body"><span class="content-ep-title">自発交流のかたち ― 第1章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">012</span><span class="content-ep-body"><span class="content-ep-title">通過儀礼の文化人類学 ― ファン・ヘネップから</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">013</span><span class="content-ep-body"><span class="content-ep-title">留学の系譜 ― 巡礼から現代の越境へ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">014</span><span class="content-ep-body"><span class="content-ep-title">大学キャンパスの偶然 ― 出会いの装置</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">015</span><span class="content-ep-body"><span class="content-ep-title">オンラインの越境 ― DiscordからGitHubへ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">016</span><span class="content-ep-body"><span class="content-ep-title">フェスと祭りのなかの越境</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">017</span><span class="content-ep-body"><span class="content-ep-title">越境のかたち ― 第2章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">018</span><span class="content-ep-body"><span class="content-ep-title">余暇の発明 ― 労働時間短縮の系譜</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">019</span><span class="content-ep-body"><span class="content-ep-title">公園というユートピア ― オルムステッドの仕事</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">020</span><span class="content-ep-body"><span class="content-ep-title">余白の経営学 ― DeMarcoのスラック</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">021</span><span class="content-ep-body"><span class="content-ep-title">詩学と休符 ― 西脇順三郎の余韻</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">022</span><span class="content-ep-body"><span class="content-ep-title">デフォルト・モード・ネットワーク ― 脳の余白</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">023</span><span class="content-ep-body"><span class="content-ep-title">余白のかたち ― 第3章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+</ol>
+</div>
+<div class="content-part" id="henka-part-2">
+<div class="content-part-header">
+<h4 class="content-part-title">媒介のかたち ― つなぎ手が社会を変える</h4>
+<div class="content-part-count">18話 / 公開済 0話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">024</span><span class="content-ep-body"><span class="content-ep-title">媒介者の人類史 ― ヘルメスから現代のキュレーターへ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">025</span><span class="content-ep-body"><span class="content-ep-title">産婆の系譜 ― 古代から現代のドゥーラ概念へ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">026</span><span class="content-ep-body"><span class="content-ep-title">市民科学の100年 ― シチズンサイエンスの系譜</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">027</span><span class="content-ep-body"><span class="content-ep-title">自助グループ運動 ― AAから現代へ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">028</span><span class="content-ep-body"><span class="content-ep-title">ピアサポートの倫理</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">029</span><span class="content-ep-body"><span class="content-ep-title">市民専門家のかたち ― 第4章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">030</span><span class="content-ep-body"><span class="content-ep-title">中間支援の系譜 ― 産業組合からNPO中間支援へ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">031</span><span class="content-ep-body"><span class="content-ep-title">賀川豊彦と日本の協同組合運動</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">032</span><span class="content-ep-body"><span class="content-ep-title">ストラクチャル・ホール理論 ― バートの構造的空隙</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">033</span><span class="content-ep-body"><span class="content-ep-title">弱い紐帯の強さ ― グラノヴェッターの衝撃</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">034</span><span class="content-ep-body"><span class="content-ep-title">プラットフォーム経営論 ― 媒介者のビジネスモデル</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">035</span><span class="content-ep-body"><span class="content-ep-title">中間支援のかたち ― 第5章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">036</span><span class="content-ep-body"><span class="content-ep-title">ナイチンゲールと看護学の創出</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">037</span><span class="content-ep-body"><span class="content-ep-title">社会福祉学の誕生 ― リッチモンドの仕事</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">038</span><span class="content-ep-body"><span class="content-ep-title">専門家批判の社会学 ― イリイチからフレイレへ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">039</span><span class="content-ep-body"><span class="content-ep-title">実践共同体（CoP）― ウェンガーとレイヴ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">040</span><span class="content-ep-body"><span class="content-ep-title">デザイン思考の制度化</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">041</span><span class="content-ep-body"><span class="content-ep-title">学問領域創出のかたち ― 第6章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+</ol>
+</div>
+<div class="content-part" id="henka-part-3">
+<div class="content-part-header">
+<h4 class="content-part-title">物語のかたち ― 価値はどこに宿るか</h4>
+<div class="content-part-count">18話 / 公開済 0話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">042</span><span class="content-ep-body"><span class="content-ep-title">物語経済学 ― ロバート・シラーの挑戦</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">043</span><span class="content-ep-body"><span class="content-ep-title">ナラティブ・アイデンティティ ― リクールの自己論</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">044</span><span class="content-ep-body"><span class="content-ep-title">ブランド・ナラティブの経営学</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">045</span><span class="content-ep-body"><span class="content-ep-title">神話と原型 ― キャンベルの英雄の旅</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">046</span><span class="content-ep-body"><span class="content-ep-title">ナラティブ・ベースド・メディスン</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">047</span><span class="content-ep-body"><span class="content-ep-title">物語付加のかたち ― 第7章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">048</span><span class="content-ep-body"><span class="content-ep-title">価値論の系譜 ― 効用説から関係説へ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">049</span><span class="content-ep-body"><span class="content-ep-title">シュンペーターの新結合再読</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">050</span><span class="content-ep-body"><span class="content-ep-title">伝統の発明 ― ホブズボームの反転</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">051</span><span class="content-ep-body"><span class="content-ep-title">ローカルナレッジ ― ギアツの厚い記述</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">052</span><span class="content-ep-body"><span class="content-ep-title">ハイデガー的「物（Ding）」と意味の起こり</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">053</span><span class="content-ep-body"><span class="content-ep-title">文脈再結合のかたち ― 第8章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">054</span><span class="content-ep-body"><span class="content-ep-title">当事者運動の系譜 ― 障害学から</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">055</span><span class="content-ep-body"><span class="content-ep-title">ケアの倫理 ― ギリガンとノディングズ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">056</span><span class="content-ep-body"><span class="content-ep-title">文化盗用と文化転用 ― 価値の正当性</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">057</span><span class="content-ep-body"><span class="content-ep-title">反専門家としての当事者</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">058</span><span class="content-ep-body"><span class="content-ep-title">自己決定権の哲学</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">059</span><span class="content-ep-body"><span class="content-ep-title">当事者主体回復のかたち ― 第9章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+</ol>
+</div>
+<div class="content-part" id="henka-part-4">
+<div class="content-part-header">
+<h4 class="content-part-title">支えのかたち ― 見えないものが社会を支える</h4>
+<div class="content-part-count">18話 / 公開済 0話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">060</span><span class="content-ep-body"><span class="content-ep-title">規格戦争の経済史 ― QWERTYからUSB-Cまで</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">061</span><span class="content-ep-body"><span class="content-ep-title">経路依存性とロックイン ― ポール・デイヴィッド</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">062</span><span class="content-ep-body"><span class="content-ep-title">メートル法の革命 ― 計量の標準化</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">063</span><span class="content-ep-body"><span class="content-ep-title">万国博覧会と標準化</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">064</span><span class="content-ep-body"><span class="content-ep-title">ISO規格の人類学</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">065</span><span class="content-ep-body"><span class="content-ep-title">規格・標準化のかたち ― 第10章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">066</span><span class="content-ep-body"><span class="content-ep-title">インフラの哲学 ― スーザン・リー・スター</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">067</span><span class="content-ep-body"><span class="content-ep-title">公共財の経済学 ― オストロムのコモンズ論</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">068</span><span class="content-ep-body"><span class="content-ep-title">上下水道の文明史</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">069</span><span class="content-ep-body"><span class="content-ep-title">電力網の倫理学</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">070</span><span class="content-ep-body"><span class="content-ep-title">インターネットというコモンズ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">071</span><span class="content-ep-body"><span class="content-ep-title">見えないインフラのかたち ― 第11章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">072</span><span class="content-ep-body"><span class="content-ep-title">メディア論の系譜 ― イニス、マクルーハン</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">073</span><span class="content-ep-body"><span class="content-ep-title">編集の人類学 ― 並列化とは何か</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">074</span><span class="content-ep-body"><span class="content-ep-title">図書館分類法の歴史</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">075</span><span class="content-ep-body"><span class="content-ep-title">都市計画の系譜 ― ハワードからコールハースへ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">076</span><span class="content-ep-body"><span class="content-ep-title">データベースとアルゴリズム</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">077</span><span class="content-ep-body"><span class="content-ep-title">編集・並列化のかたち ― 第12章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+</ol>
+</div>
+<div class="content-part" id="henka-part-5">
+<div class="content-part-header">
+<h4 class="content-part-title">開きのかたち ― 特権を多くの人に開く</h4>
+<div class="content-part-count">18話 / 公開済 0話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">078</span><span class="content-ep-body"><span class="content-ep-title">活版印刷とグーテンベルク</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">079</span><span class="content-ep-body"><span class="content-ep-title">複製技術時代 ― ベンヤミンと現代</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">080</span><span class="content-ep-body"><span class="content-ep-title">オープンソース運動の哲学</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">081</span><span class="content-ep-body"><span class="content-ep-title">クリエイティブ・コモンズの思想</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">082</span><span class="content-ep-body"><span class="content-ep-title">オラリティとリテラシー ― オングの系譜</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">083</span><span class="content-ep-body"><span class="content-ep-title">複製・伝達のかたち ― 第13章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">084</span><span class="content-ep-body"><span class="content-ep-title">フォードと自動車の大衆化</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">085</span><span class="content-ep-body"><span class="content-ep-title">民主化テクノロジーの系譜</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">086</span><span class="content-ep-body"><span class="content-ep-title">ユニバーサルデザインの思想 ― ロン・メイス</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">087</span><span class="content-ep-body"><span class="content-ep-title">アクセシビリティと包摂の倫理</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">088</span><span class="content-ep-body"><span class="content-ep-title">シェアエコノミーの経営史</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">089</span><span class="content-ep-body"><span class="content-ep-title">大衆化技術のかたち ― 第14章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">090</span><span class="content-ep-body"><span class="content-ep-title">可視化メディアの倫理 ― ソンタグから</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">091</span><span class="content-ep-body"><span class="content-ep-title">報道写真の系譜 ― キャパからの100年</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">092</span><span class="content-ep-body"><span class="content-ep-title">ジャーナリズムと社会変容</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">093</span><span class="content-ep-body"><span class="content-ep-title">データジャーナリズムの登場</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">094</span><span class="content-ep-body"><span class="content-ep-title">アクティビストとしての映像</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">095</span><span class="content-ep-body"><span class="content-ep-title">可視化メディアのかたち ― 第15章のまとめ</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+</ol>
+</div>
+<div class="content-part" id="henka-part-6">
+<div class="content-part-header">
+<h4 class="content-part-title">終 章 ― これまでとこれから</h4>
+<div class="content-part-count">5話 / 公開済 0話</div>
+</div>
+<ol class="content-ep-list">
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">096</span><span class="content-ep-body"><span class="content-ep-title">5つの「かたち」を編み直す ― 統合的視座</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">097</span><span class="content-ep-body"><span class="content-ep-title">3底流が指し示す未来</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">098</span><span class="content-ep-body"><span class="content-ep-title">フォーサイトと型 ― 未来は「つくる」もの</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">099</span><span class="content-ep-body"><span class="content-ep-title">教養としてのソーシャルイノベーション</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+<li class="content-ep content-ep-upcoming"><div class="content-ep-link content-ep-disabled"><span class="content-ep-num">100</span><span class="content-ep-body"><span class="content-ep-title">変化のかたち ― 連載を閉じて</span><span class="content-ep-status content-ep-status-upcoming">予定</span></span></div></li>
+</ol>
+</div>
+        </div>
+
+        <div class="strategy-panel" id="cpanel-other">
+          <div class="series-card-list">
+            <a href="https://stg.miratuku-journal.org/i_academias/" target="_blank" rel="noopener" class="series-card">
+              <div class="series-card-eyebrow">SERIES — JIGYO NO KATACHI</div>
+              <div class="series-card-title">事業のかたち ― 学術が事業の前提に出会うとき</div>
+              <div class="series-card-desc">5 PART × 18領域・約500人の研究者・約1,000件の引用・人文学アンカー。Translational Editor視点で学術と事業判断の前提条件を翻訳する全100話連載。</div>
+              <div class="series-card-status">公開先 → stg.miratuku-journal.org/i_academias/</div>
+            </a>
+
+            <div class="series-card" style="cursor:default;">
+              <div class="series-card-eyebrow">SERIES — KEIEI NO KATACHI</div>
+              <div class="series-card-title">経営のかたち ― 経営5機能 × 他分野研究知</div>
+              <div class="series-card-desc">経営5機能 × 他分野研究知の交差点で2レンズ設計。EP006試作完了（金茶 #C89B5B、本文1,321字 v0.4）。Stage 0仕様策定中。</div>
+              <div class="series-card-status">企画中 / 試作6話完了</div>
+            </div>
+
+            <div class="series-card" style="cursor:default;">
+              <div class="series-card-eyebrow">SERIES — ITONAMI NO KATACHI</div>
+              <div class="series-card-title">いとなみのかたち ― 日々の営みに学術が出会うとき</div>
+              <div class="series-card-desc">5領域 × 各20話 = 100話。子育て / 食事と料理 / 家事 / 余暇と楽しみ / 買い物。中核 × 周辺 × 隠れた関係 × 人文学アンカーの四角測量で構造化。</div>
+              <div class="series-card-status">企画立案（2026-05-09）</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -177,13 +816,37 @@
   <script>
     initNav('strategy');
 
-    // Sub-tab switching
-    document.querySelectorAll('.strategy-tab').forEach(function(tab) {
+    // Top-level switching (戦略 / コンテンツ)
+    document.querySelectorAll('.strategy-top-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.strategy-top-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.strategy-top-panel').forEach(function(p) { p.classList.remove('active'); });
+        this.classList.add('active');
+        document.getElementById('top-' + this.dataset.top).classList.add('active');
+      });
+    });
+
+    // Sub-tab switching for 戦略 panel (data-panel)
+    document.querySelectorAll('.strategy-tab[data-panel]').forEach(function(tab) {
       tab.addEventListener('click', function() {
-        document.querySelectorAll('.strategy-tab').forEach(function(t) { t.classList.remove('active'); });
-        document.querySelectorAll('.strategy-panel').forEach(function(p) { p.classList.remove('active'); });
+        var siblings = this.parentElement.querySelectorAll('.strategy-tab');
+        siblings.forEach(function(t) { t.classList.remove('active'); });
+        var container = this.closest('.strategy-top-panel');
+        container.querySelectorAll('.strategy-panel').forEach(function(p) { p.classList.remove('active'); });
         this.classList.add('active');
         document.getElementById('panel-' + this.dataset.panel).classList.add('active');
+      });
+    });
+
+    // Sub-tab switching for コンテンツ panel (data-cpanel)
+    document.querySelectorAll('.strategy-tab[data-cpanel]').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var siblings = this.parentElement.querySelectorAll('.strategy-tab');
+        siblings.forEach(function(t) { t.classList.remove('active'); });
+        var container = this.closest('.strategy-top-panel');
+        container.querySelectorAll('.strategy-panel').forEach(function(p) { p.classList.remove('active'); });
+        this.classList.add('active');
+        document.getElementById('cpanel-' + this.dataset.cpanel).classList.add('active');
       });
     });
   </script>
