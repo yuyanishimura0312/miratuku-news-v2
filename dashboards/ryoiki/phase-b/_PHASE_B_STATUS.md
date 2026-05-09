@@ -15,24 +15,29 @@
 - 41問: 真M4 / 準M14 / 概念整合15 / 単独T8、CTL-V 17 / T 6 / G 6
 - 主要発見: 「2030 near 真M由来 23.1% (3/13)」「Mサイン階層由来 53.8%」
 
-### Wave 2: B-2 すでにある未来 + B-4 変化検出装置 — 実施中
-- **B-2**: ✅ 完全完了
+### Wave 2: B-2 すでにある未来 + B-4 変化検出装置
+- **B-2**: ✅ 完全完了 + Phase A 継承WARN追補完了
   - 4ファイル完成 + already_future.db（14問/5系統/85wisdom/22cross-links）
   - doc-verify: 致命的不整合1+Minor3 → 修正済
-  - sentinel: CONDITIONAL APPROVAL → 追補後 APPROVED
-    - B-1 ground truth との Q-N12/Q-V05 個別ラベル同期完了（DB+analysis+handoff §5.1）
-- **B-4**: 🔄 リード走行中（agent a4f6465a6d863517b）
-  - 想定成果: 7変化検出装置 × 24問評価 + initiatives.db
+  - sentinel: CONDITIONAL APPROVAL → 追補後 APPROVED（Q-N12/Q-V05 同期完了）
+  - Phase A 継承WARN追補: PHIL 9,583→10,292 / MY 10,615→11,936 / TK 3,001→3,002 同期完了
+- **B-4**: ✅ リード完成 → 🔄 doc-verify中
+  - 4ファイル + initiatives.db (questions 24/detection_systems 7/coverage_scores 168/initiatives 463)
+  - 7装置平均スコア: SG 4.00 / IR 3.21 / UPR 2.67 / Funding 2.12 / Policy 1.50 / Sangaku 1.29 / SGRD 0.50
+  - 5補完類型: 全装置応答型6 / 制度+市場4 / 研究4 / SG単独8 / 不応答2 (Q-N07/Q-M02)
+  - 主要発見: SG除く6装置がnear偏重、規範系・概念系問いが装置応答最薄
+  - doc-verify agent: ac8d9623040ef0637 走行中
 
-### Wave 3: B-3 善い社会経路 — ✅ 完全完了
-- **B-3**: ✅ 全品質ゲート通過
+### Wave 3: B-3 善い社会経路 — ✅ 完全完了 + 全申し送り解消
+- **B-3**: ✅ 全品質ゲート通過 + MJ-02解消
   - 4ファイル完成（analysis 39KB / verification 26KB / report 73KB / handoff 11KB）
   - 5シナリオ × 30問 × 8 critical junctures
-  - doc-verify: CONDITIONAL PASS（WARN 6件、FAIL 0）→ 軽微追補 ALL_RESOLVED
+  - doc-verify: CONDITIONAL PASS → 軽微追補 ALL_RESOLVED
   - sentinel: CONDITIONAL APPROVAL → ホットフィックス後 APPROVED
-    - MJ-01: analysis §7.4 主体配分を実体集計値に同期完了
-    - m1: typo「全シナリオ底通底」→「全シナリオ底通」修正完了
-  - 申し送り（未対応・Wave 3後対応可）: MJ-02 5/8表現揺れ統一 / C-05 連結IDマトリクス
+    - MJ-01 解消: analysis §7.4 主体配分を実体集計値に同期
+    - m1 解消: typo「全シナリオ底通底」→「全シナリオ底通」修正
+    - **MJ-02 解消**: 4ファイル横断で「厳密接続 4/8 = 50% (真M+準M)」+「概念整合含む 6/8 = 75%」honest 開示形式に統一
+  - 申し送り（未対応・B-5/B-6で対応）: C-05 連結IDマトリクス
 
 ### Wave 3: B-5 動き状況測定 — Wave 3 待機中
 - **B-5**: pending
@@ -46,15 +51,18 @@
   - briefing: `_TRACK_B6_BRIEFING.md` 準備済
   - 想定成果: 統合HTML 4ファイル + ryoiki-index 更新
 
-## 現在の並列エージェント（5並列）
+## 現在の並列エージェント
 
 | Agent ID | Track | 状態 | 担当 |
 |----------|-------|------|------|
-| a4f6465a6d863517b | B-4 リード | 走行中 | 7変化検出装置DB構築 |
-| a91aaca1e83163cbf | B-5 入力テンプレ | 走行中 | 30×7セル雛形・連結ID |
-| ae8e15bb5dae7e24c | B-6 構造設計 | 走行中 | 統合HTML章立て・図表設計 |
-| ae08fb430c02d2304 | Phase A 継承監査 | 走行中 | Phase A数値の継承検証 |
-| bcvbwqp22 (bash) | ファイル監視 | 走行中 | B-3/B-4完了検出 |
+| ac8d9623040ef0637 | B-4 doc-verify | 走行中 | 4カテゴリ品質検証 |
+| bcvbwqp22 (bash) | ファイル監視 | 走行中 | 完了検出 |
+
+## 完了済み拡張チーム成果
+
+- B-5 入力テンプレート (a91aaca1e83163cbf) ✓ — _TRACK_B5_INPUT_TEMPLATE.md
+- B-6 構造設計 (ae8e15bb5dae7e24c) ✓ — _TRACK_B6_STRUCTURE.md
+- Phase A 継承監査 (ae08fb430c02d2304) ✓ — _PHASE_A_INHERITANCE_AUDIT.md (WARN-1/2 修正済)
 
 ## 完了済み品質ゲート
 
@@ -62,9 +70,12 @@
 - B-1 sentinel ✓ (APPROVED)
 - B-2 doc-verify ✓
 - B-2 sentinel ✓ (CONDITIONAL → 追補後 APPROVED)
+- B-2 Phase A継承追補 ✓ (PHIL/MY/TK 同期)
 - B-3 doc-verify ✓ (CONDITIONAL PASS)
 - B-3 軽微追補 ✓ (ALL_RESOLVED)
 - B-3 sentinel ✓ (CONDITIONAL → ホットフィックス後 APPROVED)
+- B-3 MJ-02 ✓ (5/8表現揺れ統一)
+- B-4 doc-verify 🔄 走行中
 
 ## 次工程（順序）
 
