@@ -195,3 +195,38 @@ Wave 4: Track B-6 統合
 4. **承認後の進行**: Wave 1（Track B-1）から起動
 
 ご承認いただけ次第、Wave 1 から順次起動します。
+
+---
+
+## 進捗追記（2026-05-09 14:50 JST 時点）
+
+詳細は `_PHASE_B_STATUS.md` 参照。
+
+| Wave | Track | 状態 |
+|------|-------|------|
+| 1 | B-1 多層人類史×41問 | ✅ APPROVED |
+| 2 | B-2 すでにある未来 + already_future.db | ✅ APPROVED（Q-N12/Q-V05 ラベル同期済 + Phase A WARN追補済） |
+| 2 | B-4 7変化検出装置×24問×168セル + initiatives.db | sentinel CONDITIONAL APPROVAL → 軽微追補中（C1+M1+M2 修正） |
+| 3 | B-3 5シナリオ×30問×8 critical junctures | ✅ APPROVED（MJ-01/m1/MJ-02 ホットフィックス済） |
+| 3 | B-5 hot/dead zones 弁別 | 待機（B-4 軽微追補完了後起動） |
+| 4 | B-6 統合 HTML 化 + ryoiki-index 更新 | 待機（B-5 完了後起動） |
+
+### Phase B で構築済み補助 DB
+
+- `~/projects/research/already-future-db/already_future.db`（B-2）
+- `~/projects/research/initiatives-db/initiatives.db`（B-4、463 件 initiatives）
+
+### Wave 4 起動準備済成果物（pre-build）
+
+- `_TRACK_B5_INPUT_TEMPLATE.md` — B-3 30問 × B-4 7装置 = 210セルマトリクス雛形
+- `_TRACK_B6_STRUCTURE.md` — Phase B 統合 HTML 章立て（report 30K字 + analysis 19K字 + verification 10K字 + handoff 4K字）
+- `_TRACK_B6_BRIEFING.md` — B-6 統合 HTML 化 briefing
+- `_PHASE_A_INHERITANCE_AUDIT.md` — Phase A → B 数値継承監査（WARN 2件は B-2 で修正済）
+- `_TRACK_B4_REFINEMENT_BRIEFING.md` — B-4 軽微追補 briefing（C1/M1/M2 対応ガイド）
+
+### Phase B で得られた主要発見（2026-05-09 時点）
+
+1. **B-1**: 「2030 near 真M由来 23.1% (3/13)」「Mサイン階層由来 53.8%」「3 パラダイム同時失効」（進歩・科学中立性・西洋普遍主義）
+2. **B-2**: 「14 問の 92.9% が既出回答型」「Type-A/B/C 三類型 + 三大クラスター（多元的人格群／pluriverse 群／長期時間群）」
+3. **B-3**: 「pluriverse 的前提を方法論レベルで実装する規範層」「critical juncture 8点のうち 4/8（厳密）/ 6/8（概念整合含む）が Phase A Mサイン領域接続」「Fragmentation シナリオ wisdom 蓄積の薄さ」
+4. **B-4**: 「SG 除く 6装置が near 偏重」「規範系・概念系問いが装置応答最薄」「5補完類型のうち全装置不応答型は実体ゼロ→4類型に再構成中」
