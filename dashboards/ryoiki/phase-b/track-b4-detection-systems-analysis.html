@@ -273,11 +273,11 @@ footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border);
 
 <h3>2.3 検索プロトコル</h3>
 
-<p>検索プロトコルは装置別に異なる。SG（signal.db）では <code>signal_name</code> と <code>description</code> の OR 検索（LIKE '%kw%'）で件数を取得し、最新 <code>detected_date</code> と composite_score 上位 5 件のサンプルを取得する。Policy DB では FTS5（projects_fts）が利用できる場合は FTS、そうでない場合は <code>name</code> + <code>overview</code> の OR LIKE で検索し、予算 finalized_amount 降順で上位 5 事業のサンプルを取得する。IR Collector は 1.86M セクションの巨大DBであるため、性能上の理由で先頭 2 キーワードのみで <code>text_content</code> LIKE 検索し、最新 period_end と上位 5 ファイラーを取得する。Funding（投資シグナル）は press_releases の title + body の OR LIKE 検索で件数と最新 published_at、上位 5 PR を取得する。Sangaku-matcher は ambition_taxonomy_themes と tech_taxonomy_themes の name + keywords を OR LIKE 検索し、ヒットした theme から代表 5 件を取得する。UPR と SGRD は SQLite ではなく統計 JSON のみが手元にあるため、samples 200 件と top_themes 100 件・gta 48 件の中での textual match 件数を採用する。</p>
+<p>検索プロトコルは装置別に異なる。SG（signal.db）では <code>signal_name</code> と <code>description</code> の OR 検索（LIKE '%kw%'）で件数を取得し、最新 <code>detected_date</code> と composite_score 上位 5 件のサンプルを取得する。Policy DB では FTS5（projects_fts）が利用できる場合は FTS、そうでない場合は <code>name</code> + <code>overview</code> の OR LIKE で検索し、予算 finalized_amount 降順で上位 5 事業のサンプルを取得する。IR Collector は 1.86M セクションの巨大DBであるため、本Track では検索対象を narrative セクション 7 タグ（BusinessRisks / R&D / Strategy 等、計 60K セクション）に絞り、6 キーワードすべてに対する精密検索を実施する。precompute された <code>ir_counts.json</code>（123 キーワード × narrative セクション）から 6 キーワードのカウント合算と上位 5 ファイラー samples を取得する。Funding（投資シグナル）は press_releases の title + body の OR LIKE 検索で件数と最新 published_at、上位 5 PR を取得する。Sangaku-matcher は ambition_taxonomy_themes と tech_taxonomy_themes の name + keywords を OR LIKE 検索し、ヒットした theme から代表 5 件を取得する。UPR と SGRD は SQLite ではなく統計 JSON のみが手元にあるため、samples 200 件と top_themes 100 件・gta 48 件の中での textual match 件数を採用する。</p>
 
 <h3>2.4 検索プロトコルの限界</h3>
 
-<p>本検索プロトコルには三つの限界がある。第一に、LIKE 検索は形態素解析を経ない単純部分一致のため、日本語の活用形・表記揺れを漏らす可能性がある。例えば「気候難民」は拾うが「気候によって追い立てられた人々」は拾わない。第二に、UPR / SGRD は集計 JSON のみで全レコード走査ができないため、件数は theme_top 100 件と samples 200 件の合算となり、装置の真の規模（41,760 / 36,734 件）を反映しない。これは「軽量カバレッジ評価」の構造的制約である。<span class="tag-est">推定</span> 第三に、IR の text_content LIKE 検索は先頭 2 キーワードのみで実施するため、3-6 番目のキーワードでヒットする企業が漏れる。本Trackでは IR スコアの過小評価可能性を留保事項として明示する。</p>
+<p>本検索プロトコルには三つの限界がある。第一に、LIKE 検索は形態素解析を経ない単純部分一致のため、日本語の活用形・表記揺れを漏らす可能性がある。例えば「気候難民」は拾うが「気候によって追い立てられた人々」は拾わない。第二に、UPR / SGRD は集計 JSON のみで全レコード走査ができないため、件数は theme_top 100 件と samples 200 件の合算となり、装置の真の規模（41,760 / 36,734 件）を反映しない。これは「軽量カバレッジ評価」の構造的制約である。<span class="tag-est">推定</span> 第三に、IR の text_content LIKE 検索は narrative セクション 7 タグ（60K セクション）に限定する。残る 1.7M セクション（会計方針・財務注記等）は対象外。本Trackでは IR スコアの「経営方針・リスク・R&D 記述に限った応答力」と読む。</p>
 
 </section>
 
@@ -304,12 +304,12 @@ footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border);
 <tr><td>UPR</td><td>0</td><td>1</td><td>2-4</td><td>5-14</td><td>15-39</td><td>40+</td></tr>
 <tr><td>SGRD</td><td>0</td><td>1</td><td>2-4</td><td>5-14</td><td>15-39</td><td>40+</td></tr>
 <tr><td>Policy</td><td>0</td><td>1-9</td><td>10-49</td><td>50-199</td><td>200-799</td><td>800+</td></tr>
-<tr><td>IR</td><td>0</td><td>1-49</td><td>50-299</td><td>300-1499</td><td>1500-5999</td><td>6000+</td></tr>
+<tr><td>IR</td><td>0</td><td>1-29</td><td>30-149</td><td>150-599</td><td>600-1499</td><td>1500+</td></tr>
 <tr><td>Funding</td><td>0</td><td>1-4</td><td>5-24</td><td>25-99</td><td>100-399</td><td>400+</td></tr>
 <tr><td>Sangaku</td><td>0</td><td>1-9</td><td>10-49</td><td>50-199</td><td>200-799</td><td>800+</td></tr>
 </tbody>
 </table>
-<div class="figure-caption">境界値は装置の収録規模を反映。SG は少数精鋭型のため低い境界、IR は巨大DBのため高い境界。Sangaku は ambition theme × 100 + tech theme × 80 + seeds の合算で計算される擬似件数を境界対象とする。</div>
+<div class="figure-caption">境界値は装置の収録規模を反映。SG は少数精鋭型のため低い境界、IR は narrative セクション 60K に対する精密検索の境界（2026-05-09 改訂）。Sangaku は ambition theme × 100 + tech theme × 80 + seeds の合算で計算される擬似件数を境界対象とする。SGRD は集計 JSON（top_themes 30 件 + gta 30 件 + recent 100 件）の制約で過小評価境界。</div>
 </div>
 
 <h3>3.3 スコア解釈の留意点</h3>
@@ -326,21 +326,23 @@ footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border);
 
 <h3>4.1 集計実行の概要</h3>
 
-<p>集計は <code>~/projects/research/initiatives-db/build_initiatives_db.py</code> を 2026-05-09 に実行した。実行時間は約 25 分で、最も時間を要したのは IR Collector（1.86M セクション）の LIKE 検索であった。168 セルすべてに対してスコアと初期 initiatives を生成した。</p>
+<p>集計は <code>~/projects/research/initiatives-db/build_initiatives_db.py</code> を 2026-05-09 に実行した。当初は IR Collector（1.86M セクション）の各キーワード LIKE 検索が最大の性能ボトルネックであり、1 キーワードあたり約 80 秒を要した。本Track ではこれを解決するため、IR の検索対象を <strong>narrative セクション 7 タグ</strong>（BusinessRisksTextBlock / ResearchAndDevelopmentActivitiesTextBlock / RiskManagementTextBlock / StrategyTextBlock / PolicyOnDevelopmentOfHumanResourcesAndInternalEnvironmentStrategyTextBlock / MaterialMattersRelatingToGoingConcernEtcBusinessRisksTextBlock / AnalysisAndResponsesToSignificantEventsRelatedToGoingConcernRisksEtcAnalysisOfFinancialPositionOperatingResultsAndCashFlowsTextBlock）に絞り込み、約 60K セクションに対して全 123 キーワードを 80 秒で precompute した。総集計時間は約 5 分で完了。168 セルすべてに対してスコアと 463 件の initiatives を生成した。</p>
+
+<p>実集計結果の主要数値は次のとおり。168 セルの平均スコア: 2.18。score≥3 セル数: 73 / 168（43.5%）。score≤1 セル数: 76 / 168（45.2%）。装置別最高スコア装置: SG（平均 4.00、score≥3 問い 22 / 24）。装置別最低スコア装置: SGRD（平均 0.50、集計 JSON 参照のため過小評価）。ホライズン別平均スコア: near 2.45 > far 2.05 > mid 1.98 > very-far 1.29。Initiatives レコード総数: 463 件。</p>
 
 <h3>4.2 装置別の典型的応答パターン</h3>
 
-<p>各装置は問いの種類によって応答パターンが大きく異なる。SG（Signal DB）は near 13 問に対してほぼ全問でスコア 3 以上を返し、特に「AIガバナンス」「民主主義」「物語転換」「場所性回帰」等の真M / 準M 由来問いに対して score 4-5 の強い応答を返す。一方 very-far 2 問（Q-V02 / Q-V06）は score 2-3 に留まる。これは Signal DB が「現在進行中の弱いシグナル」を扱う装置として、far / very-far の問いに直接応答する設計ではないことを反映する。</p>
+<p>各装置は問いの種類によって応答パターンが大きく異なる。SG（Signal DB）は 24 問空間で平均 4.00、score≥3 問い数 22 / 24 と最高の応答力。near 13 問の平均は 4.62、far 3 問の平均は 4.67、very-far 2 問の平均は 4.00 と、全ホライズンで高応答を返す。これは SG が Three Horizons + scenario_2100 構造を持ち、長期問いにも応答する設計を反映している。Q-N03（テクノ加速×場所性、count=816）・Q-N05（民主主義、count=501）・Q-N12（values、count=252）・Q-N09（主体・人格、count=220）・Q-M09（物語転換、count=221）・Q-V06（10億規模強制移民、count=170）が score 5 で SG の強応答対象。</p>
 
-<p>UPR / SGRD（PR 系装置）は near の研究系問い（Q-N07 科学AI、Q-N08 自律AI、Q-N10 非西洋認識論）に対して中程度（score 2-3）の応答を返すが、規範系問い（Q-N09 主体・人格、Q-N12 values、Q-N13 教育ラグ）に対しては score 1-2 に留まる。これは PR 系装置が「研究成果の発信」を扱うため、規範的問いの観測には不向きであることを反映する。</p>
+<p>UPR（大学PR）の平均は 2.67、score≥3 問い数 12 / 24。Q-N03 / Q-N04 / Q-N05 / Q-N12 / Q-N13 / Q-M02 / Q-M04 / Q-M12 / Q-F08 で score 5、Q-N09 で score 4 と、教育系・規範系問いに広く応答する。SGRD（企業 R&D PR）の平均は 0.50、score≥3 問い数 1 / 24 と本Track で最低応答。これは SGRD が集計 JSON（top_themes 30 件 + gta 30 件 + recent 100 件）参照のみで、装置の真の規模 36,734 件に比べて極端にサンプルが少ないためである。<span class="tag-est">推定</span> Track B-5 では SGRD の本格 DB 照会を推奨する。</p>
 
-<p>Policy DB は near の制度系問い（Q-N02 AI制度反作用、Q-N05 民主主義、Q-N06 気候災害、Q-N13 教育改革）と mid の制度系問い（Q-M02 / Q-M04 / Q-M12）に対して score 3-4 の強い応答を返す。これは政策事業が「制度反映」の最も具体的な観測装置であるためである。一方、概念系問い（Q-N09 / Q-N11 / Q-V07）に対しては score 0-1 に留まる。</p>
+<p>Policy DB の平均は 1.50、score≥3 問い数 6 / 24。Q-N03（172 事業・score 3）・Q-N04（67 事業・score 3）・Q-N13（144 事業・score 3）・Q-M04（182 事業・score 3）・Q-M12（145 事業・score 3）・Q-F01（89 事業・score 3）が応答対象。これは政策事業が「制度反映」の具体的観測装置であることを示す。一方、概念系問い（Q-N09 / Q-N10 / Q-N11 / Q-F03）に対しては score 0-1 に留まり、「政策事業として制度化されていない」構造的事実を反映する。</p>
 
-<p>IR Collector は near / mid のすべての問いに対して何らかの記述を持つ可能性が高いが、score の分散は大きい。特に AI 系問い（Q-N01 / Q-N02 / Q-N07 / Q-N08）と気候系問い（Q-N06 / Q-M08 / Q-F01）は企業の経営方針・リスク認識として明示されるため score 4-5 に達するが、規範系・神話系問いは IR の対象外であり score 0-1 に留まる。</p>
+<p>IR Collector の平均は 3.21、score≥3 問い数 16 / 24 と、SG に次ぐ第 2 位の応答力。Q-M04 少子化（5,166 件・score 5）・Q-N03 地域・コミュニティ（9,017 件・score 5）・Q-N13 教育・キャリア（1,939 件・score 5）・Q-N12 価値観・倫理（1,541 件・score 5）・Q-N09 主体・人格（1,584 件・score 5）が score 5 の強応答対象。これは「企業の経営方針・リスク認識・R&D 記述」が広範な問いに対して言及を持つ構造的事実を示す。規範系・神話系問い（Q-N10 非西洋認識論、Q-F03 pluriverse）は score 1 に留まる。</p>
 
-<p>Funding（投資シグナル）は near の技術系問い（Q-N01 / Q-N07 / Q-N08）と mid の医療系問い（Q-M10 創薬AI に類する Q-N07 拡張）に対して score 3-4 の応答を返す。VC 投資は「未来への賭け」を反映するため、AI・バイオ・気候技術の問いには強い応答を示す。一方、規範系・制度系問いに対しては score 0-2 に留まる。</p>
+<p>Funding（投資シグナル）の平均は 2.12、score≥3 問い数 9 / 24。Q-N01 AI ガバナンス（170 PR・score 4）・Q-N03 地域系（420 PR・score 5）・Q-N04 地域系（143 PR・score 4）・Q-N08 自律AI（115 PR・score 4）・Q-N13 教育（140 PR・score 4）・Q-M12 教育（139 PR・score 4）等が応答対象。VC 投資は「未来への賭け」を反映するため、AI・地域・教育・気候技術の問いに強い応答を示す。規範系・制度系問いに対しては score 0-2 に留まる。</p>
 
-<p>Sangaku-matcher は ambition_taxonomy_themes 33 件と tech_taxonomy_themes 40 件の構造化分類が中心であり、各問いに対する応答件数の分散が小さい（0-5 件程度の theme ヒット）。33 ambition × 100 + 40 tech × 80 の擬似スケーリング後、AI / 環境 / 教育系問いに対して score 3-4、規範系問いに対して score 0-2 となる。</p>
+<p>Sangaku-matcher の平均は 1.29、score≥3 問い数 7 / 24。Q-N01 AI ガバナンス（260 件・score 4）・Q-N03 地域（306 件・score 4）・Q-N08 自律AI（560 件・score 4）・Q-N13 教育（200 件・score 4）・Q-M12 教育（200 件・score 4）・Q-F01 気候（360 件・score 4）が応答対象。33 ambition × 100 + 40 tech × 80 の擬似スケーリング後、技術系・教育系問いに対して score 3-4、規範系問いに対して score 0-1 となる。</p>
 
 <h3>4.3 集計ログの保存場所</h3>
 
