@@ -24,13 +24,14 @@
 - **B-4**: 🔄 リード走行中（agent a4f6465a6d863517b）
   - 想定成果: 7変化検出装置 × 24問評価 + initiatives.db
 
-### Wave 3: B-3 善い社会経路 — リード完了 + 軽微追補中
-- **B-3**: 🔄 リード完成 → 軽微追補中
-  - 4ファイル完成（analysis 38KB / verification 26KB / report 73KB / handoff 10.8KB）
+### Wave 3: B-3 善い社会経路 — 軽微追補完了 → sentinel検証中
+- **B-3**: ✅ 軽微追補 ALL_RESOLVED → 🔄 sentinel最終ゲート中
+  - 4ファイル完成（analysis 38KB / verification 26KB / report 73KB+ / handoff 10.8KB+）
   - 5シナリオ × 30問 × 8 critical junctures
   - doc-verify: CONDITIONAL PASS（WARN 6件、FAIL 0）
-  - 軽微追補（agent aa2be13292345b987 走行中）: A-10主体配分 / A-11 CTL-1配分 / D-02 三大クラスター継承 / D-03 Type-A/B/C継承
-  - 後続: sentinel（軽微追補完了後）
+  - 軽微追補完了: A-10主体配分 / A-11 CTL-1配分 / D-02 三大クラスター継承 / D-03 Type-A/B/C継承
+  - 任意申し送り（未対応）: A-08 5/8表現揺れ / C-05 連結IDマトリクス
+  - sentinel agent: aeb797dec301ca28c 走行中
 
 ### Wave 3: B-5 動き状況測定 — Wave 3 待機中
 - **B-5**: pending
@@ -49,7 +50,7 @@
 | Agent ID | Track | 状態 | 担当 |
 |----------|-------|------|------|
 | a4f6465a6d863517b | B-4 リード | 走行中 | 7変化検出装置DB構築 |
-| aa2be13292345b987 | B-3 軽微追補 | 走行中 | A-10/A-11/D-02/D-03修正 |
+| aeb797dec301ca28c | B-3 sentinel | 走行中 | 最終ゲート検証 |
 
 ## 完了済み品質ゲート
 
@@ -57,7 +58,8 @@
 - B-1 sentinel ✓ (APPROVED)
 - B-2 doc-verify ✓
 - B-2 sentinel ✓ (CONDITIONAL → 追補後 APPROVED)
-- B-3 doc-verify ✓ (CONDITIONAL PASS、追補中)
+- B-3 doc-verify ✓ (CONDITIONAL PASS)
+- B-3 軽微追補 ✓ (ALL_RESOLVED)
 
 ## 次工程（順序）
 
