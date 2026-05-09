@@ -51,15 +51,23 @@
   - briefing: `_TRACK_B6_BRIEFING.md` 準備済
   - 想定成果: 統合HTML 4ファイル + ryoiki-index 更新
 
-## 現在の並列エージェント（5並列拡張）
+## 現在の並列エージェント
 
 | Agent ID | Track | 状態 | 担当 |
 |----------|-------|------|------|
-| a8a27149da6396690 | B-4 軽微追補 | 走行中 | Critical C1+Major M1+M2 修正 |
-| ad170ee726c4a82a7 | B-5 入力データ確定版 | 走行中 | 210セルマトリクス + hot/dead zones暫定 |
-| aa6a55af20a29715c | C-05 連結IDマトリクス | 走行中 | B-1×B-2×B-3×B-4 全問い対応 |
+| a8eb170a5db04a6bb | B-4 sentinel 再検証 | 走行中 | C1/M1/M2 完全履行検証 |
 | aaff278355cdc11d0 | B-6 verification枠組み | 走行中 | 統合検証HTML雛形 |
 | bcvbwqp22 (bash) | ファイル監視 | 走行中 | 完了検出 |
+
+## 完了済み拡張チーム成果（追加）
+
+- B-4 軽微追補 (a8a27149da6396690) ✓ — ALL_RESOLVED (C1+M1+M2 全件解消)
+- B-5 入力データ確定版 (ad170ee726c4a82a7) ✓ — _TRACK_B5_INPUT_DATA.md
+  - Hot zones 4問 (Care全系列) / Warm 9 / Cool 9 / Dead 0 / N/A 8
+  - 戦略的空白13問 (43.3%) / mid 6問装置観測不能 (最大盲点)
+- C-05 連結IDマトリクス (aa6a55af20a29715c) ✓ — _TRACK_LINKAGE_MATRIX.md
+  - B-2×B-4交差わずか3問 (Q-N04/N09/N12 全near帯) = Phase B最重点
+  - 独立ID 71問 + 派生716レコード = 計787
 
 ## 完了済み拡張チーム成果
 
@@ -80,7 +88,8 @@
 - B-3 MJ-02 ✓ (5/8表現揺れ統一)
 - B-4 doc-verify ✓ (CONDITIONAL PASS — 重大1+要修正3+WARN4)
 - B-4 sentinel ✓ (CONDITIONAL APPROVAL — Wave 3起動は必須修正後)
-- B-4 軽微追補 🔄 走行中（C1/M1/M2 修正中）
+- B-4 軽微追補 ✓ (ALL_RESOLVED — C1+M1+M2 全件解消)
+- B-4 sentinel 再検証 🔄 走行中
 
 ## 次工程（順序）
 
