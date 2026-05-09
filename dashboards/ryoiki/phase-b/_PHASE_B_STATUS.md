@@ -55,9 +55,13 @@
 
 | Agent ID | Track | 状態 | 担当 |
 |----------|-------|------|------|
-| a8eb170a5db04a6bb | B-4 sentinel 再検証 | 走行中 | C1/M1/M2 完全履行検証 |
-| aaff278355cdc11d0 | B-6 verification枠組み | 走行中 | 統合検証HTML雛形 |
+| a0d5811d963a20d00 | B-4 軽微追補 R2 | 走行中 | sentinel R2 REJECT 5件再修正 |
 | bcvbwqp22 (bash) | ファイル監視 | 走行中 | 完了検出 |
+
+## 完了済み拡張チーム成果（追加）
+
+- B-4 sentinel 再検証 R1 (a8eb170a5db04a6bb) ✓ — REJECT判定（refinement R1がanalysis.html未修正5箇所等を見落とし）
+- B-6 verification 枠組み (aaff278355cdc11d0) ✓ — _TRACK_B6_VERIFICATION_TEMPLATE.html (62KB, div 36/36 完全)
 
 ## 完了済み拡張チーム成果（追加）
 
@@ -87,9 +91,10 @@
 - B-3 sentinel ✓ (CONDITIONAL → ホットフィックス後 APPROVED)
 - B-3 MJ-02 ✓ (5/8表現揺れ統一)
 - B-4 doc-verify ✓ (CONDITIONAL PASS — 重大1+要修正3+WARN4)
-- B-4 sentinel ✓ (CONDITIONAL APPROVAL — Wave 3起動は必須修正後)
-- B-4 軽微追補 ✓ (ALL_RESOLVED — C1+M1+M2 全件解消)
-- B-4 sentinel 再検証 🔄 走行中
+- B-4 sentinel R1 ✓ (CONDITIONAL APPROVAL — Wave 3起動は必須修正後)
+- B-4 軽微追補 R1 ✓ (ALL_RESOLVED 報告 — ただし精度不足)
+- B-4 sentinel R2 ✓ (REJECT — analysis.html未修正5+5類型残存6+第3類型定義違反+M2部分残存+FAIL混在)
+- B-4 軽微追補 R2 🔄 走行中（案B' UPR単独強応答型を第5類型独立）
 
 ## 次工程（順序）
 
