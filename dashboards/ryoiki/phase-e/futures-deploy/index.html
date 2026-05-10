@@ -40,6 +40,16 @@
   --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
   --font-serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
   --font-display:"Judson","Noto Serif JP",Georgia,serif;
+  /* === Warm 12 palette — used as accents per card === */
+  --w1:#F0A671; --w2:#F2C792; --w3:#F1C189; --w4:#CEA26F;
+  --w5:#F8CDAC; --w6:#F0BE83; --w7:#EFC4A4; --w8:#F7BEA2;
+  --w9:#DC8766; --w10:#B07256; --w11:#966D5E; --w12:#7A4033;
+}
+[data-theme="light"]{
+  /* ライトモードでは暖色12色をコントラストの効く側にシフト */
+  --w1:#DC8766; --w2:#CEA26F; --w3:#B07256; --w4:#966D5E;
+  --w5:#DC8766; --w6:#B07256; --w7:#966D5E; --w8:#7A4033;
+  --w9:#B07256; --w10:#966D5E; --w11:#7A4033; --w12:#7A4033;
 }
 [data-theme="light"]{
   --bg:#FAF6F0;
@@ -1050,6 +1060,322 @@ footer{
   .top-bar,.theme-toggle{display:none}
   body{background:#FFFFFF;color:#000000}
 }
+
+/* =========================================================
+   PLAYFUL LAYER — added 2026-05-11
+   微細な遊び心を加える追加レイヤー（既存ルールを上書き）
+   ========================================================= */
+
+/* HERO — 微細な粒子（ドット）背景 + 装飾円 */
+.hero{position:relative}
+.hero::after{
+  content:"";
+  position:absolute;inset:0;
+  pointer-events:none;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(255,54,68,0.06) 0, rgba(255,54,68,0) 38%),
+    radial-gradient(circle at 82% 78%, rgba(240,166,113,0.06) 0, rgba(240,166,113,0) 42%),
+    radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1.4px);
+  background-size:auto, auto, 22px 22px;
+  background-position:0 0, 0 0, 0 0;
+  opacity:0.9;
+  z-index:0;
+}
+[data-theme="light"] .hero::after{
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(237,46,59,0.05) 0, rgba(237,46,59,0) 38%),
+    radial-gradient(circle at 82% 78%, rgba(176,114,86,0.05) 0, rgba(176,114,86,0) 42%),
+    radial-gradient(circle, rgba(42,31,24,0.05) 1px, transparent 1.4px);
+}
+.hero-inner{z-index:2}
+
+/* HEROのF accent — ホバーで暖色シャッフル */
+.hero-title .accent{
+  display:inline-block;
+  transition:color 0.3s ease, transform 0.4s cubic-bezier(.34,1.56,.64,1);
+  cursor:default;
+}
+.hero-title:hover .accent{
+  color:var(--w1);
+  transform:rotate(-4deg) translateY(-2px);
+}
+
+/* HERO角の装飾コーナー */
+.hero-corner{
+  position:absolute;
+  pointer-events:none;
+  z-index:1;
+  opacity:0.55;
+}
+.hero-corner.tl{top:34px;left:32px;width:56px;height:56px}
+.hero-corner.br{bottom:34px;right:32px;width:56px;height:56px;transform:rotate(180deg)}
+.hero-corner svg{width:100%;height:100%}
+.hero-corner svg *{stroke:var(--accent-warm);fill:none;stroke-width:1}
+
+/* SECTION DIVIDER — 手描き風波線（オプション要素） */
+.wave-divider{
+  display:block;
+  margin:0 auto 28px;
+  width:120px;height:14px;
+  opacity:0.85;
+}
+.wave-divider path{
+  fill:none;
+  stroke:var(--accent-warm);
+  stroke-width:1.4;
+  stroke-linecap:round;
+}
+
+/* PILLARS — 暖色12色を各カードに割り当て + ホバー演出強化 */
+.pillar{position:relative;background:var(--card)}
+.pillar::after{
+  content:"";
+  position:absolute;
+  right:-40px;top:-40px;
+  width:140px;height:140px;
+  border-radius:50%;
+  background:var(--pillar-color, var(--accent-warm));
+  opacity:0;
+  transform:scale(0.6);
+  transition:opacity .5s ease,transform .6s ease;
+  pointer-events:none;
+  z-index:0;
+}
+.pillar:hover::after{opacity:0.14;transform:scale(1)}
+.pillar > *{position:relative;z-index:1}
+.pillar:nth-child(1){--pillar-color:var(--w1)}
+.pillar:nth-child(2){--pillar-color:var(--w9)}
+.pillar:nth-child(3){--pillar-color:var(--w12)}
+.pillar:nth-child(1) .pillar-num{color:var(--w1)}
+.pillar:nth-child(2) .pillar-num{color:var(--w9)}
+.pillar:nth-child(3) .pillar-num{color:var(--w12)}
+.pillar:nth-child(1)::before{background:var(--w1)}
+.pillar:nth-child(2)::before{background:var(--w9)}
+.pillar:nth-child(3)::before{background:var(--w12)}
+.pillar:hover{border-color:var(--pillar-color)}
+.pillar-num{
+  transition:transform .5s cubic-bezier(.34,1.56,.64,1);
+  display:inline-block;
+}
+.pillar:hover .pillar-num{transform:translateY(-4px) rotate(-3deg)}
+
+/* PILLAR — 円形バッジ装飾（番号の周辺） */
+.pillar-num-wrap{
+  position:relative;
+  display:inline-block;
+  margin-bottom:32px;
+}
+.pillar-num-wrap .pillar-num{margin-bottom:0}
+.pillar-num-ring{
+  position:absolute;
+  left:-14px;top:-14px;
+  width:calc(100% + 28px);
+  height:calc(100% + 28px);
+  border:1px dashed var(--pillar-color, var(--accent-warm));
+  border-radius:50%;
+  opacity:0;
+  transform:scale(0.85);
+  transition:opacity .4s ease,transform .5s ease;
+  pointer-events:none;
+}
+.pillar:hover .pillar-num-ring{opacity:0.6;transform:scale(1)}
+
+/* FOUNDATION — 番号周りに薄い円形装飾 + 暖色アクセント */
+.foundation-card{position:relative}
+.foundation-card:nth-child(1){--card-color:var(--w2)}
+.foundation-card:nth-child(2){--card-color:var(--w8)}
+.foundation-card:nth-child(3){--card-color:var(--w10)}
+.foundation-card:nth-child(1) .foundation-num{color:var(--w2)}
+.foundation-card:nth-child(2) .foundation-num{color:var(--w8)}
+.foundation-card:nth-child(3) .foundation-num{color:var(--w10)}
+.foundation-card:nth-child(1)::before{background:var(--w2)}
+.foundation-card:nth-child(2)::before{background:var(--w8)}
+.foundation-card:nth-child(3)::before{background:var(--w10)}
+.foundation-card:hover{border-color:var(--card-color)}
+.foundation-num-wrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:84px;height:84px;
+  margin-bottom:20px;
+}
+.foundation-num-wrap .foundation-num{
+  margin-bottom:0;
+  position:relative;
+  z-index:2;
+}
+.foundation-num-wrap::before,
+.foundation-num-wrap::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+}
+.foundation-num-wrap::before{
+  width:84px;height:84px;
+  border:1px solid var(--card-color, var(--accent-warm));
+  opacity:0.25;
+}
+.foundation-num-wrap::after{
+  width:60px;height:60px;
+  background:var(--card-color, var(--accent-warm));
+  opacity:0.08;
+  transition:transform .5s ease,opacity .4s ease;
+}
+.foundation-card:hover .foundation-num-wrap::after{
+  transform:scale(1.15);opacity:0.16;
+}
+
+/* PULLQUOTE — 上下に小さな§記号 */
+.story-body .story-pullquote::after{
+  content:"§";
+  display:block;
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:22px;
+  color:var(--accent-warm);
+  opacity:0.7;
+  margin:24px auto 0;
+  line-height:1;
+}
+
+/* STORY — keyフレーズに点線アンダーライン */
+.story-body .key{
+  background-image:linear-gradient(transparent calc(100% - 4px), var(--accent-tint) 4px);
+  background-repeat:no-repeat;
+  background-size:0% 100%;
+  transition:background-size 0.7s ease;
+  padding-bottom:1px;
+}
+.story-body.in-view .key,
+.story-body .key.kindle{background-size:100% 100%}
+
+/* BENEFITS — タグ色を多色化 */
+.benefits-grid .benefit-card:nth-child(1) .benefit-tag{color:var(--w1);border-bottom-color:var(--w1)}
+.benefits-grid .benefit-card:nth-child(2) .benefit-tag{color:var(--w3);border-bottom-color:var(--w3)}
+.benefits-grid .benefit-card:nth-child(3) .benefit-tag{color:var(--w9);border-bottom-color:var(--w9)}
+.benefits-grid .benefit-card:nth-child(4) .benefit-tag{color:var(--w11);border-bottom-color:var(--w11)}
+.benefits-grid .benefit-card:nth-child(5) .benefit-tag{color:var(--w7);border-bottom-color:var(--w7)}
+.benefit-card{position:relative;overflow:hidden}
+.benefit-card::after{
+  content:"";
+  position:absolute;
+  left:0;bottom:0;
+  width:100%;height:2px;
+  background:linear-gradient(90deg, transparent, var(--accent-warm), transparent);
+  transform:scaleX(0);
+  transform-origin:left;
+  transition:transform .5s ease;
+}
+.benefit-card:hover::after{transform:scaleX(1)}
+
+/* SERIES — 5パートに暖色アクセント */
+.parts-grid .part-card{position:relative;transition:background .25s,transform .25s}
+.parts-grid .part-card:hover{background:var(--card-hover);transform:translateY(-2px)}
+.parts-grid .part-card:nth-child(1){border-top:3px solid var(--w1)}
+.parts-grid .part-card:nth-child(2){border-top:3px solid var(--w3)}
+.parts-grid .part-card:nth-child(3){border-top:3px solid var(--w9)}
+.parts-grid .part-card:nth-child(4){border-top:3px solid var(--w11)}
+.parts-grid .part-card:nth-child(5){border-top:3px solid var(--w12)}
+.parts-grid .part-card:nth-child(1) .part-num{color:var(--w1)}
+.parts-grid .part-card:nth-child(2) .part-num{color:var(--w3)}
+.parts-grid .part-card:nth-child(3) .part-num{color:var(--w9)}
+.parts-grid .part-card:nth-child(4) .part-num{color:var(--w11)}
+.parts-grid .part-card:nth-child(5) .part-num{color:var(--w12)}
+
+/* PRICING — itailc数字を大胆に + ホバー時に微細な傾き */
+.pricing-amount{transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.pricing-card:hover .pricing-amount{transform:translateX(2px) scale(1.02)}
+.pricing-features li{transition:transform .25s,padding-left .25s}
+.pricing-features li:hover{transform:translateX(2px)}
+
+/* STATUS数字 — フェードイン用初期状態 */
+.status-meta-item span{
+  display:inline-block;
+  position:relative;
+  transition:transform .5s cubic-bezier(.34,1.56,.64,1);
+}
+.status-meta-item:hover span{transform:translateY(-3px)}
+
+/* TOP-BAR mark — ホバーで微細回転 */
+.top-bar-mark{transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.top-bar-brand:hover .top-bar-mark{transform:rotate(-8deg) scale(1.05)}
+
+/* THEME TOGGLE — ホバーで微細弾み */
+.theme-toggle{transition:border-color .15s,color .15s,transform .25s}
+.theme-toggle:hover{transform:translateY(-1px)}
+
+/* BUTTON — ホバー時の輝度オーバーレイ */
+.btn-primary{position:relative}
+.btn-primary::before{
+  content:"";
+  position:absolute;inset:0;
+  background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
+  transform:translateX(-100%);
+  transition:transform 0.7s ease;
+  pointer-events:none;
+}
+.btn-primary:hover::before{transform:translateX(100%)}
+
+/* SCROLL FADE-IN — IntersectionObserver起動用 */
+.fade-up{
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity 0.8s ease, transform 0.8s ease;
+}
+.fade-up.in-view{opacity:1;transform:translateY(0)}
+.fade-up-stagger > *{
+  opacity:0;
+  transform:translateY(18px);
+  transition:opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-up-stagger.in-view > *{opacity:1;transform:translateY(0)}
+.fade-up-stagger.in-view > *:nth-child(1){transition-delay:.05s}
+.fade-up-stagger.in-view > *:nth-child(2){transition-delay:.14s}
+.fade-up-stagger.in-view > *:nth-child(3){transition-delay:.23s}
+.fade-up-stagger.in-view > *:nth-child(4){transition-delay:.32s}
+.fade-up-stagger.in-view > *:nth-child(5){transition-delay:.41s}
+.fade-up-stagger.in-view > *:nth-child(6){transition-delay:.50s}
+.fade-up-stagger.in-view > *:nth-child(7){transition-delay:.59s}
+.fade-up-stagger.in-view > *:nth-child(8){transition-delay:.68s}
+.fade-up-stagger.in-view > *:nth-child(9){transition-delay:.77s}
+
+@media (prefers-reduced-motion: reduce){
+  .fade-up,.fade-up-stagger > *{opacity:1;transform:none;transition:none}
+  .pillar:hover .pillar-num,
+  .hero-title:hover .accent,
+  .pricing-card:hover .pricing-amount{transform:none}
+  .btn-primary::before{display:none}
+}
+
+/* セクションエンドの装飾点（区切りに小さな三点） */
+section + section .section-eyebrow{position:relative}
+
+/* HERO floating dots — 装飾 */
+.hero-dot{
+  position:absolute;
+  width:6px;height:6px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:0;
+  opacity:0.55;
+}
+.hero-dot.d1{top:18%;left:8%;background:var(--w1);width:8px;height:8px}
+.hero-dot.d2{top:30%;right:12%;background:var(--w9);width:5px;height:5px}
+.hero-dot.d3{bottom:24%;left:14%;background:var(--w12);width:7px;height:7px}
+.hero-dot.d4{bottom:30%;right:18%;background:var(--w3);width:5px;height:5px}
+.hero-dot.d5{top:60%;left:46%;background:var(--w7);width:4px;height:4px;opacity:0.45}
+
+/* RESPONSIVE — モバイルで装飾を抑える */
+@media (max-width:760px){
+  .hero-corner{display:none}
+  .hero-dot{display:none}
+  .pillar::after{display:none}
+  .foundation-num-wrap{width:64px;height:64px}
+  .foundation-num-wrap::before{width:64px;height:64px}
+  .foundation-num-wrap::after{width:46px;height:46px}
+}
 </style>
 </head>
 <body>
@@ -1078,16 +1404,27 @@ footer{
 
 <!-- HERO -->
 <section class="hero" id="hero">
+<span class="hero-corner tl" aria-hidden="true">
+<svg viewBox="0 0 56 56"><path d="M2 18 L2 2 L18 2"/><circle cx="2" cy="2" r="2.4" fill="currentColor" stroke="none" style="fill:var(--accent-warm)"/></svg>
+</span>
+<span class="hero-corner br" aria-hidden="true">
+<svg viewBox="0 0 56 56"><path d="M2 18 L2 2 L18 2"/><circle cx="2" cy="2" r="2.4" fill="currentColor" stroke="none" style="fill:var(--accent-warm)"/></svg>
+</span>
+<span class="hero-dot d1" aria-hidden="true"></span>
+<span class="hero-dot d2" aria-hidden="true"></span>
+<span class="hero-dot d3" aria-hidden="true"></span>
+<span class="hero-dot d4" aria-hidden="true"></span>
+<span class="hero-dot d5" aria-hidden="true"></span>
 <div class="hero-inner">
-<div class="hero-eyebrow">NPO法人ミラツクが運営する未来を問うコミュニティ</div>
-<h1 class="hero-title"><span class="accent">F</span>utures</h1>
-<p class="hero-tagline">共に問うべき問いとともに<br>未来を描く。</p>
-<p class="hero-lead">ミラツクが2008年以来積み上げてきた未来洞察の知見を基盤に、人とAIが共創して未来への問いを見出していく学びのコミュニティ。第一期は <strong>個人参加100名・法人参加10社</strong> を募集します。</p>
-<div class="hero-cta">
+<div class="hero-eyebrow fade-up">NPO法人ミラツクが運営する未来を問うコミュニティ</div>
+<h1 class="hero-title fade-up"><span class="accent">F</span>utures</h1>
+<p class="hero-tagline fade-up">共に問うべき問いとともに<br>未来を描く。</p>
+<p class="hero-lead fade-up">ミラツクが2008年以来積み上げてきた未来洞察の知見を基盤に、人とAIが共創して未来への問いを見出していく学びのコミュニティ。第一期は <strong>個人参加100名・法人参加10社</strong> を募集します。</p>
+<div class="hero-cta fade-up">
 <a href="#pricing" class="btn btn-primary">個人として参加する</a>
 <a href="#cta" class="btn btn-secondary">法人として参加する</a>
 </div>
-<div class="hero-meta">第一期募集 ／ 個人 ¥30,000・法人 ¥500,000 ／ 年</div>
+<div class="hero-meta fade-up">第一期募集 ／ 個人 ¥30,000・法人 ¥500,000 ／ 年</div>
 </div>
 </section>
 
@@ -1095,7 +1432,7 @@ footer{
 <section class="section-story" id="story">
 <div class="section-inner story-inner">
 <div class="section-eyebrow">VISION</div>
-<h2 class="section-title">人とAIで、<br>未来への問いを見出す。</h2>
+<h2 class="section-title fade-up">人とAIで、<br>未来への問いを見出す。</h2>
 <div class="section-divider"></div>
 <div class="story-body">
 <p class="story-lead">人とAIの共創によって、未来への問いを見出す。それが、ミラツクの新しいコミュニティ「FUTURES（フューチャーズ）」のかたちです。</p>
@@ -1124,24 +1461,24 @@ footer{
 <section class="section-concept" id="concept">
 <div class="section-inner">
 <div class="section-eyebrow">3 PILLARS</div>
-<h2 class="section-title">3つの柱でつくる<br>学びのコミュニティ</h2>
+<h2 class="section-title fade-up">3つの柱でつくる<br>学びのコミュニティ</h2>
 <div class="section-divider"></div>
-<p class="section-lead">Futures はサービスを売る場ではなく、メンバーと共につくる学びの場として設計されています。会員を顧客として扱うのではなく、共に未来を読み続ける仲間として招き入れる場。3つの柱が互いに循環することで、単独のサービスでは到達できない厚みのある体験を生みます。</p>
-<div class="pillars">
+<p class="section-lead fade-up">Futures はサービスを売る場ではなく、メンバーと共につくる学びの場として設計されています。会員を顧客として扱うのではなく、共に未来を読み続ける仲間として招き入れる場。3つの柱が互いに循環することで、単独のサービスでは到達できない厚みのある体験を生みます。</p>
+<div class="pillars fade-up-stagger">
 <article class="pillar">
-<span class="pillar-num">01</span>
+<span class="pillar-num-wrap"><span class="pillar-num">01</span><span class="pillar-num-ring" aria-hidden="true"></span></span>
 <span class="pillar-tag">Network</span>
 <h3 class="pillar-title">ネットワーク</h3>
 <p class="pillar-desc">未来を読み続けるという共通項のもとに集まる、業種・職種・地域を超えた人と人のつながり。会員同士、ミラツク、登壇研究者、機関紙寄稿者の間に、相互参照の網が編まれていきます。</p>
 </article>
 <article class="pillar">
-<span class="pillar-num">02</span>
+<span class="pillar-num-wrap"><span class="pillar-num">02</span><span class="pillar-num-ring" aria-hidden="true"></span></span>
 <span class="pillar-tag">Presence</span>
 <h3 class="pillar-title">プレゼンス</h3>
 <p class="pillar-desc">会員が顔を合わせる物理的・時間的な場。京都と東京の食事会、フィールドトリップ、年次フォーラム「Our Futures」。オンラインだけでは生まれない、共にいることでしか得られない関係性の質。</p>
 </article>
 <article class="pillar">
-<span class="pillar-num">03</span>
+<span class="pillar-num-wrap"><span class="pillar-num">03</span><span class="pillar-num-ring" aria-hidden="true"></span></span>
 <span class="pillar-tag">Dialogue</span>
 <h3 class="pillar-title">対話と学び</h3>
 <p class="pillar-desc">ミラツクの未来洞察活動から生まれるレポート、ゲスト対談、機関紙、連載記事を起点に、会員と共に問いを重ねていく対話の場。読むこと・聴くこと・問うことが循環し、自らの問いを更新し続ける知の供給源となります。</p>
@@ -1160,22 +1497,22 @@ footer{
 <section class="section-foundation" id="foundation">
 <div class="section-inner">
 <div class="section-eyebrow">FOUNDATION</div>
-<h2 class="section-title">Futures を支える<br>未来洞察の知見</h2>
+<h2 class="section-title fade-up">Futures を支える<br>未来洞察の知見</h2>
 <div class="section-divider"></div>
-<p class="section-lead">Futures は、ミラツクが2008年以来15年以上にわたり積み上げてきた未来洞察の知見を基盤に立ち上がります。私たちが大切にしてきたのは、断片的な未来予測ではなく、複数の理論・データ・経験を重ね合わせて読み解く統合的なフォーサイトの姿勢です。</p>
-<div class="foundation-grid">
+<p class="section-lead fade-up">Futures は、ミラツクが2008年以来15年以上にわたり積み上げてきた未来洞察の知見を基盤に立ち上がります。私たちが大切にしてきたのは、断片的な未来予測ではなく、複数の理論・データ・経験を重ね合わせて読み解く統合的なフォーサイトの姿勢です。</p>
+<div class="foundation-grid fade-up-stagger">
 <div class="foundation-card">
-<div class="foundation-num">01</div>
+<div class="foundation-num-wrap"><div class="foundation-num">01</div></div>
 <h3 class="foundation-title">CLA・メガトレンド・シグナル</h3>
 <p class="foundation-desc">CLA（因果階層分析）36年分、世界18メガトレンド、5万件のシグナル蓄積。表層・深層・神話の四層を横断する独自の構造化済みデータベース群。</p>
 </div>
 <div class="foundation-card">
-<div class="foundation-num">02</div>
+<div class="foundation-num-wrap"><div class="foundation-num">02</div></div>
 <h3 class="foundation-title">26の専門データベース</h3>
 <p class="foundation-desc">未来学・人類学・哲学・文学・神話・伝統知・経営学・スタートアップ・地政学リスク・規制動態など、26分野で構造化された参照知識基盤。</p>
 </div>
 <div class="foundation-card">
-<div class="foundation-num">03</div>
+<div class="foundation-num-wrap"><div class="foundation-num">03</div></div>
 <h3 class="foundation-title">7+1つの問い</h3>
 <p class="foundation-desc">大規模調査から導き出した70の問いの中から、特に向き合うべき「7+1つの問い」を抽出。すでに現れつつあるが、まだ十分に扱われていない未来の芽を育てるための問い。</p>
 </div>
@@ -1192,10 +1529,10 @@ footer{
 <section class="section-benefits" id="benefits">
 <div class="section-inner">
 <div class="section-eyebrow">MEMBER BENEFITS</div>
-<h2 class="section-title">会員特典 ― 5つの活動と<br>2つの協働、そして法人サポート</h2>
+<h2 class="section-title fade-up">会員特典 ― 5つの活動と<br>2つの協働、そして法人サポート</h2>
 <div class="section-divider"></div>
-<p class="section-lead">レポートを読み（A）、対談で問いを温め（B）、現地で確かめ（C）、食卓で深め（D）、オンラインで交わす（E）。ミラツクと共に作り手にまわる協働 A〜B、そして法人会員向けのサポート。年間を通じて自然なリズムで活動が重なります。</p>
-<div class="benefits-grid">
+<p class="section-lead fade-up">レポートを読み（A）、対談で問いを温め（B）、現地で確かめ（C）、食卓で深め（D）、オンラインで交わす（E）。ミラツクと共に作り手にまわる協働 A〜B、そして法人会員向けのサポート。年間を通じて自然なリズムで活動が重なります。</p>
+<div class="benefits-grid fade-up-stagger">
 
 <div class="benefit-card">
 <span class="benefit-tag">A</span>
@@ -1261,10 +1598,10 @@ footer{
 <section class="section-series" id="series">
 <div class="section-inner">
 <div class="section-eyebrow">SERIES</div>
-<h2 class="section-title">連載「Futures」全100話</h2>
+<h2 class="section-title fade-up">連載「Futures」全100話</h2>
 <div class="section-divider"></div>
 <p class="series-intro">ミラツクが長年蓄積してきた未来洞察の知見を、学びのコミュニティ Futures 向けに段階公開する全100話の連載。「いま私たちはどこにいるのか」「未来をめぐる問いをどう問い直すか」「未来を切り拓いてきた人々の系譜」「これからの担い手の姿」「2070年〜2100年の未来像」を、読みやすい記事として届けます。会員には一般公開より先に配信。「暮らしのかたち」「変化のかたち」「事業のかたち」に続く5番目のシリーズです。</p>
-<div class="parts-grid">
+<div class="parts-grid fade-up-stagger">
 <div class="part-card">
 <div class="part-num">第1部</div>
 <div class="part-title">現在地</div>
@@ -1303,10 +1640,10 @@ footer{
 <section class="section-platform" id="platform">
 <div class="section-inner">
 <div class="section-eyebrow">PLATFORM</div>
-<h2 class="section-title">会員専用オンラインサイト<br>10の機能</h2>
+<h2 class="section-title fade-up">会員専用オンラインサイト<br>10の機能</h2>
 <div class="section-divider"></div>
-<p class="section-lead">会員専用のオンラインサイトは、コミュニティの常設の場として10の機能を備えます。会員の活動が自然に連動する設計。スマートフォン対応を前提に、最小クリック数ですべての機能に到達できるダッシュボードを提供します。</p>
-<div class="platform-groups">
+<p class="section-lead fade-up">会員専用のオンラインサイトは、コミュニティの常設の場として10の機能を備えます。会員の活動が自然に連動する設計。スマートフォン対応を前提に、最小クリック数ですべての機能に到達できるダッシュボードを提供します。</p>
+<div class="platform-groups fade-up-stagger">
 
 <div class="platform-group">
 <div class="platform-group-title">コミュニティ機能</div>
@@ -1376,10 +1713,10 @@ footer{
 <section class="section-pricing" id="pricing">
 <div class="section-inner">
 <div class="section-eyebrow">MEMBERSHIP</div>
-<h2 class="section-title">会員プラン</h2>
+<h2 class="section-title fade-up">会員プラン</h2>
 <div class="section-divider"></div>
-<p class="section-lead">個人会員と法人会員の2つのプランをご用意しています。同じコミュニティに同じ場で参加しますが、参加方法と協働の深さに自然な役割の違いがあります。階層を強調する設計ではなく、立場に応じた関わり方を選んでいただく構造です。</p>
-<div class="pricing-grid">
+<p class="section-lead fade-up">個人会員と法人会員の2つのプランをご用意しています。同じコミュニティに同じ場で参加しますが、参加方法と協働の深さに自然な役割の違いがあります。階層を強調する設計ではなく、立場に応じた関わり方を選んでいただく構造です。</p>
+<div class="pricing-grid fade-up-stagger">
 
 <div class="pricing-card">
 <div class="pricing-tier">INDIVIDUAL</div>
@@ -1444,7 +1781,7 @@ footer{
 <section class="section-faq" id="faq">
 <div class="section-inner">
 <div class="section-eyebrow">FAQ</div>
-<h2 class="section-title">よくあるご質問</h2>
+<h2 class="section-title fade-up">よくあるご質問</h2>
 <div class="section-divider"></div>
 <div class="faq-list">
 
@@ -1501,7 +1838,7 @@ footer{
 <div class="status-badge">FIRST COHORT — 2026</div>
 <h2 class="status-title">第一期を募集しています</h2>
 <p class="status-text">Futures は第一期として、個人参加100名・法人参加10社を募集します。第一期会員は創設メンバーとして年次フォーラムでの記名、機関紙創刊号への参加機会など、後続期では得られない特典をお受け取りいただけます。会員専用サイトの基本機能版での運用は2026年第3四半期に開始、連載「Futures」は2026年初頭から週4話の配信で開始します。</p>
-<div class="status-meta">
+<div class="status-meta fade-up-stagger">
 <div class="status-meta-item"><span>100</span>名</div>
 <div class="status-meta-item"><span>10</span>社</div>
 <div class="status-meta-item"><span>2026</span>年</div>
@@ -1516,9 +1853,9 @@ footer{
 <section class="section-cta" id="cta">
 <div class="section-inner">
 <div class="section-eyebrow">JOIN FUTURES</div>
-<h2 class="section-title">未来を、共に読み始める。</h2>
+<h2 class="section-title fade-up">未来を、共に読み始める。</h2>
 <div class="section-divider"></div>
-<p class="section-lead">本ページを読み終えたあなたが、それぞれの位置から Futures に関わる最初の一歩を踏み出すことで、コミュニティは初めて場として立ち上がります。地図は、現地に足を運んでこそ意味を持つ。あなたのご参加を、心からお待ちしています。</p>
+<p class="section-lead fade-up">本ページを読み終えたあなたが、それぞれの位置から Futures に関わる最初の一歩を踏み出すことで、コミュニティは初めて場として立ち上がります。地図は、現地に足を運んでこそ意味を持つ。あなたのご参加を、心からお待ちしています。</p>
 <div class="cta-buttons">
 <a href="mailto:contact@miratuku.org?subject=Futures%20第一期%20個人参加申込&body=お名前：%0A所属：%0A連絡先：%0A%0A第一期（個人会員）に参加申込いたします。" class="btn btn-primary">個人として参加する（¥30,000／年）</a>
 <a href="mailto:contact@miratuku.org?subject=Futures%20第一期%20法人参加お問い合わせ" class="btn btn-secondary">法人として参加する（¥500,000／年）</a>
@@ -1557,6 +1894,39 @@ function toggleTheme(){
   html.setAttribute("data-theme", next);
   localStorage.setItem("futures-lp-theme", next);
 }
+
+/* Scroll fade-in via IntersectionObserver */
+(function(){
+  if(typeof IntersectionObserver === "undefined") {
+    document.querySelectorAll(".fade-up,.fade-up-stagger").forEach(function(el){ el.classList.add("in-view"); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add("in-view");
+        io.unobserve(entry.target);
+      }
+    });
+  }, {threshold: 0.12, rootMargin: "0px 0px -40px 0px"});
+  document.querySelectorAll(".fade-up,.fade-up-stagger,.story-body").forEach(function(el){ io.observe(el); });
+})();
+
+/* HEROのF文字 — クリックで暖色をシャッフル（遊び心） */
+(function(){
+  var accent = document.querySelector(".hero-title .accent");
+  if(!accent) return;
+  var pool = ["--w1","--w3","--w5","--w7","--w9","--w11","--w12","--accent-warm"];
+  var idx = 0;
+  accent.addEventListener("click", function(){
+    idx = (idx + 1) % pool.length;
+    accent.style.color = "var(" + pool[idx] + ")";
+    accent.style.transform = "rotate(" + (Math.random()*10 - 5).toFixed(1) + "deg)";
+    setTimeout(function(){ accent.style.transform = ""; }, 500);
+  });
+  accent.style.cursor = "pointer";
+  accent.setAttribute("title", "click");
+})();
 </script>
 
 </body>
