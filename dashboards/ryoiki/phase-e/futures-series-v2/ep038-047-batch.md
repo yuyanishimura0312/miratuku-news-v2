@@ -137,7 +137,7 @@
 
 ## SIGNAL: 未来世代制度の世界化
 
-2023年10月、英国ウェールズで Wellbeing of Future Generations Act 10周年フォーラムがカーディフで開催されました。2024年4月には京都府が「未来世代政策研究会」を設置し、自治体としては国内初の試みとなりました。同年12月、日本若者協議会がユース・パーラメントを開催。2025年1月には豪州が連邦議会に Wellbeing of Future Generations Bill を提出しました。EUでも Future Generations Commissioner の常設提案が2024年に議論入りし、OECD は2024年「Future Generations Policy Briefing」を公表しています。
+2025年3月の10周年フォーラムがカーディフで開催されました。2024年4月には京都府が「未来世代政策研究会」を設置し、自治体としては国内初の試みとなりました。同年12月、日本若者協議会がユース・パーラメントを開催。2025年1月には豪州が連邦議会に Wellbeing of Future Generations Bill を提出しました。EUでも Future Generations Commissioner の常設提案が2024年に議論入りし、OECD は2024年「Future Generations Policy Briefing」を公表しています。
 
 ## KEY REFERENCE
 - **ハンス・ヨナス『責任という原理 ― 科学技術文明のための倫理学の試み』(1979／加藤尚武監訳、東信堂、2000年)** — 未来世代への責任を倫理学の中心に据えた書物。
