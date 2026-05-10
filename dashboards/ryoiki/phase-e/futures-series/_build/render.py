@@ -167,7 +167,7 @@ def render_lab_block(paragraphs: list[str]) -> str:
         '    <details class="reading-lens" id="lens-lab">\n'
         '      <summary class="reading-lens-trigger">\n'
         '        <span class="reading-lens-label">LAB</span>\n'
-        '        <span class="reading-lens-title">自然科学・工学の眼で読み直す</span>\n'
+        '        <span class="reading-lens-title">科学の知から</span>\n'
         '        <span class="reading-lens-arrow">▾</span>\n'
         '      </summary>\n'
         '      <div class="reading-lens-body">\n'
