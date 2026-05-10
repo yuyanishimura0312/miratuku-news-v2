@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track D-0 結合性分析 — deep-knowledge × ryoiki 71問×20章マトリクス | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5; --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200; --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222; --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --highlight: #FF4030; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono","Fira Code",monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 28px; flex-shrink: 0; font-weight: 700; }
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.7rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; line-height: 1.6; font-weight: 600; margin: 48px 0 20px; color: var(--text); }
+h4 { font-family: var(--font); font-size: 0.95rem; font-weight: 700; margin: 32px 0 12px; color: var(--accent-warm); }
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type, .lead, .figure-caption, td p, th p { text-indent: 0; }
+.lead { font-size: 1.08rem; color: var(--text-secondary); margin-bottom: 40px; font-weight: 500; }
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 32px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.55; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 20px 24px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+pre { font-family: "SF Mono", Menlo, monospace; font-size: 0.78rem; background: var(--surface); padding: 16px 20px; margin: 24px 0; line-height: 1.5; overflow-x: auto; border: 1px solid var(--border-light); white-space: pre; }
+.figure { margin: 40px 0; padding: 24px; border: 1px solid var(--border-light); background: var(--card); }
+.figure-title { font-family: var(--font); font-size: 0.85rem; font-weight: 700; color: var(--accent-warm); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+.figure-caption { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); margin-top: 14px; line-height: 1.6; }
+.tag-est, .tag-int, .tag-unv, .tag-strong, .tag-mid, .tag-weak { display: inline-block; font-family: var(--font); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 1px 5px; border-radius: 2px; margin: 0 3px; }
+.tag-est { background: rgba(110,44,44,0.12); color: #6E2C2C; }
+.tag-int { background: rgba(204,20,0,0.10); color: #B01200; }
+.tag-unv { background: rgba(107,107,107,0.15); color: #555555; }
+.tag-strong { background: rgba(204,20,0,0.18); color: #B01200; }
+.tag-mid { background: rgba(204,120,20,0.14); color: #8A5A00; }
+.tag-weak { background: rgba(107,107,107,0.10); color: #6B6B6B; }
+[data-theme="dark"] .tag-est { background: rgba(160,80,80,0.20); color: #C8A0A0; }
+[data-theme="dark"] .tag-int { background: rgba(255,64,48,0.18); color: #FF8070; }
+[data-theme="dark"] .tag-unv { background: rgba(170,170,170,0.18); color: #BBBBBB; }
+[data-theme="dark"] .tag-strong { background: rgba(255,64,48,0.22); color: #FF8070; }
+[data-theme="dark"] .tag-mid { background: rgba(255,160,80,0.18); color: #FFB070; }
+[data-theme="dark"] .tag-weak { background: rgba(170,170,170,0.14); color: #AAAAAA; }
+.discovery-box { border: 1px solid var(--accent-warm); background: var(--accent-muted); padding: 20px 24px; margin: 28px 0; }
+.discovery-box .discovery-num { font-family: var(--font); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--accent-warm); margin-bottom: 4px; text-transform: uppercase; }
+.discovery-box .discovery-title { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Track D-0 結合性分析</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="track-d1-question-selection-report.html">D-1 選定</a>
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#part1"><span class="toc-num">第I部</span>序論と方法</a></li>
+<li><a href="#p1-1"><span class="toc-num">1.1</span>本トラックの位置と目的</a></li>
+<li><a href="#p1-2"><span class="toc-num">1.2</span>結合度評価の三段階</a></li>
+<li><a href="#part2"><span class="toc-num">第II部</span>deep-knowledge 20章構造</a></li>
+<li><a href="#p2-1"><span class="toc-num">2.1</span>序章と第一部「未来を測る」</a></li>
+<li><a href="#p2-2"><span class="toc-num">2.2</span>第二部「三つの風景と知性社会」</a></li>
+<li><a href="#p2-3"><span class="toc-num">2.3</span>第三部「人類学・哲学・伝統知」</a></li>
+<li><a href="#p2-4"><span class="toc-num">2.4</span>第四部「卓越人材と 2100」</a></li>
+<li><a href="#part3"><span class="toc-num">第III部</span>71問×20章マトリクス</a></li>
+<li><a href="#p3-1"><span class="toc-num">3.1</span>強連結マトリクス</a></li>
+<li><a href="#p3-2"><span class="toc-num">3.2</span>中連結と弱連結</a></li>
+<li><a href="#p3-3"><span class="toc-num">3.3</span>結合密度の構造的観察</a></li>
+<li><a href="#part4"><span class="toc-num">第IV部</span>戦略的空白13問</a></li>
+<li><a href="#p4-1"><span class="toc-num">4.1</span>13問全体マップ</a></li>
+<li><a href="#p4-2"><span class="toc-num">4.2</span>世代間正義 G-M04/M05 集中分析</a></li>
+<li><a href="#part5"><span class="toc-num">第V部</span>ミラツク TOP10 結合</a></li>
+<li><a href="#p5-1"><span class="toc-num">5.1</span>TOP10 結合表と象限配置</a></li>
+<li><a href="#p5-2"><span class="toc-num">5.2</span>第三部偏重と読み解き</a></li>
+<li><a href="#part6"><span class="toc-num">第VI部</span>Phase C 確定値統合</a></li>
+<li><a href="#p6-1"><span class="toc-num">6.1</span>C-3 偉業 140件接続</a></li>
+<li><a href="#p6-2"><span class="toc-num">6.2</span>C-5 担い手 4軸接続</a></li>
+<li><a href="#part7"><span class="toc-num">第VII部</span>候補プールと論点</a></li>
+<li><a href="#p7-1"><span class="toc-num">7.1</span>32問候補プール</a></li>
+<li><a href="#p7-2"><span class="toc-num">7.2</span>D-0 リード論点 7点</a></li>
+<li><a href="#part8"><span class="toc-num">第VIII部</span>D-1への引継ぎ</a></li>
+<li><a href="#p8-1"><span class="toc-num">8.1</span>主章重複最小化構成</a></li>
+<li><a href="#p8-2"><span class="toc-num">8.2</span>結語と honest 開示</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">Track D-0 結合性分析</span>
+<span class="db-tag">Phase D / Wave 0</span>
+<span class="db-tag">71問 × 20章マトリクス</span>
+<span class="db-tag">deep-knowledge × ryoiki</span>
+<span class="db-tag">候補プール 32問</span>
+</div>
+<h1 class="book-title">deep-knowledge × ryoiki 結合性分析 — 71 問 × 20 章マトリクスと D-1 候補プール</h1>
+<p class="book-subtitle">本レポートは Phase D（deep-knowledge 統合）の Wave 0 に位置し、Phase A → B → C で確立された 71 独立問い + 140 偉業 + 担い手 4 軸 + サイクル螺旋 を、deep-knowledge 書籍 case 11『深い知が拓く 2100 年』（序+18+終 = 20 章 / 約 280K 字 / 26DBs 横断）の物語構造と結合させる基盤層である。本トラックは「物語との結合性評価」「強連結 50 問・中連結 18 問・弱連結 3 問の暫定分類」「Phase C 確定値（C-3 偉業 140 件・C-5 担い手 4 軸・C-1 サイクル螺旋）の追加接続」「D-1 で選定すべき 5-10 問のための 32 問候補プール」「主章重複最小化の DQ-01〜08 構成案」を出力する。</p>
+<div class="book-meta">
+<span>生成日: 2026-05-10</span>
+<span>Track: D-0 / Wave 0</span>
+<span>主軸: deep-knowledge 20章 + Phase B 71問 + Phase C 7Track 確定値</span>
+<span>編集: Phase D Track D-0 Lead</span>
+</div>
+</header>
+
+<section class="chapter-section" id="part1">
+<div class="chapter-number-label">Part I</div>
+<h2 class="chapter-title">序論と方法</h2>
+
+<h3 id="p1-1">1.1 本トラックの位置と目的 — Phase D 第四段階の基盤層として</h3>
+<p>本トラックは Phase D「deep-knowledge 統合」の 4 段階構造（D-0 結合性分析 → D-1 問い選定 → D-2 並列背景解説 → D-3 統合配布資料化）の最初のトラックとして、deep-knowledge 書籍と ryoiki-index（Phase A 9 + Phase B 6 + Phase C 7 = 22 トラック）の論理的結合点を分析することを目的とする。Phase A → B → C で確立された 71 独立問い、140 偉業（C-3 great_actions.db v0.2）、担い手 4 軸（C-5 心理 19 次元 × 行動 10+1 アーキタイプ × 領域 CTL-1 6 軸 × 専門 4 軸）、サイクル螺旋（C-1 認知転換 280-310 年・制度興亡 150-300 年・プラトー 250 年）は、それぞれが独立した知識資産として完成しているが、これらを deep-knowledge 書籍の「五つの貌（沈黙・関係・系譜・痛み・物語）」と「四部構成（測る・風景・人類学哲学伝統知・卓越人材）」の物語線に再結合することで、配布資料・企画決定用コンセプト資料・関係者向け重要資料としての形態を獲得する。</p>
+
+<p>Phase D は deep-knowledge 書籍を <strong>主</strong>、ryoiki-index を <strong>従</strong> と位置づける設計を採用する。これは Phase B/C が「ミラツクが追跡し続ける問い群」の単一台帳を作る方向性を持つのに対し、Phase D は「深い知の読者に対して『現代問うべき問いと背景資料』を提示する」方向性を持つことに由来する。本 D-0 トラックは、この方向転換を支える最初の論理的結合作業として、71 問 × 20 章のマトリクスを正本化し、D-1 トリオ実行（4-6 日）が「30-50 問の中から 5-10 問選定」という負荷を「32 問の中から 5-10 問選定」に縮小する基盤を提供する。</p>
+
+<h3 id="p1-2">1.2 結合度評価の三段階 — 強・中・弱の閾値定義</h3>
+<p>本トラックは 71 問 × 20 章の結合度を三段階で評価する。<strong>強連結</strong>は「章末扉が問いを直接呼ぶ + 規範核が一致する」という二重条件を満たす場合、章のひとつの主題が問いの核心と重なる関係。<strong>中連結</strong>は「章のひとつの節 / 一つの肖像 / 一つの事例として接続可能」な関係で、章主旋律ではないが問いの一側面を扱う。<strong>弱連結</strong>は「概念の隣接性のみ、書籍主旋律ではないが背景接続可」な関係で、独立章なし・派生問いとして扱われる。</p>
+
+<p>本評価方法に基づく結合分布の概観は以下のとおりである。</p>
+
+<div class="figure">
+<div class="figure-title">図 1 — 71 問 × 20 章 結合度分布の概観</div>
+<table>
+<thead>
+<tr><th>結合度</th><th>問い数</th><th>割合</th><th>典型例</th></tr>
+</thead>
+<tbody>
+<tr><td><span class="tag-strong">強連結</span></td><td>50 問</td><td>70.4%</td><td>Q-N04 → ch13/ch14 / G-M04 → ch14第三節</td></tr>
+<tr><td><span class="tag-mid">中連結</span></td><td>18 問</td><td>25.4%</td><td>Q-M02 → ch08 / G-N01 → ch08+ch01</td></tr>
+<tr><td><span class="tag-weak">弱連結</span></td><td>3 問</td><td>4.2%</td><td>Q-V04 / Q-V06（派生独立性弱）</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">出典: 本トラック §III. <span class="tag-est">推定</span> 結合度評価は本トラック著者の主観的判断を含む。閾値正本化は D-0 § 7.2 論点 1 で議論。</div>
+</div>
+
+<p>結合度評価は Phase D 設計判断（「強連結問いを優先選定」「中連結も含めた候補プールから選定」）に直結するため、本評価は D-1 リード本体実行で複数レビュアーによる再評価が望まれる。本 D-0 では暫定値を提示し、D-1 で正本化する設計を採用する。</p>
+</section>
+
+<section class="chapter-section" id="part2">
+<div class="chapter-number-label">Part II</div>
+<h2 class="chapter-title">deep-knowledge 書籍 20 章の構造解析</h2>
+
+<h3 id="p2-1">2.1 序章と第一部「未来を測る」 — ミラツクの未来学が示す現在地</h3>
+<p>deep-knowledge 書籍は『深い知が拓く 2100 年』case 11 として、序章・第一部（6 章）・第二部（4 章）・第三部（5 章）・第四部（4 章）・終章の合計 20 章（約 280K 字）で構成される。序章「浅い知の海で、深い知を求めて」は「五つの岸辺の同時並置」（700 万年前のサヘラントロプス・紀元前 3200 年のウルク書記室・1842 年マンチェスター・1977 年ナイロビ・2026 年 5 月の机）に始まる、深い知の三相（認識論的相 / 文明史的相 / 未来構築的相）の宣言と、深い知の五つの貌（沈黙・関係・系譜・痛み・物語）を提示する。Phase B 接続点として、本書全体の「問いの構え」と Phase B 71 問の「ミラツクが向き合う構え」が並走する位置で、特に <em>Q-V03（神話的予見と長期記憶）</em>と <em>G-V03（自己言及メタ問い）</em>の規範軸を読者に最初に手渡す役割を担う。</p>
+
+<p>第一部「未来を測る」は 5 本の独立した定規が同じ方角を指す「方法論的多重独立観測」を読者に手渡す部であり、Phase B が依拠した方法論的姿勢の系譜的説明として機能する。第 1 章「浅い知の海と、深い知の渇き」は 1377 年イブン・ハルドゥーンの塔の机から始まり、浅い知の氾濫と深い知の五つの貌を構築する。第 2 章「18 メガトレンドの構築と 10 年後の検証」は 2017 年構築の 18 メガトレンドのうち 5 トレンドの 10 年後検証「12 的中・6 部分・0 外れ」を提示し、Q-N01 / Q-N06 / Q-N08 が直接接続する。第 3 章「CLA の 127 年解析」は 1900-2026 を 5 期間で区切り CLA 4 層モデルで読み直す章で、真M「物語転換期」が CLA worldview 層転換の現代版である点を読者に手渡す。第 4 章「シグナルの長期解析と技術発展史」は 4 跳躍の地形と D1/D6 同時極大という「配置の新規性」を発見する。第 5 章「ホライズン 1,2,3 と複数サイクルの合流点」は Three Horizons 理論と 4 サイクルの合流地点としての 2026 を提示する。第 6 章「長期サイクルが示す合流地点」は歴史構造のサイクルと SI ドレイトン 4 段階・5 次元、偉人研究の 10 アーキタイプ・12 パターン・5 特性を提示し、Phase C C-3 偉業 / C-5 担い手の理論的基盤として機能する。</p>
+
+<h3 id="p2-2">2.2 第二部「三つの風景と知性社会」 — 2030/2050/2100 とAGI軌道</h3>
+<p>第二部は第一部の定規で測った「いま立つ岸辺」を、2030 / 2050 / 2100 の三つの風景として可視化し、その風景のなかに立ち上がる「知性社会」の到来を主題化する。第 7 章「三つの風景」は 2030 年の短期確定路線と 5 つの分岐 / 2050 年の中期パラダイムシフト / 2100 年の長期文明変容、の三層風景を並置する。Phase B 4 ホライズン（near 25 / mid 23 / far 13 / very-far 10 = 71 問）が三つの風景に配分可能な強連結関係を持つ。</p>
+
+<p>第 8 章「知性の地平 — AGI 軌道と確定事項の合流」は本書全体の中核章のひとつで、LLM から AGI への 7 段階クリティカルパス（狭義 AGI から超人へ）/ 5 影響領域（医療・教育・労働・政治・科学）/ 5 確定事項との合流（高齢化・規制ブロック化・気候適応・エネルギー転換・移民/分断・複利的不確実性）を提示する。Phase B 接続点は真M「物語転換期」の中核軸であり、Q-N01（AI ガバナンス空白）/ Q-N02（AI 革命の制度反作用）/ Q-N08（自律 AI エージェント労働再編）/ Q-F08（AI × 倫理長期論争）が直接接続する。第 9 章「知性社会の到来」は「知性社会」とは何か（人間 + AI の共同認知システム）/ 移行三段階 / AI は「他者」のひとつである / そこで問われる「深い知」を主題化し、G-F05（人間-AI 共進化と「個人」概念の境界）が直接接続する。第 10 章「そして『深い知』が問われる理由」は浅い知と深い知の線引き直し / 五つの貌の再提示 / 知性社会で人間に残る役割を扱い、Phase B 71 問の「規範軸」を読者に再提示する役割を持つ。</p>
+
+<h3 id="p2-3">2.3 第三部「人類学・哲学・伝統知」 — Phase B 規範軸の中核</h3>
+<p>第三部は知性社会の到来を、人類学・哲学・伝統知・神話/詩学/文学の 5 系統の深い知から読み解く部で、Phase B-2 の「すでにある未来」5 系統 wisdom 抽出と完全に並走する。第 11 章「関係の網のなかに立つ — 人類学が照らす知の構造」は関係論的転回 / 多種人類学 / 視座主義（Viveiros de Castro）/ デスコラの四存在論（自然主義・アニミズム・トーテミズム・アナロジズム）/ 三つの肖像を扱い、Q-M03 / Q-V07 / G-N07/N08 / G-N09 が直接接続する。</p>
+
+<p>第 12 章「概念を作るということ — 哲学者たちの深い知」は 1729 年ハレ大学のアモ青年から始まり、中世スコラ学はイスラーム哲学の再輸入だった / 周縁からの哲学者列伝 / <strong>第 4 変容期 — AI 時代に再考される 7 概念</strong> / 周縁から中心へ、を主題化する。Phase B の概念整合「第四変容期」（B-1 で 15 問・最多由来枠）の中核章であり、Q-N09 / Q-M07 / Q-F03 / G-F05 が直接接続する。第 13 章「先住民の伝統知 — 長い時間と関係の倫理」は出航前夜・星と指 / 長い時間軸の知 / ドゴンの星空とポリネシアの星 / ドリーミング・パチャママ・永久凍土 / トンブクトゥの図書館 / 関係の倫理を引き受けた 4 人の肖像 / AI 時代に再びアクチュアルとなる伝統知、を扱い、Q-N04 / Q-F06 / Q-V05 / G-N09 が直接接続する。</p>
+
+<p>第 14 章「伝統知の意味と価値・可能性 — 2100 年への接続」は 2017 年ウェリントン議事堂・川が法人格を得た日 / 伝統知が失われた 4 つの圧力 / 気候変動・関係論・長期時間軸 / 自然権制度の系譜（NZ・エクアドル・ボリビア・コロンビア）/ WIPO・CBD・UNESCO ICH を扱い、B-3 JCT-03（非西洋認識論国連レベル承認、2030-2035）の制度的雛形として機能する。第 15 章「火のまわりの八割 — 神話・詩学・文学の系譜」はナミビア北部 1986 年乾季の夜から始まり、第 1 の問い「火のまわりの八割」/ 第 2 の問い「創世神話」/ 第 3 の問い「英雄、トリックスター、二項対立」/ 第 4 の問い「終末と再生」/ 第 5 の問い「神話社会 2100 への系譜」を展開する。Q-V03 / Q-V07 / Q-F04 が直接接続し、特に第 5 の問い「神話社会 2100 への系譜」は G-V01（次の文明サイクルの組織形態）と直結し第四部 ch17 への橋渡しとなる。</p>
+
+<h3 id="p2-4">2.4 第四部「卓越人材と 2100 年に求められる人材像」 — Phase C C-3/C-5 並走</h3>
+<p>第四部は本書の終着点であり、Phase B が立てた問いに「誰が応えるのか」を主題化する部。Phase C C-3 偉業 140 件 / C-5 担い手 4 軸と完全に並走する位置にある。第 16 章「卓越人材研究 — 9,178 偉人が語ること」は高台から見える長い列 / 偉人とは誰か / 偉人の 5 共通構造 / マンサ・ムーサ — 巡礼の途上で覚えていたこと / 5 構造の事例集 / 知の編集が立つ場所 / あなたもまた、その列の中に立つ、を扱う。Phase C C-3 great_actions.db v0.2（140 件）の理論的基盤として機能する。</p>
+
+<p>第 17 章「2100 年に求められる人材像」は 2100 年ヘルシンキの卓 / 5 能力の輪郭 / 卓に同席する 6 人の所作（サーミ族の長老・生態学者・詩人・政策担当者・記録係・9 歳の孫娘）+ AI エージェント / 歴史的能力分布の研究 / ネットワークの結節点としての人間、を扱う。Phase C C-5 担い手 4 軸（特に第 5 類型「翻訳者型」）と完全並走し、Q-M12（教育-人材ラグ再設計完結）/ Q-V07（pluriverse 的 cosmology の very-far 実装）が直接接続する。第 18 章「現代に求められる行動と人の育成」は朝の机と 8 歳の子 / 教育思想史の 400 年 / 系譜が浮かび上がらせる 4 つの原則 / 家庭・組織・社会という大きな学校 / フレデリック・ダグラスという一つの完成形、を扱う。Q-M12 / Q-N13 / G-N12 が直接接続する。第 19 章「深い知の作法 — 自分自身と社会にむけて」は紀元 175 年ヴィンドボナ・戦陣の天幕 / 自省録の作法 / 朝の作法・昼の作法・夜の作法、を扱い、Phase B 全体の「実践化への扉」として機能する。終章「岸辺に立つ私たちへ — 知性とともに歩む時代の作法」は軸時代との対面 / 9 人の物質的対象 / 見えない朝のために / あなたの机のうえに / 知性とともに時代を歩む、を扱い、G-V03 / Q-V03 が直接接続する。</p>
+
+<div class="figure">
+<div class="figure-title">図 2 — 4 部 × Phase B ホライズン対応</div>
+<table>
+<thead>
+<tr><th>4部</th><th>章</th><th>主軸</th><th>主要接続問い</th></tr>
+</thead>
+<tbody>
+<tr><td>序章</td><td>序</td><td>全</td><td>Q-V03 / G-V03</td></tr>
+<tr><td>第一部「未来を測る」</td><td>ch01-06</td><td>near + mid（測定方法論）</td><td>Q-N01-N13 / Q-M01-M13（測定対象）</td></tr>
+<tr><td>第二部「三つの風景」</td><td>ch07-10</td><td>near / mid / far / very-far</td><td>Q-N03 / Q-M09 / Q-F03 / Q-V01 / G-F05</td></tr>
+<tr><td>第三部「人類学・哲学・伝統知」</td><td>ch11-15</td><td>mid / far / very-far（規範軸）</td><td>Q-M03 / Q-M07 / Q-F02 / Q-F06 / Q-V03 / Q-V07 / G-N07-09</td></tr>
+<tr><td>第四部「卓越人材と 2100」</td><td>ch16-19</td><td>mid / far / very-far（担い手）</td><td>Q-M12 / Q-N13 / G-N12 / G-V01（C-3/C-5 連結）</td></tr>
+<tr><td>終章</td><td>終</td><td>全</td><td>G-V03 / Q-V03</td></tr>
+</tbody>
+</table>
+<div class="figure-caption">出典: 本トラック §2 + 接続点分析。<span class="tag-est">推定</span> 各章接続問いは強連結のみを抜粋。</div>
+</div>
+</section>
+
+<section class="chapter-section" id="part3">
+<div class="chapter-number-label">Part III</div>
+<h2 class="chapter-title">71 問 × 20 章 結合マトリクス</h2>
+
+<h3 id="p3-1">3.1 強連結マトリクス — 章末扉が問いを直接呼ぶ 50 問</h3>
+<p>本節は Phase B 確定 71 問（B-1 41 問 + B-3 30 問）のうち deep-knowledge 章と強連結する 50 問を提示する。強連結は「章末扉が問いを直接呼ぶ + 規範核が一致する」という二重条件を満たす場合の関係を指す。</p>
+
+<table>
+<thead>
+<tr><th>問い ID</th><th>主題</th><th>主章</th><th>接続点</th></tr>
+</thead>
+<tbody>
+<tr><td>Q-N01</td><td>AI ガバナンス空白</td><td>ch08 / ch02</td><td>7 段階クリティカルパス</td></tr>
+<tr><td>Q-N02</td><td>AI 革命の制度反作用</td><td>ch08 / ch03</td><td>worldview 11 年実現</td></tr>
+<tr><td>Q-N03</td><td>テクノ加速 vs 場所性</td><td>ch03 / ch07</td><td>神話メタファー先行性</td></tr>
+<tr><td>Q-N04</td><td>場所性回帰の制度化（真M）</td><td>ch13 / ch14</td><td>Whanganui 法人格</td></tr>
+<tr><td>Q-N05</td><td>民主主義の正統性危機</td><td>ch08 第三節</td><td>合意形成支援</td></tr>
+<tr><td>Q-N06</td><td>気候災害強制移民 near</td><td>ch08 合流3</td><td>生態シミュレーション</td></tr>
+<tr><td>Q-N07</td><td>科学 AI と知識生産転換</td><td>ch08 第三節</td><td>自動仮説生成</td></tr>
+<tr><td>Q-N08</td><td>自律 AI エージェント労働</td><td>ch08 / ch02</td><td>業務再編速度</td></tr>
+<tr><td>Q-N09</td><td>多元的人格の解体と再構築</td><td>ch12 第4変容期</td><td>AI 時代人格概念</td></tr>
+<tr><td>Q-N10</td><td>非西洋認識論 near</td><td>ch11 / ch12</td><td>視座主義・四存在論</td></tr>
+<tr><td>Q-N11</td><td>過剰的中バイアス distance-keeping</td><td>ch01 / ch10</td><td>五つの貌</td></tr>
+<tr><td>Q-N12</td><td>values 空白補完</td><td>ch10 / ch15 第5問い</td><td>神話社会 2100</td></tr>
+<tr><td>Q-N13</td><td>教育-人材 126 年ラグ逆転</td><td>ch18</td><td>教育思想史 400 年</td></tr>
+<tr><td>Q-M01</td><td>ケア・創造・共生の経済</td><td>ch11 / ch13 / ch15</td><td>関係の倫理</td></tr>
+<tr><td>Q-M03</td><td>非西洋認識論主流化</td><td>ch11 / ch12</td><td>翻訳→参照→教育→制度</td></tr>
+<tr><td>Q-M07</td><td>多元的人格の社会</td><td>ch12 / ch17 6人</td><td>サーミ・生態学者・詩人</td></tr>
+<tr><td>Q-M09</td><td>物語転換期の本格化</td><td>ch03 / ch15</td><td>worldview 層転換</td></tr>
+<tr><td>Q-M11</td><td>身体性・精神性復権</td><td>ch11 / ch19</td><td>関係論的身体性</td></tr>
+<tr><td>Q-M12</td><td>教育-人材ラグ再設計完結</td><td>ch17 / ch18</td><td>19 能力次元体系</td></tr>
+<tr><td>Q-F02</td><td>世代間正義制度化</td><td>ch13 / ch14 / ch19</td><td>7 世代律 / Hans Jonas</td></tr>
+<tr><td>Q-F03</td><td>pluriverse 制度化</td><td>ch11 / ch12 / ch14</td><td>多元主義原則</td></tr>
+<tr><td>Q-F04</td><td>神話的人間-非人間境界</td><td>ch11 / ch13</td><td>デスコラ四存在論</td></tr>
+<tr><td>Q-F06</td><td>伝統知の知識主権</td><td>ch13 / ch14</td><td>UNDRIP / Nagoya / WIPO</td></tr>
+<tr><td>Q-F08</td><td>AI × 倫理長期論争</td><td>ch08 第六節</td><td>想定外組み合わせ</td></tr>
+<tr><td>Q-V01</td><td>サイクルA前期 2100 組織形態</td><td>ch05 / ch16</td><td>評議会型・学習共同体</td></tr>
+<tr><td>Q-V02</td><td>双子峰プラトー終端後</td><td>ch04 第三節</td><td>D1/D6 同時極大終端</td></tr>
+<tr><td>Q-V03</td><td>神話的予見・長期記憶（自己言及核）</td><td>序 / ch15 / 終</td><td>同じ岸辺の半歩先</td></tr>
+<tr><td>Q-V05</td><td>ゆっくりの権利制度化</td><td>ch13 / ch19</td><td>周期的時間</td></tr>
+<tr><td>Q-V07</td><td>pluriverse cosmology very-far</td><td>ch11 / ch12 / ch15</td><td>MS08 多重存在論</td></tr>
+<tr><td>G-N04</td><td>自治体場所性中心軸</td><td>ch13 / ch14 第三節</td><td>NZ 自然権系譜</td></tr>
+<tr><td>G-N07</td><td>国際機関多元主義</td><td>ch14 第三節</td><td>WIPO / CBD / ICH</td></tr>
+<tr><td>G-N08</td><td>学術界非西洋方法論化</td><td>ch11 / ch12</td><td>イスラーム哲学再輸入</td></tr>
+<tr><td>G-N09</td><td>先住民知識主権</td><td>ch13 / ch14 第三節</td><td>CARE / FAIR / 独自原則</td></tr>
+<tr><td>G-N10</td><td>個人ケア時間（Hot）</td><td>ch11 4 肖像</td><td>関係の倫理</td></tr>
+<tr><td>G-N11</td><td>企業ケア会計（Hot）</td><td>ch11 cross</td><td>マルチステークホルダー</td></tr>
+<tr><td>G-N12</td><td>教育リテラシー必修化（Hot/warning）</td><td>ch18 / ch17</td><td>教育思想史 400 年</td></tr>
+<tr><td>G-M01</td><td>GDP 代替ケア指標</td><td>ch08 合流1 / ch11</td><td>ケア労働構造転換</td></tr>
+<tr><td>G-M02</td><td>UBI と AI 効率化</td><td>ch08 第三節 / ch11</td><td>業務再編 + 関係性</td></tr>
+<tr><td>G-M03</td><td>マルチステークホルダー</td><td>ch11 / ch14 第六節</td><td>関係論的転回</td></tr>
+<tr><td>G-M04</td><td>世代間正義憲法化（戦略的空白1位）</td><td>ch14 第三節 / ch19</td><td>NZ・EC・BO・CO 系譜</td></tr>
+<tr><td>G-M05</td><td>未来世代代表制度化</td><td>ch14 / ch11</td><td>自然権 + 非人間代表</td></tr>
+<tr><td>G-M06</td><td>EU 遅延しない権利</td><td>ch19 朝・昼・夜</td><td>持続概念制度化</td></tr>
+<tr><td>G-M07</td><td>周期+線形時間併用</td><td>ch13 / ch19</td><td>周期時間制度実装</td></tr>
+<tr><td>G-M10</td><td>学術界 TK coequal</td><td>ch14 / ch08 合流3</td><td>TK と気候適応</td></tr>
+<tr><td>G-F01</td><td>複数 cosmology 法的確立</td><td>ch14 / ch11 四存在論</td><td>デスコラ四存在論制度化</td></tr>
+<tr><td>G-F03</td><td>多元的時間性制度浸透</td><td>ch13 / ch19 / ch18</td><td>持続概念浸透</td></tr>
+<tr><td>G-F04</td><td>地域別善い社会 pluriverse 評価</td><td>ch11 / ch15</td><td>pluriverse vs frag</td></tr>
+<tr><td>G-F05</td><td>人間-AI 共進化「個人」境界</td><td>ch09 / ch12</td><td>AI は他者のひとつ</td></tr>
+<tr><td>G-V01</td><td>次の文明サイクル組織形態</td><td>ch15 / ch16</td><td>評議会型・学習共同体</td></tr>
+<tr><td>G-V02</td><td>very-far multispecies / pluriverse 評価</td><td>ch11 / ch15</td><td>評価軸再帰問い</td></tr>
+<tr><td>G-V03</td><td>Phase B 自己言及メタ</td><td>序 / 終</td><td>あなたの机のうえに</td></tr>
+</tbody>
+</table>
+
+<p>強連結 50 問の特徴は、第一に <strong>第三部（ch11-15）への集中</strong> である。22 問が第三部 5 章に主接続し、Phase B が依拠した規範軸（真M「物語転換期」/ 準M「非西洋認識論」「世代間正義」/ 概念整合「第四変容期」）が deep-knowledge 第三部に集中的に取り扱われていることを定量的に確認できる。第二に、<strong>第二部 ch08（知性の地平）への集中</strong> である。8 問が ch08 に主接続し、AGI 軌道と確定事項合流の物語が真M「物語転換期」の中核軸として機能する。第三に、<strong>第四部 ch17-18 への集中</strong> である。Q-M12 / Q-N13 / G-N12 / G-V01 が ch17-18 に主接続し、Phase C C-3/C-5 確定値による補強が期待される。</p>
+
+<h3 id="p3-2">3.2 中連結 18 問と弱連結 3 問</h3>
+<p>中連結 18 問は章のひとつの節 / 一つの肖像 / 一つの事例として接続可能だが章主旋律ではない関係で、Q-M02 AI 制度反作用恒常化（ch08 / ch03）、Q-M04 少子化制度設計（ch08 合流1 / ch07）、Q-M05 場所性経済規模（ch13 / ch14）、Q-M06 世代間正義制度設計（ch14 / ch19）、Q-M08 気候適応 AI 倫理（ch08 合流3）、Q-M10 創薬 AI（ch08 第三節 医療）、Q-M13 ケア倫理経済化（ch11 / ch15）、Q-F01 気候の長期サイクル（ch04 / ch07 / ch08）、Q-F05 サイクル C 終端構造変革（ch04 / ch05）、Q-F07 人間中心主義揺らぎ収束（ch11 / ch15 第5問い）、G-N01 企業 AI ガバナンス values（ch08 / ch01）、G-N02 国 AI 規制地域標準（ch08 第二節）、G-N03 市民社会 AI 参加（ch08 第三節）、G-N05 企業立地戦略（ch08 合流1）、G-N06 国地域主権権限委譲（ch14）、G-M08 国際社会気候強制移民（ch08 合流5）、G-M09 気候難民市民権（ch08 / ch14）、G-F02 三項並存（市場・贈与・コモンズ）（ch11 / ch15）の 18 問。</p>
+
+<p>弱連結 3 問は概念の隣接性のみで書籍主旋律ではないが背景接続可能な関係で、Q-V04 世代間正義の神話的長期記憶（Q-F02 + Q-V03 派生）、Q-V06 10 億規模強制移民・国家解体（ch08 合流5 very-far 拡張、独立章なし）、Q-M02 AI 制度反作用恒常化（章主旋律と重複・派生扱い）の 3 問。これら派生問いは D-1 で個別 DQ として独立扱いせず、関連 DQ 内で文脈統合する設計を推奨する。</p>
+
+<h3 id="p3-3">3.3 結合密度の構造的観察 — 第三部偏重と独立章の役割</h3>
+<p>deep-knowledge 書籍 20 章のうち、Phase B 接続密度上位 5 章は <strong>ch08（知性の地平）/ ch11（関係の網）/ ch12（概念を作る）/ ch13（先住民の伝統知）/ ch14（伝統知の意味）</strong> であり、それぞれ 10 問以上が直接接続する。これは Phase B が依拠した規範軸（真M「物語転換期」/ 準M「非西洋認識論」「世代間正義」/ 概念整合「第四変容期」）が、deep-knowledge 第二部後半 + 第三部前半に集中的に取り扱われていることの定量的確認となる。</p>
+
+<p>逆に、Phase B 接続密度が薄い章は <strong>ch01（浅い知の海と渇き）/ ch10（深い知が問われる理由）/ ch16（卓越人材研究）/ ch19（深い知の作法）/ 終章</strong> であり、これらは「読者を立ち上がらせる構え」「読者の机のうえへ立ち戻る構え」として機能する独立章である。Phase D での扱いは「問いを直接運ぶ章」ではなく「問いを抱える読者の構え方を整える章」となる。これは D-2 並列展開時の「序文章として使えるシーン候補」の選定に直結する：たとえば DQ-05 G-V03 では序章「五つの岸辺の同時並置」を引用、DQ-08 Q-M07 では ch12 1729 年ハレ大学の 22 歳アモ青年口頭弁護を引用、というシーン引用の戦略である。</p>
+
+<div class="discovery-box">
+<div class="discovery-num">主要発見 1</div>
+<div class="discovery-title">deep-knowledge 第三部と Phase B 規範軸の構造的整合</div>
+<p>deep-knowledge 第三部（ch11-15）と Phase B 71 問規範軸の接続密度（22 問 / 71 問 = 30.9%）は、Phase B が「ミラツク独自の規範軸 = 深い知の人類学・哲学・伝統知」を主旋律として展開した結果と整合する。これは Phase D が結合する物語の重心が第三部にあることを示し、5-10 問選定で第三部由来 5 問以上を採用することが構造的妥当性を持つ。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="part4">
+<div class="chapter-number-label">Part IV</div>
+<h2 class="chapter-title">戦略的空白 13 問 × deep-knowledge 章 結合分析</h2>
+
+<h3 id="p4-1">4.1 戦略的空白 13 問の全体マップ</h3>
+<p>Phase B B-5 が確定した戦略的空白 13 問（B-3 30 問の 43.3%）は、deep-knowledge 章との結合可能性の観点で次の 5 グループに分類できる：世代間正義組（G-M04 / G-M05）、Care 組（G-M01 / G-M03）、Pluriverse 組（G-N07 / G-N08 / G-N09 / G-M10 / G-F01）、Slow Right 組（G-M06 / G-M07 / G-F03）、自己言及組（G-V03）。各組と deep-knowledge 接続章の対応を以下の表に示す。</p>
+
+<table>
+<thead>
+<tr><th>問い ID</th><th>主題</th><th>内訳</th><th>接続章</th></tr>
+</thead>
+<tbody>
+<tr><td>G-M04</td><td>世代間正義の憲法化</td><td>世代間正義 1</td><td>ch14 第三節 / ch19 / ch13</td></tr>
+<tr><td>G-M05</td><td>未来世代代表の制度化</td><td>世代間正義 2</td><td>ch14 第三節 / ch11 multispecies</td></tr>
+<tr><td>G-M01</td><td>GDP 代替ケア指標</td><td>Care 1</td><td>ch08 合流1 / ch11 関係の倫理</td></tr>
+<tr><td>G-M03</td><td>マルチステークホルダー</td><td>Care 2</td><td>ch11 関係の倫理 / ch14 第六節</td></tr>
+<tr><td>G-N07</td><td>国際機関多元主義原則</td><td>Pluriverse 1</td><td>ch14 第三節</td></tr>
+<tr><td>G-N08</td><td>学術界非西洋方法論化</td><td>Pluriverse 2</td><td>ch11 / ch12 周縁から中心</td></tr>
+<tr><td>G-N09</td><td>先住民知識主権制度化</td><td>Pluriverse 3</td><td>ch13 / ch14 全章</td></tr>
+<tr><td>G-M10</td><td>学術界 TK coequal</td><td>Pluriverse 4</td><td>ch14 第三節 / ch08 合流3</td></tr>
+<tr><td>G-F01</td><td>複数 cosmology 法的確立</td><td>Pluriverse 5</td><td>ch14 第三節 / ch11 四存在論</td></tr>
+<tr><td>G-M06</td><td>EU 遅延しない権利</td><td>Slow Right 1</td><td>ch19 朝・昼・夜の作法</td></tr>
+<tr><td>G-M07</td><td>周期+線形時間併用</td><td>Slow Right 2</td><td>ch13 周期的時間 / ch19</td></tr>
+<tr><td>G-F03</td><td>多元的時間性制度浸透</td><td>Slow Right 3</td><td>ch13 / ch19 / ch18</td></tr>
+<tr><td>G-V03</td><td>自己言及メタ問い</td><td>自己言及 1</td><td>序章 / 終章</td></tr>
+</tbody>
+</table>
+
+<h3 id="p4-2">4.2 世代間正義 G-M04 / G-M05 の重点接続分析</h3>
+<p>戦略的空白 13 問のうち、ミラツク TOP10 第 1 位かつ B-5 戦略的空白筆頭の <strong>G-M04（世代間正義の憲法化）</strong>は本トラックの重点分析対象である。deep-knowledge 書籍内で世代間正義に直接言及する章節は、ch14 第三節「自然権制度の系譜」（NZ 2017 Whanganui 川法人格 / エクアドル 2008 / ボリビア 2010 / コロンビア 2018）、ch13「長い時間軸の知」（ドゴンの星空・先住民圏のイロコイ 7 世代律）、ch19 第四節「夜の作法 — 長い時間と痛みの物語化」の 3 章。これらは G-M04 が問う「憲法・基本法への明文化」の制度的雛形が deep-knowledge 第三部に既に分散して存在することを示す。</p>
+
+<p>Phase D 設計上の含意は次の三点である。第一に、G-M04 を扱う問いカードは ch14 第三節を主章として設計し、「自然権制度の世代間正義版」として読者に提示する。第二に、Phase B B-4 装置観測完全不能（N/A）の構造を、ch14 第三節の制度的雛形と対比することで「規範論述は 50 年前から蓄積、制度雛形は 10-20 年前から実装、しかし装置で観測されない」という Phase B 独自視座を読者に手渡す。第三に、ch19 夜の作法と接続することで「個人の作法から制度設計へ」の系譜を構築する。</p>
+
+<p><strong>G-M05（未来世代代表 / 非人間代表の制度化）</strong>は G-M04 の「未来世代」「非人間代表」の制度化形態を問う。deep-knowledge 書籍内では、ch11 multispecies / ch11 第四節 デスコラ四存在論、ch14 第三節 自然権制度の系譜（川・森・山が法人格を得る系譜）が直接接続。とくに NZ Whanganui 川法人格（2017）は「川そのものを未来世代の代表として扱う」制度設計の原型として機能する。Phase D 設計上、G-M04 と G-M05 を並走で扱う問いカード設計（共通章 ch14 第三節 + G-M04 は ch19 / G-M05 は ch11 multispecies）が読者に「世代間正義 = 未来世代 + 非人間代表 + 法人格」の三項統合として提示される構造を持つ。</p>
+
+<p>戦略的空白 critical 5 問（G-M04 / G-N09 / G-M01 / G-N07-08 / G-V03）は、deep-knowledge での集中接続点としてすべて第三部（ch11-15）+ 第四部後半 / 序章・終章に集中接続する。これは Phase D で「戦略的空白特集」を組む場合、deep-knowledge 第三部全体を「戦略的空白の wisdom 蓄積層」として位置づけ可能であることを示す。</p>
+</section>
+
+<section class="chapter-section" id="part5">
+<div class="chapter-number-label">Part V</div>
+<h2 class="chapter-title">ミラツク優先 TOP10 × deep-knowledge 章 結合分析</h2>
+
+<h3 id="p5-1">5.1 TOP10 結合表と象限配置</h3>
+<p>Phase B B-5 → C-2 4 軸再ランキングで確定した TOP10 を、deep-knowledge 主章 + 補助章にマッピングする。各順位の象限配置（戦略的空白＝左上、即実装 Hot＝右上、メタ＝独立、中央＝両者の中間）も同時に示す。</p>
+
+<table>
+<thead>
+<tr><th>順位</th><th>問い</th><th>象限</th><th>主章</th><th>補助章</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Q-N04 場所性回帰の制度化</td><td>真M中央</td><td>ch13 場所性 / ch14 自然権</td><td>ch03 / ch07</td></tr>
+<tr><td>2</td><td>G-M04 世代間正義の憲法化</td><td>左上</td><td>ch14 第三節 自然権制度</td><td>ch19 / ch13</td></tr>
+<tr><td>3</td><td>Q-V07 pluriverse cosmology</td><td>規範 very-far</td><td>ch15 第5問い</td><td>ch11 / ch12 / ch17</td></tr>
+<tr><td>4</td><td>G-N09 先住民知識主権</td><td>左上</td><td>ch13 全章</td><td>ch14 全章 / ch11 視座主義</td></tr>
+<tr><td>5</td><td>Q-V03 神話的予見・長期記憶</td><td>メタ独立</td><td>序章 / ch15 第5問い / 終章</td><td>--</td></tr>
+<tr><td>6</td><td>Q-M07 多元的人格の社会</td><td>規範 mid</td><td>ch12 第4変容期</td><td>ch17 6人の所作 / ch09</td></tr>
+<tr><td>7</td><td>G-V03 自己言及メタ</td><td>メタ独立</td><td>序章 / 終章</td><td>ch15 第5問い</td></tr>
+<tr><td>8</td><td>G-M01 GDP 代替ケア指標</td><td>左上</td><td>ch08 合流1 高齢化</td><td>ch11 / ch15</td></tr>
+<tr><td>9</td><td>Q-V01 サイクルA前期</td><td>規範 very-far</td><td>ch05 ホライズン+4 サイクル</td><td>ch16 5 構造</td></tr>
+<tr><td>10</td><td>G-N07/N08 非西洋認識論</td><td>左上</td><td>ch11 / ch12 周縁から中心</td><td>ch15 第5問い</td></tr>
+</tbody>
+</table>
+
+<h3 id="p5-2">5.2 第三部偏重と読み解き</h3>
+<p>TOP10 の結合パターンは「第四部 + 第三部 + 序章 / 終章」に集中する非対称分布を示す。第二部（ch07-10）は補助章として機能、第一部（ch01-06）は方法論的根拠章として機能する。これは Phase B が「規範軸（第三部）+ 自己診断（序章・終章）+ 担い手 / 教育（第四部）」の三層構造で問いを立てたことを deep-knowledge 側から逆照射する事実となる。</p>
+
+<p>D-1 で TOP10 を中心に問いを選定する場合、deep-knowledge 第三部全章 + 第四部 ch17-18 + 序章・終章は必須参照章となり、第一部・第二部は方法論的補助章として参照される設計を推奨する。具体的には、左上象限 4 問（戦略的空白：G-M04 / G-N09 / G-M01 / G-N07-08）が deep-knowledge ch11-14 + ch19 に集中接続、右上象限 4 問（即実装 Care 系列 Hot：G-N12 / G-N10 / G-N11 / G-M02）が ch11-13 + ch17-18 に集中接続、メタ 1 問（G-V03）が序章 + 終章 + ch15 第5問いに集中接続、中央 1 問（Q-N04 真M全 Track 貫通）が ch13 + ch14 + ch03 に集中接続する。D-2 並列展開を最大化する場合、上記 4 つの章群は独立した執筆チームで進行可能で、章重複は最小限となる。</p>
+</section>
+
+<section class="chapter-section" id="part6">
+<div class="chapter-number-label">Part VI</div>
+<h2 class="chapter-title">Phase C 確定値統合 — C-1 サイクル / C-3 偉業 / C-5 担い手</h2>
+
+<h3 id="p6-1">6.1 C-3 great_actions.db v0.2 140 件の deep-knowledge 接続</h3>
+<p>Phase C C-3 great_actions.db v0.1（140 件）+ v0.2（11 カラム拡張 + 2 新規テーブル + 2,030 リンク）は、ミラツクの 71 問のうち 14 問（戦略的空白 13 問 + Q-N04）の偉業候補を構造化したデータベースである。本トラックは C-3 偉業を deep-knowledge 接続章にマッピングする。</p>
+
+<p>左上象限対応偉業群（戦略的空白に対する偉業）は、ch14 第三節 自然権制度の系譜（NZ・エクアドル・ボリビア・コロンビアの制度化偉業）/ ch13 4 つの肖像（先住民知識主権の制度化偉業）/ ch19 自省録の偉業（マルクス・アウレリウス・フレデリック・ダグラス）に集中接続する。具体的には G-M04 系列 15 件（七世代律 → ウェールズ未来世代法 → 憲法化）、G-N09 系列 14 件（UNDRIP → Whanganui → TK 主権国際標準化）、G-N07/N08 系列 13 件（ポストコロニアル → pluriverse 学術ネット → 国連承認）、G-M01 系列 11 件（HDI 1990 → NZ Wellbeing Budget 2019 → GDP 代替ケア指標 OECD 標準化）、G-V03 系列 6 件（GA-100/127/136 ミラツク自己言及群）が ch11-14 + ch19 に分散接続する。</p>
+
+<p>右上象限対応偉業群（即実装 Care 系列）は、ch11 関係の倫理 4 つの肖像 / ch08 高齢化対応 / ch15 火のまわりの八割に集中接続する。Q-N04 系列 1（中世自治都市 → トランジションタウン → 主権分散ガバナンス）が ch13 + ch14 + ch03 に分散接続。メタ問い対応偉業は、ch16 マンサ・ムーサ巡礼 / ch06 偉人 10 アーキタイプ全体に接続する。</p>
+
+<p>C-4 拡張で確定した <strong>warning vs opportunity = 17:50（1:2.94）</strong> + <strong>critical warning 4 件すべて G-N12（ケア経済組織化）</strong> は、本トラックでの deep-knowledge 接続として ch11 4 つの肖像（関係の倫理が市場化される警告型）+ ch18 4 つの原則（教育がリテラシー必修化と並行して市場化される警告型）に対応する。これは Phase D で「警告型 DQ」として独立扱いする論拠となる。</p>
+
+<h3 id="p6-2">6.2 C-5 担い手 4 軸の deep-knowledge 接続</h3>
+<p>Phase C C-5 担い手特性は、ミラツクの問いに応える人材像を心理 19 次元 × 行動 10+1 アーキタイプ × 領域 CTL-1 6 軸 × 専門 4 軸で記述する。第 5 類型「翻訳者型」（arch_translator、140 件中 19 件 = 13.6%、過剰要求度 9.0 倍）の独立化が C-5 主要発見であり、ミラツクが見出す/育てる 5 類型として位置づけられた。</p>
+
+<p>deep-knowledge 第四部 ch17（2100 年に求められる人材像 — 5 能力 + 6 人の所作 + AI エージェント）+ ch18（現代に求められる行動と人の育成 — 教育思想史 400 年 + 4 つの原則）が C-5 と直接対応する。C-5 担い手 19 次元のうち 5 次元が ch17 5 能力に直接整合する想定で、ch17 6 人の所作（サーミ族の長老 / 生態学者 / 詩人 / 政策担当者 / 記録係 / 9 歳の孫娘）+ AI エージェントが C-5 担い手の典型例として並走する。ch18 教育思想史 400 年 + 4 つの原則は C-5 担い手育成の系譜として機能する。</p>
+
+<p>C-1 サイクル螺旋（認知転換 280-310 年 / 制度興亡 150-300 年 / プラトー 250 年）は、deep-knowledge ch05（ホライズン 1,2,3 と複数サイクルの合流点）+ ch06（長期サイクルが示す合流地点）が直接対応する。サイクル A 前期（2050-2100 起点）に 7 問（DQ-01〜07 推奨案のうち G-V03 を除く 6 問）が集中することは、本トラックでの deep-knowledge 第三部 + 第四部偏重と整合する。</p>
+
+<div class="discovery-box">
+<div class="discovery-num">主要発見 2</div>
+<div class="discovery-title">第 5 類型「翻訳者型」が DQ-01〜08 中 6 問で中核担い手として登場</div>
+<p>C-5 で独立化された第 5 類型「翻訳者型」（arch_translator）は、本 D-0 推奨 DQ-01〜08 のうち 6 問（DQ-01 制度翻訳者 / DQ-02 ケア設計+翻訳者 / DQ-04 認識論翻訳 / DQ-05 自己言及運営 / DQ-07 認識論翻訳 / DQ-08 第四変容期翻訳）で中核担い手として登場する。これは 75% のカバー率で、ミラツク独自貢献の構造的中核として機能する。Phase D D-2 の問いカード末尾「担い手の特性」セクションで翻訳者型を Phase D 全体の人材戦略章として独立節を立てる設計が推奨される。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="part7">
+<div class="chapter-number-label">Part VII</div>
+<h2 class="chapter-title">D-1 候補プールと論点</h2>
+
+<h3 id="p7-1">7.1 32 問候補プール — Tier S 8 + Tier A 12 + Tier B 12</h3>
+<p>本節は D-1 リード本体実行に引き渡す候補プールとして、Phase B 71 問のうち deep-knowledge 結合性 + Phase C 優先度 + ミラツク独自視点の三軸で評価した 32 問の暫定プールを提示する。</p>
+
+<p><strong>Tier S（必選候補・強連結 + TOP10 + 戦略的空白）8 問</strong>：G-M04（世代間正義の憲法化、TOP10 第 1 位 / 戦略的空白筆頭 / ch14 第三節）、G-N09（先住民知識主権、TOP10 第 2 位 / Pluriverse 中核 / ch13 全章）、G-M01（GDP 代替ケア指標、TOP10 第 3 位 / Care 最厚 wisdom / ch08 合流1）、G-N12（場所性経済化、TOP10 第 4 位 / Hot 最強 / ch13 + ch18）、G-V03（自己言及メタ、TOP10 第 9 位 / メタ独自 / 序章 + 終章）、Q-N04（場所性回帰の制度化、唯一全 Track 貫通真M / ch13 + ch14 + ch03）、G-F05（人間-AI 共進化と「個人」、ch09 + ch12）、Q-V07（pluriverse 的 cosmology の very-far、B-2 最重点 / ch11 + ch12 + ch15）。</p>
+
+<p><strong>Tier A（強推奨候補・強連結 + Phase A Mサイン階層接続）12 問</strong>：Q-N01 / Q-N03 / Q-M09 / Q-N09 / Q-M07 / Q-F02 / Q-F06 / Q-M03 / G-N07-N08 / Q-V03 / Q-V01 / Q-M12。<strong>Tier B（中堅候補・中連結 + 戦略的空白 + Hot zone）12 問</strong>：G-M05 / G-M03 / G-M10 / G-F01 / G-M06 / G-N10 / G-N11 / G-M02 / G-N04 / G-V01 / Q-V05 / Q-F03。</p>
+
+<p>D-1 で 5-10 問選定する場合、Tier S から最低 5 問、Tier A から 3-5 問が選ばれることが想定される。Phase C 確定値統合後の再評価では、Q-M07（C-2 TOP6 位）が A → S 昇格、G-F05（C-3 偉業数未確認）が S → A 格下げ候補となる。最終的に Tier S+/S 8 問 + A 5 問 + B 7 問 = 20 問プールに絞り込み可能である（D-1 事前検討資料 §1.4 を参照）。</p>
+
+<h3 id="p7-2">7.2 D-0 リード論点 7 点 — D-1 への意思決定申し送り</h3>
+<p>D-0 リード本体実行で議論・決定した論点を 7 点整理し、D-1 リード本体実行に申し送る。</p>
+
+<p><strong>論点 1: 結合度評価の閾値正本化</strong>。本トラックの強 50 / 中 18 / 弱 3 分類は著者の主観的判断による。D-1 で複数レビュアーによる再評価が望まれる。<strong>論点 2: deep-knowledge 第三部偏重の是非</strong>。第三部（ch11-15）が Phase B 71 問の規範核と最も強く接続する事実は、(A) 第三部偏重を受け入れ「ミラツク独自の規範軸 = 深い知の人類学・哲学・伝統知」を主旋律とする【推奨】 / (B) 各部にバランス配分 / (C) 第三部 5 問 + 他部 5 問の半々構成、の 3 案。本トラックは (A) を【推奨】する。</p>
+
+<p><strong>論点 3: 戦略的空白特集の独立性</strong>。13 問は deep-knowledge 第三部 + ch19 夜の作法に集中接続する独自構造を持つ。(A) 戦略的空白特集を独立クラスタ化【推奨】 / (B) 分散配置、の 2 案。本トラックは (A) を【推奨】し、5-10 問選定の 3-4 問を戦略的空白から選定する設計を D-1 へ引き継ぐ。<strong>論点 4: 自己言及メタ G-V03 / Q-V03 の扱い</strong>。(A) Phase D 全体の自己診断軸として必選【強推奨】 / (B) 付録的扱い、の 2 案。本トラックは (A) を【強推奨】する。</p>
+
+<p><strong>論点 5: 第四部 ch16-18 と Phase C C-3/C-5 の依存関係</strong>。Phase C 完了済みの現時点で第四部接続は確定可能。<strong>論点 6: D-2 並列度（5-10 並列）の設計</strong>。32 問候補プールから「主章重複最小化 + Tier S 5 問必選」で 8 問構成（DQ-01〜08）が D-2 並列執筆の最短化に貢献する。<strong>論点 7（補論）: 配布資料化（D-3）と ryoiki-index 更新の関係</strong>。本トラックの結合マトリクス（71 問 × 20 章）は D-1 / D-2 / D-3 全段階で参照可能な正本マトリクスとして機能する。</p>
+</section>
+
+<section class="chapter-section" id="part8">
+<div class="chapter-number-label">Part VIII</div>
+<h2 class="chapter-title">D-1 への引継ぎ — 主章重複最小化構成と結語</h2>
+
+<h3 id="p8-1">8.1 主章重複最小化の DQ-01〜08 構成案</h3>
+<p>本トラックは D-1 リード本体実行への引継ぎとして、deep-knowledge 主章が重複しない 8 問構成（DQ-01〜08）を提示する。各 DQ の主章が異なるため、D-2 並列執筆チームの主章別資料ハンドオフが容易となり、Phase D D-2 期間（7-10 日）の最短化に貢献する設計である。</p>
+
+<table>
+<thead>
+<tr><th>DQ</th><th>問い</th><th>主章</th><th>D-2 並列性</th></tr>
+</thead>
+<tbody>
+<tr><td>DQ-01</td><td>サイクルA前期 27% 地点 (Q-V01/G-V03 系)</td><td>ch05 + ch06</td><td>独立</td></tr>
+<tr><td>DQ-02</td><td>G-M04 世代間正義の憲法化</td><td>ch14 第三節</td><td>独立</td></tr>
+<tr><td>DQ-03</td><td>G-N09 先住民知識主権</td><td>ch13 全章</td><td>独立</td></tr>
+<tr><td>DQ-04</td><td>ケア経済の組織化（G-N12 / G-M01 統合）</td><td>ch11 + ch08 合流1</td><td>独立</td></tr>
+<tr><td>DQ-05</td><td>非西洋認識論方法論化（G-N07-08）</td><td>ch15 火のまわりの八割</td><td>独立</td></tr>
+<tr><td>DQ-06</td><td>pluriverse cosmology（Q-V07 / G-V07）</td><td>ch12 第4変容期</td><td>独立</td></tr>
+<tr><td>DQ-07</td><td>場所性回帰 Q-N04 全 Track 貫通</td><td>ch03 CLA 127年</td><td>独立</td></tr>
+<tr><td>DQ-08</td><td>自己言及メタ G-V03 / Q-V03</td><td>序章 + 終章</td><td>独立</td></tr>
+</tbody>
+</table>
+
+<p>本構成案は D-0 リード本体での暫定提示であり、D-1 リード本体実行で Phase C 確定値（C-2 4 軸再ランキング・C-3 偉業 140 件・C-4 zone マッピング・C-5 担い手 4 軸）統合後の再評価により、最終的な 8 問選定（DQ-01 G-M04 / DQ-02 G-N09 / DQ-03 Q-N04 / DQ-04 Q-V07 / DQ-05 G-V03 / DQ-06 G-N12 / DQ-07 G-N07-08 / DQ-08 Q-M07）として正本化される設計である。本最終構成は D-1 トラックレポート §7 で確定する。</p>
+
+<div class="callout">
+<div class="callout-title">D-1 への申し送り 5 点</div>
+<p>第一に、本トラックの 71 問 × 20 章マトリクス（強 50 / 中 18 / 弱 3）を出発点とし、Phase C 確定値で C-3 / C-5 接続点を追記すること。第二に、論点 1-7 について D-1 内で確定し、選定理由レポートに明記すること。第三に、候補プール 32 問 → 5-10 問選定で Tier S 5 問必選 + 主章重複最小化基準を採用すること。第四に、戦略的空白 13 問特集の独立クラスタ化を採用すること。第五に、G-V03 / Q-V03 自己言及メタ問いを Phase D 全体の自己診断軸として位置づけること。</p>
+</div>
+
+<h3 id="p8-2">8.2 結語 — 本トラックの方法論的限界と honest 開示</h3>
+<p>本 D-0 トラックの方法論的限界は三点である。第一に、結合度評価（強・中・弱）の閾値設定は本トラック著者の主観的判断による。D-1 で複数レビュアーによる閾値再評価が望まれる<span class="tag-est">推定</span>。第二に、deep-knowledge 書籍の各章末扉（次章への磁力）と Phase B 問いの直接対応関係を、書籍 HTML の本文細部（章末「次章への扉」セクション）まで全章チェックする時間的余裕がなかった。本トラックは章タイトル + 主要節タイトル + 章冒頭シーンに基づく結合分析を主とした<span class="tag-unv">未検証</span>。第三に、Phase C 確定値（C-3 偉業 140 件 + C-5 担い手 4 軸）の本マトリクスへの完全反映は本トラックの数値レベルの集計に留まり、各偉業 / 担い手と各章節との細部対応は D-1 / D-2 で正本化される設計である<span class="tag-int">解釈</span>。</p>
+
+<p>本トラックが Phase D に与える効果は次の三点である。第一に、71 問 × 20 章マトリクスの正本化により、D-1 が「30-50 問の中から 5-10 問選定」という負荷を「32 問の中から 5-10 問選定」に縮小する。第二に、主章重複最小化の DQ-01〜08 構成案により、D-2 並列展開（7-10 日）の最短化に貢献する。第三に、戦略的空白 13 問特集 + メタ G-V03 必選 + 第三部偏重の三層設計により、Phase B/C 主要発見（真M 中核 / 戦略的空白 / Care Hot / メタ自己診断 / 第 5 類型翻訳者型）が網羅的にカバーされる。</p>
+
+<p>本マトリクスは Phase D D-1 / D-2 / D-3 全段階で参照される正本データとして機能し、また D-3 終了時の ryoiki-index.html「Phase D 展開 1: deep-knowledge 統合」セクション追加でも基礎データとして参照される。本 D-0 トラックの完了により、Phase D Wave 1（D-1 問い選定 4-6 日）が起動可能となる。</p>
+
+<div class="callout">
+<div class="callout-title">数値整合性 honest 開示</div>
+<p>本トラック参照数値: Phase B 71 問（B-1 41 + B-3 30）/ 派生 926（B-2 wisdom 85 + B-4 セル 168 + B-4 initiatives 463 + B-5 動きセル 210）/ 総単位 997 / Phase A Mサイン階層（真M 4 / 準M 14 / 概念整合 15 / 単独T 8）/ 戦略的空白 13 問 / TOP10 + Hot zone 4 / B-2 wisdom 配分（PHIL 24 / AN 17 / MY 15 / TK 15 / LIT 14 = 85）/ deep-knowledge 20 章（第一部 6 + 第二部 4 + 第三部 5 + 第四部 4 + 序終 2）/ Phase C C-3 great_actions.db v0.1 140 件 / C-4 v0.2 拡張 11 カラム + 2 新規テーブル + 2,030 リンク / C-4 warning vs opportunity = 17:50 / C-5 担い手 4 軸 + 第 5 類型「翻訳者型」13.6%。</p>
+</div>
+</section>
+
+<footer>
+Track D-0 結合性分析 — Phase D Wave 0 / 2026-05-10<br>
+Phase A → B → C → <strong>D</strong>（deep-knowledge 統合）/ 71 問 × 20 章 = 1,420 セル評価<br>
+次工程: D-1 問い選定（Wave 1, 4-6 日）/ 候補プール 32 問 → 8 問確定<br>
+編集: Phase D Track D-0 Lead / 主軸: deep-knowledge case 11 + ryoiki-index Phase A/B/C
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === "dark" ? "light" : "dark";
+  html.dataset.theme = next;
+  try { localStorage.setItem("ryoiki-theme", next); } catch(e) {}
+}
+(function () {
+  try {
+    const saved = localStorage.getItem("ryoiki-theme");
+    if (saved) document.documentElement.dataset.theme = saved;
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

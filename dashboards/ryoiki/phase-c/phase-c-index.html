@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>領域策定 Phase C 収束 | Index</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5; --accent: #121212; --accent-soft: #555555; --accent-warm: #CC1400; --accent-warm-soft: #B01200; --accent-muted: rgba(204,20,0,0.06); --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE; --highlight: #CC1400; --surface: #F7F7F5; --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif; --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif; }
+[data-theme="dark"] { --bg: #121212; --card: #1A1A1A; --card-hover: #222222; --accent: #E0E0E0; --accent-soft: #999999; --accent-warm: #FF4030; --accent-warm-soft: #FF6050; --accent-muted: rgba(255,64,48,0.10); --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A; --highlight: #FF4030; --surface: #1A1A1A; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.85; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; transition: all 0.2s; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.container { max-width: 1100px; margin: 0 auto; padding: 60px 24px 100px; }
+.page-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.page-eyebrow { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 16px; font-weight: 700; }
+.page-title { font-family: var(--font-serif); font-size: 2.4rem; font-weight: 700; line-height: 1.4; margin-bottom: 20px; letter-spacing: 0; }
+.page-subtitle { font-family: var(--font-serif); font-size: 1.1rem; color: var(--text-secondary); font-weight: 400; line-height: 1.85; max-width: 820px; margin-bottom: 24px; }
+.page-meta { margin-top: 24px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+.section { margin-bottom: 80px; }
+.section-title { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; letter-spacing: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.section-lead { font-family: var(--font-serif); font-size: 1rem; color: var(--text-secondary); line-height: 1.85; margin-bottom: 32px; max-width: 820px; }
+.tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.track-card { border: 1px solid var(--border); background: var(--card); padding: 24px; transition: background 0.15s, border-color 0.15s; position: relative; }
+.track-card:hover { background: var(--card-hover); border-color: var(--accent-warm); }
+.track-card::before { content: ""; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; background: var(--accent-warm); opacity: 0; transition: opacity 0.15s; }
+.track-card:hover::before { opacity: 1; }
+.track-card[data-status="completed"]::before { opacity: 1; }
+.track-card[data-status="completed"] { border-color: var(--accent-warm); }
+.track-num { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-warm); font-weight: 700; margin-bottom: 8px; }
+.track-title { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; line-height: 1.5; margin-bottom: 12px; }
+.track-db { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.04em; }
+.track-desc { font-family: var(--font-serif); font-size: 0.9rem; color: var(--text-secondary); line-height: 1.75; margin-bottom: 16px; }
+.track-stat { font-family: var(--font); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 12px; padding: 6px 0; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
+.track-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.track-link { font-family: var(--font); font-size: 0.74rem; font-weight: 700; padding: 6px 12px; border: 1px solid var(--border); color: var(--text); letter-spacing: 0.02em; transition: all 0.15s; }
+.track-link:hover { border-color: var(--accent-warm); color: var(--accent-warm); text-decoration: none; }
+.track-link--primary { background: var(--accent-warm); border-color: var(--accent-warm); color: #fff; }
+.track-link--primary:hover { background: var(--accent-warm-soft); border-color: var(--accent-warm-soft); color: #fff; }
+.status-badge { display: inline-block; font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; padding: 2px 8px; border: 1px solid var(--border); margin-left: 8px; text-transform: uppercase; }
+.status-badge[data-status="completed"] { background: var(--accent-warm); border-color: var(--accent-warm); color: #fff; }
+.status-badge[data-status="in_progress"] { background: transparent; border-color: var(--accent-warm); color: var(--accent-warm); }
+.status-badge[data-status="pending"] { background: transparent; border-color: var(--border); color: var(--text-muted); }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 24px 28px; margin: 32px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.8; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 10px; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.framework-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; margin: 24px 0; border: 1px solid var(--border); }
+.framework-cell { padding: 20px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); font-family: var(--font); background: var(--card); }
+.framework-cell:last-child { border-right: none; }
+.framework-label { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.framework-value { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--accent-warm); line-height: 1.2; }
+.framework-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+footer { margin-top: 100px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.8rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 720px) { .container { padding: 40px 16px 60px; } .page-title { font-size: 1.7rem; } .tracks { grid-template-columns: 1fr; } }
+@media print { .top-bar { display: none; } }
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>領域策定 Phase C 収束</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../ryoiki-index.html">← 領域策定インデックス</a>
+<a class="back-link" href="../phase-b/phase-b-index.html">Phase B Index</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="container">
+
+<header class="page-header">
+<div class="page-eyebrow">DOMAIN MAPPING PHASE C — CONVERGENT SYNTHESIS</div>
+<h1 class="page-title">領域策定 Phase C 収束</h1>
+<p class="page-subtitle">Phase A（9 トラック解析）+ Phase B（多層問い × 装置 × 動き 997 単位）の上に積み上がる第三段階。Phase A が「各 DB が何を語るか」、Phase B が「それらを多層構造化し問い群として再構築する」のに対し、Phase C は「<strong>問い群と検出された構造を、ミラツクが描く未来社会への羅針盤として収束させる</strong>」役割を担う。<strong>時間軸サイクル × 問い構造 × 偉業 140 件 × 担い手特性</strong>の四位一体で「ミラツクが描く未来社会への羅針盤」を確立し、Phase D（deep-knowledge 統合）の起動条件を整える。</p>
+<div class="page-meta">
+<span><strong>7 トラック構成</strong></span>
+<span><strong>4 軸統合（時間 × 問い × 偉業 × 担い手）</strong></span>
+<span><strong>great_actions.db v0.2</strong></span>
+<span><strong>赤白CI / textbook構造</strong></span>
+<span>更新: 2026-05-10 / 7 トラック完了</span>
+</div>
+</header>
+
+<section class="section">
+<h2 class="section-title">Phase C プロジェクト構造</h2>
+<p class="section-lead">Phase B が空間的（多層・装置・zone）に確定した「ミラツクが向き合う問いの全体像」を、Phase C は時間軸（C-1）+ 問い軸（C-2）+ 行為軸（C-3/C-4）+ 担い手軸（C-5）の四軸で立体化し、C-6 統合 + C-7 公開で外部発信する。Phase D 起動への入力データを確定する。</p>
+
+<div class="framework-grid">
+<div class="framework-cell">
+<div class="framework-label">AXES</div>
+<div class="framework-value">4</div>
+<div class="framework-desc">時間軸 × 問い軸 × 行為軸 × 担い手軸<br>「四位一体マスター図」の構成</div>
+</div>
+<div class="framework-cell">
+<div class="framework-label">QUESTIONS UNIFIED</div>
+<div class="framework-value">71</div>
+<div class="framework-desc">B-1 41 + B-3 30 = 71 独立 ID<br>4 層（メタ 4 / 規範 33 / 実装 22 / 装置 12）</div>
+</div>
+<div class="framework-cell">
+<div class="framework-label">GREAT ACTIONS</div>
+<div class="framework-value">140</div>
+<div class="framework-desc">過去 60 + 現代登場中 50 + 期待 30<br>great_actions.db v0.2 / 2,030 リンク</div>
+</div>
+<div class="framework-cell">
+<div class="framework-label">QUALITY GATES</div>
+<div class="framework-value">3</div>
+<div class="framework-desc">doc-verify → sentinel → C-6 統合<br>C-1〜C-7 全 APPROVED</div>
+</div>
+</div>
+
+<div class="callout">
+<div class="callout-title">METHODOLOGY DOCUMENTS</div>
+Phase B から継承された方法論プロトコルに加え、Phase C 固有の事前リサーチ群（C-1〜C-7 各 PRESEARCH）が C-1 リード起動前に確定済。<br>
+<a href="_PHASE_C_PLAN.md">_PHASE_C_PLAN.md</a> — Phase C 全体計画 ／
+<a href="_PHASE_C_STATUS.md">_PHASE_C_STATUS.md</a> — 進捗トラッキング ／
+<a href="_TRACK_C7_PRESEARCH.md">_TRACK_C7_PRESEARCH.md</a> — C-7 事前リサーチ ／
+<a href="../_PROTOCOLS.md">_PROTOCOLS.md</a> — Phase A 由来方法論 ／
+<a href="../_INTEGRATION_FRAMEWORK.md">_INTEGRATION_FRAMEWORK.md</a> — 統合フレーム
+</div>
+</section>
+
+<section class="section">
+<h2 class="section-title">7 トラック</h2>
+<p class="section-lead">C-1〜C-7 の各トラックは依存順に配置される。C-1（時間軸）+ C-2（問い軸）が並列でWave 1、C-3（行為軸 DB 構築）が Wave 2、C-4（zone マッピング）+ C-5（担い手）が並列で Wave 3、C-6（統合・検証）が Wave 4、C-7（公開）が Wave 5。全 7 トラック sentinel APPROVED を達成。</p>
+
+<div class="tracks">
+
+<article class="track-card" data-status="completed">
+<div class="track-num">TRACK C-1<span class="status-badge" data-status="completed">完了</span></div>
+<h3 class="track-title">社会展開サイクル / 螺旋（時間軸層）</h3>
+<div class="track-db">CTI v2 + Track 4 SIF/HIC/GF/TA + B-1 41 問 + B-3 8 critical juncture</div>
+<p class="track-desc">仮説 D「双子峰プラトー螺旋モデル」採用。サイクル A（認知転換 280-310 年）/ B（制度興亡 150-300 年）/ C（プラトー 250 年）の三重サイクルを 4 ホライズンに投影。CTI v2 9 時代評価で AI/産業 = 1.005 倍（CTI(1850=100) 換算 1.05 倍）を確定し、SIF-SI 初版「現代は産業革命の 1.4-1.7 倍」を学術的に却下。同期点 4 つ（Q-N04 / Q-M01 / Q-F03 / Q-V07）の代表年 2030 / 2050 / 2070 / 2095 等間隔配置を発見。</p>
+<div class="track-stat">analysis 77KB / verification 41KB / report 76KB ／ 主要発見 3 点</div>
+<div class="track-links">
+<a class="track-link track-link--primary" href="track-c1-cycle-spiral-report.html">レポート</a>
+<a class="track-link" href="track-c1-cycle-spiral-analysis.html">解析</a>
+<a class="track-link" href="track-c1-cycle-spiral-verification.html">検証</a>
+<a class="track-link" href="track-c1_handoff.md">引継ぎ書</a>
+</div>
+</article>
+
+<article class="track-card" data-status="completed">
+<div class="track-num">TRACK C-2<span class="status-badge" data-status="completed">完了</span></div>
+<h3 class="track-title">問いの統合構造化（問い軸層）</h3>
+<div class="track-db">already_future.db (DB 実値) + B-1 41 問 + B-3 30 問 + B-2 wisdom 85</div>
+<p class="track-desc">71 問単一台帳の確定（B-1 41 + B-3 30 / 重複ペア 11 件 inherited_from で明示 / メタ問い 4 件独立扱い）。4 層構造の本判定（メタ 4 / 規範 33 / 実装 22 / 装置 12 = 71、規範主層 46.5% 単独最多）。Phase C-2 観点 TOP10（4 軸再ランキング: 規範重要性 × 装置観測薄 × wisdom 厚 × Mサイン階層）。B-2 wisdom 85 紐付け（直接 14 問 + 派生継承 7 問 = 21 問・29.6%）。</p>
+<div class="track-stat">analysis 17K 字 / verification 7K 字 / report 22K 字 ／ 71 問単一台帳確定</div>
+<div class="track-links">
+<a class="track-link track-link--primary" href="track-c2-questions-synthesis-report.html">レポート</a>
+<a class="track-link" href="track-c2-questions-synthesis-analysis.html">解析</a>
+<a class="track-link" href="track-c2-questions-synthesis-verification.html">検証</a>
+<a class="track-link" href="track-c2_handoff.md">引継ぎ書</a>
+</div>
+</article>
+
+<article class="track-card" data-status="completed">
+<div class="track-num">TRACK C-3<span class="status-badge" data-status="completed">完了</span></div>
+<h3 class="track-title">great_actions.db 構築（行為軸層）</h3>
+<div class="track-db">great_actions.db v0.1 / 168 KB / 5 テーブル / 29 インデックス / 140 件投入</div>
+<p class="track-desc">過去偉業 60 + 現代登場中 50 + 期待される未来 30 = 140 件を投入。PST 10 アーキタイプ分布で Mediator 39 件 27.9% が単独最多。5 シナリオ分布で Care 47.1% / Pluriverse 30.0% の二極集中。戦略的空白 13 問完全対応（91 件・平均 7.0 件/問）。Mサイン真M + 概念整合 = 127 件 90.7% の Phase A 高純度連結。</p>
+<div class="track-stat">analysis 18K 字 / verification 8K 字 / report 22K 字 ／ great_actions.db 構築完了</div>
+<div class="track-links">
+<a class="track-link track-link--primary" href="track-c3-great-actions-report.html">レポート</a>
+<a class="track-link" href="track-c3-great-actions-analysis.html">解析</a>
+<a class="track-link" href="track-c3-great-actions-verification.html">検証</a>
+<a class="track-link" href="track-c3_handoff.md">引継ぎ書</a>
+</div>
+</article>
+
+<article class="track-card" data-status="completed">
+<div class="track-num">TRACK C-4<span class="status-badge" data-status="completed">完了</span></div>
+<h3 class="track-title">zone マッピング v0.2（実装-期待層）</h3>
+<div class="track-db">great_actions.db v0.2 / 12 カラム拡張 + 2 新規テーブル + 2,030 リンク</div>
+<p class="track-desc">v0.1→v0.2 マイグレーション完了。zone × 偉業マッピング: Hot 15 件 / Warm 17 件 / Cool 43 件 / N/A 65 件。warning 17 件（critical 4 = G-N12 ケア経済集中・high 13 = G-N04 場所性回帰）。opportunity 50 件（G-M04 世代間正義 15 件 / G-N09 先住民知識主権 14 件最多）。warning vs opportunity = 1:2.94（楽観的構造観の数量的支持）。maturity_score 5 ゼロ件＝「現代の偉業は依然として実験・試行段階」。</p>
+<div class="track-stat">analysis 10 章 / verification 4 カテ × 26 項目 / report 11 部 + 図表 12 点</div>
+<div class="track-links">
+<a class="track-link track-link--primary" href="track-c4-actions-zone-mapping-report.html">レポート</a>
+<a class="track-link" href="track-c4-actions-zone-mapping-analysis.html">解析</a>
+<a class="track-link" href="track-c4-actions-zone-mapping-verification.html">検証</a>
+<a class="track-link" href="track-c4_handoff.md">引継ぎ書</a>
+</div>
+</article>
+
+<article class="track-card" data-status="completed">
+<div class="track-num">TRACK C-5<span class="status-badge" data-status="completed">完了</span></div>
+<h3 class="track-title">求められる人物の特性（担い手層）</h3>
+<div class="track-db">era_talents.db / great_actions.db v0.1 / PST DB / JPMS DB v2</div>
+<p class="track-desc">4 軸構造化確定（心理 19 能力次元 × 行動 10+1 アーキタイプ × 領域 CTL-1 6 軸 × 専門 学術 5 領域）。第 5 類型「翻訳者型 (arch_translator)」独立化（val_pluralism + cog_synthesis、140 件中 19 件 13.6%）。英雄像の構造的転換（産業革命期 Warrior+Leader → 物語転換期 Mediator+Introvert Thinker+ 翻訳者型、TOP10 では 9.0 倍の Mediator 過剰要求）。TOP10 から導出した「ミラツクが見出す/育てる 5 類型」確定。</p>
+<div class="track-stat">analysis 16K 字 / verification 7K 字 / report 22K 字 + 図表 12 点</div>
+<div class="track-links">
+<a class="track-link track-link--primary" href="track-c5-actor-traits-report.html">レポート</a>
+<a class="track-link" href="track-c5-actor-traits-analysis.html">解析</a>
+<a class="track-link" href="track-c5-actor-traits-verification.html">検証</a>
+<a class="track-link" href="track-c5_handoff.md">引継ぎ書</a>
+</div>
+</article>
+
+<article class="track-card" data-status="completed">
+<div class="track-num">TRACK C-6<span class="status-badge" data-status="completed">完了</span></div>
+<h3 class="track-title">統合・検証（四位一体マスター図）</h3>
+<div class="track-db">C-1〜C-5 全成果統合 + great_actions.db v0.2 SQL 実値検証</div>
+<p class="track-desc">C-1〜C-5 を四位一体（時間軸サイクル × 問い × 偉業 × 担い手）として統合。「TOP10 中心 + 4 象限放射」のマンダラ構造を確定。doc-verify 4 カテゴリ通過（PASS 60 / WARN 2 / FAIL 0）+ sentinel APPROVED。Phase A 構造的限界 5 点の Phase C 継承点検（5 件中 4 件継承不可避 + 1 件部分解消）。Phase D 起動条件達成宣言。</p>
+<div class="track-stat">analysis 19.5K 字 / verification 11.2K 字 ／ DB 集計ログ L-01〜L-12</div>
+<div class="track-links">
+<a class="track-link" href="track-c6-synthesis-analysis.html">解析</a>
+<a class="track-link" href="track-c6-synthesis-verification.html">検証</a>
+</div>
+</article>
+
+<article class="track-card" data-status="completed">
+<div class="track-num">TRACK C-7<span class="status-badge" data-status="completed">完了</span></div>
+<h3 class="track-title">HTML 公開・統合インデックス</h3>
+<div class="track-db">Phase C 全成果の公開 HTML 化 + ryoiki-index.html 更新</div>
+<p class="track-desc">Phase C 全 7 トラック成果を 5 公開 HTML として最終整形。phase-c-master-{report,analysis,verification}.html + phase-c-index.html + ryoiki-index.html 追加更新。textbook 構造 + 赤白 CI 完全準拠 + タグバランス完全均衡。Phase D 起動への接続点を確定。</p>
+<div class="track-stat">5 公開 HTML / Phase D placeholder 配置 / GitHub Pages 反映</div>
+<div class="track-links">
+<a class="track-link track-link--primary" href="phase-c-master-report.html">マスターレポート</a>
+<a class="track-link" href="phase-c-master-analysis.html">マスター解析</a>
+<a class="track-link" href="phase-c-master-verification.html">マスター検証</a>
+</div>
+</article>
+
+</div>
+</section>
+
+<section class="section">
+<h2 class="section-title">統合成果（Track C-7 公開層）</h2>
+<p class="section-lead">7 トラックの成果を統合し、ミラツクが描く未来社会への羅針盤として外部公開する最終工程。Phase D（deep-knowledge 統合）の起動条件を整える。</p>
+
+<div class="callout">
+<div class="callout-title">PHASE C MASTER OUTPUT (COMPLETED)</div>
+全 7 トラック完了。Phase C-7 公開チームが以下を生成完了:
+<ul style="margin-top:12px; margin-left:1.6em; line-height:1.85;">
+<li><strong>マスターレポート</strong>: <a href="phase-c-master-report.html">phase-c-master-report.html</a> — 35K-45K 字 / 図表 12-18 点 / 8 部構成（序章 + C-1〜C-6 各章 + 終章 + 付録）</li>
+<li><strong>マスター解析</strong>: <a href="phase-c-master-analysis.html">phase-c-master-analysis.html</a> — 25K-30K 字 / 4 部構成（俯瞰 + 6 トラック連続性 + 方法論 + 限界）</li>
+<li><strong>マスター検証</strong>: <a href="phase-c-master-verification.html">phase-c-master-verification.html</a> — 12K-15K 字 / 7 章構成（doc-verify 4 カテゴリ統合）</li>
+<li><strong>四位一体マスター図 + 統合ナレッジマップ</strong> — TOP10 中心 + 4 象限放射のマンダラ構造</li>
+<li><strong>great_actions.db v0.2</strong> — 168 KB / 5 + 2 テーブル / 140 件 + 2,030 リンク（Phase D 入力データ確定）</li>
+<li><strong>ryoiki-index.html 更新</strong> — Phase C セクション + Phase D placeholder 追加</li>
+</ul>
+</div>
+
+<div class="callout">
+<div class="callout-title">great_actions.db v0.2 ダウンロード導線</div>
+<strong>パス</strong>: <code>~/projects/research/great-actions-db/great_actions.db</code>（ローカル DB / 168 KB）<br>
+<strong>スキーマ</strong>: 既存 5 テーブル（great_actions / actions_question_links / actions_archetype_links / actions_capability_links / actions_metadata）+ 2 新規テーブル（action_initiatives_links / action_zone_mapping）<br>
+<strong>主要数値</strong>: 140 件 × 60 カラム / 2,030 リンク / 292 capability_links / 43 zone_mapping セル<br>
+<strong>Phase D 入力</strong>: 5-10 問候補プール（DQ-01〜DQ-08）の主入力データ
+</div>
+
+<div class="callout">
+<div class="callout-title">PHASE A + PHASE B INDEX への戻り導線</div>
+<strong>過去フェーズへの参照</strong>:<br>
+<a href="../ryoiki-index.html">領域策定インデックス（Phase A 9 トラック + Track 10 + Phase B 6 トラック + Phase C 7 トラック + Phase D placeholder）</a><br>
+<a href="../phase-b/phase-b-index.html">Phase B 統合的解析インデックス（B-1〜B-6 6 トラック）</a><br>
+<a href="../ryoiki-master-report.html">Phase A 統合メタレポート（9 トラック横断 + ミラツク独自知見 7 件）</a>
+</div>
+
+<div class="callout">
+<div class="callout-title">PHASE D 起動準備</div>
+<strong>D-0 起動条件達成</strong>: C-1〜C-7 全 sentinel APPROVED + Phase A 構造的限界 5 点継承点検完了 + Phase D 入力データ確定 8 問。<br>
+<strong>Phase D 4 段階構成</strong>: D-0 結合性分析 → D-1 問い選定（5-10 問）→ D-2 並列展開（各 4-5 ページ背景解説）→ D-3 統合配布資料化。<br>
+<strong>主入力源</strong>: <a href="../../reports/deep-knowledge-book.html">deep-knowledge 書籍 case 11『深い知が拓く 2100 年』全 21 章 304,999 字</a> + Phase C マスターレポート + great_actions.db v0.2 + 71 問単一台帳。
+</div>
+</section>
+
+<footer>
+NPO法人ミラツク / 領域策定プロジェクト Phase C 収束 / 赤白CI #CC1400 / textbook structure<br>
+方法論: <a href="_PHASE_C_PLAN.md">_PHASE_C_PLAN.md</a> ／ 事前リサーチ: <a href="_TRACK_C7_PRESEARCH.md">_TRACK_C7_PRESEARCH.md</a> ／ 上位: <a href="../ryoiki-index.html">領域策定インデックス</a>
+</footer>
+
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>

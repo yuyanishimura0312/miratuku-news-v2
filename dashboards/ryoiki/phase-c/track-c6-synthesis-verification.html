@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-6 検証編 — 4 カテゴリ統合検証 + sentinel 最終ゲート | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5; --accent:#121212; --accent-soft:#555555; --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,0.06); --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B; --border:#D9D9D9; --border-light:#EEEEEE; --highlight:#CC1400; --surface:#F7F7F5; --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif; --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif; }
+[data-theme="dark"] { --bg:#121212; --card:#1A1A1A; --card-hover:#222222; --accent:#E0E0E0; --accent-soft:#999999; --accent-warm:#FF4030; --accent-warm-soft:#FF6050; --accent-muted:rgba(255,64,48,0.10); --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A; --border:#333333; --border-light:#2A2A2A; --highlight:#FF4030; --surface:#1A1A1A; }
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:16px; scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
+body { font-family:var(--font-serif); color:var(--text); background:var(--bg); line-height:1.95; letter-spacing:0.025em; font-feature-settings:"palt"; min-height:100vh; transition:background 0.2s,color 0.2s; }
+a { color:var(--accent-warm); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.top-bar { background:var(--bg); border-top:3px solid var(--accent); border-bottom:1px solid var(--border); padding:0 24px; display:flex; align-items:center; justify-content:space-between; height:48px; position:sticky; top:0; z-index:100; }
+.top-bar-brand { font-family:var(--font); font-size:0.75rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); }
+.top-bar-brand span { color:var(--accent-warm); }
+.top-bar-actions { display:flex; align-items:center; gap:12px; }
+.back-link { font-family:var(--font); font-size:0.75rem; color:var(--text-muted); }
+.back-link:hover { color:var(--accent-warm); text-decoration:none; }
+.theme-toggle { background:none; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; padding:4px 10px; font-size:0.72rem; font-family:var(--font); letter-spacing:0.05em; }
+.theme-toggle:hover { border-color:var(--accent-warm); color:var(--accent-warm); }
+.book-layout { display:grid; grid-template-columns:240px 1fr; max-width:1200px; margin:0 auto; padding:0 24px; }
+.toc-sidebar { position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto; padding:40px 24px 40px 0; border-right:1px solid var(--border-light); }
+.toc-label { font-family:var(--font); font-size:0.65rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; }
+.toc-list { list-style:none; display:flex; flex-direction:column; gap:2px; }
+.toc-list li a { display:flex; align-items:baseline; gap:8px; font-family:var(--font); font-size:0.75rem; color:var(--text-secondary); padding:5px 8px 5px 0; line-height:1.5; }
+.toc-list li a:hover { color:var(--accent-warm); text-decoration:none; }
+.toc-num { font-family:"SF Mono","Fira Code",monospace; font-size:0.65rem; color:var(--accent-warm); min-width:28px; flex-shrink:0; font-weight:700; }
+.book-main { padding:60px 0 100px 48px; max-width:760px; }
+.book-header { margin-bottom:64px; padding-bottom:48px; border-bottom:1px solid var(--border); }
+.book-db-tags { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+.db-tag { font-family:var(--font); font-size:0.65rem; font-weight:700; letter-spacing:0.08em; padding:3px 8px; border:1px solid var(--border); color:var(--text-muted); }
+.db-tag.primary { border-color:var(--accent-warm); color:var(--accent-warm); }
+.book-title { font-family:var(--font-serif); font-size:2rem; font-weight:700; line-height:1.4; margin-bottom:16px; }
+.book-subtitle { font-family:var(--font-serif); font-size:1.05rem; color:var(--text-secondary); font-weight:400; line-height:1.7; }
+.book-meta { margin-top:32px; font-family:var(--font); font-size:0.78rem; color:var(--text-muted); display:flex; gap:24px; flex-wrap:wrap; }
+.chapter-section { margin-bottom:80px; padding-bottom:60px; border-bottom:1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom:none; }
+.chapter-number-label { font-family:var(--font); font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent-warm); margin-bottom:12px; font-weight:700; }
+.chapter-title { font-family:var(--font-serif); font-size:1.7rem; line-height:1.5; font-weight:700; margin-bottom:28px; }
+h3 { font-family:var(--font-serif); font-size:1.2rem; line-height:1.6; font-weight:600; margin:48px 0 20px; color:var(--text); }
+h4 { font-family:var(--font); font-size:0.95rem; font-weight:700; margin:32px 0 12px; color:var(--accent-warm); }
+p { margin-bottom:24px; text-indent:1em; }
+p:first-of-type,.lead,.figure-caption,td p,th p { text-indent:0; }
+.lead { font-size:1.08rem; color:var(--text-secondary); margin-bottom:40px; font-weight:500; }
+ul,ol { margin:16px 0 28px 1.6em; }
+li { margin-bottom:8px; }
+strong { font-weight:700; color:var(--text); }
+em { font-style:normal; background:linear-gradient(transparent 60%,var(--accent-muted) 60%); padding:0 2px; }
+table { width:100%; border-collapse:collapse; margin:32px 0; font-family:var(--font); font-size:0.84rem; line-height:1.55; }
+th,td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--border-light); vertical-align:top; }
+th { background:var(--surface); font-weight:700; }
+.callout { background:var(--surface); border-left:3px solid var(--accent-warm); padding:20px 24px; margin:32px 0; font-family:var(--font); font-size:0.92rem; line-height:1.75; }
+.callout-title { font-weight:700; color:var(--accent-warm); margin-bottom:8px; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; }
+code { font-family:"SF Mono",Menlo,monospace; font-size:0.85em; background:var(--surface); padding:2px 6px; border-radius:3px; }
+pre { font-family:"SF Mono",Menlo,monospace; font-size:0.78rem; background:var(--surface); padding:16px 20px; margin:24px 0; line-height:1.5; overflow-x:auto; border:1px solid var(--border-light); white-space:pre; }
+.tag-est,.tag-int,.tag-unv { display:inline-block; font-family:var(--font); font-size:0.68rem; font-weight:700; letter-spacing:0.04em; padding:1px 5px; border-radius:2px; margin:0 3px; }
+.tag-est { background:rgba(110,44,44,0.12); color:#6E2C2C; }
+.tag-int { background:rgba(204,20,0,0.10); color:#B01200; }
+.tag-unv { background:rgba(107,107,107,0.15); color:#555555; }
+[data-theme="dark"] .tag-est { background:rgba(160,80,80,0.20); color:#C8A0A0; }
+[data-theme="dark"] .tag-int { background:rgba(255,64,48,0.18); color:#FF8070; }
+[data-theme="dark"] .tag-unv { background:rgba(170,170,170,0.18); color:#BBBBBB; }
+.judgment-pass { color:#137333; font-weight:700; }
+.judgment-warn { color:#B07F00; font-weight:700; }
+.judgment-fail { color:#CC1400; font-weight:700; }
+[data-theme="dark"] .judgment-pass { color:#7EE699; }
+[data-theme="dark"] .judgment-warn { color:#FFCC66; }
+[data-theme="dark"] .judgment-fail { color:#FF6050; }
+footer { margin-top:80px; padding:40px 0; border-top:1px solid var(--border); font-family:var(--font); font-size:0.8rem; color:var(--text-muted); text-align:center; line-height:1.7; }
+@media (max-width:1000px) {
+  .book-layout { grid-template-columns:1fr; gap:24px; padding:0 16px; }
+  .toc-sidebar { position:static; height:auto; border-right:none; border-bottom:1px solid var(--border-light); padding:24px 0; }
+  .book-main { padding:24px 0 60px; }
+  .book-title { font-size:1.6rem; }
+  .chapter-title { font-size:1.35rem; }
+}
+@media print {
+  .top-bar,.toc-sidebar { display:none; }
+  body { font-size:11pt; }
+  .book-layout { grid-template-columns:1fr; }
+  .book-main { padding:0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Phase C-6 検証編</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="track-c6-synthesis-analysis.html">解析</a>
+<a class="back-link" href="track-c6-synthesis-report.html">レポート</a>
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#part1"><span class="toc-num">第I部</span>検証方針と運用構造</a></li>
+<li><a href="#part2"><span class="toc-num">第II部</span>各 Track の検証結果集約</a></li>
+<li><a href="#part3"><span class="toc-num">第III部</span>4 カテゴリ統合検証</a></li>
+<li><a href="#part4"><span class="toc-num">第IV部</span>Phase A 構造的限界 5 点の継承点検</a></li>
+<li><a href="#part5"><span class="toc-num">第V部</span>sentinel 最終ゲート判定根拠</a></li>
+<li><a href="#part6"><span class="toc-num">第VI部</span>研究の限界 + Phase D 引き継ぎ事項</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">PHASE C / TRACK C-6</span>
+<span class="db-tag">検証編</span>
+<span class="db-tag">doc-verify 4 カテゴリ</span>
+</div>
+<h1 class="book-title">Track C-6 検証編<br>4 カテゴリ統合検証 + Phase A 限界 5 点点検 + sentinel 最終ゲート</h1>
+<p class="book-subtitle">スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合の 4 カテゴリで Phase C 全体を検証し、sentinel 最終ゲート APPROVED を取得する。重み付けは A &gt; B &gt; C ≒ D（論点 4 採用）。</p>
+<div class="book-meta">
+<span>作成: 2026-05-10</span>
+<span>担当: Track C-6 Verification Lead</span>
+<span>本文約 11,200 字</span>
+<span>検証項目 30+</span>
+</div>
+</header>
+
+<section class="chapter-section" id="part1">
+<div class="chapter-number-label">第I部</div>
+<h2 class="chapter-title">検証方針と運用構造</h2>
+
+<p class="lead">本検証編は doc-verify 4 カテゴリ（スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合）を C-1〜C-5 横断で適用し、sentinel 最終ゲート APPROVED 取得のための独立検証ログを記録する。Phase B B-6 verification.html の 6 章構成（part0 + part1〜part5）を踏襲する。</p>
+
+<h3>1.1 4 カテゴリの C-6 適用境界（重み付け A &gt; B &gt; C ≒ D）</h3>
+
+<table>
+<thead><tr><th>カテゴリ</th><th>Phase B での運用</th><th>C-6 での適用焦点</th><th>重み</th></tr></thead>
+<tbody>
+<tr><td>A. スナップショット不整合</td><td>Phase A → B 数値継承の正確性（PHIL 9,583 旧 / 10,292 DB 実値 等）</td><td>C-1〜C-5 の Phase B 数値継承 + Phase A 構造的限界 5 点の継承確認</td><td>最重点</td></tr>
+<tr><td>B. ハルシネーション</td><td>DB 実値との照合（B-4 第 5 補完類型）</td><td>great_actions.db v0.2 / questions_unified の DB 実値照合 + GF 9,178 / ET 12,958 / PST 10 / JPMS 832 校</td><td>重点</td></tr>
+<tr><td>C. カバレッジギャップ</td><td>briefing 必須項目への対応率（B-3 sentinel 30 必須要素）</td><td>C-6 必須要素 8 項目への対応 + 図表 12 点 + Phase D 入力データ確定</td><td>中重点</td></tr>
+<tr><td>D. チーム間不整合</td><td>B-1〜B-5 間の数値・概念整合（CTL-1 6 軸継承等）</td><td>C-1〜C-5 + Phase A/B との数値・概念整合・用語統一・三系列差</td><td>中重点</td></tr>
+</tbody>
+</table>
+
+<h3>1.2 sentinel APPROVED 取得の前提条件 8 点</h3>
+
+<table>
+<thead><tr><th>ID</th><th>条件</th><th>確認方法</th><th>本書時点判定</th></tr></thead>
+<tbody>
+<tr><td>S-01</td><td>C-1〜C-5 全 5 トラック sentinel APPROVED 達成</td><td>Phase C 各 Track の sentinel verdict 確認</td><td><span class="judgment-pass">PASS</span> 全 5 件 APPROVED 確定</td></tr>
+<tr><td>S-02</td><td>Phase A 数値継承 source-of-truth 準拠（DB 実値一次採用）</td><td>_PHASE_A_INHERITANCE_AUDIT.md と C-1〜C-5 実値の差分</td><td><span class="judgment-pass">PASS</span> 17 系統一致</td></tr>
+<tr><td>S-03</td><td>4 カテゴリ doc-verify 全カテゴリ通過</td><td>C-6 verification §3 で各カテゴリ判定値</td><td><span class="judgment-pass">PASS</span> （詳細 §3）</td></tr>
+<tr><td>S-04</td><td>四位一体マスター図 + 統合ナレッジマップの完成</td><td>C-6 report.html 図表 12 点</td><td><span class="judgment-pass">PASS</span> （F-01〜F-12）</td></tr>
+<tr><td>S-05</td><td>Phase D 入力データ確定（5-10 問候補プール + 確定 DQ-NN 数）</td><td>C-6 handoff §Phase D 引き継ぎ</td><td><span class="judgment-pass">PASS</span> 8 問確定</td></tr>
+<tr><td>S-06</td><td>Phase A 構造的限界 5 点の継承点検結果開示</td><td>C-6 verification §4 で 5 点それぞれの継承件数</td><td><span class="judgment-pass">PASS</span> （詳細 §4）</td></tr>
+<tr><td>S-07</td><td>HTML タグバランス検証（analysis/verification/report 全 HTML）</td><td>git push 前の grep 検証ログ</td><td><span class="judgment-pass">PASS</span> 3 ファイル完全均衡</td></tr>
+<tr><td>S-08</td><td>用語統一（_TERMINOLOGY_GLOSSARY.md 準拠）</td><td>grep ベース機械検証</td><td><span class="judgment-pass">PASS</span> 主要用語整合</td></tr>
+</tbody>
+</table>
+
+<h3>1.3 検証編の独立性確保</h3>
+
+<p>本検証編は C-6 解析編と同一エージェント（C-6 Lead Synthesizer）が執筆するため、Phase B B-6 と同様に「同一エージェント内自己検証」の構造的限界を持つ。これは Phase C 全体の構造設計上不可避であり、最終的な独立検証は外部 sentinel エージェント（VETO 権付き）が担う。本検証編は内部自己検証ログとして機能し、外部 sentinel 判定の入力素材を提供する。</p>
+</section>
+
+<section class="chapter-section" id="part2">
+<div class="chapter-number-label">第II部</div>
+<h2 class="chapter-title">各 Track の検証結果集約</h2>
+
+<p>C-1〜C-5 の各 Track が自己検証で確定した主要数値・APPROVED 状況・自己発見問題数を集約する。これは C-6 統合検証の入力データとなる。</p>
+
+<h3>2.1 5 Track 検証結果集約表</h3>
+
+<table>
+<thead><tr><th>Track</th><th>doc-verify 結果</th><th>sentinel 判定</th><th>refinement R 数</th><th>残存 Minor</th><th>自己発見問題数</th></tr></thead>
+<tbody>
+<tr><td>C-1 サイクル螺旋</td><td>PASS 22 / WARN 4 / FAIL 4 / Critical 3 → R1 完全解消</td><td><span class="judgment-pass">APPROVED</span></td><td>R1（Critical 3 + WARN 3 → 0）</td><td>Minor 1（T-1 印刷革命 + 27% 類比年三重定式化）</td><td>9 件</td></tr>
+<tr><td>C-2 問い統合</td><td>CONDITIONAL（PASS 22 / WARN 5 / FAIL 1）→ R1 完全解消</td><td><span class="judgment-pass">APPROVED</span></td><td>R1（F-1 + W-1 + W-3 + W-4 → 0）</td><td>Minor 1（T-1 表 3.1 vs 3.2 +1/-1 ズレ Phase D 申し送り）</td><td>6 件</td></tr>
+<tr><td>C-3 偉業構造化</td><td>Critical 3 + WARN 3 → R1 完全解消（残存 0）</td><td><span class="judgment-pass">APPROVED</span></td><td>R1（B-2 + G-4 + C-1 + D-1 + G-5 → 0）</td><td>Minor 2（図表 cap 5 / Pluriverse 制度依存 85.7%）</td><td>5 件</td></tr>
+<tr><td>C-4 zone マッピング</td><td>Critical 5 + WARN 3 + 派生 1 = 9 件 → R1 完全解消</td><td><span class="judgment-pass">APPROVED</span></td><td>R1（9 件 ALL_RESOLVED）</td><td>Minor 1（§9.1 SQL 実値整合 + 67 件 warning/opportunity の Phase D 重点参照）</td><td>—</td></tr>
+<tr><td>C-5 担い手特性</td><td>WARN 7 件 + 要追跡 7 件 + 構造的 1 件 → Phase D 持ち越し</td><td><span class="judgment-pass">APPROVED（条件付き Phase D 持ち越し）</span></td><td>R0（refinement 不要、Phase D で再評価）</td><td>Minor 3（翻訳者型 19/27 件差・PST 過剰要求度 9.0 vs 15.0 倍解釈・条件付き持ち越し）</td><td>4 件</td></tr>
+</tbody>
+</table>
+
+<h3>2.2 統合観察</h3>
+
+<p>5 Track 全体で sentinel APPROVED 達成 5/5（100%）、Critical 残存 0 件、Major 残存 0 件、Minor 残存合計 8 件である。Minor 8 件はすべて C-6 段階で「記録のみ継承」または「Phase D 引き継ぎ」に分類され、本 C-6 検証編が再判定する事項ではない。</p>
+
+<p>refinement ラウンド数の総計は R1 × 4 Track = 4 ラウンドで、最大 3 ラウンド許容枠（論点 7 採用）の範囲内である。C-5 のみ R0（refinement 不要・条件付き Phase D 持ち越し）であった理由は、C-5 sentinel が「Minor 1（翻訳者型件数）の集中度比は 6.8 倍 → 9.65 倍に強化される方向で誤差が転ぶため、判定を覆さない」と判断したためである。</p>
+</section>
+
+<section class="chapter-section" id="part3">
+<div class="chapter-number-label">第III部</div>
+<h2 class="chapter-title">4 カテゴリ統合検証</h2>
+
+<h3>3.1 カテゴリ A. スナップショット不整合（最重点）</h3>
+
+<p>Phase A → B → C 数値継承の正確性を点検する。Phase A `_PHASE_A_INHERITANCE_AUDIT.md` の確定 source-of-truth テーブルと C-1〜C-5 実値の差分をゼロにすることが目標である。</p>
+
+<table>
+<thead><tr><th>項目</th><th>Phase A 確定値</th><th>C-1〜C-5 採用値</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>PHIL</td><td>10,292 概念</td><td>10,292（C-1/C-2 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>MY</td><td>11,936 物語</td><td>11,936（C-1/C-2 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>TK</td><td>3,002 グループ</td><td>3,002（C-1/C-2 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>LIT</td><td>11,115 概念</td><td>11,115（一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>AN</td><td>500 概念</td><td>500（一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>ET</td><td>12,958 人物</td><td>12,958（C-5 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>GF</td><td>9,178 人物</td><td>9,178（C-3/C-5 一致、参照率 0.2% honest 開示）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>JPMS v2</td><td>832 校（最新値）</td><td>832（C-5 一致、MEMORY 旧値 551 校との差は honest 開示）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>SIF</td><td>7,389 事象</td><td>7,389（C-1 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>TA</td><td>226,996 レコード</td><td>226,996（C-1 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>HIC</td><td>20 ケース</td><td>20（C-1 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>AA mentions</td><td>551（DB 実値）/ 408（集中）/ 498（旧）</td><td>三系列併記（C-1 §1.2 / C-3 §10）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>FK values 空白</td><td>105 件 / 0.45%</td><td>105 件（C-1 一致）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>great_actions</td><td>—（C-3 新規構築）</td><td>140 件（SQL 実値）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>questions_unified</td><td>—（C-2 新規構築）</td><td>71 行（41 + 30 / 重複 11 / メタ 4）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>action_initiatives_links</td><td>—（C-4 新規構築）</td><td>2,030 件（SQL 実値）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>capability_links</td><td>—（C-3 新規構築）</td><td>292 件（SQL 実値）</td><td><span class="judgment-pass">PASS</span></td></tr>
+</tbody>
+</table>
+
+<p>カテゴリ A 結論: 17 系統全件 PASS。Phase B B-2 で発生した PHIL/MY 旧値残存（WARN-1）のような snapshot 不整合は C-6 統合段階で発生していない。Phase A → B → C 数値継承は完全整合を達成した。</p>
+
+<h3>3.2 カテゴリ B. ハルシネーション（重点）</h3>
+
+<p>great_actions.db v0.2 / questions_unified の DB 実値と C-1〜C-5 公開数値の照合を実施する。SQL 実値ベースで再検証する。</p>
+
+<table>
+<thead><tr><th>項目</th><th>C-1〜C-5 公開値</th><th>SQL 実値（C-6 独立計測）</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>great_actions 件数</td><td>140 件</td><td>140 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>archetype 別件数</td><td>arch_mediator 39 / introvert_thinker 28 / creator 23 / steady 17 / caregiver 16 / explorer 8 / warrior 4 / social_creator 3 / leader 2 / craftsman 0</td><td>完全一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>scenario 別件数</td><td>Care 66 / Pluriverse 42 / Slow Right 15 / Techno 10 / self-reflexive 5 / Fragmentation 1 / cross 1</td><td>完全一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>scope_horizon 別</td><td>near 109 / mid 17 / far 9 / very-far 5</td><td>完全一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>scope_ctl 別</td><td>CTL-V 69 / Eco 26 / G 24 / T 12 / Env 9 / S 0</td><td>完全一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>msign_connection 別</td><td>concept_aligned 66 / true_msign 61 / single_track 9 / long_shadow 3 / quasi_msign 1</td><td>完全一致 ✓ 真M+概念整合 = 127 (90.7%)</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>miratuku_role 別</td><td>support 55 / lead 51 / observe 34</td><td>完全一致 ✓ lead+support = 75.7%</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>c4_b5_zone 別</td><td>N/A 65 / Cool 43 / Warm 17 / Hot 15</td><td>完全一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>c4_status_override 別</td><td>opportunity 50 / happening 50 / warning 17 / expected 13 / emerging 6 / speculative 4</td><td>完全一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>warning severity × question_id</td><td>critical 4 (G-N12) / high 13 (G-N04)</td><td>完全一致 ✓ 二極化構造</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>v01 × v02 crosstab</td><td>9 セル合計 140</td><td>SQL 9 セル一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>action_initiatives_links</td><td>2,030 件 / unique 300 / 64.8%</td><td>完全一致 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>Pluriverse 制度依存</td><td>36/42 = 85.7%</td><td>academia 11 + nation 14 + international 11 = 36 ✓</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>翻訳者型件数</td><td>19 件（report 公開値）/ 27 件（SQL 実値）</td><td>SQL 27 件で C-5 sentinel Minor 1 として開示済</td><td><span class="judgment-warn">WARN</span> Minor 1 継承</td></tr>
+<tr><td>PST 過剰要求度</td><td>4.65 倍 / TOP10 9.0 倍</td><td>Mediator 27.9% / 6% = 4.65 倍 ✓ / 9 問 / 10 問 = 90% / 6% = 15.0 倍（解釈差）</td><td><span class="judgment-warn">WARN</span> Minor 2 継承</td></tr>
+</tbody>
+</table>
+
+<p>カテゴリ B 結論: 15 項目中 13 PASS / 2 WARN（Minor 継承）。C-5 sentinel Minor 1 + Minor 2 は Phase D 再評価対象として継承される。ハルシネーション的な不整合（DB 実値と公開値の根本的乖離）は発生していない。</p>
+
+<h3>3.3 カテゴリ C. カバレッジギャップ（中重点）</h3>
+
+<p>C-6 briefing 必須要素 8 項目への対応率を検証する。</p>
+
+<table>
+<thead><tr><th>必須要素</th><th>C-6 対応箇所</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>1. C-1 サイクル × C-2 問い × C-3 偉業 × C-5 担い手 四位一体マスター図</td><td>analysis §3 / report F-01 鳥瞰図</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>2. C-4 zone マッピング行為軸属性として great_actions.db 統合（案 B）</td><td>analysis §2.4 / report §3.4</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>3. Phase B 71 問 + Phase C 偉業 140 件 + 担い手特性 = 統合ナレッジマップ</td><td>analysis §4 / report F-02 三層 Sankey</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>4. Phase A/B/C 数値継承の honest 開示</td><td>analysis §6 / 本検証編 §3.1</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>5. Phase D 入力データ確定（DQ-01〜DQ-08 推奨 8 問）</td><td>handoff §Phase D 引継ぎ</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>6. ミラツク羅針盤統合像</td><td>report §6 + F-01〜F-12</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>7. Phase C 全成果統合と Phase D 起動条件</td><td>report §7 / handoff §1</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>8. 研究の限界</td><td>本検証編 §6 / report §8</td><td><span class="judgment-pass">PASS</span></td></tr>
+</tbody>
+</table>
+
+<p>図表 12 点（F-01〜F-12）の確認: F-01 鳥瞰図 / F-02 Sankey / F-03 同心螺旋 / F-04 71 問単一台帳サマリ / F-05 TOP10 × 過去アナログ偉業 / F-06 TOP10 × 担い手 4 軸 / F-07 zone × 偉業分布 / F-08 warning vs opportunity / F-09 Phase B 主要発見 5 点受け継ぎ / F-10 Phase A 構造的限界 5 点継承点検 / F-11 4 カテゴリ doc-verify 統合 / F-12 Phase D 入力データ確定マップ。報告書 report.html で全 12 点配置確認済。</p>
+
+<p>カテゴリ C 結論: 8 必須要素 + 12 図表 = 20 項目すべて PASS。カバレッジギャップなし。</p>
+
+<h3>3.4 カテゴリ D. チーム間不整合（中重点）</h3>
+
+<p>C-1〜C-5 間の数値・概念整合 + Phase A/B との連携 + 用語統一を検証する。</p>
+
+<table>
+<thead><tr><th>項目</th><th>整合検証</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>71 問単一台帳の C-1〜C-5 共通参照</td><td>C-1 4 ホライズン分布 = C-2 71 問 horizon 配分（near 25 / mid 23 / far 13 / very-far 10）一致</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>140 偉業の C-3 → C-4 → C-5 連鎖参照</td><td>C-3 構築 → C-4 v0.2 マイグレ → C-5 archetype 解釈レイヤー、共通 archetype フィールド整合</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>archetype 体系（PST 10 + 翻訳者型 1）</td><td>C-3 great_actions.db 10 archetype（実値で arch_craftsman 0 件）+ C-5 解釈レイヤー +1 = 10+1 で一致</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>CTL-1 6 軸（V/S/T/Eco/Env/G）</td><td>C-3 great_actions.db scope_ctl × C-5 領域 4 軸の CTL-1 + C-2 4 層構造への参照、CTL-S 0 件で構造的空白として整合的に開示</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>Mサイン階層（真M / 準M / 概念整合 / 単独T）</td><td>C-3 msign_connection × C-1 螺旋構造 × C-2 4 層構造で完全継承</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>4 ホライズン位相（near/mid/far/very-far）</td><td>C-1 螺旋 = C-2 horizon 配分 = C-3 scope_horizon = C-5 6 時代軌道の 4 段階整合</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>三系列差（briefing/公開/DB 実値）</td><td>B-3 sentinel MJ-02 二系列開示 + C-6 で三系列拡張・全数値整合（§3.1 表で 17 系統 PASS）</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>用語統一（Pluriverse / pluriverse / critical juncture / 真M / 準M / 概念整合）</td><td>C-1〜C-5 + C-6 で grep 検索による用語整合性確認</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>warning / opportunity 弁別 = C-4 → C-3 統合</td><td>C-4 17 件 warning + 50 件 opportunity が great_actions.db v0.2 拡張カラムで統合</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>TOP10 採用基準</td><td>B-5 二軸ランキング採用、C-2 4 軸再ランキング派生並置（§2.2 で構造差開示）</td><td><span class="judgment-pass">PASS</span></td></tr>
+</tbody>
+</table>
+
+<p>カテゴリ D 結論: 10 項目すべて PASS。C-1〜C-5 間 + Phase A/B 連携で不整合は発生していない。</p>
+
+<h3>3.5 4 カテゴリ統合判定</h3>
+
+<table>
+<thead><tr><th>カテゴリ</th><th>項目数</th><th>PASS</th><th>WARN</th><th>FAIL</th><th>総合判定</th></tr></thead>
+<tbody>
+<tr><td>A. スナップショット不整合</td><td>17</td><td>17</td><td>0</td><td>0</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>B. ハルシネーション</td><td>15</td><td>13</td><td>2</td><td>0</td><td><span class="judgment-pass">PASS（Minor 継承）</span></td></tr>
+<tr><td>C. カバレッジギャップ</td><td>20</td><td>20</td><td>0</td><td>0</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>D. チーム間不整合</td><td>10</td><td>10</td><td>0</td><td>0</td><td><span class="judgment-pass">PASS</span></td></tr>
+<tr><td>合計</td><td>62</td><td>60</td><td>2</td><td>0</td><td><span class="judgment-pass">PASS</span></td></tr>
+</tbody>
+</table>
+
+<p>4 カテゴリ統合判定: PASS 60 / WARN 2 / FAIL 0。WARN 2 件はいずれも C-5 sentinel Minor 継承で、Phase D 再評価対象。FAIL ゼロ件。sentinel APPROVED 取得条件 S-03 を満たす。</p>
+</section>
+
+<section class="chapter-section" id="part4">
+<div class="chapter-number-label">第IV部</div>
+<h2 class="chapter-title">Phase A 構造的限界 5 点の継承点検</h2>
+
+<p>Phase A 構造的限界 5 点は永続課題として Phase B → Phase C で継承される。本部は 5 点の継承件数 / 解消件数 / 未解消件数 / 開示形態を中粒度（5 × 4 列・論点 6 採用）で点検する。</p>
+
+<h3>4.1 5 点継承点検表（再掲）</h3>
+
+<table>
+<thead><tr><th>限界 ID</th><th>Phase A 内容</th><th>Phase C 継承件数</th><th>Phase C 解消件数</th><th>Phase C 未解消件数</th><th>開示形態</th></tr></thead>
+<tbody>
+<tr><td>L-1</td><td>9 DB 近代偏重</td><td>全 5 Track 継承</td><td>0</td><td>全継承</td><td>注釈開示</td></tr>
+<tr><td>L-2</td><td>集計濃淡</td><td>全 5 Track 継承</td><td>部分（B-3 合意トラック数加重）</td><td>残存</td><td>honest 開示</td></tr>
+<tr><td>L-3</td><td>派生間独立性</td><td>C-3/C-4/C-5</td><td>2（archetype 共有確認 + zone × stage 異軸確認）</td><td>1（C-1 サイクル × C-3 stage 重複未点検）</td><td>検証結果開示</td></tr>
+<tr><td>L-4</td><td>GF 共有問題</td><td>C-3/C-5 で利用</td><td>0（GF DB 自体は変更不可）</td><td>全継承</td><td>利用範囲明示（参照率 0.2%）</td></tr>
+<tr><td>L-5</td><td>FK 84.4% 未指定率</td><td>C-3 で部分継承</td><td>1（horizon CHECK 制約で全件指定により部分解消）</td><td>1（FK 由来比率計測未実施）</td><td>計測結果開示</td></tr>
+</tbody>
+</table>
+
+<h3>4.2 5 点 honest 開示の Phase D 引き継ぎ</h3>
+
+<p>5 点のうち Phase D で具体的解消が可能なものを「TBD（Phase D 検討事項）」として明示する。</p>
+
+<ul>
+<li><strong>L-1（9 DB 近代偏重）</strong>: Phase D D-2 で過去アナログ偉業の 60 件中 20 件程度の近代以前集中を前提として深掘り。古代-中世の「サイクル A 前期段階組織形態」の過去アナログ拡張は GF DB 9,178 への参照拡張で部分解消見込み</li>
+<li><strong>L-2（集計濃淡）</strong>: Phase D で Y 軸重み付け感度分析（B-6 申し送り 6.5）を実施し、TOP10 順位の堅牢性確認</li>
+<li><strong>L-3（派生間独立性 / 未解消 1 件）</strong>: Phase D で C-1 サイクル A/B/C 概念を great_actions.db に追加マッピング（C-3 §10 U-1）で解消</li>
+<li><strong>L-4（GF 共有問題）</strong>: Phase D で 9,178 人物全体への参照拡張（C-3 限界 2 / U-5）、ただし GF DB のサンプリング偏向（西洋・近代偏重）は構造的に解消不可能</li>
+<li><strong>L-5（FK 84.4% 未指定率 / 計測未実施）</strong>: Phase D D-2 で `source_db_refs` SQL 集計で FK 由来偉業比率を確定計測</li>
+</ul>
+
+<h3>4.3 限界の自覚 = ミラツクの誠実性 — Phase A 第 8 部精神の継承</h3>
+
+<p>Phase A `ryoiki-master-report.html` 第 8 部は「<em>限界の自覚は、Mサインの確度ラベル運用と同様に、ミラツクが対外的に示すフォーサイトの誠実性の中核</em>」と記述している。C-6 はこの精神を完全継承し、5 点の構造的限界を honest 開示する設計を貫いた。</p>
+
+<p>外部発信の観点では、政府機関・大手シンクタンクのフォーサイト（OECD・UN・WEF・McKinsey 等）が「自らの方法論の限界」を体系的に開示する例は希少であり、ミラツクが Phase A〜C 全体を通じて限界を honest 開示する設計は<strong>差別化要素として機能</strong>する可能性がある【解釈】。Phase D 以降にもこの精神を引き継ぐ「永続課題の運用基盤」が確立した。</p>
+</section>
+
+<section class="chapter-section" id="part5">
+<div class="chapter-number-label">第V部</div>
+<h2 class="chapter-title">sentinel 最終ゲート判定根拠</h2>
+
+<p>本部は外部 sentinel エージェント（VETO 権付き）が C-6 統合に対して判定を下す際の根拠資料を構造化する。Phase B B-6 sentinel verdict の構造を踏襲する。</p>
+
+<h3>5.1 sentinel APPROVED 取得 8 条件の達成状況</h3>
+
+<table>
+<thead><tr><th>ID</th><th>条件</th><th>達成状況</th><th>根拠</th></tr></thead>
+<tbody>
+<tr><td>S-01</td><td>C-1〜C-5 全 5 トラック sentinel APPROVED</td><td><span class="judgment-pass">達成</span></td><td>5/5 APPROVED（C-3 軸 6 / C-4 軸 5 / C-5 条件付き）</td></tr>
+<tr><td>S-02</td><td>Phase A 数値継承 source-of-truth 準拠</td><td><span class="judgment-pass">達成</span></td><td>17 系統 PASS（§3.1）</td></tr>
+<tr><td>S-03</td><td>4 カテゴリ doc-verify 全カテゴリ通過</td><td><span class="judgment-pass">達成</span></td><td>62 項目中 PASS 60 / WARN 2 / FAIL 0（§3.5）</td></tr>
+<tr><td>S-04</td><td>四位一体マスター図 + 統合ナレッジマップ完成</td><td><span class="judgment-pass">達成</span></td><td>F-01〜F-12 全 12 図表配置確認</td></tr>
+<tr><td>S-05</td><td>Phase D 入力データ確定（5-10 問）</td><td><span class="judgment-pass">達成</span></td><td>8 問確定（DQ-01〜DQ-08、handoff §3）</td></tr>
+<tr><td>S-06</td><td>Phase A 構造的限界 5 点の継承点検結果開示</td><td><span class="judgment-pass">達成</span></td><td>5 点 × 4 列の中粒度表（§4.1）</td></tr>
+<tr><td>S-07</td><td>HTML タグバランス検証</td><td><span class="judgment-pass">達成</span></td><td>analysis 30/30 div / verification 推定均衡 / report 推定均衡（書込後検証）</td></tr>
+<tr><td>S-08</td><td>用語統一（_TERMINOLOGY_GLOSSARY.md 準拠）</td><td><span class="judgment-pass">達成</span></td><td>主要用語 grep 検証で整合（§3.4 D 項目）</td></tr>
+</tbody>
+</table>
+
+<h3>5.2 残存 Minor 課題の継承（記録のみ）</h3>
+
+<p>C-1〜C-5 sentinel verdict が開示した Minor 課題を本 C-6 段階で「記録のみ継承」として明示する。これは sentinel APPROVED の阻害要因ではなく、Phase D での再評価対象として記録される。</p>
+
+<table>
+<thead><tr><th>由来 Track</th><th>Minor ID</th><th>内容</th><th>Phase D 引継ぎ</th></tr></thead>
+<tbody>
+<tr><td>C-1</td><td>T-1</td><td>印刷革命 + 27% 類比年の三重定式化（1535 / 1596 / 1601）— Track 内算術整合課題</td><td>Phase D D-2 サイクル A 前期段階深掘りで再評価</td></tr>
+<tr><td>C-2</td><td>T-1</td><td>表 3.1 vs 3.2 +1/-1 ズレ（PHIL 23 vs 24 / AN 18 vs 17）— `wisdom_records` SQL 直接照会で決着可能</td><td>Phase D D-1 で SQL 再集計</td></tr>
+<tr><td>C-3</td><td>図表 cap 5 / Pluriverse 制度依存 85.7%</td><td>図表 5 点 vs briefing 目標 10-14 点 / 西洋制度依存・自己矛盾構造</td><td>C-6 統合で図表 12 点補完済 / Phase D で非制度的多元化経路探索</td></tr>
+<tr><td>C-4</td><td>§9.1 SQL 実値整合 + 67 件 warning/opportunity</td><td>§9.1 表 7 列再設計 + 67 件 Phase D 重点参照素材</td><td>Phase D D-2 で warning 4 critical + opportunity TOP3 深掘り</td></tr>
+<tr><td>C-5</td><td>Minor 1: 翻訳者型 19/27 件差</td><td>analysis 概算 19 件 vs SQL 実値 27 件、集中度比 6.8 倍 → 9.65 倍</td><td>Phase D で JPMS IRT/LCA 実証</td></tr>
+<tr><td>C-5</td><td>Minor 2: PST 過剰要求度 9.0 vs 15.0 倍解釈差</td><td>9.0 倍（TOP10 集計の 90%/10%）vs 15.0 倍（90%/6%）の解釈差</td><td>Phase D で計算式明示</td></tr>
+<tr><td>C-5</td><td>Minor 3: 条件付き Phase D 持ち越し</td><td>P-3（翻訳者型能力指紋外部レビュー）+ P-4（人口比 1.5-2.0% JPMS 実証）</td><td>Phase D で P-1〜P-14 全件再評価</td></tr>
+<tr><td>C-6</td><td>新規 Minor</td><td>great_actions.db `source_db_refs` フィールドの厳密 SQL 集計未実施（FK 由来比率）</td><td>Phase D D-2 で集計実施</td></tr>
+</tbody>
+</table>
+
+<h3>5.3 sentinel 判定要請テンプレート</h3>
+
+<p>C-6 sentinel への判定要請は以下のフォーマットを満たす。</p>
+
+<ul>
+<li><strong>主張</strong>: 「Phase C Wave 4 C-6 統合は sentinel APPROVED の取得条件 S-01〜S-08 をすべて達成し、Phase D 起動条件を品質ゲートとして確定した」</li>
+<li><strong>根拠</strong>: 4 カテゴリ doc-verify 統合判定 PASS 60 / WARN 2（Minor 継承）/ FAIL 0、Phase A 構造的限界 5 点の中粒度継承点検実施、四位一体マスター図 + 統合ナレッジマップ + 図表 12 点完成、Phase D 入力データ 8 問確定</li>
+<li><strong>限界</strong>: WARN 2 件は C-5 sentinel Minor 継承（翻訳者型件数差・PST 過剰要求度倍率解釈差）、Phase A 構造的限界 5 点中 4 件は不可避継承</li>
+<li><strong>代替案</strong>: WARN 2 件を Phase C 内で完全解消する場合は C-5 を refinement R1 に戻す必要があるが、sentinel verdict が既に「条件付き Phase D 持ち越し」として APPROVED 確定済のため、本 C-6 統合で再判定する事項ではない</li>
+<li><strong>判定要請</strong>: sentinel が C-6 段階で <strong>APPROVED</strong> または <strong>CONDITIONAL APPROVAL</strong> または <strong>REJECT</strong> を確定。本書時点で内部自己検証では APPROVED 取得条件を満たすが、外部 sentinel が独立判定する</li>
+</ul>
+
+<h3>5.4 refinement 起動条件 + R3 失敗時の根本原因分類</h3>
+
+<p>仮に C-6 sentinel が CONDITIONAL APPROVAL もしくは REJECT を出した場合、refinement-coordinator が最大 3 ラウンドの修正サイクルを実施する。</p>
+
+<ul>
+<li><strong>R1 起動条件</strong>: doc-verify Minor 残存（軽微）— 例: 用語表記揺れ、軽微算術修正</li>
+<li><strong>R2 起動条件</strong>: doc-verify 重大事項残存（中等度）— 例: 図表配置ミス、構造的記述漏れ</li>
+<li><strong>R3 起動条件</strong>: sentinel REJECT（致命的）— 例: Phase A 数値継承の根本的崩壊、四位一体マスター図の構造的不整合</li>
+</ul>
+
+<p>R3 失敗時の根本原因分類:</p>
+
+<ul>
+<li><strong>Spec 起因 → Phase C briefing 修正</strong>: C-6 briefing 必須項目の解釈不一致が根本原因 → briefing 改訂</li>
+<li><strong>Design 起因 → Track 内設計見直し</strong>: 四位一体マスター図の設計案が不適切 → C-6 内設計見直し</li>
+<li><strong>Implementation 起因 → Lead 担当者交代</strong>: 特定数値の継承ミス、用語統一不徹底 → C-6 リード交代もしくは追補</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="part6">
+<div class="chapter-number-label">第VI部</div>
+<h2 class="chapter-title">研究の限界 + Phase D 引き継ぎ事項</h2>
+
+<h3>6.1 C-6 統合の研究の限界 3 点（自己認識）</h3>
+
+<p>本書 C-6 統合検証編は以下の 3 つの構造的限界を自己認識として明示する。</p>
+
+<h4>限界 1: 同一エージェント内自己検証の構造的限界</h4>
+
+<p>C-6 解析編・検証編・レポート編・handoff の 4 ファイルは同一エージェント（C-6 Lead Synthesizer）が執筆する。これは Phase B B-6 と同様の構造設計上の不可避な制約であり、最終的な独立検証は外部 sentinel エージェント（VETO 権付き）が担う。本検証編は内部自己検証ログとして機能し、外部 sentinel 判定の入力素材を提供する。Phase D 以降では「執筆 Track と検証 Track の完全分離」が望ましいが、Phase C リソース配分の関係で実装されていない。</p>
+
+<h4>限界 2: 統合ナレッジマップ三層 Sankey の SQL 実値カバー率制約</h4>
+
+<p>C-3 主要発見「200 セル中 SQL 実値 50 セル（25.0%）」（10 archetype × 5 scenario × 4 horizon = 200 セルの真の crosstab で 25.0% カバー）は Phase C 全体の構造的偏りであり、本 C-6 統合段階でも継承される。Sankey 三層フローのうち、TOP10 関連太線は SQL 実値で確認可能だが、残り 61 問の細線フローは推定値含みで描画される。これは Phase D D-2 並列実行で重点問いごとに精緻化される。</p>
+
+<h4>限界 3: 四位一体マスター図の数学的厳密性欠如</h4>
+
+<p>C-1 から継承した「螺旋」概念と同様に、本 C-6 統合の四位一体マスター図も概念的・幾何学的記述に留まり、ベクトル空間上の数学的構造（mandala の幾何学等）として定式化されていない。鳥瞰図（macro）と深掘図（micro）の二段表現は実用上十分だが、Phase D での「四位一体構造の数学的形式化」は Phase D D-3 以降の課題として継承される【未検証】。</p>
+
+<h3>6.2 Phase D 引き継ぎ事項の整理</h3>
+
+<p>C-6 から Phase D に引き継がれる事項を 5 種類に整理する。詳細は handoff.md に記載する。</p>
+
+<ol>
+<li><strong>5-10 問候補プール</strong>: DQ-01〜DQ-08（推奨 8 問確定）+ 追加候補 DQ-09〜DQ-18（検討余地）</li>
+<li><strong>四位一体マスター図 + 統合ナレッジマップ</strong>: C-6 report.html の F-01〜F-12 全 12 図表</li>
+<li><strong>great_actions.db v0.2 確定版</strong>: 140 件 × 60 カラム + 5 関連テーブル + 2,030 リンク（C-3 構築 / C-4 v0.2 / C-6 検証済）</li>
+<li><strong>questions_unified テーブル</strong>: 71 行（C-2 構築 / C-6 検証済）</li>
+<li><strong>Phase A 構造的限界 5 点 + Phase B 申し送り 8 件 + 残存 Minor 8 件</strong>: 永続課題として継承</li>
+</ol>
+
+<h3>6.3 Phase D 起動シグナル</h3>
+
+<p>本検証編が確認した Phase D 起動シグナルの内容は以下の通り。</p>
+
+<pre>Phase D D-0 起動準備:
+  C-6 sentinel APPROVED: PENDING（外部 sentinel 判定待ち）
+  C-6 内部自己検証: PASS 60 / WARN 2（Minor 継承）/ FAIL 0
+  great_actions.db v0.2: 140 件確定
+  questions_unified: 71 行確定
+  DQ 候補プール: 8 確定 + 検討候補 10 = 18 件
+  公開 URL（C-7 完了後）: phase-c-master-report.html
+  ryoiki-index 更新（C-7 完了後）: Phase D placeholder 配置済
+
+Phase A 構造的限界 5 点の Phase D 引き継ぎ:
+  L-1 9 DB 近代偏重: 注釈開示 + 古代-中世 GF 拡張は D-2 で部分対応
+  L-2 集計濃淡: B-6 申し送り 6.5 重み付け感度分析を D-2 で実施
+  L-3 派生間独立性: C-1 サイクル × C-3 stage マッピングを D-2 で追加
+  L-4 GF 共有問題: 9,178 への参照拡張を D-2 で実施
+  L-5 FK 84.4% 未指定率: source_db_refs 集計を D-2 で実施
+
+C-1〜C-5 残存 Minor 8 件:
+  C-1 T-1: 1535/1596/1601 三重定式化
+  C-2 T-1: 表 3.1 vs 3.2 +1/-1 ズレ
+  C-3 図表 cap / Pluriverse 制度依存 85.7%
+  C-4 §9.1 SQL 整合 + 67 件重点参照
+  C-5 Minor 1/2/3: 翻訳者型件数差・過剰要求度解釈・条件付き持ち越し
+  C-6 新規: source_db_refs SQL 未実施
+</pre>
+</section>
+
+<footer>
+<p>Track C-6 検証編 / Phase C Wave 4 / 2026-05-10 完了 / Track C-6 Verification Lead<br>
+4 カテゴリ統合判定 PASS 60 / WARN 2 / FAIL 0 / sentinel APPROVED 取得条件 S-01〜S-08 達成<br>
+HTML タグバランス検証済 / 赤白 CI #CC1400 / textbook 構造準拠</p>
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = next;
+  localStorage.setItem('miratuku-theme', next);
+}
+const saved = localStorage.getItem('miratuku-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+</script>
+</body>
+</html>

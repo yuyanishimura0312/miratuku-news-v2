@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track C-6 レポート編 — ミラツク羅針盤統合像と Phase D 入力データ確定 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5; --accent:#121212; --accent-soft:#555555; --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,0.06); --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B; --border:#D9D9D9; --border-light:#EEEEEE; --highlight:#CC1400; --surface:#F7F7F5; --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif; --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif; }
+[data-theme="dark"] { --bg:#121212; --card:#1A1A1A; --card-hover:#222222; --accent:#E0E0E0; --accent-soft:#999999; --accent-warm:#FF4030; --accent-warm-soft:#FF6050; --accent-muted:rgba(255,64,48,0.10); --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A; --border:#333333; --border-light:#2A2A2A; --highlight:#FF4030; --surface:#1A1A1A; }
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:16px; scroll-behavior:smooth; -webkit-font-smoothing:antialiased; }
+body { font-family:var(--font-serif); color:var(--text); background:var(--bg); line-height:1.95; letter-spacing:0.025em; font-feature-settings:"palt"; min-height:100vh; transition:background 0.2s,color 0.2s; }
+a { color:var(--accent-warm); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.top-bar { background:var(--bg); border-top:3px solid var(--accent); border-bottom:1px solid var(--border); padding:0 24px; display:flex; align-items:center; justify-content:space-between; height:48px; position:sticky; top:0; z-index:100; }
+.top-bar-brand { font-family:var(--font); font-size:0.75rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); }
+.top-bar-brand span { color:var(--accent-warm); }
+.top-bar-actions { display:flex; align-items:center; gap:12px; }
+.back-link { font-family:var(--font); font-size:0.75rem; color:var(--text-muted); }
+.back-link:hover { color:var(--accent-warm); text-decoration:none; }
+.theme-toggle { background:none; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; padding:4px 10px; font-size:0.72rem; font-family:var(--font); letter-spacing:0.05em; }
+.theme-toggle:hover { border-color:var(--accent-warm); color:var(--accent-warm); }
+.book-layout { display:grid; grid-template-columns:240px 1fr; max-width:1200px; margin:0 auto; padding:0 24px; }
+.toc-sidebar { position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto; padding:40px 24px 40px 0; border-right:1px solid var(--border-light); }
+.toc-label { font-family:var(--font); font-size:0.65rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px; }
+.toc-list { list-style:none; display:flex; flex-direction:column; gap:2px; }
+.toc-list li a { display:flex; align-items:baseline; gap:8px; font-family:var(--font); font-size:0.75rem; color:var(--text-secondary); padding:5px 8px 5px 0; line-height:1.5; }
+.toc-list li a:hover { color:var(--accent-warm); text-decoration:none; }
+.toc-num { font-family:"SF Mono","Fira Code",monospace; font-size:0.65rem; color:var(--accent-warm); min-width:28px; flex-shrink:0; font-weight:700; }
+.book-main { padding:60px 0 100px 48px; max-width:760px; }
+.book-header { margin-bottom:64px; padding-bottom:48px; border-bottom:1px solid var(--border); }
+.book-db-tags { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+.db-tag { font-family:var(--font); font-size:0.65rem; font-weight:700; letter-spacing:0.08em; padding:3px 8px; border:1px solid var(--border); color:var(--text-muted); }
+.db-tag.primary { border-color:var(--accent-warm); color:var(--accent-warm); }
+.book-title { font-family:var(--font-serif); font-size:2rem; font-weight:700; line-height:1.4; margin-bottom:16px; }
+.book-subtitle { font-family:var(--font-serif); font-size:1.05rem; color:var(--text-secondary); font-weight:400; line-height:1.7; }
+.book-meta { margin-top:32px; font-family:var(--font); font-size:0.78rem; color:var(--text-muted); display:flex; gap:24px; flex-wrap:wrap; }
+.chapter-section { margin-bottom:80px; padding-bottom:60px; border-bottom:1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom:none; }
+.chapter-number-label { font-family:var(--font); font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent-warm); margin-bottom:12px; font-weight:700; }
+.chapter-title { font-family:var(--font-serif); font-size:1.7rem; line-height:1.5; font-weight:700; margin-bottom:28px; }
+h3 { font-family:var(--font-serif); font-size:1.2rem; line-height:1.6; font-weight:600; margin:48px 0 20px; color:var(--text); }
+h4 { font-family:var(--font); font-size:0.95rem; font-weight:700; margin:32px 0 12px; color:var(--accent-warm); }
+p { margin-bottom:24px; text-indent:1em; }
+p:first-of-type,.lead,.figure-caption,td p,th p { text-indent:0; }
+.lead { font-size:1.08rem; color:var(--text-secondary); margin-bottom:40px; font-weight:500; }
+ul,ol { margin:16px 0 28px 1.6em; }
+li { margin-bottom:8px; }
+strong { font-weight:700; color:var(--text); }
+em { font-style:normal; background:linear-gradient(transparent 60%,var(--accent-muted) 60%); padding:0 2px; }
+table { width:100%; border-collapse:collapse; margin:32px 0; font-family:var(--font); font-size:0.84rem; line-height:1.55; }
+th,td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--border-light); vertical-align:top; }
+th { background:var(--surface); font-weight:700; }
+.callout { background:var(--surface); border-left:3px solid var(--accent-warm); padding:20px 24px; margin:32px 0; font-family:var(--font); font-size:0.92rem; line-height:1.75; }
+.callout-title { font-weight:700; color:var(--accent-warm); margin-bottom:8px; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; }
+code { font-family:"SF Mono",Menlo,monospace; font-size:0.85em; background:var(--surface); padding:2px 6px; border-radius:3px; }
+pre { font-family:"SF Mono",Menlo,monospace; font-size:0.78rem; background:var(--surface); padding:16px 20px; margin:24px 0; line-height:1.5; overflow-x:auto; border:1px solid var(--border-light); white-space:pre; }
+.tag-est,.tag-int,.tag-unv { display:inline-block; font-family:var(--font); font-size:0.68rem; font-weight:700; letter-spacing:0.04em; padding:1px 5px; border-radius:2px; margin:0 3px; }
+.tag-est { background:rgba(110,44,44,0.12); color:#6E2C2C; }
+.tag-int { background:rgba(204,20,0,0.10); color:#B01200; }
+.tag-unv { background:rgba(107,107,107,0.15); color:#555555; }
+[data-theme="dark"] .tag-est { background:rgba(160,80,80,0.20); color:#C8A0A0; }
+[data-theme="dark"] .tag-int { background:rgba(255,64,48,0.18); color:#FF8070; }
+[data-theme="dark"] .tag-unv { background:rgba(170,170,170,0.18); color:#BBBBBB; }
+.figure-block { margin:40px 0; padding:28px 24px; background:var(--surface); border:1px solid var(--border-light); }
+.figure-caption { font-family:var(--font); font-size:0.78rem; color:var(--text-muted); margin-top:12px; line-height:1.6; }
+.figure-label { font-family:var(--font); font-size:0.7rem; font-weight:700; color:var(--accent-warm); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px; }
+.figure-svg { width:100%; max-width:720px; margin:0 auto; display:block; }
+.discovery-box { border:1px solid var(--accent-warm); background:var(--accent-muted); padding:20px 24px; margin:28px 0; }
+.discovery-box .discovery-num { font-family:var(--font); font-size:0.72rem; font-weight:700; letter-spacing:0.1em; color:var(--accent-warm); margin-bottom:4px; text-transform:uppercase; }
+.discovery-box .discovery-title { font-family:var(--font-serif); font-size:1.15rem; font-weight:700; color:var(--text); margin-bottom:12px; }
+footer { margin-top:80px; padding:40px 0; border-top:1px solid var(--border); font-family:var(--font); font-size:0.8rem; color:var(--text-muted); text-align:center; line-height:1.7; }
+@media (max-width:1000px) {
+  .book-layout { grid-template-columns:1fr; gap:24px; padding:0 16px; }
+  .toc-sidebar { position:static; height:auto; border-right:none; border-bottom:1px solid var(--border-light); padding:24px 0; }
+  .book-main { padding:24px 0 60px; }
+  .book-title { font-size:1.6rem; }
+  .chapter-title { font-size:1.35rem; }
+}
+@media print {
+  .top-bar,.toc-sidebar { display:none; }
+  body { font-size:11pt; }
+  .book-layout { grid-template-columns:1fr; }
+  .book-main { padding:0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>Phase C-6 レポート編</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="track-c6-synthesis-analysis.html">解析</a>
+<a class="back-link" href="track-c6-synthesis-verification.html">検証</a>
+<a class="back-link" href="../ryoiki-index.html">領域策定</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#part1"><span class="toc-num">序章</span>C-6 の位置づけと Phase C 全成果俯瞰</a></li>
+<li><a href="#part2"><span class="toc-num">第I部</span>四位一体マスター図（鳥瞰）</a></li>
+<li><a href="#part3"><span class="toc-num">第II部</span>C-1〜C-5 統合フロー</a></li>
+<li><a href="#part4"><span class="toc-num">第III部</span>71 問 × 140 偉業 数値統合</a></li>
+<li><a href="#part5"><span class="toc-num">第IV部</span>TOP10 中心軸 × 5 系譜 × 5 類型</a></li>
+<li><a href="#part6"><span class="toc-num">第V部</span>ミラツク羅針盤統合像</a></li>
+<li><a href="#part7"><span class="toc-num">第VI部</span>Phase D 入力データ確定</a></li>
+<li><a href="#part8"><span class="toc-num">第VII部</span>研究の限界 3 点と結語</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">PHASE C / TRACK C-6</span>
+<span class="db-tag">レポート編</span>
+<span class="db-tag">ミラツク羅針盤統合像</span>
+</div>
+<h1 class="book-title">Track C-6 レポート編<br>ミラツク羅針盤統合像と Phase D 入力データ確定</h1>
+<p class="book-subtitle">Phase C 全 5 トラック（C-1 サイクル螺旋・C-2 問い統合・C-3 偉業構造化・C-4 zone マッピング・C-5 担い手特性）の成果を「ミラツク羅針盤」として収束させ、Phase D（deep-knowledge 統合）の起動条件を確定する。本書は対外公開を念頭に置いた統合読本として執筆される。</p>
+<div class="book-meta">
+<span>作成: 2026-05-10</span>
+<span>担当: Track C-6 Lead Synthesizer</span>
+<span>本文約 23,500 字</span>
+<span>図表 10 点（F-01〜F-10）</span>
+</div>
+</header>
+
+<section class="chapter-section" id="part1">
+<div class="chapter-number-label">序章</div>
+<h2 class="chapter-title">C-6 の位置づけと Phase C 全成果俯瞰</h2>
+
+<p class="lead">本書 Track C-6 レポート編は、Phase C「ミラツクが向き合うべき領域の確定」全 7 トラックの統合読本である。解析編が方法論的構造解析、検証編が品質ゲート判定であるのに対し、本レポート編は Phase C が辿り着いた「ミラツク羅針盤」の全体像を、対外公開可能な水準で叙述することを使命とする。</p>
+
+<p>Phase C は 7 トラック構成で、C-1 から C-5 が並列・順次で五本の柱を構築し、C-6 がその五本を「サイクル × 問い × 偉業 × 担い手」の四位一体として収束させ、C-7 が公開作業を担う。本レポート編は C-6 単独トラックの三姉妹の最終巻として、解析編で読み解いた構造と、検証編で確認した品質を踏まえつつ、ミラツクが今後 75 年に向けて手にすることになる「読み取り装置」の輪郭を提示する。</p>
+
+<h3>0.1 Phase C 全成果の俯瞰</h3>
+
+<p>Phase C は Phase B が空間的に確定した「71 独立 ID + 926 派生 = 997 単位」の問いの全体像に対し、五つの軸を加える役割を担った。第一に時間軸（C-1）、第二に問いの統合台帳（C-2）、第三に行為としての偉業（C-3）、第四に実装-期待のギャップを示す zone（C-4）、第五に担い手の心理・行動・領域・専門の四層（C-5）である。これら五軸は相互に独立な観測角度を持ちながら、ミラツク優先課題 TOP10 を共通アンカーとして統合される。</p>
+
+<table>
+<thead><tr><th>Track</th><th>主軸成果物</th><th>核心数値</th><th>状態</th></tr></thead>
+<tbody>
+<tr><td>C-1 サイクル螺旋</td><td>仮説D「双子峰プラトー螺旋モデル」+ 4 ホライズン投影</td><td>CTI v2 産業 0.764 / AI 0.768、AI/産業 1.005 倍、6 スケール 2026 同期点</td><td>APPROVED</td></tr>
+<tr><td>C-2 問い統合</td><td>71 問単一台帳 + 4 層構造（メタ 4 / 規範 33 / 実装 22 / 装置 12）</td><td>71 独立 ID、重複 11 ペア、wisdom 紐付け 21 問（29.6%）</td><td>APPROVED</td></tr>
+<tr><td>C-3 偉業構造化</td><td>great_actions.db v0.1（140 件 × 5 テーブル × 29 インデックス）</td><td>過去 60 + 現代 50 + 未来 30、Mediator + Introvert Thinker 47.9%</td><td>APPROVED</td></tr>
+<tr><td>C-4 zone マッピング</td><td>great_actions.db v0.2（12 カラム拡張 + 2 新規テーブル + 2,030 リンク）</td><td>warning 17 + opportunity 50 = 67 件、maturity 5 ゼロ件</td><td>APPROVED</td></tr>
+<tr><td>C-5 担い手特性</td><td>4 軸構造化 + 第 5 類型「翻訳者型」独立化</td><td>翻訳者型 19/140 件（13.6%）、Mediator 過剰要求度 4.65 倍（TOP10 9.0 倍）</td><td>APPROVED（条件付き Phase D 持ち越し）</td></tr>
+</tbody>
+</table>
+
+<p>5 トラック全体で sentinel APPROVED 5/5 を達成し、Critical 残存 0 件・Major 残存 0 件・Minor 残存 8 件はすべて C-6 段階で「記録のみ継承」または「Phase D 引き継ぎ」に分類されている。本レポート編はこの五本の柱の上に、ミラツク独自の統合フレームワークである「四位一体マスター図」と「ミラツク羅針盤」を提示する。</p>
+
+<h3>0.2 本書の構成と読み方</h3>
+
+<p>本書は序章を含めて 8 章で構成される。第 I 部に四位一体マスター図の鳥瞰、第 II 部に C-1〜C-5 の統合フロー、第 III 部に 71 問 × 140 偉業の数値統合、第 IV 部に TOP10 中心軸を取り囲む 5 系譜と担い手 5 類型、第 V 部にミラツク羅針盤の統合像、第 VI 部に Phase D 入力データ確定（DQ-01〜DQ-08 + D-1 推奨 8 問）、第 VII 部に研究の限界 3 点と結語、を配置する。図表は F-01 から F-10 までの 10 点で、SVG 図 2 点と数値表 8 点の組合せとした。</p>
+</section>
+
+<section class="chapter-section" id="part2">
+<div class="chapter-number-label">第I部</div>
+<h2 class="chapter-title">四位一体マスター図 — 鳥瞰としての中心軸 + 四象限放射</h2>
+
+<p class="lead">Phase C の核心成果は「サイクル × 問い × 偉業 × 担い手」の四位一体構造である。本部はその鳥瞰図を提示する。中心軸はミラツク優先課題 TOP10、四象限は時間（C-1 北）・問い（C-2 東）・偉業（C-3+C-4 南）・担い手（C-5 西）であり、各象限が中心軸から放射状に展開する構造を持つ。</p>
+
+<h3>1.1 マスター図の基本構造</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-01 四位一体マスター図（鳥瞰）</div>
+<svg class="figure-svg" viewBox="0 0 720 540" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="720" height="540" fill="none"/>
+<line x1="360" y1="40" x2="360" y2="500" stroke="#D9D9D9" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="40" y1="270" x2="680" y2="270" stroke="#D9D9D9" stroke-width="1" stroke-dasharray="3 3"/>
+<circle cx="360" cy="270" r="78" fill="#FFFFFF" stroke="#CC1400" stroke-width="2"/>
+<text x="360" y="262" text-anchor="middle" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#CC1400">中心軸</text>
+<text x="360" y="282" text-anchor="middle" font-family="Noto Sans JP" font-size="12" fill="#121212">ミラツク優先 TOP10</text>
+<text x="360" y="298" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#555555">G-M04 / G-N09 / G-M01 ...</text>
+<text x="360" y="60" text-anchor="middle" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#121212">北象限 — 時間（C-1）</text>
+<text x="360" y="78" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#555555">サイクル A/B/C × 4 ホライズン</text>
+<text x="360" y="96" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#555555">同期点 4 つ（2030 / 2050 / 2070 / 2095）</text>
+<text x="660" y="270" text-anchor="end" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#121212">東象限 — 問い（C-2）</text>
+<text x="660" y="288" text-anchor="end" font-family="Noto Sans JP" font-size="11" fill="#555555">71 問単一台帳</text>
+<text x="660" y="304" text-anchor="end" font-family="Noto Sans JP" font-size="11" fill="#555555">4 層構造（メタ/規範/実装/装置）</text>
+<text x="360" y="492" text-anchor="middle" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#121212">南象限 — 偉業（C-3+C-4）</text>
+<text x="360" y="510" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#555555">140 件 + warning 17 + opportunity 50</text>
+<text x="60" y="270" text-anchor="start" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#121212">西象限 — 担い手（C-5）</text>
+<text x="60" y="288" text-anchor="start" font-family="Noto Sans JP" font-size="11" fill="#555555">4 軸構造 + 第 5 類型翻訳者型</text>
+<text x="60" y="304" text-anchor="start" font-family="Noto Sans JP" font-size="11" fill="#555555">5 担い手類型 × 4 段階運用</text>
+<line x1="360" y1="192" x2="360" y2="120" stroke="#CC1400" stroke-width="1.2"/>
+<line x1="438" y1="270" x2="540" y2="270" stroke="#CC1400" stroke-width="1.2"/>
+<line x1="360" y1="348" x2="360" y2="450" stroke="#CC1400" stroke-width="1.2"/>
+<line x1="282" y1="270" x2="180" y2="270" stroke="#CC1400" stroke-width="1.2"/>
+<text x="360" y="178" text-anchor="middle" font-family="SF Mono" font-size="9" fill="#6B6B6B">↑ 時間軸放射</text>
+<text x="496" y="262" text-anchor="middle" font-family="SF Mono" font-size="9" fill="#6B6B6B">→ 問い軸放射</text>
+<text x="360" y="368" text-anchor="middle" font-family="SF Mono" font-size="9" fill="#6B6B6B">↓ 行為軸放射</text>
+<text x="220" y="262" text-anchor="middle" font-family="SF Mono" font-size="9" fill="#6B6B6B">← 担い手軸放射</text>
+</svg>
+<p class="figure-caption">中心軸はミラツク優先 TOP10。四象限は時間（北）・問い（東）・行為（南）・担い手（西）の 4 軸として中心から放射する。各放射線上に C-1〜C-5 の主要成果が配置され、深掘図（micro）レベルで C-4 の zone 属性が南象限内の属性として表現される。OECD/UN/WEF/McKinsey 等の既存フォーサイトに類例のないミラツク独自の統合フレームワーク【解釈】。</p>
+</div>
+
+<h3>1.2 四象限の役割分担</h3>
+
+<p>北象限（時間）は C-1 の双子峰プラトー螺旋モデルに基づき、サイクル A 認知転換（280-310 年）・サイクル B 制度興亡（150-300 年）・サイクル C プラトー（250 年）の三重サイクルを 4 ホライズン（near 2026-2035 / mid 2036-2055 / far 2056-2080 / very-far 2081-2100）に投影する。各 TOP10 課題はこの放射線上で「主強み域ホライズン」と「螺旋同期点との位置関係」を持つ。</p>
+
+<p>東象限（問い）は C-2 の 71 問単一台帳と 4 層構造（メタ 4 / 規範 33 / 実装 22 / 装置 12）に基づき、各 TOP10 課題が属する層・派生継承関係・wisdom 紐付け状況を持つ。中心軸 TOP10 と 71 問の関係は、TOP10 が「規範重要性 × 装置観測薄 × wisdom 厚 × Mサイン階層」の 4 軸再評価で抽出された 10 件であることに留意されたい。</p>
+
+<p>南象限（行為）は C-3 の great_actions.db 140 件 + C-4 の zone 属性 12 カラムを統合する。各 TOP10 課題は対応する偉業群（過去アナログ 60 件・現代登場中 50 件・期待される未来 30 件）を持ち、warning フラグ 17 件 + opportunity フラグ 50 件 = 67 件が「ミラツクの介入優先領域」として南象限内に明示される。</p>
+
+<p>西象限（担い手）は C-5 の 4 軸構造（心理 19 能力次元 × 行動 10+1 アーキタイプ × 領域 CTL-1 6 軸 × 専門 学術 5 領域）と 5 担い手類型 × 4 段階運用に基づく。各 TOP10 課題は「主担い手 + 副担い手」のアーキタイプ組合せを持ち、第 5 類型「翻訳者型」が TOP10 5 問で要求される。</p>
+</section>
+
+<section class="chapter-section" id="part3">
+<div class="chapter-number-label">第II部</div>
+<h2 class="chapter-title">C-1〜C-5 統合フロー — 五本の柱の流れ</h2>
+
+<p class="lead">C-1 から C-5 までの五本のトラックは並列・順次で起動されたが、論理的な流れとしては「時間軸の確立 → 問いの台帳化 → 行為としての偉業構造化 → 実装-期待ギャップの可視化 → 担い手特性の定義」という連鎖を辿った。本部はこの流れを表で再現し、各トラックが次のトラックに何を引き渡したかを明示する。</p>
+
+<h3>2.1 C-1 → C-2 → C-3 → C-4 → C-5 の論理的連鎖</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-02 C-1〜C-5 統合フロー（連結図）</div>
+<table>
+<thead><tr><th>段階</th><th>Track</th><th>主要産物</th><th>次トラックへの引渡し</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>C-1 サイクル螺旋</td><td>4 ホライズン共通スパン + 同期点 4 つ + 6 スケール 2026 同期</td><td>時間軸（horizon 配分・サイクル位相）を全トラックに供給</td></tr>
+<tr><td>2</td><td>C-2 問い統合</td><td>71 問単一台帳 + 4 層構造 + Phase C 観点 TOP10</td><td>問いの正本台帳と TOP10 を後続全トラックに供給</td></tr>
+<tr><td>3</td><td>C-3 偉業構造化</td><td>great_actions.db v0.1（140 件 × 60 カラム）+ 5 系譜接続</td><td>行為軸の台帳と Mediator + Introvert Thinker 構造シフト発見を C-4/C-5 に供給</td></tr>
+<tr><td>4</td><td>C-4 zone マッピング</td><td>great_actions.db v0.2（12 カラム拡張 + 2,030 リンク）+ warning 17 / opportunity 50</td><td>実装-期待差分マップを C-5/C-6 と Phase D に供給</td></tr>
+<tr><td>5</td><td>C-5 担い手特性</td><td>4 軸構造 + 第 5 類型「翻訳者型」+ 5 担い手類型</td><td>担い手レイヤーを C-6 統合に供給</td></tr>
+<tr><td>6</td><td>C-6 統合検証</td><td>四位一体マスター図 + ミラツク羅針盤 + Phase D 入力確定</td><td>Phase D 起動条件を確定</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">C-1 が時間軸の枠組みを提供し、C-2 が問いの正本台帳を確立、C-3 が行為軸を構造化、C-4 がその差分を可視化、C-5 が担い手の特性を定義する。C-6 は五本の柱を四位一体として収束させ、Phase D 起動条件を確定する。</p>
+</div>
+
+<h3>2.2 主要発見 5 点の連鎖</h3>
+
+<p>5 トラックの主要発見は独立に提示されたが、C-6 統合の観点から再配列すると、五点が一本の論理鎖を形成することが見えてくる。C-1 発見 1「同期点 4 つの等間隔配置」が時間軸の骨格を与え、C-2 発見 2「規範主層 33 問 vs 装置主層 12 問の非対称」が問いの構造を示し、C-3 発見 1「Mediator + Introvert Thinker 47.9%」が行為の主役交代を示し、C-4 発見 3「warning : opportunity = 17:50」が実装-期待ギャップの楽観的構造観を示し、C-5 発見 1「Mediator 過剰要求度 4.65 倍 / TOP10 9.0 倍」が担い手の構造的シフトを示す。これら五点が示すのは、<em>物語転換期において、規範主層の問いに対し、Mediator + Introvert Thinker + 翻訳者型の少数派担い手が、未開拓の opportunity 領域を中心に行為する</em>という統合像である。</p>
+
+<table>
+<thead><tr><th>Track</th><th>主要発見（核心一文）</th></tr></thead>
+<tbody>
+<tr><td>C-1</td><td>真M「物語転換期」螺旋と「第四変容期」螺旋の同期点 4 つ（Q-N04 / Q-M01 / Q-F03 / Q-V07）が 2030 / 2050 / 2070 / 2095 のほぼ等間隔で配置される</td></tr>
+<tr><td>C-2</td><td>71 問の主層分布（メタ 4 / 規範 33 / 実装 22 / 装置 12）は規範主層 46.5% vs 装置主層 16.9% の非対称を示す</td></tr>
+<tr><td>C-3</td><td>140 偉業の archetype 分布で Mediator (39) + Introvert Thinker (28) = 47.9% が、古典英雄像 Warrior (4) + Leader (2) = 4.3% の約 11 倍に達する</td></tr>
+<tr><td>C-4</td><td>warning 17 件 vs opportunity 50 件 = 1:2.94 の比率は「方向違いリスクより未開拓領域に注目する」楽観的構造観を実データで支持する</td></tr>
+<tr><td>C-5</td><td>Mediator の PST 人口比に対する過剰要求度は全 140 件で 4.65 倍、TOP10 限定では 9.0 倍に達し、英雄像の構造的転換を定量化する</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="part4">
+<div class="chapter-number-label">第III部</div>
+<h2 class="chapter-title">71 問 × 140 偉業 数値統合 — 中心軸を取り巻く実数</h2>
+
+<p class="lead">本部は中心軸 TOP10 を取り囲む 71 問と 140 偉業を、横断的に数値統合する。読者が後続の章で「ミラツク羅針盤」を読み解く際の基礎数値表として機能することを意図した。</p>
+
+<h3>3.1 71 問単一台帳の主要分布</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-03 71 問単一台帳の三軸分布</div>
+<table>
+<thead><tr><th>軸</th><th>区分</th><th>件数</th><th>比率</th></tr></thead>
+<tbody>
+<tr><td rowspan="4">由来</td><td>B-1 由来（Q-N01 〜 Q-V07）</td><td>41</td><td>57.7%</td></tr>
+<tr><td>B-3 由来（G-N01 〜 G-V03）</td><td>30</td><td>42.3%</td></tr>
+<tr><td>うち重複ペア（B-1 ↔ B-3、inherited_from で明示）</td><td>11</td><td>15.5%</td></tr>
+<tr><td>うちメタ問い独立扱い</td><td>4</td><td>5.6%</td></tr>
+<tr><td rowspan="4">ホライズン</td><td>near 2026-2035</td><td>25</td><td>35.2%</td></tr>
+<tr><td>mid 2036-2055</td><td>23</td><td>32.4%</td></tr>
+<tr><td>far 2056-2080</td><td>13</td><td>18.3%</td></tr>
+<tr><td>very-far 2081-2100</td><td>10</td><td>14.1%</td></tr>
+<tr><td rowspan="4">4 層</td><td>メタ層</td><td>4</td><td>5.6%</td></tr>
+<tr><td>規範層</td><td>33</td><td>46.5%</td></tr>
+<tr><td>実装層</td><td>22</td><td>31.0%</td></tr>
+<tr><td>装置層</td><td>12</td><td>16.9%</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">71 独立 ID の三軸分布。由来軸では B-1 41 + B-3 30 = 71、重複 11 ペアと メタ 4 件を独立扱いとした。ホライズン軸では near + mid = 67.6% で前半 30 年に集中。4 層軸では規範主層が 46.5% で最多、装置主層が 16.9% で最少。</p>
+</div>
+
+<h3>3.2 great_actions.db v0.2 の主要分布</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-04 140 偉業の四軸分布</div>
+<table>
+<thead><tr><th>軸</th><th>主要区分（上位 5）</th><th>件数</th><th>比率</th></tr></thead>
+<tbody>
+<tr><td rowspan="5">archetype</td><td>arch_mediator</td><td>39</td><td>27.9%</td></tr>
+<tr><td>arch_introvert_thinker</td><td>28</td><td>20.0%</td></tr>
+<tr><td>arch_creator</td><td>23</td><td>16.4%</td></tr>
+<tr><td>arch_steady</td><td>17</td><td>12.1%</td></tr>
+<tr><td>arch_caregiver</td><td>16</td><td>11.4%</td></tr>
+<tr><td rowspan="5">scenario</td><td>Care</td><td>66</td><td>47.1%</td></tr>
+<tr><td>Pluriverse</td><td>42</td><td>30.0%</td></tr>
+<tr><td>Slow Right</td><td>15</td><td>10.7%</td></tr>
+<tr><td>Techno</td><td>10</td><td>7.1%</td></tr>
+<tr><td>self-reflexive</td><td>5</td><td>3.6%</td></tr>
+<tr><td rowspan="4">scope_horizon</td><td>near</td><td>109</td><td>77.9%</td></tr>
+<tr><td>mid</td><td>17</td><td>12.1%</td></tr>
+<tr><td>far</td><td>9</td><td>6.4%</td></tr>
+<tr><td>very-far</td><td>5</td><td>3.6%</td></tr>
+<tr><td rowspan="6">c4_status_override</td><td>happening</td><td>50</td><td>35.7%</td></tr>
+<tr><td>opportunity</td><td>50</td><td>35.7%</td></tr>
+<tr><td>warning</td><td>17</td><td>12.1%</td></tr>
+<tr><td>expected</td><td>13</td><td>9.3%</td></tr>
+<tr><td>emerging</td><td>6</td><td>4.3%</td></tr>
+<tr><td>speculative</td><td>4</td><td>2.9%</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">140 偉業の四軸分布。archetype 軸では Mediator + Introvert Thinker + Creator = 64.3% の三型集中。scenario 軸では Care + Pluriverse = 77.1% の二大シナリオ。scope_horizon 軸では near が 77.9% で圧倒的優位、これは現代の偉業観測の構造的偏りを示す。c4_status_override では happening と opportunity が同数 50 件で並ぶ。</p>
+</div>
+
+<h3>3.3 戦略的空白 13 問への偉業対応</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-05 戦略的空白 13 問への対応偉業数</div>
+<table>
+<thead><tr><th>順位</th><th>戦略的空白問い</th><th>対応偉業数</th><th>主担い手アーキタイプ</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>G-M04 世代間正義の憲法化</td><td>15</td><td>Mediator + Introvert Thinker + Steady</td></tr>
+<tr><td>2</td><td>G-N09 先住民知識主権</td><td>14</td><td>Caregiver + Mediator + 翻訳者型</td></tr>
+<tr><td>3</td><td>G-N07 非西洋認識論</td><td>13</td><td>Introvert Thinker + Mediator + 翻訳者型</td></tr>
+<tr><td>4</td><td>G-M01 GDP 代替ケア指標</td><td>11</td><td>Creator + Steady + Mediator</td></tr>
+<tr><td>5</td><td>G-V03 自己言及メタ</td><td>6</td><td>Introvert Thinker + Mediator + 翻訳者型</td></tr>
+<tr><td>6</td><td>G-F01 Pluriverse cosmology</td><td>6</td><td>Introvert Thinker + 翻訳者型</td></tr>
+<tr><td>7</td><td>G-M07 Slow Right 時間</td><td>5</td><td>Caregiver + Steady</td></tr>
+<tr><td>8</td><td>G-M03 上場基準ケア</td><td>4</td><td>Creator + Mediator</td></tr>
+<tr><td>9</td><td>G-M05 未来世代代表</td><td>4</td><td>Mediator + Introvert Thinker</td></tr>
+<tr><td>10</td><td>G-M10 大学院教育多元化</td><td>4</td><td>Mediator + 翻訳者型</td></tr>
+<tr><td>11</td><td>G-N08 非西洋方法論</td><td>3</td><td>Introvert Thinker + 翻訳者型</td></tr>
+<tr><td>12</td><td>G-M06 遅延しない権利</td><td>3</td><td>Caregiver + Mediator</td></tr>
+<tr><td>13</td><td>G-F03 多元時間性 WHO/ISO</td><td>3</td><td>Mediator + Steady</td></tr>
+<tr><td colspan="2"><strong>合計</strong>（重複カウント）</td><td><strong>91 件</strong></td><td>平均 7.0 件/問・全 13 問完全対応</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">戦略的空白 13 問への偉業対応数。Mediator + Introvert Thinker + 翻訳者型の組合せが繰り返し主担い手として登場する。これは C-3 発見 1 と C-5 発見 1 を行為レベルで再確認する構造である。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="part5">
+<div class="chapter-number-label">第IV部</div>
+<h2 class="chapter-title">TOP10 中心軸 × 5 系譜 × 5 担い手類型</h2>
+
+<p class="lead">本部は中心軸であるミラツク優先 TOP10、その骨格を成す 5 系譜（場所性 / 世代間正義 / 先住民主権 / GDP 代替 / 非西洋認識論）、そして担い手の 5 類型（制度翻訳者型 / ケア設計型 / 経済再設計型 / 認識論翻訳型 / 自己言及運営型）の三層構造を統合表として提示する。</p>
+
+<h3>4.1 ミラツク優先 TOP10（C-2 観点 4 軸再ランキング）</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-06 ミラツク優先 TOP10 × 担い手類型</div>
+<table>
+<thead><tr><th>順位</th><th>問い ID</th><th>主題</th><th>主担い手アーキタイプ</th><th>所属担い手類型</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Q-N04</td><td>場所性回帰の制度化</td><td>Mediator + Caregiver + Steady</td><td>制度翻訳者型</td></tr>
+<tr><td>2</td><td>G-M04</td><td>世代間正義の憲法化</td><td>Mediator + Introvert Thinker + Steady</td><td>制度翻訳者型</td></tr>
+<tr><td>3</td><td>Q-V07</td><td>pluriverse cosmology 実装</td><td>Introvert Thinker + 翻訳者型</td><td>認識論翻訳型</td></tr>
+<tr><td>4</td><td>G-N09</td><td>先住民知識主権</td><td>Caregiver + Mediator + 翻訳者型</td><td>ケア設計型</td></tr>
+<tr><td>5</td><td>Q-V03</td><td>神話的予見と長期記憶</td><td>Introvert Thinker + Mediator</td><td>認識論翻訳型</td></tr>
+<tr><td>6</td><td>Q-M07</td><td>多元的人格の社会</td><td>Mediator + Creator + 翻訳者型</td><td>制度翻訳者型</td></tr>
+<tr><td>7</td><td>G-V03</td><td>Phase B 自己検証メタ</td><td>Introvert Thinker + Mediator + 翻訳者型</td><td>自己言及運営型</td></tr>
+<tr><td>8</td><td>G-M01</td><td>GDP 代替ケア指標</td><td>Creator + Steady + Mediator</td><td>経済再設計型</td></tr>
+<tr><td>9</td><td>Q-V01</td><td>サイクル A 前期段階組織形態</td><td>Introvert Thinker + Mediator</td><td>認識論翻訳型</td></tr>
+<tr><td>10</td><td>G-N07/N08</td><td>非西洋認識論の方法論化</td><td>Introvert Thinker + Mediator + 翻訳者型</td><td>認識論翻訳型</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">TOP10 集計では Mediator が 9 回・Introvert Thinker が 8 回・翻訳者型が 5 回・Caregiver が 3 回・Steady が 4 回・Creator が 3 回登場する。Warrior + Explorer + Craftsman は 0 回で、英雄像の構造的転換が TOP10 においてさらに鋭く現れる。</p>
+</div>
+
+<h3>4.2 5 系譜の過去 → 現代 → 未来 接続</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-07 5 系譜の時系列接続</div>
+<table>
+<thead><tr><th>系譜</th><th>過去アナログ</th><th>現代登場中</th><th>期待される未来</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>系譜 1</strong><br>場所性回帰<br>(Q-N04 起点)</td>
+<td>中世自治都市・ガンディーの郷土自治・ジェイン・ジェイコブズ（GA-017/023/046）</td>
+<td>トランジションタウン・リジェネラティブ農業・コミュニティランドトラスト（GA-082-087/106/110）</td>
+<td>主権分散ガバナンス・場所性会計の制度化（GA-128）</td>
+</tr>
+<tr>
+<td><strong>系譜 2</strong><br>世代間正義の憲法化<br>(G-M04 起点)</td>
+<td>イロコイ七世代律 ほか（GA-001/020/022/029/043/050）</td>
+<td>ウェールズ未来世代福祉法 2015・フィンランド未来委員会 ほか（GA-061/062/088/096/098/099）</td>
+<td>世代間正義憲法明文化（GA-122/123/138）</td>
+</tr>
+<tr>
+<td><strong>系譜 3</strong><br>先住民知識主権<br>(G-N09 起点)</td>
+<td>UNDRIP 2007 ほか（GA-014/016/026/027/028）</td>
+<td>ワンガヌイ川法人格 2017・エクアドル自然の権利憲法 2008 ほか（GA-073-076/078）</td>
+<td>TK 主権の国際標準化（GA-116/117/119）</td>
+</tr>
+<tr>
+<td><strong>系譜 4</strong><br>GDP 代替ケア指標<br>(G-M01 起点)</td>
+<td>HDI 1990 ほか（GA-005/018/030/051/052）</td>
+<td>ニュージーランド Wellbeing Budget 2019 ほか（GA-063-065/066/068/069/097/107）</td>
+<td>GDP 代替ケア指標の OECD 標準化（GA-120/121）</td>
+</tr>
+<tr>
+<td><strong>系譜 5</strong><br>非西洋認識論<br>(G-N07/N08 起点)</td>
+<td>京都学派・ポストコロニアル理論 ほか（GA-002/024/025/036）</td>
+<td>pluriverse 学術ネットワーク ほか（GA-071/072/079/080）</td>
+<td>国連レベル承認（GA-111-115）</td>
+</tr>
+</tbody>
+</table>
+<p class="figure-caption">5 系譜はそれぞれ過去アナログから現代登場中の試行を経て、期待される未来の制度化に至る三段階モデルで構造化されている。great_actions.db v0.1 の 140 件のうち、これら 5 系譜が骨格を成し、合計約 70 件をカバーする。</p>
+</div>
+
+<h3>4.3 担い手 5 類型 × 4 段階運用</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-08 担い手 5 類型と中核 TOP10 課題</div>
+<table>
+<thead><tr><th>類型</th><th>アーキタイプ組合せ</th><th>担う TOP10 課題</th><th>強み領域 CTL-1</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>1. 制度翻訳者型</strong></td>
+<td>Mediator + 翻訳者型</td>
+<td>G-M04・Q-N04・Q-M07・G-M02</td>
+<td>CTL-V + CTL-G</td>
+</tr>
+<tr>
+<td><strong>2. ケア設計型</strong></td>
+<td>Caregiver + Mediator + 翻訳者型</td>
+<td>G-N12・G-N10・G-N11・G-N09</td>
+<td>CTL-S + CTL-V</td>
+</tr>
+<tr>
+<td><strong>3. 経済再設計型</strong></td>
+<td>Creator + Steady + Mediator</td>
+<td>G-M01・G-N11・G-F02</td>
+<td>CTL-Eco + CTL-V</td>
+</tr>
+<tr>
+<td><strong>4. 認識論翻訳型</strong></td>
+<td>Introvert Thinker + 翻訳者型</td>
+<td>G-N07/N08・Q-V07・Q-V03・Q-V01</td>
+<td>CTL-V + CTL-S</td>
+</tr>
+<tr>
+<td><strong>5. 自己言及運営型</strong></td>
+<td>Introvert Thinker + Mediator + 翻訳者型</td>
+<td>G-V03・ミラツク後継組織</td>
+<td>CTL-V</td>
+</tr>
+</tbody>
+</table>
+<p class="figure-caption">5 担い手類型は TOP10 課題の主担い手として相互補完的に配置される。第 5 類型「自己言及運営型」はミラツク後継組織の中核担い手で、Translational Editor 型ワークフローの後継運用者として位置づけられる。4 段階運用（見出す → 育てる → 配置する → 観察し続ける）は Phase D 人材戦略セクションの基本記述形式となる。</p>
+</div>
+
+<p>5 担い手類型の運用は「4 段階運用」として整理される。第一段階「見出す」では JPMS DB v2 の 832 校・36,943 件関係者の声を素材として、4 軸プロファイルの早期識別を行う。第二段階「育てる」では Era Talents DB の 19 能力次元と PST DB の 10+1 アーキタイプを参照し、不足能力の段階的補強を行う。第三段階「配置する」では great_actions.db の 5 系譜上の現代偉業（50 件）に対応させて配置する。第四段階「観察し続ける」では JPMS 5 数理モデル（MLM/SEM/IRT/LCA/GCM）を運用し、長期軌道を追跡する。これら 4 段階は単線的ではなく、循環的に運用されることが想定される。</p>
+
+<h3>4.4 中心軸 × 四象限のクロス統合</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-09 TOP10 × 四象限属性のクロス表（抜粋）</div>
+<table>
+<thead><tr><th>順位</th><th>問い</th><th>北 時間（主強み域）</th><th>東 問い（4 層）</th><th>南 行為（zone）</th><th>西 担い手</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Q-N04</td><td>near 主強み域 + 同期点</td><td>規範主層</td><td>warning 13 + happening 多数</td><td>制度翻訳者型</td></tr>
+<tr><td>2</td><td>G-M04</td><td>mid 主強み域 + 同期点近接</td><td>規範主層</td><td>opportunity 15</td><td>制度翻訳者型</td></tr>
+<tr><td>3</td><td>Q-V07</td><td>very-far 主強み域 + 同期点</td><td>規範主層</td><td>expected + speculative 中心</td><td>認識論翻訳型</td></tr>
+<tr><td>4</td><td>G-N09</td><td>near + mid 横断</td><td>規範主層</td><td>opportunity 14 + happening 数件</td><td>ケア設計型</td></tr>
+<tr><td>5</td><td>Q-V03</td><td>very-far 主強み域</td><td>メタ層</td><td>expected 中心</td><td>認識論翻訳型</td></tr>
+<tr><td>6</td><td>Q-M07</td><td>mid 主強み域</td><td>規範主層</td><td>emerging + opportunity</td><td>制度翻訳者型</td></tr>
+<tr><td>7</td><td>G-V03</td><td>全ホライズン横断</td><td>メタ層</td><td>opportunity 6（うち self-reflexive 5）</td><td>自己言及運営型</td></tr>
+<tr><td>8</td><td>G-M01</td><td>near + mid</td><td>規範主層</td><td>happening 多数 + opportunity 11</td><td>経済再設計型</td></tr>
+<tr><td>9</td><td>Q-V01</td><td>very-far 主強み域 + 同期点</td><td>規範主層</td><td>speculative 中心</td><td>認識論翻訳型</td></tr>
+<tr><td>10</td><td>G-N07/N08</td><td>mid 主強み域</td><td>規範主層</td><td>opportunity 16</td><td>認識論翻訳型</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">中心軸 TOP10 × 四象限属性のクロス表。10 課題のうち 8 課題が規範主層に属し、Memo 4 とメタ層 2 の重複は TOP10 がいずれもメタ性を帯びることを示す。担い手類型では制度翻訳者型 3 + 認識論翻訳型 4 + ケア設計型 1 + 経済再設計型 1 + 自己言及運営型 1 という配分で、認識論翻訳型と制度翻訳者型が TOP10 の主役を成す。</p>
+</div>
+
+<div class="discovery-box">
+<div class="discovery-num">統合発見 A</div>
+<div class="discovery-title">TOP10 規範集中 × 担い手翻訳者型集中の二重構造</div>
+<p>TOP10 のうち規範主層が 8 課題（80%）を占め、同時に主担い手として翻訳者型が 5 課題で要求される。これは「規範を時代に翻訳する役割」がミラツク優先課題群の中核機能であることを示す。Phase B B-5 主要発見 5「Mサイン強接続 ⇔ 装置応答薄」の構造が、行為軸（C-3）と担い手軸（C-5）の両方で再確認される結果である【解釈】。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="part6">
+<div class="chapter-number-label">第V部</div>
+<h2 class="chapter-title">ミラツク羅針盤統合像</h2>
+
+<p class="lead">本部は四位一体マスター図を「読み取り装置」として運用する際の統合像、すなわちミラツク羅針盤を提示する。羅針盤は「方位を示す道具」であり、未来を予測する道具ではない。本書が提示する羅針盤は、ミラツクが今後 75 年（2026-2100）にわたって判断を下す際の参照点として機能することを意図する。</p>
+
+<h3>5.1 羅針盤の基本構造</h3>
+
+<p>ミラツク羅針盤は、四位一体マスター図に「ホライズン別優先度勾配」を加えたものとして定義される。near（2026-2035）では確信度高・行為密度高で「いま動く」課題群、mid（2036-2055）では確信度中・行為密度中で「装置を整備する」課題群、far（2056-2080）では確信度低・行為密度低で「準備し見守る」課題群、very-far（2081-2100）では確信度極低・類比のみで「指針を残す」課題群、という四層の優先度勾配を持つ。</p>
+
+<table>
+<thead><tr><th>ホライズン</th><th>確信度</th><th>主要 TOP10 課題</th><th>羅針盤の指示</th></tr></thead>
+<tbody>
+<tr><td>near 2026-2035</td><td>高</td><td>Q-N04 / G-M04（部分）/ G-M01 / G-N12</td><td>いま動く・装置整備の最重要 4 年</td></tr>
+<tr><td>mid 2036-2055</td><td>中</td><td>G-M04 / G-N09 / G-N07/N08 / Q-M07</td><td>規範軸の制度化主戦場</td></tr>
+<tr><td>far 2056-2080</td><td>低</td><td>Q-F03 / G-F03 / G-F01</td><td>多元時間性と pluriverse の制度化準備</td></tr>
+<tr><td>very-far 2081-2100</td><td>極低（類比）</td><td>Q-V01 / Q-V03 / Q-V07</td><td>指針を残す・75 年自己診断装置</td></tr>
+</tbody>
+</table>
+
+<h3>5.2 6 スケール 2026 同期点という独自時間構造</h3>
+
+<p>C-1 が確定した「6 スケール 2026 同期点」は、ミラツク羅針盤の起点を定義する。cosmological 5,000 年 + サイクル A 280-310 年 + サイクル B 150-300 年 + サイクル C 250 年 + Kondratiev 50-60 年 + myth shift 20-30 年の 6 スケールが現在 2026 で同期点を形成しているという独自構造は、OECD/WEF/IFTF 等の既存フォーサイトが採用する単一時間スケール（2030/2050 二点 / Three Horizons 三点）に類例のないミラツク独自時間観である【解釈】。</p>
+
+<p>この同期点認識は、ミラツク羅針盤の「現在地」を定義する。すなわち、ミラツクが 2026 年に立つ位置は、複数の長短時間スケールが偶発的に重なる稀有な分岐点であり、この時点での判断が後続 75 年の方向を大きく左右することを意味する。Phase A 真Mサイン物語転換期認定の三独立確証（CLA 5 系統失効 + Signal disruption 7.49 / paradigm_shift 20.4% + AA 2024-2025 集中 74%）の構造的根拠を、時間軸層から提供する。</p>
+
+<h3>5.3 双子峰プラトーが羅針盤に与える含意</h3>
+
+<p>CTI v2 双子峰プラトー（産業革命以降 250 年が 0.752-0.768 の高位プラトー、AI/産業 = 1.005 倍）は、ミラツク羅針盤の「水平基準線」を定義する。この発見が示すのは、AI 革命が「産業革命 1.4-1.7 倍」ではなく「ほぼ同等」であるという学術的修正値であり、これによりミラツクが向き合う時代認識は<em>「未曽有の文明転換期」ではなく「250 年プラトーの内側で固有の同時極大が発生している期」</em>として再定義される。</p>
+
+<p>この再定義の含意は重要である。第一に、AI 革命を産業革命と同等の文明転換として扱うのではなく、D1 情報処理 0.95 + D6 権力集中 0.90 の「同時極大」という固有性に注意を払うべきである。第二に、250 年プラトーの内側にあるということは、サイクル A 認知転換が「終端」ではなく「前期段階 27% 地点」にあることを意味する。第三に、ゆえに 2100 年は「サイクル A 終端」ではなく「前期段階の組織形態確立点」として記述される【解釈】。</p>
+
+<div class="callout">
+<div class="callout-title">羅針盤の使い方</div>
+<p>ミラツク羅針盤は、未来を予測する道具ではなく、ミラツクが判断を下す際の参照点として機能する。具体的には、「いま着手すべきか/装置を整備すべきか/準備し見守るべきか/指針を残すべきか」の四つの判断モードを、TOP10 課題ごとにホライズン別に提供する。これにより、ミラツクは限られたリソースを優先度勾配に沿って配分できる。</p>
+</div>
+
+<h3>5.4 ミラツクの差別化機能 — 翻訳者型担い手の独立化</h3>
+
+<p>C-5 が独立化した第 5 類型「翻訳者型」は、ミラツク羅針盤の「方位磁針の針」を担う。翻訳者型 19/140 件（13.6%）の集中度は、推定人口比 1.5-2.0% を大きく上回り、これがミラツクの差別化機能（対等な探究者・知識運動体・暗黙知のAI形式知化）を DB 構造として可視化する。</p>
+
+<p>翻訳者型の能力指紋（val_pluralism + cog_synthesis）は、TOP10 5 問（G-N09 / G-N12 / G-N07/N08 / G-V03 / G-F02）で要求され、特に認識論翻訳型と自己言及運営型の中核担い手として機能する。大正期の翻訳者群（柳田國男・南方熊楠・鈴木大拙・西田幾多郎・新渡戸稲造・岡倉天心）が同時期に活動した時代的特徴（age_social_change スコア 8.48・6 時代最高値）は、翻訳者型担い手が社会変革を駆動する歴史的アナログとして援用可能である【解釈】。</p>
+</section>
+
+<section class="chapter-section" id="part7">
+<div class="chapter-number-label">第VI部</div>
+<h2 class="chapter-title">Phase D 入力データ確定 — DQ-01〜DQ-08 + D-1 推奨 8 問</h2>
+
+<p class="lead">本部は Phase D（deep-knowledge 統合）の起動条件を確定する。Phase D は本書の C-6 統合成果を入力として、deep-knowledge 書籍 21 章 × 重点 8 問の深堀り研究を起動する。本書はその起動条件を「DQ-01〜DQ-08 の 8 入力データ + D-1 推奨 8 問」として確定する。</p>
+
+<h3>6.1 Phase D 入力データ DQ-01〜DQ-08</h3>
+
+<div class="figure-block">
+<div class="figure-label">F-10 Phase D 入力データ確定表</div>
+<table>
+<thead><tr><th>ID</th><th>入力データ</th><th>件数・粒度</th><th>主な参照先</th></tr></thead>
+<tbody>
+<tr><td>DQ-01</td><td>71 問単一台帳（C-2）</td><td>71 独立 ID + inherited_from 11 ペア + メタ 4 件</td><td>questions_unified スキーマ</td></tr>
+<tr><td>DQ-02</td><td>great_actions.db v0.2（C-3 + C-4）</td><td>140 件 × 60 + 12 カラム + action_initiatives_links 2,030 件</td><td>~/projects/research/great-actions-db/</td></tr>
+<tr><td>DQ-03</td><td>4 ホライズン共通スパン + 同期点 4 つ（C-1）</td><td>同期点 Q-N04 / Q-M01 / Q-F03 / Q-V07 の代表年 2030 / 2050 / 2070 / 2095</td><td>track-c1-cycle-spiral-report.html Fig.8</td></tr>
+<tr><td>DQ-04</td><td>双子峰プラトー判定基準（C-1）</td><td>9 時代 raw CTI 値 + AI/産業 = 1.005 倍 + D1+D6 同時極大</td><td>CTI v2 双子峰プラトー研究レポート</td></tr>
+<tr><td>DQ-05</td><td>ミラツク優先 TOP10（C-2 観点 4 軸再ランキング）</td><td>10 課題 + 各課題の所属担い手類型</td><td>本書 F-06</td></tr>
+<tr><td>DQ-06</td><td>5 系譜過去 → 現代 → 未来 接続（C-3）</td><td>5 系譜 × 三段階 = 15 セル × 約 70 件</td><td>本書 F-07</td></tr>
+<tr><td>DQ-07</td><td>warning 17 + opportunity 50 = 67 件（C-4）</td><td>critical warning 4 件すべて G-N12 集中・high warning 13 件すべて G-N04 集中</td><td>track-c4-actions-zone-mapping-report.html</td></tr>
+<tr><td>DQ-08</td><td>担い手 5 類型 × 4 段階運用（C-5）</td><td>5 類型 + 第 5 類型「翻訳者型」の能力指紋（val_pluralism + cog_synthesis）</td><td>本書 F-08</td></tr>
+</tbody>
+</table>
+<p class="figure-caption">Phase D 入力データ DQ-01〜DQ-08 の 8 件。これらは Phase D が起動する deep-knowledge 統合作業の前提データとして機能する。</p>
+</div>
+
+<h3>6.2 D-1 推奨 8 問</h3>
+
+<p>Phase D の D-1 段階で扱う重点問いは、Phase C-2 観点 TOP10 と戦略的空白 13 問を統合的に検討した結果、以下の 8 問とすることを推奨する。論点 3 の判定（並列度・結合度・網羅性の中庸選択として 8 問採用）に基づく。既存 8 問例示のうち差し替え 2 問を確定した内訳である。</p>
+
+<table>
+<thead><tr><th>順位</th><th>問い ID</th><th>主題</th><th>選定理由</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Q-N04</td><td>場所性回帰の制度化</td><td>全 Track 貫通 + near 重心 + warning 13 件集中</td></tr>
+<tr><td>2</td><td>G-M04</td><td>世代間正義の憲法化</td><td>opportunity 15 件で最多 + 同期点 mid 近接</td></tr>
+<tr><td>3</td><td>G-N09</td><td>先住民知識主権</td><td>opportunity 14 件 + 翻訳者型集中</td></tr>
+<tr><td>4</td><td>G-M01</td><td>GDP 代替ケア指標</td><td>happening 多数 + 経済再設計型の中核</td></tr>
+<tr><td>5</td><td>G-N12</td><td>ケア経済の組織化</td><td>critical warning 4 件すべてが集中する重点領域</td></tr>
+<tr><td>6</td><td>G-N07/N08</td><td>非西洋認識論の方法論化</td><td>opportunity 16 件 + 認識論翻訳型の中核</td></tr>
+<tr><td>7</td><td>G-V03</td><td>自己言及メタ問い</td><td>self-reflexive 5 件 + ミラツク後継組織の中核</td></tr>
+<tr><td>8</td><td>Q-V07</td><td>pluriverse cosmology 実装</td><td>very-far 同期点 + 75 年自己診断装置の起点</td></tr>
+</tbody>
+</table>
+
+<p>これら 8 問は、(1) ホライズン分散（near 4 / mid 2 / far 0 / very-far 2、far はサイクル C プラトー終端の不確定性ゆえに直接の重点化を見送り、Q-N04 と Q-V07 を結ぶ橋として扱う）、(2) 担い手類型分散（制度翻訳者型 2 / ケア設計型 2 / 経済再設計型 1 / 認識論翻訳型 2 / 自己言及運営型 1）、(3) 戦略的空白 13 問への網羅性（8 問のうち 6 問が戦略的空白由来）の三軸で均衡を取った構成である。</p>
+
+<h3>6.3 Phase D 起動条件チェックリスト</h3>
+
+<table>
+<thead><tr><th>条件</th><th>達成状況</th></tr></thead>
+<tbody>
+<tr><td>C-1〜C-5 全 5 トラック sentinel APPROVED</td><td>達成（5/5）</td></tr>
+<tr><td>Phase A 数値継承 source-of-truth 準拠</td><td>達成（17 系統一致）</td></tr>
+<tr><td>doc-verify 4 カテゴリ全カテゴリ通過</td><td>達成（A &gt; B &gt; C ≒ D の重み付けで PASS）</td></tr>
+<tr><td>四位一体マスター図 + 統合ナレッジマップの完成</td><td>達成（本書 F-01〜F-10）</td></tr>
+<tr><td>Phase D 入力データ確定（DQ-01〜DQ-08 + D-1 推奨 8 問）</td><td>達成（本部）</td></tr>
+<tr><td>Phase A 構造的限界 5 点の継承点検結果開示</td><td>達成（検証編 第 IV 部）</td></tr>
+<tr><td>HTML タグバランス検証（解析・検証・本書）</td><td>達成（3 ファイル完全均衡）</td></tr>
+<tr><td>用語統一（_TERMINOLOGY_GLOSSARY.md 準拠）</td><td>達成（主要用語整合）</td></tr>
+</tbody>
+</table>
+
+<p>以上 8 条件すべてを達成し、Phase D 起動条件は満たされた。Phase D オーケストレーターは本書を入力として、deep-knowledge 書籍 21 章 × 重点 8 問 = 168 セルの連結マトリクスを構築し、各セルの深堀り研究を並列で起動することができる。</p>
+</section>
+
+<section class="chapter-section" id="part8">
+<div class="chapter-number-label">第VII部</div>
+<h2 class="chapter-title">研究の限界 3 点と結語</h2>
+
+<p class="lead">本部は本書の限界を honest に開示し、結語として Phase C 全体の意義をまとめる。限界の honest 開示はミラツク方法論の中核要素であり、Phase B B-2 PHIL 9,583/10,292 教訓・B-4 第 5 補完類型ハルシネーション教訓の継承として位置づけられる。</p>
+
+<h3>7.1 研究の限界 3 点</h3>
+
+<h4>限界 1: 同一エージェント自己統合の構造的限界</h4>
+
+<p>本書は C-6 解析編 + 検証編 + レポート編の三姉妹を同一エージェント（C-6 Lead Synthesizer）が執筆している。これは Phase B B-6 と同様に「同一エージェント内自己統合」の構造的限界を持ち、Phase C 全体の構造設計上不可避である。最終的な独立検証は外部 sentinel エージェント（VETO 権付き）が担い、本書はその入力素材として機能する。Phase D 段階では別エージェントによる独立検証を要請することを推奨する。</p>
+
+<h4>限界 2: 四位一体マスター図の独自性検証未完</h4>
+
+<p>本書が提示する「四位一体マスター図 + ミラツク羅針盤」は、政府機関・大手シンクタンクのフォーサイト（OECD・UN・WEF・McKinsey 等）には類例のないミラツク独自の統合フレームワークと記述したが、これは本書の自己評価であり、独立した先行事例調査による裏付けは未完である【未検証】。Phase C-7 公開段階で外部レビューを通じた批判的吟味を経ることが望ましい。具体的には、Three Horizons / Causal Layered Analysis / Voros Map 等の既存フォーサイトフレームワークとの比較研究が Phase D 以降の課題として残る。</p>
+
+<h4>限界 3: 構造的偏りの継承</h4>
+
+<p>本書が依拠する great_actions.db v0.2 は、200 セル中 SQL 実値 50 セル（25.0%）にしか出現しない構造的偏り（Care + Pluriverse の Mediator・Caregiver・Introvert Thinker への集中）を持ち、空白セル 150 個の取り扱いは Phase D に持ち越される。同様に、Phase A 構造的限界 5 点（9 DB 近代偏重 / 集計濃淡 / 派生間独立性 / GF 共有 / FK 84.4% 未指定率）は本書の四位一体マスター図にもそのまま継承されている。これらの構造的偏りは Phase D の深堀り研究で部分的に補正されることが期待されるが、根本的解消は新規データ収集の継続を要する【未検証】。</p>
+
+<h3>7.2 結語 — 羅針盤を持って 75 年へ</h3>
+
+<p>Phase C は、Phase B が空間的に確定した「ミラツクが向き合う問いの全体像」に時間軸・行為軸・担い手軸を加え、四位一体の統合フレームワークとして収束させた。本書 C-6 レポート編が提示するミラツク羅針盤は、ミラツクが今後 75 年（2026-2100）にわたって判断を下す際の参照点として機能する読み取り装置である。</p>
+
+<p>羅針盤は未来を予測する道具ではない。それは、不確実性の海を航海する際の方位を示す道具であり、判断の責任を航海者に委ねる道具である。ミラツクは羅針盤を手にしたが、羅針盤が何処へ行くべきかを命令することはない。命令するのは、ミラツクの自己定義「対等な探究者」「知識運動体」「暗黙知の AI 形式知化」という三つの存在形式である。</p>
+
+<p>羅針盤の中心軸であるミラツク優先 TOP10 は、規範主層 8 課題に集中する。これは、物語転換期において<em>規範を時代に翻訳する役割</em>がミラツクの中核機能であることを示す。担い手として要求される第 5 類型「翻訳者型」は、ミラツクの差別化機能を DB 構造として可視化する。これらは Phase D で deep-knowledge 書籍 21 章と接続され、より深い知の地平へと展開する。</p>
+
+<p>同時に、羅針盤は限界を honest に開示する。同一エージェント自己統合の構造的限界、独自性検証の未完、構造的偏りの継承という 3 点は、本書が完全な統合像ではなく、継続的な検証と改訂を要する暫定的な統合像であることを示す。Phase D は本書を批判的に検証し、必要に応じて Phase C の前提に立ち戻ることが期待される。</p>
+
+<p>ミラツクが羅針盤を持って 75 年の航海を始めるとき、最初に手に取るべきは near 2026-2035 の 4 課題（Q-N04 場所性回帰 / G-M04 世代間正義 / G-M01 GDP 代替ケア / G-N12 ケア経済組織化）である。これらは「いま動く」課題群であり、ミラツクの最重要 4 年（2026-2030）の中心となる。同時に、very-far 2081-2100 の 3 課題（Q-V01 / Q-V03 / Q-V07）には「指針を残す」モードで関わることが期待される。これらは 75 年自己診断装置として機能し、ミラツク後継組織への引継ぎ装置となる。</p>
+
+<p>本書 Phase C-6 レポート編をもって Phase C は完了し、Phase D（deep-knowledge 統合）の起動条件は確定した。ミラツクは羅針盤を手にした。後は、対等な探究者として航海を始めるだけである。</p>
+
+<div class="callout">
+<div class="callout-title">本書のまとめ</div>
+<p>Phase C 全 5 トラックの統合により、ミラツク羅針盤（中心軸 TOP10 + 四象限放射 + ホライズン勾配）が完成した。Phase D 入力データ DQ-01〜DQ-08 と D-1 推奨 8 問の確定により、Phase D 起動条件 8 項目すべてを満たした。本書は同一エージェント自己統合という構造的限界を持つが、外部 sentinel ゲートを経て Phase D に引き継がれる。「いま動く」近期 4 課題と「指針を残す」遠期 3 課題のあいだで、ミラツクは 75 年の航海を始める。</p>
+</div>
+</section>
+
+<footer>
+Phase C / Track C-6 レポート編 — ミラツク羅針盤統合像と Phase D 入力データ確定<br>
+作成: 2026-05-10 / 担当: Track C-6 Lead Synthesizer / 本文約 23,500 字 / 図表 F-01〜F-10<br>
+姉妹編: <a href="track-c6-synthesis-analysis.html">解析編</a> / <a href="track-c6-synthesis-verification.html">検証編</a><br>
+miratuku-news / Phase C 領域策定 統合
+</footer>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') || 'light';
+  const next = current === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('theme', next); } catch(e) {}
+}
+(function() {
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

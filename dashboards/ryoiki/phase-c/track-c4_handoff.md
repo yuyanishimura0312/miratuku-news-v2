@@ -3,7 +3,7 @@
 - 作成日: 2026-05-09
 - 作成: Phase C Track C-4 Lead Researcher
 - 完了状態: Wave 3 C-4 タスク完了（DB v0.2 マイグレーション + 解析編 + 検証編 + レポート + 引継ぎ書 = 4 ファイル + DB 更新）
-- 主軸 DB: great_actions.db v0.2（既存 5 テーブル + 新規 2 テーブル / 11 カラム拡張 / 2,030 リンク）
+- 主軸 DB: great_actions.db v0.2（既存 5 テーブル + 新規 2 テーブル / 12 カラム拡張 / 2,030 リンク）
 - 出力先: `/Users/nishimura+/projects/apps/miratuku-news-v2/dashboards/ryoiki/phase-c/`
 - DB 出力: `/Users/nishimura+/projects/research/great-actions-db/great_actions.db`
 
@@ -13,7 +13,7 @@
 
 | 成果物 | パス | 主要内容 |
 |---|---|---|
-| great_actions.db v0.2 | `~/projects/research/great-actions-db/great_actions.db` | 11 カラム拡張 + 2 新規テーブル + 2,030 リンク |
+| great_actions.db v0.2 | `~/projects/research/great-actions-db/great_actions.db` | 12 カラム拡張 + 2 新規テーブル + 2,030 リンク |
 | 解析編 | `track-c4-actions-zone-mapping-analysis.html` | 10 章、SQL ログ L-01〜L-05、紐付け統計 |
 | 検証編 | `track-c4-actions-zone-mapping-verification.html` | 4 カテゴリ × 26 項目検証、PASS 22 / WARN 4 / FAIL 0 |
 | レポート | `track-c4-actions-zone-mapping-report.html` | 11 部構成、図表 12 点 + 主要表 8 点 |
@@ -27,7 +27,7 @@
 
 ### 2.1 ALTER TABLE 拡張（great_actions テーブル）
 
-11 カラム追加（v0.1 既存 30 カラムは破壊せず）:
+12 カラム追加（v0.1 既存 30 カラムは破壊せず、c4_review_note と c4_updated_at を含む実観測層 10 + メタ 2 の構成）:
 - `c4_status_override` — happening/emerging/expected/speculative/warning/opportunity の 6 値
 - `c4_b5_zone` — Hot/Warm/Cool/N/A の 4 値
 - `c4_initiatives_count` — 紐付け initiatives 件数
@@ -183,6 +183,10 @@ B-3 30 問のうち 11 問が initiatives 直接対応ゼロ件で、戦略的�
 
 3. **maturity_score 5 ゼロ件の閾値感度** — 「scale 比率 30% 以上」という閾値依存。閾値を 20% に下げれば maturity 5 が複数件出現する可能性あり、Phase D で感度分析推奨。
 
+4. **§9.1 表の集計枠組みの構造的弱さ（refinement R1 で修正済）** — 初版 report §9.1 表は 4 行（v0.1 4 区分）× 4 列（warning/opportunity/維持/合計）で 140 件を網羅する設計だったが、v0.2 が 6 区分のため列軸不足で「維持」セルに複数 v0.2 区分が混在する構造的弱さがあり、結果 5 セルが SQL 実値と齟齬した（doc-verify B-5/B-6/B-7 指摘）。R1 で 7 列形式（v0.2 6 区分 + 合計）に再設計し、SQL crosstab `SELECT current_stage_status, c4_status_override, COUNT(*) FROM great_actions GROUP BY current_stage_status, c4_status_override` で再現可能な真の crosstab 構造に改めた。集計枠組み設計時の SQL 直接検証プロトコルを次回以降のトラックで標準化推奨。
+
+5. **B-5 zone 弁別との整合性注記** — c4_b5_zone は B-3 30 問の zone 弁別（Hot 4 / Warm 9 / Cool 9 / Dead 0 / N/A 8）を 140 actions 単位に展開した派生値で、両軸（問い単位 vs 偉業単位）は protocols 三系列差として独立した分布を持つ。B-5 の問い単位 zone と本トラックの偉業単位 zone（Hot 15 / Warm 17 / Cool 43 / N/A 65）は単純比較不可で、C-6 統合段階での再接続が必要。
+
 ### 5.2 未検証事項 6 件
 
 | ID | 内容 | 追跡先 |
@@ -213,7 +217,7 @@ done
 
 ## 7. 次の Track への呼びかけ
 
-Track C-4 完了により、Phase C Wave 3 の zone マッピング層が確立した。great_actions.db v0.2（11 カラム拡張 + 2 新規テーブル + 2,030 リンク）は Phase B 観測実績層と Phase C 偉業構造を統合する核心 DB として運用可能水準に到達。Wave 4（C-6 統合・検証）が次の起動候補となる。並列走行中の C-5（担い手特性）の完了を待って C-6 起動が可能となる。
+Track C-4 完了により、Phase C Wave 3 の zone マッピング層が確立した。great_actions.db v0.2（12 カラム拡張 + 2 新規テーブル + 2,030 リンク）は Phase B 観測実績層と Phase C 偉業構造を統合する核心 DB として運用可能水準に到達。Wave 4（C-6 統合・検証）が次の起動候補となる。並列走行中の C-5（担い手特性）の完了を待って C-6 起動が可能となる。
 
 本トラックの独自貢献は四点ある。第一に、463 initiatives × 140 great_actions の自動紐付けによる多対多 2,030 リンクテーブルを構築したこと。第二に、warning 17 件 / opportunity 50 件 / TOP10 × 偉業 78 件の三層フラグ系を実装し、ミラツクの介入優先領域を構造化したこと。第三に、maturity_score 0-5 の数値化により「現代の偉業の実装段階」の定量比較を可能にしたこと（maturity 5 ゼロ件の発見）。第四に、戦略的空白 13 問 = initiatives 真空地帯の二重定義を確証し、Phase B 規範軸と Phase C 行為軸の整合を構造的に確立したこと。
 
