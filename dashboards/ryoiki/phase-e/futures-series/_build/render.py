@@ -158,23 +158,18 @@ def render_lens_body(paragraphs: list[str]) -> str:
     return "\n".join(f'        <p>{html.escape(p)}</p>' for p in paragraphs)
 
 
-def render_lab_block(paragraphs: list[str]) -> str:
-    """LAB（自然科学・工学）reading-lensのHTMLを生成。LAB が空なら空文字列を返す。"""
-    if not paragraphs:
-        return ""
-    body = "\n".join(f'        <p>{html.escape(p)}</p>' for p in paragraphs)
-    return (
-        '    <details class="reading-lens" id="lens-lab">\n'
-        '      <summary class="reading-lens-trigger">\n'
-        '        <span class="reading-lens-label">LAB</span>\n'
-        '        <span class="reading-lens-title">科学の知から</span>\n'
-        '        <span class="reading-lens-arrow">▾</span>\n'
-        '      </summary>\n'
-        '      <div class="reading-lens-body">\n'
-        f'{body}\n'
-        '      </div>\n'
-        '    </details>\n'
-    )
+def render_combined_deeper(lab_paragraphs: list[str], signal_paragraphs: list[str]) -> str:
+    """DEEPER 内に「科学の知から」と「いま、現実に起きていること」を縦に並べて出力する。"""
+    parts = []
+    if lab_paragraphs:
+        parts.append('        <h3 class="reading-lens-section-head">科学の知から</h3>')
+        parts.extend(f'        <p>{html.escape(p)}</p>' for p in lab_paragraphs)
+    if signal_paragraphs:
+        if parts:
+            parts.append('        <hr class="reading-lens-divider">')
+        parts.append('        <h3 class="reading-lens-section-head">いま、現実に起きていること</h3>')
+        parts.extend(f'        <p>{html.escape(p)}</p>' for p in signal_paragraphs)
+    return "\n".join(parts)
 
 
 def render_episode(ep_num: int, episodes: list[dict], drafts_dir: Path, template: str) -> str:
@@ -280,9 +275,7 @@ def render_episode(ep_num: int, episodes: list[dict], drafts_dir: Path, template
         "{{TOC_BLOCKS}}": build_toc(ep_num, ep["title"]),
         "{{BODY_PARAGRAPHS}}": render_body(draft["body"]),
         "{{DEEPER_TITLE}}": html.escape(deeper_title),
-        "{{DEEPER_BODY}}": render_lens_body(draft["deeper"]),
-        "{{LAB_BLOCK}}": render_lab_block(draft.get("lab", [])),
-        "{{SIGNAL_BODY}}": render_lens_body(draft["signal"]),
+        "{{DEEPER_BODY}}": render_combined_deeper(draft.get("lab", []), draft.get("signal", [])),
         "{{NEXT_QUESTION_PARAGRAPH}}": html.escape(next_question_paragraph),
         "{{NEXT_EPISODE_TITLE}}": html.escape(next_episode_title or "―"),
         "{{NEXT_EPISODE_HREF}}": next_episode_href,
