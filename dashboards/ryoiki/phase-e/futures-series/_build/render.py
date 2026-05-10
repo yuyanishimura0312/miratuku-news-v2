@@ -103,7 +103,7 @@ def parse_draft(text: str) -> dict:
         段落2
         段落3
     """
-    out = {"meta": {}, "body": [], "deeper": [], "signal": []}
+    out = {"meta": {}, "body": [], "deeper": [], "lab": [], "signal": []}
 
     # frontmatter
     fm_match = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.DOTALL)
@@ -117,7 +117,7 @@ def parse_draft(text: str) -> dict:
         rest = text
 
     # セクション分割
-    sections = re.split(r"\n#\s+(BODY|DEEPER|SIGNAL)\s*\n", rest)
+    sections = re.split(r"\n#\s+(BODY|DEEPER|LAB|SIGNAL)\s*\n", rest)
     # sections = [pre, key1, body1, key2, body2, ...]
     cur = None
     for i, chunk in enumerate(sections):
@@ -156,6 +156,25 @@ def render_body(paragraphs: list[str]) -> str:
 def render_lens_body(paragraphs: list[str]) -> str:
     """DEEPER/SIGNALの本文HTMLを生成。"""
     return "\n".join(f'        <p>{html.escape(p)}</p>' for p in paragraphs)
+
+
+def render_lab_block(paragraphs: list[str]) -> str:
+    """LAB（自然科学・工学）reading-lensのHTMLを生成。LAB が空なら空文字列を返す。"""
+    if not paragraphs:
+        return ""
+    body = "\n".join(f'        <p>{html.escape(p)}</p>' for p in paragraphs)
+    return (
+        '    <details class="reading-lens" id="lens-lab">\n'
+        '      <summary class="reading-lens-trigger">\n'
+        '        <span class="reading-lens-label">LAB</span>\n'
+        '        <span class="reading-lens-title">自然科学・工学の眼で読み直す</span>\n'
+        '        <span class="reading-lens-arrow">▾</span>\n'
+        '      </summary>\n'
+        '      <div class="reading-lens-body">\n'
+        f'{body}\n'
+        '      </div>\n'
+        '    </details>\n'
+    )
 
 
 def render_episode(ep_num: int, episodes: list[dict], drafts_dir: Path, template: str) -> str:
@@ -262,6 +281,7 @@ def render_episode(ep_num: int, episodes: list[dict], drafts_dir: Path, template
         "{{BODY_PARAGRAPHS}}": render_body(draft["body"]),
         "{{DEEPER_TITLE}}": html.escape(deeper_title),
         "{{DEEPER_BODY}}": render_lens_body(draft["deeper"]),
+        "{{LAB_BLOCK}}": render_lab_block(draft.get("lab", [])),
         "{{SIGNAL_BODY}}": render_lens_body(draft["signal"]),
         "{{NEXT_QUESTION_PARAGRAPH}}": html.escape(next_question_paragraph),
         "{{NEXT_EPISODE_TITLE}}": html.escape(next_episode_title or "―"),
