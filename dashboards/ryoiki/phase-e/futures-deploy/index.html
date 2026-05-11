@@ -1989,8 +1989,8 @@ section + section .section-eyebrow{position:relative}
 <div class="cta-choice-price"><span class="currency">¥</span>30,000<span class="per">／年</span></div>
 <div class="cta-choice-seats">第一期 100席 ／ Stripe自動更新</div>
 <div class="cta-choice-summary">レポート全件、対談、フィールドトリップ、食事会、連載先行配信。一個人として未来洞察に関わる年単位の関わり方。</div>
-<a href="mailto:contact@miratuku.org?subject=Futures%20第一期%20個人参加申込&body=お名前：%0Aご所属：%0Aご連絡先：%0A%0A第一期（個人会員）に参加申込いたします。%0Aご案内をお願いいたします。" class="cta-choice-btn primary">個人として申込む</a>
-<div class="cta-choice-note">メール送信 → 折返しにてご案内</div>
+<a href="https://futures.emerging-future.org/login" data-checkout-plan="individual" class="cta-choice-btn primary" id="cta-individual-btn">個人として申込む</a>
+<div class="cta-choice-note" id="cta-individual-note">Stripeで安全に決済 → 完了後にご案内メール</div>
 </div>
 
 <div class="cta-choice featured">
@@ -2005,7 +2005,7 @@ section + section .section-eyebrow{position:relative}
 
 </div>
 
-<div class="cta-fineprint">運営：NPO法人ミラツク ／ Stripe決済（個人）／ 請求書払い（法人）</div>
+<div class="cta-fineprint">運営：NPO法人ミラツク ／ 個人はStripe安全決済（カード自動更新）／ 法人は請求書払い ／ いつでもキャンセル可能</div>
 </div>
 </section>
 
@@ -2071,6 +2071,43 @@ function toggleTheme(){
   });
   accent.style.cursor = "pointer";
   accent.setAttribute("title", "click");
+})();
+
+/* Stripe Checkout — individual plan
+   Hits futures-platform /api/checkout (CORS allow-listed) and redirects to Stripe.
+   Falls back to /login page (the href) if anything goes wrong so users are never stuck. */
+(function(){
+  var CHECKOUT_API = "https://futures.emerging-future.org/api/checkout";
+  document.querySelectorAll("[data-checkout-plan]").forEach(function(el){
+    el.addEventListener("click", function(ev){
+      var plan = el.getAttribute("data-checkout-plan");
+      if(!plan) return;
+      ev.preventDefault();
+      var note = document.getElementById("cta-" + plan + "-note");
+      var originalLabel = el.textContent;
+      el.textContent = "決済画面へ遷移中…";
+      el.style.pointerEvents = "none";
+      fetch(CHECKOUT_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: plan }),
+      })
+        .then(function(res){ return res.json().then(function(b){ return { ok: res.ok, body: b }; }); })
+        .then(function(r){
+          if(r.ok && r.body && r.body.url){
+            window.location.href = r.body.url;
+          } else {
+            throw new Error((r.body && r.body.error) || "checkout_failed");
+          }
+        })
+        .catch(function(err){
+          console.error("[cta] checkout failed", err);
+          el.textContent = originalLabel;
+          el.style.pointerEvents = "";
+          if(note){ note.textContent = "決済画面の起動に失敗しました。お手数ですが contact@miratuku.org までご連絡ください。"; note.style.color = "rgba(255,120,120,0.85)"; }
+        });
+    });
+  });
 })();
 </script>
 
