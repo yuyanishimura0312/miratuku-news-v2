@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Web Monetization DB — Dashboard</title>
+<title>Web Monetization DB — v0.4.0 Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
@@ -42,13 +43,14 @@ body {
 }
 .top-bar .brand { font-weight: 700; font-size: 14px; color: var(--accent-warm); letter-spacing: 0.08em; }
 .top-bar .brand-sub { color: var(--text-secondary); font-size: 12px; margin-left: 8px; letter-spacing: 0.04em; }
+.top-bar .version { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-left: 12px; }
 .theme-toggle {
   background: none; border: 1px solid var(--border); color: var(--text);
   padding: 4px 12px; border-radius: 2px; font-size: 12px; cursor: pointer;
   font-family: var(--font);
 }
 .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
-.layout { display: grid; grid-template-columns: 240px 1fr; padding-top: 48px; }
+.layout { display: grid; grid-template-columns: 260px 1fr; padding-top: 48px; }
 .toc-sidebar {
   position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto;
   padding: 32px 20px; border-right: 1px solid var(--border-light);
@@ -63,52 +65,264 @@ body {
 }
 .toc-sidebar a:hover { color: var(--accent-warm); background: var(--accent-muted); }
 .toc-sidebar .toc-num { font-family: var(--font-mono); color: var(--text-muted); min-width: 32px; }
-.main { max-width: 760px; margin: 0 auto; padding: 48px 40px; }
-h1 { font-family: var(--font-serif); font-size: 28px; margin: 0 0 8px; color: var(--accent); font-weight: 700; }
+.main { max-width: 880px; margin: 0 auto; padding: 48px 40px 96px; }
+h1 { font-family: var(--font-serif); font-size: 30px; margin: 0 0 8px; color: var(--accent); font-weight: 700; }
 .subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 48px; }
 h2 {
-  font-family: var(--font-serif); font-size: 20px; margin: 64px 0 16px;
+  font-family: var(--font-serif); font-size: 22px; margin: 80px 0 24px;
   padding-bottom: 12px; border-bottom: 1px solid var(--border-light);
   color: var(--accent); font-weight: 700;
 }
-h2 .chapter-num { color: var(--accent-warm); font-family: var(--font-mono); font-size: 14px; margin-right: 12px; }
+h2 .chapter-num { color: var(--accent-warm); font-family: var(--font-mono); font-size: 14px; margin-right: 16px; letter-spacing: 0.1em; }
 h3 { font-family: var(--font-serif); font-size: 16px; margin: 32px 0 12px; color: var(--accent); }
-p { font-family: var(--font-serif); margin: 12px 0; text-indent: 1em; }
-p:first-of-type { text-indent: 0; }
+p { font-family: var(--font-serif); margin: 12px 0; line-height: 1.85; }
+p.intro { font-family: var(--font-serif); text-indent: 1em; }
+
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0; }
 .kpi-card {
   padding: 20px; background: var(--card); border: 1px solid var(--border-light);
-  border-radius: 2px;
+  border-radius: 2px; transition: all 0.2s;
 }
-.kpi-card:hover { background: var(--card-hover); }
+.kpi-card:hover { background: var(--card-hover); border-color: var(--accent-warm); }
 .kpi-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
 .kpi-value { font-family: var(--font-mono); font-size: 28px; color: var(--accent-warm); margin-top: 8px; font-weight: 500; }
 .kpi-unit { font-size: 12px; color: var(--text-secondary); margin-left: 4px; }
+.kpi-delta { font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-family: var(--font-mono); }
+.kpi-delta.up { color: #2D8A2D; }
+
 table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
-th { text-align: left; padding: 12px 8px; border-bottom: 2px solid var(--accent); font-weight: 500; }
+th { text-align: left; padding: 12px 8px; border-bottom: 2px solid var(--accent); font-weight: 500; font-size: 12px; color: var(--text-secondary); letter-spacing: 0.05em; text-transform: uppercase; }
 td { padding: 12px 8px; border-bottom: 1px solid var(--border-light); }
 tr:hover { background: var(--surface); }
-.tag { display: inline-block; padding: 2px 8px; border: 1px solid var(--border); border-radius: 2px; font-size: 11px; color: var(--text-secondary); margin-right: 4px; }
+td.num { font-family: var(--font-mono); text-align: right; }
+td.code { font-family: var(--font-mono); font-size: 12px; color: var(--accent-warm); }
+
+.bar-chart { display: flex; flex-direction: column; gap: 8px; margin: 24px 0; }
+.bar-row { display: grid; grid-template-columns: 140px 1fr 60px; gap: 12px; align-items: center; font-size: 13px; }
+.bar-label { color: var(--text-secondary); }
+.bar-track { background: var(--border-light); height: 18px; border-radius: 2px; position: relative; overflow: hidden; }
+.bar-fill { background: var(--accent-warm); height: 100%; border-radius: 2px; transition: width 0.4s; }
+.bar-fill.muted { background: var(--accent-soft); }
+.bar-count { font-family: var(--font-mono); color: var(--text); text-align: right; font-size: 12px; }
+
+.tag { display: inline-block; padding: 2px 8px; border: 1px solid var(--border); border-radius: 2px; font-size: 11px; color: var(--text-secondary); margin-right: 4px; font-family: var(--font); }
 .tag-warm { border-color: var(--accent-warm); color: var(--accent-warm); }
-footer { margin-top: 96px; padding-top: 24px; border-top: 1px solid var(--border-light); font-size: 12px; color: var(--text-muted); }
+.tag-success { border-color: #2D8A2D; color: #2D8A2D; }
+.tag-fail { border-color: #C84634; color: #C84634; background: rgba(200,70,52,0.04); }
+
+.callout {
+  border-left: 3px solid var(--accent-warm); padding: 16px 20px;
+  background: var(--accent-muted); margin: 24px 0;
+  font-family: var(--font-serif); font-size: 14px;
+}
+.callout .callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; letter-spacing: 0.05em; }
+
+.note { font-size: 12px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
+
+footer { margin-top: 96px; padding-top: 24px; border-top: 1px solid var(--border-light); font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
+footer a { color: var(--accent-warm); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
 @media (max-width: 1000px) {
   .layout { grid-template-columns: 1fr; }
   .toc-sidebar { position: static; height: auto; }
   .main { padding: 32px 24px; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .bar-row { grid-template-columns: 100px 1fr 50px; font-size: 12px; }
 }
 @media print {
   .toc-sidebar, .top-bar { display: none; }
-  .layout { display: block; }
+  .layout { display: block; padding-top: 0; }
+  .main { max-width: none; padding: 0; }
 }
 </style>
 </head>
 <body>
 <div class="top-bar">
-  <div><span class="brand">MIRATUKU</span><span class="brand-sub">Web Monetization DB</span></div>
+  <div><span class="brand">MIRATUKU</span><span class="brand-sub">Web Monetization DB</span><span class="version">v0.4.0</span></div>
   <button class="theme-toggle" onclick="toggleTheme()">Theme</button>
 </div>
-<div class="layout"><nav class="toc-sidebar"><div class="toc-title">Contents</div><ul><li><a href="#overview"><span class="toc-num">01</span>概要</a></li><li><a href="#subfields"><span class="toc-num">02</span>12サブフィールド</a></li><li><a href="#patterns"><span class="toc-num">03</span>主要パターン</a></li><li><a href="#metrics"><span class="toc-num">04</span>指標体系</a></li><li><a href="#parent"><span class="toc-num">05</span>親DBとの関係</a></li></ul></nav><div class="main"><h1>Web Monetization DB</h1><div class="subtitle">ウェブ・インターネット領域の収益化技法 — パターン×事例×指標の体系的データベース ｜ 2026-05-12 更新</div><h2 id="overview"><span class="chapter-num">01</span>概要</h2><p>本データベースは、Web/インターネット上で行われる収益化技法を体系的に整理したパターンライブラリである。広告・サブスクリプション・EC・デジタルコンテンツ販売・アフィリエイト・フリーミアム・ペイウォール・クラウドファンディング・API課金・Web3トークン・ゲーミフィケーション課金・リードジェネレーションの十二領域に分類し、各領域で確立された収益化パターン、実装企業の具体事例、評価指標（KPI）を一元的に参照できるよう設計している。</p><p>親DBである統合マネタイズ知識基盤（business-model-patterns-db）が長期的な経営判断のための戦略フレームワークを扱うのに対し、本DBは短中期の実装判断に資する戦術的パターンを扱う相互補完的な位置づけにある。</p><div class="kpi-grid"><div class="kpi-card"><div class="kpi-label">Subfields</div><div class="kpi-value">16</div></div><div class="kpi-card"><div class="kpi-label">Patterns</div><div class="kpi-value">564</div></div><div class="kpi-card"><div class="kpi-label">Examples</div><div class="kpi-value">349</div></div><div class="kpi-card"><div class="kpi-label">Metrics</div><div class="kpi-value">192</div></div><div class="kpi-card"><div class="kpi-label">Researchers</div><div class="kpi-value">87</div></div><div class="kpi-card"><div class="kpi-label">Concepts</div><div class="kpi-value">120</div></div><div class="kpi-card"><div class="kpi-label">Relations</div><div class="kpi-value">1,021</div></div></div><h2 id="subfields"><span class="chapter-num">02</span>12サブフィールド</h2><p>本DBが扱う収益化領域は、課金構造・対象媒体・価値交換の様式によって十二のサブフィールドに分類される。各領域は独立して機能すると同時に、現代のウェブ事業ではしばしば組み合わせて運用される。たとえばメディア事業ではペイウォールと広告が併存し、SaaSではサブスクリプションとフリーミアムが組み合わさる。</p><table><thead><tr><th>ID</th><th>領域</th><th>目標</th><th>Patterns</th><th>Examples</th><th>充足率</th></tr></thead><tbody><tr><td>WM01</td><td>ウェブ広告型収益</td><td>100</td><td>38</td><td>28</td><td>66%</td></tr><tr><td>WM02</td><td>サブスクリプション/会員型</td><td>100</td><td>85</td><td>62</td><td>147%</td></tr><tr><td>WM03</td><td>EC・D2C・マーケットプレイス</td><td>100</td><td>55</td><td>46</td><td>101%</td></tr><tr><td>WM04</td><td>デジタルコンテンツ販売</td><td>90</td><td>27</td><td>22</td><td>54%</td></tr><tr><td>WM05</td><td>アフィリエイト・成果報酬</td><td>80</td><td>26</td><td>20</td><td>57%</td></tr><tr><td>WM06</td><td>フリーミアム・課金転換</td><td>80</td><td>34</td><td>22</td><td>70%</td></tr><tr><td>WM07</td><td>ペイウォール戦略</td><td>70</td><td>23</td><td>20</td><td>61%</td></tr><tr><td>WM08</td><td>クラウドファンディング・支援型</td><td>70</td><td>24</td><td>18</td><td>60%</td></tr><tr><td>WM09</td><td>API/データ・ライセンス</td><td>80</td><td>50</td><td>14</td><td>80%</td></tr><tr><td>WM10</td><td>Web3・トークン・暗号資産</td><td>70</td><td>61</td><td>21</td><td>117%</td></tr><tr><td>WM11</td><td>ゲーミフィケーション・マイクロ課金</td><td>80</td><td>37</td><td>19</td><td>70%</td></tr><tr><td>WM12</td><td>リードジェネレーション・マーケ型</td><td>80</td><td>33</td><td>16</td><td>61%</td></tr><tr><td>WM13</td><td>AIネイティブ・サブスクリプション</td><td>80</td><td>13</td><td>29</td><td>52%</td></tr><tr><td>WM14</td><td>エージェント仲介商取引</td><td>60</td><td>31</td><td>12</td><td>71%</td></tr><tr><td>WM15</td><td>ML向けデータライセンシング</td><td>60</td><td>16</td><td>0</td><td>26%</td></tr><tr><td>WM16</td><td>クリエイター経済プラットフォーム</td><td>80</td><td>11</td><td>0</td><td>13%</td></tr></tbody></table><h2 id="patterns"><span class="chapter-num">03</span>主要パターン（実例数上位）</h2><p>各収益化パターンには、それを採用している実在企業の事例が紐づいている。実例数が多いパターンは業界に広く受容されたものとみなせる一方、新興のパターンは事例数こそ少ないが先進事例として注目される。以下は実例数の多い順に上位パターンを示したものである。</p><table><thead><tr><th>Subfield</th><th>パターン</th><th>成熟度</th><th>事例数</th></tr></thead><tbody><tr><td>WM13</td><td>固定月額サブスク（暗黙的トークン上限付き）</td><td><span class="tag">growth</span></td><td>17</td></tr><tr><td>WM13</td><td>ティア型サブスク（基本×5倍、20倍）</td><td><span class="tag">growth</span></td><td>7</td></tr><tr><td>WM03</td><td>地域フードデリバリー型</td><td><span class="tag">-</span></td><td>2</td></tr><tr><td>WM04</td><td>オンデマンド動画講座（自習型）</td><td><span class="tag">mature</span></td><td>2</td></tr><tr><td>WM01</td><td>ディスプレイ広告とサーチ広告の統合型</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>ソーシャルフィード広告とオーディエンスターゲティング</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>商品検索広告とスポンサード商品</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>フィード内動画広告とブランド乗っ取り型広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>プレロール・ミッドロール・オーバーレイ広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>ローカルサーチ広告とスポンサード結果表示</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>プログラマティック広告配信プラットフォーム</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>ダイナミックリターゲティング広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>メッセージングアプリ内ネイティブ広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>コンテンツディスカバリー型ネイティブ広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>検索広告＋アプリネイティブ広告の統合</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>動画内広告＋クリエイター収入分配</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>ビジュアルディスカバリー広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>フルスクリーン動画広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>B2B スポンサード記事＋リード生成</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>文脈型 Q&A 広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>中国検索広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>ロシア検索広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>韓国メッセージングアプリ広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>ウェブトゥーン（デジタル漫画）広告</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>ネイティブ広告</td><td><span class="tag">mature</span></td><td>1</td></tr><tr><td>WM01</td><td>動画プリロール</td><td><span class="tag">mature</span></td><td>1</td></tr><tr><td>WM01</td><td>トリビアゲームショウ広告モデル衰退</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>決済インフラB2B型</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>モダン決済APIプラットフォーム</td><td><span class="tag">-</span></td><td>1</td></tr><tr><td>WM01</td><td>決済ゲートウェイ＋融資</td><td><span class="tag">-</span></td><td>1</td></tr></tbody></table><h2 id="metrics"><span class="chapter-num">04</span>指標体系</h2><p>収益化パターンの評価は、それぞれの構造に対応した指標体系によって行う。広告型ではCPM/CPC/Viewability、サブスクリプション型ではMRR/Churn/LTV/NRR、EC型ではGMV/AOV/Take Rate、フリーミアム型ではFree-to-Paid Conversion/Time-to-Valueというように、領域ごとに観測すべき軸が異なる。</p><table><thead><tr><th>Code</th><th>名称</th><th>定義</th></tr></thead><tbody><tr><td><span class="tag tag-warm">CPM</span></td><td>1000インプレッション当たりのコスト</td><td>Fixed amount advertiser pays per 1,000 ad impressions served. Industry-standard </td></tr><tr><td><span class="tag tag-warm">MRR</span></td><td>月次経常収益</td><td>Predictable monthly revenue from active subscriptions normalized to monthly rate</td></tr><tr><td><span class="tag tag-warm">RPM</span></td><td>RPM</td><td>Publisher revenue per 1,000 views</td></tr><tr><td><span class="tag tag-warm">LTV</span></td><td>顧客生涯価値</td><td>Total profit per customer lifetime</td></tr><tr><td><span class="tag tag-warm">CAC</span></td><td>顧客獲得コスト</td><td>Average cost to acquire one customer</td></tr><tr><td><span class="tag tag-warm">Churn</span></td><td>チャーン率</td><td>% of customers lost in period</td></tr><tr><td><span class="tag tag-warm">NRR</span></td><td>NRR</td><td>Revenue growth from existing customers after churn</td></tr><tr><td><span class="tag tag-warm">Churn_Rate</span></td><td>解約率</td><td>Percentage of monthly subscribers who cancel. High churn (>10%/month) indicates </td></tr><tr><td><span class="tag tag-warm">ARPU</span></td><td>ユーザーあたり平均収益</td><td>Average revenue generated per active user/subscriber. Includes mix of tiers (e.g</td></tr><tr><td><span class="tag tag-warm">Conversion_Rate</span></td><td>無料から有料への転換率</td><td>Percentage of free tier users converting to paid subscription. Benchmark: 1-5% f</td></tr><tr><td><span class="tag tag-warm">Engagement_Rate</span></td><td>コンテンツエンゲージメント率</td><td>User interaction with content (views, likes, comments, shares). Proxy for conten</td></tr><tr><td><span class="tag tag-warm">Completion_Rate</span></td><td>修了率</td><td>Percentage of learners completing course/content. Benchmark: 5-10% for on-demand</td></tr><tr><td><span class="tag tag-warm">NPS_Score</span></td><td>推奨度スコア</td><td>Customer satisfaction proxy. Score >50 excellent, 0-50 acceptable, <0 problemati</td></tr><tr><td><span class="tag tag-warm">Refund_Rate</span></td><td>返金率</td><td>Percentage of customers requesting refunds. High refund rate (>10%) signals qual</td></tr><tr><td><span class="tag tag-warm">Platform_Fee</span></td><td>プラットフォーム手数料率</td><td>Commission platform takes from creator revenue. Typical range: 5-30%. Lower rate</td></tr><tr><td><span class="tag tag-warm">Time_to_Revenue</span></td><td>初回売上までの期間</td><td>Speed to monetization. Benchmark: 7-30 days for organic growth; faster with exis</td></tr><tr><td><span class="tag tag-warm">Funding_Success_Rate</span></td><td>クラウドファンディング成功率</td><td>Percentage of crowdfunding campaigns reaching goal. Benchmark: Kickstarter 41% s</td></tr><tr><td><span class="tag tag-warm">Backer_Count</span></td><td>クラウドファンディング支援者数</td><td>Total unique backers/supporters for crowdfunding campaign. Proxy for project rea</td></tr><tr><td><span class="tag tag-warm">Reward_Tier_Concentration</span></td><td>リワード層の集中度</td><td>Whether revenue concentrated in few high-price tiers or distributed. High concen</td></tr><tr><td><span class="tag tag-warm">Creator_Income_Distribution</span></td><td>クリエイター所得分布不平等</td><td>Measure of income inequality across creator base. High Gini (0.7-0.9, typical fo</td></tr><tr><td><span class="tag tag-warm">Market_Saturation_Index</span></td><td>市場飽和度・カテゴリー競争度</td><td>Degree of competition in content category. High saturation (many competitors, lo</td></tr><tr><td><span class="tag tag-warm">Creator_Retention</span></td><td>クリエイター継続率</td><td>Percentage of creators still active after 1 year. Low retention (<50%) suggests </td></tr><tr><td><span class="tag tag-warm">Revenue_Diversification_Index</span></td><td>收入源多様化度</td><td>Measure of revenue concentration. Creators relying on single platform/revenue so</td></tr><tr><td><span class="tag tag-warm">Blockchain_Royalty_Revenue</span></td><td>NFT再販ロイヤリティ収益</td><td>Ongoing revenue from resales of NFT collectibles. Unique to blockchain monetizat</td></tr><tr><td><span class="tag tag-warm">Gacha_ARPU</span></td><td>ガチャARPU</td><td></td></tr><tr><td><span class="tag tag-warm">Ceiling_Reach_Rate</span></td><td>天井到達率</td><td></td></tr><tr><td><span class="tag tag-warm">Lead_Quality_Score</span></td><td>リード品質スコア</td><td></td></tr><tr><td><span class="tag tag-warm">None</span></td><td>月次経常収益</td><td>Active subscriptions × monthly price. Cash flow forecasting基礎。</td></tr><tr><td><span class="tag tag-warm">None</span></td><td>顧客生涯価値（LTV）</td><td>期待顧客利益 over lifetime。LTV = (平均顧客価値 × 顧客寿命). CAC支出の持続可能性を決定。</td></tr><tr><td><span class="tag tag-warm">None</span></td><td>ネットレベニュー・リテンション（NRR）</td><td>NRR = (保持 + 拡張 - チャーン) / 前期売上 × 100. >100% = 既存顧客からの純成長。120%+がVC規模指標。</td></tr></tbody></table><h2 id="parent"><span class="chapter-num">05</span>親DBとの関係</h2><p>本DBは、ミラツクが構築する統合マネタイズ知識基盤（business-model-patterns-db）の子DBとして位置づけられる。親DBは経営戦略・事業ポートフォリオ・長期ビジョン形成という上位レイヤーを扱い、本DBは個別Webサービスの収益設計・KPI設計・実装パターン選定という下位レイヤーを扱う。両者を併用することで、戦略から実装までを一気通貫で接続できる。</p><footer>NPO法人ミラツク / Web Monetization DB v0.1.0 / Generated: 2026-05-12 22:41</footer></div></div>
+<div class="layout"><nav class="toc-sidebar"><div class="toc-title">Contents</div><ul><li><a href="#overview"><span class="toc-num">01</span>概要</a></li><li><a href="#kpi"><span class="toc-num">02</span>全体KPI</a></li><li><a href="#subfields"><span class="toc-num">03</span>16サブフィールド</a></li><li><a href="#geographic"><span class="toc-num">04</span>地理的分布</a></li><li><a href="#failures"><span class="toc-num">05</span>失敗事例</a></li><li><a href="#top-patterns"><span class="toc-num">06</span>Top パターン</a></li><li><a href="#relations"><span class="toc-num">07</span>関係グラフ</a></li><li><a href="#academic"><span class="toc-num">08</span>学術根拠</a></li><li><a href="#concepts"><span class="toc-num">09</span>概念体系</a></li><li><a href="#crossdb"><span class="toc-num">10</span>クロスDB</a></li><li><a href="#parent"><span class="toc-num">11</span>親DB連携</a></li></ul></nav><div class="main"><h1>Web Monetization DB</h1><div class="subtitle">ウェブ・インターネット領域の収益化技法データベース ｜ v0.4.0 ｜ 2026-05-12 更新</div><h2 id="overview"><span class="chapter-num">01</span>概要</h2><p class="intro">本データベースは、ウェブ・インターネット上で行われる収益化技法を体系的に整理した知識基盤である。広告・サブスクリプション・EC・デジタルコンテンツ販売・アフィリエイト・フリーミアム・ペイウォール・クラウドファンディング・API課金・Web3トークン・ゲーミフィケーション課金・リードジェネレーションといった従来からの十二領域に加え、v0.3.0でAIネイティブ・サブスクリプション、エージェント仲介商取引、ML向けデータライセンシング、クリエイター経済プラットフォームの四領域を追加し、二〇二六年現在のAI時代の収益化様式までを包含する十六サブフィールドの体系を構築している。</p><p class="intro">v0.4.0では量的拡張から質的深化へと焦点を移し、収益化の失敗事例の構造化、地理的多様性の拡張、学術的根拠の強化、AI時代新興領域の事例層拡充を四つの並列リサーチで実施した。北米中心の偏在から、中国・東南アジア・インド・中南米・アフリカ等を含むグローバルな視座へと拡張され、各パターンには経済学・行動経済学・プラットフォーム経済学・Web3理論の主要研究者と概念による学術的根拠が付与された。</p><h2 id="kpi"><span class="chapter-num">02</span>全体KPI</h2><p>v0.4.0時点のデータベース全体規模は、十六サブフィールド・五百六十四パターン・三百四十九事例・八十七研究者・百二十概念・百九十二指標・千二十一関係・三十八のクロスDB連携で構成される。すべての主要レコードに一次情報URLが付与されており、ハルシネーション・チェックではURL欠落ゼロを維持している。</p><div class="kpi-grid"><div class="kpi-card"><div class="kpi-label">Subfields</div><div class="kpi-value">16</div><div class="kpi-delta up">+4 from v0.2</div></div><div class="kpi-card"><div class="kpi-label">Patterns</div><div class="kpi-value">564</div><div class="kpi-delta up">+119 from v0.3</div></div><div class="kpi-card"><div class="kpi-label">Examples</div><div class="kpi-value">349</div><div class="kpi-delta up">+136 from v0.3</div></div><div class="kpi-card"><div class="kpi-label">Relations</div><div class="kpi-value">1,021</div><div class="kpi-delta up">+20 from v0.3</div></div><div class="kpi-card"><div class="kpi-label">Researchers</div><div class="kpi-value">87</div><div class="kpi-delta up">+19 from v0.3</div></div><div class="kpi-card"><div class="kpi-label">Concepts</div><div class="kpi-value">120</div><div class="kpi-delta up">+34 from v0.3</div></div><div class="kpi-card"><div class="kpi-label">Metrics</div><div class="kpi-value">192</div><div class="kpi-delta up">+48 from v0.3</div></div><div class="kpi-card"><div class="kpi-label">Cross-DB links</div><div class="kpi-value">38</div><div class="kpi-delta up">8 external DBs</div></div></div><h2 id="subfields"><span class="chapter-num">03</span>16サブフィールド</h2><p>本DBが扱う収益化領域は、課金構造・対象媒体・価値交換の様式によって十六のサブフィールドに分類される。WM01〜WM12は伝統的な十二領域、WM13〜WM16は二〇二六年AI時代の四つの新興領域である。各領域は独立して機能すると同時に、現代のウェブ事業ではしばしば組み合わせて運用される。</p><table><thead><tr><th>ID</th><th>領域</th><th class="num">目標</th><th class="num">Patterns</th><th class="num">Examples</th><th class="num">充足率</th><th>Status</th></tr></thead><tbody><tr><td class="code">WM01</td><td>ウェブ広告型収益 </td><td class="num">100</td><td class="num">38</td><td class="num">28</td><td class="num">66%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM02</td><td>サブスクリプション/会員型 </td><td class="num">100</td><td class="num">85</td><td class="num">62</td><td class="num">147%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM03</td><td>EC・D2C・マーケットプレイス </td><td class="num">100</td><td class="num">55</td><td class="num">46</td><td class="num">101%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM04</td><td>デジタルコンテンツ販売 </td><td class="num">90</td><td class="num">27</td><td class="num">22</td><td class="num">54%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM05</td><td>アフィリエイト・成果報酬 </td><td class="num">80</td><td class="num">26</td><td class="num">20</td><td class="num">57%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM06</td><td>フリーミアム・課金転換 </td><td class="num">80</td><td class="num">34</td><td class="num">22</td><td class="num">70%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM07</td><td>ペイウォール戦略 </td><td class="num">70</td><td class="num">23</td><td class="num">20</td><td class="num">61%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM08</td><td>クラウドファンディング・支援型 </td><td class="num">70</td><td class="num">24</td><td class="num">18</td><td class="num">60%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM09</td><td>API/データ・ライセンス </td><td class="num">80</td><td class="num">50</td><td class="num">14</td><td class="num">80%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM10</td><td>Web3・トークン・暗号資産 </td><td class="num">70</td><td class="num">61</td><td class="num">21</td><td class="num">117%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM11</td><td>ゲーミフィケーション・マイクロ課金 </td><td class="num">80</td><td class="num">37</td><td class="num">19</td><td class="num">70%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM12</td><td>リードジェネレーション・マーケ型 </td><td class="num">80</td><td class="num">33</td><td class="num">16</td><td class="num">61%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM13</td><td>AIネイティブ・サブスクリプション <span class="tag tag-warm">NEW</span></td><td class="num">80</td><td class="num">13</td><td class="num">29</td><td class="num">52%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM14</td><td>エージェント仲介商取引 <span class="tag tag-warm">NEW</span></td><td class="num">60</td><td class="num">31</td><td class="num">12</td><td class="num">71%</td><td><span class="tag tag-success">強</span></td></tr><tr><td class="code">WM15</td><td>ML向けデータライセンシング <span class="tag tag-warm">NEW</span></td><td class="num">60</td><td class="num">16</td><td class="num">0</td><td class="num">26%</td><td><span class="tag ">薄</span></td></tr><tr><td class="code">WM16</td><td>クリエイター経済プラットフォーム <span class="tag tag-warm">NEW</span></td><td class="num">80</td><td class="num">11</td><td class="num">0</td><td class="num">13%</td><td><span class="tag ">薄</span></td></tr></tbody></table><h2 id="geographic"><span class="chapter-num">04</span>地理的分布</h2><p>v0.4.0ではTeam F2による八十六件の地理多様性事例追加により、データベース全体の地理的偏在が大幅に改善した。北米の比重が六十パーセントから四十九パーセントへ低下し、中国は三・三パーセントから八・〇パーセントへ約四倍に拡大、東南アジアは一・四パーセントから五・四パーセントへ、インド・中南米・アフリカ・中東は新規にカバーされた領域となった。</p><div class="bar-chart"><div class="bar-row">
+        <div class="bar-label">北米 (NA)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100.0%"></div></div>
+        <div class="bar-count">171</div>
+        </div><div class="bar-row">
+        <div class="bar-label">その他 (OTHER)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:26.9%"></div></div>
+        <div class="bar-count">46</div>
+        </div><div class="bar-row">
+        <div class="bar-label">欧州 (EU)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:17.0%"></div></div>
+        <div class="bar-count">29</div>
+        </div><div class="bar-row">
+        <div class="bar-label">中国 (CN)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:16.4%"></div></div>
+        <div class="bar-count">28</div>
+        </div><div class="bar-row">
+        <div class="bar-label">東南アジア (SEA)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:11.1%"></div></div>
+        <div class="bar-count">19</div>
+        </div><div class="bar-row">
+        <div class="bar-label">日本 (JP)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:11.1%"></div></div>
+        <div class="bar-count">19</div>
+        </div><div class="bar-row">
+        <div class="bar-label">インド (IN)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:8.8%"></div></div>
+        <div class="bar-count">15</div>
+        </div><div class="bar-row">
+        <div class="bar-label">中南米 (LATAM)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:4.7%"></div></div>
+        <div class="bar-count">8</div>
+        </div><div class="bar-row">
+        <div class="bar-label">中東・北アフリカ (MENA)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:2.9%"></div></div>
+        <div class="bar-count">5</div>
+        </div><div class="bar-row">
+        <div class="bar-label">アフリカ (AF)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:2.3%"></div></div>
+        <div class="bar-count">4</div>
+        </div><div class="bar-row">
+        <div class="bar-label">韓国 (KR)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:1.8%"></div></div>
+        <div class="bar-count">3</div>
+        </div><div class="bar-row">
+        <div class="bar-label">オセアニア (OCE)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:1.2%"></div></div>
+        <div class="bar-count">2</div>
+        </div></div><p class="note">事例総数 349 件のうち、地域別分類済み。North America 171 件（49%）が依然最大、中国 28 件で第三位。</p><h2 id="failures"><span class="chapter-num">05</span>失敗事例の構造分析</h2><p>v0.4.0で新たに導入された失敗事例層は、収益化の構造的限界を学習可能な知識として体系化する。Team F1の調査により五十五件の主要失敗事例と十九の構造的失敗パターンが収集された。FTXの信用崩壊、Terra/Lunaのアルゴリズム的ステーブルコイン死のスパイラル、MoviePassのUnit Economics崩壊、Quibiのフォーマット不一致、Vice Media・BuzzFeed Newsの広告依存型メディア崩壊、SonyのConcordがわずか二週間で運営停止に至った事例まで、業界記憶として残る主要な失敗が体系化されている。</p><h3>失敗タイプ別分布</h3><div class="bar-chart"><div class="bar-row">
+        <div class="bar-label">Format Audience Mismatch</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100.0%"></div></div>
+        <div class="bar-count">5</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Token Bubble Burst</div>
+        <div class="bar-track"><div class="bar-fill" style="width:80.0%"></div></div>
+        <div class="bar-count">4</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Unit Economics Failure</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40.0%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Trust Collapse</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40.0%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Platform Dependency</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40.0%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Hype Decay</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40.0%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Burn Rate Unsustainable</div>
+        <div class="bar-track"><div class="bar-fill" style="width:40.0%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Regulatory Strike</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.0%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Quality Erosion</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.0%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Network Effect Failure</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.0%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Market Demand Collapse</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.0%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Leverage Cascade</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.0%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Competitive Race To Bottom</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.0%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">Competitive Displacement</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20.0%"></div></div>
+        <div class="bar-count">1</div>
+        </div></div><h3>代表的失敗事例</h3><table><thead><tr><th>企業</th><th>サービス</th><th>国</th><th>年</th><th>失敗タイプ</th><th>規模</th></tr></thead><tbody><tr><td>Sony Interactive Entertainment</td><td>Concord (Firewalk Studios)</td><td>US</td><td class="num">2024</td><td><span class="tag tag-fail">format audience mismatch</span></td><td style="font-size:11px">$200M+ invested, 2 weeks of service</td></tr><tr><td>Friend.tech (TheReal Co Inc.)</td><td>Friend.tech</td><td>US</td><td class="num">2023</td><td><span class="tag tag-fail">token bubble burst</span></td><td style="font-size:11px">Peak $50M TVL → <$5M</td></tr><tr><td>Warner Bros. Discovery</td><td>CNN+</td><td>US</td><td class="num">2022</td><td><span class="tag tag-fail">format audience mismatch</span></td><td style="font-size:11px">$300M+ invested, lost in 30 days</td></tr><tr><td>Square Enix</td><td>Babylon's Fall</td><td>Japan</td><td class="num">2022</td><td><span class="tag tag-fail">format audience mismatch</span></td><td style="font-size:11px">Undisclosed development cost, ~11 months of servic</td></tr><tr><td>Stability AI</td><td>Stable Diffusion (commercial)</td><td>UK</td><td class="num">2022</td><td><span class="tag tag-fail">burn rate unsustainable</span></td><td style="font-size:11px">$1B valuation → financial distress</td></tr><tr><td>Inflection AI</td><td>Pi (Personal Intelligence)</td><td>US</td><td class="num">2022</td><td><span class="tag tag-fail">competitive displacement</span></td><td style="font-size:11px">$1.5B raised → effective acqui-hire $650M</td></tr><tr><td>Find Satoshi Lab</td><td>STEPN</td><td>Australia/Vietnam</td><td class="num">2021</td><td><span class="tag tag-fail">token bubble burst</span></td><td style="font-size:11px">Peak DAU 700K → DAU <10K</td></tr><tr><td>Terraform Labs</td><td>Terra USD (UST) + Luna</td><td>South Korea</td><td class="num">2020</td><td><span class="tag tag-fail">token bubble burst</span></td><td style="font-size:11px">Peak $40B → near $0 in days</td></tr><tr><td>Quibi Holdings</td><td>Quibi</td><td>US</td><td class="num">2020</td><td><span class="tag tag-fail">format audience mismatch</span></td><td style="font-size:11px">$1.75B raised, 270K subs at peak, dissolved</td></tr><tr><td>Alpha Exploration Co.</td><td>Clubhouse</td><td>US</td><td class="num">2020</td><td><span class="tag tag-fail">hype decay</span></td><td style="font-size:11px">$4B valuation → effective shutdown</td></tr><tr><td>FTX</td><td>FTX Crypto Exchange</td><td>Bahamas (HQ)</td><td class="num">2019</td><td><span class="tag tag-fail">trust collapse</span></td><td style="font-size:11px">Peak $32B valuation → $0</td></tr><tr><td>Sky Mavis</td><td>Axie Infinity</td><td>Vietnam</td><td class="num">2018</td><td><span class="tag tag-fail">token bubble burst</span></td><td style="font-size:11px">Peak $4B+ in NFT sales → 95%+ decline</td></tr><tr><td>Celsius Network</td><td>Celsius Earn / Yield</td><td>US</td><td class="num">2017</td><td><span class="tag tag-fail">trust collapse</span></td><td style="font-size:11px">$25B AUM → bankruptcy</td></tr><tr><td>HQ Trivia</td><td>HQ Trivia</td><td>US</td><td class="num">2017</td><td><span class="tag tag-fail">hype decay</span></td><td style="font-size:11px">Peak 2.3M DAU, monthly $1.5M revenue → shutdown</td></tr><tr><td>OpenSea (Ozone Networks)</td><td>OpenSea Royalty Enforcement</td><td>US</td><td class="num">2017</td><td><span class="tag tag-fail">competitive race to bottom</span></td><td style="font-size:11px">Royalty Revenue $2B+ → $300M (industry-wide)</td></tr></tbody></table><h2 id="top-patterns"><span class="chapter-num">06</span>Top パターン（事例数上位）</h2><p>各収益化パターンには、それを採用している実在企業の事例が紐づいている。実例数が多いパターンは業界に広く受容されたものとみなせる一方、新興のパターンは事例数こそ少ないが先進事例として注目される。以下は事例数上位二十五のパターンである。</p><table><thead><tr><th>Subfield</th><th>パターン</th><th>成熟度</th><th>出現</th><th class="num">事例数</th></tr></thead><tbody><tr><td class="code">WM13</td><td>固定月額サブスク（暗黙的トークン上限付き）</td><td><span class="tag">growth</span></td><td style="font-size:11px;color:var(--text-muted)">2023</td><td class="num">17</td></tr><tr><td class="code">WM13</td><td>ティア型サブスク（基本×5倍、20倍）</td><td><span class="tag">growth</span></td><td style="font-size:11px;color:var(--text-muted)">2024</td><td class="num">7</td></tr><tr><td class="code">WM03</td><td>地域フードデリバリー型</td><td><span class="tag">-</span></td><td style="font-size:11px;color:var(--text-muted)">-</td><td class="num">2</td></tr><tr><td class="code">WM04</td><td>オンデマンド動画講座（自習型）</td><td><span class="tag">mature</span></td><td style="font-size:11px;color:var(--text-muted)">2010</td><td class="num">2</td></tr></tbody></table><h2 id="relations"><span class="chapter-num">07</span>関係グラフ</h2><p>パターン間の関係は、補完（complements）・代替（substitutes）・前段（precedes）・衝突（conflicts）・構成（composes）の五基本タイプに、研究者の理論的貢献（theorizes）、指標による測定（measures）、技術的依存（depends_on）、利用（uses）、実装（implements）、実現（enables）を加えた十一種類で記述される。複数の関係タイプを組合せることで、戦略から実装までの推論経路がDB上で参照可能となる。</p><div class="bar-chart"><div class="bar-row">
+        <div class="bar-label">complements</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100.0%"></div></div>
+        <div class="bar-count">886</div>
+        </div><div class="bar-row">
+        <div class="bar-label">substitutes</div>
+        <div class="bar-track"><div class="bar-fill" style="width:4.7%"></div></div>
+        <div class="bar-count">42</div>
+        </div><div class="bar-row">
+        <div class="bar-label">precedes</div>
+        <div class="bar-track"><div class="bar-fill" style="width:3.8%"></div></div>
+        <div class="bar-count">34</div>
+        </div><div class="bar-row">
+        <div class="bar-label">composes</div>
+        <div class="bar-track"><div class="bar-fill" style="width:2.7%"></div></div>
+        <div class="bar-count">24</div>
+        </div><div class="bar-row">
+        <div class="bar-label">measures</div>
+        <div class="bar-track"><div class="bar-fill" style="width:2.1%"></div></div>
+        <div class="bar-count">19</div>
+        </div><div class="bar-row">
+        <div class="bar-label">conflicts</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0.9%"></div></div>
+        <div class="bar-count">8</div>
+        </div><div class="bar-row">
+        <div class="bar-label">theorizes</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0.3%"></div></div>
+        <div class="bar-count">3</div>
+        </div><div class="bar-row">
+        <div class="bar-label">depends_on</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0.2%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">uses</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0.1%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">implements</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0.1%"></div></div>
+        <div class="bar-count">1</div>
+        </div><div class="bar-row">
+        <div class="bar-label">enables</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0.1%"></div></div>
+        <div class="bar-count">1</div>
+        </div></div><h2 id="academic"><span class="chapter-num">08</span>学術根拠の研究者陣</h2><p>v0.4.0でTeam F3により学術的根拠が強化された。経済学のノーベル賞受賞者群（Paul Romer・Joseph Stiglitz・George Akerlof・Daniel Kahneman・Richard Thaler・Jean Tirole）、行動経済学・神経経済学の主要研究者、プラットフォーム経済学の権威、Web3理論の先駆者、クリエイター経済論者を含む八十七名の研究者がDB内に登録され、それぞれが具体的パターンと理論的に接続されている。</p><table><thead><tr><th>研究者</th><th>所属</th><th>領域</th></tr></thead><tbody><tr><td>Reid Hoffman</td><td style="font-size:11px;color:var(--text-secondary)">Greylock Partners</td><td>WM03, WM06</td></tr><tr><td>Etienne Wenger</td><td style="font-size:11px;color:var(--text-secondary)">UC Davis (Professor Emeritus)</td><td>WM03, WM06</td></tr><tr><td>Chris Dixon</td><td style="font-size:11px;color:var(--text-secondary)">Andreessen Horowitz (General Partner)</td><td>WM08, WM09</td></tr><tr><td>Eugene Wei</td><td style="font-size:11px;color:var(--text-secondary)">Independent (former Sequoia Capital)</td><td>WM06, WM09</td></tr><tr><td>Robbie Kellman Baxter</td><td style="font-size:11px;color:var(--text-secondary)">The Membership Company (Founder)</td><td>WM02, WM06</td></tr><tr><td>Clayton Christensen</td><td style="font-size:11px;color:var(--text-secondary)">Harvard Business School</td><td>WM01, WM02, WM06</td></tr><tr><td>E. Glen Weyl</td><td style="font-size:11px;color:var(--text-secondary)">Microsoft Research / RadicalxChange Foundation</td><td>WM08, WM09</td></tr><tr><td>Marshall Van Alstyne</td><td style="font-size:11px;color:var(--text-secondary)">Boston University</td><td>WM03</td></tr><tr><td>Geoffrey Parker</td><td style="font-size:11px;color:var(--text-secondary)">Dartmouth College</td><td>WM03, WM04</td></tr><tr><td>Sunil Gupta</td><td style="font-size:11px;color:var(--text-secondary)">Harvard Business School</td><td>WM02, WM03</td></tr><tr><td>Peter Fader</td><td style="font-size:11px;color:var(--text-secondary)">Wharton School of Business</td><td>WM02, WM06</td></tr><tr><td>Robert Cialdini</td><td style="font-size:11px;color:var(--text-secondary)">Arizona State University (Emeritus)</td><td>WM02, WM03, WM06</td></tr><tr><td>Drazen Prelec</td><td style="font-size:11px;color:var(--text-secondary)">MIT Sloan School of Management</td><td>WM02, WM06</td></tr><tr><td>Richard Thaler</td><td style="font-size:11px;color:var(--text-secondary)">University of Chicago (Nobel Prize 2017)</td><td>WM02, WM03, WM06</td></tr><tr><td>Daniel Kahneman</td><td style="font-size:11px;color:var(--text-secondary)">Princeton University (Nobel Prize 2002)</td><td>WM01, WM02</td></tr><tr><td>Paul Romer</td><td style="font-size:11px;color:var(--text-secondary)">New York University (Nobel Prize 2018)</td><td>WM06, WM08</td></tr><tr><td>George Akerlof</td><td style="font-size:11px;color:var(--text-secondary)">UC Berkeley (Nobel Prize 2001)</td><td>WM01, WM02, WM03</td></tr><tr><td>Joseph Stiglitz</td><td style="font-size:11px;color:var(--text-secondary)">Columbia University (Nobel Prize 2001)</td><td>WM01, WM02, WM03</td></tr><tr><td>Kenneth Arrow</td><td style="font-size:11px;color:var(--text-secondary)">Stanford University (Professor Emeritus)</td><td>WM02, WM06</td></tr><tr><td>Casey Newton</td><td style="font-size:11px;color:var(--text-secondary)">Platformer</td><td>-</td></tr></tbody></table><h2 id="concepts"><span class="chapter-num">09</span>概念体系</h2><p>収益化パターンを支える理論的概念は百二十件登録されている。情報経済学・両側市場理論・注意経済・サブスクリプション経済・フリーミアム理論・支払いの痛み・プロスペクト理論・アンカリング効果・ネットワーク効果・Aggregation Theoryといった主要概念から、Web3固有の二次資金調達・ソウルバウンド・トークン・コードによる法（code is law）の限界まで、学際的な概念ネットワークを構成する。</p><table><thead><tr><th>概念（英）</th><th>日本語</th><th>定義要旨</th><th>領域</th></tr></thead><tbody><tr><td style="font-size:12px"><strong>Quadratic Funding</strong></td><td>二次資金調達</td><td style="font-size:11px;color:var(--text-secondary)">公共財資金調達メカニズム。コントリビューション額の平方根の合計で配分。sybil-resistant。</td><td>Mechanism design</td></tr><tr><td style="font-size:12px"><strong>Commitment Escalation</strong></td><td>コミットメント昇温法</td><td style="font-size:11px;color:var(--text-secondary)">初期の小さな約束が心理的コミットメントを生み、高コストなアクションへ導く。フリートライアル→有料化の基礎。</td><td>Social psychology</td></tr><tr><td style="font-size:12px"><strong>Signaling Theory</strong></td><td>シグナリング理論</td><td style="font-size:11px;color:var(--text-secondary)">情報格差下で、一方が行動で自身の品質を他方に知らせるメカニズム。プレミアム価格設定による品質シグナリング。</td><td>Information economics</td></tr><tr><td style="font-size:12px"><strong>Non-rivalry (Information Goods)</strong></td><td>非競合性（情報財）</td><td style="font-size:11px;color:var(--text-secondary)">情報財は多くの人が同時利用でき、一人の使用が他の利用を減じない。デジタルコンテンツの限界費用はゼロに近い。</td><td>Information economics</td></tr><tr><td style="font-size:12px"><strong>Ownership Economy vs. Attention Economy</strong></td><td>-</td><td style="font-size:11px;color:var(--text-secondary)">Philosophical divide: creator autonomy (ownership) vs. viral growth (attention)</td><td>-</td></tr><tr><td style="font-size:12px"><strong>Middle-Class Creator Sustainability</strong></td><td>-</td><td style="font-size:11px;color:var(--text-secondary)">Target income $1,000-5,000/mo for emerging creators</td><td>-</td></tr><tr><td style="font-size:12px"><strong>Creator Burnout</strong></td><td>-</td><td style="font-size:11px;color:var(--text-secondary)">Exhaustion from publishing/streaming consistency demands</td><td>-</td></tr><tr><td style="font-size:12px"><strong>Agent-to-Agent Commerce (A2A)</strong></td><td>エージェント間商取引</td><td style="font-size:11px;color:var(--text-secondary)">Direct transactions between autonomous agents (e.g., developer APIs, MCP servers...</td><td>e-commerce</td></tr><tr><td style="font-size:12px"><strong>Know Your Agent (KYA) Framework</strong></td><td>エージェント認証フレームワーク</td><td style="font-size:11px;color:var(--text-secondary)">Identity verification layer for AI agents, binding agent identity to payment ins...</td><td>fintech</td></tr><tr><td style="font-size:12px"><strong>Product Metadata for Agent Discovery</strong></td><td>エージェント向け商品メタデータ</td><td style="font-size:11px;color:var(--text-secondary)">Structured product data (GTIN, SKU, attributes, availability) exposed via APIs f...</td><td>e-commerce</td></tr><tr><td style="font-size:12px"><strong>Agent Compute Unit (ACU)</strong></td><td>エージェント計算単位</td><td style="font-size:11px;color:var(--text-secondary)">Normalized pricing metric for autonomous agent work (VM time, model inference, n...</td><td>SaaS</td></tr><tr><td style="font-size:12px"><strong>Agentic Commerce Protocol</strong></td><td>エージェント商取引プロトコル</td><td style="font-size:11px;color:var(--text-secondary)">Open standard enabling direct agent-to-merchant transactions without human inter...</td><td>e-commerce</td></tr><tr><td style="font-size:12px"><strong>Agent Identity Verification</strong></td><td>エージェント本人確認</td><td style="font-size:11px;color:var(--text-secondary)">Cryptographic binding of AI agents to verified consumer identities to enable tru...</td><td>fintech</td></tr><tr><td style="font-size:12px"><strong>Answer Engine Optimization (AEO)</strong></td><td>回答エンジン最適化</td><td style="font-size:11px;color:var(--text-secondary)">Content and data optimization for AI-powered answer engines (ChatGPT, Perplexity...</td><td>marketing</td></tr><tr><td style="font-size:12px"><strong>Agentic Discovery</strong></td><td>エージェント起点の発見</td><td style="font-size:11px;color:var(--text-secondary)">Product discovery initiated by AI agents via API rather than human browsing, pri...</td><td>e-commerce</td></tr></tbody></table><h2 id="crossdb"><span class="chapter-num">10</span>クロスDB連携</h2><p>WMDは単体で完結する辞書ではなく、ミラツクが構築する他十八のSQLite DBと連動する知識ハブとして機能する。cross_db_linksテーブルでは、十六のサブフィールドが親DB（business-model-patterns-db）の対応領域へリンクされ、加えて経営学概念DB（MG-DB）・イノベーション理論DB・未来予測DB（Foresight-KB）・産学連携DB（Sangaku-PR）・マクロ経済DB・投資シグナルDB・規制動向DBへの参照が三十八件構造化されている。</p><div class="bar-chart"><div class="bar-row">
+        <div class="bar-label">business-model-patterns-db</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100.0%"></div></div>
+        <div class="bar-count">16</div>
+        </div><div class="bar-row">
+        <div class="bar-label">mg-database</div>
+        <div class="bar-track"><div class="bar-fill" style="width:31.2%"></div></div>
+        <div class="bar-count">5</div>
+        </div><div class="bar-row">
+        <div class="bar-label">regulatory-japan-db</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25.0%"></div></div>
+        <div class="bar-count">4</div>
+        </div><div class="bar-row">
+        <div class="bar-label">innovation-db</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25.0%"></div></div>
+        <div class="bar-count">4</div>
+        </div><div class="bar-row">
+        <div class="bar-label">foresight-kb</div>
+        <div class="bar-track"><div class="bar-fill" style="width:18.8%"></div></div>
+        <div class="bar-count">3</div>
+        </div><div class="bar-row">
+        <div class="bar-label">sangaku-pr-db</div>
+        <div class="bar-track"><div class="bar-fill" style="width:12.5%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">macro-economy-db</div>
+        <div class="bar-track"><div class="bar-fill" style="width:12.5%"></div></div>
+        <div class="bar-count">2</div>
+        </div><div class="bar-row">
+        <div class="bar-label">investment-signal-db</div>
+        <div class="bar-track"><div class="bar-fill" style="width:12.5%"></div></div>
+        <div class="bar-count">2</div>
+        </div></div><h2 id="parent"><span class="chapter-num">11</span>親DBとの関係</h2><p>WMDの上位には統合マネタイズDB（business-model-patterns-db、スラッシュコマンド /integrated-monetization）が存在する。親DBはBM×MS×MPV（Business Model × Management Studies × Minimum Viable Venture）の三軸統合視座を持ち、三年・十年・三十年の長期ホライズンでの経営判断を支援する。一方、WMDは零〜三年の戦術ホライズンでの実装パターン選定を支援する。</p><div class="callout"><div class="callout-title">推奨される利用フロー</div>新規事業の構想者は親DBで長期ビジョンを設計する。事業設計者はWMDのサブフィールド構造から自社事業に該当する領域を特定し、パターン群を概観する。事業の実装者は具体パターンの事例と失敗事例の双方を参照し、自社固有の制約条件と比較しながら最適パターンを選定する。事業の運営者は指標体系を参照しながらKPIダッシュボードを設計する。経営判断者は親DBとWMDを往復しながら、戦略と実装のずれを継続的に補正する。</div><footer><span>Web Monetization DB v0.4.0 ｜ NPO法人ミラツク</span><span><a href="wmd-textbook.html">教科書（20章）</a> ｜ Generated: 2026-05-12 23:12</span></footer></div></div>
 <script>
 function toggleTheme() {
   const el = document.documentElement;
@@ -120,6 +334,14 @@ function toggleTheme() {
 (function(){
   const saved = localStorage.getItem('wmd-theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);
+  // Smooth scroll for TOC links
+  document.querySelectorAll('.toc-sidebar a').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) { e.preventDefault(); el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+    });
+  });
 })();
 </script>
 </body></html>
