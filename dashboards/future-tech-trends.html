@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>未来技術動向DB ── FTT-DB ダッシュボード</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF; --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+      --border: #D9D9D9; --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="dark"] {
+      --bg: #121212; --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF5A4A;
+      --accent-muted: rgba(255,90,74,0.10);
+      --text: #F0F0F0; --text-secondary: #BBBBBB; --text-muted: #999999;
+      --border: #333333; --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.85; letter-spacing: 0.025em; transition: background 0.2s, color 0.2s; }
+    a { color: var(--accent-warm); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .top-bar { background: var(--bg); border-top: 3px solid var(--text); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+    .top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .top-bar-brand span { color: var(--accent-warm); }
+    .theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    .container { max-width: 1180px; margin: 0 auto; padding: 60px 24px; }
+    .cover { text-align: center; padding: 40px 0 60px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    .cover-tag { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.18em; color: var(--accent-warm); text-transform: uppercase; margin-bottom: 24px; }
+    .cover-title { font-family: var(--font-serif); font-size: 2.4rem; font-weight: 900; line-height: 1.3; margin-bottom: 16px; }
+    .cover-title em { font-style: normal; color: var(--accent-warm); }
+    .cover-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); margin: 20px auto 28px; max-width: 720px; }
+    .cover-meta { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.04em; }
+    .cover-meta span { margin: 0 8px; }
+
+    h2 { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; padding-top: 18px; padding-bottom: 12px; border-top: 2px solid var(--accent-warm); margin: 56px 0 24px; }
+    p { margin-bottom: 1.2em; }
+    p.lead { font-size: 1.02rem; color: var(--text-secondary); margin-bottom: 32px; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); margin: 32px 0; }
+    .kpi-cell { padding: 18px; border-right: 1px solid var(--border); }
+    .kpi-cell:last-child { border-right: none; }
+    .kpi-label { font-family: var(--font); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .kpi-value { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 900; color: var(--text); line-height: 1.15; }
+
+    .domain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin: 24px 0; }
+    .domain-card { padding: 18px; background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--accent-warm); transition: all 0.15s; }
+    .domain-card:hover { background: var(--surface); }
+    .domain-code { font-family: var(--font); font-size: 0.62rem; letter-spacing: 0.15em; color: var(--accent-warm); font-weight: 700; }
+    .domain-name { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; margin: 6px 0; }
+    .domain-name-en { font-family: var(--font); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; }
+    .domain-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+    .domain-meta { font-family: var(--font); font-size: 0.7rem; color: var(--text-muted); margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-light); }
+    .ai-strong { color: var(--accent-warm); font-weight: 700; }
+
+    table.matrix { width: 100%; border-collapse: collapse; margin: 24px 0; font-family: var(--font); font-size: 0.84rem; }
+    table.matrix th { background: var(--surface); padding: 12px; text-align: left; border-bottom: 2px solid var(--accent-warm); font-weight: 700; }
+    table.matrix td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+    table.matrix .reg-mature { color: var(--accent-warm); font-weight: 700; }
+    table.matrix .reg-forming { color: var(--text); }
+    table.matrix .reg-vacuum { color: var(--text-muted); font-style: italic; }
+
+    .megatrend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 20px 0; }
+    .megatrend-card { padding: 14px; background: var(--accent-muted); border-left: 3px solid var(--accent-warm); }
+    .megatrend-name { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; color: var(--accent-warm); }
+    .megatrend-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 6px; }
+
+    .cli-box { background: var(--surface); border-left: 4px solid var(--accent-warm); padding: 20px 24px; margin: 24px 0; font-family: ui-monospace, Menlo, monospace; font-size: 0.85rem; }
+    .cli-box code { color: var(--accent-warm); font-weight: 700; }
+
+    .info-box { background: var(--surface); border-left: 4px solid var(--accent-warm); padding: 18px 24px; margin: 24px 0; }
+    .info-box p { text-indent: 0; }
+
+    footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); }
+
+    @media (max-width: 720px) {
+      .cover-title { font-size: 1.8rem; }
+      .container { padding: 40px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/" class="top-bar-brand">MIRATUKU <span>news</span></a>
+    <div>
+      <a href="../databases.html" style="font-family:var(--font);font-size:0.75rem;color:var(--text-muted);margin-right:14px;">← データベース一覧</a>
+      <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <section class="cover">
+      <div class="cover-tag">FUTURE TECH TRENDS DB · FTT-DB v1.0 · 2026.05</div>
+      <h1 class="cover-title">未来技術動向DB<br><em>—</em> 10工学領域 × 4時代 × 3経路</h1>
+      <p class="cover-subtitle">deep knowledge補論v7.2「製造現場のオーケストラ化 2030-2100」付録F基盤の構造化データベース。<br>2030/2050/2070/2100の技術発展系譜を、規制成熟度・市場数値・メガトレンドと統合する。</p>
+      <div class="cover-meta">
+        <span>10領域</span>·<span>4時代</span>·<span>281レコード</span>·<span>62人物</span>·<span>58組織</span>·<span>25規制</span>·<span>27シナリオ</span>·<span>v1.0</span>
+      </div>
+      <div style="margin-top:24px;">
+        <a href="../reports/manufacturing-orchestra-2030-2100.html#appendix" style="display:inline-block;padding:10px 22px;background:var(--accent-warm);color:#FFF;font-family:var(--font);font-size:0.85rem;font-weight:700;letter-spacing:0.05em;">→ 補論付録F本編を読む</a>
+      </div>
+    </section>
+
+    <div class="kpi-grid">
+      <div class="kpi-cell"><div class="kpi-label">DOMAINS</div><div class="kpi-value">10</div></div>
+      <div class="kpi-cell"><div class="kpi-label">TIME PERIODS</div><div class="kpi-value">4</div></div>
+      <div class="kpi-cell"><div class="kpi-label">TECHNOLOGIES</div><div class="kpi-value">41</div></div>
+      <div class="kpi-cell"><div class="kpi-label">PEOPLE</div><div class="kpi-value">62</div></div>
+      <div class="kpi-cell"><div class="kpi-label">ORGS</div><div class="kpi-value">58</div></div>
+      <div class="kpi-cell"><div class="kpi-label">REGULATIONS</div><div class="kpi-value">25</div></div>
+      <div class="kpi-cell"><div class="kpi-label">SCENARIOS</div><div class="kpi-value">27</div></div>
+      <div class="kpi-cell"><div class="kpi-label">MARKET DATA</div><div class="kpi-value">30</div></div>
+    </div>
+
+    <h2>10工学領域</h2>
+    <p class="lead">補論v7.2付録F（F-1〜F-9）で扱った10工学領域。AI影響強度・領域コードを併記。</p>
+
+    <div class="domain-grid">
+      <div class="domain-card"><div class="domain-code">QUANTUM</div><div class="domain-name">量子・光・通信</div><div class="domain-name-en">Quantum/Photonics/Communication</div><div class="domain-desc">量子計算・シリコンフォトニクス・6G・量子インターネット</div><div class="domain-meta">情報基盤 · AI影響: <span class="ai-strong">強</span></div></div>
+      <div class="domain-card"><div class="domain-code">MATERIAL</div><div class="domain-name">材料・ナノ</div><div class="domain-name-en">Materials/Nanotechnology</div><div class="domain-desc">2D材料・メタマテリアル・AI材料発見・分子マシン</div><div class="domain-meta">物質基盤 · AI影響: <span class="ai-strong">強</span></div></div>
+      <div class="domain-card"><div class="domain-code">ENERGY</div><div class="domain-name">エネルギー深化</div><div class="domain-name-en">Energy Engineering</div><div class="domain-desc">核融合・SMR・固体電池・水素・グリッド</div><div class="domain-meta">物理基盤 · AI影響: 中</div></div>
+      <div class="domain-card"><div class="domain-code">SPACE</div><div class="domain-name">宇宙・海洋</div><div class="domain-name-en">Space/Ocean Engineering</div><div class="domain-desc">打上げ低コスト・宇宙製造・浮体風力・深海</div><div class="domain-meta">空間基盤 · AI影響: 中</div></div>
+      <div class="domain-card"><div class="domain-code">CLIMATE</div><div class="domain-name">環境・気候</div><div class="domain-name-en">Environment/Climate</div><div class="domain-desc">DAC/CCUS・地球工学・環境センサ</div><div class="domain-meta">地球系 · AI影響: 中</div></div>
+      <div class="domain-card"><div class="domain-code">MEDICAL</div><div class="domain-name">医療・神経</div><div class="domain-name-en">Medical/Neuro Engineering</div><div class="domain-desc">AI診断・オルガノイド・CRISPR・BCI・ニューロモーフィック</div><div class="domain-meta">生命基盤 · AI影響: <span class="ai-strong">強</span></div></div>
+      <div class="domain-card"><div class="domain-code">TRANSPORT</div><div class="domain-name">輸送</div><div class="domain-name-en">Transportation</div><div class="domain-desc">自動運転・eVTOL・電動水素航空</div><div class="domain-meta">社会基盤 · AI影響: <span class="ai-strong">強</span></div></div>
+      <div class="domain-card"><div class="domain-code">BUILDING</div><div class="domain-name">建築</div><div class="domain-name-en">Construction/Urban</div><div class="domain-desc">3Dプリント・デジタルツイン・CLT</div><div class="domain-meta">物理基盤 · AI影響: 中</div></div>
+      <div class="domain-card"><div class="domain-code">AGRI</div><div class="domain-name">農業</div><div class="domain-name-en">Agriculture</div><div class="domain-desc">垂直農業・精密農業・代替食品・再生農業</div><div class="domain-meta">生命基盤 · AI影響: <span class="ai-strong">強</span></div></div>
+      <div class="domain-card"><div class="domain-code">CROSS</div><div class="domain-name">横断観察</div><div class="domain-name-en">Cross-domain</div><div class="domain-desc">AI影響の工学全般への波及・10領域マッピング</div><div class="domain-meta">メタ · AI影響: -</div></div>
+    </div>
+
+    <h2>4時代パネル</h2>
+    <table class="matrix">
+      <thead><tr><th>年</th><th>期</th><th>位相</th><th>説明</th></tr></thead>
+      <tbody>
+        <tr><td><strong>2030</strong></td><td>協奏団期</td><td>concertante</td><td>人＋AI協働判断・触診的暗黙知の言語化</td></tr>
+        <tr><td><strong>2050</strong></td><td>室内楽期</td><td>chamber music</td><td>自律サブシステム連邦・譜面を書く者</td></tr>
+        <tr><td><strong>2070</strong></td><td>交響楽期</td><td>symphony</td><td>生命系・量子系・宇宙系の時間スケール統合</td></tr>
+        <tr><td><strong>2100</strong></td><td>関係論的製造期</td><td>relational</td><td>工学領域の境界溶解・関係の網</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5メガトレンド</h2>
+    <p class="lead">5,099シナリオ・507トレンドの横断分析から抽出された、10工学領域全体に作用するメタトレンド。</p>
+    <div class="megatrend-grid">
+      <div class="megatrend-card"><div class="megatrend-name">自律化</div><div class="megatrend-desc">Autonomy — 人間操作の外部化、運輸・製造・情報処理全域で進行</div></div>
+      <div class="megatrend-card"><div class="megatrend-name">分散化</div><div class="megatrend-desc">Decentralization — 中央集約型から分散型へ、エネルギー・計算・通信・製造で並行</div></div>
+      <div class="megatrend-card"><div class="megatrend-name">脱炭素化</div><div class="megatrend-desc">Decarbonization — エネルギー・材料・プロセス全面の置き換え</div></div>
+      <div class="megatrend-card"><div class="megatrend-name">生命化</div><div class="megatrend-desc">Biologization — 非生命工学への生物学的原理統合</div></div>
+      <div class="megatrend-card"><div class="megatrend-name">地球外化</div><div class="megatrend-desc">Extraterrestrialization — 資源・活動空間の地球外拡張</div></div>
+    </div>
+
+    <h2>3経路シナリオ構造</h2>
+    <table class="matrix">
+      <thead><tr><th>経路</th><th>特徴</th><th>典型像</th></tr></thead>
+      <tbody>
+        <tr><td><strong style="color:var(--accent-warm);">ともに育てる</strong></td><td>国際協調・分散型・コモンズ志向</td><td>規範的選択、生態系統合、民主的合意形成</td></tr>
+        <tr><td><strong>権威主義的AI統制</strong></td><td>集中型・特定主体独占・監視資本主義</td><td>データ独占、技術覇権、認知監視</td></tr>
+        <tr><td><strong>生態系切断型自動化</strong></td><td>短期効率優先・地域生態系断絶</td><td>規制空白下の暴走、外部性無視、生態系破壊</td></tr>
+      </tbody>
+    </table>
+    <p>27件のシナリオエントリで9領域×3経路を具体化。各シナリオに分岐点（規制判断・国際合意・市場形成の決定的瞬間）を併記。</p>
+
+    <h2>規制成熟度マトリクス</h2>
+    <table class="matrix">
+      <thead><tr><th>成熟度</th><th>領域</th><th>代表例</th></tr></thead>
+      <tbody>
+        <tr><td class="reg-mature">成熟・競争加速</td><td>量子暗号PQC</td><td>NIST FIPS 203/204/205 (2024.8標準化)</td></tr>
+        <tr><td class="reg-forming">急速形成・地域分裂</td><td>半導体</td><td>米CHIPS法、BIS 2024.12最終ルール</td></tr>
+        <tr><td class="reg-forming">形成中・複数枠組み共存</td><td>エネルギー脱炭素</td><td>EU CSRD/CSDDD/CBAM、米IRA 45Q</td></tr>
+        <tr><td class="reg-forming">形成中・条約実装段階</td><td>宇宙</td><td>Artemis Accords (2025年56署名国)</td></tr>
+        <tr><td class="reg-forming">急速形成・応用空白並行</td><td>医療・神経</td><td>FDA SaMD/PCCP、Casgevy承認</td></tr>
+        <tr><td class="reg-forming">地域分層・段階的形成</td><td>輸送</td><td>CPUC L4許可、FAA eVTOL</td></tr>
+        <tr><td class="reg-vacuum">空白・民間先行</td><td>建築</td><td>IBC CLT認可、3Dプリント空白</td></tr>
+        <tr><td class="reg-vacuum">深刻な空白・交渉停滞</td><td>海洋</td><td>ISA 30+未解決項目 (2024.7時点)</td></tr>
+        <tr><td class="reg-vacuum">深刻な分裂・国家戦略相違</td><td>農業食料</td><td>FDA承認vs米国州法禁止</td></tr>
+      </tbody>
+    </table>
+
+    <h2>CLIクイックアクセス</h2>
+    <p>SQLite DB（131KB）を直接クエリするCLIツール。</p>
+    <div class="cli-box">
+      <p># 統計と全体構造</p>
+      <p><code>python3 ~/projects/research/future-tech-trends-db/scripts/ftt-cli.py stats</code></p>
+      <p># 領域詳細</p>
+      <p><code>python3 ftt-cli.py domain ENERGY</code></p>
+      <p># 技術一覧</p>
+      <p><code>python3 ftt-cli.py technologies QUANTUM</code></p>
+      <p># 3経路シナリオ</p>
+      <p><code>python3 ftt-cli.py scenarios MEDICAL</code></p>
+      <p># 市場・投資数値</p>
+      <p><code>python3 ftt-cli.py market SPACE</code></p>
+      <p># キーワード横断検索</p>
+      <p><code>python3 ftt-cli.py search 核融合</code></p>
+    </div>
+
+    <h2>エージェント連携</h2>
+    <div class="info-box">
+      <p><strong>専用エージェント: <code style="color:var(--accent-warm);">/future-tech-trends</code></strong></p>
+      <p>本DBを駆動する未来技術動向専門エージェント。10工学領域診断・3経路シナリオ照合・規制成熟度マトリクス・市場数値提示・5メガトレンド × 領域分析・主要人物組織の系譜的提示・補論本体との統合を担う。</p>
+      <p style="margin-top:12px;">関連: <a href="../reports/manufacturing-orchestra-2030-2100.html">補論本編（v7.2）</a> · <a href="../reports/manufacturing-orchestra-methodology.html">方法論解説</a></p>
+    </div>
+
+    <h2>出典と構築履歴</h2>
+    <p>本DBは、<a href="../reports/manufacturing-orchestra-2030-2100.html#appendix">deep knowledge補論「製造現場のオーケストラ化 2030-2100」v7.2付録F</a>を学術的基盤とし、19並列リサーチチーム（G1-G6基盤＋H1-H6精緻化）×7回反復で構築された付録Fの全文と背景データを構造化したものである。本DBの281レコードは、H6最終学術検証（A評価到達）を経た補論v7.2の数値・人物・組織・引用関係を保持している。</p>
+
+    <p><strong>主要参照DB</strong>: AD（AI Development 2,236論文）・AA（AI Acceleration Evidence 498言及）・TA（Tech Acceleration 227Kレコード）・SG（Signal DB 7,668件）・IN（Innovation Theory 9,839概念）・GPT-QoL（Robotics Projection 243件）・MT（Megatrend 18件）・FK（Foresight KB 309機関・23,272予測）・PE（PESTLE 196,714記事）</p>
+
+    <footer>
+      未来技術動向DB v1.0 · 2026.05 · NPO法人ミラツク · 西村勇也<br>
+      補論v7.2付録F基盤の構造化データベース · 281レコード · A評価基盤
+    </footer>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const root = document.documentElement;
+      const current = root.getAttribute('data-theme') || 'light';
+      const next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('ftt-theme', next); } catch (e) {}
+    }
+    try {
+      const saved = localStorage.getItem('ftt-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+    } catch (e) {}
+  </script>
+</body>
+</html>
