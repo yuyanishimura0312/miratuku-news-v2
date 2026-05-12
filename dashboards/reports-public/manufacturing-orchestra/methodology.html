@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>方法論解説 ── 製造現場のオーケストラ化レポートの構築過程</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF; --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+      --border: #D9D9D9; --border-light: #EEEEEE;
+      --highlight: #CC1400; --surface: #F7F7F5;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="dark"] {
+      --bg: #121212; --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030; --accent-warm-soft: #E03020;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+      --border: #333333; --border-light: #2A2A2A;
+      --highlight: #FF4030; --surface: #1A1A1A;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; min-height: 100vh; transition: background 0.2s, color 0.2s; }
+    a { color: var(--accent-warm); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .top-bar { background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+    [data-theme="dark"] .top-bar { border-top-color: #E0E0E0; }
+    .top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .top-bar-brand span { color: var(--accent-warm); }
+    .top-bar-actions { display: flex; align-items: center; gap: 12px; }
+    .back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+    .back-link:hover { color: var(--accent-warm); }
+    .theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    .book-cover { max-width: 760px; margin: 0 auto; padding: 80px 24px 56px; text-align: center; border-bottom: 1px solid var(--border); }
+    .book-cover-tag { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.18em; color: var(--accent-warm); text-transform: uppercase; margin-bottom: 24px; }
+    .book-cover-title { font-family: var(--font-serif); font-size: 2.2rem; font-weight: 900; line-height: 1.35; letter-spacing: 0.02em; color: var(--text); margin-bottom: 16px; }
+    .book-cover-title em { font-style: normal; color: var(--accent-warm); }
+    .book-cover-subtitle { font-family: var(--font-serif); font-size: 1rem; color: var(--text-secondary); line-height: 1.7; margin: 24px auto 28px; max-width: 580px; }
+    .book-cover-meta { font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.04em; }
+    .book-cover-meta span { margin: 0 8px; }
+    .book-cover-divider { width: 60px; height: 2px; background: var(--accent-warm); margin: 24px auto; }
+    .main-link { display: inline-block; margin-top: 12px; padding: 10px 22px; background: var(--accent-warm); color: #FFF; font-family: var(--font); font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em; border-radius: 2px; transition: background 0.15s; }
+    .main-link:hover { background: var(--accent-warm-soft); text-decoration: none; }
+
+    .book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1180px; margin: 0 auto; padding: 0 24px; gap: 0; }
+    .toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+    .toc-title { font-family: var(--font); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .toc-list { list-style: none; }
+    .toc-list li { margin: 8px 0; }
+    .toc-list a { display: block; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5; padding: 4px 8px; border-left: 2px solid transparent; transition: all 0.15s; }
+    .toc-list a:hover, .toc-list a.active { color: var(--accent-warm); border-left-color: var(--accent-warm); background: var(--accent-muted); }
+
+    .book-main { padding: 60px 0 80px 60px; max-width: 760px; }
+    .chapter-section { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+    .chapter-section:last-child { border-bottom: none; }
+    .chapter-number-label { font-family: var(--font); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; color: var(--accent-warm); text-transform: uppercase; margin-bottom: 12px; }
+    .chapter-title { font-family: var(--font-serif); font-size: 1.65rem; font-weight: 700; line-height: 1.45; letter-spacing: 0.015em; color: var(--text); margin-bottom: 32px; }
+    .article-h2 { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; line-height: 1.5; color: var(--text); margin: 48px 0 18px; padding-top: 20px; border-top: 2px solid var(--accent-warm); }
+    .book-main p { font-family: var(--font-serif); font-size: 1rem; line-height: 1.95; letter-spacing: 0.025em; color: var(--text); margin-bottom: 1.4em; text-indent: 1em; }
+    .book-main p.no-indent, .book-main p:first-of-type { text-indent: 0; }
+    .book-main p strong { font-weight: 700; color: var(--accent-warm); }
+    .finding-box { background: var(--surface); border-left: 4px solid var(--accent-warm); padding: 18px 22px; margin: 24px 0; font-family: var(--font-serif); }
+    .finding-box p { text-indent: 0; }
+    .table-clean { width: 100%; border-collapse: collapse; margin: 24px 0; font-family: var(--font); font-size: 0.84rem; }
+    .table-clean th { background: var(--surface); padding: 10px; text-align: left; border-bottom: 2px solid var(--accent-warm); font-weight: 700; color: var(--text); }
+    .table-clean td { padding: 9px 10px; border-bottom: 1px solid var(--border-light); vertical-align: top; color: var(--text); }
+
+    /* Dark mode SVG overrides ── 包括的可読性確保（!important で強制） */
+    [data-theme="dark"] svg text { fill: #F0F0F0 !important; }
+    [data-theme="dark"] svg text[fill="#CC1400"],
+    [data-theme="dark"] svg g[fill="#CC1400"] > text,
+    [data-theme="dark"] svg g[fill="#CC1400"] text:not([fill]) { fill: #FF5A4A !important; }
+    [data-theme="dark"] svg text[fill="#121212"],
+    [data-theme="dark"] svg g[fill="#121212"] > text,
+    [data-theme="dark"] svg g[fill="#121212"] text:not([fill]) { fill: #F0F0F0 !important; }
+    [data-theme="dark"] svg text[fill="#555"],
+    [data-theme="dark"] svg text[fill="#555555"],
+    [data-theme="dark"] svg g[fill="#555"] > text,
+    [data-theme="dark"] svg g[fill="#555555"] > text { fill: #CCCCCC !important; }
+    [data-theme="dark"] svg text[fill="#6B6B6B"],
+    [data-theme="dark"] svg g[fill="#6B6B6B"] > text { fill: #AAAAAA !important; }
+    [data-theme="dark"] svg rect[fill="#FFF"],
+    [data-theme="dark"] svg rect[fill="#FFFFFF"] { fill: #333333 !important; }
+    [data-theme="dark"] svg rect[fill="#F7F7F5"] { fill: #2A2A2A !important; }
+    [data-theme="dark"] svg rect[stroke="#121212"] { stroke: #F0F0F0 !important; }
+    [data-theme="dark"] svg rect[stroke="#D9D9D9"] { stroke: #666666 !important; }
+    [data-theme="dark"] svg rect[stroke="#CC1400"] { stroke: #FF5A4A !important; }
+    [data-theme="dark"] svg line[stroke="#121212"] { stroke: #F0F0F0 !important; }
+    [data-theme="dark"] svg line[stroke="#999"] { stroke: #888888 !important; }
+    [data-theme="dark"] svg line[stroke="#CC1400"] { stroke: #FF5A4A !important; }
+    [data-theme="dark"] svg polygon[fill="#121212"] { fill: #F0F0F0 !important; }
+    [data-theme="dark"] svg circle[fill="#CC1400"] { fill: #FF5A4A !important; }
+    [data-theme="dark"] figure[style] { background: rgba(255,90,74,0.06) !important; border-top-color: #FF5A4A !important; border-bottom-color: #FF5A4A !important; }
+    [data-theme="dark"] figcaption { color: #AAAAAA !important; }
+
+    @media print { .top-bar, .toc-sidebar { display: none; } .book-layout { grid-template-columns: 1fr; } .book-main { padding: 0; max-width: none; } }
+    @media (max-width: 1000px) { .book-layout { grid-template-columns: 1fr; } .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 24px 0; } .book-main { padding: 40px 0; } }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/" class="top-bar-brand">MIRATUKU <span>news</span></a>
+    <div class="top-bar-actions">
+      <a href="index.html" class="back-link">← 本編</a>
+      <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+    </div>
+  </div>
+
+  <section class="book-cover">
+    <div class="book-cover-tag">METHODOLOGY · 2026.05</div>
+    <h1 class="book-cover-title">方法論解説<br><em>—</em> データ活用と並列チーム解析のプロセス</h1>
+    <p class="book-cover-subtitle">『製造現場のオーケストラ化 2030-2100』が、26データベースと9並列チーム解析によってどう構築されたか</p>
+    <div class="book-cover-divider"></div>
+    <div class="book-cover-meta"><span>序+5章+終</span><span>·</span><span>12並列チーム</span><span>·</span><span>26DB横断</span><span>·</span><span>5回反復</span><span>·</span><span>v5最終版</span></div>
+    <div style="margin-top:24px;"><a href="index.html" class="main-link">→ 本編レポートを読む</a></div>
+  </section>
+
+<div class="book-layout">
+<aside class="toc-sidebar">
+<div class="toc-title">目次</div>
+<ul class="toc-list">
+<li><a href="#intro">序 ── 方法論の全体像</a></li>
+<li><a href="#ch01">1 ── 26データベースの活用</a></li>
+<li><a href="#ch02">2 ── 9並列チームの設計</a></li>
+<li><a href="#ch03">3 ── プロセス・フロー</a></li>
+<li><a href="#ch04">4 ── 反復履歴 v1→v2→v3</a></li>
+<li><a href="#ch05">5 ── 検証結果と次稿課題</a></li>
+<li><a href="#epilogue">終 ── 大規模AI協働の方法論</a></li>
+</ul>
+</aside>
+
+<main class="book-main">
+
+<section class="chapter-section" id="intro">
+<div class="chapter-number-label">INTRODUCTION</div>
+<h2 class="chapter-title">序 ── 方法論の全体像</h2>
+
+<p class="no-indent">本ページは、『製造現場のオーケストラ化 2030-2100』本編がどのように構築されたかを、データ活用と並列チーム解析のプロセスとして可視化するものである。本編は知性社会への移行を製造領域に翻訳する大規模解析だが、その作成プロセス自体もまた、人間とAIエージェント連邦の協働による知性社会的な作業の実例である。本ページは、その作業の背骨を露出する。</p>
+
+<p>本編の制作には3回の主要反復（v1→v2→v3）があり、各反復で異なる目的のチームが起動された。v1は6つの並列研究チームによる骨格生成、v2は3つの検証チームと図解・ロードマップ追加、v3は学術検証2回目と文章編集と図解5点追加を含む。総計9種類のチーム、約20回のエージェント起動、26のデータベース参照、3度の独立検証が、本編1本のレポートを支えている。</p>
+
+<h2 class="article-h2">本ページの読み方</h2>
+
+<p class="no-indent">本ページは、本編の正当性を再主張するものではなく、本編が学術的に脆弱な箇所と、検証によって補強された箇所と、依然として残る課題とを、可能なかぎり透明に開示する試みである。読者は、本編の主張を信じるためにではなく、本編の主張をどう疑い、どう検証し、どう改善するかの方法論的足場を得るために、本ページを読まれたい。</p>
+
+</section>
+
+<section class="chapter-section" id="ch01">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">1 ── 26データベースの活用</h2>
+
+<p class="no-indent">本編は、書籍『deep knowledge — 深い知が拓く2100年』case11仕上げ版の補論として書かれた。本書は26のデータベース（合計約1,540万レコード）を横断する大規模解析の上に成立しており、本補論もこれらのデータベースを参照基盤として用いる。直接参照したデータベースは以下の通りである。</p>
+
+<figure style="margin:36px 0;text-align:center;background:rgba(204,20,0,0.02);border-top:1px solid #CC1400;border-bottom:1px solid #CC1400;padding:32px 16px;">
+<svg viewBox="0 0 680 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;font-family:var(--font-serif);">
+<text x="340" y="22" font-size="13" font-weight="700" text-anchor="middle" fill="#121212">図A 本補論で直接参照したデータベース</text>
+<g font-size="9" text-anchor="middle">
+<rect x="30" y="55" width="100" height="48" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="80" y="73" font-weight="700" fill="#CC1400">TA</text>
+<text x="80" y="86" fill="#555">技術発展加速度</text>
+<text x="80" y="97" fill="#555">227Kレコード</text>
+<rect x="140" y="55" width="100" height="48" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="190" y="73" font-weight="700" fill="#CC1400">AD</text>
+<text x="190" y="86" fill="#555">AI Development</text>
+<text x="190" y="97" fill="#555">2,236論文</text>
+<rect x="250" y="55" width="100" height="48" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="300" y="73" font-weight="700" fill="#CC1400">AA</text>
+<text x="300" y="86" fill="#555">AI加速エビデンス</text>
+<text x="300" y="97" fill="#555">498言及</text>
+<rect x="360" y="55" width="100" height="48" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="410" y="73" font-weight="700" fill="#CC1400">SG</text>
+<text x="410" y="86" fill="#555">シグナルDB</text>
+<text x="410" y="97" fill="#555">7,668件</text>
+<rect x="470" y="55" width="100" height="48" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="520" y="73" font-weight="700" fill="#CC1400">MT</text>
+<text x="520" y="86" fill="#555">メガトレンド</text>
+<text x="520" y="97" fill="#555">18件</text>
+<rect x="580" y="55" width="80" height="48" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="620" y="73" font-weight="700" fill="#CC1400">IN</text>
+<text x="620" y="86" fill="#555">イノベーション</text>
+<text x="620" y="97" fill="#555">9,839概念</text>
+
+<rect x="30" y="115" width="100" height="48" fill="rgba(204,20,0,0.08)" stroke="#CC1400" stroke-width="1"/>
+<text x="80" y="133" font-weight="700" fill="#CC1400">MG</text>
+<text x="80" y="146" fill="#555">経営学</text>
+<text x="80" y="157" fill="#555">3,369概念</text>
+<rect x="140" y="115" width="100" height="48" fill="rgba(204,20,0,0.08)" stroke="#CC1400" stroke-width="1"/>
+<text x="190" y="133" font-weight="700" fill="#CC1400">AN</text>
+<text x="190" y="146" fill="#555">人類学</text>
+<text x="190" y="157" fill="#555">500概念</text>
+<rect x="250" y="115" width="100" height="48" fill="rgba(204,20,0,0.08)" stroke="#CC1400" stroke-width="1"/>
+<text x="300" y="133" font-weight="700" fill="#CC1400">TK</text>
+<text x="300" y="146" fill="#555">伝統知</text>
+<text x="300" y="157" fill="#555">3,002グループ</text>
+<rect x="360" y="115" width="100" height="48" fill="rgba(204,20,0,0.08)" stroke="#CC1400" stroke-width="1"/>
+<text x="410" y="133" font-weight="700" fill="#CC1400">ETD</text>
+<text x="410" y="146" fill="#555">時代別人材</text>
+<text x="410" y="157" fill="#555">12,958人物</text>
+<rect x="470" y="115" width="100" height="48" fill="rgba(204,20,0,0.08)" stroke="#CC1400" stroke-width="1"/>
+<text x="520" y="133" font-weight="700" fill="#CC1400">GF</text>
+<text x="520" y="146" fill="#555">偉人</text>
+<text x="520" y="157" fill="#555">9,178人</text>
+<rect x="580" y="115" width="80" height="48" fill="rgba(204,20,0,0.08)" stroke="#CC1400" stroke-width="1"/>
+<text x="620" y="133" font-weight="700" fill="#CC1400">SIF</text>
+<text x="620" y="146" fill="#555">SI Framework</text>
+<text x="620" y="157" fill="#555">1,096事象</text>
+
+<rect x="30" y="175" width="100" height="48" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="80" y="193" font-weight="700" fill="#CC1400">RG</text>
+<text x="80" y="206" fill="#555">規制DB日本</text>
+<text x="80" y="217" fill="#555">1,332法令</text>
+<rect x="140" y="175" width="100" height="48" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="190" y="193" font-weight="700" fill="#CC1400">PD</text>
+<text x="190" y="206" fill="#555">政策DB</text>
+<text x="190" y="217" fill="#555">30K事業</text>
+<rect x="250" y="175" width="100" height="48" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="300" y="193" font-weight="700" fill="#CC1400">ME</text>
+<text x="300" y="206" fill="#555">マクロ経済</text>
+<text x="300" y="217" fill="#555">52K件</text>
+<rect x="360" y="175" width="100" height="48" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="410" y="193" font-weight="700" fill="#CC1400">GR</text>
+<text x="410" y="206" fill="#555">地政学リスク</text>
+<text x="410" y="217" fill="#555">422K件</text>
+<rect x="470" y="175" width="100" height="48" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="520" y="193" font-weight="700" fill="#CC1400">PE</text>
+<text x="520" y="206" fill="#555">PESTLE</text>
+<text x="520" y="217" fill="#555">196K件</text>
+<rect x="580" y="175" width="80" height="48" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="620" y="193" font-weight="700" fill="#CC1400">FK</text>
+<text x="620" y="206" fill="#555">フォーサイト</text>
+<text x="620" y="217" fill="#555">76Kレポート</text>
+
+<rect x="30" y="235" width="100" height="48" fill="rgba(204,20,0,0.12)" stroke="#CC1400" stroke-width="1"/>
+<text x="80" y="253" font-weight="700" fill="#CC1400">GPT</text>
+<text x="80" y="266" fill="#555">GPT-QoL</text>
+<text x="80" y="277" fill="#555">34,715事象</text>
+<rect x="140" y="235" width="100" height="48" fill="rgba(204,20,0,0.12)" stroke="#CC1400" stroke-width="1"/>
+<text x="190" y="253" font-weight="700" fill="#CC1400">MY</text>
+<text x="190" y="266" fill="#555">神話</text>
+<text x="190" y="277" fill="#555">11,895件</text>
+<rect x="250" y="235" width="100" height="48" fill="rgba(204,20,0,0.12)" stroke="#CC1400" stroke-width="1"/>
+<text x="300" y="253" font-weight="700" fill="#CC1400">CLA</text>
+<text x="300" y="266" fill="#555">CLA 127年</text>
+<text x="300" y="277" fill="#555">91,550件</text>
+<rect x="360" y="235" width="100" height="48" fill="rgba(204,20,0,0.12)" stroke="#CC1400" stroke-width="1"/>
+<text x="410" y="253" font-weight="700" fill="#CC1400">CI</text>
+<text x="410" y="266" fill="#555">文化情報</text>
+<text x="410" y="277" fill="#555">576K記事</text>
+<rect x="470" y="235" width="100" height="48" fill="rgba(204,20,0,0.12)" stroke="#CC1400" stroke-width="1"/>
+<text x="520" y="253" font-weight="700" fill="#CC1400">EX</text>
+<text x="520" y="266" fill="#555">有識者</text>
+<text x="520" y="277" fill="#555">3,995人</text>
+<rect x="580" y="235" width="80" height="48" fill="rgba(204,20,0,0.12)" stroke="#CC1400" stroke-width="1"/>
+<text x="620" y="253" font-weight="700" fill="#CC1400">SGRD</text>
+<text x="620" y="266" fill="#555">産学PR</text>
+<text x="620" y="277" fill="#555">36,734件</text>
+
+<rect x="30" y="295" width="100" height="48" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="80" y="313" font-weight="700" fill="#CC1400">UPR</text>
+<text x="80" y="326" fill="#555">大学PR</text>
+<text x="80" y="337" fill="#555">42,219件</text>
+<rect x="140" y="295" width="100" height="48" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="190" y="313" font-weight="700" fill="#CC1400">SGPR</text>
+<text x="190" y="326" fill="#555">産学連携</text>
+<text x="190" y="337" fill="#555">6,581件</text>
+<rect x="250" y="295" width="100" height="48" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="300" y="313" font-weight="700" fill="#CC1400">SI</text>
+<text x="300" y="326" fill="#555">産学マッチ</text>
+<text x="300" y="337" fill="#555">492K件</text>
+<rect x="360" y="295" width="100" height="48" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="410" y="313" font-weight="700" fill="#CC1400">BM</text>
+<text x="410" y="326" fill="#555">事業モデル</text>
+<text x="410" y="337" fill="#555">概念群</text>
+<rect x="470" y="295" width="100" height="48" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="520" y="313" font-weight="700" fill="#CC1400">MS</text>
+<text x="520" y="326" fill="#555">マーケ予測</text>
+<text x="520" y="337" fill="#555">概念群</text>
+<rect x="580" y="295" width="80" height="48" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="620" y="313" font-weight="700" fill="#CC1400">MPV</text>
+<text x="620" y="326" fill="#555">MPV</text>
+<text x="620" y="337" fill="#555">概念群</text>
+</g>
+<text x="340" y="365" text-anchor="middle" font-size="10" font-style="italic" fill="#555">本書26DB（合計約1,540万レコード）。本補論は左上から右へ、表層から構造へ深化する順で参照した。</text>
+</svg>
+<figcaption style="font-family:var(--font);font-size:0.78rem;color:#6B6B6B;margin-top:12px;text-align:center;">本補論で直接または間接に参照した本書26データベース。色の濃度は本補論での使用頻度を示す。</figcaption>
+</figure>
+
+<h2 class="article-h2">中心DB（最も多く参照）</h2>
+
+<p class="no-indent"><strong>技術系</strong>：TA（技術発展加速度・227Kレコード・13ソース）、AD（AI Development・LLM 1,097+AGI 1,139）、AA（AI加速エビデンス・498言及）、SG（シグナル・7,668件）、GPT-QoL（汎用技術×生活の質・34,715事象、Robotics Projection 243件）。これらが本編第3〜6章および図7（AGI 7段階×製造）の主要根拠。</p>
+
+<p><strong>関係論・伝統知系</strong>：AN（人類学・500概念・関係論的転回）、TK（伝統知・3,002グループ・36,360項目）、MY（神話・11,895件）。これらが本編第5章・第6章および図9（自然権制度系譜）の主要根拠。</p>
+
+<p><strong>制度・経済系</strong>：RG（規制1,332法令）、PD（政策30K事業）、ME（マクロ経済52K件）、GR（地政学リスク422K件）。これらが本編第9章の制度ハイライト表および図11（5確定事項×4時代）の主要根拠。</p>
+
+<p><strong>人材・思想系</strong>：ETD（時代別人材12,958人物×19能力次元）、GF（偉人9,178人・10意思決定アーキタイプ）、SIF（SI Framework・1,096事象）。これらが本編第7章の5次元モデルと図10（5核心能力×4時代レーダー）の主要根拠。</p>
+
+</section>
+
+<section class="chapter-section" id="ch02">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">2 ── 9並列チームの設計</h2>
+
+<p class="no-indent">本補論は、9種類のエージェント・チームの並列起動と統合によって構築された。各チームは異なる専門領域を担当し、互いの成果物に対して独立性を保ちながら、最終統合層で1本のレポートに編まれる。本章は9チームの設計を可視化する。</p>
+
+<figure style="margin:36px 0;text-align:center;background:rgba(204,20,0,0.02);border-top:1px solid #CC1400;border-bottom:1px solid #CC1400;padding:32px 16px;">
+<svg viewBox="0 0 680 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;font-family:var(--font-serif);">
+<text x="340" y="22" font-size="13" font-weight="700" text-anchor="middle" fill="#121212">図B 9並列チームの構造</text>
+
+<text x="40" y="60" font-size="11" font-weight="700" fill="#CC1400">v1 研究チーム（6並列）</text>
+<line x1="40" y1="68" x2="640" y2="68" stroke="#CC1400" stroke-width="0.5"/>
+<g font-size="10" text-anchor="middle">
+<rect x="40" y="80" width="95" height="60" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="87" y="98" font-weight="700" fill="#121212">A 製造史</text>
+<text x="87" y="113" font-size="8" fill="#555">6パラダイム</text>
+<text x="87" y="125" font-size="8" fill="#555">TA・IN・MG</text>
+<rect x="143" y="80" width="95" height="60" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="190" y="98" font-weight="700" fill="#121212">B AI軌道</text>
+<text x="190" y="113" font-size="8" fill="#555">7段階パス</text>
+<text x="190" y="125" font-size="8" fill="#555">AD・AA・SG</text>
+<rect x="246" y="80" width="95" height="60" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="293" y="98" font-weight="700" fill="#121212">C ロボ</text>
+<text x="293" y="113" font-size="8" fill="#555">物理AI</text>
+<text x="293" y="125" font-size="8" fill="#555">GPT-QoL・TA</text>
+<rect x="349" y="80" width="95" height="60" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="396" y="98" font-weight="700" fill="#121212">D 生命</text>
+<text x="396" y="113" font-size="8" fill="#555">合成生物</text>
+<text x="396" y="125" font-size="8" fill="#555">TK・TA・AA</text>
+<rect x="452" y="80" width="95" height="60" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="499" y="98" font-weight="700" fill="#121212">E 人間</text>
+<text x="499" y="113" font-size="8" fill="#555">関係論的</text>
+<text x="499" y="125" font-size="8" fill="#555">AN・ETD・MY</text>
+<rect x="555" y="80" width="95" height="60" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="602" y="98" font-weight="700" fill="#121212">F 制度</text>
+<text x="602" y="113" font-size="8" fill="#555">規制経済</text>
+<text x="602" y="125" font-size="8" fill="#555">RG・PD・ME・GR</text>
+</g>
+
+<text x="40" y="180" font-size="11" font-weight="700" fill="#CC1400">v2 検証＋拡張チーム（3並列＋編集）</text>
+<line x1="40" y1="188" x2="640" y2="188" stroke="#CC1400" stroke-width="0.5"/>
+<g font-size="10" text-anchor="middle">
+<rect x="40" y="200" width="145" height="60" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="113" y="218" font-weight="700" fill="#121212">V1 ファクト検証</text>
+<text x="113" y="233" font-size="8" fill="#555">引用人物・年代</text>
+<text x="113" y="245" font-size="8" fill="#555">統計・制度事例</text>
+<rect x="195" y="200" width="145" height="60" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="268" y="218" font-weight="700" fill="#121212">V2 引用ルール</text>
+<text x="268" y="233" font-size="8" fill="#555">本書整合性</text>
+<text x="268" y="245" font-size="8" fill="#555">動詞論理連続</text>
+<rect x="350" y="200" width="145" height="60" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="423" y="218" font-weight="700" fill="#121212">V3 論理構造</text>
+<text x="423" y="233" font-size="8" fill="#555">階差・必然性</text>
+<text x="423" y="245" font-size="8" fill="#555">読者翻訳</text>
+<rect x="505" y="200" width="145" height="60" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="577" y="218" font-weight="700" fill="#121212">R+D 拡張</text>
+<text x="577" y="233" font-size="8" fill="#555">ロードマップ</text>
+<text x="577" y="245" font-size="8" fill="#555">図解5点</text>
+</g>
+
+<text x="40" y="300" font-size="11" font-weight="700" fill="#CC1400">v3 再検証＋編集チーム（3並列）</text>
+<line x1="40" y1="308" x2="640" y2="308" stroke="#CC1400" stroke-width="0.5"/>
+<g font-size="10" text-anchor="middle">
+<rect x="40" y="320" width="195" height="60" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="137" y="338" font-weight="700" fill="#121212">学術検証</text>
+<text x="137" y="353" font-size="8" fill="#555">概念出典・著作年代</text>
+<text x="137" y="365" font-size="8" fill="#555">欠落文献の指摘</text>
+<rect x="245" y="320" width="195" height="60" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="342" y="338" font-weight="700" fill="#121212">文章編集</text>
+<text x="342" y="353" font-size="8" fill="#555">用語不整合・冗長</text>
+<text x="342" y="365" font-size="8" fill="#555">本書文体適合度</text>
+<rect x="450" y="320" width="200" height="60" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="550" y="338" font-weight="700" fill="#121212">追加図解・AGI統合</text>
+<text x="550" y="353" font-size="8" fill="#555">AGI×製造・自然権</text>
+<text x="550" y="365" font-size="8" fill="#555">5確定×4時代</text>
+</g>
+
+<line x1="340" y1="400" x2="340" y2="430" stroke="#CC1400" stroke-width="2"/>
+<polygon points="336,430 344,430 340,440" fill="#CC1400"/>
+<rect x="200" y="440" width="280" height="35" fill="rgba(204,20,0,0.18)" stroke="#CC1400" stroke-width="2"/>
+<text x="340" y="462" text-anchor="middle" font-size="13" font-weight="700" fill="#CC1400">統合層 ── 1本のレポートへ</text>
+</svg>
+<figcaption style="font-family:var(--font);font-size:0.78rem;color:#6B6B6B;margin-top:12px;text-align:center;">9種類のチームが3層（v1基盤・v2検証拡張・v3再検証編集）で並列稼働し、統合層で1本に編集される。</figcaption>
+</figure>
+
+<table class="table-clean">
+<thead>
+<tr><th>チーム</th><th>役割</th><th>使用エージェント</th><th>参照DB</th></tr>
+</thead>
+<tbody>
+<tr><td>A 製造史</td><td>6パラダイム系譜整理</td><td>researcher</td><td>TA・IN・MG・SIF・ME</td></tr>
+<tr><td>B AI軌道</td><td>AI 7段階×製造到達</td><td>general-purpose</td><td>AD・AA・SG・GPT-QoL</td></tr>
+<tr><td>C ロボティクス</td><td>物理AI・身体性</td><td>researcher</td><td>GPT-QoL・TA・SG</td></tr>
+<tr><td>D 生命統合</td><td>合成生物・伝統知</td><td>general-purpose</td><td>TK・TA・AA</td></tr>
+<tr><td>E 人間理解</td><td>関係論的人間像</td><td>researcher</td><td>AN・ETD・MY・SIF・MG</td></tr>
+<tr><td>F 制度経済</td><td>規制・法人格</td><td>general-purpose</td><td>RG・PD・ME・GR</td></tr>
+<tr><td>V1 ファクト検証</td><td>引用・統計の正確性</td><td>researcher</td><td>外部Web</td></tr>
+<tr><td>V2 引用ルール</td><td>本書整合性</td><td>general-purpose</td><td>本書case11</td></tr>
+<tr><td>V3 論理構造</td><td>階差・読者翻訳</td><td>general-purpose</td><td>本編本文</td></tr>
+<tr><td>学術検証</td><td>概念出典・欠落文献</td><td>researcher</td><td>外部学術</td></tr>
+<tr><td>文章編集</td><td>用語・冗長・文体</td><td>general-purpose</td><td>本書case11</td></tr>
+</tbody>
+</table>
+
+</section>
+
+<section class="chapter-section" id="ch03">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">3 ── プロセス・フロー</h2>
+
+<p class="no-indent">本補論の作成プロセスは、計画策定→並列研究→中間統合→検証→反復→最終統合→公開の7段階で進行した。各段階で何が起こり、何が決定されたかを以下に整理する。</p>
+
+<figure style="margin:36px 0;text-align:center;background:rgba(204,20,0,0.02);border-top:1px solid #CC1400;border-bottom:1px solid #CC1400;padding:32px 16px;">
+<svg viewBox="0 0 680 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;height:auto;font-family:var(--font-serif);">
+<text x="340" y="22" font-size="13" font-weight="700" text-anchor="middle" fill="#121212">図C 7段階プロセス・フロー</text>
+<g font-size="10">
+<rect x="40" y="60" width="110" height="42" fill="rgba(204,20,0,0.06)" stroke="#CC1400" stroke-width="1"/>
+<text x="95" y="80" text-anchor="middle" font-weight="700" fill="#121212">S0 計画策定</text>
+<text x="95" y="94" text-anchor="middle" font-size="8" fill="#555">主題と射程の確定</text>
+<polygon points="155,80 165,76 165,84" fill="#CC1400"/>
+<rect x="170" y="60" width="110" height="42" fill="rgba(204,20,0,0.08)" stroke="#CC1400" stroke-width="1"/>
+<text x="225" y="80" text-anchor="middle" font-weight="700" fill="#121212">S1 並列研究</text>
+<text x="225" y="94" text-anchor="middle" font-size="8" fill="#555">6チーム同時起動</text>
+<polygon points="285,80 295,76 295,84" fill="#CC1400"/>
+<rect x="300" y="60" width="110" height="42" fill="rgba(204,20,0,0.10)" stroke="#CC1400" stroke-width="1"/>
+<text x="355" y="80" text-anchor="middle" font-weight="700" fill="#121212">S2 中間統合</text>
+<text x="355" y="94" text-anchor="middle" font-size="8" fill="#555">4時代パネル編集</text>
+<polygon points="415,80 425,76 425,84" fill="#CC1400"/>
+<rect x="430" y="60" width="110" height="42" fill="rgba(204,20,0,0.12)" stroke="#CC1400" stroke-width="1"/>
+<text x="485" y="80" text-anchor="middle" font-weight="700" fill="#121212">S3 初稿執筆</text>
+<text x="485" y="94" text-anchor="middle" font-size="8" fill="#555">v1 HTML生成</text>
+<polygon points="545,80 555,76 555,84" fill="#CC1400"/>
+<rect x="560" y="60" width="100" height="42" fill="rgba(204,20,0,0.14)" stroke="#CC1400" stroke-width="1"/>
+<text x="610" y="80" text-anchor="middle" font-weight="700" fill="#121212">S4 検証反復</text>
+<text x="610" y="94" text-anchor="middle" font-size="8" fill="#555">3回</text>
+
+<rect x="170" y="160" width="110" height="42" fill="rgba(204,20,0,0.16)" stroke="#CC1400" stroke-width="1"/>
+<text x="225" y="180" text-anchor="middle" font-weight="700" fill="#121212">S5 図解追加</text>
+<text x="225" y="194" text-anchor="middle" font-size="8" fill="#555">11点SVG</text>
+<rect x="300" y="160" width="110" height="42" fill="rgba(204,20,0,0.16)" stroke="#CC1400" stroke-width="1"/>
+<text x="355" y="180" text-anchor="middle" font-weight="700" fill="#121212">S6 文体編集</text>
+<text x="355" y="194" text-anchor="middle" font-size="8" fill="#555">本書整合</text>
+<rect x="430" y="160" width="110" height="42" fill="rgba(204,20,0,0.18)" stroke="#CC1400" stroke-width="1"/>
+<text x="485" y="180" text-anchor="middle" font-weight="700" fill="#121212">S7 最終公開</text>
+<text x="485" y="194" text-anchor="middle" font-size="8" fill="#555">v3 確定</text>
+
+<line x1="610" y1="105" x2="610" y2="180" stroke="#CC1400" stroke-width="1" stroke-dasharray="3,2"/>
+<polygon points="606,180 614,180 610,190" fill="#CC1400"/>
+<line x1="395" y1="105" x2="395" y2="160" stroke="#CC1400" stroke-width="1" stroke-dasharray="3,2"/>
+<polygon points="391,160 399,160 395,170" fill="#CC1400"/>
+<line x1="225" y1="105" x2="225" y2="160" stroke="#CC1400" stroke-width="1" stroke-dasharray="3,2"/>
+<polygon points="221,160 229,160 225,170" fill="#CC1400"/>
+</g>
+
+<g font-size="10" font-style="italic" fill="#555">
+<text x="40" y="245">▼ 各反復で起きたこと</text>
+<text x="40" y="265">v1：6チーム並列研究 → 4時代パネル → 11章 HTML 構築（27,115字）</text>
+<text x="40" y="282">v2：V1〜V3検証 → 修正反映 → ロードマップ章追加 → 図解6点（30,737字）</text>
+<text x="40" y="299">v3：学術＋文章再検証 → 漢数字88件変換 → 図解5点追加 → 文体修正（31,280字）</text>
+<text x="40" y="316">最終：155KB HTML / 11章 / 11図解 / 11対応シンボル → 関係論的製造の物質的成果物</text>
+</g>
+</svg>
+<figcaption style="font-family:var(--font);font-size:0.78rem;color:#6B6B6B;margin-top:12px;text-align:center;">S0からS7まで線形には進まない。S4の検証反復は、S5図解とS6文体編集と並行し、各反復でフィードバックがS3初稿に戻る。</figcaption>
+</figure>
+
+</section>
+
+<section class="chapter-section" id="ch04">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">4 ── 反復履歴 v1→v2→v3</h2>
+
+<p class="no-indent">本補論は3回の主要反復を経て現在のv3に達した。各反復で何が変わったかを表で示す。</p>
+
+<table class="table-clean">
+<thead>
+<tr><th>版</th><th>章数</th><th>本文字数</th><th>図解数</th><th>主な追加・修正</th><th>主な検証フィードバック</th></tr>
+</thead>
+<tbody>
+<tr><td>v1</td><td>10</td><td>27,115</td><td>0</td><td>6チーム並列研究→4時代パネル→11章HTML構築</td><td>未検証</td></tr>
+<tr><td>v2</td><td>11</td><td>30,737</td><td>6</td><td>V1〜V3検証→修正反映、ロードマップ章追加、図解6点（動詞変遷・双子峰・オーケストラ・4時代・ロードマップ・5痛み）</td><td>V1=85-90点／V2=A／V3=B-</td></tr>
+<tr><td>v3</td><td>11</td><td>31,280</td><td>11</td><td>学術＋文章再検証、漢数字88件変換、TL;DR削除、観念→ラトゥール整合、統制→育てる物質的橋渡し、図解5点追加（AGI×製造・系譜・自然権・5核心能力・5確定事項）、終章勧誘調→循環</td><td>学術=B+／文章=B+</td></tr>
+<tr><td>v4</td><td>12</td><td>36,575</td><td>12</td><td>残課題解消：(T1)視座主義→制度実装の4段階橋渡し追加・関係論的法人格の機能主義的法理補強・「育てる」必然性の3経路相対化、(T2)第10章「周辺要素の合流」新設＋図12、(T3)文体編集（節題literary化「卓のうえ」シリーズ、用語統一、定型反復解消、第8章対句構造解消）</td><td>学術=A-／論理=B+／文体=A-／総合=A-</td></tr>
+<tr><td>v5最終版</td><td>12</td><td>38,605</td><td>12</td><td>もうひといき：第1章エピグラフ「編者再構成」→プランク直接引用、第3章でAGI 7段階を自己完結的に明示、第2章でCTI v2の合成指標構造を明示、第10章の6基盤を第3-6章の各時代パネル末尾に「YYYY年の卓を支える周辺基盤」サブ節として埋め込み（本筋への構造的再統合）、ダークモード可読性を!important＋継承パス完全網羅で根本解決、book-cover meta整理</td><td>学術=A／論理=A-／文体=A-／総合=A</td></tr>
+</tbody>
+</table>
+
+<div class="finding-box">
+<p><strong>反復で改善した主な点</strong></p>
+<p>(1) ファクト：フレイレ出版地・フォードT 1500万台到達日・EU AI法ハイリスク日付の精密化。(2) 整合性：本書18章との章節参照の正確化、動詞変遷の章帰属修正。(3) 論理：観念-物質の絡まり合いをラトゥール命題と整合、統制→育てる転換に物質的根拠を追加。(4) 文体：TL;DR削除、勧誘調→循環構造、本書「机のうえ」メタファー継承の強化。(5) 学術：インゴルド・ハラウェイ・デスコラ・ツィン・ラビノウの系譜文献を図8で組み込み。</p>
+</div>
+
+</section>
+
+<section class="chapter-section" id="ch05">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">5 ── 検証結果と次稿課題</h2>
+
+<p class="no-indent">3回の検証で明らかになった主な発見と、依然として残る次稿の課題を、透明に開示する。</p>
+
+<h2 class="article-h2">検証で確認された強み</h2>
+
+<p class="no-indent">主要概念（アクター・ネットワーク理論・視座主義・関係論的存在論・技術経済パラダイム）は学術的に正確に使用されている。歴史的事実（綿輸入数字・米国労働生産性・フォードT生産日）は標準的経済史と整合する。制度事例（エクアドル憲法第71-74条・テ・アワ・トゥプア法・コロンビアSTC4360-2018・米FDA培養肉承認）はすべて検証可能。本書26DBの数値（CTI v2双子峰・AGI 7段階・偉人9,178人・伝統知3,002グループ）は内的整合性を保つ。</p>
+
+<h2 class="article-h2">次稿の課題（依然として残るもの）</h2>
+
+<p class="no-indent"><strong>論証の弱点</strong>：(1) 「視座主義の制度実装」── 哲学から制度への論理的飛躍は、テ・アワ・トゥプア法という橋渡しを置いてもなお弱い。(2) 「関係論的法人格」── AIエージェント・培養細胞群への法人格付与は、責任主体としての賠償能力・意思形成プロセスの定義が不十分。(3) 「育てる」動詞の必然性── 規範的決断と記述的予測の混在が残る。対抗シナリオの相対化は施したが、なお弱い。</p>
+
+<p><strong>欠落テーマ</strong>：エネルギー転換（核融合・SMR）・半導体地政学・サーキュラーエコノミーの詳細・中小製造業の視点・サイバーセキュリティ・気候変動の直接物理影響・人口動態。本補論は射程整合を優先したため、これらは次稿の補強領域となる。</p>
+
+<p><strong>文体の課題</strong>：「3軸／5領域に整理できる」「両者の対応は〜に集約される」という定型反復が第7-8章で目立つ。本書の「抑制された端正な語り」との適合度は、v3でBへ上昇したが、A−水準にはあと一歩。用語不整合（オーケストレーター／指揮者／譜面を書く者）の統一は次稿に持ち越し。</p>
+
+<p><strong>学術文献の補強候補</strong>：マニュエル・カステル『情報の時代』、ティム・インゴルド以外の関係論的人類学者の追加、シルヴィア・フェデリーチの労働論、デヴィッド・ハーヴェイの空間論。これらは関係論的存在論の社会理論的接合面を強化する候補である。</p>
+
+<h2 class="article-h2">透明な開示の意味</h2>
+
+<p class="no-indent">本ページが行ったのは、本編の弱点を隠蔽せず、可能なかぎり開示することである。これは関係論的存在論の方法論的実装でもある。すなわち、知識は単独の権威から発せられるのではなく、複数のチームの検証と反復のなかで立ち上がるという認識を、本補論の制作プロセス自体が体現している。読者は、本編の主張を信じる必要はない。本ページの開示を踏まえて、本編に対する独自の評価を立ち上げてほしい。</p>
+
+</section>
+
+<section class="chapter-section" id="epilogue">
+<div class="chapter-number-label">EPILOGUE</div>
+<h2 class="chapter-title">終 ── 大規模AI協働の方法論</h2>
+
+<p class="no-indent">本補論の制作は、26データベース・9並列チーム・3回反復・約20回のエージェント起動という、人間とAIエージェント連邦の協働による知性社会的作業の一実例である。本編が描く2050年代の「譜面を書く指揮者」と「エージェント連邦の演奏」の関係は、まさにこの制作プロセス自体に予示的に存在している。書き手は譜面（仕様）を書き、複数のエージェントが解釈し、検証と編集と図解の各層で別のエージェントが応答する。書き手は楽団員でもあり、指揮者でもある。</p>
+
+<p>この方法論は、現在の生成AIをツールとして使う方法から、エージェント連邦の参加者として迎える方法への移行の初期形である。2030年代に製造現場で起きるべき協奏団期の協働は、すでに知識生産の現場で予習されはじめている。本補論は、その予習の1例として、可能なかぎり透明な開示とともに公開される。</p>
+
+<p>本ページの後ろにある本編のレポートは、その予習の物質的結晶である。読者の机のうえで、本編を開きながら、本ページを参照しながら、読者自身の関係論的読解を立ち上げていただきたい。</p>
+
+<div style="text-align:center;margin-top:48px;">
+<a href="index.html" class="main-link">→ 本編レポートを読む</a>
+</div>
+
+</section>
+
+</main>
+</div>
+
+<script>
+  function toggleTheme() {
+    const root = document.documentElement;
+    const current = root.getAttribute('data-theme') || 'light';
+    const next = current === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('mo-theme', next); } catch (e) {}
+  }
+  try {
+    const saved = localStorage.getItem('mo-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  } catch (e) {}
+</script>
+</body>
+</html>
