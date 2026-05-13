@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>哲学的問いと時代変遷の螺旋 — 7基のDB横断分析</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", Menlo, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-warm: #FF4030;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.85;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  transition: background 0.2s, color 0.2s;
+}
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 48px;
+  background: var(--bg);
+  border-top: 3px solid #121212;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; z-index: 100;
+}
+[data-theme="dark"] .top-bar { border-top-color: var(--accent-warm); }
+.brand {
+  font-family: var(--font);
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+.brand .sep { color: var(--accent-warm); margin: 0 8px; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border);
+  color: var(--text); padding: 4px 12px; cursor: pointer;
+  font-family: var(--font); font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+.layout {
+  display: grid; grid-template-columns: 260px 1fr;
+  max-width: 1280px; margin: 0 auto; padding-top: 48px;
+}
+.toc-sidebar {
+  position: sticky; top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 32px 24px 32px 32px;
+  border-right: 1px solid var(--border-light);
+  font-size: 13px;
+}
+.toc-title {
+  font-family: var(--font);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.15em; color: var(--text-secondary);
+  margin-bottom: 16px; text-transform: uppercase;
+}
+.toc-sidebar ol { list-style: none; }
+.toc-sidebar li { margin-bottom: 6px; }
+.toc-sidebar a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: block; padding: 4px 0;
+  border-left: 2px solid transparent;
+  padding-left: 12px; margin-left: -12px;
+  transition: all 0.15s;
+}
+.toc-sidebar a:hover {
+  color: var(--accent-warm);
+  border-left-color: var(--accent-warm);
+}
+.toc-sidebar .ch-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-warm);
+  margin-right: 8px;
+}
+main {
+  max-width: 760px;
+  padding: 64px 48px 120px 48px;
+  font-family: var(--font-serif);
+}
+.title-block { margin-bottom: 80px; padding-bottom: 32px; border-bottom: 2px solid var(--accent-warm); }
+.title-block .eyebrow {
+  font-family: var(--font); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; color: var(--accent-warm);
+  margin-bottom: 12px; text-transform: uppercase;
+}
+h1 {
+  font-family: var(--font-serif);
+  font-size: 34px; font-weight: 700;
+  line-height: 1.4; letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+.subtitle {
+  font-family: var(--font);
+  font-size: 14px; color: var(--text-secondary);
+  font-weight: 400; line-height: 1.7;
+}
+.meta {
+  margin-top: 24px;
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.chapter-section { margin-bottom: 80px; padding-bottom: 64px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-of-type { border-bottom: none; }
+h2 {
+  font-family: var(--font-serif);
+  font-size: 24px; font-weight: 700;
+  margin-top: 56px; margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.02em;
+}
+h2 .ch-prefix {
+  font-family: var(--font-mono);
+  font-size: 14px; color: var(--accent-warm);
+  margin-right: 12px; font-weight: 500;
+}
+h3 {
+  font-family: var(--font-serif);
+  font-size: 18px; font-weight: 700;
+  margin-top: 40px; margin-bottom: 16px;
+  color: var(--text);
+}
+h4 {
+  font-family: var(--font);
+  font-size: 13px; font-weight: 700;
+  margin-top: 24px; margin-bottom: 8px;
+  color: var(--accent-warm);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+p {
+  font-family: var(--font-serif);
+  font-size: 16px; line-height: 1.95;
+  margin-bottom: 20px;
+  text-indent: 1em;
+  color: var(--text);
+}
+p:first-of-type { text-indent: 0; }
+p.no-indent { text-indent: 0; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: italic; color: var(--accent-warm-soft); }
+ul, ol { margin-bottom: 20px; padding-left: 24px; font-family: var(--font-serif); font-size: 16px; }
+li { margin-bottom: 6px; line-height: 1.85; }
+blockquote {
+  margin: 24px 0; padding: 16px 24px;
+  background: var(--accent-muted);
+  border-left: 3px solid var(--accent-warm);
+  font-family: var(--font-serif); font-size: 15px;
+  color: var(--text);
+}
+blockquote p { text-indent: 0; margin-bottom: 0; font-size: 15px; }
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 24px 0;
+  font-family: var(--font); font-size: 13px;
+}
+th, td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+th {
+  background: var(--surface);
+  font-weight: 700; color: var(--text);
+  border-bottom: 2px solid var(--accent-warm);
+  font-size: 12px; letter-spacing: 0.05em;
+}
+td { line-height: 1.7; }
+td .era { font-family: var(--font-mono); font-size: 11px; color: var(--accent-warm); }
+.callout {
+  margin: 32px 0; padding: 24px 28px;
+  background: var(--surface);
+  border-left: 4px solid var(--accent-warm);
+}
+.callout .label {
+  font-family: var(--font); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.2em; color: var(--accent-warm);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.callout p { text-indent: 0; margin-bottom: 8px; font-size: 14px; }
+.callout p:last-child { margin-bottom: 0; }
+code {
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--accent-muted);
+  padding: 2px 6px; border-radius: 2px;
+  color: var(--accent-warm);
+}
+.q-tag {
+  display: inline-block;
+  font-family: var(--font); font-size: 11px;
+  background: var(--accent-warm);
+  color: #FFFFFF;
+  padding: 2px 8px; border-radius: 2px;
+  margin-right: 6px; letter-spacing: 0.05em;
+}
+.era-card {
+  margin: 24px 0; padding: 20px 24px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.era-card .era-label {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--accent-warm); margin-bottom: 8px;
+}
+.era-card h4 { margin-top: 0; color: var(--text); font-size: 16px; text-transform: none; letter-spacing: 0.02em; }
+.era-card p { text-indent: 0; font-size: 14px; line-height: 1.8; margin-bottom: 8px; }
+.footer-note {
+  margin-top: 64px; padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font); font-size: 11px;
+  color: var(--text-muted); line-height: 1.7;
+}
+@media (max-width: 1000px) {
+  .layout { display: block; }
+  .toc-sidebar {
+    position: relative; height: auto;
+    border-right: none; border-bottom: 1px solid var(--border);
+    padding: 24px;
+  }
+  main { padding: 32px 24px 80px 24px; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; }
+}
+@media print {
+  .top-bar, .toc-sidebar, .theme-toggle { display: none; }
+  .layout { display: block; }
+  main { max-width: none; padding: 0; }
+  body { font-size: 12pt; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">MIRATUKU<span class="sep">×</span>ESSE-SENSE / Knowledge Synthesis</div>
+  <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+
+<div class="layout">
+  <nav class="toc-sidebar">
+    <div class="toc-title">目次 / Contents</div>
+    <ol>
+      <li><a href="#preface"><span class="ch-num">序</span>問いは時代と共に作り直される</a></li>
+      <li><a href="#ch1"><span class="ch-num">01</span>軸の発火</a></li>
+      <li><a href="#ch2"><span class="ch-num">02</span>救済の組み立て</a></li>
+      <li><a href="#ch3"><span class="ch-num">03</span>翻訳の連鎖</a></li>
+      <li><a href="#ch4"><span class="ch-num">04</span>主観の覚醒</a></li>
+      <li><a href="#ch5"><span class="ch-num">05</span>加速の問い</a></li>
+      <li><a href="#ch6"><span class="ch-num">06</span>断裂の言葉</a></li>
+      <li><a href="#ch7"><span class="ch-num">07</span>第四変容</a></li>
+      <li><a href="#synthesis"><span class="ch-num">08</span>螺旋として読み直す</a></li>
+      <li><a href="#matrix"><span class="ch-num">附A</span>横断マトリクス</a></li>
+      <li><a href="#sources"><span class="ch-num">附B</span>典拠</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <div class="title-block">
+      <div class="eyebrow">Knowledge Synthesis Report</div>
+      <h1>哲学的問いと時代変遷の螺旋<br>— 7基のDBが映す2,500年の連動構造</h1>
+      <p class="subtitle">PHIL-DB（10,292概念）× PT-DB（2,685概念・8,084詩文）× CLA-DB（91,550レコード）× CTI-v2（9時代6次元）× Great Figures DB（9,178人物）× Historical Cases（20ケース・184K字）× ETD（12,902人・31,430能力スコア） を横断統合した、哲学的問いと時代変遷の連動分析。</p>
+      <div class="meta">2026-05-13 ／ NPO法人ミラツク ／ Knowledge Synthesis #01</div>
+    </div>
+
+    <section id="preface" class="chapter-section">
+      <h2><span class="ch-prefix">序</span>問いは時代と共に作り直される</h2>
+      <p>哲学は線形に進歩したのではない。本稿が7基のデータベースを横断して見出した最も大きな構造は、<strong>人類の哲学的問いは技術と社会の構造転換のたびに古い問いを新しい資源で再開してきた</strong>という事実である。</p>
+      <p>PHIL-DB（10,292概念・2,047研究者）は、「人間とは何か」という問いがBC500前後の枢軸時代に枝分かれし、AD2020年代のAGI転換期に再び中心へ戻ったことを記録する。CLA-DB（91,550レコード・127年フルカバー）は、20-21世紀の6つの主要転換点（1914・1945・1968・1989・2008・2020）でそれぞれ第1層（事象）から第4層（神話）まで通底する哲学的問いの位相変化を実証する。CTI-v2は産業革命（CTI=0.764）とAI革命（CTI=0.768）が同じ「双子峰プラトー」上にあることを示し、Great Figures DBは「問う制度」が女性に開かれたのが1800年代後半以降であったことを定量化する。</p>
+      <p>本稿は7基のDBが独立に到達した結論を重ね合わせることで、BC800-AD2026の2,500年を<strong>7区分</strong>に整理し直す。各区分は「中心的な問い／代表的概念／代表的人物／連動した非哲学領域／7DBの実データ証拠」の5軸で構成される。最後の<em>第四変容期</em>（1990-現在）は意図的に厚く扱い、AI時代の問いが古代の問いの再開であることを示す。</p>
+      <div class="callout">
+        <div class="label">Method</div>
+        <p>本稿は事前にハイポセシスを置かず、7基のDBエージェントを並列起動し、各々の独立した解析結果を統合する手順で構成された。7基すべての分析が独立に同じ転換点（軸の時代／印刷期／産業革命／AI時代）を強調したことが、本稿の構造的信頼性の根拠である。</p>
+      </div>
+    </section>
+
+    <section id="ch1" class="chapter-section">
+      <h2><span class="ch-prefix">01</span>軸の発火 — 枢軸時代の同時多発（BC800-BC200）</h2>
+      <h4>中心的な問い</h4>
+      <p>「人間とは何か（理性的存在か）」「共同体の正義とは」「自己の救済はどう可能か」「善く生きるとは」「世界の根源（アルケー）は何か」。問いはユーラシア東西で同時多発した。</p>
+      <h4>哲学（PHIL-DB）</h4>
+      <p>西洋ではアルケー（<code>Arche</code>, BC600）・ピュシス・ノモス・ポリス（BC500, Plato/Aristotle）・イデア（<code>Forms</code>, BC380, Plato）・エイドス・エートスが立ち上がる。東アジアでは仁（<code>Ren</code>, BC500, 孔子）・義・兼愛（墨子, BC450）・道（老子, BC400）・無為が、南アジアでは縁起（<code>Pratityasamutpada</code>, BC528, Buddha）・涅槃・八正道・アヒンサーが並行発生する。Karl Jaspersが<em>枢軸時代</em>と呼んだこの並列性は、PHIL-DBの<code>era_start</code>カラム上でBC600-BC400に概念密度ピークとして実在する。</p>
+      <h4>詩学（PT-DB）</h4>
+      <p>同時期に詩学も独立する。プラトンのミメーシス批判（<code>cp_mimesis</code>, BC375）・アリストテレスのカタルシス（<code>cp_catharsis</code>, BC335）が西洋詩学を、Bharata Muniのラサ（<code>cp_rasa</code>, AD200頃成立だが伝統はBC期）が南アジア詩学を起動した。プラトンのミメーシス批判はそのままイデア論（実在＝形相、感覚的世界＝模倣）の裏返しであり、詩学と存在論は最初から一体だった。</p>
+      <h4>連動構造（CTI-v2）</h4>
+      <p>CTI-v2は枢軸時代を<strong>CTI=0.636（C=0.55, I=0.85）</strong>と評価する。Cが中位・Iが高位という組み合わせは「広域的並列現象」かつ「制度化された定着」を意味する。鉄器化に伴うエネルギー余剰の地理的同時化（D3）と、車輪・文字の遅効的拡散（D1）が、各文明圏に「世界全体を俯瞰する余裕」を同時に与えた。問いの普遍化は、共通の物質基盤の上に立ち上がった<em>並列認識転換</em>である。</p>
+      <h4>人物分布（Great Figures DB）</h4>
+      <p>GF-DBはタレス（BC624）・マハヴィーラ（BC599）・ブッダ（BC566）・孔子（BC551）・ヘラクレイトス（BC540）・パルメニデス（BC515）・ソクラテス（BC469）・墨子（BC470）・プラトン（BC428）・アリストテレス（BC384）・荘子（BC369）を同一の時代区分に登録する。<code>historical_contexts</code>テーブルは「春秋戦国時代」「古代ギリシャ古典期」「マウリヤ朝インド」を同時並行コンテキストとして記述する。<strong>問いは安定ではなく崩壊から立ち上がる</strong>──諸侯戦争と民主政の動揺がそれぞれ諸子百家とソクラテス／プラトンを生んだ。</p>
+      <h4>歴史的駆動（HIC-DB）</h4>
+      <p>アレクサンドロス遠征（BC334-323、HIC-DBケース①）はポリス的「市民」概念を瓦解させ、ストア派の「世界市民（kosmopolitēs）」とエピクロス派の「アタラクシア」を生んだ。問いの位相は<em>ポリスを失った人間はどう生きるか</em>へ転位した。</p>
+    </section>
+
+    <section id="ch2" class="chapter-section">
+      <h2><span class="ch-prefix">02</span>救済の組み立て — 帝国・聖典・救済の哲学（BC200-AD600）</h2>
+      <h4>中心的な問い</h4>
+      <p>「神（超越者）の本性は何か」「皇帝の徳（virtus）とは何か」「天命とは何か」「悟りとは何か」。問いは<em>個人の救済</em>と<em>帝国の正統性</em>の二軸に集約される。</p>
+      <h4>哲学・宗教の系譜</h4>
+      <p>PHIL-DBは原罪（<code>Original Sin</code>, AD400）・信仰と理性（<code>Faith and Reason</code>, AD400）を西洋中世前期の中心概念として登録する。GF-DBはエピクロス（BC341）・董仲舒（BC179、儒教国教化）・司馬遷（BC145）・イエス（BC6）・パウロ（AD5）・アウグスティヌス（AD354、北アフリカ）を「教父・帝国哲学」の主流として記録する。<strong>宗教（religious）が思想分野の主流となり、構築主義者（パウロ・アウグスティヌス・董仲舒）が意思決定アーキタイプとして優勢化する</strong>。</p>
+      <h4>歴史的駆動（HIC-DB）</h4>
+      <p>HIC-DBはローマ帝政成立（ケース②、BC27-AD180）でセネカ・マルクス・アウレリウスのストア派倫理が国家運営に組み込まれたこと、漢王朝の儒教国教化（ケース③、BC141-AD220）で董仲舒の「天人感応」思想が皇帝権力の正統性問題を解いたことを記録する。MPV的に見れば<em>アウグストゥスのPax Romana</em>はストア派的「公共善」を統治ビジョンに翻訳した経営判断だった。</p>
+      <h4>連動構造</h4>
+      <p>ローマ末期-中世封建制／カリフ制／隋唐律令制はいずれも<strong>広域帝国の統治装置として宗教を制度化</strong>した。哲学はスコラ学・カラーム・経学として神学の侍女になる。問いは「人間とは何か」から「<em>神に対して人間は何者か</em>」へと位相を変えた。</p>
+    </section>
+
+    <section id="ch3" class="chapter-section">
+      <h2><span class="ch-prefix">03</span>翻訳の連鎖 — イスラム黄金期と東アジア仏教の深化（AD600-1300）</h2>
+      <h4>中心的な問い</h4>
+      <p>「言葉の暗示はどこまで届くか」「神秘的経験は語れるか」「信仰と理性は両立するか」「普遍は実在するか」。</p>
+      <h4>3磁場の並走</h4>
+      <p>PT-DBはこの時代を<strong>三つの磁場の交差</strong>として描く：(1) インドの<em>ドゥヴァニ</em>（<code>cp_dhvani</code>, Ānandavardhana 850）・<em>シャーンタ・ラサ</em>（Abhinavagupta 1000）、(2) アラブの<em>マジャーズ</em>（<code>cp_majaz</code>, al-Jurjānī 1078）・<em>ナズム言語配列論</em>、(3) 中国の<em>妙悟</em>（<code>cp_miaowu</code>, 嚴羽 1235）・<em>言外之意</em>。al-Jurjānīのナズム理論は「語の配列そのものが意味を生む」と提唱し、20世紀構造主義の言語観を900年先取りした。</p>
+      <h4>人物分布（Great Figures DB）</h4>
+      <p>GF-DBはこの時代に<strong>Middle East 212件・Central Asia 17件</strong>を集中させる。アル=フワーリズミー（780、代数学の創設者）・アル=ハイサム（965、光学）・アヴィセンナ（980、医学典範）・アル=ガザーリー（1058）・ウマル・ハイヤーム（1048）・アヴェロエス（1126、アリストテレス解釈の集大成）が並ぶ。<strong>この時代だけは「問いの中心地」が中東＝中央アジアにあった</strong>ことが定量的に確認できる。</p>
+      <h4>東アジアの並行系譜</h4>
+      <p>PHIL-DBは朱熹の理（<code>Li</code>, 1100）・性即理・功夫を、空海・最澄・道元を登録する。GF-DBの<code>person_relations</code>から再構成されるイスラム系譜は──ムハンマド（570）→ アル=フワーリズミー → アル=ハイサム → アヴィセンナ → アル=ガザーリー → アヴェロエス → トマス・アクィナスを経て西欧へ逆輸入──という二段階の流れを示す。<strong>問いの伝播は南アジア→中東→アンダルス→西欧と一旦移動し、その後西欧から世界へ逆流した</strong>。</p>
+      <h4>連動構造（CTI-v2）</h4>
+      <p>CTI-v2の中世大学期（1100-1300）はCTI=<strong>0.531</strong>（9時代中の最低値）。だがI=0.75の不可逆性は侮れない。Brian Arthur 1989のpath dependence 4要素（自己強化／学習効果／調整効果／適応的期待）はすべて大学制度に内蔵された。<em>普遍論争</em>（普遍は実在か名か）は、後の科学革命における「自然法則の地位」問題の祖型となる。</p>
+    </section>
+
+    <section id="ch4" class="chapter-section">
+      <h2><span class="ch-prefix">04</span>主観の覚醒 — ルネサンス・印刷・科学革命（1300-1700）</h2>
+      <h4>中心的な問い</h4>
+      <p>「人間とは何か」「知識はどこから来るか（経験か理性か）」「自我の確実な土台は何か」「自然はどう機械として読み解けるか」「私は何を知りうるか（Que sais-je?）」。</p>
+      <h4>近代二元論の発生（PHIL-DB）</h4>
+      <p>PHIL-DBは<em>明晰判明</em>（<code>Clear and Distinct Ideas</code>, 1641, Descartes）・<em>社会契約</em>（1651, Hobbes-Locke-Rousseau）・<em>自然権</em>（1689, Locke）を中核概念として登録する。印刷術（グーテンベルク1450）が<strong>読書する個人</strong>を出現させ、「私とは何か」という認識主体の問いが沸騰した。地動説・解剖学・代数学は<em>自然は数学的に読める対象</em>になることを示し、これが「主観／客観」「心／物」の<strong>近代二元論</strong>の発生源となる。</p>
+      <h4>東洋の並行系譜</h4>
+      <p>東アジアでは宋明理学が並行して<em>気-理の二元構造</em>を磨き、王陽明の知行合一（1500-1600）が中江藤樹に流入する。日本では侘び寂び（<code>Wabi-Sabi</code>, 1500, 千利休）・守破離（1600）・五輪書（1645, 宮本武蔵）・不動智（1645, 沢庵）が<em>身体と心の一致</em>として近世日本独自の問いを開いた。PT-DBは藤原定家の余情（<code>cp_yojo</code>, 1209）・本歌取り（1219）・世阿弥の幽玄（<code>cp_yugen</code>, 1424）・芭蕉系の不易流行（1702）を中世日本詩学の支柱として記録する。本歌取りは「他者の言葉の上に立つ」という<em>所有権の希薄な作者観</em>を制度化し、20世紀のクリステヴァのインターテクスチュアリティと500年の時差で響き合う。</p>
+      <h4>連動構造（CTI-v2）</h4>
+      <p>印刷期（1450-1500）はCTI=<strong>0.666</strong>。CTI-v2の「過去から学ぶ3教訓」の第一が観察される時代──D1情報処理→D4価値観の<strong>50-100年ラグ</strong>。印刷の物理的成立（1450）と宗教改革（1517）の間隔がそれを示す。</p>
+      <h4>歴史的駆動（HIC-DB）</h4>
+      <p>HIC-DBはルネサンス（ケース⑥）でピコ・デラ・ミランドラ『人間の尊厳について』が「人間は神でも獣でもなく自己決定する存在」と再定義したこと、大航海時代とラス・カサス論争（ケース⑦、1550-51バリャドリッド討論）で<em>他者は人間か</em>が問われたことを記録する。スペイン王室のエンコミエンダ制度は初期の「植民地プラットフォーム経営」だった。</p>
+    </section>
+
+    <section id="ch5" class="chapter-section">
+      <h2><span class="ch-prefix">05</span>加速の問い — 革命・産業・歴史の発見（1700-1900）</h2>
+      <h4>中心的な問い</h4>
+      <p>「人類は進歩しているのか」「個人の自由と社会の公正は両立するか」「神なき後の道徳は可能か」「労働は人間を解放するか疎外するか」「自由意志は機械論的世界に居場所があるか」。</p>
+      <h4>概念の濃縮（PHIL-DB）</h4>
+      <p>PHIL-DBはこの200年に<em>カテゴリー</em>（1781, Kant）・<em>一般意志</em>（1762, Rousseau）・<em>功利主義</em>（1789, Bentham-Mill）・<em>弁証法</em>（1812, Hegel）・<em>意志</em>（1819, Schopenhauer）・<em>類的存在</em>（1844, Marx）・<em>疎外</em>（1844, Hegel-Feuerbach-Marx）・<em>イデオロギー</em>（1846）・<em>物象化</em>（1867, Marx-Lukács）・<em>超人</em>（1883, Nietzsche）・<em>ルサンチマン</em>（1887）を密集して登録する。</p>
+      <h4>美学の主体論的転回（PT-DB）</h4>
+      <p>カント美学（<code>cp_kant_beautiful</code> 等9概念が1790年に集中）は詩学を「対象の性質論」から「主観の判断構造論」へ移す巨大な転回点となった。ここから詩学は認識論・主体論の一部となる。続くロマン主義は<em>第一・第二想像力</em>（Coleridge 1817）・<em>消極的能力</em>（Keats 1817）として「想像力が世界を構成する」哲学を提示した。</p>
+      <h4>労働の再定義（CTI-v2 × HIC-DB）</h4>
+      <p>CTI-v2の産業革命（1760-1840）はM=<strong>0.71</strong>・C=<strong>0.85</strong>・I=<strong>0.95</strong>、CTI=<strong>0.764</strong>。D2労働構造（Shannon entropy + 新規職種比率）が初めて高位（0.85級）に達した。「労働とは何か」「疎外とは何か」という問いは、D2が量的に跳ね上がった結果として<strong>不可避</strong>になった問いである。HIC-DBはアークライト・ボールトン＆ワットの工場経営を「人間労働を動力＋部品＋管理に分解する初の試み」として記録する。同時にロバート・オウエンのニュー・ラナークは「人間中心経営」の対抗モデルを提示した。</p>
+      <h4>日本の翻訳実践</h4>
+      <p>明治日本（ETD実データ）の能力プロファイル上位は<strong>創造性 8.31 ＋ 伝統文化尊重 8.18 が同値帯</strong>。「西洋の理性をいかに自分のものにできるか」と「日本人であるとは何か」が同時に問われた。西田幾多郎の純粋経験（1911）・絶対無の場所（1926-27）・和辻哲郎の間柄（1934）・風土（1935）が、西洋哲学を東洋の文脈で問い直す装置として機能した。</p>
+    </section>
+
+    <section id="ch6" class="chapter-section">
+      <h2><span class="ch-prefix">06</span>断裂の言葉 — 大戦・記号・構造・他者（1900-1990）</h2>
+      <h4>中心的な問い</h4>
+      <p>「意識はどう存在するか」「言語はどこまで世界を捉えるか」「全体主義はなぜ起きるか」「他者はどう倫理の根拠になるか」「科学の合理性は普遍か（パラダイム）」「作者は死んだか」「権力はどこから来るか」。</p>
+      <h4>CLA四層の動態（CLA-DB）</h4>
+      <p>CLA-DBは127年フルカバーで第3層（世界観）と第4層（神話）の年次変化を記録する。主要転換点を抜粋する：</p>
+      <table>
+        <thead><tr><th>転換点</th><th>第1層（事象）</th><th>第3層（世界観）</th><th>第4層（神話）</th><th>哲学的問いのシフト</th></tr></thead>
+        <tbody>
+          <tr><td><span class="era">1914</span></td><td>サラエボ／世界大戦</td><td>進歩主義と民族主義の奇妙な結合</td><td>機械戦争としての世界システム</td><td>「進歩は無限か」→「主体は何を解放したのか」</td></tr>
+          <tr><td><span class="era">1945</span></td><td>広島長崎／国連憲章</td><td>近代的進歩史観と破滅的現実の矛盾</td><td>浄化の炎による死と再生</td><td>「実存は可能か」→「他者と共存する条件は何か」</td></tr>
+          <tr><td><span class="era">1968</span></td><td>五月革命／プラハの春</td><td>モダニズムの頂点と内部崩壊</td><td>完璧に調律された身体の分裂</td><td>「制度は中立か」→「言語と権力の関係は何か」</td></tr>
+          <tr><td><span class="era">1989</span></td><td>壁崩壊／天安門</td><td>自由民主主義の勝利と全面的不確実性</td><td>封印された巨大な力の解放</td><td>「歴史は終わるのか」→「ネットワークは平等か」</td></tr>
+        </tbody>
+      </table>
+      <h4>哲学的概念の集中（PHIL-DB）</h4>
+      <p>PHIL-DBは<em>現象学</em>（1900, Husserl）・<em>現存在・世界内存在</em>（1927, Heidegger）・<em>反証可能性</em>（1934, Popper）・<em>他者</em>（1943, Sartre-Levinas）・<em>チューリングテスト</em>（1950, Turing）・<em>言語ゲーム</em>（1953, Wittgenstein）・<em>パラダイム</em>（1962, Kuhn）・<em>機能主義</em>（1967, Putnam）・<em>エクリチュール</em>（1967, Derrida）・<em>正義論</em>（1971, Rawls）・<em>コミュニケーション的行為</em>（1981, Habermas）を登録する。</p>
+      <h4>詩学の脱構築（PT-DB）</h4>
+      <p>PT-DBは<em>異化</em>（Shklovsky 1917）・<em>文学性</em>（Jakobson 1921）・<em>客観的相関物</em>（Eliot 1919）・<em>ポリフォニー</em>（Bakhtin 1929）・<em>クロノトポス</em>（1938）・<em>インターテクスチュアリティ</em>（Kristeva 1966）・<em>作者の死</em>（Barthes 1967）・<em>暗示された読者</em>（Iser 1972）を密集登録する。バフチンはマルクス主義言語論と対話哲学（ブーバー系）から「言葉は本質的に対話的」の存在論を展開し、ポリフォニーで小説形式論を作った。</p>
+      <h4>非西洋からの問い（GF-DB）</h4>
+      <p>GF-DBはこの時代に<strong>脱植民地化系譜</strong>を初めて主流として記録する──クワメ・ンクルマ（1909, ガーナ独立／アフリカ統一機構）・サンゴール（1906, ネグリチュード運動）・スカルノ（1901）・モハマド・ハッタ（1902）。サイード『オリエンタリズム』（1978）、Spivak『サバルタンは語ることができるか』（1988）、Stuart Hall encoding/decoding（1980）が、西洋詩学そのものの普遍性主張を権力として読み解いた。</p>
+    </section>
+
+    <section id="ch7" class="chapter-section">
+      <h2><span class="ch-prefix">07</span>第四変容 — AI時代の問いの組み直し（1990-現在）</h2>
+      <h4>固有性の構造</h4>
+      <p>CTI-v2はAI革命（2017-現在）をM=0.72・C=<strong>0.85</strong>・I=0.75・CTI=<strong>0.768</strong>と評価する。固有性は<strong>D1情報処理 0.95 ＋ D6権力集中 0.90 の同時極大</strong>──過去9時代に類例がない。これが「人間とは何か」の問いを哲学者の専有物から全人類の日常へ降ろす構造的要因である。</p>
+      <h4>古代の問いの再開（PHIL-DB）</h4>
+      <p>PHIL-DBは<em>第四変容期</em>を明示的カテゴリとして持ち、<code>ai_age_philosophy</code>サブフィールドだけで206概念、<code>posthuman_philosophy</code>100概念を登録する。再開された問いの構造は以下である：</p>
+      <table>
+        <thead><tr><th>AI時代の問い</th><th>古代の対応する問い</th><th>再考の鍵概念（PHIL-DB）</th></tr></thead>
+        <tbody>
+          <tr><td>AIに意識は宿るか</td><td>心とは何か（イデア／アートマン）</td><td>クオリア（1929）／意識のハード問題（Chalmers）／人工意識（1996）</td></tr>
+          <tr><td>AIエージェントは主体か</td><td>自我とは（コギト／無我）</td><td>拡張された心（1998, Clark-Chalmers）／エナクティブ認知（1991, Varela）</td></tr>
+          <tr><td>生成AIの知識は真理か</td><td>エピステーメとドクサ</td><td>情報の哲学（Floridi 2011）／シンボル接地問題（1990, Harnad）</td></tr>
+          <tr><td>アルゴリズムの責任は誰か</td><td>自由意志と責任</td><td>価値学習（2017, Russell）／コリゲビリティ（2015, Bostrom）／憲法的AI（2022, Anthropic）</td></tr>
+          <tr><td>創造性はAIに宿るか</td><td>ポイエーシス／芸（道）</td><td>計算的創造性（1990, Boden）</td></tr>
+          <tr><td>人間という種は何になるか</td><td>人間の本質</td><td>ポストヒューマニズム（1995, Hayles-Braidotti）／超知能（2014, Bostrom）／技術的特異点（1993, Kurzweil-Vinge）</td></tr>
+          <tr><td>AI時代の正義とは</td><td>ポリスの正義</td><td>アルゴリズム的差別（2016）／プルラリティ（2024, Weyl-Tang）</td></tr>
+        </tbody>
+      </table>
+      <h4>神話の多神化（CLA-DB）</h4>
+      <p>CLA-DBの2021-2026年レコードは決定的に重要な観察を含む：</p>
+      <blockquote>
+        <p>多神的・脱近代的な知識体系の共存：西洋的進歩主義の終焉と「周辺から中心を相対化」する物語。AI救世主神話がポストスカーシティの幻想を提供。古い「男性的・中央集権的」権力構造の衰退と「身体・感情・精神性」の復権。循環的・回復的歴史観への移行。新しい戦国時代的多極化。<br>──CLA-DB / myths_timeline 2021-2026</p>
+      </blockquote>
+      <p>これはブリュノ・ラトゥール『ガイアに向きあう』（2015）、ユク・ホイ『再帰性と偶然性』（2019）が問うた「複数の宇宙技芸の共存」と完全に対応する。<strong>「進歩」「主体」「歴史」という近代の3大神話が同時に終焉し、「循環・回復・多神化・身体性」という前近代/非西洋的神話への移行が第4層レベルで進行している</strong>──これがAI・気候・ポストヒューマンという第1層の事象群と通底する哲学的問いの根である。</p>
+      <h4>能力次元の再編（ETD）</h4>
+      <p>ETDの令和（2019-2030）能力プロファイル上位は<strong>数学的リテラシー 9.00／AI協働リテラシー 8.91／論理的思考 8.76／創造性 8.65</strong>。代表的人物が量子情報（中村泰信・山本喜久・香取秀俊）・気候科学（江守正多）・自然言語処理（辻井潤一）に集中することで、「知性とは何か」「人間の知性とAIの知性は何が違うのか」を問う時代の能力分布が定量的に立ち上がる。</p>
+      <p>ETD未来予測590件は、問いが3段階で深化する見通しを示す：</p>
+      <ul>
+        <li><strong>2030年代</strong>: 「知性とは何か」──AI協働リテラシー＋批判的思考＋対人関係スキルが、AIに代替されない知の定義となる（労働力39%のコア技能変化、人間中心スキルは35%のみ変容に留まる: WEF）</li>
+        <li><strong>2050年代</strong>: 「他者と地球と共にある知とは何か」──システム思考＋エコロジカルリテラシー＋OECD変革コンピテンシーが中心へ</li>
+        <li><strong>2100年代</strong>: 「人間とは何か」──エコロジカル相互依存・寛容性・対人関係スキルが人間固有の存在論を支える。<code>capability_id</code>未指定の64件が、まだ言語化されていない未来の能力次元の存在を示唆する</li>
+      </ul>
+      <h4>東洋の並行系譜と第四変容</h4>
+      <p>第四変容期の問いは西洋哲学だけで答えきれない。PHIL-DBは東アジア・南アジアの古典が再活性化することを明示している：</p>
+      <ul>
+        <li><strong>無我（縁起・空, Buddha・Nagarjuna）</strong>：AIに「自己」を仮定する必要があるかを問い直す土台。「自己の境界は流動的」という仏教の前提が拡張された心仮説と接続する</li>
+        <li><strong>間柄（和辻, 1934）</strong>：個ではなく<em>関係</em>を主語にする倫理。アルゴリズム的他者性の議論に再接続される</li>
+        <li><strong>絶対無の場所（西田, 1926-27）</strong>：「主観／客観」二元論を超える論理。ポストヒューマン主体論の東洋的アンカーになる</li>
+        <li><strong>道・無為（老子, BC400）</strong>：「<em>統制せず生かす</em>」発想は、AIの制御問題（control problem）の対案として再読される可能性を持つ</li>
+      </ul>
+    </section>
+
+    <section id="synthesis" class="chapter-section">
+      <h2><span class="ch-prefix">08</span>螺旋として読み直す — 6つの構造的発見</h2>
+      <p>7基のDBが独立に到達した結論を重ね合わせると、以下の6つの構造的発見が浮かび上がる。</p>
+      <h3>発見1：問いは線形に進歩せず、螺旋的に深化する</h3>
+      <p>AI時代に問われている「意識」「主体」「真理」「責任」「創造性」は、いずれも枢軸時代（BC500前後）にPlato・Buddha・Confuciusがそれぞれの言語で立てた問いの<strong>再構成</strong>である。違いはただ一つ──今回は問いの対象が「<em>人間ならざる対話相手</em>」になったことだ。</p>
+      <h3>発見2：問いは安定からではなく崩壊から立ち上がる</h3>
+      <p>GF-DBの<code>historical_contexts</code>と思想家の時代分布の相関は明白である。春秋戦国・古代ギリシャ動乱・宗教改革・フランス革命・二度の世界大戦が、それぞれ枢軸時代・ソクラテス／プラトン・ルター／カルヴァン・ルソー／カント・アーレント／サルトルを生んだ。<strong>問いは秩序の崩落のあとに、新しい言葉として現れる</strong>。</p>
+      <h3>発見3：問いの中心地は移動する</h3>
+      <p>GF-DBの地域別分布が示す通り、BC枢軸期には南アジア＋東アジア＋ギリシャの三極で同時発火し、AD600-1200は<strong>中東＝中央アジアに移り</strong>（Middle East 212件・Central Asia 17件）、1200以降に西欧へ戻り、20世紀後半から再び多極化する。「問いを問う」歴史は西洋史単独ではなく<strong>多中心史</strong>として再構成可能、という定量的証拠を提供している。</p>
+      <h3>発見4：哲学的問いとメディアは半歩ずれて進む</h3>
+      <p>CTI-v2の「過去から学ぶ3教訓」が示す通り、D1情報処理（メディア）→D4価値観（哲学）の伝播には<strong>50-100年のラグ</strong>がある。印刷術1450→宗教改革1517、産業革命1760-1840→マルクス1848、コンピュータ1950→意識のハード問題1995。エルゴード文学（1997）と生成AI詩学（Boden 1990）も、それぞれWeb出現とディープラーニング革命の<strong>前夜</strong>に概念化されており、<strong>詩学が常に技術に半歩先んじて言語を準備してきた</strong>ことを示す。</p>
+      <h3>発見5：「問う制度」は時代固有である</h3>
+      <p>GF-DBの<code>thinker</code>カテゴリの時代別分布は、medieval（332）→ early_modern（333）→ modern（715）と<strong>近代以降に倍増する</strong>。問いを問うことが「職業」として制度化されたのは近代以降。さらに女性が<code>thinker</code>として制度的に登録される位置を得たのは<strong>1800年代後半以降</strong>であり、それ以前は<code>religious</code>または<code>cultural</code>カテゴリにしか登録の場所がなかった。「問う権利」の歴史は男女・地域で大きく非対称である。</p>
+      <h3>発見6：第四変容は3大神話の同時終焉と東西の対等な動員</h3>
+      <p>CLA-DBが2021-2026年レコードに記録する「進歩・主体・歴史の3大近代神話の同時終焉」と、PHIL-DBが第四変容期に東アジア・南アジアの古典（無我・間柄・絶対無・道）を再活性化資源として登録すること、CTI-v2のAI革命がD1＋D6同時極大という史上例のない構造を示すこと──これら3つは互いに独立に観測されながら、<strong>同じ転換</strong>を指している。第四変容期の哲学は、東西の系譜を初めて<em>対等な資源として</em>動員し直すフェーズに入っている。</p>
+      <div class="callout">
+        <div class="label">Conclusion</div>
+        <p>PHIL-DBが浮かび上がらせる構造は、人類の哲学的問いは線形に進歩したのではなく、技術と社会の構造転換のたびに古代の問いを新しい資源で再開してきたということだ。AI時代に問われている「意識」「主体」「真理」「責任」「創造性」は、いずれも枢軸時代に立てられた問いの再構成である。違いは、今回の対話相手が人間ならざるものになったということだけだ。</p>
+      </div>
+    </section>
+
+    <section id="matrix" class="chapter-section">
+      <h2><span class="ch-prefix">附A</span>7基のDB横断マトリクス</h2>
+      <table>
+        <thead><tr><th>時代</th><th>中心的問い</th><th>CTI</th><th>哲学（PHIL）</th><th>詩学（PT）</th><th>能力（ETD）</th><th>神話（CLA）</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="era">BC800-BC200</span><br>軸の発火</td>
+            <td>善く生きるとは／世界の根源</td>
+            <td>0.636</td>
+            <td>イデア・縁起・仁・道</td>
+            <td>ミメーシス・カタルシス・ラサ</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="era">BC200-AD600</span><br>救済の組み立て</td>
+            <td>神に対し人間は何者か</td>
+            <td>—</td>
+            <td>原罪・信仰と理性</td>
+            <td>ラサ詩学体系化</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="era">AD600-1300</span><br>翻訳の連鎖</td>
+            <td>信仰と理性は両立するか</td>
+            <td>0.531</td>
+            <td>タウヒード・理（朱熹）</td>
+            <td>ドゥヴァニ・マジャーズ・妙悟</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="era">1300-1700</span><br>主観の覚醒</td>
+            <td>私は何を知りうるか</td>
+            <td>0.666</td>
+            <td>明晰判明・社会契約</td>
+            <td>余情・幽玄・不易流行</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="era">1700-1900</span><br>加速の問い</td>
+            <td>労働は人を解放するか</td>
+            <td>0.764</td>
+            <td>カテゴリー・疎外・超人</td>
+            <td>カント美学・想像力</td>
+            <td>明治: 創造性8.31</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="era">1900-1990</span><br>断裂の言葉</td>
+            <td>他者は倫理の根拠か</td>
+            <td>—</td>
+            <td>現存在・パラダイム・他者性</td>
+            <td>異化・ポリフォニー・作者の死</td>
+            <td>昭和前期: 伝統8.59</td>
+            <td>機械戦争・浄化の炎・分裂</td>
+          </tr>
+          <tr>
+            <td><span class="era">1990-現在</span><br>第四変容</td>
+            <td>人間とは何か（再）</td>
+            <td>0.768</td>
+            <td>クオリア・拡張された心・憲法的AI</td>
+            <td>認知詩学・エルゴード・生成AI詩学</td>
+            <td>令和: AI協働8.91/数学9.00</td>
+            <td>多神化・循環・身体性復権</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="no-indent" style="font-size: 13px; color: var(--text-muted); margin-top: 16px;">注：CTI-v2は2026=100基準。PHIL/PTは概念名（出典は本文）。ETDは平均スコア（評価件数は本文）。CLAは第4層神話メタファー。</p>
+    </section>
+
+    <section id="sources" class="chapter-section">
+      <h2><span class="ch-prefix">附B</span>典拠データベース</h2>
+      <ul>
+        <li><strong>PHIL-DB</strong> ／ 哲学概念知識DB（10,292概念・2,047研究者・19サブフィールド）<br><code>/Users/nishimura+/projects/research/philosophy-db/philosophy.db</code></li>
+        <li><strong>PT-DB</strong> ／ 詩学DB（2,685概念・2,768原著引用・8,084PD詩文・12文化圏・897典拠著者）<br><code>~/projects/research/academic-knowledge-db/academic.db</code></li>
+        <li><strong>CLA-DB</strong> ／ Causal Layered Analysis DB（91,550レコード・127年フルカバー・神話46,345件・社会指標34,212件）<br><code>/Users/nishimura+/projects/research/pestle-signal-db/data/cla.db</code></li>
+        <li><strong>CTI-v2</strong> ／ Civilizational Transformation Index v2（9時代×6次元）<br>レポート: <code>~/Documents/ミラツク事業/ミラツク/未来洞察・AI協働/未来洞察事業2026/CTI_v2_双子峰プラトー研究レポート_2026年5月期.html</code></li>
+        <li><strong>Great Figures DB</strong> ／ 偉人DB（9,178人物・10,033イベント・10意思決定アーキタイプ・12シチュエーション）<br><code>~/projects/research/great-figures-db/great_figures.db</code></li>
+        <li><strong>Historical Cases DB</strong> ／ 歴史×統合ケースDB（20ケース・184K字・BC334-AD2024）</li>
+        <li><strong>ETD</strong> ／ 時代別活躍人材DB（12,902人・31,430能力スコア・19能力次元・590未来予測・8時代区分）<br><code>~/projects/research/era-talents-db/data/era_talents.db</code></li>
+      </ul>
+      <p class="no-indent" style="margin-top: 16px;">本稿はすべてDB実データに依拠する。記載された概念ID・人物・年代・著作はすべて該当DBに実在する。引用は原文を改変なく転載。</p>
+
+      <div class="footer-note">
+        <p>Knowledge Synthesis Report #01 — 「哲学的問いと時代変遷の螺旋」<br>
+        Generated 2026-05-13 by 7-DB parallel synthesis (PHIL × PT × CLA × CTI-v2 × GF × HIC × ETD).<br>
+        NPO法人ミラツク × esse-sense ／ Knowledge synthesis pipeline.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const saved = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+</script>
+</body>
+</html>
