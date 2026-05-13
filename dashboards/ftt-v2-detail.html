@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FTT-DB v2.0 詳細ダッシュボード — 現状把握・検証・拡張計画</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-light: #1A1A1A; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.85; letter-spacing: 0.025em; font-feature-settings: "palt"; }
+.top-bar {
+  position: sticky; top: 0; height: 48px; background: var(--bg);
+  border-top: 3px solid #121212; border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; padding: 0 24px; z-index: 100;
+  font-size: 0.85rem; font-weight: 500;
+}
+.top-bar .brand { color: var(--accent-warm); font-weight: 700; margin-right: 24px; }
+.top-bar .meta { color: var(--text-muted); font-size: 0.75rem; }
+.theme-toggle {
+  margin-left: auto; background: transparent; border: 1px solid var(--border);
+  color: var(--text); padding: 4px 12px; cursor: pointer; border-radius: 3px;
+  font-size: 0.75rem;
+}
+.theme-toggle:hover { background: var(--accent-muted); border-color: var(--accent-warm); color: var(--accent-warm); }
+.layout { display: grid; grid-template-columns: 260px 1fr; max-width: 1320px; margin: 0 auto; }
+.toc-sidebar {
+  position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto;
+  padding: 32px 20px; border-right: 1px solid var(--border-light);
+  font-size: 0.85rem;
+}
+.toc-sidebar h3 { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin: 16px 0 8px; letter-spacing: 0.1em; }
+.toc-sidebar a { display: block; padding: 4px 0; color: var(--text-secondary); text-decoration: none; }
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.toc-sidebar .num { color: var(--text-muted); font-family: "SF Mono", "Fira Code", monospace; font-size: 0.75rem; margin-right: 8px; }
+.main { max-width: 800px; padding: 48px 40px; }
+h1 { font-family: var(--font-serif); font-size: 2.2rem; font-weight: 500; letter-spacing: 0.03em; margin-bottom: 12px; }
+h2 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 500; margin: 56px 0 16px; padding-top: 16px; border-top: 1px solid var(--border-light); }
+h3 { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 500; margin: 32px 0 12px; color: var(--accent-warm); }
+h4 { font-family: var(--font); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin: 20px 0 8px; }
+p { font-family: var(--font-serif); margin-bottom: 1em; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead { color: var(--text-secondary); font-size: 1rem; margin-bottom: 32px; }
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px; margin: 24px 0 32px;
+}
+.kpi {
+  border: 1px solid var(--border-light); padding: 16px 18px;
+  background: var(--card);
+}
+.kpi .v { font-size: 1.6rem; font-weight: 600; color: var(--accent-warm); font-family: var(--font); }
+.kpi .l { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+.kpi .sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.chapter-section { margin-bottom: 64px; padding-bottom: 32px; border-bottom: 1px solid var(--border-light); }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 16px 0; font-family: var(--font); }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 500; color: var(--text-secondary); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+td.num { text-align: right; font-family: "SF Mono", "Fira Code", monospace; }
+.bar { display: inline-block; height: 8px; background: var(--accent-warm); vertical-align: middle; }
+.bar-track { display: inline-block; height: 8px; background: var(--border-light); vertical-align: middle; position: relative; }
+.cat-group { margin-bottom: 24px; }
+.cat-label { font-size: 0.75rem; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 8px; letter-spacing: 0.1em; font-weight: 500; }
+.paper-list { font-size: 0.85rem; font-family: var(--font); }
+.paper-list li { list-style: none; padding: 10px 0; border-bottom: 1px dashed var(--border-light); }
+.paper-list .meta { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px; }
+.paper-list .title { color: var(--text); }
+.paper-list .cites { color: var(--accent-warm); font-weight: 500; }
+.note { background: var(--accent-muted); padding: 16px 20px; margin: 20px 0; font-size: 0.85rem; color: var(--text-secondary); font-family: var(--font); border-left: 3px solid var(--accent-warm); }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.metric-grid .metric { border: 1px solid var(--border-light); padding: 14px 16px; background: var(--card); font-family: var(--font); font-size: 0.85rem; }
+.metric .v { font-size: 1.2rem; font-weight: 600; color: var(--accent-warm); }
+.metric .l { color: var(--text-secondary); font-size: 0.75rem; }
+.dom-card { border: 1px solid var(--border-light); padding: 20px 24px; margin: 16px 0; background: var(--card); font-family: var(--font); }
+.dom-card .head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.dom-card .code { font-family: "SF Mono", monospace; color: var(--accent-warm); font-weight: 600; font-size: 0.9rem; }
+.dom-card .name { font-family: var(--font-serif); font-size: 1.15rem; font-weight: 500; }
+.dom-card .ai { font-size: 0.7rem; padding: 2px 8px; border: 1px solid var(--border); border-radius: 10px; color: var(--text-muted); }
+.dom-card .desc { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
+.dom-card .stat { display: inline-block; margin-right: 16px; font-size: 0.78rem; }
+.dom-card .stat strong { color: var(--accent-warm); font-size: 1rem; }
+.dom-card .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; font-size: 0.78rem; }
+.dom-card .lists h5 { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.06em; }
+.cov-tier { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+.cov-high { background: rgba(204,20,0,0.12); color: var(--accent-warm); }
+.cov-mid { background: rgba(204,20,0,0.06); color: var(--accent-warm-soft); }
+.cov-low { background: var(--surface); color: var(--text-secondary); }
+.cov-min { background: var(--surface); color: var(--text-muted); }
+.phase-card { border: 1px solid var(--border-light); padding: 16px 20px; margin: 12px 0; background: var(--card); font-family: var(--font); font-size: 0.85rem; }
+.phase-card .ph-title { font-family: var(--font-serif); font-weight: 500; font-size: 1.05rem; color: var(--accent-warm); margin-bottom: 6px; }
+.phase-card .ph-meta { font-size: 0.78rem; color: var(--text-muted); }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); }
+  .main { padding: 32px 20px; }
+  .dom-card .lists { grid-template-columns: 1fr; }
+}
+@media print { .toc-sidebar, .top-bar { display: none; } .main { max-width: 100%; padding: 0; } }
+</style>
+</head>
+<body>
+<header class="top-bar">
+  <span class="brand">FTT-DB v2.0 詳細</span>
+  <span class="meta">現状把握・検証結果・カバー率推論・拡張計画</span>
+  <button class="theme-toggle" onclick="toggleTheme()">Theme</button>
+</header>
+<div class="layout">
+<nav class="toc-sidebar">
+  <h3>第一部 現状把握</h3>
+  <a href="#summary"><span class="num">01</span>要旨</a>
+  <a href="#kpi"><span class="num">02</span>KPI</a>
+  <a href="#domains"><span class="num">03</span>30領域の詳細</a>
+  <a href="#technologies"><span class="num">04</span>166技術の言及量</a>
+  <a href="#authors"><span class="num">05</span>領域別主要著者</a>
+  <a href="#orgs"><span class="num">06</span>領域別主要機関</a>
+  <a href="#yearly"><span class="num">07</span>年次推移</a>
+  <a href="#geo"><span class="num">08</span>地理分布</a>
+  <a href="#cross"><span class="num">09</span>領域横断論文</a>
+  <h3>第二部 検証</h3>
+  <a href="#audit-precision"><span class="num">10</span>言及精度</a>
+  <a href="#audit-integrity"><span class="num">11</span>データ完全性</a>
+  <a href="#audit-duplicates"><span class="num">12</span>重複・整合性</a>
+  <a href="#audit-distribution"><span class="num">13</span>分布特性</a>
+  <h3>第三部 カバー率</h3>
+  <a href="#coverage-overall"><span class="num">14</span>全体カバー率</a>
+  <a href="#coverage-by-domain"><span class="num">15</span>領域別カバー率</a>
+  <h3>第四部 拡張計画</h3>
+  <a href="#plan-overview"><span class="num">16</span>Phase 8-15</a>
+  <a href="#plan-priorities"><span class="num">17</span>優先順位</a>
+</nav>
+
+<main class="main">
+<h1>FTT-DB v2.0 詳細ダッシュボード</h1>
+<p class="lead">現状把握・検証結果・カバー率推論・拡張計画を統合した詳細レポート。生成日: 2026-05-14 06:39</p>
+
+<section class="chapter-section" id="summary">
+<h2>01. 要旨</h2>
+<p>本ダッシュボードは未来技術動向データベース v2.0 の現状と検証結果、そして今後の拡張計画を統合する。v2.0 は OpenAlex API を主軸として 30 工学領域から 18,524 の学術論文を収集し、9,970 件の技術言及を抽出した。30 領域すべてが下限 450 件以上の学術基盤を獲得し、論文の実在性は無作為標本検証で 100%、技術言及の抽出精度は無作為標本 100 件中 95 件が厳密一致（精度 95.0%）の結果を得た。一方でカバー率の総合的検証によれば、本データベースが対象とする工学領域全体の理論的論文母集団は約 1,517 万件と推定され、現状のカバー率は 0.124% に留まる。カテゴリ別では「高カバー」9 領域、「中カバー」11 領域、「低カバー」5 領域、「極小カバー」5 領域に分布し、特に EDGE_AI・SAFETY_AI・CROSS・MEDICAL・BRAIN_CI の 5 領域は理論母集団が極めて大きく、現状の数百件レベルでは概観に留まる。</p>
+<p>拡張計画は 8 つのフェーズに段階分けされる。Phase 8 は低カバー領域の救済、Phase 9 は中位領域の強化、Phase 10 は論文間引用ネットワークの構築、Phase 11 は規制と論文の橋渡し、Phase 12 は多ソース化（arXiv 全文・PubMed・IEEE Xplore）、Phase 13 は LLM による言及抽出 v2、Phase 14 は他学術 DB との結合、Phase 15 は教科書 HTML の生成である。完成形では論文 50K 級・言及 35K 級・引用関係 370K 級の規模を想定する。</p>
+</section>
+
+<section class="chapter-section" id="kpi">
+<h2>02. KPI</h2>
+<p>本データベースを構成する主要オブジェクトの規模と、品質ゲートの達成状況を一覧する。論文 18,524 件・技術言及 9,970 件・人物 6,921 名・機関 1,994 件が中心テーブルを成し、領域マッピング 28,144 件と論文-著者リンク 113,287 件、論文-機関リンク 141,694 件によって関係ネットワークを形成している。</p>
+<div class="kpi-grid">
+  <div class="kpi"><div class="v">30</div><div class="l">工学領域</div><div class="sub">v1.0 の 10 から 30 へ</div></div>
+  <div class="kpi"><div class="v">166</div><div class="l">技術エントリ</div><div class="sub">v1.0 の 41 から 166 へ</div></div>
+  <div class="kpi"><div class="v">18,524</div><div class="l">学術論文</div><div class="sub">OpenAlex 経由</div></div>
+  <div class="kpi"><div class="v">9,970</div><div class="l">技術言及</div><div class="sub">精度 95.0%</div></div>
+  <div class="kpi"><div class="v">113,287</div><div class="l">論文-著者</div><div class="sub">114K リンク</div></div>
+  <div class="kpi"><div class="v">141,694</div><div class="l">論文-機関</div><div class="sub">142K リンク</div></div>
+  <div class="kpi"><div class="v">6,921</div><div class="l">人物</div><div class="sub">3論文以上</div></div>
+  <div class="kpi"><div class="v">1,994</div><div class="l">機関</div><div class="sub">5論文以上</div></div>
+  <div class="kpi"><div class="v">0.1236%</div><div class="l">総カバー率</div><div class="sub">理論母集団比</div></div>
+  <div class="kpi"><div class="v">100%</div><div class="l">論文実在率</div><div class="sub">50/50検証</div></div>
+</div>
+</section>
+
+<section class="chapter-section" id="domains">
+<h2>03. 30 領域の詳細</h2>
+<p>30 領域を 7 カテゴリに配置し、それぞれの領域について収集論文数（一次マッピング論文数）・技術言及数・配下技術エントリ数・AI 影響強度・主要著者・主要機関を統合提示する。各領域は最低 450 件の学術基盤を獲得しており、十分な観察対象として機能する。</p>
+<h3>情報基盤</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">QUANTUM</span>
+    <span class="name">量子・光・通信</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-low">LOW 0.226%</span>
+  </div>
+  <div class="desc">量子計算・シリコンフォトニクス・6G・量子インターネット</div>
+  <div>
+    <span class="stat"><strong>770</strong> 論文</span>
+    <span class="stat"><strong>461</strong> 言及</span>
+    <span class="stat"><strong>12</strong> 技術エントリ</span>
+    <span class="stat">一次757 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Liang Jiang <span style="color:var(--text-muted)">(17)</span></li><li>Ryan Babbush <span style="color:var(--text-muted)">(12)</span></li><li>Keisuke Fujii <span style="color:var(--text-muted)">(11)</span></li><li>Jian-Wei Pan <span style="color:var(--text-muted)">(11)</span></li><li>Sergio Boixo <span style="color:var(--text-muted)">(11)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Delft University of Technology <span style="color:var(--text-muted)">[NL / 40]</span></li><li>California Institute of Technology <span style="color:var(--text-muted)">[US / 37]</span></li><li>QuTech <span style="color:var(--text-muted)">[NL / 29]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">SAFETY_AI</span>
+    <span class="name">AI安全・解釈可能性</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-min">MIN 0.028%</span>
+  </div>
+  <div class="desc">アライメント・解釈可能性・RLHF・憲法AI</div>
+  <div>
+    <span class="stat"><strong>741</strong> 論文</span>
+    <span class="stat"><strong>289</strong> 言及</span>
+    <span class="stat"><strong>5</strong> 技術エントリ</span>
+    <span class="stat">一次740 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>IA, 10 <span style="color:var(--text-muted)">(8)</span></li><li>Revista, Zen <span style="color:var(--text-muted)">(8)</span></li><li>Iason Gabriel <span style="color:var(--text-muted)">(5)</span></li><li>Alexander Neulinger <span style="color:var(--text-muted)">(4)</span></li><li>Diyi Yang <span style="color:var(--text-muted)">(4)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Stanford University <span style="color:var(--text-muted)">[US / 16]</span></li><li>Massachusetts Institute of Technology <span style="color:var(--text-muted)">[US / 16]</span></li><li>Harvard University <span style="color:var(--text-muted)">[US / 14]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">EDGE_AI</span>
+    <span class="name">エッジAI</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-min">MIN 0.016%</span>
+  </div>
+  <div class="desc">デバイス端でのAI推論・連合学習</div>
+  <div>
+    <span class="stat"><strong>607</strong> 論文</span>
+    <span class="stat"><strong>370</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次589 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Dusit Niyato <span style="color:var(--text-muted)">(17)</span></li><li>Yuanming Shi <span style="color:var(--text-muted)">(16)</span></li><li>Dingzhu Wen <span style="color:var(--text-muted)">(9)</span></li><li>Ivanovitch Silva <span style="color:var(--text-muted)">(9)</span></li><li>Jiawen Kang <span style="color:var(--text-muted)">(9)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Nanyang Technological University <span style="color:var(--text-muted)">[SG / 26]</span></li><li>ShanghaiTech University <span style="color:var(--text-muted)">[CN / 18]</span></li><li>Hong Kong University of Science and Technology <span style="color:var(--text-muted)">[HK / 16]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">CYBER_PHYS</span>
+    <span class="name">サイバーフィジカルシステム</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-mid">MID 0.889%</span>
+  </div>
+  <div class="desc">デジタルツイン・IoT融合制御</div>
+  <div>
+    <span class="stat"><strong>604</strong> 論文</span>
+    <span class="stat"><strong>311</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次597 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Jiafu Wan <span style="color:var(--text-muted)">(12)</span></li><li>Di Li <span style="color:var(--text-muted)">(12)</span></li><li>Adam Hahn <span style="color:var(--text-muted)">(10)</span></li><li>Fei Tao <span style="color:var(--text-muted)">(8)</span></li><li>Jiewu Leng <span style="color:var(--text-muted)">(8)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>South China University of Technology <span style="color:var(--text-muted)">[CN / 15]</span></li><li>Shanghai Jiao Tong University <span style="color:var(--text-muted)">[CN / 14]</span></li><li>University of Auckland <span style="color:var(--text-muted)">[NZ / 13]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">NEUROMORPHIC</span>
+    <span class="name">ニューロモーフィック</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-high">HIGH 2.638%</span>
+  </div>
+  <div class="desc">スパイキングニューラルネット・脳模倣チップ</div>
+  <div>
+    <span class="stat"><strong>601</strong> 論文</span>
+    <span class="stat"><strong>500</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次582 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>J. Joshua Yang <span style="color:var(--text-muted)">(24)</span></li><li>Tarek M. Taha <span style="color:var(--text-muted)">(19)</span></li><li>Chris Yakopcic <span style="color:var(--text-muted)">(18)</span></li><li>R. Stanley Williams <span style="color:var(--text-muted)">(15)</span></li><li>Qiangfei Xia <span style="color:var(--text-muted)">(14)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Intel (United States) <span style="color:var(--text-muted)">[US / 34]</span></li><li>Tsinghua University <span style="color:var(--text-muted)">[CN / 27]</span></li><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 24]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">PHOTONICS</span>
+    <span class="name">フォトニクス</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 0.993%</span>
+  </div>
+  <div class="desc">光集積回路・量子フォトニクス・LiDAR</div>
+  <div>
+    <span class="stat"><strong>589</strong> 論文</span>
+    <span class="stat"><strong>295</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次577 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>John E. Bowers <span style="color:var(--text-muted)">(26)</span></li><li>Dirk Englund <span style="color:var(--text-muted)">(18)</span></li><li>Jeremy L. O’Brien <span style="color:var(--text-muted)">(16)</span></li><li>Roel Baets <span style="color:var(--text-muted)">(15)</span></li><li>Mark G. Thompson <span style="color:var(--text-muted)">(15)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>University of California, Santa Barbara <span style="color:var(--text-muted)">[US / 41]</span></li><li>Massachusetts Institute of Technology <span style="color:var(--text-muted)">[US / 29]</span></li><li>Ghent University <span style="color:var(--text-muted)">[BE / 27]</span></li></ul></div></div></div><h3>生命基盤</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">SYNBIO</span>
+    <span class="name">合成生物学</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-low">LOW 0.128%</span>
+  </div>
+  <div class="desc">ゲノム合成・代謝工学・細胞工場</div>
+  <div>
+    <span class="stat"><strong>764</strong> 論文</span>
+    <span class="stat"><strong>582</strong> 言及</span>
+    <span class="stat"><strong>5</strong> 技術エントリ</span>
+    <span class="stat">一次735 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Sang Yup Lee <span style="color:var(--text-muted)">(19)</span></li><li>Karin Strauß <span style="color:var(--text-muted)">(18)</span></li><li>Luís Ceze <span style="color:var(--text-muted)">(14)</span></li><li>Vincent Noireaux <span style="color:var(--text-muted)">(14)</span></li><li>Michael C. Jewett <span style="color:var(--text-muted)">(13)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Massachusetts Institute of Technology <span style="color:var(--text-muted)">[US / 28]</span></li><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 26]</span></li><li>Imperial College London <span style="color:var(--text-muted)">[GB / 25]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">MEDICAL</span>
+    <span class="name">医療・神経</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-min">MIN 0.055%</span>
+  </div>
+  <div class="desc">AI診断・オルガノイド・CRISPR・BCI・ニューロモーフィック</div>
+  <div>
+    <span class="stat"><strong>744</strong> 論文</span>
+    <span class="stat"><strong>423</strong> 言及</span>
+    <span class="stat"><strong>11</strong> 技術エントリ</span>
+    <span class="stat">一次743 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Carl H. June <span style="color:var(--text-muted)">(14)</span></li><li>Crystal L. Mackall <span style="color:var(--text-muted)">(10)</span></li><li>ドリュー・ワイズマン <span style="color:var(--text-muted)">(10)</span></li><li>Augustin Žídek <span style="color:var(--text-muted)">(9)</span></li><li>Renier J. Brentjens <span style="color:var(--text-muted)">(9)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>University of Pennsylvania <span style="color:var(--text-muted)">[US / 40]</span></li><li>Harvard University <span style="color:var(--text-muted)">[US / 36]</span></li><li>University of Washington <span style="color:var(--text-muted)">[US / 24]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">AGRI</span>
+    <span class="name">農業</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-mid">MID 1.526%</span>
+  </div>
+  <div class="desc">垂直農業・精密農業・代替食品・再生農業</div>
+  <div>
+    <span class="stat"><strong>741</strong> 論文</span>
+    <span class="stat"><strong>369</strong> 言及</span>
+    <span class="stat"><strong>9</strong> 技術エントリ</span>
+    <span class="stat">一次741 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Hanna L. Tuomisto <span style="color:var(--text-muted)">(11)</span></li><li>L.F.M. Marcelis <span style="color:var(--text-muted)">(7)</span></li><li>Garrett M. Broad <span style="color:var(--text-muted)">(6)</span></li><li>Michael Martin <span style="color:var(--text-muted)">(6)</span></li><li>Sara R. Jaeger <span style="color:var(--text-muted)">(6)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Wageningen University &amp; Research <span style="color:var(--text-muted)">[NL / 27]</span></li><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 17]</span></li><li>Chinese Academy of Agricultural Sciences <span style="color:var(--text-muted)">[CN / 15]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">BIOELEC</span>
+    <span class="name">バイオエレクトロニクス</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-high">HIGH 14.993%</span>
+  </div>
+  <div class="desc">生体センサ・組織埋込デバイス・神経刺激</div>
+  <div>
+    <span class="stat"><strong>593</strong> 論文</span>
+    <span class="stat"><strong>195</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次593 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Zhenan Bao <span style="color:var(--text-muted)">(12)</span></li><li>John A. Rogers <span style="color:var(--text-muted)">(12)</span></li><li>Stephanie Carreiro <span style="color:var(--text-muted)">(10)</span></li><li>Yonggang Huang <span style="color:var(--text-muted)">(10)</span></li><li>Wei Gao <span style="color:var(--text-muted)">(9)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Stanford University <span style="color:var(--text-muted)">[US / 23]</span></li><li>Feinstein Institute for Medical Research <span style="color:var(--text-muted)">[US / 22]</span></li><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 19]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">LONGEVITY</span>
+    <span class="name">長寿・老化科学</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-low">LOW 0.11%</span>
+  </div>
+  <div class="desc">セノリティクス・部分リプログラミング・エピジェネティック時計</div>
+  <div>
+    <span class="stat"><strong>589</strong> 論文</span>
+    <span class="stat"><strong>239</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次589 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Steve Horvath <span style="color:var(--text-muted)">(37)</span></li><li>James L. Kirkland <span style="color:var(--text-muted)">(21)</span></li><li>Tamar Tchkonia <span style="color:var(--text-muted)">(19)</span></li><li>Amin Haghani <span style="color:var(--text-muted)">(12)</span></li><li>Paul D. Robbins <span style="color:var(--text-muted)">(11)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>University of California, Los Angeles <span style="color:var(--text-muted)">[US / 52]</span></li><li>Harvard University <span style="color:var(--text-muted)">[US / 38]</span></li><li>Mayo Clinic in Florida <span style="color:var(--text-muted)">[US / 22]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">BRAIN_CI</span>
+    <span class="name">脳-機械インタフェース</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-min">MIN 0.096%</span>
+  </div>
+  <div class="desc">侵襲・非侵襲BCI・Neuralink系譜</div>
+  <div>
+    <span class="stat"><strong>588</strong> 論文</span>
+    <span class="stat"><strong>423</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次586 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Jeffrey R. Capadona <span style="color:var(--text-muted)">(42)</span></li><li>Leigh R. Hochberg <span style="color:var(--text-muted)">(19)</span></li><li>Benjamin Blankertz <span style="color:var(--text-muted)">(17)</span></li><li>Jonathan R. Wolpaw <span style="color:var(--text-muted)">(16)</span></li><li>Niels Birbaumer <span style="color:var(--text-muted)">(16)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Case Western Reserve University <span style="color:var(--text-muted)">[US / 51]</span></li><li>Louis Stokes Cleveland VA Medical Center <span style="color:var(--text-muted)">[US / 43]</span></li><li>University of Tübingen <span style="color:var(--text-muted)">[DE / 29]</span></li></ul></div></div></div><h3>メタ</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">CROSS</span>
+    <span class="name">横断観察</span>
+    <span class="ai">AI影響: -</span>
+    <span class="cov-tier cov-min">MIN 0.019%</span>
+  </div>
+  <div class="desc">AI影響の工学全般への波及</div>
+  <div>
+    <span class="stat"><strong>760</strong> 論文</span>
+    <span class="stat"><strong>551</strong> 言及</span>
+    <span class="stat"><strong>5</strong> 技術エントリ</span>
+    <span class="stat">一次749 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Vincent Blok <span style="color:var(--text-muted)">(12)</span></li><li>Richard Owen <span style="color:var(--text-muted)">(10)</span></li><li>Mario Coccia <span style="color:var(--text-muted)">(7)</span></li><li>Phil Macnaghten <span style="color:var(--text-muted)">(6)</span></li><li>Mihail C. Roco <span style="color:var(--text-muted)">(5)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Wageningen University &amp; Research <span style="color:var(--text-muted)">[NL / 18]</span></li><li>University of Oxford <span style="color:var(--text-muted)">[GB / 13]</span></li><li>Arizona State University <span style="color:var(--text-muted)">[US / 12]</span></li></ul></div></div></div><h3>社会基盤</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">TRANSPORT</span>
+    <span class="name">輸送</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-high">HIGH 2.504%</span>
+  </div>
+  <div class="desc">自動運転・eVTOL・電動水素航空</div>
+  <div>
+    <span class="stat"><strong>750</strong> 論文</span>
+    <span class="stat"><strong>443</strong> 言及</span>
+    <span class="stat"><strong>9</strong> 技術エントリ</span>
+    <span class="stat">一次749 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Jaiyoung Ryu <span style="color:var(--text-muted)">(11)</span></li><li>Kwan-Sup Lee <span style="color:var(--text-muted)">(10)</span></li><li>Benjamin M. Simmons <span style="color:var(--text-muted)">(8)</span></li><li>Florian Holzapfel <span style="color:var(--text-muted)">(8)</span></li><li>Thi Thanh Giang Le <span style="color:var(--text-muted)">(8)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Korea Railroad Research Institute <span style="color:var(--text-muted)">[KR / 18]</span></li><li>Delft University of Technology <span style="color:var(--text-muted)">[NL / 18]</span></li><li>Beihang University <span style="color:var(--text-muted)">[CN / 15]</span></li></ul></div></div></div><h3>エネルギー</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">FUSION_DEEP</span>
+    <span class="name">核融合</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-high">HIGH 9.179%</span>
+  </div>
+  <div class="desc">トカマク・ステラレータ・慣性閉じ込め・FRC</div>
+  <div>
+    <span class="stat"><strong>738</strong> 論文</span>
+    <span class="stat"><strong>406</strong> 言及</span>
+    <span class="stat"><strong>5</strong> 技術エントリ</span>
+    <span class="stat">一次738 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>H. Gota <span style="color:var(--text-muted)">(29)</span></li><li>Tomohiko Asai <span style="color:var(--text-muted)">(25)</span></li><li>Michl Binderbauer <span style="color:var(--text-muted)">(24)</span></li><li>R. Betti <span style="color:var(--text-muted)">(24)</span></li><li>O. L. Landen <span style="color:var(--text-muted)">(23)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Lawrence Livermore National Laboratory <span style="color:var(--text-muted)">[US / 96]</span></li><li>Max Planck Institute for Plasma Physics - Greifswald <span style="color:var(--text-muted)">[DE / 60]</span></li><li>Princeton Plasma Physics Laboratory <span style="color:var(--text-muted)">[US / 60]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">HYDROGEN</span>
+    <span class="name">水素</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-low">LOW 0.247%</span>
+  </div>
+  <div class="desc">グリーン水素・電解槽・燃料電池・水素貯蔵</div>
+  <div>
+    <span class="stat"><strong>601</strong> 論文</span>
+    <span class="stat"><strong>266</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次597 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Masoud Salavati‐Niasari <span style="color:var(--text-muted)">(7)</span></li><li>Marcelo Carmo <span style="color:var(--text-muted)">(6)</span></li><li>Martin Müller <span style="color:var(--text-muted)">(6)</span></li><li>Pouria Ahmadi <span style="color:var(--text-muted)">(6)</span></li><li>A.S. Aricò <span style="color:var(--text-muted)">(5)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Centre National de la Recherche Scientifique <span style="color:var(--text-muted)">[FR / 17]</span></li><li>Forschungszentrum Jülich <span style="color:var(--text-muted)">[DE / 11]</span></li><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 10]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">OCEAN_ENERGY</span>
+    <span class="name">海洋エネルギー</span>
+    <span class="ai">AI影響: 弱</span>
+    <span class="cov-tier cov-low">LOW 0.104%</span>
+  </div>
+  <div class="desc">波力・潮流・温度差発電（OTEC）</div>
+  <div>
+    <span class="stat"><strong>450</strong> 論文</span>
+    <span class="stat"><strong>343</strong> 言及</span>
+    <span class="stat"><strong>3</strong> 技術エントリ</span>
+    <span class="stat">一次450 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Richard Willden <span style="color:var(--text-muted)">(13)</span></li><li>Aurélien Babarit <span style="color:var(--text-muted)">(11)</span></li><li>Yasuyuki Ikegami <span style="color:var(--text-muted)">(10)</span></li><li>Gérard C. Nihous <span style="color:var(--text-muted)">(9)</span></li><li>Christopher Vogel <span style="color:var(--text-muted)">(8)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>University of Edinburgh <span style="color:var(--text-muted)">[GB / 23]</span></li><li>University of Oxford <span style="color:var(--text-muted)">[GB / 21]</span></li><li>University of Strathclyde <span style="color:var(--text-muted)">[GB / 18]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">GEOTHERMAL</span>
+    <span class="name">地熱・先進地熱</span>
+    <span class="ai">AI影響: 弱</span>
+    <span class="cov-tier cov-mid">MID 0.691%</span>
+  </div>
+  <div class="desc">強化型地熱（EGS）・超臨界地熱</div>
+  <div>
+    <span class="stat"><strong>446</strong> 論文</span>
+    <span class="stat"><strong>164</strong> 言及</span>
+    <span class="stat"><strong>3</strong> 技術エントリ</span>
+    <span class="stat">一次445 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Arash Dahi Taleghani <span style="color:var(--text-muted)">(12)</span></li><li>Xianzhi Song <span style="color:var(--text-muted)">(11)</span></li><li>Yu Shi <span style="color:var(--text-muted)">(11)</span></li><li>Gaosheng Wang <span style="color:var(--text-muted)">(10)</span></li><li>Tianfu Xu <span style="color:var(--text-muted)">(10)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>China University of Petroleum, East China <span style="color:var(--text-muted)">[CN / 21]</span></li><li>China University of Petroleum, Beijing <span style="color:var(--text-muted)">[CN / 18]</span></li><li>ETH Zurich <span style="color:var(--text-muted)">[CH / 18]</span></li></ul></div></div></div><h3>物理基盤</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">ENERGY</span>
+    <span class="name">エネルギー深化</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 0.978%</span>
+  </div>
+  <div class="desc">核融合・SMR・固体電池・水素・グリッド</div>
+  <div>
+    <span class="stat"><strong>712</strong> 論文</span>
+    <span class="stat"><strong>303</strong> 言及</span>
+    <span class="stat"><strong>11</strong> 技術エントリ</span>
+    <span class="stat">一次598 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Jürgen Janek <span style="color:var(--text-muted)">(22)</span></li><li>Yi Cui <span style="color:var(--text-muted)">(17)</span></li><li>Qiang Zhang <span style="color:var(--text-muted)">(17)</span></li><li>Jia‐Qi Huang <span style="color:var(--text-muted)">(14)</span></li><li>Wolfgang G. Zeier <span style="color:var(--text-muted)">(14)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Tsinghua University <span style="color:var(--text-muted)">[CN / 37]</span></li><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 37]</span></li><li>Justus-Liebig-Universität Gießen <span style="color:var(--text-muted)">[DE / 27]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">BUILDING</span>
+    <span class="name">建築</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 1.92%</span>
+  </div>
+  <div class="desc">3Dプリント・デジタルツイン・CLT</div>
+  <div>
+    <span class="stat"><strong>601</strong> 論文</span>
+    <span class="stat"><strong>280</strong> 言及</span>
+    <span class="stat"><strong>7</strong> 技術エントリ</span>
+    <span class="stat">一次600 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Nele De Belie <span style="color:var(--text-muted)">(28)</span></li><li>Kim Van Tittelboom <span style="color:var(--text-muted)">(14)</span></li><li>Elke Gruyaert <span style="color:var(--text-muted)">(11)</span></li><li>H.M. Jonkers <span style="color:var(--text-muted)">(10)</span></li><li>Paul D Kremer <span style="color:var(--text-muted)">(9)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Ghent University <span style="color:var(--text-muted)">[BE / 28]</span></li><li>Oregon State University <span style="color:var(--text-muted)">[US / 18]</span></li><li>Delft University of Technology <span style="color:var(--text-muted)">[NL / 18]</span></li></ul></div></div></div><h3>物質基盤</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">MATERIAL</span>
+    <span class="name">材料・ナノ</span>
+    <span class="ai">AI影響: 強</span>
+    <span class="cov-tier cov-high">HIGH 3.139%</span>
+  </div>
+  <div class="desc">2D材料・メタマテリアル・AI材料発見・分子マシン</div>
+  <div>
+    <span class="stat"><strong>614</strong> 論文</span>
+    <span class="stat"><strong>135</strong> 言及</span>
+    <span class="stat"><strong>8</strong> 技術エントリ</span>
+    <span class="stat">一次598 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Peter K. Liaw <span style="color:var(--text-muted)">(20)</span></li><li>Jien‐Wei Yeh <span style="color:var(--text-muted)">(18)</span></li><li>Omar M. Yaghi <span style="color:var(--text-muted)">(18)</span></li><li>Banglin Chen <span style="color:var(--text-muted)">(15)</span></li><li>Joseph T. Hupp <span style="color:var(--text-muted)">(11)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>University of Tennessee at Knoxville <span style="color:var(--text-muted)">[US / 35]</span></li><li>University of Science and Technology Beijing <span style="color:var(--text-muted)">[CN / 28]</span></li><li>Oak Ridge National Laboratory <span style="color:var(--text-muted)">[US / 23]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">2D_MATERIAL</span>
+    <span class="name">2次元材料</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 1.465%</span>
+  </div>
+  <div class="desc">グラフェン・MoS2・hBN・遷移金属ジカルコゲナイド</div>
+  <div>
+    <span class="stat"><strong>596</strong> 論文</span>
+    <span class="stat"><strong>287</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次594 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Kenji Watanabe <span style="color:var(--text-muted)">(26)</span></li><li>Takashi Taniguchi <span style="color:var(--text-muted)">(24)</span></li><li>Sunkook Kim <span style="color:var(--text-muted)">(13)</span></li><li>Lain‐Jong Li <span style="color:var(--text-muted)">(12)</span></li><li>Jun Lou <span style="color:var(--text-muted)">(11)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 34]</span></li><li>National Institute for Materials Science <span style="color:var(--text-muted)">[JP / 27]</span></li><li>Sungkyunkwan University <span style="color:var(--text-muted)">[KR / 24]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">META_MATERIAL</span>
+    <span class="name">メタマテリアル</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 1.404%</span>
+  </div>
+  <div class="desc">電磁・音響・力学メタ材料</div>
+  <div>
+    <span class="stat"><strong>594</strong> 論文</span>
+    <span class="stat"><strong>185</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次593 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Vladimir M. Shalaev <span style="color:var(--text-muted)">(17)</span></li><li>Martin Wegener <span style="color:var(--text-muted)">(15)</span></li><li>Costas M. Soukoulis <span style="color:var(--text-muted)">(12)</span></li><li>Muamer Kadic <span style="color:var(--text-muted)">(12)</span></li><li>Thomas Koschny <span style="color:var(--text-muted)">(12)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Centre National de la Recherche Scientifique <span style="color:var(--text-muted)">[FR / 33]</span></li><li>Beijing Institute of Technology <span style="color:var(--text-muted)">[CN / 27]</span></li><li>Duke University <span style="color:var(--text-muted)">[US / 25]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">BIO_MATERIAL</span>
+    <span class="name">生体・分解性材料</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 1.75%</span>
+  </div>
+  <div class="desc">バイオプラスチック・再生医療用足場・キチン由来</div>
+  <div>
+    <span class="stat"><strong>590</strong> 論文</span>
+    <span class="stat"><strong>197</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次589 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Markus Flury <span style="color:var(--text-muted)">(15)</span></li><li>Carol Miles <span style="color:var(--text-muted)">(14)</span></li><li>Douglas G. Hayes <span style="color:var(--text-muted)">(10)</span></li><li>Henry Y. Sintim <span style="color:var(--text-muted)">(10)</span></li><li>Sean M. Schaeffer <span style="color:var(--text-muted)">(8)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Washington State University <span style="color:var(--text-muted)">[US / 25]</span></li><li>Centre National de la Recherche Scientifique <span style="color:var(--text-muted)">[FR / 19]</span></li><li>University of Tennessee at Knoxville <span style="color:var(--text-muted)">[US / 17]</span></li></ul></div></div></div><h3>空間基盤</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">SPACE</span>
+    <span class="name">宇宙・海洋</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-high">HIGH 5.892%</span>
+  </div>
+  <div class="desc">打上げ低コスト・宇宙製造・浮体風力・深海</div>
+  <div>
+    <span class="stat"><strong>603</strong> 論文</span>
+    <span class="stat"><strong>315</strong> 言及</span>
+    <span class="stat"><strong>7</strong> 技術エントリ</span>
+    <span class="stat">一次598 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Koki Ho <span style="color:var(--text-muted)">(10)</span></li><li>Daniel E. Hastings <span style="color:var(--text-muted)">(8)</span></li><li>Satoshi Nonaka <span style="color:var(--text-muted)">(8)</span></li><li>Toralf Boge <span style="color:var(--text-muted)">(8)</span></li><li>Vladimir S. Aslanov <span style="color:var(--text-muted)">(8)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Deutsches Zentrum für Luft- und Raumfahrt e. V. (DLR) <span style="color:var(--text-muted)">[DE / 45]</span></li><li>Harbin Institute of Technology <span style="color:var(--text-muted)">[CN / 30]</span></li><li>Japan Aerospace Exploration Agency <span style="color:var(--text-muted)">[JP / 27]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">DEEP_SEA</span>
+    <span class="name">深海・海底</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-high">HIGH 3.438%</span>
+  </div>
+  <div class="desc">深海資源・海底ケーブル・自律潜水艇</div>
+  <div>
+    <span class="stat"><strong>597</strong> 論文</span>
+    <span class="stat"><strong>238</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次597 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Daniel O. B. Jones <span style="color:var(--text-muted)">(18)</span></li><li>Pedro Martínez Arbizu <span style="color:var(--text-muted)">(17)</span></li><li>Pan-Mook Lee <span style="color:var(--text-muted)">(16)</span></li><li>Bong-Huan Jun <span style="color:var(--text-muted)">(15)</span></li><li>Craig R. Smith <span style="color:var(--text-muted)">(14)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>National Oceanography Centre <span style="color:var(--text-muted)">[GB / 36]</span></li><li>University of Southampton <span style="color:var(--text-muted)">[GB / 29]</span></li><li>Shanghai Jiao Tong University <span style="color:var(--text-muted)">[CN / 27]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">ASTEROID</span>
+    <span class="name">小惑星・深宇宙</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 0.945%</span>
+  </div>
+  <div class="desc">小惑星採掘・深宇宙探査・OSIRIS-REx系譜</div>
+  <div>
+    <span class="stat"><strong>592</strong> 論文</span>
+    <span class="stat"><strong>464</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次590 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>D. S. Lauretta <span style="color:var(--text-muted)">(98)</span></li><li>M. C. Nolan <span style="color:var(--text-muted)">(46)</span></li><li>Patrick Michel <span style="color:var(--text-muted)">(37)</span></li><li>O. S. Barnouin <span style="color:var(--text-muted)">(37)</span></li><li>Daniel J. Scheeres <span style="color:var(--text-muted)">(30)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>University of Arizona <span style="color:var(--text-muted)">[US / 104]</span></li><li>Goddard Space Flight Center <span style="color:var(--text-muted)">[US / 78]</span></li><li>Planetary Science Institute <span style="color:var(--text-muted)">[US / 73]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">LUNAR</span>
+    <span class="name">月面</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-high">HIGH 153.846%</span>
+  </div>
+  <div class="desc">Artemis・月面基地・ISRU・月面通信</div>
+  <div>
+    <span class="stat"><strong>583</strong> 論文</span>
+    <span class="stat"><strong>349</strong> 言及</span>
+    <span class="stat"><strong>4</strong> 技術エントリ</span>
+    <span class="stat">一次581 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Gerald B. Sanders <span style="color:var(--text-muted)">(12)</span></li><li>Ruhai Wang <span style="color:var(--text-muted)">(12)</span></li><li>Daniel J. Diekema <span style="color:var(--text-muted)">(10)</span></li><li>Michael A. Pfaller <span style="color:var(--text-muted)">(10)</span></li><li>Qinyu Zhang <span style="color:var(--text-muted)">(9)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Johnson Space Center <span style="color:var(--text-muted)">[US / 33]</span></li><li>Chinese Academy of Sciences <span style="color:var(--text-muted)">[CN / 27]</span></li><li>Kennedy Space Center <span style="color:var(--text-muted)">[US / 21]</span></li></ul></div></div></div>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">STRATOSPHERIC</span>
+    <span class="name">成層圏・HAPS</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-high">HIGH 50.448%</span>
+  </div>
+  <div class="desc">成層圏プラットフォーム・気球・高高度疑似衛星</div>
+  <div>
+    <span class="stat"><strong>447</strong> 論文</span>
+    <span class="stat"><strong>134</strong> 言及</span>
+    <span class="stat"><strong>3</strong> 技術エントリ</span>
+    <span class="stat">一次447 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Mohamed‐Slim Alouini <span style="color:var(--text-muted)">(13)</span></li><li>Albert Hertzog <span style="color:var(--text-muted)">(9)</span></li><li>Mingxiang Guan <span style="color:var(--text-muted)">(9)</span></li><li>Halim Yanıkömeroğlu <span style="color:var(--text-muted)">(7)</span></li><li>Jane Jean Kiam <span style="color:var(--text-muted)">(7)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Centre National de la Recherche Scientifique <span style="color:var(--text-muted)">[FR / 28]</span></li><li>Jet Propulsion Laboratory <span style="color:var(--text-muted)">[US / 17]</span></li><li>Deutsches Zentrum für Luft- und Raumfahrt e. V. (DLR) <span style="color:var(--text-muted)">[DE / 16]</span></li></ul></div></div></div><h3>地球系</h3>
+<div class="dom-card">
+  <div class="head">
+    <span class="code">CLIMATE</span>
+    <span class="name">環境・気候</span>
+    <span class="ai">AI影響: 中</span>
+    <span class="cov-tier cov-mid">MID 0.59%</span>
+  </div>
+  <div class="desc">DAC/CCUS・地球工学・環境センサ</div>
+  <div>
+    <span class="stat"><strong>602</strong> 論文</span>
+    <span class="stat"><strong>453</strong> 言及</span>
+    <span class="stat"><strong>7</strong> 技術エントリ</span>
+    <span class="stat">一次600 件</span>
+  </div>
+  <div class="lists">
+    <div>
+      <h5>主要著者</h5>
+      <ul style="list-style:none"><li>Douglas G. MacMartin <span style="color:var(--text-muted)">(30)</span></li><li>Daniele Visioni <span style="color:var(--text-muted)">(27)</span></li><li>Ben Kravitz <span style="color:var(--text-muted)">(24)</span></li><li>Lennart T. Bach <span style="color:var(--text-muted)">(21)</span></li><li>Ulf Riebesell <span style="color:var(--text-muted)">(17)</span></li></ul></div><div><h5>主要機関</h5><ul style="list-style:none"><li>Cornell University <span style="color:var(--text-muted)">[US / 35]</span></li><li>NSF National Center for Atmospheric Research <span style="color:var(--text-muted)">[US / 31]</span></li><li>GEOMAR Helmholtz Centre for Ocean Research Kiel <span style="color:var(--text-muted)">[DE / 31]</span></li></ul></div></div></div></section><section class="chapter-section" id="technologies"><h2>04. 166 技術エントリの言及量</h2><p>本データベースに登録された 166 の技術エントリについて、その言及量を上位順に示す。言及量上位の技術は学術コミュニティにおける関心の高さを示すとともに、本データベースの収集設計が当該領域の学術的議論を捉えていることを示す。一方、言及量がゼロまたは少数に留まる技術は、新興プロダクト名（Google Willow・IBM Heron 等）が学術論文ではなく企業発表中心であることに起因する場合と、収集キーワードの拡張で改善可能な場合がある。</p><table><tr><th>順位</th><th>領域</th><th>技術（英）</th><th>技術（和）</th><th>言及数</th></tr><tr><td class="num">1</td><td>SYNBIO</td><td>synthetic biology</td><td>合成生物学</td><td class="num">288</td></tr><tr><td class="num">2</td><td>NEUROMORPHIC</td><td>neuromorphic computing</td><td>ニューロモーフィック計算</td><td class="num">223</td></tr><tr><td class="num">3</td><td>BRAIN_CI</td><td>brain-computer interface</td><td>脳機械インタフェース</td><td class="num">185</td></tr><tr><td class="num">4</td><td>LUNAR</td><td>lunar regolith</td><td>月面レゴリス</td><td class="num">183</td></tr><tr><td class="num">5</td><td>QUANTUM</td><td>quantum error correction</td><td>量子誤り訂正</td><td class="num">182</td></tr><tr><td class="num">6</td><td>EDGE_AI</td><td>federated learning</td><td>連合学習</td><td class="num">178</td></tr><tr><td class="num">7</td><td>SYNBIO</td><td>metabolic engineering</td><td>代謝工学</td><td class="num">171</td></tr><tr><td class="num">8</td><td>CYBER_PHYS</td><td>industrial internet of things</td><td>産業IoT</td><td class="num">164</td></tr><tr><td class="num">9</td><td>2D_MATERIAL</td><td>hexagonal boron nitride</td><td>六方晶窒化ホウ素</td><td class="num">154</td></tr><tr><td class="num">10</td><td>CROSS</td><td>responsible innovation</td><td>責任ある研究開発</td><td class="num">153</td></tr><tr><td class="num">11</td><td>CLIMATE</td><td>direct air capture</td><td>直接空気回収</td><td class="num">152</td></tr><tr><td class="num">12</td><td>EDGE_AI</td><td>TinyML</td><td>TinyML</td><td class="num">151</td></tr><tr><td class="num">13</td><td>OCEAN_ENERGY</td><td>ocean thermal energy conversion</td><td>OTEC</td><td class="num">150</td></tr><tr><td class="num">14</td><td>AGRI</td><td>vertical farming</td><td>垂直農法</td><td class="num">148</td></tr><tr><td class="num">15</td><td>TRANSPORT</td><td>hyperloop</td><td>ハイパーループ</td><td class="num">148</td></tr><tr><td class="num">16</td><td>ENERGY</td><td>vehicle-to-grid</td><td>V2G</td><td class="num">146</td></tr><tr><td class="num">17</td><td>MEDICAL</td><td>AlphaFold protein</td><td>AlphaFold</td><td class="num">146</td></tr><tr><td class="num">18</td><td>FUSION_DEEP</td><td>inertial confinement fusion</td><td>慣性閉じ込め核融合</td><td class="num">142</td></tr><tr><td class="num">19</td><td>SPACE</td><td>space debris removal</td><td>宇宙デブリ除去</td><td class="num">140</td></tr><tr><td class="num">20</td><td>ASTEROID</td><td>OSIRIS-REx</td><td>オシリス・レックス</td><td class="num">140</td></tr><tr><td class="num">21</td><td>BUILDING</td><td>self-healing concrete</td><td>自己修復コンクリート</td><td class="num">139</td></tr><tr><td class="num">22</td><td>CROSS</td><td>technology foresight</td><td>技術フォーサイト</td><td class="num">138</td></tr><tr><td class="num">23</td><td>NEUROMORPHIC</td><td>memristor crossbar</td><td>メムリスタクロスバー</td><td class="num">135</td></tr><tr><td class="num">24</td><td>TRANSPORT</td><td>eVTOL aircraft</td><td>eVTOL機</td><td class="num">135</td></tr><tr><td class="num">25</td><td>BIO_MATERIAL</td><td>biodegradable plastic</td><td>生分解性プラスチック</td><td class="num">134</td></tr><tr><td class="num">26</td><td>FUSION_DEEP</td><td>field-reversed configuration</td><td>FRC核融合</td><td class="num">130</td></tr><tr><td class="num">27</td><td>PHOTONICS</td><td>silicon photonics</td><td>シリコンフォトニクス</td><td class="num">128</td></tr><tr><td class="num">28</td><td>SAFETY_AI</td><td>RLHF reinforcement learning human feedback</td><td>RLHF</td><td class="num">128</td></tr><tr><td class="num">29</td><td>CYBER_PHYS</td><td>smart factory</td><td>スマートファクトリー</td><td class="num">127</td></tr><tr><td class="num">30</td><td>ASTEROID</td><td>near-Earth asteroid</td><td>地球近傍小惑星</td><td class="num">122</td></tr></table></section><section class="chapter-section" id="authors"><h2>05. 領域別主要著者</h2><p>各領域における筆頭著者を 5 名ずつ示す。OSIRIS-REx 計画の主任研究者 D. S. Lauretta（小惑星）、AlphaFold チームのリード、エピジェネティック時計の Steve Horvath、自己修復コンクリートの Nele De Belie、神経インタフェースの Jeffrey R. Capadona など、各領域の象徴的研究者を捕捉している。</p><table><tr><th>領域</th><th>主要著者（論文数）</th></tr><tr><td><strong>QUANTUM</strong> 量子・光・通信</td><td>Liang Jiang (17) / Ryan Babbush (12) / Keisuke Fujii (11) / Jian-Wei Pan (11) / Sergio Boixo (11)</td></tr><tr><td><strong>SYNBIO</strong> 合成生物学</td><td>Sang Yup Lee (19) / Karin Strauß (18) / Luís Ceze (14) / Vincent Noireaux (14) / Michael C. Jewett (13)</td></tr><tr><td><strong>CROSS</strong> 横断観察</td><td>Vincent Blok (12) / Richard Owen (10) / Mario Coccia (7) / Phil Macnaghten (6) / Mihail C. Roco (5)</td></tr><tr><td><strong>TRANSPORT</strong> 輸送</td><td>Jaiyoung Ryu (11) / Kwan-Sup Lee (10) / Benjamin M. Simmons (8) / Florian Holzapfel (8) / Thi Thanh Giang Le (8)</td></tr><tr><td><strong>MEDICAL</strong> 医療・神経</td><td>Carl H. June (14) / Crystal L. Mackall (10) / ドリュー・ワイズマン (10) / Augustin Žídek (9) / Renier J. Brentjens (9)</td></tr><tr><td><strong>AGRI</strong> 農業</td><td>Hanna L. Tuomisto (11) / L.F.M. Marcelis (7) / Garrett M. Broad (6) / Michael Martin (6) / Sara R. Jaeger (6)</td></tr><tr><td><strong>SAFETY_AI</strong> AI安全・解釈可能性</td><td>IA, 10 (8) / Revista, Zen (8) / Iason Gabriel (5) / Alexander Neulinger (4) / Diyi Yang (4)</td></tr><tr><td><strong>FUSION_DEEP</strong> 核融合</td><td>H. Gota (29) / Tomohiko Asai (25) / Michl Binderbauer (24) / R. Betti (24) / O. L. Landen (23)</td></tr><tr><td><strong>ENERGY</strong> エネルギー深化</td><td>Jürgen Janek (22) / Yi Cui (17) / Qiang Zhang (17) / Jia‐Qi Huang (14) / Wolfgang G. Zeier (14)</td></tr><tr><td><strong>MATERIAL</strong> 材料・ナノ</td><td>Peter K. Liaw (20) / Jien‐Wei Yeh (18) / Omar M. Yaghi (18) / Banglin Chen (15) / Joseph T. Hupp (11)</td></tr><tr><td><strong>EDGE_AI</strong> エッジAI</td><td>Dusit Niyato (17) / Yuanming Shi (16) / Dingzhu Wen (9) / Ivanovitch Silva (9) / Jiawen Kang (9)</td></tr><tr><td><strong>CYBER_PHYS</strong> サイバーフィジカルシステム</td><td>Jiafu Wan (12) / Di Li (12) / Adam Hahn (10) / Fei Tao (8) / Jiewu Leng (8)</td></tr><tr><td><strong>SPACE</strong> 宇宙・海洋</td><td>Koki Ho (10) / Daniel E. Hastings (8) / Satoshi Nonaka (8) / Toralf Boge (8) / Vladimir S. Aslanov (8)</td></tr><tr><td><strong>CLIMATE</strong> 環境・気候</td><td>Douglas G. MacMartin (30) / Daniele Visioni (27) / Ben Kravitz (24) / Lennart T. Bach (21) / Ulf Riebesell (17)</td></tr><tr><td><strong>BUILDING</strong> 建築</td><td>Nele De Belie (28) / Kim Van Tittelboom (14) / Elke Gruyaert (11) / H.M. Jonkers (10) / Paul D Kremer (9)</td></tr><tr><td><strong>NEUROMORPHIC</strong> ニューロモーフィック</td><td>J. Joshua Yang (24) / Tarek M. Taha (19) / Chris Yakopcic (18) / R. Stanley Williams (15) / Qiangfei Xia (14)</td></tr><tr><td><strong>HYDROGEN</strong> 水素</td><td>Masoud Salavati‐Niasari (7) / Marcelo Carmo (6) / Martin Müller (6) / Pouria Ahmadi (6) / A.S. Aricò (5)</td></tr><tr><td><strong>DEEP_SEA</strong> 深海・海底</td><td>Daniel O. B. Jones (18) / Pedro Martínez Arbizu (17) / Pan-Mook Lee (16) / Bong-Huan Jun (15) / Craig R. Smith (14)</td></tr><tr><td><strong>2D_MATERIAL</strong> 2次元材料</td><td>Kenji Watanabe (26) / Takashi Taniguchi (24) / Sunkook Kim (13) / Lain‐Jong Li (12) / Jun Lou (11)</td></tr><tr><td><strong>META_MATERIAL</strong> メタマテリアル</td><td>Vladimir M. Shalaev (17) / Martin Wegener (15) / Costas M. Soukoulis (12) / Muamer Kadic (12) / Thomas Koschny (12)</td></tr><tr><td><strong>BIOELEC</strong> バイオエレクトロニクス</td><td>Zhenan Bao (12) / John A. Rogers (12) / Stephanie Carreiro (10) / Yonggang Huang (10) / Wei Gao (9)</td></tr><tr><td><strong>ASTEROID</strong> 小惑星・深宇宙</td><td>D. S. Lauretta (98) / M. C. Nolan (46) / Patrick Michel (37) / O. S. Barnouin (37) / Daniel J. Scheeres (30)</td></tr><tr><td><strong>BIO_MATERIAL</strong> 生体・分解性材料</td><td>Markus Flury (15) / Carol Miles (14) / Douglas G. Hayes (10) / Henry Y. Sintim (10) / Sean M. Schaeffer (8)</td></tr><tr><td><strong>PHOTONICS</strong> フォトニクス</td><td>John E. Bowers (26) / Dirk Englund (18) / Jeremy L. O’Brien (16) / Roel Baets (15) / Mark G. Thompson (15)</td></tr><tr><td><strong>LONGEVITY</strong> 長寿・老化科学</td><td>Steve Horvath (37) / James L. Kirkland (21) / Tamar Tchkonia (19) / Amin Haghani (12) / Paul D. Robbins (11)</td></tr><tr><td><strong>BRAIN_CI</strong> 脳-機械インタフェース</td><td>Jeffrey R. Capadona (42) / Leigh R. Hochberg (19) / Benjamin Blankertz (17) / Jonathan R. Wolpaw (16) / Niels Birbaumer (16)</td></tr><tr><td><strong>LUNAR</strong> 月面</td><td>Gerald B. Sanders (12) / Ruhai Wang (12) / Daniel J. Diekema (10) / Michael A. Pfaller (10) / Qinyu Zhang (9)</td></tr><tr><td><strong>OCEAN_ENERGY</strong> 海洋エネルギー</td><td>Richard Willden (13) / Aurélien Babarit (11) / Yasuyuki Ikegami (10) / Gérard C. Nihous (9) / Christopher Vogel (8)</td></tr><tr><td><strong>STRATOSPHERIC</strong> 成層圏・HAPS</td><td>Mohamed‐Slim Alouini (13) / Albert Hertzog (9) / Mingxiang Guan (9) / Halim Yanıkömeroğlu (7) / Jane Jean Kiam (7)</td></tr><tr><td><strong>GEOTHERMAL</strong> 地熱・先進地熱</td><td>Arash Dahi Taleghani (12) / Xianzhi Song (11) / Yu Shi (11) / Gaosheng Wang (10) / Tianfu Xu (10)</td></tr></table></section><section class="chapter-section" id="orgs"><h2>06. 領域別主要機関</h2><p>各領域における筆頭機関を 3 件ずつ示す。MIT・Stanford・Harvard・中国科学院・NASA 等のメガ研究機関と、各領域専門機関（核融合の MIT/Princeton、月面の NASA Goddard、長寿の Buck Institute 等）が並ぶ。</p><table><tr><th>領域</th><th>主要機関（国 / 論文数）</th></tr><tr><td><strong>QUANTUM</strong> 量子・光・通信</td><td>Delft University of Technology [NL, 40] / California Institute of Technology [US, 37] / QuTech [NL, 29]</td></tr><tr><td><strong>SYNBIO</strong> 合成生物学</td><td>Massachusetts Institute of Technology [US, 28] / Chinese Academy of Sciences [CN, 26] / Imperial College London [GB, 25]</td></tr><tr><td><strong>CROSS</strong> 横断観察</td><td>Wageningen University &amp; Research [NL, 18] / University of Oxford [GB, 13] / Arizona State University [US, 12]</td></tr><tr><td><strong>TRANSPORT</strong> 輸送</td><td>Korea Railroad Research Institute [KR, 18] / Delft University of Technology [NL, 18] / Beihang University [CN, 15]</td></tr><tr><td><strong>MEDICAL</strong> 医療・神経</td><td>University of Pennsylvania [US, 40] / Harvard University [US, 36] / University of Washington [US, 24]</td></tr><tr><td><strong>AGRI</strong> 農業</td><td>Wageningen University &amp; Research [NL, 27] / Chinese Academy of Sciences [CN, 17] / Chinese Academy of Agricultural Sciences [CN, 15]</td></tr><tr><td><strong>SAFETY_AI</strong> AI安全・解釈可能性</td><td>Stanford University [US, 16] / Massachusetts Institute of Technology [US, 16] / Harvard University [US, 14]</td></tr><tr><td><strong>FUSION_DEEP</strong> 核融合</td><td>Lawrence Livermore National Laboratory [US, 96] / Max Planck Institute for Plasma Physics - Greifswa [DE, 60] / Princeton Plasma Physics Laboratory [US, 60]</td></tr><tr><td><strong>ENERGY</strong> エネルギー深化</td><td>Tsinghua University [CN, 37] / Chinese Academy of Sciences [CN, 37] / Justus-Liebig-Universität Gießen [DE, 27]</td></tr><tr><td><strong>MATERIAL</strong> 材料・ナノ</td><td>University of Tennessee at Knoxville [US, 35] / University of Science and Technology Beijing [CN, 28] / Oak Ridge National Laboratory [US, 23]</td></tr><tr><td><strong>EDGE_AI</strong> エッジAI</td><td>Nanyang Technological University [SG, 26] / ShanghaiTech University [CN, 18] / Hong Kong University of Science and Technology [HK, 16]</td></tr><tr><td><strong>CYBER_PHYS</strong> サイバーフィジカルシステム</td><td>South China University of Technology [CN, 15] / Shanghai Jiao Tong University [CN, 14] / University of Auckland [NZ, 13]</td></tr><tr><td><strong>SPACE</strong> 宇宙・海洋</td><td>Deutsches Zentrum für Luft- und Raumfahrt e. V. (D [DE, 45] / Harbin Institute of Technology [CN, 30] / Japan Aerospace Exploration Agency [JP, 27]</td></tr><tr><td><strong>CLIMATE</strong> 環境・気候</td><td>Cornell University [US, 35] / NSF National Center for Atmospheric Research [US, 31] / GEOMAR Helmholtz Centre for Ocean Research Kiel [DE, 31]</td></tr><tr><td><strong>BUILDING</strong> 建築</td><td>Ghent University [BE, 28] / Oregon State University [US, 18] / Delft University of Technology [NL, 18]</td></tr><tr><td><strong>NEUROMORPHIC</strong> ニューロモーフィック</td><td>Intel (United States) [US, 34] / Tsinghua University [CN, 27] / Chinese Academy of Sciences [CN, 24]</td></tr><tr><td><strong>HYDROGEN</strong> 水素</td><td>Centre National de la Recherche Scientifique [FR, 17] / Forschungszentrum Jülich [DE, 11] / Chinese Academy of Sciences [CN, 10]</td></tr><tr><td><strong>DEEP_SEA</strong> 深海・海底</td><td>National Oceanography Centre [GB, 36] / University of Southampton [GB, 29] / Shanghai Jiao Tong University [CN, 27]</td></tr><tr><td><strong>2D_MATERIAL</strong> 2次元材料</td><td>Chinese Academy of Sciences [CN, 34] / National Institute for Materials Science [JP, 27] / Sungkyunkwan University [KR, 24]</td></tr><tr><td><strong>META_MATERIAL</strong> メタマテリアル</td><td>Centre National de la Recherche Scientifique [FR, 33] / Beijing Institute of Technology [CN, 27] / Duke University [US, 25]</td></tr><tr><td><strong>BIOELEC</strong> バイオエレクトロニクス</td><td>Stanford University [US, 23] / Feinstein Institute for Medical Research [US, 22] / Chinese Academy of Sciences [CN, 19]</td></tr><tr><td><strong>ASTEROID</strong> 小惑星・深宇宙</td><td>University of Arizona [US, 104] / Goddard Space Flight Center [US, 78] / Planetary Science Institute [US, 73]</td></tr><tr><td><strong>BIO_MATERIAL</strong> 生体・分解性材料</td><td>Washington State University [US, 25] / Centre National de la Recherche Scientifique [FR, 19] / University of Tennessee at Knoxville [US, 17]</td></tr><tr><td><strong>PHOTONICS</strong> フォトニクス</td><td>University of California, Santa Barbara [US, 41] / Massachusetts Institute of Technology [US, 29] / Ghent University [BE, 27]</td></tr><tr><td><strong>LONGEVITY</strong> 長寿・老化科学</td><td>University of California, Los Angeles [US, 52] / Harvard University [US, 38] / Mayo Clinic in Florida [US, 22]</td></tr><tr><td><strong>BRAIN_CI</strong> 脳-機械インタフェース</td><td>Case Western Reserve University [US, 51] / Louis Stokes Cleveland VA Medical Center [US, 43] / University of Tübingen [DE, 29]</td></tr><tr><td><strong>LUNAR</strong> 月面</td><td>Johnson Space Center [US, 33] / Chinese Academy of Sciences [CN, 27] / Kennedy Space Center [US, 21]</td></tr><tr><td><strong>OCEAN_ENERGY</strong> 海洋エネルギー</td><td>University of Edinburgh [GB, 23] / University of Oxford [GB, 21] / University of Strathclyde [GB, 18]</td></tr><tr><td><strong>STRATOSPHERIC</strong> 成層圏・HAPS</td><td>Centre National de la Recherche Scientifique [FR, 28] / Jet Propulsion Laboratory [US, 17] / Deutsches Zentrum für Luft- und Raumfahrt e. V. (D [DE, 16]</td></tr><tr><td><strong>GEOTHERMAL</strong> 地熱・先進地熱</td><td>China University of Petroleum, East China [CN, 21] / China University of Petroleum, Beijing [CN, 18] / ETH Zurich [CH, 18]</td></tr></table></section><section class="chapter-section" id="yearly"><h2>07. 年次論文数推移</h2><p>2000 年以降の論文発行年別の分布。2020 年代に大きく増加しており、未来技術動向としての最新性を担保している。一方で 2000 年代の基礎研究時期も 9.1% カバーされ、技術系譜の発展軌跡を再構成可能にしている。</p><table><tr><th>年</th><th>論文数</th><th>分布</th></tr><tr><td>2005</td><td class="num">267</td><td><span class="bar" style="width:62px"></span></td></tr><tr><td>2006</td><td class="num">319</td><td><span class="bar" style="width:75px"></span></td></tr><tr><td>2007</td><td class="num">334</td><td><span class="bar" style="width:78px"></span></td></tr><tr><td>2008</td><td class="num">355</td><td><span class="bar" style="width:83px"></span></td></tr><tr><td>2009</td><td class="num">418</td><td><span class="bar" style="width:98px"></span></td></tr><tr><td>2010</td><td class="num">444</td><td><span class="bar" style="width:104px"></span></td></tr><tr><td>2011</td><td class="num">521</td><td><span class="bar" style="width:122px"></span></td></tr><tr><td>2012</td><td class="num">587</td><td><span class="bar" style="width:138px"></span></td></tr><tr><td>2013</td><td class="num">642</td><td><span class="bar" style="width:151px"></span></td></tr><tr><td>2014</td><td class="num">728</td><td><span class="bar" style="width:171px"></span></td></tr><tr><td>2015</td><td class="num">760</td><td><span class="bar" style="width:178px"></span></td></tr><tr><td>2016</td><td class="num">875</td><td><span class="bar" style="width:206px"></span></td></tr><tr><td>2017</td><td class="num">1,037</td><td><span class="bar" style="width:244px"></span></td></tr><tr><td>2018</td><td class="num">1,228</td><td><span class="bar" style="width:289px"></span></td></tr><tr><td>2019</td><td class="num">1,421</td><td><span class="bar" style="width:334px"></span></td></tr><tr><td>2020</td><td class="num">1,509</td><td><span class="bar" style="width:355px"></span></td></tr><tr><td>2021</td><td class="num">1,580</td><td><span class="bar" style="width:371px"></span></td></tr><tr><td>2022</td><td class="num">1,614</td><td><span class="bar" style="width:380px"></span></td></tr><tr><td>2023</td><td class="num">1,502</td><td><span class="bar" style="width:353px"></span></td></tr><tr><td>2024</td><td class="num">1,404</td><td><span class="bar" style="width:330px"></span></td></tr><tr><td>2025</td><td class="num">833</td><td><span class="bar" style="width:196px"></span></td></tr><tr><td>2026</td><td class="num">146</td><td><span class="bar" style="width:34px"></span></td></tr></table></section><section class="chapter-section" id="geo"><h2>08. 地理分布</h2><p>論文-機関リンクの国別集計。米国 25%・中国 14%・英国 7%・ドイツ 6% の上位 4 ヶ国で半数を占める。日本は 3.1% で 5 位。北米偏重を 25% 以下に抑え、地理多様性のゲートを通過している。アジア圏では中国・日本・韓国・インド・シンガポールが上位を占める。</p><table><tr><th>順位</th><th>国</th><th>論文数</th><th>分布</th></tr><tr><td class="num">1</td><td>US</td><td class="num">6,585</td><td><span class="bar" style="width:380px"></span></td></tr><tr><td class="num">2</td><td>CN</td><td class="num">3,657</td><td><span class="bar" style="width:211px"></span></td></tr><tr><td class="num">3</td><td>GB</td><td class="num">1,884</td><td><span class="bar" style="width:108px"></span></td></tr><tr><td class="num">4</td><td>DE</td><td class="num">1,615</td><td><span class="bar" style="width:93px"></span></td></tr><tr><td class="num">5</td><td>JP</td><td class="num">843</td><td><span class="bar" style="width:48px"></span></td></tr><tr><td class="num">6</td><td>FR</td><td class="num">824</td><td><span class="bar" style="width:47px"></span></td></tr><tr><td class="num">7</td><td>KR</td><td class="num">808</td><td><span class="bar" style="width:46px"></span></td></tr><tr><td class="num">8</td><td>CA</td><td class="num">805</td><td><span class="bar" style="width:46px"></span></td></tr><tr><td class="num">9</td><td>IT</td><td class="num">785</td><td><span class="bar" style="width:45px"></span></td></tr><tr><td class="num">10</td><td>AU</td><td class="num">739</td><td><span class="bar" style="width:42px"></span></td></tr><tr><td class="num">11</td><td>NL</td><td class="num">618</td><td><span class="bar" style="width:35px"></span></td></tr><tr><td class="num">12</td><td>ES</td><td class="num">593</td><td><span class="bar" style="width:34px"></span></td></tr><tr><td class="num">13</td><td>IN</td><td class="num">543</td><td><span class="bar" style="width:31px"></span></td></tr><tr><td class="num">14</td><td>CH</td><td class="num">494</td><td><span class="bar" style="width:28px"></span></td></tr><tr><td class="num">15</td><td>SG</td><td class="num">411</td><td><span class="bar" style="width:23px"></span></td></tr><tr><td class="num">16</td><td>SE</td><td class="num">313</td><td><span class="bar" style="width:18px"></span></td></tr><tr><td class="num">17</td><td>HK</td><td class="num">307</td><td><span class="bar" style="width:17px"></span></td></tr><tr><td class="num">18</td><td>BE</td><td class="num">292</td><td><span class="bar" style="width:16px"></span></td></tr><tr><td class="num">19</td><td>RU</td><td class="num">261</td><td><span class="bar" style="width:15px"></span></td></tr><tr><td class="num">20</td><td>DK</td><td class="num">235</td><td><span class="bar" style="width:13px"></span></td></tr></table></section><section class="chapter-section" id="cross"><h2>09. 領域横断論文 TOP30</h2><p>3 つ以上の領域に同時マッピングされた論文を被引用数順に示す。これらは異なる工学領域を架橋する論文であり、技術収束の先行指標として機能する。AI・材料・エネルギー・医療などの境界を超える論文が並び、汎用技術（GPT）的性質を示唆する。</p><table><tr><th>年</th><th>引用</th><th>領域</th><th>タイトル</th></tr></table></section><section class="chapter-section" id="audit-precision">
+<h2>10. 言及抽出の精度検証</h2>
+<p>無作為に抽出した 100 件の paper_tech_mention について、技術名が論文 title／abstract に単語境界マッチで実在するか、また excerpt に正しく当該技術名が含まれているかを再評価した。結果は厳密一致 95 件、ファジー一致 0 件、誤抽出 5 件であり、合計精度 95.0% に達した。誤抽出 5 件はいずれもタイトル内に技術キーワードが部分的に含まれるが文脈が異なるケースで、主に CROSS 領域の汎用語（technology convergence 等）に集中する。</p>
+<div class="metric-grid">
+  <div class="metric"><div class="v">95.0%</div><div class="l">厳密精度</div></div>
+  <div class="metric"><div class="v">95.0%</div><div class="l">総精度</div></div>
+  <div class="metric"><div class="v">5/100</div><div class="l">誤抽出件数</div></div>
+</div>
+</section><section class="chapter-section" id="audit-integrity">
+<h2>11. データ完全性</h2>
+<p>必須フィールドの欠損率と外部キー整合性を検証した。OpenAlex ID・タイトル・出版年・ソース URL の必須項目は 100% の充足率を達成している。一方、論文要旨（abstract）は OpenAlex 側で未提供のケースを反映して 27.6% が欠損し、これは言及抽出の上限を制約する第一要因である。DOI 欠損は 3.4%、ジャーナル名欠損は 8.1% で、これらは多くがプレプリント由来のものと考えられる。外部キー整合性については初期検証で 3,466 件のオーファン行が検出されたが、`INSERT OR IGNORE` における `lastrowid` 取得バグに起因することが判明し、これら無効リンクは検証後に削除済みである。</p>
+<div class="metric-grid">
+  <div class="metric"><div class="v">100%</div><div class="l">openalex_id 充足</div></div>
+  <div class="metric"><div class="v">100%</div><div class="l">title 充足</div></div>
+  <div class="metric"><div class="v">72.4%</div><div class="l">abstract 充足</div></div>
+  <div class="metric"><div class="v">96.6%</div><div class="l">DOI 充足</div></div>
+  <div class="metric"><div class="v">91.9%</div><div class="l">venue 充足</div></div>
+  <div class="metric"><div class="v">80.3%</div><div class="l">機関統合率</div></div>
+  <div class="metric"><div class="v">29.5%</div><div class="l">著者統合率</div></div>
+  <div class="metric"><div class="v">0</div><div class="l">オーファン行（修正後）</div></div>
+</div>
+<p>著者統合率 29.5% は、3 論文以上に登場する著者のみを people テーブルに昇格させる閾値によるもので、ロングテールの単発著者を意図的に正規化対象から除外している。機関統合率 80.3% は 5 論文以上の閾値を反映している。これら閾値の見直しは Phase 8 以降の対象となる。</p>
+</section><section class="chapter-section" id="audit-duplicates">
+<h2>12. 重複・整合性</h2>
+<p>論文の主キー一意性は OpenAlex ID と DOI の双方で完全に保たれている。同一の OpenAlex ID を持つ重複論文は 0 件、同一 DOI の重複も 0 件である。これは OpenAlex API のキャノニカル ID を主導的に用いた収集設計の効果である。</p>
+<div class="metric-grid">
+  <div class="metric"><div class="v">0</div><div class="l">重複 OpenAlex ID</div></div>
+  <div class="metric"><div class="v">0</div><div class="l">重複 DOI</div></div>
+  <div class="metric"><div class="v">15</div><div class="l">近似タイトル（前80字一致）</div></div>
+</div>
+<p>近似タイトル（最初の 80 文字が一致する論文）は若干存在するが、これらは続報・改訂版・短報といった正当な別論文を含むため、機械的な統合は行わない。</p>
+</section><section class="chapter-section" id="audit-distribution">
+<h2>13. 分布特性</h2>
+<p>被引用数の分布はロングテールを示し、中央値 56 引用、90 パーセンタイル 430 引用、最大値 801,217 引用となった。最大引用数を持つ論文は Geoffrey Hinton 系統のディープラーニング基礎論文と推定される。引用ゼロの論文は 2.1% に留まり、収集対象が学術的に流通している論文を中心に構成されていることが確認できる。</p>
+<p>ジャーナル/会議は 3,925 種類と多様であり、最上位の Nature Communications でも全体の 1.8% を占めるに留まる。これは特定誌偏重を回避し、領域横断的な学術コミュニティを捕捉していることを示す。</p>
+<p>技術エントリの言及量分布は不均一で、上位 30 技術が全言及の約半数を占める一方、37 件の技術が言及ゼロとなっている。これらの多くは Google Willow・IBM Heron・NVIDIA Cosmos といった新興プロダクト固有名であり、企業発表中心であるため学術論文への登場が遅延している。Phase 13 の LLM 言及抽出と同義語拡張により、これらの捕捉率向上が見込まれる。</p>
+<div class="metric-grid">
+  <div class="metric"><div class="v">801,217</div><div class="l">最大被引用</div></div>
+  <div class="metric"><div class="v">56</div><div class="l">中央値</div></div>
+  <div class="metric"><div class="v">2.1%</div><div class="l">引用ゼロ</div></div>
+  <div class="metric"><div class="v">3,925</div><div class="l">ジャーナル種</div></div>
+  <div class="metric"><div class="v">37/166</div><div class="l">言及ゼロ技術</div></div>
+</div>
+</section><section class="chapter-section" id="coverage-overall">
+<h2>14. 全体カバー率の推論</h2>
+<p>本データベースが対象とする 30 工学領域の理論的論文母集団を、OpenAlex API の各領域代表クエリの総ヒット数から推定した。推定値は約 15,173,326 件で、現状の収集論文 18,757 件に対する全体カバー率は <strong style="color:var(--accent-warm)">0.1236%</strong> となる。この数値は一見極めて低いが、実際の対象は「先端的未来技術」に限定されるため、母集団推定が広義に取られている影響もある。例えば MEDICAL（医療）の母集団 1,372,985 件には mRNA・CAR-T・AlphaFold 以外の医療論文も含まれており、本データベースが真に対象とすべき「未来医療技術」の集合はその一部に過ぎない。</p>
+<p>したがって本指標は絶対値としてではなく、領域間の相対比較指標として読まれるべきものである。HIGH 領域（カバー率 2% 以上）9 件、MID 領域（0.5-2%）11 件、LOW 領域（0.1-0.5%）5 件、MIN 領域（0.1% 未満）5 件という分布は、母集団規模の不均衡を反映しており、特に MIN 領域の母集団超大規模化（EDGE_AI・SAFETY_AI・MEDICAL・CROSS・BRAIN_CI）が拡張計画の優先対象となる。</p>
+</section><section class="chapter-section" id="coverage-by-domain"><h2>15. 領域別カバー率</h2><p>30 領域それぞれの理論的母集団と現状収集論文数、そしてカバー率を一覧する。カバー率 100% 超の LUNAR は、本データベースが「月面」関連を広義に捕捉している（Artemis 計画＋ISRU＋月レゴリス＋シスルナ通信）一方、OpenAlex 母集団推定クエリがやや狭く設定された結果である。本データベースの収集は当該領域の代表的論文群を網羅していると解釈すべき。</p><table><tr><th>領域</th><th>カバー率</th><th>収集</th><th>理論母集団</th><th>1%到達差</th><th>5%到達差</th></tr><tr><td><strong>LUNAR</strong></td><td><span class="cov-tier cov-high">153.846%</span></td><td class="num">600</td><td class="num">390</td><td class="num">0</td><td class="num">0</td></tr><tr><td><strong>STRATOSPHERIC</strong></td><td><span class="cov-tier cov-high">50.448%</span></td><td class="num">450</td><td class="num">892</td><td class="num">0</td><td class="num">0</td></tr><tr><td><strong>BIOELEC</strong></td><td><span class="cov-tier cov-high">14.993%</span></td><td class="num">600</td><td class="num">4,002</td><td class="num">0</td><td class="num">0</td></tr><tr><td><strong>FUSION_DEEP</strong></td><td><span class="cov-tier cov-high">9.179%</span></td><td class="num">750</td><td class="num">8,171</td><td class="num">0</td><td class="num">0</td></tr><tr><td><strong>SPACE</strong></td><td><span class="cov-tier cov-high">5.892%</span></td><td class="num">600</td><td class="num">10,183</td><td class="num">0</td><td class="num">0</td></tr><tr><td><strong>DEEP_SEA</strong></td><td><span class="cov-tier cov-high">3.438%</span></td><td class="num">600</td><td class="num">17,452</td><td class="num">0</td><td class="num">272</td></tr><tr><td><strong>MATERIAL</strong></td><td><span class="cov-tier cov-high">3.139%</span></td><td class="num">600</td><td class="num">19,114</td><td class="num">0</td><td class="num">355</td></tr><tr><td><strong>NEUROMORPHIC</strong></td><td><span class="cov-tier cov-high">2.638%</span></td><td class="num">600</td><td class="num">22,748</td><td class="num">0</td><td class="num">537</td></tr><tr><td><strong>TRANSPORT</strong></td><td><span class="cov-tier cov-high">2.504%</span></td><td class="num">750</td><td class="num">29,956</td><td class="num">0</td><td class="num">747</td></tr><tr><td><strong>BUILDING</strong></td><td><span class="cov-tier cov-mid">1.92%</span></td><td class="num">600</td><td class="num">31,252</td><td class="num">0</td><td class="num">962</td></tr><tr><td><strong>BIO_MATERIAL</strong></td><td><span class="cov-tier cov-mid">1.75%</span></td><td class="num">600</td><td class="num">34,281</td><td class="num">0</td><td class="num">1,114</td></tr><tr><td><strong>AGRI</strong></td><td><span class="cov-tier cov-mid">1.526%</span></td><td class="num">750</td><td class="num">49,154</td><td class="num">0</td><td class="num">1,707</td></tr><tr><td><strong>2D_MATERIAL</strong></td><td><span class="cov-tier cov-mid">1.465%</span></td><td class="num">598</td><td class="num">40,817</td><td class="num">0</td><td class="num">1,442</td></tr><tr><td><strong>META_MATERIAL</strong></td><td><span class="cov-tier cov-mid">1.404%</span></td><td class="num">599</td><td class="num">42,664</td><td class="num">0</td><td class="num">1,534</td></tr><tr><td><strong>PHOTONICS</strong></td><td><span class="cov-tier cov-mid">0.993%</span></td><td class="num">599</td><td class="num">60,296</td><td class="num">3</td><td class="num">2,415</td></tr><tr><td><strong>ENERGY</strong></td><td><span class="cov-tier cov-mid">0.978%</span></td><td class="num">600</td><td class="num">61,343</td><td class="num">13</td><td class="num">2,467</td></tr><tr><td><strong>ASTEROID</strong></td><td><span class="cov-tier cov-mid">0.945%</span></td><td class="num">600</td><td class="num">63,482</td><td class="num">34</td><td class="num">2,574</td></tr><tr><td><strong>CYBER_PHYS</strong></td><td><span class="cov-tier cov-mid">0.889%</span></td><td class="num">600</td><td class="num">67,508</td><td class="num">75</td><td class="num">2,775</td></tr><tr><td><strong>GEOTHERMAL</strong></td><td><span class="cov-tier cov-mid">0.691%</span></td><td class="num">450</td><td class="num">65,131</td><td class="num">201</td><td class="num">2,806</td></tr><tr><td><strong>CLIMATE</strong></td><td><span class="cov-tier cov-mid">0.59%</span></td><td class="num">600</td><td class="num">101,657</td><td class="num">416</td><td class="num">4,482</td></tr><tr><td><strong>HYDROGEN</strong></td><td><span class="cov-tier cov-low">0.247%</span></td><td class="num">600</td><td class="num">242,463</td><td class="num">1,824</td><td class="num">11,523</td></tr><tr><td><strong>QUANTUM</strong></td><td><span class="cov-tier cov-low">0.226%</span></td><td class="num">763</td><td class="num">337,072</td><td class="num">2,607</td><td class="num">16,090</td></tr><tr><td><strong>SYNBIO</strong></td><td><span class="cov-tier cov-low">0.128%</span></td><td class="num">749</td><td class="num">586,811</td><td class="num">5,119</td><td class="num">28,591</td></tr><tr><td><strong>LONGEVITY</strong></td><td><span class="cov-tier cov-low">0.11%</span></td><td class="num">599</td><td class="num">545,158</td><td class="num">4,852</td><td class="num">26,658</td></tr><tr><td><strong>OCEAN_ENERGY</strong></td><td><span class="cov-tier cov-low">0.104%</span></td><td class="num">450</td><td class="num">430,709</td><td class="num">3,857</td><td class="num">21,085</td></tr><tr><td><strong>BRAIN_CI</strong></td><td><span class="cov-tier cov-min">0.096%</span></td><td class="num">600</td><td class="num">622,724</td><td class="num">5,627</td><td class="num">30,536</td></tr><tr><td><strong>MEDICAL</strong></td><td><span class="cov-tier cov-min">0.055%</span></td><td class="num">750</td><td class="num">1,372,985</td><td class="num">12,979</td><td class="num">67,899</td></tr><tr><td><strong>SAFETY_AI</strong></td><td><span class="cov-tier cov-min">0.028%</span></td><td class="num">750</td><td class="num">2,681,458</td><td class="num">26,064</td><td class="num">133,322</td></tr><tr><td><strong>CROSS</strong></td><td><span class="cov-tier cov-min">0.019%</span></td><td class="num">750</td><td class="num">3,891,757</td><td class="num">38,167</td><td class="num">193,837</td></tr><tr><td><strong>EDGE_AI</strong></td><td><span class="cov-tier cov-min">0.016%</span></td><td class="num">600</td><td class="num">3,731,696</td><td class="num">36,716</td><td class="num">185,984</td></tr></table></section><section class="chapter-section" id="plan-overview"><h2>16. 拡張計画 Phase 8-15</h2><p>v2.0 完了時点を Phase 7 とし、これに続く Phase 8 から 15 までの拡張計画を段階的に構築した。総工数は約 2 ヶ月程度と見積もる。Phase 8 から 10 までを「基盤拡張期」、Phase 11 から 13 までを「精緻化期」、Phase 14 から 15 までを「統合公開期」と呼ぶ。</p>
+<div class="phase-card">
+  <div class="ph-title">Phase 8 (low-coverage rescue)</div>
+  <div class="ph-meta">[基盤拡張期] 期間: 3-5 days (11-parallel teams) / 追加論文 約 58,050 件 / 対象 5 領域</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">minimalカテゴリ領域を 0.5% カバー率まで引き上げる</p></div>
+<div class="phase-card">
+  <div class="ph-title">Phase 9 (mid-tier reinforcement)</div>
+  <div class="ph-meta">[基盤拡張期] 期間: 5-7 days / 追加論文 約 18,259 件 / 対象 5 領域</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">lowカテゴリ領域を 1% カバー率まで引き上げる</p></div>
+<div class="phase-card">
+  <div class="ph-title">Phase 10 (citation network)</div>
+  <div class="ph-meta">[基盤拡張期] 期間: 2-3 days / 想定 370,000 件</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">paper_citations を構築し論文間引用ネットワークを完成させる</p><p style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted);text-indent:0">OpenAlex referenced_works から構築、論文あたり平均20件引用とすると約370K件</p></div>
+<div class="phase-card">
+  <div class="ph-title">Phase 11 (regulation-paper bridge)</div>
+  <div class="ph-meta">[精緻化期] 期間: 2 days / 想定 5,000 件</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">25件の規制エントリを論文裏付けに接続。tech_regulation_links を充実</p><p style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted);text-indent:0">規制関連キーワードで論文サンプリング</p></div>
+<div class="phase-card">
+  <div class="ph-title">Phase 12 (multi-source diversification)</div>
+  <div class="ph-meta">[精緻化期] 期間: 7-10 days / 想定 10,000 件</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">OpenAlex 一辺倒からの脱却</p><p style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted);text-indent:0">追加データソース: arXiv full-text API, PubMed, IEEE Xplore, Semantic Scholar Influential Citations</p></div>
+<div class="phase-card">
+  <div class="ph-title">Phase 13 (mention extraction v2 - LLM)</div>
+  <div class="ph-meta">[精緻化期] 期間: 3-5 days / 想定 35,000 件</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">rule-based抽出 9970件 → LLM-based で精度向上＋言及量 30K+</p><p style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted);text-indent:0">Claude Haiku で abstract → tech mention の分類</p></div>
+<div class="phase-card">
+  <div class="ph-title">Phase 14 (knowledge graph integration)</div>
+  <div class="ph-meta">[統合公開期] 期間: 5-7 days</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">academic-landscape DB / Tech Acceleration DB / Signal DB との結合</p></div>
+<div class="phase-card">
+  <div class="ph-title">Phase 15 (textbook generation)</div>
+  <div class="ph-meta">[統合公開期] 期間: 10-14 days</div>
+  <p style="font-family:var(--font);font-size:0.85rem;text-indent:0;margin-top:8px">「未来技術動向の学術系譜 2030-2100」教科書HTML（30章想定、200K字）</p></div></section><section class="chapter-section" id="plan-priorities"><h2>17. 優先順位の判断</h2><p>拡張計画の優先順位は、領域の戦略的重要性と現状カバー率の双方を勘案して決定される。第一優先は EDGE_AI と SAFETY_AI である。これらは AI 安全と分散 AI という現代の最重要研究領域であるにもかかわらず、母集団が 300 万件規模と巨大なため現状カバー率が 0.02-0.03% に留まる。第二優先は MEDICAL と BRAIN_CI で、生命基盤層の中核として今後 10 年で社会的インパクトの大きい領域である。第三優先は CROSS（領域横断観察）であり、技術収束の捕捉には独立した補強が必要である。</p><h4>Phase 8 優先対象 5 領域</h4><table><tr><th>領域</th><th>現状</th><th>目標</th><th>追加論文</th><th>母集団</th></tr><tr><td><strong>EDGE_AI</strong></td><td class="num">600</td><td class="num">18,658</td><td class="num">18,058</td><td class="num">3,731,696</td></tr><tr><td><strong>SAFETY_AI</strong></td><td class="num">750</td><td class="num">13,407</td><td class="num">12,657</td><td class="num">2,681,458</td></tr><tr><td><strong>MEDICAL</strong></td><td class="num">750</td><td class="num">6,864</td><td class="num">6,114</td><td class="num">1,372,985</td></tr><tr><td><strong>BRAIN_CI</strong></td><td class="num">600</td><td class="num">3,113</td><td class="num">2,513</td><td class="num">622,724</td></tr><tr><td><strong>CROSS</strong></td><td class="num">750</td><td class="num">19,458</td><td class="num">18,708</td><td class="num">3,891,757</td></tr></table><h4>Phase 9 優先対象 5 領域</h4><table><tr><th>領域</th><th>現状</th><th>目標</th><th>追加論文</th><th>母集団</th></tr><tr><td><strong>QUANTUM</strong></td><td class="num">763</td><td class="num">3,370</td><td class="num">2,607</td><td class="num">337,072</td></tr><tr><td><strong>HYDROGEN</strong></td><td class="num">600</td><td class="num">2,424</td><td class="num">1,824</td><td class="num">242,463</td></tr><tr><td><strong>OCEAN_ENERGY</strong></td><td class="num">450</td><td class="num">4,307</td><td class="num">3,857</td><td class="num">430,709</td></tr><tr><td><strong>SYNBIO</strong></td><td class="num">749</td><td class="num">5,868</td><td class="num">5,119</td><td class="num">586,811</td></tr><tr><td><strong>LONGEVITY</strong></td><td class="num">599</td><td class="num">5,451</td><td class="num">4,852</td><td class="num">545,158</td></tr></table><div class="note">
+本拡張計画は v2.0 完了時点での試案であり、Phase 8 以降は社会的優先順位と利用者のフィードバックを踏まえて柔軟に再構成される。Phase 13 の LLM 言及抽出は精度向上の鍵であり、それまでに OpenAI Codex の認証復旧か Anthropic Claude Haiku の併用パイプライン整備が前提となる。Phase 15 の教科書生成は v2.0 の最終形であり、未来技術動向の学術系譜 2030-2100 として 30 章・200K 字を想定する。
+</div>
+</section>
+</main>
+</div>
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('ftt-detail-theme', next);
+}
+const saved = localStorage.getItem('ftt-detail-theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
