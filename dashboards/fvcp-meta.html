@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FVCP Meta DB ── 補論シリーズ横断管理基盤</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF; --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+      --border: #D9D9D9; --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="dark"] {
+      --bg: #121212; --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+      --border: #333333; --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; }
+    .top-bar { background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+    .top-bar-brand { font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+    .top-bar-brand span { color: var(--accent-warm); }
+    .theme-toggle { background: none; border: 1px solid var(--border); padding: 4px 10px; font-size: .72rem; cursor: pointer; color: var(--text-muted); }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .container { max-width: 1180px; margin: 0 auto; padding: 40px 24px 80px; }
+    .header { text-align: center; padding: 40px 0 60px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+    .header-eyebrow { font-size: .7rem; letter-spacing: .18em; color: var(--accent-warm); text-transform: uppercase; font-weight: 700; margin-bottom: 16px; }
+    .header h1 { font-family: var(--font-serif); font-size: 2.4rem; font-weight: 900; margin-bottom: 12px; }
+    .header h1 em { font-style: normal; color: var(--accent-warm); }
+    .header-sub { font-family: var(--font-serif); font-size: 1rem; color: var(--text-secondary); max-width: 720px; margin: 0 auto; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 56px; }
+    .kpi-card { background: var(--card); border: 1px solid var(--border); padding: 20px 18px; text-align: center; }
+    .kpi-num { font-family: var(--font-serif); font-size: 2.2rem; font-weight: 900; color: var(--accent-warm); line-height: 1; }
+    .kpi-label { font-size: .68rem; letter-spacing: .15em; text-transform: uppercase; color: var(--text-muted); margin-top: 10px; }
+    .kpi-sub { font-size: .72rem; color: var(--text-secondary); margin-top: 6px; }
+
+    .section { margin-bottom: 56px; }
+    .section-title { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; padding-bottom: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--accent-warm); }
+    .section-intro { font-size: .9rem; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.85; }
+
+    .matrix-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .matrix-table th { background: var(--surface); padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--accent-warm); font-weight: 700; }
+    .matrix-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+    .matrix-table tr:hover { background: var(--accent-muted); }
+    .badge { display: inline-block; padding: 2px 8px; font-size: .68rem; letter-spacing: .05em; font-weight: 700; }
+    .badge-A { background: var(--accent-warm); color: #fff; }
+    .badge-A- { background: var(--surface); color: var(--text); border: 1px solid var(--accent-warm); }
+    .badge-plan { background: transparent; color: var(--text-muted); border: 1px dashed var(--border); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .verb-card { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--accent-warm); padding: 18px 22px; }
+    .verb-theme { font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-warm); font-weight: 700; }
+    .verb-flow { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700; margin: 8px 0 4px; line-height: 1.5; }
+    .verb-stages { font-size: .78rem; color: var(--text-secondary); }
+
+    .person-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .person-card { background: var(--card); border: 1px solid var(--border); padding: 14px 16px; }
+    .person-name { font-family: var(--font-serif); font-weight: 700; font-size: .95rem; margin-bottom: 4px; }
+    .person-themes { font-size: .68rem; color: var(--accent-warm); font-weight: 700; letter-spacing: .08em; }
+    .person-meta { font-size: .72rem; color: var(--text-muted); margin-top: 4px; }
+
+    .path-matrix { width: 100%; border-collapse: collapse; font-size: .78rem; margin-top: 12px; }
+    .path-matrix th, .path-matrix td { padding: 8px 10px; border: 1px solid var(--border-light); text-align: center; }
+    .path-matrix th { background: var(--surface); font-weight: 700; }
+    .path-matrix .high { background: rgba(204,20,0,0.18); color: var(--accent-warm); font-weight: 700; }
+    .path-matrix .medium { background: rgba(204,20,0,0.08); }
+    .path-matrix .low, .path-matrix .speculative { background: var(--surface); color: var(--text-muted); }
+    .path-matrix tr td:first-child { text-align: left; font-weight: 700; background: var(--surface); }
+
+    .footnote { font-size: .76rem; color: var(--text-muted); padding: 20px; background: var(--surface); border-left: 3px solid var(--accent-warm); margin-top: 32px; line-height: 1.85; }
+    .footnote a { color: var(--accent-warm); }
+
+    @media (max-width: 800px) {
+      .header h1 { font-size: 1.8rem; }
+      .kpi-num { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="../" style="text-decoration:none;" class="top-bar-brand">MIRATUKU <span>news</span></a>
+    <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+  </div>
+
+  <main class="container">
+    <div class="header">
+      <div class="header-eyebrow">META · FVCP MANAGEMENT</div>
+      <h1>FVCP Meta DB <em>v1.5</em></h1>
+      <p class="header-sub">deep knowledge補論シリーズ（製造／移動／Physical AI／Talent + 9計画テーマ）の横断管理基盤。動詞転換・経路シナリオ・概念派生・人物影響を一元化し、新規補論企画時の中核人物プール提案とFVCP方法論の品質予測を支援する。</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-num">13</div><div class="kpi-label">THEMES</div><div class="kpi-sub">4公開+9計画</div></div>
+      <div class="kpi-card"><div class="kpi-num">218</div><div class="kpi-label">PERSONS</div><div class="kpi-sub">+193 from v1.0</div></div>
+      <div class="kpi-card"><div class="kpi-num">400+</div><div class="kpi-label">CONCEPTS</div><div class="kpi-sub">+373 from v1.0</div></div>
+      <div class="kpi-card"><div class="kpi-num">37</div><div class="kpi-label">CROSS REFS</div><div class="kpi-sub">補論ペア参照</div></div>
+      <div class="kpi-card"><div class="kpi-num">17</div><div class="kpi-label">INFLUENCES</div><div class="kpi-sub">人物間影響</div></div>
+      <div class="kpi-card"><div class="kpi-num">15</div><div class="kpi-label">GENEALOGY</div><div class="kpi-sub">概念派生</div></div>
+      <div class="kpi-card"><div class="kpi-num">16</div><div class="kpi-label">PATH MAP</div><div class="kpi-sub">経路×補論</div></div>
+      <div class="kpi-card"><div class="kpi-num">1,368</div><div class="kpi-label">CANDIDATES</div><div class="kpi-sub">スキャナー出力</div></div>
+    </div>
+
+    <section class="section">
+      <h2 class="section-title">4補論サマリ（公開済）</h2>
+      <p class="section-intro">FVCP補論シリーズの基準点は<strong>製造v6（A評価・46,892字・24+並列×9反復）</strong>。他3補論はこれを100%目標として構築・運用される。</p>
+      <table class="matrix-table">
+        <thead><tr><th>ID</th><th>テーマ</th><th>動詞転換</th><th>字数</th><th>セクション</th><th>並列×反復</th><th>評価</th><th>状態</th></tr></thead>
+        <tbody>
+          <tr><td><strong>MFG</strong></td><td>製造現場のオーケストラ化 2030-2100</td><td>統制する → 育てる（6段階）</td><td>46,892</td><td>95</td><td>24+ × 9</td><td><span class="badge badge-A">A</span></td><td>基準点</td></tr>
+          <tr><td><strong>MOB</strong></td><td>移動の2030-2100</td><td>運ぶ → 流れる → 宿る（3段階）</td><td>31,600</td><td>33</td><td>9 × 1</td><td><span class="badge badge-A-">A-</span></td><td>FVCP実証第1弾</td></tr>
+          <tr><td><strong>PHAI</strong></td><td>フィジカルAIが拓く2100年</td><td>個別操作 → 身体化AI → 関係論的物理生態系（7段階）</td><td>96,987</td><td>50+</td><td>6+ × 開発中</td><td><span class="badge badge-A-">A-推定</span></td><td>開発中</td></tr>
+          <tr><td><strong>TLNT</strong></td><td>企業活動の現場で求められる人材の未来 2030-2100</td><td>効率最適化 → 行為の領域（2段階）</td><td>50,388</td><td>62</td><td>3 × 2</td><td><span class="badge badge-A-">A-</span></td><td>完成</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">動詞転換マップ（17段階）</h2>
+      <p class="section-intro">各補論の中軸動詞の転換段階。製造のみ過去300年を含む長波構造。他3補論は未来70年に限定。</p>
+      <div class="grid-2">
+        <div class="verb-card">
+          <div class="verb-theme">MFG · 製造（6段階・過去300年+未来70年）</div>
+          <div class="verb-flow">作る → 量産する → 改善する → 統合する → 統制する → <strong style="color:var(--accent-warm);">育てる</strong></div>
+          <div class="verb-stages">1500→1750→1900→1970→2000→2030→2100</div>
+        </div>
+        <div class="verb-card">
+          <div class="verb-theme">MOB · 移動（3段階・未来70年）</div>
+          <div class="verb-flow">運ぶ → 流れる → <strong style="color:var(--accent-warm);">宿る</strong></div>
+          <div class="verb-stages">〜2030→2050→2100</div>
+        </div>
+        <div class="verb-card">
+          <div class="verb-theme">PHAI · Physical AI（7段階）</div>
+          <div class="verb-flow">個別操作 → 言語条件付き → 汎用VLA → 自律物理エージェント → 知性オーケストラ → <strong style="color:var(--accent-warm);">関係論的物理生態系</strong></div>
+          <div class="verb-stages">1990→2022→2025→2029→2070→2100</div>
+        </div>
+        <div class="verb-card">
+          <div class="verb-theme">TLNT · 産業人材（2段階）</div>
+          <div class="verb-flow">効率最適化 → <strong style="color:var(--accent-warm);">行為の領域</strong></div>
+          <div class="verb-stages">1900→2030→2100</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">経路×補論マトリクス（16セル）</h2>
+      <p class="section-intro">4経路シナリオ × 4補論の実現可能性。<strong>関係論的</strong>は第4の可能性として全補論で speculative-aspirational。</p>
+      <table class="path-matrix">
+        <thead><tr><th></th><th>ともに流れる</th><th>統制シームレス</th><th>断片化分断</th><th>関係論的</th></tr></thead>
+        <tbody>
+          <tr><td>MFG</td><td class="high">high</td><td class="medium">medium</td><td class="medium">medium</td><td class="low">low-aspirational</td></tr>
+          <tr><td>MOB</td><td class="high">high</td><td class="high">high</td><td class="medium">medium</td><td class="speculative">speculative</td></tr>
+          <tr><td>PHAI</td><td class="medium">medium</td><td class="high">high</td><td class="medium">medium</td><td class="speculative">speculative</td></tr>
+          <tr><td>TLNT</td><td class="medium">medium</td><td class="high">high</td><td class="medium">medium</td><td class="medium">medium-aspirational</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">中核人物プール（3補論を横断する4名）</h2>
+      <p class="section-intro">複数補論で central として位置づけられる人物。新規補論企画時にまず参照すべき。</p>
+      <div class="person-grid">
+        <div class="person-card">
+          <div class="person-name">ブルーノ・ラトゥール</div>
+          <div class="person-themes">MFG · MOB · PHAI</div>
+          <div class="person-meta">アクタネットワーク理論 / 関係論的存在論の基盤</div>
+        </div>
+        <div class="person-card">
+          <div class="person-name">エドゥアルド・ヴィヴェイロス・デ・カストロ</div>
+          <div class="person-themes">MFG · MOB · PHAI</div>
+          <div class="person-meta">多自然主義 / パースペクティヴィズム</div>
+        </div>
+        <div class="person-card">
+          <div class="person-name">ジェフリー・ヒントン</div>
+          <div class="person-themes">MFG · MOB · PHAI</div>
+          <div class="person-meta">深層学習 / 2024ノーベル物理学賞</div>
+        </div>
+        <div class="person-card">
+          <div class="person-name">デミス・ハサビス</div>
+          <div class="person-themes">MFG · MOB · PHAI</div>
+          <div class="person-meta">DeepMind / AlphaFold / 2024ノーベル化学賞</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">補論ペア最強関係（strength=5）</h2>
+      <p class="section-intro">theme_cross_refs から strength=5（最強）のペアを抽出。</p>
+      <table class="matrix-table">
+        <thead><tr><th>FROM</th><th>TO</th><th>関係種別</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td>MFG</td><td>MOB</td><td>complementary</td><td>製造（生産する側）と移動（運ぶ側）の動詞転換が補完。21世紀の物質的生産・流通の双面像</td></tr>
+          <tr><td>MFG</td><td>MOB</td><td>verb-parallel</td><td>製造6段階（過去300年+未来70年）と移動3段階（未来70年）の長波対応</td></tr>
+          <tr><td>MFG</td><td>MOB</td><td>shared-concept</td><td>関係論的存在論・4時代パネル・3経路シナリオ・動詞転換・規範的選択構造を共有</td></tr>
+          <tr><td>MFG</td><td>PHAI</td><td>shared-concept</td><td>関係論的物理生態系 = 関係論的製造期。同質の到達点を技術領域で展開</td></tr>
+          <tr><td>MFG</td><td>PHAI</td><td>shared-person</td><td>ラトゥール・ヴィヴェイロス・ヒントン・ハサビスを共有</td></tr>
+          <tr><td>PHAI</td><td>TLNT</td><td>complementary</td><td>AI×人間の2100年最大補完軸。フィジカルAIと産業人材の共進化</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">FVCP実行履歴（4補論）</h2>
+      <p class="section-intro">FVCP方法論の実証データ。並列×反復→評価の予測モデル基盤。</p>
+      <table class="matrix-table">
+        <thead><tr><th>テーマ</th><th>開始</th><th>反復</th><th>並列</th><th>評価</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td>MFG</td><td>2026-05-12</td><td>9</td><td>24+</td><td><span class="badge badge-A">A</span></td><td>FVCP方法論確立元・基準点</td></tr>
+          <tr><td>MOB</td><td>2026-05-14</td><td>1</td><td>9</td><td><span class="badge badge-A-">A-</span></td><td>FVCP実証第1弾・最小実行可能規模</td></tr>
+          <tr><td>PHAI</td><td>2026-05-13</td><td>開発中</td><td>6+</td><td><span class="badge badge-A-">A-推定</span></td><td>5系統合流分析</td></tr>
+          <tr><td>TLNT</td><td>2026-05-10</td><td>2</td><td>3</td><td><span class="badge badge-A-">A-</span></td><td>era-talents-db駆動</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Phase 3 候補（次の3補論）</h2>
+      <p class="section-intro">db-expansion-planで定めたPhase 3優先候補。中核人物プール（ラトゥール・ヴィヴェイロス・ヒントン・ハサビス）を横断的に活用予定。</p>
+      <table class="matrix-table">
+        <thead><tr><th>ID</th><th>テーマ</th><th>仮想動詞転換</th><th>必要DB</th><th>状態</th></tr></thead>
+        <tbody>
+          <tr><td>MED</td><td>医療の2030-2100</td><td>治す → ケアする → 共生する</td><td>MED-DB（医療技術DB）</td><td><span class="badge badge-plan">Phase 3</span></td></tr>
+          <tr><td>EDU</td><td>教育の2030-2100</td><td>教える → 学び合う → 自ら問う</td><td>LRN-DB（学習科学DB）</td><td><span class="badge badge-plan">Phase 3</span></td></tr>
+          <tr><td>FOOD</td><td>食の2030-2100</td><td>生産する → 分かち合う → 宿す</td><td>FOOD-DB（食料システムDB）</td><td><span class="badge badge-plan">Phase 3</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footnote">
+      <strong>FVCP Meta DB v1.5 ── 構築履歴（2026-05-14）</strong><br>
+      v1.0初期実装（10テーブル・13テーマ・25人物・20概念）→ 自動スキャナーv1.0で1,368候補抽出 → curate-candidates.pyで自動精査 → 6並列Agent統合（A1-A6: citation補完・概念派生・人物影響・補論クロス参照）。
+      <br><br>
+      DB: <code>~/projects/research/fvcp-meta-db/data/fvcp-meta.db</code><br>
+      CLI: <code>python3 ~/projects/research/fvcp-meta-db/scripts/fvcp-cli.py {list|verb|paths|concepts|persons|pipeline}</code><br>
+      専属エージェント: <code>/fvcp-meta</code><br>
+      管理ページ: <a href="../strategy.html#themes">strategy.html#themes</a>
+    </div>
+  </main>
+
+  <script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('fvcp-meta-theme', next);
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var saved = localStorage.getItem('fvcp-meta-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  });
+  </script>
+</body>
+</html>
