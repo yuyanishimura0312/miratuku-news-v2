@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ミラツクDB体系の検証活動 — 厳格さとルールの全体像 | miratuku-news</title>
+<meta name="description" content="ミラツクが運用する66+データベース群の構築・検証・公開に適用している原則・方法論・品質ゲート・チェックリストの全体像。AI駆動研究の脆弱性を直視し、ハルシネーションを構造的に抑制するための運用基盤。">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+  gap: 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  padding: 5px 8px 5px 0;
+  transition: color 0.15s;
+  line-height: 1.55;
+}
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--accent-warm);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+
+.book-header {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.book-db-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.db-tag {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.book-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.book-meta {
+  margin-top: 32px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 60px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  line-height: 1.5;
+  font-weight: 700;
+  margin-bottom: 28px;
+  letter-spacing: 0;
+}
+h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+h4 {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 32px 0 12px;
+  color: var(--accent-warm);
+}
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type, .lead, .callout p, .stat-box p, td p, th p { text-indent: 0; }
+.lead {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  font-weight: 500;
+  text-indent: 0;
+}
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; line-height: 1.85; }
+strong { font-weight: 700; color: var(--text); }
+em {
+  font-style: normal;
+  background: linear-gradient(transparent 60%, var(--accent-muted) 60%);
+  padding: 0 2px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+th, td {
+  padding: 11px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+th { background: var(--surface); font-weight: 700; }
+td.num, th.num { text-align: right; font-family: "SF Mono", Menlo, monospace; }
+
+.callout {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+  padding: 20px 24px;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.92rem;
+  line-height: 1.85;
+}
+.callout-title {
+  font-weight: 700;
+  color: var(--accent-warm);
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+.stat-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-family: var(--font);
+  background: var(--card);
+}
+.stat-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+pre {
+  background: var(--surface);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 24px 0;
+  border-left: 3px solid var(--accent-warm);
+}
+pre code { background: none; padding: 0; }
+
+.principle-card {
+  border: 1px solid var(--border);
+  padding: 22px 26px;
+  margin: 18px 0;
+  background: var(--card);
+  font-family: var(--font);
+}
+.principle-card h4 {
+  margin-top: 0;
+  color: var(--text);
+}
+.principle-card .principle-num {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  color: var(--accent-warm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.principle-card .why,
+.principle-card .how {
+  font-size: 0.88rem;
+  line-height: 1.85;
+  margin-top: 10px;
+  color: var(--text-secondary);
+}
+.principle-card .why::before {
+  content: "WHY ";
+  font-weight: 700;
+  color: var(--accent-warm);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+.principle-card .how::before {
+  content: "HOW ";
+  font-weight: 700;
+  color: var(--accent-warm);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+
+.checklist {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  margin: 24px 0;
+  background: var(--surface);
+  padding: 20px 28px;
+  border: 1px solid var(--border-light);
+}
+.checklist li {
+  list-style: none;
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 12px;
+  line-height: 1.75;
+}
+.checklist li::before {
+  content: "☐";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--accent-warm);
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+footer {
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: 24px 0;
+  }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.55rem; }
+  .chapter-title { font-size: 1.3rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>DB VERIFICATION RULES</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次"><div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#ch00"><span class="toc-num">00</span><span>序章：なぜルールを明文化するのか</span></a></li>
+<li><a href="#ch01"><span class="toc-num">01</span><span>基盤原則：AI駆動DB構築の12条</span></a></li>
+<li><a href="#ch02"><span class="toc-num">02</span><span>戦術方法論：学術DB7フェーズ／実データDB5段階</span></a></li>
+<li><a href="#ch03"><span class="toc-num">03</span><span>4大品質問題と防止策</span></a></li>
+<li><a href="#ch04"><span class="toc-num">04</span><span>横断メタ原則：5箇条と暗黙知7パターン</span></a></li>
+<li><a href="#ch05"><span class="toc-num">05</span><span>品質ゲート統一基準</span></a></li>
+<li><a href="#ch06"><span class="toc-num">06</span><span>ハルシネーション対策チェックリスト</span></a></li>
+<li><a href="#ch07"><span class="toc-num">07</span><span>ライセンス・帰属・倫理</span></a></li>
+<li><a href="#ch08"><span class="toc-num">08</span><span>検証体制：生成と検証の分離</span></a></li>
+<li><a href="#ch09"><span class="toc-num">09</span><span>実証：大規模クリーニング Phase 1の実績</span></a></li>
+<li><a href="#ch10"><span class="toc-num">10</span><span>運用：判断トリガーと再参照</span></a></li>
+<li><a href="#ch11"><span class="toc-num">11</span><span>結語：訂正可能性を品質の核に</span></a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">VERIFICATION RULES</span>
+<span class="db-tag">METHODOLOGY</span>
+<span class="db-tag">QUALITY GATES</span>
+<span class="db-tag">66+ DATABASES</span>
+</div>
+<h1 class="book-title">ミラツクDB体系の検証活動 — 厳格さとルールの全体像</h1>
+<p class="book-subtitle">66+データベース群の構築・検証・公開に適用している原則・方法論・品質ゲート・チェックリストを単一の参照可能文書として整理する。AI駆動研究の脆弱性を直視し、ハルシネーションを構造的に抑制するための運用基盤。</p>
+<div class="book-meta">
+<span>NPO法人ミラツク / esse-sense</span>
+<span>v1.0 — 2026-05-15</span>
+<span>本文 約27,000字</span>
+<span>赤白CI準拠</span>
+</div>
+</header>
+
+<section class="chapter-section" id="ch00">
+<div class="chapter-number-label">CHAPTER 00 / 序章</div>
+<h2 class="chapter-title">なぜルールを明文化するのか</h2>
+
+<p class="lead">ミラツクは現在66以上のデータベースを運用している。学術知識DBの一部は10,000件規模に達し、実データDBは延べ100万件以上のレコードを収めている。これらが信頼に足るかどうかは、単一の判断ではなく、構築から公開までの全工程に張り巡らされた手続きによって決まる。本文書はその手続きを単一の参照可能な文書として明示する。</p>
+
+<p>大規模言語モデルを用いた知識生産は、いまや調査者一人の手作業を遥かに超える速度で「もっともらしい言説」を量産する。Walters &amp; Wilder（Scientific Reports, 2023）はGPT-4でも引用捏造率が18%に達することを示し、Dahl ら（Large Legal Fictions, 2024）は法務領域で69〜88%、Bhattacharyya ら（Cureus, 2023）は医学領域で47%という値を報告している。つまり、出典の伴わない主張は構造的にハルシネーションと区別できない。この事実は、検証手続きを欠いたAI駆動DBが学術活動の補助になるどころか、誤情報の倍速生成装置に転落する危険を持つことを意味する。</p>
+
+<p>ミラツクのDB群は、検索可能な事実集ではなく<em>意思決定の前提条件</em>として用いられている。連載の前提・コンサルティング提案の根拠・教科書の典拠・政策提言の論拠──いずれの用途においても、エントリの一件が誤っていれば、その上に積まれた判断は連鎖的に揺らぐ。だからこそ、構築の段階で「もっともらしいが検証不能」なデータを排除し、公開の段階で「修正可能な仕組み」を担保する必要がある。</p>
+
+<p>本文書は、これまで46〜66のDB構築で蓄積された経験を、誰が読んでも再現できる形に圧縮したものである。基盤原則（戦略・哲学）、戦術方法論（学術DB7フェーズ／実データDB5段階）、4大品質問題と防止策、横断メタ原則、品質ゲート、チェックリスト、検証体制、実証ケース、運用上の判断トリガーまで、全11章で順に開示する。ここに書かれていないことは原則として実行しない。書かれていることは原則として例外なく実行する。これは「もっともらしさ」と「正しさ」を区別するための、ミラツクとしての公的な約束である。</p>
+
+<div class="callout">
+<div class="callout-title">本文書の位置付け</div>
+本ページは <a href="../databases.html">databases.html</a>（ミラツク66+DB一覧）の付属文書である。各DBページの末尾と databases.html 最下部から参照可能。新規DB企画時・既存DB再設計時・品質問題発生時に必ず参照する。
+</div>
+</section>
+
+<section class="chapter-section" id="ch01">
+<div class="chapter-number-label">CHAPTER 01 / 基盤原則</div>
+<h2 class="chapter-title">AI駆動DB構築の12条</h2>
+
+<p>戦術的な方法論の上位にある戦略・哲学レイヤー。46DBの成功と失敗、そしてAI研究の先行文献（Walters &amp; Wilder, Dahl, Beel, Vaugrante, Da, CARE Principles 等）から抽出した12の基盤原則を以下に開示する。新規DBの企画、v2再設計、AI駆動リサーチの方針決定は、必ずこの12条を順に通過させる。</p>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 01</span>
+<h4>Claim-First ＋ Provenance 必須付帯</h4>
+<p class="why">GPT-4でも引用捏造率18%、法務領域69-88%、医学47%。出典のない主張はハルシネーションと構造的に区別できない。</p>
+<p class="how">全DBに <code>{claim_id, source_DOI/URL, retrieval_date, verifier, verification_method, confidence_score}</code> を必須付帯。出典なしエントリは構造的に投入不可（Citation Agent ゲート）。lunar-life-db の 800/1,015 検証不能を二度起こさない。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 02</span>
+<h4>件数目標 → 検証通過率KPI への転換</h4>
+<p class="why">academic-knowledge-db v1 の根本失敗は「件数目標がLLMの古典偏りを増幅した」点にあった。AstaBench（Wang Allen AI 2025）も pass@k 反復による偽精度を警告。</p>
+<p class="how">新規DBのKPIは「N件達成」ではなく、(a) citation accuracy ≥85%、(b) フィールド充填率100%、(c) 接続率100%、(d) abstain率（答えない率）の許容明示。件数は副産物として算出する。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 03</span>
+<h4>三層 Verification Stack の標準化</h4>
+<p class="why">Vaugrante ら（2024, arXiv:2409.20303）が CoT / Self-Consistency / ToT 単体の有意差は6モデル×5技法でほぼ存在しないことを実証。単一プロンプト技法を信奉しない。</p>
+<p class="how">Self-Consistency（k≥5）＋ Chain-of-Verification（Dhuliawala 2024）＋ Semantic Entropy（Farquhar Nature 2024）の三層をデフォルト構成とする。個別技法の効果主張は複数seed・複数モデルでの統計検定が前提。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 04</span>
+<h4>完全自律生成は禁止、監督付きアシスタント運用</h4>
+<p class="why">AI Scientist v1/v2 の独立追試（Beel 2025）で実験42%がコーディング失敗、中央値5件の引用欠損、"Conclusions Here" のプレースホルダ残存が確認された。</p>
+<p class="how">Plan / Execute を分離し、計画段階を人間レビュー対象とする。codex-team で並列調査する場合も、最終統合と方針決定はClaude＋人間が握る。生成主体と検証主体を絶対に同一にしない。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 05</span>
+<h4>複数分類体系の並置 — 単一普遍分類を拒否する</h4>
+<p class="why">distant reading の歴史的後退（Da 2019）、Wikidata の西洋中心バイアス（女性人物22%未満）、Said／Spivak／Mignolo のポストコロニアル批判。「中立の標準分類」は実は政治的選択を隠蔽している。</p>
+<p class="how">SEP・仏教教学・儒学・イスラム・先住民・東アジア家制度・近代企業など複数の分類体系を圧縮せずに並置する。属性として優先度・由来・解釈者を保持する（traditional-knowledge-db, philosophy-db, organization-genealogy で実装済み）。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 06</span>
+<h4>Temporal Precision を一級市民に</h4>
+<p class="why">「正確な日付がない」「時期不明」を欠損として扱うと historical contingency が消失する。Stinchcombe の liability of newness が後知恵で読み替えられる現象と同型の誤りが、年代不明エントリの一括削除で起きる。</p>
+<p class="how">全DBで <code>date_precision = exact / year / century / period / unknown</code> を一級市民として扱う。temporal facet で governance / resource / territory / identity の時系列状態を別記録する。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 07</span>
+<h4>CARE ／ OCAP ／ EU AI Act の内製化</h4>
+<p class="why">EU AI Act（2024/1689）Art.53(c) が訓練コンテンツの著作権遵守を要求、NIST AI 600-1 が12リスクを標準化、CARE Principles（Collective benefit / Authority / Responsibility / Ethics）、OCAP（Ownership / Control / Access / Possession）。traditional-knowledge-db は既に準拠済み。</p>
+<p class="how">先住民・コミュニティ・宗教・未公開研究データを含むDBは設計時点で(a)許諾、(b)帰属表記、(c)商用化ポリシー、(d)プライベートエンドポイント運用を決定する。公開LLM API投入禁止データの分類を必ず作成する。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 08</span>
+<h4>タスク特性に応じたエージェント選定</h4>
+<p class="why">PaperQA2（citation 85.2%）、Anthropic Multi-Agent（+90.2%精度だが15×トークン）、OpenAI Deep Research（GAIA 67.36%）、Coscientist（化学合成）。各システムが得意領域を持ち、万能ツールは存在しない。</p>
+<p class="how">文献統合は PaperQA2 型RAG、複数視点並列は Multi-Agent協調、計画的報告は ReWOO 型計画分離、仮説探索は LATS 型木探索。codex-team-playbook の5自動化プロファイル（team / review / research / solo / yolo）の使い分けを習慣化する。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 09</span>
+<h4>Wave 段階展開 — 全完遂を待たない</h4>
+<p class="why">great-figures-db（Phase 1: 500→2: 2,000→3: 8,000）、academic-db v3 psychology pilot、grant-db Stage 0 が示すとおり、「全完了待ち」は価値を遅延させる。MVPで使い始めることでギャップが判明する。</p>
+<p class="how">新規DBは必ず Wave 1 を1〜3日で出す。Wave 1完了→公開→ユーザー利用→ギャップ判明→Wave 2 設計、というループに乗せる。GC-DB（126研究者→Wave 2拡張）、great-figures-db で実証済み。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 10</span>
+<h4>量産より深化 — 既存DBへの接続を優先</h4>
+<p class="why">66本のDBは既に「相互参照する生態系」を形成している。新規DB追加は限界収益逓減の局面に入っている。逆に既存DBへの接続口（FK / embedding）追加は指数効果を持つ。db-coverage-diagnostic で全16実行領域が Quality ボトルネックであることが判明している。</p>
+<p class="how">新規DB提案前に「既存DBのどれかの拡張で実装できないか」を必ず問う。新規が必要な場合も「孤立DB」ではなく「既存DBへのbridge設計」から開始する。cross_db_refs を最低10件設計する。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 11</span>
+<h4>失敗の明示記録 — v1→v2 再設計の教訓を残す</h4>
+<p class="why">v1→v2 再設計（academic-db v1→v3、miratuku-news→v2、basho-db→public、sangaku-matcher→v2 等）が頻発しているが、再設計理由が README に明文化されていないケースが多い。教訓が暗黙知のままだと後継DBで同じ失敗を繰り返す。</p>
+<p class="how">v2 再設計時、README.md 冒頭に「## v1 で何が失敗したか／なぜ v2 を設計したか」セクションを必ず書く。後継DBが教師信号として読める形で残す。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">PRINCIPLE 12</span>
+<h4>ポートフォリオ統治 — クラスター単位の意思決定</h4>
+<p class="why">66DB を個別最適化すると重複・散逸が増える。逆に5大クラスター（ミラツク／フォーサイト／esse-sense／学術知識／PESTLE・政策）単位で見ると分業構造が成立する。foresight-radar v2 の6ソース統合 dashboard が好例。</p>
+<p class="how">個別DB単独より「クラスター統合 dashboard」「クラスター横断 API」「クラスター単位の品質 KPI」を優先する。新規提案はクラスター帰属を明示。クラスター長期ロードマップを持ち、その中での新規DB位置づけを明確化する。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="ch02">
+<div class="chapter-number-label">CHAPTER 02 / 戦術方法論</div>
+<h2 class="chapter-title">学術DB7フェーズと実データDB5段階</h2>
+
+<p>基盤原則を実装に落とす戦術レイヤーは、対象の性格に応じて二系統に分岐する。概念・理論・関係を扱う<em>学術概念DB</em>は7フェーズの方法論を、時系列・指標・観測値を扱う<em>実データDB</em>は5段階の方法論を、それぞれ独立に適用する。両者は並存可能であり、同じエコシステム内で相互参照する。</p>
+
+<h3>2-1. 学術概念DB — 7フェーズ方法論</h3>
+
+<p>イノベーション理論DB（9,839件・35,939関係）と経営学概念DB（3,458件・5,267関係）の構築経験から確立された7フェーズ。新分野のDB構築時、この順序を必ず守る。逆順は構造的にスナップショット不整合を生む。</p>
+
+<table>
+<tr><th>Phase</th><th>名称</th><th>主目的</th><th>主成果物</th></tr>
+<tr><td>0</td><td>Scoping</td><td>知識生産量の推定と収集目標設定</td><td>サブフィールドマトリクス</td></tr>
+<tr><td>1</td><td>Survey</td><td>主要理論・研究者・文献の特定</td><td>必須理論チェックリスト</td></tr>
+<tr><td>2</td><td>Collect</td><td>概念エントリのDB投入</td><td>初期エントリ（5,000-10,000件）</td></tr>
+<tr><td>3</td><td>Verify</td><td>正確性・網羅性・整合性の検証</td><td>4カテゴリ検証レポート</td></tr>
+<tr><td>4</td><td>Relations</td><td>概念間関係ネットワークの構築</td><td>関係数＝概念数の3-5倍</td></tr>
+<tr><td>5</td><td>Outputs</td><td>教科書・ダッシュボード・エージェント生成</td><td>HTML成果物セット</td></tr>
+<tr><td>6</td><td>Audit</td><td>査読レベルの学術検証と修正</td><td>3並列Opusレビュー</td></tr>
+<tr><td>7</td><td>Publish</td><td>databases.html 掲載と公開</td><td>db-registry.json 更新</td></tr>
+</table>
+
+<p>規模感の基準値は以下のとおり。これを下回るDBは原則として「実験版」として扱い、本番運用には乗せない。</p>
+
+<table>
+<tr><th>指標</th><th>基準値</th><th>イノベーションDB実績</th><th>経営学DB実績</th></tr>
+<tr><td>概念エントリ</td><td class="num">5,000-10,000</td><td class="num">9,839</td><td class="num">3,458</td></tr>
+<tr><td>サブフィールド数</td><td class="num">10-15</td><td class="num">14</td><td class="num">10</td></tr>
+<tr><td>関係数（概念×3-5倍）</td><td class="num">15,000-50,000</td><td class="num">35,939</td><td class="num">5,267</td></tr>
+<tr><td>フィールド充填率</td><td class="num">100%必達</td><td class="num">100%</td><td class="num">100%</td></tr>
+<tr><td>接続率（孤立ゼロ）</td><td class="num">100%必達</td><td class="num">100%</td><td class="num">100%</td></tr>
+<tr><td>重複率</td><td class="num">0%必達</td><td class="num">0%</td><td class="num">0%</td></tr>
+</table>
+
+<h3>2-2. 実データDB — 5段階方法論</h3>
+
+<p>FAO・IEA・UN WPP・OECD・e-Gov 法令API などの公開オープンデータを統合する実データDBは、概念DBとは別の方法論で扱う。5段階の各 Stage で独立した品質ゲートを通過させる。工数単位は <code>FDD（Focused Developer Day = 8h集中作業）</code> に統一する。「人月」「週」混在は禁止。</p>
+
+<table>
+<tr><th>Stage</th><th>名称</th><th>主担当エージェント</th><th>並列度</th></tr>
+<tr><td>1</td><td>BLIND SPOT 盲点抽出</td><td>db-blindspot-orchestrator</td><td>単一</td></tr>
+<tr><td>2</td><td>SOURCE VERIFICATION 実在検証</td><td>db-data-verifier</td><td>N並列</td></tr>
+<tr><td>3</td><td>SCOPE DESIGN MVPスキーマ設計</td><td>db-scope-designer</td><td>N並列</td></tr>
+<tr><td>4</td><td>INTEGRATION 統合と優先度確定</td><td>db-blindspot-orchestrator</td><td>単一</td></tr>
+<tr><td>5</td><td>AUTONOMOUS BUILD 自律構築</td><td>db-build-orchestrator + 5専門</td><td>Phase別</td></tr>
+</table>
+
+<p>Stage 5（自律構築）はさらに Phase 0〜6 に分解される。Phase 0: Spec、Phase 1: Schema、Phase 2: ETL、Phase 3: Validate、Phase 4: Cross-Ref、Phase 5: Dashboard、Phase 6: Publish。各Phase完了時に品質ゲート判定を行い、失敗時は Stage 3 にロールバックする。</p>
+
+<div class="callout">
+<div class="callout-title">CC BY 優先のライセンス選好順序</div>
+実データDBにおける外部データ採用は次の優先順位で決定する：<br>
+CC BY 4.0 ＞ CC BY-SA ／ CC BY 3.0 ＞ 政府公開（CC0相当）＞ 学術登録制 ＞ 非営利・要登録 ＞ 有料（採用前に代替検証）
+</div>
+
+<h3>2-3. 両系統の並存と相互参照</h3>
+
+<table>
+<tr><th>観点</th><th>学術概念DB（7フェーズ）</th><th>実データDB（5段階）</th></tr>
+<tr><td>対象</td><td>概念・理論・関係</td><td>時系列・指標・観測値</td></tr>
+<tr><td>主ソース</td><td>学術論文（Semantic Scholar / OpenAlex）</td><td>公開オープンデータ（FAO / IEA / UN / OECD）</td></tr>
+<tr><td>検証単位</td><td>概念名×年代×論文ID</td><td>URL live ＋ ライセンス分類</td></tr>
+<tr><td>MVP規模</td><td>5,000-10,000概念</td><td>5,000-100,000 records</td></tr>
+<tr><td>関係数</td><td>概念×3-5倍</td><td>cross_ref ≥10件</td></tr>
+<tr><td>専属エージェント</td><td>academic-db-* シリーズ</td><td>db-* シリーズ</td></tr>
+</table>
+
+<p>両者は同じDBエコシステム内で相互参照し、cross_db_refs で接続される。例えば philosophy-db（学術概念）の Bourdieu 概念は、university-press-releases-db（実データ）の社会学系プレスリリースと keyword 連結される。</p>
+</section>
+
+<section class="chapter-section" id="ch03">
+<div class="chapter-number-label">CHAPTER 03 / 4大品質問題</div>
+<h2 class="chapter-title">繰り返し発生する4カテゴリと防止策</h2>
+
+<p>イノベーション理論教科書の品質検証で24件の問題を検出した経験から、大規模文書・DBの生成時に繰り返し発生する4カテゴリの品質問題が体系化されている。各問題には固有の発生メカニズムと防止策がある。順に開示する。</p>
+
+<h3>A. スナップショット不整合（最頻出・7/24件・29%）</h3>
+
+<p>DB改善（重複除去・関係拡充等）の後に、成果物HTMLの数値が古いまま残る問題。成果物に数値をハードコードしており、DBの変更が自動伝播しない構造に起因する。特に「まず成果物を作り、その後DBを品質改善する」というワークフロー順序が直接の原因となる。</p>
+
+<p><strong>防止策</strong>：</p>
+<ol>
+<li>成果物生成はDB品質改善の<em>後</em>に行う。DB完成→検証→修正→成果物生成の順序を厳守する</li>
+<li>成果物生成時は必ずDBからリアルタイムでSQLクエリして数値を取得する。ハードコードしない</li>
+<li>成果物生成後にDBを変更した場合、<code>grep -n "旧数値" *.html</code> で全成果物を検索・更新する</li>
+<li>他DBの数値を参照する場合、メモリではなく実DBを直接クエリして最新値を取得する</li>
+</ol>
+
+<h3>B. LLMハルシネーション（危険度最高・5/24件・21%）</h3>
+
+<p>研究者名×年代×概念名の三つ組で「もっともらしいが誤った」内容を生成する問題。特に大量テキスト生成時にDB参照なしで書くと発生する。LLMの訓練データに基づく「確率的に妥当な」出力が、学術的事実と乖離する。マイナーな研究者や用語の正確な綴り・年代でハルシネーションが起きやすい。</p>
+
+<p><strong>防止策</strong>：</p>
+<ol>
+<li>教科書・レポートの本文生成時、各段落で言及する研究者×年代をDBクエリで検証してから書く</li>
+<li>生成後に「全固有名詞×年代」の自動検証スクリプトを実行する：<code>grep -oP '[A-Z][a-z]+.*?\d{4}' | DB照合</code></li>
+<li>特に警戒すべきパターン：(a) フレームワーク名の正確な表記、(b) 研究者の所属・国籍、(c) 概念の初出年 vs 書籍刊行年 vs 普及年の区別</li>
+<li>日本語固有名詞の漢字変換も要注意（補足→捕捉など同音異字）</li>
+</ol>
+
+<h3>C. カバレッジギャップ（構造的問題・8/24件・33%）</h3>
+
+<p>各章の「必須理論リスト」なしに生成するため、重要理論の欠落が検出されない問題。エージェントは「知っていることを書く」が「何が欠けているか」は自己検出できない。特に並列チームで分割生成すると、「当然含まれるべき基礎理論」が全チームで見落とされる。</p>
+
+<p><strong>防止策</strong>：</p>
+<ol>
+<li>章ごとの必須理論チェックリストをDBクエリで事前生成する：<br><code>SELECT name_en, era_start, key_researchers FROM table WHERE subfield='X' AND significance_score >= 8 ORDER BY era_start</code></li>
+<li>生成後にチェックリストと突合し、言及されていない必須理論をフラグする</li>
+<li>特にサブフィールドの「創設者」「転換点」「主要批判」の3カテゴリは必ず含める</li>
+</ol>
+
+<h3>D. 並列チーム間の不整合（編集問題・4/24件・17%）</h3>
+
+<p>複数チームが並列で別章を書くと、テキストの重複・用語の不統一・結語の重複が生じる問題。各チームが独立してLLM生成するため、他チームの出力を参照できないことに起因する。</p>
+
+<p><strong>防止策</strong>：</p>
+<ol>
+<li>統合後に必ず重複検出スクリプトを実行する：<code>grep -oP '.{30,}' file | sort | uniq -d</code></li>
+<li>結語・まとめ・メタファーは最終章にのみ配置し、他章では使わないよう指示する</li>
+<li>統合後にOpusエージェントによる通読レビューを実施し、章間の整合性をチェックする</li>
+</ol>
+
+<div class="callout">
+<div class="callout-title">4大品質問題の分布</div>
+イノベーション理論教科書の検証で検出された24件の問題は、A: 29% / B: 21% / C: 33% / D: 17% の比率で分布した。最も頻出するのは「スナップショット不整合」と「カバレッジギャップ」であり、それぞれワークフロー順序と事前チェックリストの欠如という<em>構造的原因</em>を持つ。技術的対策ではなく手順設計の問題として認識する必要がある。
+</div>
+</section>
+
+<section class="chapter-section" id="ch04">
+<div class="chapter-number-label">CHAPTER 04 / 横断メタ原則</div>
+<h2 class="chapter-title">5箇条と暗黙知7パターン</h2>
+
+<p>DB構築・エージェント化・調査解析・連載制作の4領域を横断して、Process Verification 2026-05-15 で抽出されたメタ原則。領域を選ばずに作用する。新規プロジェクト着手時・品質問題発生時にまず参照する5原則を以下に示す。</p>
+
+<h3>4-1. 横断メタ原則 5箇条</h3>
+
+<div class="principle-card">
+<span class="principle-num">META 01</span>
+<h4>生成と検証の分離</h4>
+<p>実装したエージェントに検証を担わせない。doc-verify、Sentinel、3チーム並列検証など、必ず<em>別主体</em>が検証する。製造補論の3チーム再検証（事実精査50件・DB数値9基・学術批判10件）が代表事例。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">META 02</span>
+<h4>DB完成後に成果物を生成する</h4>
+<p>Phase 3検証→Phase 4関係構築→Phase 5成果物生成の順序を厳守する。逆順は構造的にスナップショット不整合を生む。イノベーションDBで7件発生した教訓。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">META 03</span>
+<h4>件数目標 → カバー率／検証通過率KPI転換</h4>
+<p>件数目標はLLM古典バイアスを増幅しハルシネーション量産につながる。代わりに citation accuracy ≥85%、充填率100%、接続率100%、abstain率明示。件数は副産物として算出する。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">META 04</span>
+<h4>削除より flag を優先</h4>
+<p><code>synthetic_*</code> / <code>placeholder</code> / <code>paraphrase</code> / <code>likely_synthetic</code> の多軸flagで識別可能性を保持しつつ、明白な「実体ゼロ」のみ削除する。2,763件flag化・4,276件削除の実績。</p>
+</div>
+
+<div class="principle-card">
+<span class="principle-num">META 05</span>
+<h4>Wave 段階展開</h4>
+<p>全完遂を待たず1〜3日で Wave 1 公開→使う→ギャップ判明→Wave 2 へ。GC-DB（126研究者→Wave 2拡張）、great-figures-db（500→2,000→8,000）で実証済み。</p>
+</div>
+
+<h3>4-2. 暗黙知のメタパターン 7パターン</h3>
+
+<p>メモリに未登録だが4領域で繰り返し適用されているパターン。明文化することで判断速度が上がる。</p>
+
+<ol>
+<li><strong>「未来考察が強ければ既存語が新鮮になる」第一原理</strong> — 形式（DB／連載／エージェント）の精緻化より中身の強度評価が先に来る</li>
+<li><strong>v1 の失敗を v2 の README に書く</strong> — 教訓継承の最小機構。明文化されないと後継DBで同じ失敗を繰り返す</li>
+<li><strong>並列検証＋直接実行の役割分離</strong> — subagent は読み取り検証に強力、削除・改変はメイン主体が直接実行が確実</li>
+<li><strong>メタデータ多軸化による透明性</strong> — <code>data_quality</code> / <code>quality_flag</code> / <code>source_reliability</code> / <code>verification_status</code> / <code>gta_status</code> を最初から組み込む（後付け不可能）</li>
+<li><strong>訂正版を重ねる誠実性</strong> — v1.0→v1.1→v1.2 と訂正履歴を明示公開。ハルシネーション完全防止より「修正可能性」を品質の核に</li>
+<li><strong>クラスター統治 vs 個別最適化</strong> — 66DB を個別最適化すると重複・散逸。5大クラスター単位の意思決定が機能する</li>
+<li><strong>派生DB 必須化（連載 ⇄ DB バインド）</strong> — 補論執筆時に必ず派生DB（FTT-DB / MTT-DB / PHAI-DB / era-talents-db）を構築。連載は「DBの利用者」かつ「DBの構築動機」として双方向強化</li>
+</ol>
+
+<h3>4-3. 3つの核命題</h3>
+
+<p>Process Verification 2026-05-15 から導かれた3つの核命題。本文書の根底にある世界観を表す。</p>
+
+<ol>
+<li>4領域（DB構築・エージェント化・調査解析・連載制作）は独立しておらず、循環構造のなかにある（連載→DB→エージェント→調査→DB v2）</li>
+<li>品質保証は「いつ」「どこで」「だれが」の三点で決まる</li>
+<li>失敗の明文化は次の判断を早くする最大の投資である</li>
+</ol>
+</section>
+
+<section class="chapter-section" id="ch05">
+<div class="chapter-number-label">CHAPTER 05 / 品質ゲート</div>
+<h2 class="chapter-title">統一基準と強制／推奨指標</h2>
+
+<p>全Phase共通で適用される品質ゲートを、強制（必達）と推奨（努力目標）に分けて明示する。強制項目を1つでも満たさないDBは、原則として databases.html への登録を行わない。</p>
+
+<table>
+<tr><th>指標</th><th>基準値</th><th>強制／推奨</th></tr>
+<tr><td>データソース URL live率</td><td class="num">100%</td><td>強制</td></tr>
+<tr><td>ライセンス明記率</td><td class="num">100%</td><td>強制</td></tr>
+<tr><td><code>sources</code> ／ <code>citations</code> テーブル存在</td><td>必須</td><td>強制</td></tr>
+<tr><td>MVP cross_ref 件数</td><td class="num">≥10件</td><td>強制</td></tr>
+<tr><td>重複率</td><td class="num">0%</td><td>強制</td></tr>
+<tr><td>フィールド充填率</td><td class="num">100%</td><td>強制</td></tr>
+<tr><td>接続率（孤立エントリゼロ）</td><td class="num">100%</td><td>強制</td></tr>
+<tr><td>Dashboard 赤白CI 準拠</td><td class="num">100%</td><td>強制</td></tr>
+<tr><td>教科書 textbook.html style 準拠</td><td class="num">100%</td><td>強制</td></tr>
+<tr><td>専属エージェント</td><td>各DB 1体</td><td>強制</td></tr>
+<tr><td>db-registry 登録</td><td>完了</td><td>強制</td></tr>
+<tr><td>verified率（実データ）</td><td class="num">≥90%</td><td>推奨</td></tr>
+<tr><td>citation accuracy</td><td class="num">≥85%</td><td>推奨</td></tr>
+<tr><td>2000年以降エントリ比率</td><td class="num">60-80%</td><td>推奨</td></tr>
+<tr><td>有料データ依存度</td><td class="num">&lt;30%</td><td>推奨</td></tr>
+</table>
+
+<h3>5-1. メタデータ多軸化の標準仕様</h3>
+
+<p>全DBに以下のメタデータ列を最初から組み込む。後付けは原則不可能（既存エントリの判断材料が失われる）。</p>
+
+<pre><code>data_quality       INTEGER DEFAULT 80      -- 0-100スコア
+quality_flag       TEXT                    -- synthetic_* / placeholder / paraphrase 等
+source_reliability TEXT DEFAULT 'secondary' -- primary / secondary / tertiary
+verification_status TEXT                   -- verified / likely_synthetic / possibly_real
+gta_status         TEXT                    -- exact / estimated / interpolated
+source_url         TEXT NOT NULL           -- 必須付帯
+retrieval_date     TEXT                    -- 取得日
+verifier           TEXT                    -- 検証主体
+confidence_score   REAL                    -- 0.0-1.0</code></pre>
+
+<h3>5-2. 共通スキーマ要件</h3>
+
+<p>全DBに以下の3つの共通テーブルを必須とする。これらが存在しないDBは品質ゲートを通過しない。</p>
+
+<ul>
+<li><strong>sources テーブル</strong> — 出典URL・ライセンス・取得日・取得方法を記録</li>
+<li><strong>citations テーブル</strong> — 各エントリと出典の対応関係（多対多）</li>
+<li><strong>cross_db_refs テーブル</strong> — 他DBとの相互参照（接続キー：国コード／ISO／年／概念名／DOI）</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="ch06">
+<div class="chapter-number-label">CHAPTER 06 / チェックリスト</div>
+<h2 class="chapter-title">ハルシネーション対策チェックリスト</h2>
+
+<p>新規DB公開前、既存DB更新前、教科書・レポート生成後に必ず通過させるチェックリスト。担当者は項目ごとに確認の上、結果をログに残す。</p>
+
+<h3>6-1. ハルシネーション対策（必須）</h3>
+
+<ul class="checklist">
+<li>全データソース URL に対し WebSearch / WebFetch で実検証ログを残した</li>
+<li>「2024年データ」「2025年公開」等の固有時系列factsは一次ソース照合を行った</li>
+<li>推定値・補間値は <code>gta_status</code> で明示した</li>
+<li>レコード由来の出典 URL を 100% 記録した</li>
+<li>並列リサーチ完了後は doc-verify エージェントで横断検証を行った</li>
+<li>研究者名×年代×概念名の三つ組をDB照合した</li>
+<li>固有名詞の自動検証スクリプトを実行した</li>
+<li>日本語固有名詞の漢字変換ミスをチェックした</li>
+</ul>
+
+<h3>6-2. スナップショット整合性（必須）</h3>
+
+<ul class="checklist">
+<li>成果物生成はDB品質検証の<em>後</em>に行った</li>
+<li>成果物の数値は実DBへのリアルタイムクエリで取得した（ハードコードなし）</li>
+<li>DB変更後、<code>grep -n "旧数値" *.html</code> で全成果物を検索した</li>
+<li>他DBの数値は実DBから直接取得した（メモリ参照ではない）</li>
+</ul>
+
+<h3>6-3. カバレッジ網羅性（必須）</h3>
+
+<ul class="checklist">
+<li>章ごとの必須理論チェックリストをDBクエリで事前生成した</li>
+<li>生成後にチェックリストと突合し、欠落をフラグした</li>
+<li>サブフィールドの「創設者」「転換点」「主要批判」を必ず含めた</li>
+</ul>
+
+<h3>6-4. 並列チーム整合性（必須）</h3>
+
+<ul class="checklist">
+<li>統合後に重複検出スクリプトを実行した</li>
+<li>結語・まとめは最終章にのみ配置した</li>
+<li>統合後にOpusエージェントで通読レビューを実施した</li>
+</ul>
+
+<h3>6-5. ライセンス・倫理（必須）</h3>
+
+<ul class="checklist">
+<li>全データソースのライセンスを明記した</li>
+<li>CC BY 優先のライセンス選好順序に従って採用判断を行った</li>
+<li>有料データ依存度が30%未満であることを確認した</li>
+<li>先住民・コミュニティデータは CARE / OCAP に準拠した</li>
+<li>EU AI Act Art.53(c) の訓練コンテンツ著作権遵守を確認した</li>
+<li>公開LLM API 投入禁止データの分類が作成済みであることを確認した</li>
+</ul>
+
+<h3>6-6. 公開前最終確認（必須）</h3>
+
+<ul class="checklist">
+<li>databases.html にエントリを追加した</li>
+<li>db-registry.json を更新した</li>
+<li>ダッシュボード・教科書を公開した</li>
+<li>analysis-reports.json にレポートを追加した</li>
+<li>Research Dashboard に完了レポートを保存した</li>
+<li>専属エージェント（/xxx-db）を作成した</li>
+<li>slash-commands.md に追加した</li>
+<li>MEMORY.md にプロジェクトメモリを追加した</li>
+<li>GitHub プッシュを完了した</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="ch07">
+<div class="chapter-number-label">CHAPTER 07 / ライセンス・帰属・倫理</div>
+<h2 class="chapter-title">採用と公開の倫理基準</h2>
+
+<p>ミラツクのDBは「公共財」として設計されている。出典の明示・ライセンスの遵守・先住民やマイノリティの権利保護は、品質指標であると同時に倫理的責務である。本章では採用と公開に関する倫理基準を整理する。</p>
+
+<h3>7-1. ライセンス選好順序</h3>
+
+<p>実データDBに採用する外部データは、次の優先順位で判断する。上位を満たすデータが存在しない場合に限り、下位を検討する。</p>
+
+<table>
+<tr><th>優先度</th><th>ライセンス／ソース</th><th>運用</th></tr>
+<tr><td>1</td><td>CC BY 4.0</td><td>無条件採用</td></tr>
+<tr><td>2</td><td>CC BY-SA / CC BY 3.0</td><td>SA条件の派生物管理を設計</td></tr>
+<tr><td>3</td><td>政府公開（CC0相当）</td><td>無条件採用</td></tr>
+<tr><td>4</td><td>学術登録制（OpenAlex / Crossref 等）</td><td>レート制限と取得方針を設計</td></tr>
+<tr><td>5</td><td>非営利・要登録</td><td>非営利明示と帰属表記</td></tr>
+<tr><td>6</td><td>有料</td><td>採用前に代替検証、依存度30%未満</td></tr>
+</table>
+
+<h3>7-2. CARE Principles / OCAP の適用</h3>
+
+<p>先住民・コミュニティ・宗教・未公開研究データを含むDBは、設計時点で次の4点を決定する。</p>
+
+<ol>
+<li><strong>許諾</strong> — データ提供者またはコミュニティからの明示的同意</li>
+<li><strong>帰属表記</strong> — 提供者・コミュニティ・原典の明示</li>
+<li><strong>商用化ポリシー</strong> — 商業利用の可否と条件</li>
+<li><strong>プライベートエンドポイント運用</strong> — 公開API禁止データの隔離</li>
+</ol>
+
+<p>traditional-knowledge-db（3,002グループ・36,360項目）は CARE Principles に準拠して設計済み。先住民言語データは Glottolog の言語ID で正規化され、D-PLACE / UNESCO ICH との cross_ref を維持する。</p>
+
+<h3>7-3. EU AI Act / NIST AI 600-1 の準拠</h3>
+
+<p>EU AI Act（Regulation 2024/1689）Art.53(c) は訓練コンテンツの著作権遵守を要求する。ミラツクDBに収録するデータは、(a) 著作権満了、(b) CC ライセンス、(c) 政府公開、(d) 明示的許諾、のいずれかに該当することを必須とする。</p>
+
+<p>NIST AI 600-1（Generative AI Profile）は12のリスクカテゴリを定義する。本DBは特に Confabulation（ハルシネーション）、Information Integrity（情報整合性）、Information Security（情報安全性）に対する対応をチェックリスト化している（CHAPTER 06 参照）。</p>
+
+<h3>7-4. 出典の明示と訂正可能性</h3>
+
+<p>ミラツクのDBは「正解集」ではなく「現時点での最善の整理」である。誤りが見つかった場合の訂正経路を公開時に必ず明示する。具体的には：</p>
+
+<ul>
+<li>各エントリに <code>source_url</code> と <code>retrieval_date</code> を必須付帯</li>
+<li>GitHub issue による訂正提案を受け付ける</li>
+<li>v1.0→v1.1→v1.2 と訂正履歴を README に明示</li>
+<li>削除より flag を優先（識別可能性の保持）</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="ch08">
+<div class="chapter-number-label">CHAPTER 08 / 検証体制</div>
+<h2 class="chapter-title">生成と検証の分離</h2>
+
+<p>DB品質を担保する最も重要な構造的措置は、生成と検証の分離である。実装したエージェントに検証を担わせない。これは「自己採点」が機能しないという経験則の言語化であり、横断メタ原則の第1条にも掲げられている。</p>
+
+<h3>8-1. 検証チーム構成</h3>
+
+<p>学術DBの Phase 6（学術検証）では、3チーム並列・Opus モデルで査読レベルの検証を実施する。</p>
+
+<table>
+<tr><th>チーム</th><th>担当範囲</th><th>主検証項目</th></tr>
+<tr><td>A</td><td>前半章</td><td>事実正確性・研究者帰属</td></tr>
+<tr><td>B</td><td>中盤章</td><td>理論的整合性・カバレッジ</td></tr>
+<tr><td>C</td><td>後半章</td><td>構造的整合性・DB数値照合</td></tr>
+</table>
+
+<h3>8-2. 専属検証エージェント</h3>
+
+<p>2026-05-15 新設の専属エージェント群が、各 Stage / Phase の検証を担う。</p>
+
+<table>
+<tr><th>エージェント</th><th>担当 Stage / Phase</th><th>主機能</th></tr>
+<tr><td><code>db-data-verifier</code></td><td>Stage 2</td><td>データソース実在検証（URL live・ライセンス分類）</td></tr>
+<tr><td><code>db-scope-designer</code></td><td>Stage 3</td><td>MVPスキーマ設計・cross_ref 抽出</td></tr>
+<tr><td><code>db-etl-builder</code></td><td>Stage 5 Phase 2</td><td>ETL構築（取得・正規化・投入）</td></tr>
+<tr><td><code>db-quality-auditor</code></td><td>Stage 5 Phase 3</td><td>品質監査（重複・欠損・異常値・synthetic除去）</td></tr>
+<tr><td><code>db-cross-ref-mapper</code></td><td>Stage 5 Phase 4</td><td>既存DBマッピング</td></tr>
+<tr><td><code>db-dashboard-builder</code></td><td>Stage 5 Phase 5</td><td>赤白CI dashboard 構築</td></tr>
+<tr><td><code>doc-verify</code></td><td>全Phase</td><td>4カテゴリ品質問題の横断検証</td></tr>
+<tr><td><code>sentinel</code></td><td>公開前</td><td>最終ゲート（拒否権あり）</td></tr>
+</table>
+
+<h3>8-3. 並列検証＋直接実行の役割分離</h3>
+
+<p>大規模クリーニング Phase 1（2026-05-13）で得られた重要な実装上の知見：subagent は読み取り検証に強力だが、削除・改変はメイン主体が直接実行するほうが確実である。これは subagent のコンテキスト分離による恩恵（並列検証）と、トランザクション一貫性の必要（直接実行）の両立として設計されている。</p>
+
+<div class="callout">
+<div class="callout-title">5並列検証 → 5並列実行の体制</div>
+2026-05-13 の DB 大規模クリーニング Phase 1 では、Stage 1 で5並列の Explore subagent が SU / GF / US / ETD / AA を詳細分析し、Stage 2 で Phase 1（低リスク削除）を主体が直接 SQL 実行、Stage 3 で Phase 2/3（Wikidata / Wikipedia / Scholar 補充・置換）を4並列 subagent で実行した。
+</div>
+
+<h3>8-4. Sentinel — 公開前最終ゲート</h3>
+
+<p>databases.html への登録、教科書HTMLの公開、dashboard URL のリリース、いずれも sentinel エージェントの承認なしには実行しない。sentinel は次の項目を独立に検証し、いずれか1つでも不合格があれば公開を阻止する権限を持つ。</p>
+
+<ul>
+<li>品質ゲート統一基準（強制項目）の全通過</li>
+<li>ハルシネーション対策チェックリストの全通過</li>
+<li>ライセンス・倫理基準の全通過</li>
+<li>4大品質問題（A/B/C/D）の各防止策実施確認</li>
+<li>専属エージェント・db-registry 登録の完了</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="ch09">
+<div class="chapter-number-label">CHAPTER 09 / 実証</div>
+<h2 class="chapter-title">大規模クリーニング Phase 1 の実績</h2>
+
+<p>本章は、これまでに示した原則・方法論・チェックリストが空文ではないことを示すための実証セクションである。2026-05-13 に実施した DB 大規模クリーニング Phase 1 の結果を、定量的に開示する。</p>
+
+<h3>9-1. 背景</h3>
+
+<p>2026-05-11〜13 の連続セッションで実施した 58 DB 検証（V1-V6）の結果、ハルシネーション・生成AIテンプレート由来データを計131,967件以上識別した。Phase 1 では、明確な削除候補4,276件を実行削除し、判断保留分2,763件を多軸 flag で識別可能化した。</p>
+
+<h3>9-2. Phase 1 削除実行（4,276件）</h3>
+
+<table>
+<tr><th>DB</th><th>テーブル</th><th class="num">削除件数</th><th>内訳</th></tr>
+<tr><td>US</td><td>university_startups</td><td class="num">1,538</td><td>synthetic 全件（Web痕跡ゼロ確認）</td></tr>
+<tr><td>SU</td><td>startup_theory</td><td class="num">1,217</td><td>numbered_suffix 942 + ecosystem 275</td></tr>
+<tr><td>GF</td><td>persons</td><td class="num">1,465</td><td>Scientist_NN 935 + Businessman_NN 530</td></tr>
+<tr><td>ETD</td><td>achievers</td><td class="num">56</td><td>日本科学者NN 45 + ダミー 11</td></tr>
+<tr><td>MY</td><td>narratives</td><td class="num">76</td><td>Wodehouse misclassified</td></tr>
+<tr><td colspan="2"><strong>合計</strong></td><td class="num"><strong>4,276</strong></td><td>削除実行済</td></tr>
+</table>
+
+<p>削除に伴う関連クリーンとして、startup_relations が 6,796 → 3,720 件（3,076件削除）、startup_theory_relations が 42,497 → 38,291 件（4,206件削除）に整理された。GF の person_contexts / childhood_profiles / early_life_events の orphan も同時削除した。</p>
+
+<h3>9-3. Flag 細分化（2,763件）</h3>
+
+<p>削除には至らない判断保留分は、識別可能性を保持するために多軸 flag で細分化した。これにより、後続の検証で「実体ゼロ」が確定したものから順に削除可能となる。</p>
+
+<table>
+<tr><th>DB</th><th>カラム</th><th>細分内訳</th></tr>
+<tr><td>AA sources</td><td>verification_status</td><td>likely_synthetic 2,548 / paraphrase 215 / possibly_real 532</td></tr>
+<tr><td>AK humanities_concept</td><td>status='flagged_for_review'</td><td>11件</td></tr>
+<tr><td>AK social_theory</td><td>quality_flag='plausible_framework_template'</td><td>28件</td></tr>
+</table>
+
+<h3>9-4. 教訓</h3>
+
+<p>本実証から得られた5つの教訓を以下に示す。これらは横断メタ原則および AI駆動DB構築12条 にすでに昇格・反映されている。</p>
+
+<ol>
+<li><strong>メタデータレイヤーが命</strong> — data_quality / quality_flag / source_reliability / verification_status の多軸 flag で透明化する</li>
+<li><strong>削除より flag を優先</strong> — synthetic_* / placeholder / paraphrase 等で識別可能性を保持しつつ、明白な「実体ゼロ」のみ削除する</li>
+<li><strong>5並列検証 → 直接実行</strong> — 並列 subagent は読み取り検証に強力、削除実行は主体が直接が確実</li>
+<li><strong>テンプレ検出</strong> — <code>Scientist_NN</code> <code>XX Figure NN</code> <code>NNth Century Leader</code> <code>(Variant N)</code> <code>日本科学者NN</code> 等の signature を辞書化</li>
+<li><strong>API限界</strong> — Codex生成パラフレーズ題目は Crossref / Wayback / arXiv で hit ゼロ。Phase 1 Semantic Scholar 1% を Phase 2 で覆すのは困難</li>
+</ol>
+
+<h3>9-5. Wave 1-6 の継続的品質改善</h3>
+
+<p>Phase 1 完了後、db-coverage-diagnostic による 21章 × 16補論 × 64DB の3層カバレッジ診断を実施。Variety / Volume / Quality の3軸スコアリングで全16実行領域が Quality ボトルネックであることが判明した。これを受けて Wave 1-6 を実行し、累計 Coverage は 82.4 → 85.6（+3.2pt）に改善した。</p>
+
+<div class="stats-row">
+<div class="stat-box"><div class="stat-num">4,276</div><div class="stat-label">削除実行（件）</div></div>
+<div class="stat-box"><div class="stat-num">2,763</div><div class="stat-label">flag 細分化（件）</div></div>
+<div class="stat-box"><div class="stat-num">+3.2pt</div><div class="stat-label">Coverage改善</div></div>
+<div class="stat-box"><div class="stat-num">66+</div><div class="stat-label">DB総数</div></div>
+</div>
+</section>
+
+<section class="chapter-section" id="ch10">
+<div class="chapter-number-label">CHAPTER 10 / 運用</div>
+<h2 class="chapter-title">判断トリガーと再参照</h2>
+
+<p>本文書は静的な参照資料ではなく、判断の場で能動的に呼び出される運用ガイドとして設計されている。次の兆候が現れた瞬間、必ず本文書または該当 feedback メモリを再参照する。</p>
+
+<h3>10-1. 再参照トリガー</h3>
+
+<ul>
+<li>「件数目標」を設定したくなった（→ PRINCIPLE 02 / META 03）</li>
+<li>「全完遂を待つ」誘惑が現れた（→ PRINCIPLE 09 / META 05）</li>
+<li>同一エージェントに生成と検証を両方任せようとしている（→ PRINCIPLE 04 / META 01）</li>
+<li>v1 の失敗が明文化されないまま v2 に着手しようとしている（→ PRINCIPLE 11 / 暗黙知2）</li>
+<li>個別DB最適化で散逸が進んでいる（→ PRINCIPLE 12 / 暗黙知6）</li>
+<li>並列度を9以上に増やそうとしている（→ codex-team-playbook の上限）</li>
+<li><code>source_url</code> 欠落のままレコードを投入しようとしている（→ PRINCIPLE 01）</li>
+<li>LP / Book / Phase D / detail の複数層が並存し、どれが真か揺れている（→ feedback_path_1_lp_as_truth）</li>
+<li>ユーザー判断待ち事項がブロッカーになっている（→ feedback_default_confirmation）</li>
+</ul>
+
+<h3>10-2. 実行系の選択フロー</h3>
+
+<p>リサーチ・検証・大量投入の実行系は、状況に応じて動的に選択する。</p>
+
+<ol>
+<li><strong>第一選択</strong>: API 直接（Anthropic API、claude researcher 5並列）</li>
+<li><strong>usage limit 到達時</strong>: codex CLI への動的ピボット（6並列、codex-team profile）</li>
+<li><strong>anti-hallucination 発動時</strong>: 即時に別系統へ切替（meta-failover-controller が監視）</li>
+<li><strong>空配列返却・1% hit 等の制約変化</strong>: 即時ピボット</li>
+</ol>
+
+<h3>10-3. ステージ × 領域 × 品質ゲート マトリクス</h3>
+
+<p>Process Verification 2026-05-15 で構築された8×5マトリクス。診断書としても設計書としても機能する。</p>
+
+<table>
+<tr><th>Phase</th><th>DB</th><th>エージェント</th><th>調査</th><th>連載</th></tr>
+<tr><td>P0 構想</td><td>盲点分析</td><td>役割定義</td><td>テーマ設定</td><td>テーマスコープ</td></tr>
+<tr><td>P1 設計</td><td>スキーマ設計</td><td>権限設計</td><td>調査設計</td><td>EP 仕様</td></tr>
+<tr><td>P2 収集</td><td>ETL</td><td>プロンプト設計</td><td>並列リサーチ</td><td>DB+Web リサーチ</td></tr>
+<tr><td>P3 検証</td><td>4カテゴリ品質ゲート</td><td>doc-verify</td><td>引用照合</td><td>本文+DEEPER 検証</td></tr>
+<tr><td>P4 関係</td><td>cross_db_refs</td><td>エージェント間連携</td><td>分野横断統合</td><td>シーン×典拠統合</td></tr>
+<tr><td>P5 成果物</td><td>Dashboard / 教科書</td><td>専属エージェント生成</td><td>レポート</td><td>記事公開</td></tr>
+<tr><td>P6 監査</td><td>3並列Opus検証</td><td>sentinel</td><td>査読</td><td>editor A 評価</td></tr>
+<tr><td>P7 公開</td><td>db-registry / databases.html</td><td>slash-commands.md</td><td>Research Dashboard</td><td>FTP / GitHub Pages</td></tr>
+</table>
+
+<h3>10-4. 連携メモリ</h3>
+
+<p>本文書と密接に連携する feedback メモリ群を以下に示す。判断の場では本文書を起点として、必要に応じて該当メモリを参照する。</p>
+
+<ul>
+<li><code>feedback_ai_driven_db_principles.md</code> — AI駆動DB構築 12条（戦略レイヤー）</li>
+<li><code>feedback_large_scale_academic_db_methodology.md</code> — 学術DB 7フェーズ方法論</li>
+<li><code>feedback_db_expansion_methodology.md</code> — 実データDB 5段階方法論</li>
+<li><code>feedback_document_generation_quality.md</code> — 4大品質問題と防止策</li>
+<li><code>feedback_process_meta_principles.md</code> — 横断メタ原則 5箇条＋暗黙知 7パターン</li>
+<li><code>feedback_codex_quality.md</code> — Codex並列時の検証ステップ必須</li>
+<li><code>feedback_codex_team_research.md</code> — リサーチは codex-team research 基本</li>
+<li><code>feedback_codex_claude_api_failover.md</code> — 実行系選択フロー</li>
+<li><code>feedback_default_confirmation.md</code> — 5確認事項デフォルト確定パターン</li>
+<li><code>feedback_path_1_lp_as_truth.md</code> — 多層文書の path-1 原則</li>
+<li><code>~/.claude/rules/db-expansion-process.md</code> — 実データDB拡張プロセス正本</li>
+<li><code>~/.claude/rules/db-design-system.md</code> — 赤白CI textbook.html 必須</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="ch11">
+<div class="chapter-number-label">CHAPTER 11 / 結語</div>
+<h2 class="chapter-title">訂正可能性を品質の核に</h2>
+
+<p>本文書を通じて開示してきたのは、ハルシネーションを完全に防ぐ魔法ではない。むしろ、ハルシネーションは構造的に避けがたいという前提から出発して、(1) 入口で確率的に減らす、(2) 出口で検出する、(3) 発見後に修正可能な仕組みを残す──という三層の手続きをDB体系全体に組み込むという設計である。</p>
+
+<p>AI駆動の知識生産において、品質の核は「完全無謬性」ではなく「訂正可能性」である。出典なしの主張がハルシネーションと区別できないからこそ、全エントリに <code>source_url</code> を必須付帯する。LLMの自己採点が機能しないからこそ、生成と検証を必ず別主体に分ける。件数目標がバイアスを増幅するからこそ、KPIを検証通過率に転換する。全完遂を待つと価値が遅延するからこそ、Wave 段階展開で1〜3日サイクルに乗せる。これらはいずれも、誤りを構造的に減らしつつ、見つかった誤りを構造的に直せるようにする工夫である。</p>
+
+<p>ミラツクの66+データベース群は、その総体として「現時点での最善の整理」を提示している。各エントリは出典に紐付き、各DBは品質ゲートを通過し、各成果物は4大品質問題のチェックを経ている。それでもなお、誤りはあるだろう。誤りが見つかったときに、隠さず・遅らせず・訂正履歴を残して直す。それが、本文書の根底にある約束である。</p>
+
+<p>本文書は v1.0 として公開する。実運用での発見に応じて v1.1、v1.2 と訂正履歴を重ねていく。原則の追加・削除、品質ゲートの基準値変更、新しい検証エージェントの登場、いずれも本文書の更新を伴う。databases.html の最下部、および各DBページの末尾から、いつでもこの文書に立ち戻れるよう設計されている。検証活動の厳格さとルールのあり方を、開示と訂正の繰り返しによって維持していく。</p>
+
+<div class="callout">
+<div class="callout-title">この文書の運用</div>
+本文書は <a href="../databases.html">databases.html</a> の最下部からリンクされている。新規DB企画・既存DB再設計・品質問題発生時には、まずこの文書を通読し、該当する原則・方法論・チェックリストを判断の場に持ち込むこと。誤り・抜け漏れ・改善提案は GitHub issue または直接連絡で受け付ける。
+</div>
+</section>
+
+<footer>
+NPO法人ミラツク / esse-sense<br>
+DB Verification Rules v1.0 — 2026-05-15<br>
+<a href="../databases.html">← Databases に戻る</a>
+</footer>
+
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
