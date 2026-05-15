@@ -21,7 +21,7 @@ HOST = "ftp2.gmoserver.jp"
 USER = "sd0177751@gmoserver.jp"
 LOCAL_DIR = Path("/Users/nishimura+/projects/apps/miratuku-news-v2/dashboards/reports-public/foodag-2030-2100")
 REMOTE_DIR = "/journal.emerging-future.org/reports/foodag-2030-2100"
-FILES = ["index.html", "methodology.html"]
+FILES = ["index.html"]  # methodology.html追加は v3 以降
 
 
 def get_password() -> str:
