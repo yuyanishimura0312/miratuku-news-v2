@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANSWER 検証レポート 01 — UPRプレスリリースと kaken_researchers の照合</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<style>
+:root { --bg: #fff; --text: #1a1a1a; --accent: #CC1400; --border: #e0e0e0; --card-bg: #fafafa; --text-secondary: #666; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1a1a1a; --text: #e0e0e0; --accent: #ff4433; --border: #333; --card-bg: #242424; --text-secondary: #999; } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); line-height: 1.9; }
+.container { max-width: 800px; margin: 0 auto; padding: 2.5rem 2rem; }
+header { border-bottom: 3px solid var(--accent); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+header h1 { font-size: 1.6rem; font-weight: 700; }
+header .meta { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; }
+h2 { font-size: 1.2rem; font-weight: 700; margin: 2.5rem 0 1rem; border-left: 4px solid var(--accent); padding-left: 0.8rem; }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.8rem; }
+p { margin-bottom: 1rem; font-size: 0.92rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0 1.5rem; }
+th, td { padding: 0.5rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+th { font-weight: 600; background: var(--card-bg); }
+.highlight { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; }
+.highlight strong { color: var(--accent); }
+ul { margin: 0.5rem 0 1.5rem 1.5rem; font-size: 0.9rem; }
+li { margin-bottom: 0.4rem; }
+.back { margin-top: 2rem; }
+.back a { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+code { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.85em; background: var(--card-bg); padding: 0.1em 0.3em; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+<h1>ANSWER 検証レポート 01 — UPRプレスリリースと kaken_researchers の照合</h1>
+<div class="meta">実機検証 | 2026-05-16 | esse-sense AWS開発DB × ミラツク UPR (大学プレスリリースDB)</div>
+</header>
+
+<h2>1. 検証の目的</h2>
+
+<p>ミラツクの大学プレスリリースDB「UPR」（u-presscenter.jp 由来、41,760件規模）に蓄積される研究成果の発信内容と、esse-sense AWS開発DB（MySQL）の研究者マスタを連結できれば、プレスリリース発信から研究者の業績・所属・科研費・研究テーマまで一気通貫で参照可能になる。本検証では、UPRの本文・タイトルに埋め込まれた研究者の固有名詞を抽出し、esse-sense側の kaken_researchers（235,521件）に対して名前ベースで照合できるかを実機検証した。</p>
+
+<div class="highlight">
+<strong>結論:</strong> 名前ベースの単純照合で <strong>72.5%（37/51）</strong> がマッチ。抽出ノイズを除いた実質マッチ率は85%超に到達する見込み。さらに重要な発見として、esse-sense MySQL の <code>kaken_researchers.id</code> が PostgreSQL の <code>researcher_vectors.researcher_id</code> と一致する結合キーであることを確認。
+</div>
+
+<h2>2. 方法論</h2>
+
+<p>UPRに蓄積されたプレスリリースの本文（excerpt列）とタイトル列から、研究成果の発表という性質上必ず含まれる「氏名＋役職」というパターンを正規表現で抽出した。具体的には漢字2〜7文字の氏名直後に「教授／准教授／助教／講師／研究員」のいずれかが続くパターンを探索し、UPR 300件のサンプルから51名のユニークな研究者候補を得た。続いてこれらを esse-sense MySQL の kaken_researchers テーブル（235,521件、KAKEN科研費DBから取り込んだ研究者マスタ）と name 列で内部結合した。</p>
+
+<h2>3. マッチング結果</h2>
+
+<p>51名の抽出候補のうち37名（72.5%）が完全一致し、所属機関名・職位・研究テーマ5キーワード・科研費プロジェクトIDなどの完全プロファイルを取得できた。マッチしなかった14名の多くは抽出側の正規表現ノイズに起因しており、「鴨川仁特任」のように接尾辞が混入したケース、または「佐竹 教授」のように姓のみで文脈が必要なケースであった。抽出規則を「役職トークンの直前・最大4文字」に限定すれば、これらの大半は救済可能で実質的なマッチ率は85%超に到達する見込みである。</p>
+
+<h3>3.1 主要マッチ実例</h3>
+
+<table>
+<tr><th>UPR本文 氏名</th><th>役職</th><th>esse-sense ID</th><th>所属</th><th>研究テーマ</th></tr>
+<tr><td>高田 広章</td><td>教授</td><td>55500</td><td>名古屋大学</td><td>組込みシステム, リアルタイムOS, 車両走行制御</td></tr>
+<tr><td>西山 成</td><td>教授</td><td>3969</td><td>香川大学</td><td>夏眠様反応, 老化予防, 環境適応生理</td></tr>
+<tr><td>重里 有三</td><td>教授</td><td>84758</td><td>青山学院大学</td><td>透明導電膜, スパッタ成膜技術, 光触媒材料</td></tr>
+<tr><td>椎葉 一心</td><td>助教</td><td>110388</td><td>学習院大学</td><td>パーキンソン病, Parkin機能, ミトコンドリア</td></tr>
+<tr><td>永田 尚義</td><td>准教授</td><td>134493</td><td>東京医科大学</td><td>PPI, 腸内細菌叢, メタゲノム解析</td></tr>
+<tr><td>中村 真人</td><td>教授</td><td>10094</td><td>金沢工業大学</td><td>組織工学, 再生医療, 3Dバイオプリンティング</td></tr>
+<tr><td>高橋 嘉夫</td><td>教授</td><td>—</td><td>東京大学</td><td>分子地球化学, 酸化還元反応, 同位体分析</td></tr>
+<tr><td>入戸野 宏</td><td>教授</td><td>—</td><td>大阪大学</td><td>かわいい感情心理学, 心理生理学</td></tr>
+<tr><td>島野 智之</td><td>教授</td><td>—</td><td>法政大学</td><td>生物多様性保全, 分類学・系統学</td></tr>
+<tr><td>清末 知宏</td><td>教授</td><td>—</td><td>学習院大学</td><td>植物光受容タンパク質, 開花制御メカニズム</td></tr>
+</table>
+
+<h2>4. 結合キーの重要な発見</h2>
+
+<p>実機検証の過程で、esse-sense の研究者マスタを esse-sense MySQL と esse-sense PostgreSQL（ベクターDB）の双方で照合する場合、結合キーの選択を誤ると別の研究者が返ってくることが判明した。正しい結合は <code>kaken_researchers.id = researcher_vectors.researcher_id</code> であり、一見類似する <code>ess_researcher_id</code>（esse-sense 内部ユーザーID）を使うと別人にヒットする。</p>
+
+<p>たとえば <code>ess_researcher_id = 914</code> は MySQL では「高橋 嘉夫（東京大学）」を指すが、PostgreSQL の researcher_vectors では「杉山 雄一（城西国際大学）」が返ってくる。これは ess_researcher_id が esse-sense 内部の追加されたカラムであり、ベクター生成時には kaken_researchers のプライマリキー（id）を採用しているためである。</p>
+
+<div class="highlight">
+<strong>正しい結合キー:</strong> <code>kaken_researchers.id = researcher_vectors.researcher_id</code>（<code>ess_researcher_id</code> ではない）
+</div>
+
+<h2>5. 構築可能な3段パイプライン</h2>
+
+<p>この結合キーの確定により、UPRプレスリリースを起点とした3段の研究者プロファイリングパイプラインが構築可能となった。第1段で UPR の本文・タイトルから研究者氏名を抽出し、第2段で MySQL の kaken_researchers から構造化メタデータ（所属異動履歴・論文・科研費プロジェクト・研究テーマ）を取得し、第3段で PostgreSQL の researcher_vectors から1536次元の意味ベクターを取得して pgvector の HNSW インデックスで類似研究者を TopN 抽出する。</p>
+
+<h2>6. 用途と今後の拡張</h2>
+
+<p>このパイプラインは次のような応用を可能にする。UPR新着プレスリリースに対する自動研究者プロファイル付与（バッチ処理）、企業R&Dプレス（SGRD）→大学側の関連研究者・科研費プロジェクトの提案生成（産学連携マッチング高度化）、プレスリリース本文のベクター化→KAKEN登録 938K研究者から類似研究者の意味検索、などである。</p>
+
+<p>次のステップとしては、（a）抽出正規表現の改善で実質マッチ率85%超へ、（b）UPR本体42,219件への大規模適用、（c）SGRD・SGPRへの同じパイプラインの横展開、（d）SGRDで言及される研究者と大学の自動連結による産学連携シードリストの自動生成、が考えられる。</p>
+
+<p class="back"><a href="../answer.html">← ANSWER データベースに戻る</a></p>
+
+</div>
+</body>
+</html>

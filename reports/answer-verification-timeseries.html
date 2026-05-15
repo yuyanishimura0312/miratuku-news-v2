@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANSWER 検証レポート 02 — 時系列情報の4層構造</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<style>
+:root { --bg: #fff; --text: #1a1a1a; --accent: #CC1400; --border: #e0e0e0; --card-bg: #fafafa; --text-secondary: #666; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1a1a1a; --text: #e0e0e0; --accent: #ff4433; --border: #333; --card-bg: #242424; --text-secondary: #999; } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); line-height: 1.9; }
+.container { max-width: 800px; margin: 0 auto; padding: 2.5rem 2rem; }
+header { border-bottom: 3px solid var(--accent); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+header h1 { font-size: 1.6rem; font-weight: 700; }
+header .meta { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; }
+h2 { font-size: 1.2rem; font-weight: 700; margin: 2.5rem 0 1rem; border-left: 4px solid var(--accent); padding-left: 0.8rem; }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.8rem; }
+p { margin-bottom: 1rem; font-size: 0.92rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0 1.5rem; }
+th, td { padding: 0.5rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-weight: 600; background: var(--card-bg); }
+.highlight { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; }
+.highlight strong { color: var(--accent); }
+ul { margin: 0.5rem 0 1.5rem 1.5rem; font-size: 0.9rem; }
+li { margin-bottom: 0.4rem; }
+.back { margin-top: 2rem; }
+.back a { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+code { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.85em; background: var(--card-bg); padding: 0.1em 0.3em; border-radius: 3px; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+<h1>ANSWER 検証レポート 02 — 時系列情報の4層構造</h1>
+<div class="meta">実機検証 | 2026-05-16 | esse-sense AWS開発DB / 4層 計4,470万件超の時系列データ</div>
+</header>
+
+<h2>1. 検証の目的</h2>
+
+<p>esse-sense社の旗艦サービス ANSWER+ に関連する時系列データの所在と粒度を明らかにし、研究者プロファイリングだけでなく「変化・推移・履歴」を軸とした分析がどこまで可能かを把握することを目的とした。esse-sense MySQL 全253テーブルから時系列カラム（created_at／publication_date／start_date等）を持つテーブルを抽出し、各テーブルの時系列カバー範囲・件数・粒度・現在性（最新更新日）を実機計測した。</p>
+
+<div class="highlight">
+<strong>結論:</strong> ANSWER+の運用ログと学術業績は <strong>4層構造</strong>で時系列保持されている。第1層: 学術業績 (1,400万件超)、第2層: ユーザー行動 (2,170万件・5年・継続更新)、第3層: 推薦履歴 (2,200万件・2年分)、第4層: ANSWER検索API実履歴 (6千件・2024-10以降)。最古2021-07、現在も更新中。
+</div>
+
+<h2>2. 第1層：学術業績の時系列</h2>
+
+<p>研究者のキャリア・業績の時系列は KAKEN 連携テーブル群が担っている。kaken_researcher_histories（1,093,757件）は各研究者の所属異動を start_date／end_date ペアで保持しており、たとえば高田広章教授（名古屋大学、id=55500）について「1995年4月東京大学助手 → 1998年4月豊橋技術科学大学講師 → 2005年4月名古屋大学教授 → 2010-2015年情報科学研究科教授 → 2020-2024年情報学研究科教授」というキャリア軌跡が即時取得できる。</p>
+
+<p>kaken_researcher_products（10,504,387件）は論文・著書の publication_date を保持し、journal名・巻号・著者リストとセットで時系列分析に直接利用できる。同一研究者の出版テーマの推移、特定領域の論文数の年次推移、研究グループの共著ネットワークの時系列変化など、多様な分析が可能である。一方 kaken_researcher_projects（1,642,728件）は科研費プロジェクトの期間情報を持つが、start_date／end_year列はNULL率が高く、プロジェクト時系列としての利用には補完が必要である。</p>
+
+<table>
+<tr><th>テーブル</th><th class="num">件数</th><th>時系列カラム</th><th>用途</th></tr>
+<tr><td>kaken_researcher_histories</td><td class="num">1,093,757</td><td>start_date / end_date</td><td>所属異動の時系列</td></tr>
+<tr><td>kaken_researcher_products</td><td class="num">10,504,387</td><td>publication_date 96.6%</td><td>論文・著書の出版時系列</td></tr>
+<tr><td>kaken_researcher_projects</td><td class="num">1,642,728</td><td>start_date / end_year (NULL多)</td><td>科研費プロジェクト期間</td></tr>
+<tr><td>researcher_external_articles</td><td class="num">1,371,708</td><td>created_at</td><td>研究者の外部記事・お知らせ</td></tr>
+</table>
+
+<h2>3. 第2層：ユーザー行動ログ</h2>
+
+<p>actlogs（21,694,291件）は2021-07-30から2026-05-06まで5年弱にわたるユーザー行動ログを保持しており、現在も継続更新中である。これは ANSWER+ のリテンション分析、機能利用率、特定機能の伸長・衰退、ユーザーセグメントの行動差異など、サービス運営に直結する分析の母集団となる。user_accesses（45,192件）はサイトアクセス、transactions（4,231件）は課金履歴を保持しており、いずれも created_at で時系列分析が可能である。</p>
+
+<table>
+<tr><th>テーブル</th><th class="num">件数</th><th>時系列カバー</th><th>用途</th></tr>
+<tr><td>actlogs</td><td class="num">21,694,291</td><td>2021-07-30 〜 2026-05-06</td><td>行動ログ全般。DAU/WAU推移、リテンション分析</td></tr>
+<tr><td>user_accesses</td><td class="num">45,192</td><td>2022-06-20 〜 2026-05-06</td><td>サイトアクセス</td></tr>
+<tr><td>transactions</td><td class="num">4,231</td><td>2023-09-21 〜 2026-05-05</td><td>課金履歴</td></tr>
+</table>
+
+<h2>4. 第3層：推薦エンジン履歴</h2>
+
+<p>recommend_logs（22,030,857件、2021-08-04〜2023-09-22）は ANSWER+ の前身となるレコメンドエンジン2年分の推薦履歴で、特筆すべきは <code>created_at</code>（推薦生成時刻）・<code>read_at</code>（記事閲覧時刻）・<code>view_at</code>（記事表示時刻）の3時点を1レコードで保持していることである。これにより「推薦から閲覧までのリードタイム」「推薦の効果測定（推薦→閲覧の到達率）」「ユーザーセグメント別の推薦への反応速度」など、レコメンド改善の核となる分析が可能になる。なお、recommend_logs_20230922（21,026,280件）は2023-09-22時点のスナップショットとして保存されている。</p>
+
+<h2>5. 第4層：ANSWER+ 検索API実履歴</h2>
+
+<p>researcher_searcher_api_log（5,924件、2024-10-16〜2026-05-06）には ANSWER+ の検索APIに対する全クエリと返却結果が時刻付きで保存されている。input列に検索クエリ、response列に返却された研究者JSONが格納されており、「いつ何が検索されたか」「どの研究者が返却されたか」「同じ検索が繰り返されたか」というユーザーの検索意図の時系列分析が可能である。search_keyword（5,931件）は同期間のキーワード履歴を保持しており、組み合わせて使うことで検索トピックのトレンド変化が抽出できる。</p>
+
+<div class="highlight">
+<strong>注目ポイント:</strong> researcher_searcher_api_log は ANSWER+ の意味検索エンジンが「実際にどう使われたか」を完全ログとして保持している。プロダクト改善（クエリパターンの類型化、不調なクエリの特定、新規ユースケースの発見）の一次データソース。
+</div>
+
+<h2>6. 分析ユースケース（時系列を軸にした応用）</h2>
+
+<ul>
+<li><strong>研究者キャリア類型分析</strong>：histories から「助手→講師→准教授→教授」の典型的キャリアタイム、専門領域による昇進速度差を抽出</li>
+<li><strong>論文出版の時系列トレンド</strong>：publication_date × related_tags で研究テーマの時系列推移、研究領域のホット化／コールド化の検出</li>
+<li><strong>レコメンド効果測定</strong>：recommend_logs の3時点差分でリードタイム分析、ユーザーセグメント別の反応速度</li>
+<li><strong>検索クエリのトピック変動</strong>：search_keyword + api_log で「いつ何が検索されるようになったか」のトピックトレンド検出</li>
+<li><strong>ユーザーリテンション</strong>：actlogs から日次/週次のアクティブユーザー推移、機能別利用率の変化</li>
+<li><strong>UPR連動分析</strong>：プレスリリース発信日と当該研究者の業績推移を重ね合わせ、メディア露出と業績の相関を可視化</li>
+</ul>
+
+<h2>7. 運用上の留意点</h2>
+
+<p>actlogs と recommend_logs はそれぞれ2,000万件を超えるため、集計クエリでは created_at の B-Tree インデックスを前提とした WHERE 句設計が必須である。kaken_researcher_projects の start_date／end_year は NULL 率が高いため、プロジェクト時系列の代用には kaken_researcher_products の publication_date を使った間接推定が現実的である。kaken_researcher_products の publication_date は DB import 時点（2025-08）で打ち切られているため、2024年8月以降の最新論文は反映されていない可能性がある点も運用設計時に注意が必要である。</p>
+
+<p class="back"><a href="../answer.html">← ANSWER データベースに戻る</a></p>
+
+</div>
+</body>
+</html>

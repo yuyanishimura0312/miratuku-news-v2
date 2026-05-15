@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANSWER 検証レポート 03 — 論文情報の取得粒度</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<style>
+:root { --bg: #fff; --text: #1a1a1a; --accent: #CC1400; --border: #e0e0e0; --card-bg: #fafafa; --text-secondary: #666; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1a1a1a; --text: #e0e0e0; --accent: #ff4433; --border: #333; --card-bg: #242424; --text-secondary: #999; } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); line-height: 1.9; }
+.container { max-width: 800px; margin: 0 auto; padding: 2.5rem 2rem; }
+header { border-bottom: 3px solid var(--accent); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+header h1 { font-size: 1.6rem; font-weight: 700; }
+header .meta { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; }
+h2 { font-size: 1.2rem; font-weight: 700; margin: 2.5rem 0 1rem; border-left: 4px solid var(--accent); padding-left: 0.8rem; }
+h3 { font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.8rem; }
+p { margin-bottom: 1rem; font-size: 0.92rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0 1.5rem; }
+th, td { padding: 0.5rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-weight: 600; background: var(--card-bg); }
+.highlight { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; }
+.highlight strong { color: var(--accent); }
+.warn { border-left: 3px solid var(--accent); padding-left: 1rem; background: var(--card-bg); padding: 0.8rem 1rem; margin: 1rem 0; font-size: 0.9rem; }
+ul { margin: 0.5rem 0 1.5rem 1.5rem; font-size: 0.9rem; }
+li { margin-bottom: 0.4rem; }
+.back { margin-top: 2rem; }
+.back a { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+code { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.85em; background: var(--card-bg); padding: 0.1em 0.3em; border-radius: 3px; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.absent { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+<h1>ANSWER 検証レポート 03 — 論文情報の取得粒度</h1>
+<div class="meta">実機検証 | 2026-05-16 | kaken_researcher_products 10,504,387件 / 主要カラム充足率の実測</div>
+</header>
+
+<h2>1. 検証の目的</h2>
+
+<p>esse-sense AWS開発DBから論文・研究業績情報をどの程度の粒度で取り出せるかを明らかにし、用途別の適性を判断するための実機調査を行った。前回までの検証で UPRプレスリリースからの研究者照合パイプライン（72.5%マッチ率）と時系列情報の所在（4層構造）が確認できていたが、論文単位での情報取得についてはより具体的な粒度把握が必要であった。本検証では kaken_researcher_products の全カラムについて、サンプル100,000件で空文字列とNULLを除外した実質充足率を計測した。</p>
+
+<div class="highlight">
+<strong>結論:</strong> タイトル <strong>99.8%</strong>・著者 <strong>98.4%</strong>・出版日 <strong>96.6%</strong> は完備。一方で抄録 8.3%・英文タイトル 0.3%・出版社 3.3% と極端に少なく、<span class="absent">DOI／arXiv ID／全文PDF／被引用数</span>はカラム自体が存在しない。「研究者ベースのプロファイリング基盤」として設計されており「論文ベースの引用分析基盤」ではない。
+</div>
+
+<h2>2. データの規模と性質</h2>
+
+<p>kaken_researcher_products は KAKEN科研費DB から取り込まれた研究業績一覧であり、約1,050万件のレコードを保持している。1レコードが1件の業績（論文・学会発表・書籍章・特許・報告書など）に対応し、kaken_researcher_id 列で研究者マスタ（235,521件）と多対多関係を持つ。研究者あたりの業績数は実例で9〜357件と大きくばらつくが、中堅以上の研究者では数十〜数百件が標準である。</p>
+
+<table>
+<tr><th>研究者</th><th>id</th><th class="num">業績数</th></tr>
+<tr><td>中村 真人（金沢工業大学）</td><td>10094</td><td class="num">347</td></tr>
+<tr><td>西山 成（香川大学）</td><td>3969</td><td class="num">357</td></tr>
+<tr><td>高田 広章（名古屋大学）</td><td>55500</td><td class="num">85</td></tr>
+<tr><td>重里 有三（青山学院大学）</td><td>84758</td><td class="num">39</td></tr>
+<tr><td>椎葉 一心（学習院大学）</td><td>110388</td><td class="num">9</td></tr>
+<tr><td>永田 尚義（東京医科大学）</td><td>134493</td><td class="num">9</td></tr>
+</table>
+
+<p>publication_date の年次分布を見ると、健全な範囲は1990年代〜2024年で、ピークは2010-2018年（年間13,000〜15,000件）にあり、直近2024年は約1,000件まで減少する。これは DB import が2025年8月時点で行われたためで、最新論文の反映が不十分である点に注意が必要である。一部に1900年以前や2105年といった明らかなデータ品質エラーも含まれているため、年次分析時はフィルタリングが推奨される。</p>
+
+<h2>3. 取得できる項目の充足率</h2>
+
+<p>100,000件のサンプリングで主要カラムの充足率を測定した結果、項目によって大きな差があることが判明した。タイトル（title、和文）は99.8%、著者リスト（creator_name、カンマ区切りテキスト）は98.4%、出版年月日（publication_date）は96.6%と、論文の基本3点はほぼ完備されている。一方、英文タイトル（title_en）は0.3%のみと極めて低く、英文書誌情報を主軸とした分析には別ルートが必要である。</p>
+
+<table>
+<tr><th>カラム</th><th>内容</th><th class="num">充足率</th><th>評価</th></tr>
+<tr><td>title</td><td>和文タイトル</td><td class="num">99.8%</td><td>完備</td></tr>
+<tr><td>creator_name</td><td>著者リスト (カンマ区切り)</td><td class="num">98.4%</td><td>完備 (ORCID紐付けは無し)</td></tr>
+<tr><td>publication_date</td><td>出版年月日</td><td class="num">96.6%</td><td>完備 (1990s〜2024)</td></tr>
+<tr><td>source</td><td>掲載誌・学会名</td><td class="num">43.3%</td><td>半分のみ</td></tr>
+<tr><td>firstPage / lastPage</td><td>ページ番号</td><td class="num">38.6%</td><td>半分以下</td></tr>
+<tr><td>conference_location</td><td>学会開催地</td><td class="num">34.9%</td><td>学会発表の判別に有用</td></tr>
+<tr><td>volume</td><td>巻</td><td class="num">23.5%</td><td>少ない</td></tr>
+<tr><td>issue</td><td>号</td><td class="num">10.5%</td><td>少ない</td></tr>
+<tr><td>description</td><td>抄録</td><td class="num">8.3%</td><td>意味検索には不十分</td></tr>
+<tr><td>contributor_publisher</td><td>出版社</td><td class="num">3.3%</td><td>ほぼ無し</td></tr>
+<tr><td>title_en</td><td>英文タイトル</td><td class="num">0.3%</td><td>ほぼ無し</td></tr>
+</table>
+
+<h2>4. 業績の種別構成</h2>
+
+<p>充足率の組み合わせから業績の種別を推定すると、conference_locationが埋まっているレコードが約35%（学会発表に相当）、source+volumeの両方が埋まっているレコードが約23%（ジャーナル論文に相当）、それ以外の約42%は書籍章・報告書・特許など多様な業績タイプであると考えられる。研究者プロファイリングにおいて「ジャーナル中心の発信スタイル」「学会発表中心の発信スタイル」を判別する材料として活用できる。</p>
+
+<table>
+<tr><th>業績種別</th><th>判定条件</th><th class="num">構成比</th></tr>
+<tr><td>学会発表</td><td>conference_location が非空</td><td class="num">約35%</td></tr>
+<tr><td>ジャーナル論文</td><td>source かつ volume が非空</td><td class="num">約23%</td></tr>
+<tr><td>その他（書籍章・報告書・特許等）</td><td>上記いずれにも該当せず</td><td class="num">約42%</td></tr>
+</table>
+
+<h2>5. 取得できないもの</h2>
+
+<p>明示的に確認した不在項目として、DOI・arXiv ID・ISBN といった外部識別子が無く、全文PDF・全文テキストへの直接リンクも保持されていない。被引用数・インパクトファクター・h-index（論文単位）といった citation metrics も欠如している。論文単位のキーワードタグも無く、キーワード情報は研究者単位の related_tags / industrial_tags / social_tags 列にのみ存在する。最後に、DB import 時期の関係で2024年8月以降の最新論文は反映されていない可能性が高い。</p>
+
+<div class="warn">
+これらの欠落は、esse-sense DBが「研究者ベースのプロファイリング基盤」として設計されており、「論文ベースの引用分析基盤」としては設計されていないことを示している。引用ネットワーク分析や全文検索を行いたい場合は OpenAlex / Semantic Scholar / J-STAGE などの外部APIとの連携が必要である。
+</div>
+
+<h2>6. 実例：高田広章教授（id=55500）の業績データ</h2>
+
+<p>2023年1月1日付の「路車協調に向けた物標情報提供のためのデータフュージョンシステム」は、タイトル・著者（川田福和, 丈達生伍, 山田峻也, 渡辺陽介, 佐藤健哉, 高田広章）・日付が揃っているが source/volume/issue/page は NULL であった。一方、2022年の英文論文「Efficient Access Method for Multi-access Edge Servers in Dynamic ...」は source（International Journal of Intel...）と volume・pages を保持していた。このように同一研究者でも業績によって書誌情報の充足度に差がある。</p>
+
+<p>著者情報はORCIDなどの一意IDではなく、カンマ区切りのテキストとして保存されており（例：「山口 晃広, 島田 秀輝, 伊藤 信一, 石原 直樹, 本田 晋也, 佐藤 健哉, 高田 広章」）、共著者間の研究者IDレベルでの自動紐付けは行われていない。共著ネットワーク分析を行う際は、テキストマッチで再連結する必要がある。</p>
+
+<h2>7. 用途別の適性</h2>
+
+<p>実機調査の結果、論文情報の取得は次のような用途に適している。第一に「誰がいつ何を書いたか」の業績一覧取得には十分（タイトル・著者・日付が98%以上完備）。第二に長期キャリアにわたる論文系列分析（30年分・publication_dateで時系列追跡可能）。第三に学会発表とジャーナル論文の大まかな分類（conference_location の有無で判別）。第四に研究者プロファイリングと類似研究者探索（pgvectorの研究者単位ベクター活用）。</p>
+
+<p>一方、適していない用途として、論文間の引用ネットワーク分析（被引用データ無し）、ジャーナル名・巻号でのレファレンス書誌検索（半分程度のみ）、論文単位の抄録テキストでの意味検索（8.3%のみ）、DOI起点での外部DB連携（DOI無し）、英文タイトルベースの国際比較（0.3%のみ）が挙げられる。</p>
+
+<h2>8. 補助テーブル</h2>
+
+<p>researcher_external_articles（1,371,708件）は研究者ページから外部論文へのリンクを link 列で保持しており、researchmap_id とも紐付いている。kaken_researcher_reports（116,355件）は科研費年次報告書を、kaken_researchers.report_pdf_url は各研究者の科研費総括レポートPDFへのリンクを保持している。これらを組み合わせれば、KAKEN内の業績データ＋外部論文リンク＋研究者レポートPDFという3層構造で研究者プロファイルを構築できる。</p>
+
+<p class="back"><a href="../answer.html">← ANSWER データベースに戻る</a></p>
+
+</div>
+</body>
+</html>

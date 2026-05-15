@@ -27,6 +27,52 @@
     }
     .page-meta strong { color: var(--text); font-weight: 800; font-size: 0.92rem; }
 
+    .verify-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px; margin: 0 0 12px;
+    }
+    .verify-card {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 22px 22px 20px; border: 1px solid var(--border);
+      background: var(--card); text-decoration: none; color: inherit;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    }
+    .verify-card:hover {
+      border-color: var(--accent-warm); background: var(--card-hover);
+      transform: translateY(-1px); text-decoration: none;
+    }
+    .verify-card-tag {
+      font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); font-weight: 700;
+    }
+    .verify-card-title {
+      font-family: var(--font-serif); font-size: 1.05rem; font-weight: 900;
+      color: var(--accent-warm); margin: 0; line-height: 1.45;
+    }
+    .verify-card-summary {
+      font-size: 0.82rem; line-height: 1.75; color: var(--text-secondary);
+      margin: 0; flex: 1;
+    }
+    .verify-card-summary strong { color: var(--text); font-weight: 700; }
+    .verify-card-summary code {
+      font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.92em;
+      background: var(--surface); padding: 0.05em 0.35em; border-radius: 3px;
+      color: var(--accent-warm);
+    }
+    .verify-card-kpi {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      font-size: 0.72rem; color: var(--text-muted);
+      padding-top: 10px; border-top: 1px solid var(--border-light);
+      letter-spacing: 0.02em;
+    }
+    .verify-card-kpi strong {
+      color: var(--accent-warm); font-weight: 900; font-size: 0.9rem;
+    }
+    .verify-card-link {
+      font-size: 0.78rem; font-weight: 700; color: var(--accent-warm);
+      letter-spacing: 0.04em;
+    }
+
     .kpi-row {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
@@ -953,125 +999,43 @@
 
       <section class="app-section">
         <div class="section-header">
-          <h2 class="section-title">外部DB連携検証 — UPRプレスリリースとの照合</h2>
-          <span class="section-subtitle">2026-05-16 実機検証 / ミラツク UPR (大学プレスリリースDB) → esse-sense kaken_researchers</span>
+          <h2 class="section-title">検証レポート</h2>
+          <span class="section-subtitle">ANSWER データベースの実機検証結果。各カードから詳細レポートへ</span>
         </div>
-        <p class="page-lead">
-          ミラツクの大学プレスリリースDB (UPR) の本文・タイトルから抽出した研究者氏名を、esse-sense 開発DBの研究者マスタへ照合できるかを実機検証しました。UPR 300件のサンプルから正規表現「漢字氏名＋教授／准教授／助教／講師／研究員」で51名のユニーク候補を抽出し、kaken_researchers (235,521件) と name 列で照合した結果、<strong>37名 (72.5%) が完全一致</strong>し、所属機関名・職位・研究テーマ5キーワード・科研費プロジェクトIDなどの完全プロファイルを取得できました。マッチしなかった14名は抽出側の正規表現ノイズ（「鴨川仁特任」のような接尾辞混入、「佐竹 教授」のような姓のみのケース）に起因しており、抽出を改善すれば実質的なマッチ率は85%超に到達する見込みです。
-        </p>
-        <p class="page-lead">
-          重要な実機発見として、esse-sense MySQL の <strong>kaken_researchers.id が PostgreSQL の researcher_vectors.researcher_id と一致する結合キー</strong>であることを確認しました。一方で ess_researcher_id (esse-sense 内部ユーザーID) は両DBで意味が異なるため誤結合を引き起こします。この発見により、UPR プレスリリースで言及された研究者を起点に、MySQL でKAKEN由来の構造化メタデータを取得 → PostgreSQL で1536次元の意味ベクターを取得 → pgvector の HNSW 検索で類似研究者を TopN 抽出、という3段パイプラインが構築可能です。
-        </p>
-        <div class="kpi-row">
-          <div class="kpi-cell"><div class="kpi-label">UPR SAMPLE</div><div class="kpi-value">300</div></div>
-          <div class="kpi-cell"><div class="kpi-label">EXTRACTED</div><div class="kpi-value">51</div></div>
-          <div class="kpi-cell"><div class="kpi-label">MATCHED</div><div class="kpi-value">37</div></div>
-          <div class="kpi-cell"><div class="kpi-label">MATCH RATE</div><div class="kpi-value">72.5%</div></div>
-          <div class="kpi-cell"><div class="kpi-label">JOIN KEY</div><div class="kpi-value">researcher_id</div></div>
-        </div>
-        <div class="ans-table-wrap" style="max-height:380px;">
-          <table class="ans-table">
-            <thead><tr>
-              <th style="min-width:130px;">UPR本文 氏名</th>
-              <th>役職</th>
-              <th>esse-sense 照合結果</th>
-              <th>所属</th>
-              <th>研究テーマ (related_tags)</th>
-            </tr></thead>
-            <tbody>
-              <tr><td class="ans-cell">高田 広章</td><td class="ans-cell">教授</td><td class="ans-cell">id=55500 ✓</td><td class="ans-cell">名古屋大学</td><td class="ans-cell">組込みシステム, リアルタイムOS, マルチプロセッサ, 車両走行制御</td></tr>
-              <tr><td class="ans-cell">西山 成</td><td class="ans-cell">教授</td><td class="ans-cell">id=3969 ✓</td><td class="ans-cell">香川大学</td><td class="ans-cell">夏眠様反応, 老化予防, 腎機能・代謝疾患, 環境適応生理</td></tr>
-              <tr><td class="ans-cell">重里 有三</td><td class="ans-cell">教授</td><td class="ans-cell">id=84758 ✓</td><td class="ans-cell">青山学院大学</td><td class="ans-cell">透明導電膜, スパッタ成膜技術, 光触媒材料, 薄膜結晶化</td></tr>
-              <tr><td class="ans-cell">椎葉 一心</td><td class="ans-cell">助教</td><td class="ans-cell">id=110388 ✓</td><td class="ans-cell">学習院大学</td><td class="ans-cell">パーキンソン病, Parkin機能, ミトコンドリア機能障害</td></tr>
-              <tr><td class="ans-cell">永田 尚義</td><td class="ans-cell">准教授</td><td class="ans-cell">id=134493 ✓</td><td class="ans-cell">東京医科大学</td><td class="ans-cell">プロトンポンプ阻害薬, 腸内細菌叢, メタゲノム解析</td></tr>
-              <tr><td class="ans-cell">中村 真人</td><td class="ans-cell">教授</td><td class="ans-cell">id=10094 ✓</td><td class="ans-cell">金沢工業大学</td><td class="ans-cell">組織工学, 再生医療, 3Dバイオプリンティング, 凍結保存技術</td></tr>
-              <tr><td class="ans-cell">高橋 嘉夫</td><td class="ans-cell">教授</td><td class="ans-cell">✓</td><td class="ans-cell">東京大学</td><td class="ans-cell">分子地球化学, 酸化還元反応, 同位体分析, 粘土鉱物環境化学</td></tr>
-              <tr><td class="ans-cell">入戸野 宏</td><td class="ans-cell">教授</td><td class="ans-cell">✓</td><td class="ans-cell">大阪大学</td><td class="ans-cell">かわいい感情心理学, 心理生理学, 認知神経科学</td></tr>
-              <tr><td class="ans-cell">島野 智之</td><td class="ans-cell">教授</td><td class="ans-cell">✓</td><td class="ans-cell">法政大学</td><td class="ans-cell">生物多様性保全, 遺伝子解析, 分類学・系統学</td></tr>
-              <tr><td class="ans-cell">清末 知宏</td><td class="ans-cell">教授</td><td class="ans-cell">✓</td><td class="ans-cell">学習院大学</td><td class="ans-cell">植物光受容タンパク質, 開花制御メカニズム, 環境ストレス応答</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="app-section">
-        <div class="section-header">
-          <h2 class="section-title">時系列情報の4層構造</h2>
-          <span class="section-subtitle">研究者キャリア / 出版業績 / ユーザー行動 / ANSWER検索API履歴 — 実機計測</span>
-        </div>
-        <p class="page-lead">
-          esse-sense MySQL には ANSWER+ の検索・推薦機能を支える時系列データが4層構造で存在します。第1層は研究者のキャリア・業績の時系列（kaken_researcher_histories で異動履歴を start_date/end_date ペアで保持、kaken_researcher_products で出版日とジャーナル名・巻号を保持）、第2層はユーザー行動ログ（actlogs が2021-07-30 から現在まで5年弱で2,169万件、現在も更新中）、第3層は推薦エンジン履歴（recommend_logs が2021-08〜2023-09 の2年分で2,203万件、created_at/read_at/view_at の3時点を保持しリードタイム分析が可能）、第4層は ANSWER+ 検索APIの実履歴（researcher_searcher_api_log に2024-10-16以降の検索クエリと返却JSONを全件保存）です。
-        </p>
-        <p class="page-lead">
-          実例として高田広章教授 (id=55500) のキャリア時系列を kaken_researcher_histories から取得すると、1995年4月東京大学助手 → 1998年4月豊橋技術科学大学講師 → 2005年4月名古屋大学教授 → 2010-2015年名古屋大学情報科学研究科教授 → 2020-2024年情報学研究科教授、というキャリア軌跡が即時に取得できます。
-        </p>
-        <div class="ans-table-wrap" style="max-height:420px;">
-          <table class="ans-table">
-            <thead><tr>
-              <th style="min-width:180px;">層 / テーブル</th>
-              <th class="ans-num">件数</th>
-              <th>時系列カバー範囲</th>
-              <th>用途</th>
-            </tr></thead>
-            <tbody>
-              <tr><td class="ans-cell"><strong>第1層：学術業績</strong><br>kaken_researcher_histories</td><td class="ans-cell ans-num">1,093,757</td><td class="ans-cell">start_date / end_date ペア</td><td class="ans-cell">所属異動の時系列。1人につき複数行で在籍期間を保持</td></tr>
-              <tr><td class="ans-cell">kaken_researcher_products</td><td class="ans-cell ans-num">10,504,387</td><td class="ans-cell">publication_date 96.6%</td><td class="ans-cell">論文・著書の出版日。journal/巻号/著者付き</td></tr>
-              <tr><td class="ans-cell">kaken_researcher_projects</td><td class="ans-cell ans-num">1,642,728</td><td class="ans-cell">start_date / end_year (NULL多)</td><td class="ans-cell">科研費プロジェクト期間</td></tr>
-              <tr><td class="ans-cell">researcher_external_articles</td><td class="ans-cell ans-num">1,371,708</td><td class="ans-cell">created_at</td><td class="ans-cell">研究者の外部記事・お知らせ</td></tr>
-              <tr><td class="ans-cell"><strong>第2層：ユーザー行動</strong><br>actlogs</td><td class="ans-cell ans-num">21,694,291</td><td class="ans-cell">2021-07-30 〜 2026-05-06 (5年・継続更新)</td><td class="ans-cell">行動ログ全般。DAU/WAU推移、リテンション分析</td></tr>
-              <tr><td class="ans-cell">user_accesses</td><td class="ans-cell ans-num">45,192</td><td class="ans-cell">2022-06-20 〜 2026-05-06</td><td class="ans-cell">サイトアクセス</td></tr>
-              <tr><td class="ans-cell">transactions</td><td class="ans-cell ans-num">4,231</td><td class="ans-cell">2023-09-21 〜 2026-05-05</td><td class="ans-cell">課金履歴</td></tr>
-              <tr><td class="ans-cell"><strong>第3層：推薦履歴</strong><br>recommend_logs</td><td class="ans-cell ans-num">22,030,857</td><td class="ans-cell">2021-08-04 〜 2023-09-22</td><td class="ans-cell">created_at/read_at/view_at の3時点。リードタイム分析</td></tr>
-              <tr><td class="ans-cell"><strong>第4層：検索API実履歴</strong><br>researcher_searcher_api_log</td><td class="ans-cell ans-num">5,924</td><td class="ans-cell">2024-10-16 〜 2026-05-06</td><td class="ans-cell">ANSWER+ 検索クエリ (input) と返却JSON (response) 全件保存</td></tr>
-              <tr><td class="ans-cell">search_keyword</td><td class="ans-cell ans-num">5,931</td><td class="ans-cell">2024-10-16 〜 2026-05-06</td><td class="ans-cell">検索キーワード履歴</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="app-section">
-        <div class="section-header">
-          <h2 class="section-title">論文情報の取得粒度</h2>
-          <span class="section-subtitle">kaken_researcher_products 10,504,387件 / 主要カラム充足率 (100K件サンプリング実機計測)</span>
-        </div>
-        <p class="page-lead">
-          KAKEN由来の業績データは1,050万件あり、研究者あたり9〜357件と幅があります。タイトル (99.8%)・著者リスト (98.4%)・出版日 (96.6%) は完備されている一方、英文タイトル (0.3%)・抄録 (8.3%)・出版社 (3.3%) は極端に少なく、書誌詳細では巻 (23.5%)・号 (10.5%)・ページ番号 (38.6%) と中程度の充足率です。conference_location の有無による推定で <strong>学会発表 約35% / ジャーナル論文 約23% / 書籍章・報告書・その他 約42%</strong> という構成比が見えてきます。DOI・arXiv ID・ISBN・全文PDF・被引用数・インパクトファクターはいずれも保持されておらず、引用ネットワーク分析や全文検索を行う場合は OpenAlex / Semantic Scholar / J-STAGE などの外部API連携が必須です。
-        </p>
-        <p class="page-lead">
-          健全な年次範囲は1990年代〜2024年で、ピークは2010-2018年の年間13,000〜15,000件です。DB import が2025年8月のため直近2024年は約1,000件に減少しており、最新論文の反映は2024年8月までで打ち切られている点に運用上の留意が必要です。本テーブルは「研究者ベースのプロファイリング基盤」として設計されており「論文ベースの引用分析基盤」ではないため、業績タイムラインの可視化・研究関心の遷移抽出・学会発表とジャーナル比率での発信スタイル類型化には十分活用可能です。
-        </p>
-        <div class="ans-table-wrap" style="max-height:520px;">
-          <table class="ans-table">
-            <thead><tr>
-              <th>カラム</th>
-              <th>内容</th>
-              <th class="ans-num">充足率</th>
-              <th>評価</th>
-            </tr></thead>
-            <tbody>
-              <tr><td class="ans-cell">title</td><td class="ans-cell">和文タイトル</td><td class="ans-cell ans-num">99.8%</td><td class="ans-cell">完備</td></tr>
-              <tr><td class="ans-cell">creator_name</td><td class="ans-cell">著者リスト (カンマ区切り)</td><td class="ans-cell ans-num">98.4%</td><td class="ans-cell">完備 (ORCID紐付けは無し)</td></tr>
-              <tr><td class="ans-cell">publication_date</td><td class="ans-cell">出版年月日</td><td class="ans-cell ans-num">96.6%</td><td class="ans-cell">完備 (1990s〜2024)</td></tr>
-              <tr><td class="ans-cell">source</td><td class="ans-cell">掲載誌・学会名</td><td class="ans-cell ans-num">43.3%</td><td class="ans-cell">半分のみ</td></tr>
-              <tr><td class="ans-cell">firstPage / lastPage</td><td class="ans-cell">ページ番号</td><td class="ans-cell ans-num">38.6%</td><td class="ans-cell">半分以下</td></tr>
-              <tr><td class="ans-cell">conference_location</td><td class="ans-cell">学会開催地</td><td class="ans-cell ans-num">34.9%</td><td class="ans-cell">学会発表の判別に有用</td></tr>
-              <tr><td class="ans-cell">volume</td><td class="ans-cell">巻</td><td class="ans-cell ans-num">23.5%</td><td class="ans-cell">少ない</td></tr>
-              <tr><td class="ans-cell">issue</td><td class="ans-cell">号</td><td class="ans-cell ans-num">10.5%</td><td class="ans-cell">少ない</td></tr>
-              <tr><td class="ans-cell">description</td><td class="ans-cell">抄録</td><td class="ans-cell ans-num">8.3%</td><td class="ans-cell">意味検索には不十分 (※研究者単位ベクターで代替可)</td></tr>
-              <tr><td class="ans-cell">contributor_publisher</td><td class="ans-cell">出版社</td><td class="ans-cell ans-num">3.3%</td><td class="ans-cell">ほぼ無し</td></tr>
-              <tr><td class="ans-cell">title_en</td><td class="ans-cell">英文タイトル</td><td class="ans-cell ans-num">0.3%</td><td class="ans-cell">ほぼ無し</td></tr>
-              <tr><td class="ans-cell">DOI / arXiv ID / ISBN</td><td class="ans-cell">外部識別子</td><td class="ans-cell ans-num">—</td><td class="ans-cell"><strong>カラム自体が無い</strong></td></tr>
-              <tr><td class="ans-cell">全文PDF / 全文テキスト</td><td class="ans-cell">本文</td><td class="ans-cell ans-num">—</td><td class="ans-cell"><strong>カラム自体が無い</strong></td></tr>
-              <tr><td class="ans-cell">被引用数 / インパクトファクター</td><td class="ans-cell">citation metrics</td><td class="ans-cell ans-num">—</td><td class="ans-cell"><strong>カラム自体が無い</strong></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi-cell"><div class="kpi-label">TOTAL PAPERS</div><div class="kpi-value">10.5M</div></div>
-          <div class="kpi-cell"><div class="kpi-label">CONFERENCE</div><div class="kpi-value">~35%</div></div>
-          <div class="kpi-cell"><div class="kpi-label">JOURNAL</div><div class="kpi-value">~23%</div></div>
-          <div class="kpi-cell"><div class="kpi-label">OTHER</div><div class="kpi-value">~42%</div></div>
-          <div class="kpi-cell"><div class="kpi-label">YEAR RANGE</div><div class="kpi-value">1990s-2024</div></div>
+        <div class="verify-grid">
+          <a class="verify-card" href="reports/answer-verification-upr-matching.html">
+            <div class="verify-card-tag">2026-05-16 / 実機検証</div>
+            <h3 class="verify-card-title">UPRプレスリリースと kaken_researchers の照合</h3>
+            <p class="verify-card-summary">ミラツク大学プレスリリースDB (UPR) の本文から研究者氏名を抽出し、kaken_researchers (235,521件) と照合。<strong>72.5% (37/51)</strong> がマッチ。重要発見：<code>researcher_vectors.researcher_id = kaken_researchers.id</code> が正しい結合キー（ess_researcher_id ではない）。3段パイプライン (UPR→MySQL→pgvector) が成立。</p>
+            <div class="verify-card-kpi">
+              <span><strong>72.5%</strong> マッチ率</span>
+              <span><strong>235,521</strong> 研究者マスタ</span>
+              <span><strong>3段</strong> パイプライン</span>
+            </div>
+            <span class="verify-card-link">詳細レポートを読む →</span>
+          </a>
+          <a class="verify-card" href="reports/answer-verification-timeseries.html">
+            <div class="verify-card-tag">2026-05-16 / 実機計測</div>
+            <h3 class="verify-card-title">時系列情報の4層構造</h3>
+            <p class="verify-card-summary">ANSWER+ を支える時系列データを<strong>4層</strong>で実機計測。第1層: 学術業績 (kaken_histories/products 1,400万件)、第2層: ユーザー行動 (actlogs 2,170万件・5年・継続更新)、第3層: 推薦履歴 (recommend_logs 2,200万件・2年分)、第4層: ANSWER検索API実履歴 (6千件・2024-10以降)。最古2021-07、現在も更新中。</p>
+            <div class="verify-card-kpi">
+              <span><strong>4層</strong> 時系列構造</span>
+              <span><strong>4,470万+</strong> 時系列レコード</span>
+              <span><strong>5年</strong> カバー期間</span>
+            </div>
+            <span class="verify-card-link">詳細レポートを読む →</span>
+          </a>
+          <a class="verify-card" href="reports/answer-verification-paper-coverage.html">
+            <div class="verify-card-tag">2026-05-16 / 充足率実測</div>
+            <h3 class="verify-card-title">論文情報の取得粒度</h3>
+            <p class="verify-card-summary">kaken_researcher_products <strong>10,504,387件</strong>のカラム充足率を実機計測。タイトル 99.8%・著者 98.4%・publication_date 96.6% は完備。抄録 8.3%・英文タイトル 0.3%。<strong>DOI／arXiv ID／全文PDF／被引用数はカラム自体が存在しない</strong>。学会発表 35% / ジャーナル 23% / その他 42%。「研究者プロファイリング基盤」であって「引用分析基盤」ではない。</p>
+            <div class="verify-card-kpi">
+              <span><strong>10.5M</strong> 業績レコード</span>
+              <span><strong>99.8%</strong> タイトル充足率</span>
+              <span><strong>0</strong> DOI/被引用数</span>
+            </div>
+            <span class="verify-card-link">詳細レポートを読む →</span>
+          </a>
         </div>
       </section>
     </div>
