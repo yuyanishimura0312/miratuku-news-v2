@@ -29,6 +29,9 @@ initNav('databases');
       '<div class="db-overview-card"><div class="db-overview-value">' + escapeHtml(String(stats.layers)) + '</div><div class="db-overview-label">\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u5c64</div></div>' +
       '<div class="db-overview-card"><div class="db-overview-value">' + escapeHtml(String(stats.updateFrequency)) + '</div><div class="db-overview-label">\u66f4\u65b0\u983b\u5ea6</div></div>';
 
+    // \u81ea\u52d5\u66f4\u65b0\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u72b6\u614b\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9
+    renderPipelineStatus(data);
+
     var container = document.getElementById('dbLayersContent');
     var html = '';
     var layerEyebrows = { core: 'CORE', structural: 'STRUCTURAL', detection: 'DETECTION', conceptual: 'CONCEPTUAL' };
@@ -109,6 +112,63 @@ initNav('databases');
   }
 
 
+  function formatTs(ts) {
+    if (!ts) return '';
+    // ISO 8601 -> YYYY-MM-DD HH:MM (no seconds)
+    var s = String(ts).replace('T', ' ').replace(/:\d{2}(\.\d+)?([+\-Z].*)?$/, '');
+    return s;
+  }
+
+  function freshnessClass(ts) {
+    if (!ts) return 'stale';
+    var t = new Date(String(ts).replace(' ', 'T'));
+    if (isNaN(t.getTime())) return '';
+    var hoursAgo = (Date.now() - t.getTime()) / 36e5;
+    if (hoursAgo <= 36) return 'fresh';
+    if (hoursAgo <= 72) return 'warm';
+    return 'stale';
+  }
+
+  function renderPipelineStatus(data) {
+    var pipeline = data.autoUpdatePipeline;
+    var container = document.getElementById('pipelineStatus');
+    if (!container) return;
+    if (!pipeline || !pipeline.databases) {
+      container.innerHTML = '';
+      return;
+    }
+    var dbs = pipeline.databases;
+    var order = ['PE', 'CI', 'UPR', 'SGPR', 'SG'];
+    var rows = order.filter(function(k) { return dbs[k]; }).map(function(k) {
+      var d = dbs[k];
+      var ts = d.lastUpdated || d.lastChecked;
+      var cls = freshnessClass(ts);
+      var deltaTxt = '';
+      if (typeof d.lastUpdatedDelta === 'number') {
+        var sign = d.lastUpdatedDelta >= 0 ? '+' : '';
+        deltaTxt = '<span class="pipeline-delta">' + sign + d.lastUpdatedDelta.toLocaleString() + '</span>';
+      }
+      var rowsTxt = (typeof d.rows === 'number') ? d.rows.toLocaleString() : '-';
+      var verb = d.lastUpdated ? '\u66f4\u65b0' : '\u78ba\u8a8d';
+      return '<a href="#" data-db="' + escapeHtml(k) + '" class="pipeline-card pipeline-' + cls + '">' +
+        '<div class="pipeline-card-head"><span class="pipeline-id">' + escapeHtml(k) + '</span><span class="pipeline-name">' + escapeHtml(d.nameJa || '') + '</span></div>' +
+        '<div class="pipeline-card-rows">' + rowsTxt + '<span class="pipeline-card-unit">\u4ef6</span>' + deltaTxt + '</div>' +
+        '<div class="pipeline-card-ts">\u6700\u7d42' + verb + ': ' + escapeHtml(formatTs(ts) || '\u672a\u53d6\u5f97') + '</div>' +
+        '</a>';
+    }).join('');
+    var lastRunTxt = formatTs(pipeline.lastRun) || '\u672a\u5b9f\u884c';
+    container.innerHTML =
+      '<div class="pipeline-status-header">' +
+        '<div>' +
+          '<div class="pipeline-status-eyebrow">AUTO-UPDATE PIPELINE</div>' +
+          '<div class="pipeline-status-title">\u81ea\u52d5\u66f4\u65b0\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u72b6\u614b</div>' +
+          '<div class="pipeline-status-desc">' + escapeHtml(pipeline.schedule || '') + ' / \u6700\u7d42\u5b9f\u884c: <strong>' + escapeHtml(lastRunTxt) + '</strong></div>' +
+        '</div>' +
+        (pipeline.repository ? '<a href="' + safeUrl(pipeline.repository) + '" target="_blank" class="pipeline-status-link">Pipeline repo \u2192</a>' : '') +
+      '</div>' +
+      '<div class="pipeline-status-grid">' + rows + '</div>';
+  }
+
   function renderDbEntry(dbItem) {
     var meta = '';
     if (dbItem.storage) meta += '<span>' + escapeHtml(dbItem.storage) + '</span>';
@@ -116,6 +176,18 @@ initNav('databases');
     if (dbItem.tables) meta += '<span>' + escapeHtml(String(dbItem.tables)) + '\u30c6\u30fc\u30d6\u30eb</span>';
     if (dbItem.rows) meta += '<span>' + escapeHtml(dbItem.rows.toLocaleString()) + '\u884c</span>';
     if (dbItem.sizeMB) meta += '<span>' + escapeHtml(String(dbItem.sizeMB)) + 'MB</span>';
+    // \u6700\u7d42\u66f4\u65b0\u30bf\u30a4\u30e0\u30b9\u30bf\u30f3\u30d7\uff08\u81ea\u52d5\u66f4\u65b0\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u5bfe\u8c61DB\uff09
+    if (dbItem.isPipelineWatched) {
+      var pts = dbItem.lastUpdated || dbItem.lastChecked;
+      if (pts) {
+        var cls = freshnessClass(pts);
+        var verb = dbItem.lastUpdated ? '\u66f4\u65b0' : '\u78ba\u8a8d';
+        var deltaTxt = (typeof dbItem.lastUpdatedDelta === 'number')
+          ? ' <span class="pipeline-delta-inline">' + (dbItem.lastUpdatedDelta >= 0 ? '+' : '') + dbItem.lastUpdatedDelta.toLocaleString() + '</span>'
+          : '';
+        meta += '<span class="pipeline-badge pipeline-' + cls + '" title="\u81ea\u52d5\u66f4\u65b0\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u7ba1\u8f44">\u2605 \u6700\u7d42' + verb + ' ' + escapeHtml(formatTs(pts)) + deltaTxt + '</span>';
+      }
+    }
 
     // Build link list (dashboard / textbook / summary / timeline / report)
     var links = [];
