@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="KGH-DB: Knowledge Genesis History Database. 世界中の知の生成史を地域×時代×分野×主体×媒体の5軸で構造化">
+<title>KGH-DB / 知の生成史DB ダッシュボード</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "SF Mono", "Fira Code", ui-monospace, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-warm: #FF4030;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font);
+  line-height: 1.85;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  transition: background 0.2s, color 0.2s;
+}
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 48px;
+  background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px;
+  z-index: 100;
+}
+[data-theme="dark"] .top-bar { border-top-color: #E0E0E0; }
+.brand { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.05em; }
+.brand .sep { color: var(--accent-warm); margin: 0 8px; }
+.theme-toggle {
+  margin-left: auto; cursor: pointer; padding: 6px 12px;
+  background: none; border: 1px solid var(--border); color: var(--text);
+  font-size: 12px; font-family: var(--font); border-radius: 2px;
+}
+.theme-toggle:hover { background: var(--card-hover); }
+.layout {
+  display: grid; grid-template-columns: 240px 1fr;
+  max-width: 1200px; margin: 0 auto; padding-top: 48px;
+}
+.toc-sidebar {
+  position: sticky; top: 48px; height: calc(100vh - 48px);
+  border-right: 1px solid var(--border-light); padding: 32px 16px;
+  overflow-y: auto; font-size: 13px;
+}
+.toc-sidebar h3 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted); margin-bottom: 12px; font-weight: 600;
+}
+.toc-sidebar ul { list-style: none; }
+.toc-sidebar li { margin-bottom: 6px; }
+.toc-sidebar a {
+  color: var(--text-secondary); text-decoration: none;
+  display: block; padding: 4px 8px; border-radius: 2px;
+  transition: all 0.15s;
+}
+.toc-sidebar a:hover { color: var(--accent-warm); background: var(--card-hover); }
+.toc-sidebar a .num {
+  font-family: var(--font-mono); color: var(--accent-warm); margin-right: 8px;
+  font-size: 11px;
+}
+.main {
+  max-width: 760px; padding: 48px 32px 96px; margin: 0 auto;
+}
+.chapter-section {
+  margin-bottom: 64px; padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-num {
+  font-family: var(--font-mono); color: var(--accent-warm);
+  font-size: 12px; margin-bottom: 8px; letter-spacing: 0.1em;
+}
+h1 {
+  font-family: var(--font-serif); font-size: 28px; font-weight: 700;
+  margin-bottom: 16px; letter-spacing: 0.02em;
+}
+h2 {
+  font-family: var(--font-serif); font-size: 22px; font-weight: 600;
+  margin: 32px 0 16px; color: var(--text);
+}
+h3 {
+  font-size: 16px; font-weight: 600;
+  margin: 24px 0 12px; color: var(--text);
+}
+p {
+  font-family: var(--font-serif); font-size: 15px;
+  margin-bottom: 16px; text-indent: 1em;
+  color: var(--text);
+}
+p:first-of-type { text-indent: 0; }
+.lead {
+  font-size: 16px; color: var(--text-secondary);
+  margin-bottom: 24px; text-indent: 0;
+  border-left: 3px solid var(--accent-warm); padding-left: 16px;
+}
+.stat-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px; margin: 24px 0;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border-light);
+  padding: 16px; border-radius: 2px;
+}
+.stat-value {
+  font-family: var(--font-mono); font-size: 24px;
+  color: var(--accent-warm); font-weight: 700;
+}
+.stat-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-muted); margin-top: 4px;
+}
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0;
+  font-size: 13px; font-family: var(--font);
+}
+th, td {
+  text-align: left; padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+th {
+  font-weight: 600; color: var(--text-muted);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+td .source-link {
+  color: var(--accent-warm); text-decoration: none; font-size: 11px;
+}
+td .source-link:hover { text-decoration: underline; }
+.tag {
+  display: inline-block; padding: 1px 6px; font-size: 10px;
+  border: 1px solid var(--border); border-radius: 2px;
+  color: var(--text-secondary); margin-right: 4px;
+  font-family: var(--font-mono); text-transform: uppercase;
+}
+.tag-region { border-color: var(--accent-warm-soft); color: var(--accent-warm); }
+.matrix {
+  border-collapse: collapse; margin: 16px 0; font-size: 11px;
+}
+.matrix th, .matrix td {
+  border: 1px solid var(--border); padding: 4px 6px;
+  text-align: center; font-family: var(--font-mono);
+}
+.matrix td.filled { background: var(--accent-muted); color: var(--accent-warm); font-weight: 600; }
+.matrix td.empty { color: var(--text-muted); }
+.genealogy-chain {
+  font-family: var(--font-serif); padding: 12px 16px;
+  background: var(--surface); border-left: 3px solid var(--accent-warm);
+  margin: 12px 0; font-size: 14px;
+}
+.genealogy-arrow {
+  color: var(--accent-warm); font-family: var(--font-mono); margin: 0 6px;
+}
+.footnote {
+  font-size: 12px; color: var(--text-muted); margin-top: 24px;
+  border-top: 1px solid var(--border-light); padding-top: 16px;
+}
+@media print {
+  .top-bar, .toc-sidebar, .theme-toggle { display: none; }
+  .layout { grid-template-columns: 1fr; padding-top: 0; }
+  .main { max-width: 100%; padding: 0; }
+  .chapter-section { page-break-inside: avoid; }
+}
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar {
+    position: static; height: auto; border-right: none;
+    border-bottom: 1px solid var(--border-light); padding: 16px;
+  }
+  .toc-sidebar ul { display: flex; flex-wrap: wrap; gap: 8px; }
+  .toc-sidebar li { margin: 0; }
+  .main { padding: 24px 16px 64px; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="brand">KGH-DB<span class="sep">/</span>Knowledge Genesis History</span>
+  <button class="theme-toggle">Dark / Light</button>
+</div>
+<div class="layout">
+  <nav class="toc-sidebar">
+    <h3>Contents</h3>
+    <ul><li><a href="#overview"><span class="num">01</span>概観</a></li><li><a href="#matrix"><span class="num">02</span>マトリクス</a></li><li><a href="#domains"><span class="num">03</span>分野</a></li><li><a href="#regions"><span class="num">04</span>地域</a></li><li><a href="#events"><span class="num">05</span>イベント</a></li><li><a href="#chains"><span class="num">06</span>系譜</a></li><li><a href="#crossrefs"><span class="num">07</span>Cross-DB</a></li><li><a href="#wave2"><span class="num">08</span>Wave 2/3</a></li></ul>
+  </nav>
+  <main class="main">
+    
+    <section id="overview" class="chapter-section">
+      <div class="chapter-num">01 / OVERVIEW</div>
+      <h1>KGH-DB ダッシュボード</h1>
+      <p class="lead">Knowledge Genesis History Database。世界中の知の生成史を地域×時代×分野×主体×媒体の5軸で構造化し、発生点と系譜を最大解像度で追跡可能にする。本ダッシュボードは Wave 1 MVP の集計概観。</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-value">112</div><div class="stat-label">知の発生イベント</div></div>
+        <div class="stat-card"><div class="stat-value">115</div><div class="stat-label">主体（学派・機関）</div></div>
+        <div class="stat-card"><div class="stat-value">59</div><div class="stat-label">系譜リンク</div></div>
+        <div class="stat-card"><div class="stat-value">334</div><div class="stat-label">出典</div></div>
+        <div class="stat-card"><div class="stat-value">387</div><div class="stat-label">既存DB参照</div></div>
+        <div class="stat-card"><div class="stat-value">13</div><div class="stat-label">接続DB数</div></div>
+        <div class="stat-card"><div class="stat-value">11</div><div class="stat-label">文明圏カバー</div></div>
+        <div class="stat-card"><div class="stat-value">6</div><div class="stat-label">時代カバー</div></div>
+        <div class="stat-card"><div class="stat-value">88.4%</div><div class="stat-label">非西洋イベント比率</div></div>
+      </div>
+    </section>
+    
+    <section id="matrix" class="chapter-section">
+      <div class="chapter-num">02 / MATRIX</div>
+      <h1>文明圏 × 時代マトリクス</h1>
+      <p>KGH-DB は12文明圏×8時代の96セルに5軸データを配置する。数値はそのセルに記録されている知の発生イベント数。西洋偏重を構造的に回避するため、Wave 1 では非西洋セルの優先充填を行った。</p>
+      <table class="matrix"><thead><tr><th></th><th>先史</th><th>古代</th><th>古典古代</th><th>中世</th><th>初期近代</th><th>近代</th><th>現代</th><th>21世紀</th></tr></thead><tbody><tr><th style="text-align:left">アンデス</th><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="filled">2</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">中央アジア</th><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="filled">1</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">東アジア</th><td class="empty">·</td><td class="filled">2</td><td class="filled">4</td><td class="filled">7</td><td class="filled">5</td><td class="filled">2</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">イスラム圏</th><td class="empty">·</td><td class="filled">4</td><td class="filled">2</td><td class="filled">10</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">メソアメリカ</th><td class="empty">·</td><td class="empty">·</td><td class="filled">4</td><td class="filled">1</td><td class="filled">3</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">北アフリカ</th><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">北米</th><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="filled">1</td><td class="empty">·</td><td class="filled">1</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">オセアニア</th><td class="filled">1</td><td class="filled">1</td><td class="empty">·</td><td class="filled">1</td><td class="empty">·</td><td class="filled">1</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">南アジア</th><td class="empty">·</td><td class="filled">2</td><td class="filled">11</td><td class="filled">1</td><td class="filled">1</td><td class="filled">2</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">東南アジア</th><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="filled">1</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">サブサハラ</th><td class="empty">·</td><td class="filled">5</td><td class="filled">1</td><td class="filled">3</td><td class="filled">1</td><td class="filled">1</td><td class="empty">·</td><td class="empty">·</td></tr><tr><th style="text-align:left">西欧</th><td class="empty">·</td><td class="empty">·</td><td class="filled">10</td><td class="filled">7</td><td class="filled">6</td><td class="filled">7</td><td class="empty">·</td><td class="empty">·</td></tr></tbody></table>
+      <p class="footnote">凡例: 数値=event数 / ·=未充填。Wave 2 では空白セルを優先補完予定。</p>
+    </section>
+    
+    <section id="domains" class="chapter-section">
+      <div class="chapter-num">03 / DOMAINS</div>
+      <h1>6分野の均衡</h1>
+      <p>知の生成史は単一分野では追えない。哲学・科学・技術・芸術・宗教・伝統知の6分野を均衡的にカバーすることで、分野横断的な系譜（例: 哲学と数学の相互作用、宗教と芸術の交差）を可視化できる。</p>
+      <table>
+        <thead><tr><th>分野</th><th>イベント数</th></tr></thead>
+        <tbody>
+        <tr>
+          <td><span class="tag">技術・工学</span></td>
+          <td>22</td>
+        </tr>
+        <tr>
+          <td><span class="tag">哲学・思想</span></td>
+          <td>21</td>
+        </tr>
+        <tr>
+          <td><span class="tag">芸術・文芸</span></td>
+          <td>19</td>
+        </tr>
+        <tr>
+          <td><span class="tag">数学・自然科</span></td>
+          <td>18</td>
+        </tr>
+        <tr>
+          <td><span class="tag">宗教・霊性</span></td>
+          <td>16</td>
+        </tr>
+        <tr>
+          <td><span class="tag">伝統知・実践</span></td>
+          <td>16</td>
+        </tr></tbody>
+      </table>
+    </section>
+    
+    <section id="regions" class="chapter-section">
+      <div class="chapter-num">04 / REGIONS</div>
+      <h1>12文明圏の地理</h1>
+      <p>西欧中心の学術DBが多い中、KGH-DB は非西洋50%以上を Wave 1 で達成した。サブサハラ・メソアメリカ・オセアニア・アンデスの先住民知識体系を、ギリシア・中国・インドと同等の知の発生源として記録する。</p>
+      <table>
+        <thead><tr><th>文明圏</th><th>イベント数</th></tr></thead>
+        <tbody>
+        <tr>
+          <td><span class="tag tag-region">西欧</span></td>
+          <td>30</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">東アジア</span></td>
+          <td>20</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td>17</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">イスラム圏</span></td>
+          <td>16</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">サブサハラ</span></td>
+          <td>11</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">メソアメリカ</span></td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">オセアニア</span></td>
+          <td>4</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">北米</span></td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">アンデス</span></td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">東南アジア</span></td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-region">中央アジア</span></td>
+          <td>1</td>
+        </tr></tbody>
+      </table>
+    </section>
+    
+    <section id="events" class="chapter-section">
+      <div class="chapter-num">05 / EVENTS</div>
+      <h1>知の発生イベント（年代順抜粋）</h1>
+      <p>各イベントは「いつ」「どこで」「どの分野で」「誰によって」発生したかを記録する。出典は全件 Wikipedia / Wikidata / Stanford Encyclopedia of Philosophy 等の検証可能なソースに紐付く。</p>
+      <table>
+        <thead><tr><th>年</th><th>イベント</th><th>地域</th><th>時代</th><th>分野</th><th></th></tr></thead>
+        <tbody>
+        <tr>
+          <td>50000年BCE</td>
+          <td>オーストラリア先住民のソングラインと知識地図</td>
+          <td><span class="tag tag-region">オセアニア</span></td>
+          <td><span class="tag">先史</span></td>
+          <td>伝統知・実践知</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Songline" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>3000年BCE</td>
+          <td>エジプト象形文字と書記官学校の成立</td>
+          <td><span class="tag tag-region">サブサハラ</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>技術・工学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Egyptian_hieroglyphs" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>3000年BCE</td>
+          <td>メソポタミアの楔形文字と行政記録体系の成立</td>
+          <td><span class="tag tag-region">イスラム圏</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>技術・工学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Cuneiform" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>2500年BCE</td>
+          <td>インドの古代都市計画技術（モヘンジョ=ダーロ）</td>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>技術・工学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Mohenjo-daro" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>2500年BCE</td>
+          <td>アフリカ最古の哲学的伝統（古代エジプトのマアト概念）</td>
+          <td><span class="tag tag-region">サブサハラ</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>哲学・思想</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Maat" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1754年BCE</td>
+          <td>ハンムラビ法典の制定</td>
+          <td><span class="tag tag-region">イスラム圏</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>哲学・思想</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Code_of_Hammurabi" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1650年BCE</td>
+          <td>古代エジプトの数学（リンド・パピルス）</td>
+          <td><span class="tag tag-region">サブサハラ</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>数学・自然科学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Rhind_Mathematical_Papyrus" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1600年BCE</td>
+          <td>古代エジプトの医学知識（エドウィン・スミス・パピルス）</td>
+          <td><span class="tag tag-region">サブサハラ</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>数学・自然科学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Edwin_Smith_Papyrus" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1350年BCE</td>
+          <td>エジプトのアマルナ宗教改革（アクエナテン）</td>
+          <td><span class="tag tag-region">サブサハラ</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>宗教・霊性</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Akhenaten" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1200年BCE</td>
+          <td>殷周の青銅器製造技術</td>
+          <td><span class="tag tag-region">東アジア</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>技術・工学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Chinese_bronze_inscriptions" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1200年BCE</td>
+          <td>甲骨文字の使用と商代の占卜記録</td>
+          <td><span class="tag tag-region">東アジア</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>宗教・霊性</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Oracle_bone_script" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1200年BCE</td>
+          <td>ヴェーダの編纂（リグヴェーダ）</td>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>宗教・霊性</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Rigveda" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1200年BCE</td>
+          <td>ギルガメッシュ叙事詩の編纂</td>
+          <td><span class="tag tag-region">イスラム圏</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>芸術・文芸</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Epic_of_Gilgamesh" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>1000年BCE</td>
+          <td>ポリネシア人の天測航法の体系化</td>
+          <td><span class="tag tag-region">オセアニア</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>伝統知・実践知</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Polynesian_navigation" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>750年BCE</td>
+          <td>ホメロスによる叙事詩の成立</td>
+          <td><span class="tag tag-region">西欧</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>芸術・文芸</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Homer" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>750年BCE</td>
+          <td>古代ギリシアの多神教と神話体系</td>
+          <td><span class="tag tag-region">西欧</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>宗教・霊性</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Ancient_Greek_religion" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>700年BCE</td>
+          <td>東アジア最古の詩集『詩経』の編纂</td>
+          <td><span class="tag tag-region">東アジア</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>芸術・文芸</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Classic_of_Poetry" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>600年BCE</td>
+          <td>ウパニシャッドの哲学的展開</td>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>哲学・思想</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Upanishads" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>600年BCE</td>
+          <td>ヌビア（クシュ王国）の製鉄技術の確立</td>
+          <td><span class="tag tag-region">サブサハラ</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>技術・工学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Meroe" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>580年BCE</td>
+          <td>ソクラテス以前の哲学者たちによる自然哲学の開始</td>
+          <td><span class="tag tag-region">西欧</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>哲学・思想</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Pre-Socratic_philosophy" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>550年BCE</td>
+          <td>ジャイナ教の哲学体系の確立（マハーヴィーラ）</td>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>哲学・思想</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Jainism" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>528年BCE</td>
+          <td>仏教の成立とダルマの体系化（ゴータマ・ブッダ）</td>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>宗教・霊性</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Gautama_Buddha" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>500年BCE</td>
+          <td>諸子百家の形成</td>
+          <td><span class="tag tag-region">東アジア</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>哲学・思想</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Hundred_Schools_of_Thought" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>500年BCE</td>
+          <td>ベドウィンの口承詩伝統（ジャーヒリーヤ期のカシーダ）</td>
+          <td><span class="tag tag-region">イスラム圏</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>芸術・文芸</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Mu%27allaqat" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>470年BCE</td>
+          <td>古代ギリシアの劇場と悲劇・喜劇の確立</td>
+          <td><span class="tag tag-region">西欧</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>芸術・文芸</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Theatre_of_ancient_Greece" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>420年BCE</td>
+          <td>古代ギリシアの民間療法と医学の体系化（ヒポクラテス派）</td>
+          <td><span class="tag tag-region">西欧</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>伝統知・実践知</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Hippocrates" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>400年BCE</td>
+          <td>マハーバーラタ・ラーマーヤナの成文化</td>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>芸術・文芸</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Mahabharata" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>400年BCE</td>
+          <td>バビロニア天文学の発展（MUL.APIN・エフェメリス表）</td>
+          <td><span class="tag tag-region">イスラム圏</span></td>
+          <td><span class="tag">古代</span></td>
+          <td>数学・自然科学</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Babylonian_astronomy" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>380年BCE</td>
+          <td>プラトンによる対話篇群の執筆</td>
+          <td><span class="tag tag-region">西欧</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>哲学・思想</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/Plato" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        
+        <tr>
+          <td>350年BCE</td>
+          <td>パーニニによるサンスクリット文法の体系化</td>
+          <td><span class="tag tag-region">南アジア</span></td>
+          <td><span class="tag">古典古代</span></td>
+          <td>伝統知・実践知</td>
+          <td><a class="source-link" href="https://en.wikipedia.org/wiki/P%C4%81%E1%B9%87ini" target="_blank" rel="noopener">出典</a></td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+    
+    <section id="chains" class="chapter-section">
+      <div class="chapter-num">06 / CHAINS</div>
+      <h1>系譜の例（高確信度）</h1>
+      <p>20件の直接証拠リンクから抜粋。各リンクは link_type（synthesis / transmission / critical_reception / direct_citation / translation / mentor_disciple 等）と evidence_type（直接言及 / 文書参照 / 師弟関係 / 同時代推定）の2軸でラベル付けされている。</p>
+      
+        <div class="genealogy-chain">
+          <strong>プラトンによる対話篇群の執筆</strong><span class="genealogy-arrow">→ mentor_disciple →</span><strong>アリストテレスによる諸学問の体系化</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">アリストテレスはプラトンのアカデメイアで20年間学んだ後にリュケイオンを開いた</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>アリストテレスによる諸学問の体系化</strong><span class="genealogy-arrow">→ translation →</span><strong>バグダードのバイトゥル・ヒクマによる翻訳運動</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">バイトゥル・ヒクマでアリストテレス全集がアラビア語に翻訳された（9世紀）</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>バグダードのバイトゥル・ヒクマによる翻訳運動</strong><span class="genealogy-arrow">→ transmission →</span><strong>スコラ哲学の確立（トマス・アクィナス『神学大全』）</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">アヴェロエス・アヴィセンナ等のアラビア哲学注解がトレド翻訳学派経由でアクィナスに伝わる</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>ヴェーダの編纂（リグヴェーダ）</strong><span class="genealogy-arrow">→ synthesis →</span><strong>ウパニシャッドの哲学的展開</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">ウパニシャッドはヴェーダの祭祀主義から内省的形而上学へと展開した直接の継承</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>仏教の成立とダルマの体系化（ゴータマ・ブッダ）</strong><span class="genealogy-arrow">→ transmission →</span><strong>ナーランダー大学の設立と仏教学術センターの形成</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">ナーランダー大学は仏教学術センターとして釈尊のダルマを学問体系化</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>仏教の成立とダルマの体系化（ゴータマ・ブッダ）</strong><span class="genealogy-arrow">→ transmission →</span><strong>東アジアの仏教経典翻訳（玄奘）</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">玄奘の仏典翻訳事業はナーランダーの仏教知識を中国へ移植</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>明治維新後の日本における西洋知識の体系的輸入</strong><span class="genealogy-arrow">→ synthesis →</span><strong>東アジアの近代科学の受容（日本の帝国大学体制）</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">帝国大学体制は明治維新後の西洋知識体系的輸入の制度化</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>コーランの啓示とイスラム知識観の確立</strong><span class="genealogy-arrow">→ direct_citation →</span><strong>イスラム法学（フィクフ）の体系化</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">イスラム法学（フィクフ）はクルアーンとハディースの解釈学として成立</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>ユークリッドによる幾何学原論の編纂</strong><span class="genealogy-arrow">→ translation →</span><strong>バグダードのバイトゥル・ヒクマによる翻訳運動</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">ユークリッド『原論』はバイトゥル・ヒクマでアラビア語に翻訳された</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>バグダードのバイトゥル・ヒクマによる翻訳運動</strong><span class="genealogy-arrow">→ direct_citation →</span><strong>アル=フワーリズミーによる代数学の体系化</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">アル=フワーリズミーはバイトゥル・ヒクマで活動した学者</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>アル=フワーリズミーによる代数学の体系化</strong><span class="genealogy-arrow">→ transmission →</span><strong>西欧中世の大学制度確立（パリ大学・オックスフォード大学）</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">12世紀トレド翻訳学派でフワーリズミー著作がラテン語化されヨーロッパ大学で標準教科書化</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>イブン・スィーナーによる医学典範の編纂</strong><span class="genealogy-arrow">→ transmission →</span><strong>西欧中世の大学制度確立（パリ大学・オックスフォード大学）</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">イブン・スィーナー『医学典範』はラテン語訳されヨーロッパ大学医学部の標準教科書に</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>グーテンベルクによる活版印刷の実用化</strong><span class="genealogy-arrow">→ direct_citation →</span><strong>ルターによる宗教改革の開始</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">グーテンベルク印刷はルター宗教改革の大衆化を可能にした技術的前提</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>コペルニクスによる地動説の提唱</strong><span class="genealogy-arrow">→ synthesis →</span><strong>ニュートンによる自然哲学の数学的原理の完成</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">ニュートン『プリンキピア』はコペルニクス・ケプラー・ガリレオの宇宙論を統合した</div>
+        </div>
+        
+        <div class="genealogy-chain">
+          <strong>スコラ哲学の確立（トマス・アクィナス『神学大全』）</strong><span class="genealogy-arrow">→ synthesis →</span><strong>西欧中世の大学制度確立（パリ大学・オックスフォード大学）</strong>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:6px">スコラ哲学はパリ大学・オックスフォード大学の中世ヨーロッパ大学制度を方法論的に成立させた</div>
+        </div>
+        
+    </section>
+    
+    <section id="crossrefs" class="chapter-section">
+      <div class="chapter-num">07 / CROSS-DB</div>
+      <h1>既存64+DBとの統合</h1>
+      <p>KGH-DB は単独のDBではない。既存の Great Figures DB、Era Talents DB、Phil-DB、LIT-DB、MG-DB、Anthropology DB、Traditional Knowledge DB、Myth Narratives DB 等への参照を 387件、13個のDBに対して構築している。これにより「ナーガールジュナという人物（Great Figures）」と「空の哲学という概念（Phil）」と「ナーランダー大学という機関（KGH agents）」が一貫した知の生態系として参照可能になる。</p>
+      <table>
+        <thead><tr><th>接続先DB</th><th>参照数</th><th>最高確信度</th></tr></thead>
+        <tbody>
+        <tr><td>traditional_knowledge</td><td>89</td><td>95%</td></tr>
+        <tr><td>anthropology</td><td>49</td><td>85%</td></tr>
+        <tr><td>great_figures</td><td>46</td><td>85%</td></tr>
+        <tr><td>tech_acceleration</td><td>40</td><td>40%</td></tr>
+        <tr><td>phil</td><td>25</td><td>95%</td></tr>
+        <tr><td>cdh</td><td>23</td><td>95%</td></tr>
+        <tr><td>mg</td><td>22</td><td>85%</td></tr>
+        <tr><td>in</td><td>20</td><td>95%</td></tr>
+        <tr><td>lit</td><td>20</td><td>95%</td></tr>
+        <tr><td>poetics</td><td>20</td><td>95%</td></tr>
+        <tr><td>myth_narratives</td><td>18</td><td>95%</td></tr>
+        <tr><td>cla</td><td>14</td><td>40%</td></tr>
+        <tr><td>cti_v2</td><td>1</td><td>90%</td></tr></tbody>
+      </table>
+    </section>
+    
+    <section id="wave2" class="chapter-section">
+      <div class="chapter-num">08 / NEXT</div>
+      <h1>Wave 2/3 展望</h1>
+      <p>Wave 1 は方法論検証としての MVP。Wave 2 では系譜リンク密度を倍化（現状 0.5 → 1.0+）し、空白文明圏（中央アジア・東南アジア・北米先住民）を優先補完する。media_propagation_links テーブルを新設し、知の伝播における媒体の役割（口承 → 写本 → 印刷 → デジタル）を可視化する。</p>
+      <p>Wave 3 では citation_chains テーブルで多段引用チェーン（例: アリストテレス → イブン・スィーナー → アクィナス → デカルト → カント）を追跡し、10,000+ events 規模へ拡張する。Great Figures DB との双方向 cross_ref も自動マッピングする。</p>
+    </section>
+    
+    <p class="footnote">Generated by /db-master Tier 0. Wave 1 MVP. 2026-05-15. NPO法人ミラツク × esse-sense Inc.</p>
+  </main>
+</div>
+
+<script>
+(function(){
+  const saved = localStorage.getItem('kgh-theme');
+  if (saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
+  function toggle(){
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    if (next === 'dark') document.documentElement.setAttribute('data-theme','dark');
+    else document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('kgh-theme', next);
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    const btn = document.querySelector('.theme-toggle');
+    if (btn) btn.addEventListener('click', toggle);
+  });
+})();
+</script>
+
+</body>
+</html>
