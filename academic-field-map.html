@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学術領域MAP — ANSWERデータベース | Insight News</title>
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/shared/firebase-config.js"></script>
+  <style>
+    .page-lead {
+      font-size: 0.94rem; color: var(--text-secondary); line-height: 1.9;
+      margin: 10px 0 22px; max-width: 820px;
+    }
+    .page-meta {
+      display: flex; flex-wrap: wrap; gap: 22px;
+      font-size: 0.74rem; color: var(--text-muted);
+      padding: 16px 0; border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px; letter-spacing: 0.02em;
+    }
+    .page-meta strong { color: var(--text); font-weight: 800; font-size: 0.92rem; }
+    .kpi-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: var(--surface); margin: 0 0 24px;
+    }
+    .kpi-cell { padding: 16px 18px; border-right: 1px solid var(--border); }
+    .kpi-cell:last-child { border-right: none; }
+    .kpi-label {
+      font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-family: var(--font-serif); font-size: 1.5rem; font-weight: 900;
+      color: var(--text); line-height: 1.15;
+    }
+    .fmap-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); margin: 0 0 32px;
+    }
+    .fmap-card {
+      background: var(--card); padding: 16px 18px;
+      text-decoration: none; color: var(--text);
+      transition: all 0.15s; display: block;
+    }
+    .fmap-card:hover {
+      background: var(--card-hover);
+      box-shadow: inset 0 0 0 2px var(--accent-warm);
+    }
+    .fmap-card-head {
+      display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px;
+    }
+    .fmap-code {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 0.7rem; color: var(--accent-warm);
+      letter-spacing: 0.06em; font-weight: 700;
+    }
+    .fmap-name {
+      font-family: var(--font-serif); font-size: 1.05rem; font-weight: 900;
+      color: var(--text);
+    }
+    .fmap-card-stats {
+      display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px;
+    }
+    .fmap-stat-big {
+      font-family: var(--font-serif); font-size: 1.8rem; font-weight: 900;
+      color: var(--accent-warm); line-height: 1;
+    }
+    .fmap-stat-label {
+      font-size: 0.7rem; color: var(--text-muted);
+    }
+    .fmap-card-sub {
+      font-size: 0.74rem; color: var(--text-secondary); margin-top: 4px;
+    }
+    .fmap-card-sub strong { color: var(--text); font-weight: 700; }
+    .fmap-2col {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      margin: 18px 0;
+    }
+    .fmap-col-title {
+      font-family: var(--font-serif); font-size: 1.0rem; font-weight: 900;
+      margin: 0 0 10px; color: var(--accent-warm);
+      padding-bottom: 6px; border-bottom: 1px solid var(--border);
+    }
+    .ans-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .ans-head {
+      text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--text);
+      font-weight: 800; color: var(--text); background: var(--surface);
+    }
+    .ans-head.ans-num { text-align: right; }
+    .ans-cell { padding: 7px 10px; border-bottom: 1px solid var(--border-light); }
+    .ans-cell.ans-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .fmap-code-inline {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 0.7rem; color: var(--accent-warm);
+      letter-spacing: 0.06em; margin-left: 8px; vertical-align: middle;
+    }
+    .fmap-keywords {
+      font-size: 0.78rem; color: var(--text-muted); margin-top: 14px;
+      padding: 10px 12px; background: var(--surface);
+      border-left: 3px solid var(--accent-warm);
+    }
+    .fmap-keywords code {
+      font-family: inherit; color: var(--text-secondary);
+    }
+    .fmap-method {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 22px 24px; margin: 0 0 32px;
+    }
+    .fmap-method h3 {
+      font-family: var(--font-serif); font-size: 1.05rem; font-weight: 900;
+      margin: 0 0 12px; color: var(--accent-warm);
+    }
+    .fmap-method p {
+      font-size: 0.88rem; line-height: 1.9; margin: 0 0 10px;
+      color: var(--text-secondary);
+    }
+    .fmap-back {
+      display: inline-block; margin: 0 0 18px;
+      font-size: 0.82rem; color: var(--accent-warm); text-decoration: none;
+      padding: 6px 12px; border: 1px solid var(--accent-warm);
+    }
+    .fmap-back:hover { background: var(--accent-warm); color: white; }
+    @media (max-width: 800px) {
+      .fmap-2col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-nav"></div>
+  <div id="app-content">
+    <div class="container">
+      <section class="app-section">
+        <a class="fmap-back" href="answer.html">← ANSWER データベース</a>
+        <div class="section-header">
+          <h1 class="section-title">学術領域MAP</h1>
+          <span class="section-subtitle">日本最大の研究者DB (235,521名 / KAKEN由来) を 30 の学術領域へマッピング</span>
+        </div>
+        <p class="page-lead">
+          KAKEN 由来の研究者プロファイル 235,521 件に対し、各研究者の <code>research_theme</code>（一文テーマ）と <code>research_theme_summary</code>（平易解説）のテキストに、30 の学術領域それぞれが持つ識別キーワード辞書を照合し、マルチラベルでの紐付けを行った結果である。各領域における該当人数、所属大学・学位取得大学の上位ランキング、代表研究テーマを一覧できる構造とした。元データの esse-sense MySQL/PostgreSQL は一切変更せず、独立 SQLite に出力したものを本ページに静的展開している。
+        </p>
+        <div class="page-meta">
+          <span><strong>235,521</strong> 研究者</span>
+          <span>カバー率 <strong>89.7%</strong> (211,345)</span>
+          <span><strong>30</strong> 学術領域</span>
+          <span><strong>450,965</strong> 紐付け</span>
+          <span>平均 <strong>2.13</strong> ラベル/人</span>
+          <span>方法 <strong>B-theme</strong></span>
+          <span>辞書 <strong>v0.1-2026-05-16</strong></span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">235,521</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELDS</div><div class="kpi-value">30</div></div>
+          <div class="kpi-cell"><div class="kpi-label">ASSIGNMENTS</div><div class="kpi-value">450,965</div></div>
+          <div class="kpi-cell"><div class="kpi-label">COVERAGE</div><div class="kpi-value">89.7%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">AVG LABELS</div><div class="kpi-value">2.13</div></div>
+        </div>
+      </section>
+
+      <section class="app-section">
+        <div class="section-header">
+          <h2 class="section-title">領域別 研究者数 一覧</h2>
+          <span class="section-subtitle">人数の多い順 ／ カードクリックで詳細セクションへ移動</span>
+        </div>
+        <div class="fmap-grid">
+        <a class="fmap-card" href="#field-BIO">
+          <div class="fmap-card-head">
+            <span class="fmap-code">BIO</span>
+            <span class="fmap-name">生物学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">88,790</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>65,964</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-MED">
+          <div class="fmap-card-head">
+            <span class="fmap-code">MED</span>
+            <span class="fmap-name">医学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">66,685</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>22,983</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ENG_INFO">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ENG_INFO</span>
+            <span class="fmap-name">情報工学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">37,013</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>13,687</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-MATH">
+          <div class="fmap-card-head">
+            <span class="fmap-code">MATH</span>
+            <span class="fmap-name">数学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">35,383</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>6,582</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ENG_MAT">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ENG_MAT</span>
+            <span class="fmap-name">材料工学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">28,053</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>12,570</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ENERGY">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ENERGY</span>
+            <span class="fmap-name">エネルギー・環境</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">23,639</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>4,448</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ENG_CIVIL">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ENG_CIVIL</span>
+            <span class="fmap-name">土木・建築</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">17,160</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>3,778</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-MG">
+          <div class="fmap-card-head">
+            <span class="fmap-code">MG</span>
+            <span class="fmap-name">経営学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">16,461</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>10,842</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-SS_PSY">
+          <div class="fmap-card-head">
+            <span class="fmap-code">SS_PSY</span>
+            <span class="fmap-name">心理学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">15,963</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>9,479</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-HIST">
+          <div class="fmap-card-head">
+            <span class="fmap-code">HIST</span>
+            <span class="fmap-name">歴史学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">14,880</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>4,897</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-SS_EDU">
+          <div class="fmap-card-head">
+            <span class="fmap-code">SS_EDU</span>
+            <span class="fmap-name">教育学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">14,839</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>8,922</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-CHEM">
+          <div class="fmap-card-head">
+            <span class="fmap-code">CHEM</span>
+            <span class="fmap-name">化学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">14,208</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>7,758</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-SS_SOC">
+          <div class="fmap-card-head">
+            <span class="fmap-code">SS_SOC</span>
+            <span class="fmap-name">社会学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">13,714</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>10,097</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-AGRI">
+          <div class="fmap-card-head">
+            <span class="fmap-code">AGRI</span>
+            <span class="fmap-name">農学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">9,792</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>2,981</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-PHYS">
+          <div class="fmap-card-head">
+            <span class="fmap-code">PHYS</span>
+            <span class="fmap-name">物理学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">8,333</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>5,045</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ART_DESIGN">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ART_DESIGN</span>
+            <span class="fmap-name">芸術・デザイン</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">7,533</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>2,726</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ENG_MECH">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ENG_MECH</span>
+            <span class="fmap-name">機械工学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">7,281</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>909</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ENG_ELEC">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ENG_ELEC</span>
+            <span class="fmap-name">電気電子工学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">6,669</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>2,141</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-EARTH">
+          <div class="fmap-card-head">
+            <span class="fmap-code">EARTH</span>
+            <span class="fmap-name">地球科学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">6,104</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>2,165</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-NURS">
+          <div class="fmap-card-head">
+            <span class="fmap-code">NURS</span>
+            <span class="fmap-name">看護学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">5,281</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>4,307</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-LIT">
+          <div class="fmap-card-head">
+            <span class="fmap-code">LIT</span>
+            <span class="fmap-name">文学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">4,076</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>3,376</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-SS_ECON">
+          <div class="fmap-card-head">
+            <span class="fmap-code">SS_ECON</span>
+            <span class="fmap-name">経済学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">2,217</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>1,399</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-SS_POL">
+          <div class="fmap-card-head">
+            <span class="fmap-code">SS_POL</span>
+            <span class="fmap-name">政治学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">1,997</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>1,398</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-PHIL">
+          <div class="fmap-card-head">
+            <span class="fmap-code">PHIL</span>
+            <span class="fmap-name">哲学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">1,430</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>1,238</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-LING">
+          <div class="fmap-card-head">
+            <span class="fmap-code">LING</span>
+            <span class="fmap-name">言語学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">1,153</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>307</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-SS_LAW">
+          <div class="fmap-card-head">
+            <span class="fmap-code">SS_LAW</span>
+            <span class="fmap-name">法学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">944</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>560</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ANTH">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ANTH</span>
+            <span class="fmap-name">人類学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">894</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>763</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-SG">
+          <div class="fmap-card-head">
+            <span class="fmap-code">SG</span>
+            <span class="fmap-name">戦略学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">236</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>5</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-INFO_LIB">
+          <div class="fmap-card-head">
+            <span class="fmap-code">INFO_LIB</span>
+            <span class="fmap-name">図書館情報学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">179</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>6</strong></span>
+          </div>
+        </a>
+        <a class="fmap-card" href="#field-ENG_CHEM">
+          <div class="fmap-card-head">
+            <span class="fmap-code">ENG_CHEM</span>
+            <span class="fmap-name">化学工学</span>
+          </div>
+          <div class="fmap-card-stats">
+            <span class="fmap-stat-big">58</span>
+            <span class="fmap-stat-label">研究者数（重複含む）</span>
+          </div>
+          <div class="fmap-card-sub">
+            <span>top-1判定: <strong>12</strong></span>
+          </div>
+        </a>
+        </div>
+      </section>
+
+      <section class="app-section">
+        <div class="section-header">
+          <h2 class="section-title">方法と読み方</h2>
+          <span class="section-subtitle">トライアル v0.1 検証で採択された「theme バリアント」を全件適用</span>
+        </div>
+        <div class="fmap-method">
+          <h3>マッピング手法</h3>
+          <p>本マップは 1,000 名ランダムサンプルによるトライアル検証（4 バリアント比較）の結果、最もバランスのよい <strong>theme バリアント</strong> を全 235,521 名に適用したものである。各研究者の研究テーマ短文と平易解説のみを入力テキストとし、30 領域の識別キーワードとの単純カウントマッチでスコア化、得点が 1 以上のすべての領域を紐付けた。トライアル時の検証では、KAKEN の粗分類（生物系・医学・理工系等）に対する top-1 整合率 90.6%、平均ラベル数 2.16/人を達成している。</p>
+          <h3>カラムの意味</h3>
+          <p><strong>研究者数（重複含む）</strong>は当該領域に紐付いた研究者の総数（複数領域に該当する研究者は各領域でカウントされる、平均 1.91 領域/人）。<strong>top-1判定</strong>は当該領域がその研究者のもっとも高いスコアであった件数で、その人にとっての主たる学術領域とみなせる。所属大学の TOP10 は現在の所属、学位取得大学の TOP10 は履歴中の博士課程・大学院在籍記録（明示 1,755 名）と最古履歴からの推定（推定 233,762 名）を統合した結果である。</p>
+          <h3>注意点</h3>
+          <p>識別キーワード辞書は v0.1 であり、特に化学・生物学・医学・工学諸領域は語彙の網羅性が不十分な可能性がある。MATH（数学）が大きく見えるのは、数理・統計・モデルといった語が他領域でも頻出するためで、純粋数学者は top-1 判定 6,582 名のほうが実態に近い。次サイクル v0.2 では領域カタログ語彙の体系的拡張、IDF 重み付け、ベクトル類似度との統合を予定している。</p>
+        </div>
+      </section>
+
+      <section class="app-section" id="field-BIO">
+        <div class="section-header">
+          <h2 class="section-title">生物学 <span class="fmap-code-inline">BIO</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>88,790</strong> 名（top-1 判定 65,964 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">88,790</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">65,964</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">BIO</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">1,959</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">1,685</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">1,611</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">1,111</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">1,110</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">1,104</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">928</td></tr>
+          <tr><td class="ans-cell">順天堂大学</td><td class="ans-cell ans-num">868</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">863</td></tr>
+          <tr><td class="ans-cell">岡山大学</td><td class="ans-cell ans-num">694</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">4,925</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">3,517</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">3,461</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">2,643</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">2,522</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">2,239</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">1,882</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">1,858</td></tr>
+          <tr><td class="ans-cell">岡山大学</td><td class="ans-cell ans-num">1,376</td></tr>
+          <tr><td class="ans-cell">東京医科歯科大学</td><td class="ans-cell ans-num">1,319</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">佐藤 矩行</td><td class="ans-cell">沖縄科学技術大学院大学</td><td class="ans-cell">脊索動物の進化と生物多様性の理解</td></tr>
+          <tr><td class="ans-cell">川出 健介</td><td class="ans-cell">埼玉大学</td><td class="ans-cell">植物の代謝と成長制御の分子メカニズム解明</td></tr>
+          <tr><td class="ans-cell">嶋田 正和</td><td class="ans-cell">東京大学</td><td class="ans-cell">生態学と進化生物学で解く多様性維持の謎</td></tr>
+          <tr><td class="ans-cell">日下部 岳広</td><td class="ans-cell">甲南大学</td><td class="ans-cell">脳の発生と遺伝子制御で進化を解明する研究</td></tr>
+          <tr><td class="ans-cell">平良 眞規</td><td class="ans-cell">中央大学</td><td class="ans-cell">ゲノム融合と胚発生の分子メカニズム解明</td></tr>
+          <tr><td class="ans-cell">平井 百樹</td><td class="ans-cell"></td><td class="ans-cell">環境遺伝学で解く都市公害の健康影響</td></tr>
+          <tr><td class="ans-cell">山岸 明彦</td><td class="ans-cell"></td><td class="ans-cell">宇宙環境と生命起源の分子進化研究</td></tr>
+          <tr><td class="ans-cell">大嶋 孝之</td><td class="ans-cell">東京家政学院大学</td><td class="ans-cell">電気パルスで進化させる発酵と細胞機能</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>生物学,分子生物,細胞,遺伝子,発生,進化,生態学,微生物,植物,動物,ゲノム,タンパク質</code></p>
+      </section>
+      <section class="app-section" id="field-MED">
+        <div class="section-header">
+          <h2 class="section-title">医学 <span class="fmap-code-inline">MED</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>66,685</strong> 名（top-1 判定 22,983 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">66,685</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">22,983</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">MED</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">1,263</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">1,179</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">1,115</td></tr>
+          <tr><td class="ans-cell">順天堂大学</td><td class="ans-cell ans-num">847</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">811</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">777</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">755</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">713</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">627</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">545</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">3,158</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">2,616</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">2,209</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">1,884</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">1,773</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">1,538</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">1,529</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">1,237</td></tr>
+          <tr><td class="ans-cell">東京医科歯科大学</td><td class="ans-cell ans-num">1,043</td></tr>
+          <tr><td class="ans-cell">千葉大学</td><td class="ans-cell ans-num">1,026</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">小野 憲一郎</td><td class="ans-cell"></td><td class="ans-cell">ミトコンドリア損傷と免疫制御による加齢疾患克服</td></tr>
+          <tr><td class="ans-cell">川本 進</td><td class="ans-cell"></td><td class="ans-cell">低酸素環境適応と細胞周期制御による病原真菌制御</td></tr>
+          <tr><td class="ans-cell">中山 絵里</td><td class="ans-cell">国立健康危機管理研究機構</td><td class="ans-cell">免疫応答の仕組み解明で感染症を制御する</td></tr>
+          <tr><td class="ans-cell">新井 義文</td><td class="ans-cell"></td><td class="ans-cell">赤ちゃんの感染症が引き起こす難聴のしくみ解明</td></tr>
+          <tr><td class="ans-cell">大畑 建治</td><td class="ans-cell">大阪公立大学</td><td class="ans-cell">医工連携で実現する安全な脳手術止血剤</td></tr>
+          <tr><td class="ans-cell">齋藤 広幸</td><td class="ans-cell">大阪大学</td><td class="ans-cell">幹細胞と免疫療法で挑む難治性小児疾患</td></tr>
+          <tr><td class="ans-cell">冨田 祐介</td><td class="ans-cell">岡山大学</td><td class="ans-cell">免疫療法で挑む小児難治性脳腫瘍治療</td></tr>
+          <tr><td class="ans-cell">中山 駿矢</td><td class="ans-cell">日本大学</td><td class="ans-cell">脂質の仕組みで免疫調節と脳腫瘍治療を目指す</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>医学,臨床,免疫,がん,感染症,外科,内科,病理,薬理,脳,神経,循環器,公衆衛生</code></p>
+      </section>
+      <section class="app-section" id="field-ENG_INFO">
+        <div class="section-header">
+          <h2 class="section-title">情報工学 <span class="fmap-code-inline">ENG_INFO</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>37,013</strong> 名（top-1 判定 13,687 名）／ ミラツク学術DB対応: ai-development</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">37,013</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">13,687</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ENG_INFO</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">1,262</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">761</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">746</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">568</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">482</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">478</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">456</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">439</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">410</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">404</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">2,477</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">1,428</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">1,361</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">1,104</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">895</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">796</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">753</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">644</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">584</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">557</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">榎原 博之</td><td class="ans-cell">関西大学</td><td class="ans-cell">AIで解く複雑問題と災害支援ネットワーク</td></tr>
+          <tr><td class="ans-cell">弘中 哲夫</td><td class="ans-cell">広島市立大学</td><td class="ans-cell">深層学習で拓く高性能再構成型プロセッサ</td></tr>
+          <tr><td class="ans-cell">清水 謙多郎</td><td class="ans-cell">日本女子大学</td><td class="ans-cell">深層学習と分子結合予測によるタンパク質設計</td></tr>
+          <tr><td class="ans-cell">高橋 規一</td><td class="ans-cell">岡山大学</td><td class="ans-cell">分散最適化とニューラルネットワーク安定性の研究</td></tr>
+          <tr><td class="ans-cell">篠田 正人</td><td class="ans-cell">奈良女子大学</td><td class="ans-cell">ゲーム理論で拓くAI最適化評価</td></tr>
+          <tr><td class="ans-cell">信川 創</td><td class="ans-cell">千葉工業大学</td><td class="ans-cell">神経ネットワークの動きを活用した早期診断AI</td></tr>
+          <tr><td class="ans-cell">早川 吉弘</td><td class="ans-cell"></td><td class="ans-cell">未観測データ推定と高速学習で拓くAI未来</td></tr>
+          <tr><td class="ans-cell">安田 宗樹</td><td class="ans-cell">山形大学</td><td class="ans-cell">AIの透明性を深層学習理論で高める</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>情報,計算機,アルゴリズム,機械学習,深層学習,人工知能,AI,ソフトウェア,ネットワーク,セキュリティ,データベース,計算機科学</code></p>
+      </section>
+      <section class="app-section" id="field-MATH">
+        <div class="section-header">
+          <h2 class="section-title">数学 <span class="fmap-code-inline">MATH</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>35,383</strong> 名（top-1 判定 6,582 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">35,383</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">6,582</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">MATH</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">1,025</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">812</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">672</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">526</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">485</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">434</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">410</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">394</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">296</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">290</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">2,279</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">1,602</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">1,318</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">1,134</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">1,063</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">822</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">812</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">547</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">546</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">536</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">濱田 雄策</td><td class="ans-cell"></td><td class="ans-cell">複素数の手法で解く偏微分方程式の構造</td></tr>
+          <tr><td class="ans-cell">上野 健爾</td><td class="ans-cell">東京都立大学</td><td class="ans-cell">モジュライ空間と共形場理論の融合</td></tr>
+          <tr><td class="ans-cell">徳永 浩雄</td><td class="ans-cell">東京都立大学</td><td class="ans-cell">Galois理論と代数幾何の融合</td></tr>
+          <tr><td class="ans-cell">諏訪 立雄</td><td class="ans-cell">北海道大学</td><td class="ans-cell">特異点を持つ空間の留数理論による構造解析</td></tr>
+          <tr><td class="ans-cell">藤本 坦孝</td><td class="ans-cell"></td><td class="ans-cell">複素解析と幾何学的値分布の新理論創出</td></tr>
+          <tr><td class="ans-cell">須川 敏幸</td><td class="ans-cell">東北大学</td><td class="ans-cell">曲面の距離解析で拓く関数理論の基礎</td></tr>
+          <tr><td class="ans-cell">福田 拓生</td><td class="ans-cell"></td><td class="ans-cell">特異点理論と数論的代数幾何学による構造解析</td></tr>
+          <tr><td class="ans-cell">森脇 淳</td><td class="ans-cell">中部大学</td><td class="ans-cell">数の性質を幾何的に解明する研究</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>数学,代数,幾何,解析,トポロジー,確率論,統計学,数理,離散数学,数論</code></p>
+      </section>
+      <section class="app-section" id="field-ENG_MAT">
+        <div class="section-header">
+          <h2 class="section-title">材料工学 <span class="fmap-code-inline">ENG_MAT</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>28,053</strong> 名（top-1 判定 12,570 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">28,053</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">12,570</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ENG_MAT</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">694</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">670</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">651</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell ans-num">619</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">580</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">473</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人物質・材料研究機構</td><td class="ans-cell ans-num">401</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">399</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">383</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">331</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">1,836</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">1,805</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">1,327</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">1,306</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">938</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">886</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">816</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">745</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">403</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">347</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">石田 洋一</td><td class="ans-cell"></td><td class="ans-cell">カーボンナノ材料と界面科学による革新的複合材料開発</td></tr>
+          <tr><td class="ans-cell">大城 桂作</td><td class="ans-cell"></td><td class="ans-cell">結晶成長制御による高機能材料の開発</td></tr>
+          <tr><td class="ans-cell">伊藤 邦夫</td><td class="ans-cell"></td><td class="ans-cell">ナノ複合材料による高性能軽量化技術の開発</td></tr>
+          <tr><td class="ans-cell">森 博太郎</td><td class="ans-cell"></td><td class="ans-cell">ナノ粒子の熱力学的安定性と相変態制御</td></tr>
+          <tr><td class="ans-cell">鈴木 達</td><td class="ans-cell">国立研究開発法人物質・材料研究機構</td><td class="ans-cell">磁場制御による多価イオン伝導材料の開発</td></tr>
+          <tr><td class="ans-cell">越崎 直人</td><td class="ans-cell"></td><td class="ans-cell">短時間加熱でつくる高機能ナノ材料</td></tr>
+          <tr><td class="ans-cell">屋代 如月</td><td class="ans-cell">岐阜大学</td><td class="ans-cell">ナノ材料科学で拓く高信頼性材料設計</td></tr>
+          <tr><td class="ans-cell">佐治 哲夫</td><td class="ans-cell"></td><td class="ans-cell">高硬度複合皮膜と界面活性剤制御による革新的薄膜技術</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>材料,結晶,金属,セラミックス,薄膜,ナノ材料,複合材料,界面,格子</code></p>
+      </section>
+      <section class="app-section" id="field-ENERGY">
+        <div class="section-header">
+          <h2 class="section-title">エネルギー・環境 <span class="fmap-code-inline">ENERGY</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>23,639</strong> 名（top-1 判定 4,448 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">23,639</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">4,448</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ENERGY</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">781</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">637</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">538</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">501</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">455</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell ans-num">428</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">359</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">349</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">311</td></tr>
+          <tr><td class="ans-cell">大阪公立大学</td><td class="ans-cell ans-num">221</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">1,749</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">1,223</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">1,213</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">929</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">846</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">688</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">662</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">641</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">356</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">316</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">竹下 貴之</td><td class="ans-cell">長崎大学</td><td class="ans-cell">地域特性を活かした脱炭素エネルギーモデリング</td></tr>
+          <tr><td class="ans-cell">大島 堅一</td><td class="ans-cell">龍谷大学</td><td class="ans-cell">地域分散型エネルギーで実現する脱炭素社会</td></tr>
+          <tr><td class="ans-cell">高嶋 隆太</td><td class="ans-cell">東京理科大学</td><td class="ans-cell">脱炭素化とエネルギーミックス最適化の追求</td></tr>
+          <tr><td class="ans-cell">小泉 武昭</td><td class="ans-cell">静岡理工科大学</td><td class="ans-cell">電気の力でCO2を燃料に変える技術開発</td></tr>
+          <tr><td class="ans-cell">小宮山 涼一</td><td class="ans-cell">東京大学</td><td class="ans-cell">エネルギーシステム最適化で実現する脱炭素社会</td></tr>
+          <tr><td class="ans-cell">増原 直樹</td><td class="ans-cell">兵庫県立大学</td><td class="ans-cell">地域環境政策と市民参加で拓く脱炭素社会</td></tr>
+          <tr><td class="ans-cell">小尾 美千代</td><td class="ans-cell">南山大学</td><td class="ans-cell">政治的対立を乗り越えた脱炭素化推進の戦略</td></tr>
+          <tr><td class="ans-cell">船津 麻美</td><td class="ans-cell">長岡技術科学大学</td><td class="ans-cell">CO2還元とナノ材料でつくる脱炭素社会</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>エネルギー,環境工学,再生可能,太陽電池,燃料電池,原子力,風力,脱炭素,気候変動,二酸化炭素</code></p>
+      </section>
+      <section class="app-section" id="field-ENG_CIVIL">
+        <div class="section-header">
+          <h2 class="section-title">土木・建築 <span class="fmap-code-inline">ENG_CIVIL</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>17,160</strong> 名（top-1 判定 3,778 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">17,160</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">3,778</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ENG_CIVIL</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">528</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">432</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">361</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">302</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">251</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">238</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">218</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell ans-num">206</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">191</td></tr>
+          <tr><td class="ans-cell">大阪公立大学</td><td class="ans-cell ans-num">171</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">1,264</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">965</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">726</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">704</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">467</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">454</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">453</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">442</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">260</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">257</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">千田 嘉博</td><td class="ans-cell">名古屋市立大学</td><td class="ans-cell">学融合で解き明かす中世の城と町の構造</td></tr>
+          <tr><td class="ans-cell">土本 俊和</td><td class="ans-cell">信州大学</td><td class="ans-cell">歴史的都市形成と文化遺産活用の融合</td></tr>
+          <tr><td class="ans-cell">三浦 要一</td><td class="ans-cell">高知県立大学</td><td class="ans-cell">文化財保存と建築史に基づく歴史建造物修復</td></tr>
+          <tr><td class="ans-cell">安高 尚毅</td><td class="ans-cell">小山工業高等専門学校</td><td class="ans-cell">建築史と都市計画で支える地域文化継承</td></tr>
+          <tr><td class="ans-cell">成田 剛</td><td class="ans-cell"></td><td class="ans-cell">東南アジア建築史に基づく文化遺産保存の革新</td></tr>
+          <tr><td class="ans-cell">米田 純</td><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell">3D構造フィルターで土木インフラの安全性革新</td></tr>
+          <tr><td class="ans-cell">尼田 正男</td><td class="ans-cell"></td><td class="ans-cell">模型実験装置で解き明かす土圧と基礎の力</td></tr>
+          <tr><td class="ans-cell">林 一馬</td><td class="ans-cell"></td><td class="ans-cell">キリスト教会建築史と技術伝来の解明</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>土木,建築,都市計画,構造,地盤,水工学,交通工学,建築意匠,建築史</code></p>
+      </section>
+      <section class="app-section" id="field-MG">
+        <div class="section-header">
+          <h2 class="section-title">経営学 <span class="fmap-code-inline">MG</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>16,461</strong> 名（top-1 判定 10,842 名）／ ミラツク学術DB対応: mg</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">16,461</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">10,842</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">MG</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">312</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">299</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">249</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">197</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">195</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">182</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">181</td></tr>
+          <tr><td class="ans-cell">日本大学</td><td class="ans-cell ans-num">148</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">147</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">135</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">709</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">563</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">503</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">438</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">431</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">369</td></tr>
+          <tr><td class="ans-cell">東京医科歯科大学</td><td class="ans-cell ans-num">311</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">292</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">276</td></tr>
+          <tr><td class="ans-cell">岡山大学</td><td class="ans-cell ans-num">259</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">松山 一紀</td><td class="ans-cell">同志社大学</td><td class="ans-cell">積極的なフォロワー行動で組織の革新を促す</td></tr>
+          <tr><td class="ans-cell">奥 倫陽</td><td class="ans-cell">東京国際大学</td><td class="ans-cell">リーダーシップと管理システムで戦略実現を支援</td></tr>
+          <tr><td class="ans-cell">堀田 和彦</td><td class="ans-cell"></td><td class="ans-cell">地域農業経営とつながりを活かした販売戦略</td></tr>
+          <tr><td class="ans-cell">高橋 伸夫</td><td class="ans-cell">東京理科大学</td><td class="ans-cell">組織文化と技術革新の両立を探る経営学</td></tr>
+          <tr><td class="ans-cell">森澤 恵子</td><td class="ans-cell"></td><td class="ans-cell">ICT産業と技術移転で拓く途上国経済成長</td></tr>
+          <tr><td class="ans-cell">井上 憲一</td><td class="ans-cell">九州大学</td><td class="ans-cell">中山間地域農業の持続を支える組織文化と経営戦略</td></tr>
+          <tr><td class="ans-cell">加護野 忠男</td><td class="ans-cell"></td><td class="ans-cell">自動車部品調達の現地化と経営改善の研究</td></tr>
+          <tr><td class="ans-cell">秋葉 武</td><td class="ans-cell">立命館大学</td><td class="ans-cell">事業型NPOの経営と政策提言の革新</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>経営,マネジメント,組織,戦略,リーダーシップ,人的資源,コーポレートガバナンス,ビジネスモデル,起業,経営戦略</code></p>
+      </section>
+      <section class="app-section" id="field-SS_PSY">
+        <div class="section-header">
+          <h2 class="section-title">心理学 <span class="fmap-code-inline">SS_PSY</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>15,963</strong> 名（top-1 判定 9,479 名）／ ミラツク学術DB対応: ss</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">15,963</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">9,479</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">SS_PSY</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">317</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">262</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">231</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">218</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">167</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">158</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">152</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">151</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">150</td></tr>
+          <tr><td class="ans-cell">順天堂大学</td><td class="ans-cell ans-num">142</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">684</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">453</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">432</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">419</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">292</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">285</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">285</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">274</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">229</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">214</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">唐澤 真弓</td><td class="ans-cell">東京女子大学</td><td class="ans-cell">文化心理学で解く女性の不安と認知機能</td></tr>
+          <tr><td class="ans-cell">中條 和光</td><td class="ans-cell">岡山商科大学</td><td class="ans-cell">認知心理学で拓く多様学習者の支援</td></tr>
+          <tr><td class="ans-cell">伊東 裕司</td><td class="ans-cell">京都女子大学</td><td class="ans-cell">認知心理学で解く司法の誤認防止</td></tr>
+          <tr><td class="ans-cell">鈴木 光太郎</td><td class="ans-cell"></td><td class="ans-cell">発達障害の歴史と心理学で知覚を解明する</td></tr>
+          <tr><td class="ans-cell">幕内 充</td><td class="ans-cell">国立障害者リハビリテーションセンター(研究所)</td><td class="ans-cell">描画能力と脳のしくみで障害支援を進める</td></tr>
+          <tr><td class="ans-cell">行廣 隆次</td><td class="ans-cell">京都先端科学大学</td><td class="ans-cell">発達障害の認知機能と心理学解析の研究</td></tr>
+          <tr><td class="ans-cell">大山 正</td><td class="ans-cell"></td><td class="ans-cell">記憶と感情の関わりを解明する認知心理学</td></tr>
+          <tr><td class="ans-cell">水野 誠</td><td class="ans-cell"></td><td class="ans-cell">神経発達障害と脳内炎症の仕組み解明</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>心理学,認知,発達,臨床心理,社会心理,知覚,記憶,感情,パーソナリティ,実験心理</code></p>
+      </section>
+      <section class="app-section" id="field-HIST">
+        <div class="section-header">
+          <h2 class="section-title">歴史学 <span class="fmap-code-inline">HIST</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>14,880</strong> 名（top-1 判定 4,897 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">14,880</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">4,897</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">HIST</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">440</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">273</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">265</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">213</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">182</td></tr>
+          <tr><td class="ans-cell">明治大学</td><td class="ans-cell ans-num">155</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">149</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">147</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">137</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">132</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">799</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">440</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">437</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">278</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">275</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">269</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">260</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">254</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">229</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">205</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">遠藤 基郎</td><td class="ans-cell">東京大学</td><td class="ans-cell">中近世の古文書をデジタル化し歴史文化を未来へ</td></tr>
+          <tr><td class="ans-cell">市川 裕</td><td class="ans-cell">東京大学</td><td class="ans-cell">古代宗教の歴史から見る一神教の社会変化</td></tr>
+          <tr><td class="ans-cell">久留島 浩</td><td class="ans-cell">国立歴史民俗博物館</td><td class="ans-cell">歴史資料復元で紡ぐ大和の文化遺産</td></tr>
+          <tr><td class="ans-cell">佐伯 弘次</td><td class="ans-cell"></td><td class="ans-cell">中世日本史と古文書データベースによる歴史再構築</td></tr>
+          <tr><td class="ans-cell">桃崎 祐輔</td><td class="ans-cell">福岡大学</td><td class="ans-cell">科学的分析で解明する日中文化交流の実態</td></tr>
+          <tr><td class="ans-cell">川本 慎自</td><td class="ans-cell">東京大学</td><td class="ans-cell">禅宗寺院の知識伝承と中世日本史の解明</td></tr>
+          <tr><td class="ans-cell">宮城 弘樹</td><td class="ans-cell">沖縄国際大学</td><td class="ans-cell">お墓から読み解く近世琉球の社会構造</td></tr>
+          <tr><td class="ans-cell">長谷川 裕子</td><td class="ans-cell">跡見学園女子大学</td><td class="ans-cell">地域史料調査で紐解く生業・交易の歴史</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>歴史,歴史学,古文書,考古学,東洋史,西洋史,日本史,中世,近世,近代史</code></p>
+      </section>
+      <section class="app-section" id="field-SS_EDU">
+        <div class="section-header">
+          <h2 class="section-title">教育学 <span class="fmap-code-inline">SS_EDU</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>14,839</strong> 名（top-1 判定 8,922 名）／ ミラツク学術DB対応: ss</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">14,839</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">8,922</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">SS_EDU</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">311</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">198</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">176</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">172</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">169</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">167</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">150</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">137</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">135</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">134</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">594</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">322</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">305</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">284</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">258</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">252</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">224</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">222</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">206</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">168</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">岡崎 正和</td><td class="ans-cell">広島大学</td><td class="ans-cell">算数と数学をつなぐ探究型授業の創造</td></tr>
+          <tr><td class="ans-cell">袴田 綾斗</td><td class="ans-cell">高知大学</td><td class="ans-cell">探究的学習で深める数学教員養成</td></tr>
+          <tr><td class="ans-cell">高野 尚好</td><td class="ans-cell"></td><td class="ans-cell">法教育と現地学習で育む子どもの法意識</td></tr>
+          <tr><td class="ans-cell">生田 孝至</td><td class="ans-cell"></td><td class="ans-cell">VR教育で教師の力量を高める</td></tr>
+          <tr><td class="ans-cell">篠原 文陽児</td><td class="ans-cell">東京学芸大学</td><td class="ans-cell">主体的に学ぶ教育で多様性に応える教材開発</td></tr>
+          <tr><td class="ans-cell">重松 敬一</td><td class="ans-cell"></td><td class="ans-cell">メタ認知教育で教師と子どもの成長を促進</td></tr>
+          <tr><td class="ans-cell">長洲 南海男</td><td class="ans-cell">筑波大学</td><td class="ans-cell">科学的思考力と理科教育の未来づくり</td></tr>
+          <tr><td class="ans-cell">岩田 昌太郎</td><td class="ans-cell">同志社大学</td><td class="ans-cell">体育教員の専門性開発と実践力向上</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>教育学,カリキュラム,学習,教授法,教育心理,教育社会,教育方法,教師,授業,教育課程</code></p>
+      </section>
+      <section class="app-section" id="field-CHEM">
+        <div class="section-header">
+          <h2 class="section-title">化学 <span class="fmap-code-inline">CHEM</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>14,208</strong> 名（top-1 判定 7,758 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">14,208</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">7,758</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">CHEM</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">342</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">328</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">273</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">264</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">244</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">237</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell ans-num">234</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">200</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">195</td></tr>
+          <tr><td class="ans-cell">大阪公立大学</td><td class="ans-cell ans-num">146</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">921</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">736</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">642</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">592</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">468</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">460</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">452</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">393</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">224</td></tr>
+          <tr><td class="ans-cell">岡山大学</td><td class="ans-cell ans-num">173</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">井上 祥平</td><td class="ans-cell"></td><td class="ans-cell">二酸化炭素を資源化する高分子材料の開発</td></tr>
+          <tr><td class="ans-cell">久枝 良雄</td><td class="ans-cell"></td><td class="ans-cell">自然に学ぶ触媒で進める環境化学の革新</td></tr>
+          <tr><td class="ans-cell">米山 宏</td><td class="ans-cell"></td><td class="ans-cell">電気化学的界面制御で拓く高性能電池開発</td></tr>
+          <tr><td class="ans-cell">吉藤 正明</td><td class="ans-cell"></td><td class="ans-cell">低配位リン化合物の立体保護と触媒開発</td></tr>
+          <tr><td class="ans-cell">山田 鉄兵</td><td class="ans-cell">東京大学</td><td class="ans-cell">電気化学反応制御による高効率熱電変換技術</td></tr>
+          <tr><td class="ans-cell">今林 慎一郎</td><td class="ans-cell"></td><td class="ans-cell">電気化学触媒と資源循環で拓く持続可能社会</td></tr>
+          <tr><td class="ans-cell">藤井 有起</td><td class="ans-cell"></td><td class="ans-cell">金属錯体を用いた生体分子の精密制御技術開発</td></tr>
+          <tr><td class="ans-cell">鬼塚 清孝</td><td class="ans-cell">大阪大学</td><td class="ans-cell">分子設計で拓く高選択性触媒と機能性材料</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>化学,有機化学,無機化学,物理化学,分析化学,高分子,触媒,錯体,電気化学,理論化学</code></p>
+      </section>
+      <section class="app-section" id="field-SS_SOC">
+        <div class="section-header">
+          <h2 class="section-title">社会学 <span class="fmap-code-inline">SS_SOC</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>13,714</strong> 名（top-1 判定 10,097 名）／ ミラツク学術DB対応: ss</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">13,714</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">10,097</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">SS_SOC</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">307</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">179</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">176</td></tr>
+          <tr><td class="ans-cell">大阪公立大学</td><td class="ans-cell ans-num">157</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">139</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">138</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">123</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">118</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">117</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">114</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">684</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">361</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">273</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">269</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">237</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">215</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">213</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">208</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">204</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">200</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">佐藤 裕</td><td class="ans-cell">都留文科大学</td><td class="ans-cell">都市社会学で解くインドの男女格差問題</td></tr>
+          <tr><td class="ans-cell">能川 泰治</td><td class="ans-cell">金沢大学</td><td class="ans-cell">都市の貧しい層と知識人の歴史的役割</td></tr>
+          <tr><td class="ans-cell">高城 玲</td><td class="ans-cell">神奈川大学</td><td class="ans-cell">コミュニティ運動とメディアが紡ぐ政治変動の解明</td></tr>
+          <tr><td class="ans-cell">笹野 美佐恵</td><td class="ans-cell">茨城大学</td><td class="ans-cell">ジェンダー変化と少子化加速の社会構造解明</td></tr>
+          <tr><td class="ans-cell">白井 宏明</td><td class="ans-cell"></td><td class="ans-cell">農村社会構造の変動と地域自治の未来</td></tr>
+          <tr><td class="ans-cell">狩谷 あゆみ</td><td class="ans-cell">広島修道大学</td><td class="ans-cell">性別の視点で解く女性被害の社会構造</td></tr>
+          <tr><td class="ans-cell">石田 正昭</td><td class="ans-cell">京都大学</td><td class="ans-cell">農業協同組合で支える持続可能な農村社会</td></tr>
+          <tr><td class="ans-cell">厳 善平</td><td class="ans-cell">同志社大学</td><td class="ans-cell">戸籍制度改革で拓く農民工の都市化と社会統合</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>社会学,ジェンダー,家族,都市,労働,階層,社会調査,コミュニティ,社会運動,社会構造</code></p>
+      </section>
+      <section class="app-section" id="field-AGRI">
+        <div class="section-header">
+          <h2 class="section-title">農学 <span class="fmap-code-inline">AGRI</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>9,792</strong> 名（top-1 判定 2,981 名）／ ミラツク学術DB対応: food-futures</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">9,792</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">2,981</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">AGRI</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">国立研究開発法人農業・食品産業技術総合研究機構</td><td class="ans-cell ans-num">497</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">253</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">245</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人森林研究・整備機構</td><td class="ans-cell ans-num">234</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">170</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">126</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">125</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">120</td></tr>
+          <tr><td class="ans-cell">東京農工大学</td><td class="ans-cell ans-num">104</td></tr>
+          <tr><td class="ans-cell">東京農業大学</td><td class="ans-cell ans-num">98</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">601</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">507</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">400</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">287</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">253</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">246</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人農業・食品産業技術総合研究機構</td><td class="ans-cell ans-num">194</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">170</td></tr>
+          <tr><td class="ans-cell">独立行政法人農業・食品産業技術総合研究機構</td><td class="ans-cell ans-num">165</td></tr>
+          <tr><td class="ans-cell">独立行政法人森林総合研究所</td><td class="ans-cell ans-num">149</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">櫻井 克年</td><td class="ans-cell">京都女子大学</td><td class="ans-cell">生態系修復と持続可能農業の融合研究</td></tr>
+          <tr><td class="ans-cell">佐々木 惠彦</td><td class="ans-cell"></td><td class="ans-cell">環境ストレスに強い植物で持続的生産を実現</td></tr>
+          <tr><td class="ans-cell">藤井 一至</td><td class="ans-cell">福島国際研究教育機構</td><td class="ans-cell">土壌微生物の動きで支える炭素貯留と環境保全</td></tr>
+          <tr><td class="ans-cell">穴瀬 真</td><td class="ans-cell"></td><td class="ans-cell">傾斜地農業と土壌侵食制御による持続可能農業の実現</td></tr>
+          <tr><td class="ans-cell">佐久間 敏雄</td><td class="ans-cell"></td><td class="ans-cell">農林生態系の循環を支える持続可能な農業技術</td></tr>
+          <tr><td class="ans-cell">片岡 良太</td><td class="ans-cell">山梨大学</td><td class="ans-cell">植物と微生物の協働で農薬残留を抑制し環境保全へ</td></tr>
+          <tr><td class="ans-cell">筒木 潔</td><td class="ans-cell">帯広畜産大学</td><td class="ans-cell">土壌有機物維持による持続可能農業の実現</td></tr>
+          <tr><td class="ans-cell">加藤 秀正</td><td class="ans-cell"></td><td class="ans-cell">酸性土壌の化学特性と植物障害の解明</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>農学,農業,作物,畜産,水産,森林,獣医,土壌,食品科学,農業経済,農芸化学</code></p>
+      </section>
+      <section class="app-section" id="field-PHYS">
+        <div class="section-header">
+          <h2 class="section-title">物理学 <span class="fmap-code-inline">PHYS</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>8,333</strong> 名（top-1 判定 5,045 名）／ ミラツク学術DB対応: phys</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">8,333</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">5,045</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">PHYS</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">411</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">264</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">245</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">208</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">165</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人理化学研究所</td><td class="ans-cell ans-num">157</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell ans-num">146</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">146</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人量子科学技術研究開発機構</td><td class="ans-cell ans-num">129</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">120</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">904</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">479</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">435</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">401</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">335</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">244</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">214</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">202</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">160</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">124</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">新田 宗土</td><td class="ans-cell">慶應義塾大学</td><td class="ans-cell">中性子星物理とトポロジカル物性の融合研究</td></tr>
+          <tr><td class="ans-cell">斎藤 卓也</td><td class="ans-cell">高知大学</td><td class="ans-cell">特殊構造で解明する極限物質の性質</td></tr>
+          <tr><td class="ans-cell">前田 吉昭</td><td class="ans-cell">東北大学</td><td class="ans-cell">非可換幾何学で拓く量子技術基盤の未来</td></tr>
+          <tr><td class="ans-cell">江口 徹</td><td class="ans-cell"></td><td class="ans-cell">超弦理論と複素多様体による自然法則の統一</td></tr>
+          <tr><td class="ans-cell">菅野 浩明</td><td class="ans-cell">名古屋大学</td><td class="ans-cell">超対称ゲージ理論と量子可積分系の数学的深化</td></tr>
+          <tr><td class="ans-cell">北原 和夫</td><td class="ans-cell"></td><td class="ans-cell">非平衡熱力学で拓く未来の科学教育</td></tr>
+          <tr><td class="ans-cell">長瀬 正義</td><td class="ans-cell">埼玉大学</td><td class="ans-cell">断熱展開理論で拓く多様体熱核解析</td></tr>
+          <tr><td class="ans-cell">岡田 康志</td><td class="ans-cell">国立研究開発法人理化学研究所</td><td class="ans-cell">生命の情報物理学で解く細胞内輸送の謎</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>物理学,量子,相対論,素粒子,宇宙論,物性,凝縮系,光学,プラズマ,統計力学,熱力学,電磁気</code></p>
+      </section>
+      <section class="app-section" id="field-ART_DESIGN">
+        <div class="section-header">
+          <h2 class="section-title">芸術・デザイン <span class="fmap-code-inline">ART_DESIGN</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>7,533</strong> 名（top-1 判定 2,726 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">7,533</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">2,726</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ART_DESIGN</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">154</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">129</td></tr>
+          <tr><td class="ans-cell">東京藝術大学</td><td class="ans-cell ans-num">112</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">105</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">95</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">91</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">82</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">71</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">71</td></tr>
+          <tr><td class="ans-cell">日本大学</td><td class="ans-cell ans-num">70</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">344</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">222</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">200</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">191</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">158</td></tr>
+          <tr><td class="ans-cell">東京藝術大学</td><td class="ans-cell ans-num">132</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">126</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">115</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">94</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">89</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">渡辺 浩司</td><td class="ans-cell">大阪大学</td><td class="ans-cell">古典弁論術と近代美学の融合による表現力革新</td></tr>
+          <tr><td class="ans-cell">浅井 信吉</td><td class="ans-cell">会津大学</td><td class="ans-cell">共感覚と感覚統合で創る新しい映像デザイン</td></tr>
+          <tr><td class="ans-cell">高木 陽子</td><td class="ans-cell">文化学園大学</td><td class="ans-cell">ファッションの世界的広がりと文化交流の新展開</td></tr>
+          <tr><td class="ans-cell">高辻 知義</td><td class="ans-cell"></td><td class="ans-cell">舞台芸術における共作と表現の革新</td></tr>
+          <tr><td class="ans-cell">島津 京</td><td class="ans-cell">専修大学</td><td class="ans-cell">装飾の視点で見る多分野芸術の統合</td></tr>
+          <tr><td class="ans-cell">河村 彩</td><td class="ans-cell">東京科学大学</td><td class="ans-cell">ソ連時代の美術とメディア表現の革新</td></tr>
+          <tr><td class="ans-cell">富山 秀男</td><td class="ans-cell"></td><td class="ans-cell">映像芸術の保存と美術館活動の改善</td></tr>
+          <tr><td class="ans-cell">馬 定延</td><td class="ans-cell">関西大学</td><td class="ans-cell">映像メディアと現代美術の新たな美学探求</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>美術,芸術,デザイン,音楽,建築意匠,美学,芸術史,舞踊,演劇,映像</code></p>
+      </section>
+      <section class="app-section" id="field-ENG_MECH">
+        <div class="section-header">
+          <h2 class="section-title">機械工学 <span class="fmap-code-inline">ENG_MECH</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>7,281</strong> 名（top-1 判定 909 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">7,281</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">909</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ENG_MECH</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">187</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">168</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">135</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">111</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">89</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">86</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">80</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">69</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">61</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人理化学研究所</td><td class="ans-cell ans-num">58</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">517</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">351</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">322</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">269</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">235</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">183</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">174</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">135</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">115</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">109</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">木谷 勝</td><td class="ans-cell"></td><td class="ans-cell">乱流はく離制御による高効率能動流体技術</td></tr>
+          <tr><td class="ans-cell">小山 忠正</td><td class="ans-cell"></td><td class="ans-cell">磁性流体の粒子凝集制御による振動抑制技術</td></tr>
+          <tr><td class="ans-cell">赤木 徹也</td><td class="ans-cell">岡山理科大学</td><td class="ans-cell">低コスト流体制御で拓く高齢者自立支援</td></tr>
+          <tr><td class="ans-cell">宇敷 育男</td><td class="ans-cell">広島大学</td><td class="ans-cell">超臨界流体技術で拓く空気中CO2回収革新</td></tr>
+          <tr><td class="ans-cell">太田 照和</td><td class="ans-cell"></td><td class="ans-cell">剥離流れ解析による熱伝達機構の革新</td></tr>
+          <tr><td class="ans-cell">高野 泰斉</td><td class="ans-cell"></td><td class="ans-cell">べん毛推進機構解析による微生物運動制御</td></tr>
+          <tr><td class="ans-cell">伊澤 悟</td><td class="ans-cell">小山工業高等専門学校</td><td class="ans-cell">材料力学教育で実践力と評価の見える化を推進</td></tr>
+          <tr><td class="ans-cell">佐藤 慎太郎</td><td class="ans-cell">東北大学</td><td class="ans-cell">空気の流れを数学で解く航空機設計革新</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>機械工学,ロボティクス,制御工学,材料力学,流体,熱工学,メカトロニクス,アクチュエータ,機構</code></p>
+      </section>
+      <section class="app-section" id="field-ENG_ELEC">
+        <div class="section-header">
+          <h2 class="section-title">電気電子工学 <span class="fmap-code-inline">ENG_ELEC</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>6,669</strong> 名（top-1 判定 2,141 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">6,669</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">2,141</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ENG_ELEC</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">213</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell ans-num">177</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">166</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">149</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">113</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">112</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">93</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">87</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人理化学研究所</td><td class="ans-cell ans-num">81</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人物質・材料研究機構</td><td class="ans-cell ans-num">75</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">504</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">387</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">328</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">260</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">213</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">205</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">148</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">143</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">100</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">99</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">前澤 宏一</td><td class="ans-cell">富山大学</td><td class="ans-cell">共鳴トンネル素子を用いたテラヘルツ高感度センサの開発</td></tr>
+          <tr><td class="ans-cell">町田 克之</td><td class="ans-cell">東京科学大学</td><td class="ans-cell">半導体と微小機械で人体動作を高精度予測</td></tr>
+          <tr><td class="ans-cell">大見 忠弘</td><td class="ans-cell"></td><td class="ans-cell">高速動作と低消費電力を実現する半導体技術</td></tr>
+          <tr><td class="ans-cell">中野 義昭</td><td class="ans-cell">豊田工業大学</td><td class="ans-cell">光のまま処理する超高速通信技術の開発</td></tr>
+          <tr><td class="ans-cell">川人 祥二</td><td class="ans-cell">静岡大学</td><td class="ans-cell">光電子制御による超高感度時間分解撮像</td></tr>
+          <tr><td class="ans-cell">荒井 滋久</td><td class="ans-cell"></td><td class="ans-cell">低消費電力半導体レーザで光配線を革新する</td></tr>
+          <tr><td class="ans-cell">小野寺 秀俊</td><td class="ans-cell">京都大学</td><td class="ans-cell">省エネルギー集積回路で拓く高信頼LSI設計</td></tr>
+          <tr><td class="ans-cell">坪内 和夫</td><td class="ans-cell"></td><td class="ans-cell">高速無線通信制御技術で省エネ通信を実現</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>電気工学,電子工学,半導体,回路,電力,通信工学,光エレクトロニクス,MEMS</code></p>
+      </section>
+      <section class="app-section" id="field-EARTH">
+        <div class="section-header">
+          <h2 class="section-title">地球科学 <span class="fmap-code-inline">EARTH</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>6,104</strong> 名（top-1 判定 2,165 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">6,104</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">2,165</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">EARTH</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">264</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">162</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人海洋研究開発機構</td><td class="ans-cell ans-num">158</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">117</td></tr>
+          <tr><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell ans-num">96</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">95</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">86</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">69</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">66</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">65</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">533</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">354</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">240</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">189</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">160</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">151</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">140</td></tr>
+          <tr><td class="ans-cell">独立行政法人海洋研究開発機構</td><td class="ans-cell ans-num">117</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">90</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">86</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">西村 進</td><td class="ans-cell"></td><td class="ans-cell">地球の磁気記録で東アジアの地殻変動を解明する</td></tr>
+          <tr><td class="ans-cell">板谷 徹丸</td><td class="ans-cell">株式会社蒜山地質年代学研究所(地質技術センター)</td><td class="ans-cell">地質学的年代測定で地球の歴史を解明</td></tr>
+          <tr><td class="ans-cell">栗田 敬</td><td class="ans-cell">東京大学</td><td class="ans-cell">地球内部の動きと実験教育の融合</td></tr>
+          <tr><td class="ans-cell">藤田 正治</td><td class="ans-cell"></td><td class="ans-cell">土砂災害の仕組み解明と安全な川づくり</td></tr>
+          <tr><td class="ans-cell">杉岡 裕子</td><td class="ans-cell">神戸大学</td><td class="ans-cell">海底地震観測で拓く災害減災の未来</td></tr>
+          <tr><td class="ans-cell">水谷 伸治郎</td><td class="ans-cell"></td><td class="ans-cell">山の成り立ちと自然災害の防災力解析</td></tr>
+          <tr><td class="ans-cell">田中 寅夫</td><td class="ans-cell"></td><td class="ans-cell">GPS技術で進める地震・火山災害の予測</td></tr>
+          <tr><td class="ans-cell">遠藤 邦彦</td><td class="ans-cell">日本大学</td><td class="ans-cell">リアルタイム火山防災と地質解析による都市安全</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>地球科学,地質,気象,海洋,古気候,地震,火山,リモートセンシング,宇宙地球</code></p>
+      </section>
+      <section class="app-section" id="field-NURS">
+        <div class="section-header">
+          <h2 class="section-title">看護学 <span class="fmap-code-inline">NURS</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>5,281</strong> 名（top-1 判定 4,307 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">5,281</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">4,307</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">NURS</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">順天堂大学</td><td class="ans-cell ans-num">66</td></tr>
+          <tr><td class="ans-cell">東京医療保健大学</td><td class="ans-cell ans-num">58</td></tr>
+          <tr><td class="ans-cell">大阪公立大学</td><td class="ans-cell ans-num">51</td></tr>
+          <tr><td class="ans-cell">千葉大学</td><td class="ans-cell ans-num">50</td></tr>
+          <tr><td class="ans-cell">国際医療福祉大学</td><td class="ans-cell ans-num">42</td></tr>
+          <tr><td class="ans-cell">兵庫県立大学</td><td class="ans-cell ans-num">41</td></tr>
+          <tr><td class="ans-cell">日本赤十字看護大学</td><td class="ans-cell ans-num">39</td></tr>
+          <tr><td class="ans-cell">名古屋市立大学</td><td class="ans-cell ans-num">37</td></tr>
+          <tr><td class="ans-cell">関西医科大学</td><td class="ans-cell ans-num">36</td></tr>
+          <tr><td class="ans-cell">聖路加国際大学</td><td class="ans-cell ans-num">35</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">千葉大学</td><td class="ans-cell ans-num">146</td></tr>
+          <tr><td class="ans-cell">聖路加看護大学</td><td class="ans-cell ans-num">81</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">79</td></tr>
+          <tr><td class="ans-cell">日本赤十字看護大学</td><td class="ans-cell ans-num">72</td></tr>
+          <tr><td class="ans-cell">国際医療福祉大学</td><td class="ans-cell ans-num">69</td></tr>
+          <tr><td class="ans-cell">順天堂大学</td><td class="ans-cell ans-num">60</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">59</td></tr>
+          <tr><td class="ans-cell">神戸市看護大学</td><td class="ans-cell ans-num">58</td></tr>
+          <tr><td class="ans-cell">北里大学</td><td class="ans-cell ans-num">56</td></tr>
+          <tr><td class="ans-cell">埼玉県立大学</td><td class="ans-cell ans-num">54</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">仁井田 裕美</td><td class="ans-cell">横浜市立大学</td><td class="ans-cell">看護職の専門性と職業意識の形成支援</td></tr>
+          <tr><td class="ans-cell">末原 紀美代</td><td class="ans-cell"></td><td class="ans-cell">災害看護と周産期看護教育の革新</td></tr>
+          <tr><td class="ans-cell">吉岡 京子</td><td class="ans-cell">東京大学</td><td class="ans-cell">超音波検査で新生児股関節脱臼を早期発見</td></tr>
+          <tr><td class="ans-cell">小池 武嗣</td><td class="ans-cell">聖隷クリストファー大学</td><td class="ans-cell">仮想空間で実現する新しい看護教育</td></tr>
+          <tr><td class="ans-cell">綾部 明江</td><td class="ans-cell">茨城県立医療大学</td><td class="ans-cell">保健師の実践力を客観的に評価する方法の開発</td></tr>
+          <tr><td class="ans-cell">小林 祐子</td><td class="ans-cell">新潟青陵大学</td><td class="ans-cell">災害看護と悲しみ支援で心の回復を目指す</td></tr>
+          <tr><td class="ans-cell">鈴木 瞳</td><td class="ans-cell">日本赤十字看護大学</td><td class="ans-cell">妊娠前ケアで母子の健康を守る教育</td></tr>
+          <tr><td class="ans-cell">太田 勝正</td><td class="ans-cell">東都大学</td><td class="ans-cell">看護倫理と患者尊厳で未来のケアを創る</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>看護,看護学,看護師,保健師,助産</code></p>
+      </section>
+      <section class="app-section" id="field-LIT">
+        <div class="section-header">
+          <h2 class="section-title">文学 <span class="fmap-code-inline">LIT</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>4,076</strong> 名（top-1 判定 3,376 名）／ ミラツク学術DB対応: lit</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">4,076</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">3,376</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">LIT</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">113</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">87</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">86</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">70</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">54</td></tr>
+          <tr><td class="ans-cell">日本大学</td><td class="ans-cell ans-num">51</td></tr>
+          <tr><td class="ans-cell">明治大学</td><td class="ans-cell ans-num">46</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">45</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">45</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">37</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">228</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">125</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">109</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">106</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">77</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">66</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">61</td></tr>
+          <tr><td class="ans-cell">国文学研究資料館</td><td class="ans-cell ans-num">61</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">58</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">56</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">井上 泰至</td><td class="ans-cell">防衛大学校(総合教育学群、人文社会科学群、応用科学群、電気情報学群及びシステム工学群)</td><td class="ans-cell">伝統文化の近代化と日中比較文学の探求</td></tr>
+          <tr><td class="ans-cell">長谷川 真史</td><td class="ans-cell">東京学芸大学</td><td class="ans-cell">東アジア古典文学で紡ぐ文化交流の物語</td></tr>
+          <tr><td class="ans-cell">橋本 順光</td><td class="ans-cell">大阪大学</td><td class="ans-cell">文化交流の歴史的誤解を比較文学で解く</td></tr>
+          <tr><td class="ans-cell">藤元 優子</td><td class="ans-cell">大阪大学</td><td class="ans-cell">イラン文学で解く女性のジェンダー表象</td></tr>
+          <tr><td class="ans-cell">吉田 司雄</td><td class="ans-cell">工学院大学</td><td class="ans-cell">東アジア文化交流と翻訳で紡ぐ近代文学史</td></tr>
+          <tr><td class="ans-cell">安達 敬子</td><td class="ans-cell">京都府立大学</td><td class="ans-cell">連歌と源氏物語による中世文化の変化解明</td></tr>
+          <tr><td class="ans-cell">宇戸 清治</td><td class="ans-cell">東京外国語大学</td><td class="ans-cell">民族叙事詩とナショナリズムの文化融合研究</td></tr>
+          <tr><td class="ans-cell">伊藤 伸江</td><td class="ans-cell">愛知県立大学</td><td class="ans-cell">中世日本文学で紡ぐ伝統文化の継承と再評価</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>文学,小説,詩歌,物語,古典,近代文学,比較文学,テクスト,ナラティブ,和歌,俳句</code></p>
+      </section>
+      <section class="app-section" id="field-SS_ECON">
+        <div class="section-header">
+          <h2 class="section-title">経済学 <span class="fmap-code-inline">SS_ECON</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>2,217</strong> 名（top-1 判定 1,399 名）／ ミラツク学術DB対応: ss/gc</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">2,217</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">1,399</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">SS_ECON</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">75</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">65</td></tr>
+          <tr><td class="ans-cell">一橋大学</td><td class="ans-cell ans-num">57</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">44</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">38</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">37</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">34</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">34</td></tr>
+          <tr><td class="ans-cell">中央大学</td><td class="ans-cell ans-num">34</td></tr>
+          <tr><td class="ans-cell">日本大学</td><td class="ans-cell ans-num">31</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">107</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">81</td></tr>
+          <tr><td class="ans-cell">一橋大学</td><td class="ans-cell ans-num">81</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">76</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">66</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">61</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">50</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">44</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">44</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">40</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">西山 慶彦</td><td class="ans-cell">京都大学</td><td class="ans-cell">経済データ解析で金融バブルを早期発見する技術</td></tr>
+          <tr><td class="ans-cell">戸堂 康之</td><td class="ans-cell">早稲田大学</td><td class="ans-cell">経済と安全保障の多層ネットワーク解析</td></tr>
+          <tr><td class="ans-cell">中林 純</td><td class="ans-cell">京都大学</td><td class="ans-cell">入札談合防止に挑む計量経済学の革新</td></tr>
+          <tr><td class="ans-cell">羽森 茂之</td><td class="ans-cell">大和大学</td><td class="ans-cell">金融リスク管理で築く持続可能経済</td></tr>
+          <tr><td class="ans-cell">新谷 元嗣</td><td class="ans-cell">東京大学</td><td class="ans-cell">機械学習で切り拓くマクロ経済政策評価</td></tr>
+          <tr><td class="ans-cell">若田部 昌澄</td><td class="ans-cell">早稲田大学</td><td class="ans-cell">中央銀行の政策と経済思想による危機対応の強化</td></tr>
+          <tr><td class="ans-cell">村瀬 英彰</td><td class="ans-cell">学習院大学</td><td class="ans-cell">行動経済学で解く政策の悪循環</td></tr>
+          <tr><td class="ans-cell">郡司 大志</td><td class="ans-cell">大東文化大学</td><td class="ans-cell">利益が出ない企業と金融政策の効果検証</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>経済学,マクロ経済,ミクロ経済,金融,計量経済,ゲーム理論,経済政策,労働経済,産業組織,公共経済</code></p>
+      </section>
+      <section class="app-section" id="field-SS_POL">
+        <div class="section-header">
+          <h2 class="section-title">政治学 <span class="fmap-code-inline">SS_POL</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>1,997</strong> 名（top-1 判定 1,398 名）／ ミラツク学術DB対応: ss</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">1,997</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">1,398</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">SS_POL</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">86</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">73</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">45</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">44</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">43</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">33</td></tr>
+          <tr><td class="ans-cell">同志社大学</td><td class="ans-cell ans-num">32</td></tr>
+          <tr><td class="ans-cell">明治大学</td><td class="ans-cell ans-num">30</td></tr>
+          <tr><td class="ans-cell">法政大学</td><td class="ans-cell ans-num">28</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">25</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">137</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">97</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">72</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">62</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">56</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">44</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">42</td></tr>
+          <tr><td class="ans-cell">一橋大学</td><td class="ans-cell ans-num">41</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">39</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">32</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">高橋 良輔</td><td class="ans-cell"></td><td class="ans-cell">時間の政治学で拓く新たな政治理論</td></tr>
+          <tr><td class="ans-cell">大西 裕</td><td class="ans-cell">神戸大学</td><td class="ans-cell">危機管理と公正な選挙の実現</td></tr>
+          <tr><td class="ans-cell">品田 裕</td><td class="ans-cell">神戸大学</td><td class="ans-cell">選挙制度改革で政治参加と民主主義再生</td></tr>
+          <tr><td class="ans-cell">伊藤 武</td><td class="ans-cell">東京大学</td><td class="ans-cell">民主主義の変化と政党組織の改革</td></tr>
+          <tr><td class="ans-cell">塩川 伸明</td><td class="ans-cell">東京大学</td><td class="ans-cell">非欧米政治の多様性と民族意識の解明</td></tr>
+          <tr><td class="ans-cell">松本 充豊</td><td class="ans-cell">京都女子大学</td><td class="ans-cell">台湾の民主主義と中国の影響力の関係</td></tr>
+          <tr><td class="ans-cell">建林 正彦</td><td class="ans-cell">京都大学</td><td class="ans-cell">多層政治制度による政党機能の再生</td></tr>
+          <tr><td class="ans-cell">中田 瑞穂</td><td class="ans-cell">明治学院大学</td><td class="ans-cell">東欧政治研究で民主主義の未来を拓く</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>政治学,国際関係,外交,民主主義,政治理論,公共政策,選挙,政党,ガバナンス,比較政治</code></p>
+      </section>
+      <section class="app-section" id="field-PHIL">
+        <div class="section-header">
+          <h2 class="section-title">哲学 <span class="fmap-code-inline">PHIL</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>1,430</strong> 名（top-1 判定 1,238 名）／ ミラツク学術DB対応: philosophy</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">1,430</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">1,238</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">PHIL</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">59</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">41</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">31</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">27</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">22</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">21</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">18</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">17</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">15</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">15</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">110</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">56</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">42</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">38</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">35</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">30</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">29</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">26</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">25</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">25</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">細川 亮一</td><td class="ans-cell"></td><td class="ans-cell">存在の根本を問う形而上学的哲学研究</td></tr>
+          <tr><td class="ans-cell">冨田 恭彦</td><td class="ans-cell">京都大学</td><td class="ans-cell">自然主義的論理で解く近代哲学の観念論</td></tr>
+          <tr><td class="ans-cell">大河内 泰樹</td><td class="ans-cell">京都大学</td><td class="ans-cell">戦争と平和の哲学で持続可能な社会を探る</td></tr>
+          <tr><td class="ans-cell">福谷 茂</td><td class="ans-cell">創価大学</td><td class="ans-cell">ものごとの成り立ちから形而上学の歴史を見直す</td></tr>
+          <tr><td class="ans-cell">長坂 真澄</td><td class="ans-cell">早稲田大学</td><td class="ans-cell">現象学と想像力で無限を哲学的に再構築</td></tr>
+          <tr><td class="ans-cell">黒積 俊夫</td><td class="ans-cell"></td><td class="ans-cell">カント哲学による価値倫理学の再構築</td></tr>
+          <tr><td class="ans-cell">繁田 歩</td><td class="ans-cell">工学院大学</td><td class="ans-cell">カント哲学に基づく認識の様相整理</td></tr>
+          <tr><td class="ans-cell">荻原 理</td><td class="ans-cell">東北大学</td><td class="ans-cell">古代哲学で探る魂と欺きの倫理学</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>哲学,倫理学,形而上学,認識論,存在論,現象学,実存,観念論,プラトン,カント,ヘーゲル,ハイデガー,デカルト,ベルクソン</code></p>
+      </section>
+      <section class="app-section" id="field-LING">
+        <div class="section-header">
+          <h2 class="section-title">言語学 <span class="fmap-code-inline">LING</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>1,153</strong> 名（top-1 判定 307 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">1,153</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">307</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">LING</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">35</td></tr>
+          <tr><td class="ans-cell">東京外国語大学</td><td class="ans-cell ans-num">30</td></tr>
+          <tr><td class="ans-cell">大学共同利用機関法人人間文化研究機構国立国語研究所</td><td class="ans-cell ans-num">21</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">20</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">19</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">16</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">15</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">15</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">13</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">13</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">52</td></tr>
+          <tr><td class="ans-cell">東京外国語大学</td><td class="ans-cell ans-num">39</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">39</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">27</td></tr>
+          <tr><td class="ans-cell">大学共同利用機関法人人間文化研究機構国立国語研究所</td><td class="ans-cell ans-num">26</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">21</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">21</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">19</td></tr>
+          <tr><td class="ans-cell">国立国語研究所</td><td class="ans-cell ans-num">19</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">19</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">中島 信夫</td><td class="ans-cell"></td><td class="ans-cell">断片情報のつながり再構築による言葉の理解</td></tr>
+          <tr><td class="ans-cell">荻野 綱男</td><td class="ans-cell"></td><td class="ans-cell">社会言語学で解明する日本語の多様性</td></tr>
+          <tr><td class="ans-cell">松田 謙次郎</td><td class="ans-cell">神戸松蔭大学</td><td class="ans-cell">社会言語学で解き明かす言語変異の実態</td></tr>
+          <tr><td class="ans-cell">松森 晶子</td><td class="ans-cell">日本女子大学</td><td class="ans-cell">歴史言語学で解き明かす地域方言の音声文化</td></tr>
+          <tr><td class="ans-cell">大竹 孝司</td><td class="ans-cell"></td><td class="ans-cell">心理言語学で解明する音韻認識の多様性</td></tr>
+          <tr><td class="ans-cell">阿部 美規</td><td class="ans-cell">富山大学</td><td class="ans-cell">歴史言語学で解き明かす語順変化の社会的背景</td></tr>
+          <tr><td class="ans-cell">トート ルディ</td><td class="ans-cell">長崎大学</td><td class="ans-cell">歴史言語学で解き明かす日本語の多様性</td></tr>
+          <tr><td class="ans-cell">本多 尚子</td><td class="ans-cell">愛知大学</td><td class="ans-cell">英語の文の形の歴史的変化の解明</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>言語学,音韻,統語,意味論,語用論,方言,歴史言語,言語類型,コーパス</code></p>
+      </section>
+      <section class="app-section" id="field-SS_LAW">
+        <div class="section-header">
+          <h2 class="section-title">法学 <span class="fmap-code-inline">SS_LAW</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>944</strong> 名（top-1 判定 560 名）／ ミラツク学術DB対応: ss</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">944</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">560</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">SS_LAW</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">44</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">33</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">22</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">20</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">19</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">18</td></tr>
+          <tr><td class="ans-cell">明治大学</td><td class="ans-cell ans-num">17</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">17</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">16</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">16</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">49</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">46</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">35</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">33</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">28</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">28</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">28</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">25</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">24</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">22</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">成瀬 幸典</td><td class="ans-cell">東北大学</td><td class="ans-cell">情報の保護と刑法理論による法制度の調和</td></tr>
+          <tr><td class="ans-cell">柳 赫秀</td><td class="ans-cell"></td><td class="ans-cell">国際行政法で拓く国家主権と法秩序の調和</td></tr>
+          <tr><td class="ans-cell">小野 秀誠</td><td class="ans-cell">獨協大学</td><td class="ans-cell">亡命法学者の理論で拓く国際法学交流</td></tr>
+          <tr><td class="ans-cell">菅沼 博子</td><td class="ans-cell">拓殖大学</td><td class="ans-cell">憲法学と法哲学で探る多文化共生の表現規制</td></tr>
+          <tr><td class="ans-cell">上野 達也</td><td class="ans-cell">京都産業大学</td><td class="ans-cell">消費者法と裁判権保障の法律体系見直し</td></tr>
+          <tr><td class="ans-cell">佐藤 義明</td><td class="ans-cell">成蹊大学</td><td class="ans-cell">世界のルールと国の主権の調和を目指す研究</td></tr>
+          <tr><td class="ans-cell">須網 隆夫</td><td class="ans-cell">早稲田大学</td><td class="ans-cell">世界のルールをつくる新しい考え方</td></tr>
+          <tr><td class="ans-cell">濱本 正太郎</td><td class="ans-cell">京都大学</td><td class="ans-cell">AIと国際法の理論革新による法秩序の変化</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>法学,憲法,民法,刑法,国際法,行政法,商法,労働法,知的財産,法哲学</code></p>
+      </section>
+      <section class="app-section" id="field-ANTH">
+        <div class="section-header">
+          <h2 class="section-title">人類学 <span class="fmap-code-inline">ANTH</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>894</strong> 名（top-1 判定 763 名）／ ミラツク学術DB対応: anthropology</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">894</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">763</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ANTH</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">31</td></tr>
+          <tr><td class="ans-cell">国立民族学博物館</td><td class="ans-cell ans-num">29</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">27</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">17</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">15</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">14</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">14</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">13</td></tr>
+          <tr><td class="ans-cell">神奈川大学</td><td class="ans-cell ans-num">12</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">12</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">36</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">34</td></tr>
+          <tr><td class="ans-cell">国立民族学博物館</td><td class="ans-cell ans-num">30</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">26</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">26</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">19</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">19</td></tr>
+          <tr><td class="ans-cell">東京外国語大学</td><td class="ans-cell ans-num">18</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">17</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">16</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">窪田 幸子</td><td class="ans-cell">芦屋大学</td><td class="ans-cell">先住民族研究で拓く歴史的和解の未来</td></tr>
+          <tr><td class="ans-cell">鈴木 紀</td><td class="ans-cell">国立民族学博物館</td><td class="ans-cell">先住民文化の持続と社会的包摂の実現を目指す文化人類学</td></tr>
+          <tr><td class="ans-cell">中西 裕二</td><td class="ans-cell">日本女子大学</td><td class="ans-cell">中世仏教と伝統文化の継承メカニズム解明</td></tr>
+          <tr><td class="ans-cell">中山 紀子</td><td class="ans-cell">中部大学</td><td class="ans-cell">文化人類学で探る移民女性の多文化共生</td></tr>
+          <tr><td class="ans-cell">中村 寛</td><td class="ans-cell">多摩美術大学</td><td class="ans-cell">文化人類学で暴力と多文化共生を探る</td></tr>
+          <tr><td class="ans-cell">亘 純吉</td><td class="ans-cell"></td><td class="ans-cell">映像表現で解き明かす女性像の文化と役割</td></tr>
+          <tr><td class="ans-cell">生月 亘</td><td class="ans-cell">関西外国語大学</td><td class="ans-cell">先住民教育で紡ぐ文化アイデンティティの未来</td></tr>
+          <tr><td class="ans-cell">小林 宏至</td><td class="ans-cell">山口大学</td><td class="ans-cell">文化人類学で解く伝統文化の現代変容</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>人類学,民族誌,文化人類学,社会人類学,エスノグラフィ,親族,儀礼,民俗,先住民,贈与</code></p>
+      </section>
+      <section class="app-section" id="field-SG">
+        <div class="section-header">
+          <h2 class="section-title">戦略学 <span class="fmap-code-inline">SG</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>236</strong> 名（top-1 判定 5 名）／ ミラツク学術DB対応: sg</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">236</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">5</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">SG</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">9</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">8</td></tr>
+          <tr><td class="ans-cell">中央大学</td><td class="ans-cell ans-num">6</td></tr>
+          <tr><td class="ans-cell">法政大学</td><td class="ans-cell ans-num">5</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">同志社大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">4</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">9</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">9</td></tr>
+          <tr><td class="ans-cell">大阪大学</td><td class="ans-cell ans-num">9</td></tr>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">7</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">7</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">7</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">6</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">6</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">6</td></tr>
+          <tr><td class="ans-cell">京都産業大学</td><td class="ans-cell ans-num">5</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">佐藤 幸人</td><td class="ans-cell">独立行政法人日本貿易振興機構アジア経済研究所</td><td class="ans-cell">半導体産業の地政学的リスクと技術革新の推進</td></tr>
+          <tr><td class="ans-cell">徳永 昌弘</td><td class="ans-cell">関西大学</td><td class="ans-cell">言語圏市場統合による新興国投資環境の革新</td></tr>
+          <tr><td class="ans-cell">清水 学</td><td class="ans-cell">帝京大学</td><td class="ans-cell">国際河川の地政学と水資源協力の未来</td></tr>
+          <tr><td class="ans-cell">金 明柱</td><td class="ans-cell">同志社女子大学</td><td class="ans-cell">国境地域の観光交流で築く持続可能な国際理解</td></tr>
+          <tr><td class="ans-cell">蓮見 雄</td><td class="ans-cell">立教大学</td><td class="ans-cell">エネルギー安全保障と地政学的紛争の総合分析</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>軍事戦略,競争戦略,ゲーム理論,地政学,マーケティング戦略,イノベーション戦略,プラットフォーム戦略</code></p>
+      </section>
+      <section class="app-section" id="field-INFO_LIB">
+        <div class="section-header">
+          <h2 class="section-title">図書館情報学 <span class="fmap-code-inline">INFO_LIB</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>179</strong> 名（top-1 判定 6 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">179</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">6</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">INFO_LIB</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">13</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">6</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">5</td></tr>
+          <tr><td class="ans-cell">立命館大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">関西大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">名古屋大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">南山大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">立教大学</td><td class="ans-cell ans-num">2</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">15</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">9</td></tr>
+          <tr><td class="ans-cell">慶應義塾大学</td><td class="ans-cell ans-num">6</td></tr>
+          <tr><td class="ans-cell">広島大学</td><td class="ans-cell ans-num">5</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">5</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">早稲田大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">国文学研究資料館</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">関西大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">立教大学</td><td class="ans-cell ans-num">3</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">黒田 一雄</td><td class="ans-cell">早稲田大学</td><td class="ans-cell">国際教育で平和を築く未来</td></tr>
+          <tr><td class="ans-cell">高橋 晴子</td><td class="ans-cell">国立民族学博物館</td><td class="ans-cell">身装文化の変化を記録するデジタルアーカイブ研究</td></tr>
+          <tr><td class="ans-cell">倉部 慶太</td><td class="ans-cell">東京外国語大学</td><td class="ans-cell">少数民族言語の保存とデジタル資源化で文化継承を支援</td></tr>
+          <tr><td class="ans-cell">杉長 敬治</td><td class="ans-cell"></td><td class="ans-cell">デジタル活用で博物館の教育普及を革新</td></tr>
+          <tr><td class="ans-cell">常木 佳奈</td><td class="ans-cell">久留米工業高等専門学校</td><td class="ans-cell">デジタル保存で明治期出版文化を未来へ</td></tr>
+          <tr><td class="ans-cell">並木 晴香</td><td class="ans-cell">武庫川女子大学</td><td class="ans-cell">デジタルアーカイブで伝統文化を未来へ継承</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>図書館情報学,情報組織化,知識組織,情報サービス,アーカイブ</code></p>
+      </section>
+      <section class="app-section" id="field-ENG_CHEM">
+        <div class="section-header">
+          <h2 class="section-title">化学工学 <span class="fmap-code-inline">ENG_CHEM</span></h2>
+          <span class="section-subtitle">該当研究者 <strong>58</strong> 名（top-1 判定 12 名）／ ミラツク学術DB対応: (none-yet)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-cell"><div class="kpi-label">RESEARCHERS</div><div class="kpi-value">58</div></div>
+          <div class="kpi-cell"><div class="kpi-label">TOP-1 (PRIMARY)</div><div class="kpi-value">12</div></div>
+          <div class="kpi-cell"><div class="kpi-label">FIELD CODE</div><div class="kpi-value">ENG_CHEM</div></div>
+        </div>
+        <div class="fmap-2col">
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">所属大学 TOP10（現在）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">8</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">2</td></tr>
+          <tr><td class="ans-cell">名古屋工業大学</td><td class="ans-cell ans-num">2</td></tr>
+          <tr><td class="ans-cell">鹿児島大学</td><td class="ans-cell ans-num">1</td></tr>
+          <tr><td class="ans-cell">関西大学</td><td class="ans-cell ans-num">1</td></tr>
+          <tr><td class="ans-cell">茨城大学</td><td class="ans-cell ans-num">1</td></tr>
+          <tr><td class="ans-cell">筑波大学</td><td class="ans-cell ans-num">1</td></tr>
+          <tr><td class="ans-cell">沖縄工業高等専門学校</td><td class="ans-cell ans-num">1</td></tr>
+          <tr><td class="ans-cell">東京科学大学</td><td class="ans-cell ans-num">1</td></tr>
+          <tr><td class="ans-cell">東京工科大学</td><td class="ans-cell ans-num">1</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="fmap-col">
+            <h3 class="fmap-col-title">学位取得大学 TOP10（推定含む）</h3>
+            <table class="ans-table">
+              <thead><tr><th class="ans-head">大学</th><th class="ans-head ans-num">人数</th></tr></thead>
+              <tbody>
+          <tr><td class="ans-cell">神戸大学</td><td class="ans-cell ans-num">7</td></tr>
+          <tr><td class="ans-cell">京都大学</td><td class="ans-cell ans-num">4</td></tr>
+          <tr><td class="ans-cell">東北大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">東京工業大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">東京大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">名古屋工業大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">北海道大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">九州大学</td><td class="ans-cell ans-num">3</td></tr>
+          <tr><td class="ans-cell">鹿児島大学</td><td class="ans-cell ans-num">2</td></tr>
+          <tr><td class="ans-cell">東京理科大学</td><td class="ans-cell ans-num">2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <h3 class="fmap-col-title" style="margin-top:24px">代表研究テーマ（top-1 スコア順 8件）</h3>
+        <table class="ans-table">
+          <thead><tr><th class="ans-head" style="width:14%">研究者</th><th class="ans-head" style="width:20%">所属</th><th class="ans-head">研究テーマ</th></tr></thead>
+          <tbody>
+          <tr><td class="ans-cell">吉岡 朋久</td><td class="ans-cell">神戸大学</td><td class="ans-cell">ナノ構造制御による省エネルギー膜分離技術の革新</td></tr>
+          <tr><td class="ans-cell">森 秀樹</td><td class="ans-cell">名古屋工業大学</td><td class="ans-cell">複合分離技術で実現する省エネ化学プロセス</td></tr>
+          <tr><td class="ans-cell">丹保 憲仁</td><td class="ans-cell">地方独立行政法人北海道立総合研究機構</td><td class="ans-cell">膜技術で実現する安定した高効率水質浄化</td></tr>
+          <tr><td class="ans-cell">藤田 賢二</td><td class="ans-cell"></td><td class="ans-cell">膜分離技術で実現する安全・省エネ浄水システム</td></tr>
+          <tr><td class="ans-cell">古賀 真之</td><td class="ans-cell">東北大学</td><td class="ans-cell">放射性物質除去で微弱なニュートリノ検出を実現</td></tr>
+          <tr><td class="ans-cell">長田 孝志</td><td class="ans-cell"></td><td class="ans-cell">太陽熱を使った災害時の安全な飲み水確保技術</td></tr>
+          <tr><td class="ans-cell">碇 醇</td><td class="ans-cell"></td><td class="ans-cell">蒸留技術と気液平衡による品質安定化</td></tr>
+          <tr><td class="ans-cell">齋藤 慎平</td><td class="ans-cell">国立研究開発法人産業技術総合研究所</td><td class="ans-cell">熱の伝わり方を解析し省エネを目指す技術開発</td></tr>
+          </tbody>
+        </table>
+        <p class="fmap-keywords">領域識別キーワード: <code>化学工学,反応工学,分離工学,プロセス工学,蒸留,膜分離</code></p>
+      </section>
+
+    </div>
+  </div>
+  <script src="js/shared/nav.js"></script>
+</body>
+</html>
