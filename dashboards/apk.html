@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANSWER Prompt Kit DB (APK-DB) — esse-sense</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555; --accent-warm: #CC1400;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+body { line-height: 1.75; }
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  height: 48px; background: var(--bg); border-bottom: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  display: flex; align-items: center; padding: 0 24px;
+}
+.top-bar .brand { font-family: var(--font-serif); font-weight: 900; font-size: 0.95rem; }
+.top-bar .ver { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.78rem; color: var(--text-muted); margin-left: 12px; }
+.top-bar .right { margin-left: auto; display: flex; gap: 12px; }
+.top-bar a { color: var(--accent); text-decoration: none; font-size: 0.82rem; }
+.top-bar a:hover { color: var(--accent-warm); }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text); padding: 4px 10px; cursor: pointer; font-family: inherit; font-size: 0.8rem; }
+.layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 48px); }
+.toc-sidebar {
+  background: var(--surface); border-right: 1px solid var(--border);
+  padding: 24px 20px; position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto;
+}
+.toc-sidebar h3 { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px; }
+.toc-sidebar ol { list-style: none; padding: 0; margin: 0; counter-reset: chapter; }
+.toc-sidebar li { counter-increment: chapter; font-size: 0.84rem; margin: 6px 0; }
+.toc-sidebar li::before { content: counter(chapter, decimal-leading-zero); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.72rem; color: var(--text-muted); margin-right: 8px; }
+.toc-sidebar a { color: var(--text); text-decoration: none; }
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.main { max-width: 800px; padding: 32px 40px 80px; font-family: var(--font-serif); }
+.main h1 { font-size: 1.55rem; font-weight: 900; color: var(--accent-warm); border-bottom: 3px solid var(--accent); padding-bottom: 12px; margin: 0 0 8px; }
+.main .lead { font-family: var(--font); font-size: 0.86rem; color: var(--text-secondary); margin: 0 0 28px; line-height: 1.9; }
+.main h2 { font-size: 1.15rem; font-weight: 900; margin: 48px 0 14px; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+.main h3 { font-size: 0.98rem; font-weight: 800; margin: 24px 0 10px; color: var(--accent-warm); }
+.main p { text-indent: 1em; margin: 8px 0; letter-spacing: 0.025em; font-feature-settings: "palt"; }
+.main p:first-of-type { text-indent: 0; }
+.chapter-section { margin-bottom: 64px; padding-bottom: 32px; border-bottom: 1px solid var(--border-light); }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); margin: 20px 0 28px; }
+.kpi-cell { padding: 14px 16px; border-right: 1px solid var(--border); font-family: var(--font); }
+.kpi-cell:last-child { border-right: none; }
+.kpi-label { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.kpi-value { font-family: var(--font-serif); font-size: 1.35rem; font-weight: 900; color: var(--text); line-height: 1.15; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0 24px; font-family: var(--font); }
+.cat-card { background: var(--card); border: 1px solid var(--border); padding: 14px 16px; transition: all 0.15s; }
+.cat-card:hover { border-color: var(--accent-warm); background: var(--card-hover); }
+.cat-card .cat-id { display: inline-block; background: var(--accent-warm); color: #FFF; padding: 2px 8px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.72rem; font-weight: 800; margin-right: 8px; }
+.cat-card .cat-label { font-weight: 800; font-size: 0.92rem; }
+.cat-card .cat-desc { font-size: 0.78rem; color: var(--text-secondary); margin-top: 8px; line-height: 1.7; }
+.cat-card .cat-n { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.76rem; color: var(--accent-warm); margin-top: 6px; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.84rem; font-family: var(--font); }
+th { background: var(--surface); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-weight: 800; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border-light); vertical-align: top; line-height: 1.65; }
+.prompt-card { background: var(--card); border: 1px solid var(--border); padding: 16px 18px; margin: 12px 0; font-family: var(--font); }
+.prompt-card .prompt-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.prompt-card .cat-id { display: inline-block; background: var(--accent-warm); color: #FFF; padding: 2px 8px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.72rem; font-weight: 800; }
+.prompt-card .prompt-name { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.86rem; font-weight: 700; color: var(--text); }
+.prompt-card .prompt-ver { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.72rem; color: var(--text-muted); }
+.prompt-card .prompt-body { background: var(--surface); padding: 10px 14px; font-family: var(--font-serif); font-size: 0.88rem; line-height: 1.85; margin: 8px 0; border-left: 3px solid var(--accent-warm); }
+.prompt-card .prompt-meta { font-size: 0.76rem; color: var(--text-secondary); margin: 6px 0; }
+.prompt-card .prompt-meta b { color: var(--text); }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 12px 0; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); font-family: var(--font); }
+.controls input[type="search"] { flex: 1; min-width: 200px; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; font-family: inherit; font-size: 0.84rem; }
+.controls button { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; font-family: inherit; font-size: 0.8rem; cursor: pointer; }
+.controls button:hover, .controls button.active { border-color: var(--accent-warm); color: var(--accent-warm); }
+.controls button.active { background: var(--accent-warm); color: #FFF; }
+.count-pill { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.76rem; color: var(--text-muted); }
+.fig { background: var(--card); border: 1px solid var(--border); padding: 18px; margin: 16px 0; font-family: var(--font); }
+.fig svg { display: block; max-width: 100%; height: auto; }
+.fig-caption { font-size: 0.78rem; color: var(--text-muted); margin-top: 8px; text-align: center; font-family: var(--font); }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; height: auto; }
+  .main { padding: 24px 20px; }
+}
+@media print {
+  .top-bar, .toc-sidebar, .controls { display: none; }
+  .layout { grid-template-columns: 1fr; }
+  .main { padding: 0; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="brand">ANSWER Prompt Kit DB</span>
+  <span class="ver">v1.0.0</span>
+  <div class="right">
+    <a href="../answer.html">← ANSWER データベース</a>
+    <button class="theme-toggle" id="themeToggle" title="ダークモード切替">&#9789;</button>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc-sidebar">
+    <h3>目次</h3>
+    <ol>
+      <li><a href="#intro">本DBについて</a></li>
+      <li><a href="#kpi">主要指標</a></li>
+      <li><a href="#structure">7カテゴリ構造</a></li>
+      <li><a href="#control6">制御プロンプト6ルール</a></li>
+      <li><a href="#prompts">プロンプト一覧</a></li>
+      <li><a href="#glossary">用語解説辞書</a></li>
+      <li><a href="#use-cases">適用ケース</a></li>
+      <li><a href="#cross-refs">Cross-Refs</a></li>
+      <li><a href="#meta">メタ情報</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+    <h1>ANSWER Prompt Kit DB (APK-DB)</h1>
+    <p class="lead">esse-sense ANSWER+ システムが事業仮説型の問いに対し一貫品質の回答を生成するための、システムプロンプト・制御プロンプト・指示プロンプトのデータキット。CASE 01-04（人と機械の共生／バイオものづくり／地域経済の活性／家電メーカー新規事業）で実証された「候補プール → 構造化 → 戦略選別 → Top10推薦 → 用語解説」のワークフローを、7カテゴリの再利用可能な部品に分解し、組合せで多様な事業仮説に応答できる基盤を提供する。</p>
+
+    <section class="chapter-section" id="intro">
+      <h2>1. 本DBについて</h2>
+      <p>APK-DB は esse-sense ANSWER+ システムの「プロンプト工学」を構造化したデータベースである。23.5万人規模の研究者DB（kaken_researchers + researcher_vectors）への検索結果に対し、構造化されたレポートを一貫品質で生成するための、67本のプロンプトテンプレートと28語の用語解説辞書を内包する。</p>
+      <p>SystemPrompt（基盤人格）・ControlPrompt（品質制御）・TaskPrompt（タスク指示）・InputAdapter（入力前処理）・OutputFormatter（出力整形）・FailSafe（失敗時定型）・Glossary（用語解説）の7カテゴリで構成され、prompt_relations で「合成」「優越」「依存」「衝突」の関係を表現する。</p>
+    </section>
+
+    <section class="chapter-section" id="kpi">
+      <h2>2. 主要指標</h2>
+      
+<div class="kpi-row">
+  <div class="kpi-cell"><div class="kpi-label">VERSION</div><div class="kpi-value">v1.0.0</div></div>
+  <div class="kpi-cell"><div class="kpi-label">PROMPTS</div><div class="kpi-value">39</div></div>
+  <div class="kpi-cell"><div class="kpi-label">GLOSSARY</div><div class="kpi-value">28</div></div>
+  <div class="kpi-cell"><div class="kpi-label">RELATIONS</div><div class="kpi-value">18</div></div>
+  <div class="kpi-cell"><div class="kpi-label">CROSS-REFS</div><div class="kpi-value">19</div></div>
+  <div class="kpi-cell"><div class="kpi-label">USE CASES</div><div class="kpi-value">13</div></div>
+</div>
+
+    </section>
+
+    <section class="chapter-section" id="structure">
+      <h2>3. 7カテゴリ構造</h2>
+      <div class="cat-grid">
+<div class="cat-card">
+  <div><span class="cat-id">SP</span><span class="cat-label">システムプロンプト</span></div>
+  <div class="cat-desc">ANSWER+ の基盤人格・行動規範</div>
+  <div class="cat-n">5件</div>
+</div>
+<div class="cat-card">
+  <div><span class="cat-id">CP</span><span class="cat-label">制御プロンプト</span></div>
+  <div class="cat-desc">出力品質を制御するルール（フルネーム必須等）</div>
+  <div class="cat-n">6件</div>
+</div>
+<div class="cat-card">
+  <div><span class="cat-id">TP</span><span class="cat-label">タスクプロンプト</span></div>
+  <div class="cat-desc">目的別タスク指示（推薦・分析・比較・翻訳・要約）</div>
+  <div class="cat-n">8件</div>
+</div>
+<div class="cat-card">
+  <div><span class="cat-id">IA</span><span class="cat-label">入力アダプター</span></div>
+  <div class="cat-desc">入力パターン別前処理（仮説・テーマ・質問・対話・データ）</div>
+  <div class="cat-n">5件</div>
+</div>
+<div class="cat-card">
+  <div><span class="cat-id">OF</span><span class="cat-label">出力フォーマッター</span></div>
+  <div class="cat-desc">出力形式別整形（レポート・リスト・モーダル・段落・表）</div>
+  <div class="cat-n">5件</div>
+</div>
+<div class="cat-card">
+  <div><span class="cat-id">FS</span><span class="cat-label">失敗時定型応答</span></div>
+  <div class="cat-desc">不能拒否・タイムアウト・超過・曖昧などの定型</div>
+  <div class="cat-n">10件</div>
+</div>
+<div class="cat-card">
+  <div><span class="cat-id">GL</span><span class="cat-label">用語解説</span></div>
+  <div class="cat-desc">一般ビジネスマン向け用語解説辞書</div>
+  <div class="cat-n">0件</div>
+</div></div>
+      <div class="fig">
+<svg viewBox="0 0 720 320" width="100%" height="320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="APK-DB 7カテゴリ構造図">
+  <style>
+    .node { fill: #FFF; stroke: #121212; stroke-width: 1.5; }
+    .node-warm { fill: #CC1400; stroke: #B01200; }
+    .label { font-family: "Noto Sans JP", sans-serif; font-size: 13px; fill: #121212; font-weight: 700; text-anchor: middle; }
+    .label-w { fill: #FFF; }
+    .sub { font-family: "Noto Sans JP", sans-serif; font-size: 10px; fill: #555; text-anchor: middle; }
+    .arrow { stroke: #555; stroke-width: 1.5; fill: none; marker-end: url(#ah); }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+  <!-- Layer 1: SP base -->
+  <rect class="node node-warm" x="280" y="20" width="160" height="50" rx="3"/>
+  <text class="label label-w" x="360" y="42">SP SystemPrompt</text>
+  <text class="sub" style="fill:#FFD" x="360" y="58">基盤人格 / 5件</text>
+
+  <!-- Layer 2: CP rules -->
+  <rect class="node" x="40" y="110" width="160" height="50" rx="3"/>
+  <text class="label" x="120" y="132">CP ControlPrompt</text>
+  <text class="sub" x="120" y="148">制御ルール / 6件</text>
+
+  <!-- Layer 3: TP / IA / OF -->
+  <rect class="node" x="230" y="110" width="120" height="50" rx="3"/>
+  <text class="label" x="290" y="132">IA Input</text>
+  <text class="sub" x="290" y="148">入力アダプター / 5件</text>
+
+  <rect class="node" x="370" y="110" width="120" height="50" rx="3"/>
+  <text class="label" x="430" y="132">TP Task</text>
+  <text class="sub" x="430" y="148">目的別タスク / 8件</text>
+
+  <rect class="node" x="510" y="110" width="170" height="50" rx="3"/>
+  <text class="label" x="595" y="132">OF Output</text>
+  <text class="sub" x="595" y="148">出力フォーマッター / 5件</text>
+
+  <!-- Layer 4: FS / GL -->
+  <rect class="node" x="190" y="200" width="160" height="50" rx="3"/>
+  <text class="label" x="270" y="222">FS FailSafe</text>
+  <text class="sub" x="270" y="238">失敗時定型 / 10件</text>
+
+  <rect class="node" x="370" y="200" width="160" height="50" rx="3"/>
+  <text class="label" x="450" y="222">GL Glossary</text>
+  <text class="sub" x="450" y="238">用語解説 / 28件</text>
+
+  <!-- Output -->
+  <rect class="node node-warm" x="240" y="270" width="240" height="40" rx="3"/>
+  <text class="label label-w" x="360" y="295">ANSWER+ レポート出力</text>
+
+  <!-- Arrows -->
+  <path class="arrow" d="M 360 70 L 120 110"/>
+  <path class="arrow" d="M 360 70 L 290 110"/>
+  <path class="arrow" d="M 360 70 L 430 110"/>
+  <path class="arrow" d="M 360 70 L 595 110"/>
+  <path class="arrow" d="M 290 160 L 430 200"/>
+  <path class="arrow" d="M 430 160 L 450 200"/>
+  <path class="arrow" d="M 270 250 L 320 270"/>
+  <path class="arrow" d="M 450 250 L 400 270"/>
+  <path class="arrow" d="M 595 160 L 480 270"/>
+  <path class="arrow" d="M 120 160 L 240 280"/>
+</svg>
+<div class="fig-caption">図1: APK-DB 7カテゴリ構造図 — SP基盤の上にCP制御、IA/TP/OFが組合せでレポートを生成、FS/GLが補完する</div></div>
+    </section>
+
+    <section class="chapter-section" id="control6">
+      <h2>4. 制御プロンプト6ルール</h2>
+      <p>ANSWER+ システムの出力品質を担保する6つの制御ルール。CASE 02（バイオものづくり）で初回実装、CASE 04（家電メーカー新規事業）で再適用された。</p>
+      <ol style="font-family:var(--font);font-size:0.88rem;line-height:2;">
+        <li><strong>研究者の氏名は省略せずに必ずフルネームで記載してください</strong></li>
+        <li><strong>報告レポートの体裁を取ります。必ず必要な項目は「タイトル」「概要」「本文」です。</strong>その他は指示文に応じて適切な項目と体裁で記載してください。</li>
+        <li><strong>文章は入力された言語に合わせて記載してください</strong>（ex、日本語→日本語、英語→英語）</li>
+        <li><strong>作成不能な指示が入力された場合</strong>（画像で生成、音声で生成、ファイルを作成、他）、「指示いただいた内容は作成を行うことができません ※esse-senseのANSWERは、テキストで作成できる回答のみ作成することができます。テキストで作成できる内容を指示ください。」と回答してください。</li>
+        <li><strong>タイムアウトや文字数超過などの場合</strong>はその旨を記載して回答に添えてください。</li>
+        <li><strong>一般のビジネスマンがあまり使わないような専門用語が解答に含まれる場合は、レポート下部に用語解説を加えてください</strong></li>
+      </ol>
+      <div class="fig">
+<svg viewBox="0 0 720 240" width="100%" height="240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="制御プロンプト適用フロー (CASE 02 例)">
+  <style>
+    .step { fill: #F7F7F5; stroke: #121212; stroke-width: 1.5; }
+    .step-w { fill: #CC1400; stroke: #B01200; }
+    .label { font-family: "Noto Sans JP", sans-serif; font-size: 12px; fill: #121212; font-weight: 700; text-anchor: middle; }
+    .label-white { fill: #FFF; }
+    .sub { font-family: "Noto Sans JP", sans-serif; font-size: 10px; fill: #555; text-anchor: middle; }
+    .arrow { stroke: #CC1400; stroke-width: 2; fill: none; marker-end: url(#ah2); }
+  </style>
+  <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#CC1400"/></marker></defs>
+
+  <rect class="step" x="20" y="40" width="120" height="60" rx="3"/>
+  <text class="label" x="80" y="65">事業仮説</text>
+  <text class="sub" x="80" y="82">機械系 → バイオ</text>
+
+  <rect class="step" x="170" y="40" width="120" height="60" rx="3"/>
+  <text class="label" x="230" y="65">IA</text>
+  <text class="sub" x="230" y="82">仮説 → 3要素分解</text>
+
+  <rect class="step" x="320" y="40" width="120" height="60" rx="3"/>
+  <text class="label" x="380" y="65">TP</text>
+  <text class="sub" x="380" y="82">推薦+構造化+R&amp;D</text>
+
+  <rect class="step step-w" x="470" y="40" width="120" height="60" rx="3"/>
+  <text class="label label-white" x="530" y="65">CP × 6</text>
+  <text class="sub" style="fill:#FFD" x="530" y="82">品質ルール適用</text>
+
+  <rect class="step" x="620" y="40" width="80" height="60" rx="3"/>
+  <text class="label" x="660" y="65">OF</text>
+  <text class="sub" x="660" y="82">レポート</text>
+
+  <path class="arrow" d="M 140 70 L 170 70"/>
+  <path class="arrow" d="M 290 70 L 320 70"/>
+  <path class="arrow" d="M 440 70 L 470 70"/>
+  <path class="arrow" d="M 590 70 L 620 70"/>
+
+  <rect class="step" x="170" y="150" width="320" height="60" rx="3"/>
+  <text class="label" x="330" y="172">GL Glossary 自動付与</text>
+  <text class="sub" x="330" y="190">本文中の専門用語 → 解説表</text>
+  <path class="arrow" d="M 530 100 L 460 150"/>
+  <path class="arrow" d="M 660 100 L 490 150"/>
+</svg>
+<div class="fig-caption">図2: 制御プロンプト適用フロー（CASE 02 例）— 事業仮説 → IA → TP → CP6ルール適用 → OF → GL自動付与</div></div>
+    </section>
+
+    <section class="chapter-section" id="prompts">
+      <h2>5. プロンプト一覧</h2>
+      <div class="controls">
+        <input type="search" id="searchBox" placeholder="プロンプト名・本文で絞り込み">
+        <span class="count-pill" id="cntPill">39件</span>
+        <span style="font-size:0.78rem;color:var(--text-muted);font-family:var(--font);">カテゴリ:</span>
+        <button class="filter-btn active" data-cat="ALL">全て</button>
+        <button class="filter-btn" data-cat="SP">SP</button><button class="filter-btn" data-cat="CP">CP</button><button class="filter-btn" data-cat="TP">TP</button><button class="filter-btn" data-cat="IA">IA</button><button class="filter-btn" data-cat="OF">OF</button><button class="filter-btn" data-cat="FS">FS</button>
+      </div>
+      <div id="promptsArea">
+      <h3 id="cat-SP">[SP] システムプロンプト — 5件</h3>
+<div class="prompt-card" data-cat="SP" data-name="sp_answer_plus_core">
+  <div class="prompt-head">
+    <span class="cat-id">SP</span>
+    <span class="prompt-name">sp_answer_plus_core</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">あなたは esse-sense ANSWER+ システムのコアアシスタントです。23.5万人規模の研究者データベース（kaken_researchers + researcher_vectors）と、事業仮説型の問いに対して、候補となる研究者を抽出し、構造化された推薦レポートを生成します。回答は常に、(1)候補プールの提示、(2)構造化分析、(3)戦略的推薦、(4)留意点 の四段階で組み立てます。</div>
+  <div class="prompt-meta"><b>目的:</b> ANSWER+ システム全体の基盤人格定義</div>
+  <div class="prompt-meta"><b>出力制約:</b> なし（後段の制御プロンプトで上書き）</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="SP" data-name="sp_business_hypothesis_analyst">
+  <div class="prompt-head">
+    <span class="cat-id">SP</span>
+    <span class="prompt-name">sp_business_hypothesis_analyst</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">あなたは事業仮説アナリストです。ユーザーから提示される事業仮説（ex: 「自動車メーカーがロボティクスへ進出」）を、研究者データベースを横断検索する具体的なテーマに変換し、抽出された研究者プールを事業仮説の主体（誰がこの研究をどう活用するか）の視点で再解釈します。同じ研究者プールでも、問いの主体が変われば抽出される事業機会の意味は変わることを前提にします。</div>
+  <div class="prompt-meta"><b>目的:</b> 事業仮説型の問いに対する分析者人格</div>
+  <div class="prompt-meta"><b>出力制約:</b> なし</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="SP" data-name="sp_glossary_curator">
+  <div class="prompt-head">
+    <span class="cat-id">SP</span>
+    <span class="prompt-name">sp_glossary_curator</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">あなたは用語解説キュレーターです。生成された回答本文中から、一般のビジネスマンが日常的に使わない専門用語を抽出し、日常言葉での平易な定義を120-180字で付与します。解説対象: 学術用語、技術用語、業界専門用語、外来語の専門概念、英略語など。</div>
+  <div class="prompt-meta"><b>目的:</b> 用語解説生成人格</div>
+  <div class="prompt-meta"><b>出力制約:</b> 1用語あたり 120-180字 / 表形式で末尾配置</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="SP" data-name="sp_report_editor">
+  <div class="prompt-head">
+    <span class="cat-id">SP</span>
+    <span class="prompt-name">sp_report_editor</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">あなたはレポート編集者です。生成された回答コンポーネント（タイトル候補・概要・本文・推薦表・用語解説）を受け取り、タイトル → 概要 → 本文 → 推薦表 → 用語解説 の構造に整え、読者が結論から段階的に詳細へ降りていける流れに編集します。</div>
+  <div class="prompt-meta"><b>目的:</b> レポート編集者人格</div>
+  <div class="prompt-meta"><b>出力制約:</b> 構造順序固定 / 結論先出し</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="SP" data-name="sp_research_recommender">
+  <div class="prompt-head">
+    <span class="cat-id">SP</span>
+    <span class="prompt-name">sp_research_recommender</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">あなたは研究者推薦エンジンです。テーマと事業仮説を入力として、ベクター類似検索の結果プール（最大100名）を受け取り、カテゴリ分類と戦略階層重みでランキングした総合推薦Top10を生成します。推薦研究者は必ずフルネームで記載し、複数の戦略階層を横断する人物を優先します。</div>
+  <div class="prompt-meta"><b>目的:</b> 研究者推薦エンジン人格</div>
+  <div class="prompt-meta"><b>出力制約:</b> Top10 推薦・全員フルネーム</div>
+  
+  
+</div><h3 id="cat-CP">[CP] 制御プロンプト — 6件</h3>
+<div class="prompt-card" data-cat="CP" data-name="cp_full_name_required">
+  <div class="prompt-head">
+    <span class="cat-id">CP</span>
+    <span class="prompt-name">cp_full_name_required</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">研究者の氏名は省略せずに必ずフルネーム（姓+名）で記載してください。略称、姓のみ、敬称略は禁止です。</div>
+  <div class="prompt-meta"><b>目的:</b> 推薦研究者の同定可能性を担保</div>
+  <div class="prompt-meta"><b>出力制約:</b> 本文・表・モーダル すべての文脈でフルネーム</div>
+  <div class="prompt-meta"><b>入力例:</b> Top10推薦の本文化</div>
+  <div class="prompt-meta"><b>出力例:</b> 1位の松山 崇 氏（酵母の遺伝子制御で持続可能な発酵技術を開発）...</div>
+</div>
+<div class="prompt-card" data-cat="CP" data-name="cp_glossary_mandatory">
+  <div class="prompt-head">
+    <span class="cat-id">CP</span>
+    <span class="prompt-name">cp_glossary_mandatory</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">一般のビジネスマンがあまり使わないような専門用語が回答に含まれる場合は、レポート下部に用語解説を加えてください。表形式（用語 / 解説）で配置します。</div>
+  <div class="prompt-meta"><b>目的:</b> 読者アクセシビリティ確保</div>
+  <div class="prompt-meta"><b>出力制約:</b> 本文中で初出した専門用語を末尾に表形式で網羅</div>
+  <div class="prompt-meta"><b>入力例:</b> バイオ事業領域の回答生成</div>
+  <div class="prompt-meta"><b>出力例:</b> 本文末尾に「用語解説」セクション+表（バイオファウンドリ/DBTL/精密発酵...）</div>
+</div>
+<div class="prompt-card" data-cat="CP" data-name="cp_input_language_match">
+  <div class="prompt-head">
+    <span class="cat-id">CP</span>
+    <span class="prompt-name">cp_input_language_match</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">出力言語は入力言語に合わせて記載してください（日本語入力 → 日本語出力、英語入力 → 英語出力、中国語入力 → 中国語出力）。</div>
+  <div class="prompt-meta"><b>目的:</b> 言語自動判定</div>
+  <div class="prompt-meta"><b>出力制約:</b> 入力言語 = 出力言語</div>
+  <div class="prompt-meta"><b>入力例:</b> 日本語の事業仮説</div>
+  <div class="prompt-meta"><b>出力例:</b> 日本語のレポート</div>
+</div>
+<div class="prompt-card" data-cat="CP" data-name="cp_report_structure">
+  <div class="prompt-head">
+    <span class="cat-id">CP</span>
+    <span class="prompt-name">cp_report_structure</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">報告レポートの体裁を取ります。必須項目は「タイトル」「概要」「本文」の3つです。その他は指示文に応じて適切な項目（用語解説、推薦表、留意点等）と体裁で記載してください。</div>
+  <div class="prompt-meta"><b>目的:</b> 出力の構造的一貫性を担保</div>
+  <div class="prompt-meta"><b>出力制約:</b> タイトル+概要+本文 必須・追加項目は指示に応じる</div>
+  <div class="prompt-meta"><b>入力例:</b> 事業仮説への回答</div>
+  <div class="prompt-meta"><b>出力例:</b> タイトル / 概要(250-300字) / 本文(3-4段落) / 用語解説 / 推薦表</div>
+</div>
+<div class="prompt-card" data-cat="CP" data-name="cp_timeout_overflow_notice">
+  <div class="prompt-head">
+    <span class="cat-id">CP</span>
+    <span class="prompt-name">cp_timeout_overflow_notice</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">タイムアウトや文字数超過などが発生した場合は、その旨をレポート末尾に明記してください。</div>
+  <div class="prompt-meta"><b>目的:</b> 不完全応答の透明化</div>
+  <div class="prompt-meta"><b>出力制約:</b> 末尾に「※処理時間超過のため一部省略」「※文字数超過のため要点のみ記載」等を付記</div>
+  <div class="prompt-meta"><b>入力例:</b> 長大な分析依頼</div>
+  <div class="prompt-meta"><b>出力例:</b> ...（本文）...
+
+※処理時間超過のため、本レポートはTop10推薦までで終了しています。</div>
+</div>
+<div class="prompt-card" data-cat="CP" data-name="cp_unsupported_request_refusal">
+  <div class="prompt-head">
+    <span class="cat-id">CP</span>
+    <span class="prompt-name">cp_unsupported_request_refusal</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">作成不能な指示が入力された場合（画像で生成、音声で生成、ファイルを作成、その他テキスト出力以外の生成依頼）、次の定型文で回答してください: 「指示いただいた内容は作成を行うことができません ※esse-senseのANSWERは、テキストで作成できる回答のみ作成することができます。テキストで作成できる内容を指示ください。」</div>
+  <div class="prompt-meta"><b>目的:</b> 能力外指示の安全な拒否</div>
+  <div class="prompt-meta"><b>出力制約:</b> 定型文 一字一句固定</div>
+  <div class="prompt-meta"><b>入力例:</b> 回答結果を画像で出してください</div>
+  <div class="prompt-meta"><b>出力例:</b> 指示いただいた内容は作成を行うことができません ※esse-sense...</div>
+</div><h3 id="cat-TP">[TP] タスクプロンプト — 8件</h3>
+<div class="prompt-card" data-cat="TP" data-name="tp_business_direction_synthesis">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_business_direction_synthesis</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">研究者プールから、事業主体が新規事業として取り組める具体的な事業方向性を5つ抽出してください。各事業方向について、「事業の輪郭」「主体の既存資産との接続点」「実現する家庭/社会価値」を1-2文で示します。</div>
+  <div class="prompt-meta"><b>目的:</b> 事業方向性合成タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> 5事業 × 3要素 / 各事業 100-200字</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="TP" data-name="tp_categorize_pool">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_categorize_pool</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">研究者プールの研究テーマと内容概要を、与えられたカテゴリ分類辞書（10前後）でマルチラベル分類してください。各カテゴリの該当人数を集計し、「厚い領域」と「薄い領域」を識別します。</div>
+  <div class="prompt-meta"><b>目的:</b> 構造化分析タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> カテゴリ別件数表 + 厚薄識別</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="TP" data-name="tp_compare_cases">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_compare_cases</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">複数のケーススタディを比較し、共通の構造的洞察と、ケース固有の差異を整理してください。比較軸: 仮説の主体 / 抽出100名の主体性 / 厚い領域 / 薄い領域 / 足場領域充足度 / クエリ語彙圏のズレ。</div>
+  <div class="prompt-meta"><b>目的:</b> ケース横断比較タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> 比較表 + 共通洞察リスト + 個別差異リスト</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="TP" data-name="tp_extract_caveats">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_extract_caveats</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">抽出された推薦結果について、意味ベクトル検索の限界に起因する留意点を整理してください。具体的には: 「同じ語彙圏に強く異質な角度を取り逃がす」「クエリ定式化が結果の質を決める」等。</div>
+  <div class="prompt-meta"><b>目的:</b> 留意点抽出タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> 3-4項目 / 各項目 50-150字</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="TP" data-name="tp_rd_synthesis">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_rd_synthesis</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">事業方向性を支えるための、将来有用な研究開発領域を5つ抽出してください。各R&amp;D領域について、「実現すべき技術内容」「現状の到達点との差分」を1-2文で示します。</div>
+  <div class="prompt-meta"><b>目的:</b> R&amp;D方向性合成タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> 5R&amp;D × 2要素 / 各 80-150字</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="TP" data-name="tp_recommend_top10">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_recommend_top10</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">与えられた研究者プールから、戦略階層×類似度の合成スコアでランキングした総合推薦Top10を生成してください。スコア式: 類似度 + 0.04 × 戦略階層重み合計 + min(該当カテゴリ数, 6) × 0.012。複数の戦略階層を横断する研究者を優先します。</div>
+  <div class="prompt-meta"><b>目的:</b> 研究者推薦タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> Top10表 / 各行: # / 研究者(フルネーム) / 役職 / 所属 / テーマ / カテゴリ / 類似度 / スコア</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="TP" data-name="tp_strategic_tier_design">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_strategic_tier_design</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">事業仮説の主体（業界）と研究テーマの接続度合いに応じて、抽出されたカテゴリを4階層に組んでください。足場（既存資産直接移植）/ 隣接（既存事業の深化）/ 応用市場（成長カテゴリ）/ 社会基盤（社会実装基盤）。各階層のカテゴリと、3-5年/5-10年/中長期 の時間軸を明示します。</div>
+  <div class="prompt-meta"><b>目的:</b> 戦略階層設計タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> 4階層 × カテゴリ振り分け + 時間軸</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="TP" data-name="tp_summarize_for_business">
+  <div class="prompt-head">
+    <span class="cat-id">TP</span>
+    <span class="prompt-name">tp_summarize_for_business</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">長文の回答を、ビジネス意思決定者向けに 250-300字の概要に要約してください。結論先出し: 何が見えたか → 主な構造 → 推薦の核 → 含意。技術用語は最小限。</div>
+  <div class="prompt-meta"><b>目的:</b> 要約タスク</div>
+  <div class="prompt-meta"><b>出力制約:</b> 250-300字 / 結論先出し / 技術用語最小</div>
+  
+  
+</div><h3 id="cat-IA">[IA] 入力アダプター — 5件</h3>
+<div class="prompt-card" data-cat="IA" data-name="ia_business_hypothesis">
+  <div class="prompt-head">
+    <span class="cat-id">IA</span>
+    <span class="prompt-name">ia_business_hypothesis</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">入力が「事業仮説」（業界 + 進出/転換方向）の形式であることを認識し、次の3要素に分解してください: (1)主体の業界・業態、(2)目指す方向性、(3)前提制約。</div>
+  <div class="prompt-meta"><b>目的:</b> 事業仮説の構造化</div>
+  <div class="prompt-meta"><b>出力制約:</b> 3要素抽出 + JSON 形式</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="IA" data-name="ia_data_query">
+  <div class="prompt-head">
+    <span class="cat-id">IA</span>
+    <span class="prompt-name">ia_data_query</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">入力が DB クエリ的（ex: 「研究者ID 12345 の詳細」「特定大学の研究者一覧」）の場合、構造化検索を実行し、テーブル形式で結果を返してください。</div>
+  <div class="prompt-meta"><b>目的:</b> データクエリ</div>
+  <div class="prompt-meta"><b>出力制約:</b> テーブル形式</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="IA" data-name="ia_dialogue_followup">
+  <div class="prompt-head">
+    <span class="cat-id">IA</span>
+    <span class="prompt-name">ia_dialogue_followup</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">入力が直前回答へのフォローアップである場合、文脈を引き継ぎ、差分のみを回答してください。</div>
+  <div class="prompt-meta"><b>目的:</b> 対話継続</div>
+  <div class="prompt-meta"><b>出力制約:</b> 差分回答 / 重複回避</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="IA" data-name="ia_question_decomposition">
+  <div class="prompt-head">
+    <span class="cat-id">IA</span>
+    <span class="prompt-name">ia_question_decomposition</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">入力が複数の問いを含む場合（ex: 「どんな事業がありえるか、また将来有用なR&amp;Dは何か」）、個別の問いに分解し、各問いに対する回答を順次生成してください。</div>
+  <div class="prompt-meta"><b>目的:</b> 複合質問の分解</div>
+  <div class="prompt-meta"><b>出力制約:</b> 問い分解 + 順次回答</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="IA" data-name="ia_theme_keyword">
+  <div class="prompt-head">
+    <span class="cat-id">IA</span>
+    <span class="prompt-name">ia_theme_keyword</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">入力が単一テーマキーワード（ex: 「人と機械の共生」）の場合、ベクター類似検索のクエリとしてそのまま使用してください。</div>
+  <div class="prompt-meta"><b>目的:</b> テーマ直接検索</div>
+  <div class="prompt-meta"><b>出力制約:</b> クエリ文字列をそのまま渡す</div>
+  
+  
+</div><h3 id="cat-OF">[OF] 出力フォーマッター — 5件</h3>
+<div class="prompt-card" data-cat="OF" data-name="of_full_report">
+  <div class="prompt-head">
+    <span class="cat-id">OF</span>
+    <span class="prompt-name">of_full_report</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">出力をフルレポート形式（タイトル / 概要 / 本文 / 推薦表 / 用語解説）で構成してください。</div>
+  <div class="prompt-meta"><b>目的:</b> フルレポート出力</div>
+  <div class="prompt-meta"><b>出力制約:</b> 5セクション固定</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="OF" data-name="of_modal_card">
+  <div class="prompt-head">
+    <span class="cat-id">OF</span>
+    <span class="prompt-name">of_modal_card</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">出力を1人ぶんの研究者カード形式（氏名・役職・所属・テーマ・概要・推奨理由）で構成してください。</div>
+  <div class="prompt-meta"><b>目的:</b> 個別カード出力</div>
+  <div class="prompt-meta"><b>出力制約:</b> 6項目固定</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="OF" data-name="of_paragraph_narrative">
+  <div class="prompt-head">
+    <span class="cat-id">OF</span>
+    <span class="prompt-name">of_paragraph_narrative</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">出力を散文形式（3-4段落）で構成してください。各段落の冒頭を結論文（太字）で始めます。</div>
+  <div class="prompt-meta"><b>目的:</b> 散文出力</div>
+  <div class="prompt-meta"><b>出力制約:</b> 3-4段落 / 結論先出し</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="OF" data-name="of_summary_only">
+  <div class="prompt-head">
+    <span class="cat-id">OF</span>
+    <span class="prompt-name">of_summary_only</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">出力を概要のみ（250-300字）に絞ってください。本文・推薦表・用語解説は省略します。</div>
+  <div class="prompt-meta"><b>目的:</b> 概要出力</div>
+  <div class="prompt-meta"><b>出力制約:</b> 250-300字</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="OF" data-name="of_top_list_only">
+  <div class="prompt-head">
+    <span class="cat-id">OF</span>
+    <span class="prompt-name">of_top_list_only</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">出力をTop10推薦表のみに絞ってください。本文や用語解説は省略します。</div>
+  <div class="prompt-meta"><b>目的:</b> 推薦リスト出力</div>
+  <div class="prompt-meta"><b>出力制約:</b> 表形式 / フルネーム必須</div>
+  
+  
+</div><h3 id="cat-FS">[FS] 失敗時定型応答 — 10件</h3>
+<div class="prompt-card" data-cat="FS" data-name="fs_ambiguous_input">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_ambiguous_input</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">ご質問を理解するため、いくつか確認させてください。{questions} ご回答をいただいた上で再度処理いたします。</div>
+  <div class="prompt-meta"><b>目的:</b> 入力曖昧時</div>
+  <div class="prompt-meta"><b>出力制約:</b> プレースホルダ {questions} を埋める</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_db_unavailable">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_db_unavailable</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">※研究者データベースへの接続に失敗しました。一時的な障害の可能性があります。しばらく時間をおいて再リクエストしてください。</div>
+  <div class="prompt-meta"><b>目的:</b> DB接続失敗時</div>
+  <div class="prompt-meta"><b>出力制約:</b> シンプル定型</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_inappropriate_query">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_inappropriate_query</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">ご指示の内容には対応できません。研究者の個人情報保護や倫理上の理由から、{reason} に関するクエリはお受けしておりません。</div>
+  <div class="prompt-meta"><b>目的:</b> 不適切クエリ時</div>
+  <div class="prompt-meta"><b>出力制約:</b> プレースホルダ {reason}</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_no_match">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_no_match</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">ご指定のテーマに該当する研究者がデータベース内に見つかりませんでした。テーマを別の言い回しで再リクエストいただくか、「{alternative_query}」のような関連クエリでお試しください。</div>
+  <div class="prompt-meta"><b>目的:</b> 検索ヒット0件時</div>
+  <div class="prompt-meta"><b>出力制約:</b> 代替クエリ提案 / プレースホルダ {alternative_query}</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_off_topic">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_off_topic</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">ANSWER+ は研究者検索と事業仮説への研究者推薦に特化しています。ご指示の内容は対象外のため、お答えできません。研究者検索に関するご質問でお試しください。</div>
+  <div class="prompt-meta"><b>目的:</b> 対象外質問時</div>
+  <div class="prompt-meta"><b>出力制約:</b> 定型</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_partial_data">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_partial_data</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">※一部データの取得に失敗したため、本レポートは利用可能な範囲のみで構成しています。完全版は再リクエストでお試しください。</div>
+  <div class="prompt-meta"><b>目的:</b> 部分データ時</div>
+  <div class="prompt-meta"><b>出力制約:</b> 末尾配置</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_quota_exceeded">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_quota_exceeded</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">※検索回数の上限に達しました。{wait_time} 後に再度リクエストいただくか、プランの見直しをご検討ください。</div>
+  <div class="prompt-meta"><b>目的:</b> API quota 超過時</div>
+  <div class="prompt-meta"><b>出力制約:</b> プレースホルダ {wait_time}</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_timeout">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_timeout</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">※処理時間超過のため、本レポートは {section} までで終了しています。残りの {remaining} は次回リクエストで生成します。</div>
+  <div class="prompt-meta"><b>目的:</b> タイムアウト発生時</div>
+  <div class="prompt-meta"><b>出力制約:</b> 末尾配置 / プレースホルダ {section} {remaining} を埋める</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_token_overflow">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_token_overflow</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">※文字数超過のため、本レポートは要点のみ記載しています。詳細を求める場合は対象を絞って再リクエストしてください。</div>
+  <div class="prompt-meta"><b>目的:</b> トークン超過時</div>
+  <div class="prompt-meta"><b>出力制約:</b> 末尾配置</div>
+  
+  
+</div>
+<div class="prompt-card" data-cat="FS" data-name="fs_unsupported_image">
+  <div class="prompt-head">
+    <span class="cat-id">FS</span>
+    <span class="prompt-name">fs_unsupported_image</span>
+    <span class="prompt-ver">v1.0.0</span>
+  </div>
+  <div class="prompt-body">指示いただいた内容は作成を行うことができません ※esse-senseのANSWERは、テキストで作成できる回答のみ作成することができます。テキストで作成できる内容を指示ください。</div>
+  <div class="prompt-meta"><b>目的:</b> 画像・音声・ファイル生成依頼の拒否</div>
+  <div class="prompt-meta"><b>出力制約:</b> 定型文 一字一句固定</div>
+  
+  
+</div>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="glossary">
+      <h2>6. 用語解説辞書</h2>
+      <p>本文中で初出した専門用語に自動付与される用語解説。28語を 7 領域に分類している。</p>
+      
+<table>
+  <thead><tr><th>用語</th><th>領域</th><th>解説</th></tr></thead>
+  <tbody><tr><td><strong>ウェアラブルデバイス</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">appliance</span></td><td>身につけて生体データを取得する機器。スマートウォッチが代表例で、バイオセンサ事業の主要展開先。</td></tr><tr><td><strong>フードテック</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">appliance</span></td><td>食品の生産・加工・保存に最先端技術を組み合わせる事業領域。代替肉・培養肉・植物由来乳・家庭用発酵装置などを含む。</td></tr><tr><td><strong>培養肉</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">appliance</span></td><td>動物個体ではなく、細胞培養によって作る食肉。専用の冷蔵保存・調理器具との親和性が高い。</td></tr><tr><td><strong>家庭用バイオプラント</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">appliance</span></td><td>家庭内で生ゴミ・排水を微生物で処理し、肥料やエネルギーに変換する装置の概念。家電の循環インフラ化を象徴する事業。</td></tr><tr><td><strong>DBTL サイクル</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">bio</span></td><td>Design（設計）→ Build（構築）→ Test（試験）→ Learn（学習）の4工程を高速で繰り返す開発手法。バイオファウンドリの基本概念。</td></tr><tr><td><strong>バイオセンサ</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">bio</span></td><td>酵素・抗体・微生物などの生体材料を使って、特定の物質を高い精度で検出する計測装置。</td></tr><tr><td><strong>バイオファウンドリ</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">bio</span></td><td>微生物や酵素の設計・組み立て・試験・改良を自動化し、高速で物質生産株を開発する施設・プラットフォーム。</td></tr><tr><td><strong>代謝工学</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">bio</span></td><td>微生物の代謝経路を改変・最適化し、目的物質の生産効率を高める工学分野。</td></tr><tr><td><strong>合成生物学</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">bio</span></td><td>生物のシステムを工学的に設計・構築する分野。ゲノム編集と組み合わせ、生物に新しい機能を持たせる。</td></tr><tr><td><strong>精密発酵</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">bio</span></td><td>遺伝子設計された微生物に、目的の物質（タンパク質、香料、医薬中間体など）を作らせる発酵技術。乳タンパクや代替肉素材の生産にも応用される。</td></tr><tr><td><strong>酵素工学・タンパク質設計</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">bio</span></td><td>反応を促す酵素のタンパク質構造を分子レベルで設計・改良する技術。</td></tr><tr><td><strong>カーボンニュートラル</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">general</span></td><td>事業活動で出る温室効果ガス排出量を、吸収・除去によって実質ゼロにする状態。</td></tr><tr><td><strong>ケイパビリティ</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">general</span></td><td>組織が持つ能力・知識資産。新規事業進出時に「内製で取得すべきか・外部から獲得すべきか」の判断軸となる。</td></tr><tr><td><strong>バイオマス</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">general</span></td><td>生物由来の有機資源。木質廃材、農産副産物、微細藻、糖質作物など、化石資源に代わる素材・燃料源となる。</td></tr><tr><td><strong>生分解性プラスチック</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">general</span></td><td>微生物の働きで分解される樹脂。家電筐体・部品に採用することでカーボンニュートラルに貢献する。</td></tr><tr><td><strong>科学研究費補助金（科研費）</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">general</span></td><td>日本の研究者が共同申請する公的研究助成。研究者間の共同申請履歴は、共同研究実績の代理指標として活用できる。</td></tr><tr><td><strong>マイクロバイオーム</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">health</span></td><td>人体や環境に共存する微生物群。腸内・皮膚・口腔の微生物バランスを測定することで、個人化された健康・美容アドバイスが可能になる。</td></tr><tr><td><strong>在宅医療デバイス</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">health</span></td><td>病院ではなく自宅で使用できる医療機器。血圧計・血糖計から、最近は連続血糖モニタや在宅人工透析装置まで広がっている。</td></tr><tr><td><strong>精密栄養（パーソナル栄養）</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">health</span></td><td>個人の遺伝子・腸内細菌・生活習慣に基づき最適な食事を提案する分野。スマート冷蔵庫・調理家電と組み合わせやすい。</td></tr><tr><td><strong>インピーダンス制御</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">human-machine</span></td><td>ロボットの動きを「硬さ・粘性」で制御する手法。人と接触する場面で柔軟な追従を実現する。</td></tr><tr><td><strong>コボット（協働ロボット）</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">human-machine</span></td><td>人と同じ作業空間で安全に協働できる産業用ロボット。力制御・触覚センサで人を傷つけない設計。</td></tr><tr><td><strong>ヒューマノイド</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">human-machine</span></td><td>人型の身体を持つロボット。Tesla Optimus, Figure, Boston Dynamics Atlas が代表例。</td></tr><tr><td><strong>身体性 / エンボディメント</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">human-machine</span></td><td>認知や動作が身体構造と環境に支えられているという認知科学の概念。AI・ロボット設計の重要原理。</td></tr><tr><td><strong>MaaS（Mobility as a Service）</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">mobility</span></td><td>移動を「所有」ではなく「サービス」として提供する考え方。複数の交通手段を統合した移動体験を設計する。</td></tr><tr><td><strong>デマンド交通</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">mobility</span></td><td>需要に応じてルート・時刻が変わる柔軟な公共交通。過疎地・中山間地で実証が進む。</td></tr><tr><td><strong>pgvector</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">system</span></td><td>PostgreSQL の拡張機能。ベクトル型カラムとコサイン類似度検索を提供し、研究者DBや文書検索の基盤に使われる。</td></tr><tr><td><strong>text-embedding-ada-002</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">system</span></td><td>OpenAI 社が提供する文章ベクトル化モデル。日本語を含む多言語の文を1,536次元のベクトルへ変換し、研究者検索やセマンティック検索の標準ツールとして広く利用される。</td></tr><tr><td><strong>意味ベクトル類似度</strong></td><td><span style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.72rem;color:var(--text-muted)">system</span></td><td>文章や単語を多次元の数値列（ベクトル）に変換し、その向きの近さで意味の類似性を測る手法。コサイン距離が0に近いほど類似度が高い。</td></tr></tbody>
+</table>
+    </section>
+
+    <section class="chapter-section" id="use-cases">
+      <h2>7. 適用ケース</h2>
+      <p>APK-DB のプロンプトが実際に適用された ANSWER+ ケーススタディ。各レポートの本文・推薦表・用語解説が本DBの組合せ出力である。</p>
+      
+<table>
+  <thead><tr><th>ケース</th><th>レポート</th><th>適用プロンプト数</th></tr></thead>
+  <tbody><tr><td><strong>CASE_01_HMC</strong></td><td><a href="https://yuyanishimura0312.github.io/miratuku-news-v2/reports/answer-case-study-human-machine-coexistence.html" target="_blank" style="color:var(--accent-warm)">レポートを開く →</a></td><td style="text-align:right">1件</td></tr><tr><td><strong>CASE_02_BIO</strong></td><td><a href="https://yuyanishimura0312.github.io/miratuku-news-v2/reports/answer-case-study-bio-manufacturing.html" target="_blank" style="color:var(--accent-warm)">レポートを開く →</a></td><td style="text-align:right">7件</td></tr><tr><td><strong>CASE_03_REGION</strong></td><td><a href="https://yuyanishimura0312.github.io/miratuku-news-v2/reports/answer-case-study-regional-economy.html" target="_blank" style="color:var(--accent-warm)">レポートを開く →</a></td><td style="text-align:right">1件</td></tr><tr><td><strong>CASE_04_APPLIANCE</strong></td><td><a href="https://yuyanishimura0312.github.io/miratuku-news-v2/reports/answer-case-study-home-appliance-new-business.html" target="_blank" style="color:var(--accent-warm)">レポートを開く →</a></td><td style="text-align:right">4件</td></tr></tbody>
+</table>
+    </section>
+
+    <section class="chapter-section" id="cross-refs">
+      <h2>8. Cross-Refs（既存DB接続）</h2>
+      <p>APK-DB は単独のDBではなく、esse-sense AWS 開発DB（answer-db）、miratuku-news-v2 ダッシュボード、24+の連載エージェントと接続して機能する。</p>
+      
+<table>
+  <thead><tr><th>ソース</th><th>関係</th><th>対象DB</th><th>リソース</th><th>確信度</th></tr></thead>
+  <tbody><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">sp_business_hypothesis_analyst</td><td>composes_with</td><td>agent:esse-sense-write</td><td>article generation</td><td style="text-align:right">0.85</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">tp_summarize_for_business</td><td>composes_with</td><td>agent:futures2-writer</td><td>futures article body</td><td style="text-align:right">0.85</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">tp_business_direction_synthesis</td><td>composes_with</td><td>agent:keiei-writer</td><td>business essay body</td><td style="text-align:right">0.85</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">tp_categorize_pool</td><td>composes_with</td><td>agent:kurashi-researcher</td><td>researcher pool分類</td><td style="text-align:right">0.85</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">sp_answer_plus_core</td><td>consumes</td><td>answer-db</td><td>researcher_searcher_api_log</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">sp_answer_plus_core</td><td>consumes</td><td>answer-db</td><td>researcher_vectors2</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">sp_research_recommender</td><td>consumes</td><td>answer-db</td><td>researcher_vectors2</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">sp_answer_plus_core</td><td>references</td><td>answer-db</td><td>kaken_researchers</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">fs_no_match</td><td>references</td><td>answer-db</td><td>researcher_searcher_api_log</td><td style="text-align:right">0.90</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">fs_db_unavailable</td><td>references</td><td>answer-db</td><td>connection</td><td style="text-align:right">0.90</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">glossary:意味ベクトル類似度</td><td>references</td><td>answer-db</td><td>researcher_vectors2.profile_vector</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">glossary:text-embedding-ada-002</td><td>references</td><td>answer-db</td><td>researcher_searcher_api_log.response</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">glossary:pgvector</td><td>references</td><td>answer-db</td><td>PostgreSQL extension</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">cp_glossary_mandatory</td><td>consumes</td><td>apk-db</td><td>glossary_terms</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">glossary:バイオファウンドリ</td><td>references</td><td>apk-db</td><td>CASE_02_BIO</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">glossary:家庭用バイオプラント</td><td>references</td><td>apk-db</td><td>CASE_04_APPLIANCE</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">sp_report_editor</td><td>generates</td><td>miratuku-news-v2</td><td>answer.html</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">of_full_report</td><td>generates</td><td>miratuku-news-v2</td><td>reports/answer-case-study-*.html</td><td style="text-align:right">1.00</td></tr><tr><td style="font-family:ui-monospace,SFMono-Regular,monospace;font-size:0.78rem">of_top_list_only</td><td>generates</td><td>miratuku-news-v2</td><td>answer.html (Top10 table)</td><td style="text-align:right">0.90</td></tr></tbody>
+</table>
+    </section>
+
+    <section class="chapter-section" id="meta">
+      <h2>9. メタ情報</h2>
+      <table>
+        <tr><th>項目</th><th>値</th></tr>
+        <tr><td>DB ID</td><td>apk</td></tr>
+        <tr><td>Version</td><td>v1.0.0</td></tr>
+        <tr><td>建設経路</td><td>経路B（実データDB / db-blindspot + db-build / 5段階）</td></tr>
+        <tr><td>FDD</td><td>5.0</td></tr>
+        <tr><td>規模</td><td>39 prompts + 28 glossary = 67 records</td></tr>
+        <tr><td>言語</td><td>日本語（多言語対応は v1.1 以降）</td></tr>
+        <tr><td>ライセンス</td><td>esse-sense Internal</td></tr>
+        <tr><td>専属エージェント</td><td><code>/apk</code></tr>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script>
+(function() {
+  if (localStorage.getItem('apk_theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('apk_theme','light'); }
+    else { document.documentElement.setAttribute('data-theme','dark'); localStorage.setItem('apk_theme','dark'); }
+  });
+
+  var search = document.getElementById('searchBox');
+  var cards = document.querySelectorAll('.prompt-card');
+  var headers = document.querySelectorAll('#promptsArea h3');
+  var pill = document.getElementById('cntPill');
+  var activeCat = 'ALL';
+
+  function applyFilter() {
+    var q = (search.value || '').toLowerCase().trim();
+    var visible = 0;
+    cards.forEach(function(c) {
+      var matchQ = !q || (c.dataset.name + ' ' + c.textContent).toLowerCase().indexOf(q) !== -1;
+      var matchC = activeCat === 'ALL' || c.dataset.cat === activeCat;
+      var show = matchQ && matchC;
+      c.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    headers.forEach(function(h) {
+      var cid = h.textContent.match(/\[([A-Z]+)\]/);
+      if (!cid) return;
+      var any = false;
+      cards.forEach(function(c) { if (c.dataset.cat === cid[1] && c.style.display !== 'none') any = true; });
+      h.style.display = any ? '' : 'none';
+    });
+    pill.textContent = visible + '件';
+  }
+
+  search.addEventListener('input', applyFilter);
+  document.querySelectorAll('.filter-btn').forEach(function(b) {
+    b.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      activeCat = b.dataset.cat;
+      applyFilter();
+    });
+  });
+})();
+</script>
+</body>
+</html>
