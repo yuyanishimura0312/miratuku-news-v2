@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SFS-DB Dashboard — SF Studies × Works × Questions × Future Society Conditions</title>
+<link rel="icon" type="image/x-icon" href="https://esse-sense.com/favicon.ico"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555555;
+  --accent-warm:#CC1400; --accent-warm-soft:#B01200;
+  --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE;
+  --highlight:#CC1400; --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+}
+[data-theme="dark"] {
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222222;
+  --accent:#E0E0E0; --accent-warm:#FF4030;
+  --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A;
+  --border:#333333; --border-light:#2A2A2A;
+  --highlight:#FF4030; --surface:#1A1A1A;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { background:var(--bg); color:var(--text); font-family:var(--font); font-feature-settings:"palt"; letter-spacing:0.025em; }
+.top-bar { position:fixed; top:0; left:0; right:0; height:48px; background:var(--bg); border-bottom:1px solid var(--border-light); border-top:3px solid #121212; display:flex; align-items:center; padding:0 24px; z-index:100; gap:16px; }
+.top-bar .brand { font-weight:700; font-size:14px; }
+.top-bar .meta { color:var(--text-muted); font-size:11px; margin-left:auto; }
+.theme-toggle { background:none; border:1px solid var(--border); color:var(--text); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px; }
+.layout { display:flex; padding-top:48px; max-width:100%; }
+.toc-sidebar { width:240px; min-width:240px; padding:24px 16px; border-right:1px solid var(--border-light); position:sticky; top:48px; height:calc(100vh - 48px); overflow-y:auto; font-size:12px; }
+.toc-sidebar h3 { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:12px; }
+.toc-sidebar a { display:block; padding:4px 0; color:var(--text-secondary); text-decoration:none; line-height:1.6; }
+.toc-sidebar a:hover { color:var(--accent-warm); }
+main { flex:1; padding:48px 40px; max-width:920px; }
+h1 { font-family:var(--font-serif); font-size:32px; line-height:1.4; margin-bottom:12px; }
+h2 { font-family:var(--font-serif); font-size:22px; line-height:1.5; margin:48px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--border-light); }
+h3 { font-size:15px; margin:24px 0 12px; color:var(--accent-warm); font-weight:600; }
+p { font-family:var(--font-serif); line-height:1.85; margin-bottom:14px; text-indent:1em; }
+p:first-of-type { text-indent:0; }
+.subtitle { color:var(--text-secondary); font-size:13px; margin-bottom:24px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin:24px 0; }
+.kpi { background:var(--surface); border:1px solid var(--border-light); padding:16px; border-radius:6px; }
+.kpi .val { font-size:28px; font-weight:700; color:var(--accent-warm); }
+.kpi .lbl { font-size:11px; color:var(--text-muted); margin-top:4px; }
+table { width:100%; border-collapse:collapse; margin:16px 0; font-size:12px; }
+th { text-align:left; padding:8px 10px; border-bottom:2px solid var(--border); background:var(--surface); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); }
+td { padding:8px 10px; border-bottom:1px solid var(--border-light); line-height:1.5; }
+tr:hover td { background:var(--card-hover); }
+.tag { display:inline-block; padding:2px 8px; background:var(--accent-muted); color:var(--accent-warm); border-radius:3px; font-size:10px; margin-right:4px; }
+.chapter-section { margin-bottom:64px; padding-bottom:32px; border-bottom:1px solid var(--border-light); }
+.note { font-size:11px; color:var(--text-muted); margin-top:8px; }
+@media print { .toc-sidebar, .top-bar { display:none; } main { padding:0; max-width:none; } }
+@media (max-width:1000px) { .toc-sidebar { display:none; } main { padding:24px 16px; } }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="brand">SFS-DB Dashboard v0.1</span>
+  <span class="meta">SF Studies × Works × Questions × Future Society Conditions / 2026-05-16 16:25</span>
+  <button class="theme-toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';localStorage.setItem('theme',document.documentElement.dataset.theme);">テーマ</button>
+</div>
+
+<div class="layout">
+  <nav class="toc-sidebar">
+    <h3>目次</h3>
+    <a href="#summary">01 サマリ</a>
+    <a href="#subfields">02 サブフィールド分布</a>
+    <a href="#era">03 時代分布</a>
+    <a href="#lang">04 言語分布</a>
+    <a href="#culture">05 文化圏</a>
+    <a href="#questions">06 L2 問い</a>
+    <a href="#conditions">07 L3 未来社会条件</a>
+    <a href="#crossdb">08 cross_db_refs</a>
+    <a href="#sample">09 サンプル概念</a>
+    <a href="#methodology">10 方法論</a>
+    <a href="#status">11 ステータス</a>
+  </nav>
+
+  <main>
+    <h1>SFS-DB Dashboard</h1>
+    <p class="subtitle">SF Studies × Works × Questions × Future Society Conditions Concept DB —
+    Wave 1 (v0.1) / Phase 0-7 完了版 / 2026-05-16</p>
+
+    <section class="chapter-section" id="summary">
+      <h2>01 サマリ</h2>
+      <p>SFS-DB は、SF (Science Fiction / Speculative Fiction) が 200 年余りにわたって提起してきた「問い」と、描かれてきた「未来社会条件」を、SF 研究 (Science Fiction Studies) の学術概念と統合した世界初規模の 3 レイヤー学術 DB である。本ダッシュボードは Wave 1 MVP (Phase 0-7 完了) 時点のスナップショット。</p>
+      <p>方法論は <code>/academic-db-build</code> v1.1 (Phase 0-15 full-quality) を採用。Production 規模目標 9,700+ 概念に対する達成率は約 3.9% (Wave 1 MVP)。残余は Phase 8-11 反復ループで Wave 2 以降に拡張する。</p>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="val">380</div><div class="lbl">学術概念</div></div>
+        <div class="kpi"><div class="val">30</div><div class="lbl">L2 問い</div></div>
+        <div class="kpi"><div class="val">35</div><div class="lbl">L3 未来条件</div></div>
+        <div class="kpi"><div class="val">40</div><div class="lbl">著者・批評家</div></div>
+        <div class="kpi"><div class="val">1014</div><div class="lbl">概念間関係</div></div>
+        <div class="kpi"><div class="val">60</div><div class="lbl">cross_db_refs</div></div>
+      </div>
+      <h3>品質指標</h3>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="val">97.6%</div><div class="lbl">verified率</div></div>
+        <div class="kpi"><div class="val">100.0%</div><div class="lbl">source_url率</div></div>
+        <div class="kpi"><div class="val">79.7%</div><div class="lbl">非西洋率 (基準40%)</div></div>
+        <div class="kpi"><div class="val">55.3%</div><div class="lbl">非英語率 (基準35%)</div></div>
+      </div>
+      <p class="note">基準値: verified ≥ 95% / source_url 100% / 非西洋 ≥ 40% / 多言語 ≥ 35% (/adb v1.1)</p>
+    </section>
+
+    <section class="chapter-section" id="subfields">
+      <h2>02 サブフィールド分布 (21 領域)</h2>
+      <p>SFS-DB は 21 のサブフィールドで構成される。SF 理論を中核に、英語圏 SF 史、ロシア・日本・中国・韓国・南アジア・中東・中南米・アフリカ・欧州大陸 SF の地域別歴史、Afrofuturism・Indigenous Futurisms・脱植民地 SF の批評運動、サブジャンル・メディア形式、そして 7 つの主題系を横断する。</p>
+      <table>
+        <thead><tr><th>ID</th><th>領域</th><th>件数</th><th>Wave 1 達成率</th></tr></thead>
+        <tbody>
+<tr><td>SFS-01</td><td>SF理論・詩学</td><td>25</td><td>4.2%</td></tr>
+<tr><td>SFS-02</td><td>英語圏SFの歴史</td><td>35</td><td>5.8%</td></tr>
+<tr><td>SFS-03</td><td>ロシア・ソ連・東欧SF</td><td>80</td><td>13.3%</td></tr>
+<tr><td>SFS-04</td><td>日本SF</td><td>70</td><td>11.7%</td></tr>
+<tr><td>SFS-05</td><td>中国語圏SF</td><td>59</td><td>9.8%</td></tr>
+<tr><td>SFS-06</td><td>アフロフューチャリズム・アフリカSF</td><td>57</td><td>9.5%</td></tr>
+<tr><td>SFS-07</td><td>先住民フューチャリズム</td><td>29</td><td>4.8%</td></tr>
+<tr><td>SFS-08</td><td>中南米・ポルトガル語圏SF</td><td>0</td><td>0.0%</td></tr>
+<tr><td>SFS-09</td><td>南アジアSF</td><td>0</td><td>0.0%</td></tr>
+<tr><td>SFS-10</td><td>中東・アラブ・北アフリカSF</td><td>0</td><td>0.0%</td></tr>
+<tr><td>SFS-11</td><td>韓国・その他東アジアSF</td><td>0</td><td>0.0%</td></tr>
+<tr><td>SFS-12</td><td>欧州大陸SF</td><td>0</td><td>0.0%</td></tr>
+<tr><td>SFS-13</td><td>SFサブジャンル・形式</td><td>2</td><td>0.3%</td></tr>
+<tr><td>SFS-14</td><td>SFメディア・形式</td><td>0</td><td>0.0%</td></tr>
+<tr><td>SFS-15</td><td>存在論・実存テーマ</td><td>10</td><td>1.7%</td></tr>
+<tr><td>SFS-16</td><td>政治・経済・批評理論テーマ</td><td>5</td><td>0.8%</td></tr>
+<tr><td>SFS-17</td><td>生態・気候・惑星テーマ</td><td>3</td><td>0.5%</td></tr>
+<tr><td>SFS-18</td><td>技術テーマ</td><td>3</td><td>0.5%</td></tr>
+<tr><td>SFS-19</td><td>社会的アイデンティティ・テーマ</td><td>2</td><td>0.3%</td></tr>
+<tr><td>SFS-20</td><td>スペキュレイティヴな問い</td><td>0</td><td>0.0%</td></tr>
+<tr><td>SFS-21</td><td>未来社会条件</td><td>0</td><td>0.0%</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Wave 2 以降で SFS-07/08/09/10/11/12/13/14/17/18/19/20/21 を拡張予定。</p>
+    </section>
+
+    <section class="chapter-section" id="era">
+      <h2>03 時代分布</h2>
+      <p>SF の 200 年余りにわたる歴史を時代区分で見る。pre-1900 のプロト SF (Frankenstein 1818, Verne 1864-1905, Wells 1895-) から、1900-1939 のパルプ時代、1940-1969 の黄金期、1970-1999 のニューウェーヴからサイバーパンク、2000-2014 のスリップストリームから climate-AI 時代、2015 年以降の cli-fi / Indigenous Futurisms / hopepunk 期までを網羅。</p>
+      <table>
+        <thead><tr><th>時代</th><th>件数</th><th>比率</th></tr></thead>
+        <tbody>
+<tr><td>1900-1939</td><td>25</td><td>6.6%</td></tr>
+<tr><td>1940-1969</td><td>64</td><td>16.8%</td></tr>
+<tr><td>1970-1999</td><td>118</td><td>31.1%</td></tr>
+<tr><td>2000-2014</td><td>98</td><td>25.8%</td></tr>
+<tr><td>2015-</td><td>68</td><td>17.9%</td></tr>
+<tr><td>pre-1900</td><td>7</td><td>1.8%</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="lang">
+      <h2>04 言語分布</h2>
+      <p>SF は元来多言語的な文学であり、本 DB はこの多元性を構造的に保存する。基準値「非英語 35%+」に対して 55.3% を達成 (Wave 1 時点)。</p>
+      <table>
+        <thead><tr><th>言語 (ISO 639-1)</th><th>件数</th><th>比率</th></tr></thead>
+        <tbody>
+<tr><td>en</td><td>170</td><td>44.7%</td></tr>
+<tr><td>ja</td><td>67</td><td>17.6%</td></tr>
+<tr><td>zh</td><td>60</td><td>15.8%</td></tr>
+<tr><td>ru</td><td>53</td><td>13.9%</td></tr>
+<tr><td>pl</td><td>18</td><td>4.7%</td></tr>
+<tr><td>cs</td><td>5</td><td>1.3%</td></tr>
+<tr><td>hu</td><td>2</td><td>0.5%</td></tr>
+<tr><td>uk</td><td>1</td><td>0.3%</td></tr>
+<tr><td>sv</td><td>1</td><td>0.3%</td></tr>
+<tr><td>ro</td><td>1</td><td>0.3%</td></tr>
+<tr><td>fr</td><td>1</td><td>0.3%</td></tr>
+<tr><td>bg</td><td>1</td><td>0.3%</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="culture">
+      <h2>05 文化圏分布</h2>
+      <p>Eurocentric / Anglosphere 偏重の構造的解消を目標として、非西洋・global_indigenous の比率を測定。基準値「非西洋 40%+」に対して 79.7% を達成。</p>
+      <table>
+        <thead><tr><th>文化圏</th><th>件数</th><th>比率</th></tr></thead>
+        <tbody>
+<tr><td>global_indigenous</td><td>30</td><td>7.9%</td></tr>
+<tr><td>mixed</td><td>9</td><td>2.4%</td></tr>
+<tr><td>non_western</td><td>273</td><td>71.8%</td></tr>
+<tr><td>western</td><td>68</td><td>17.9%</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="questions">
+      <h2>06 L2 スペキュレイティヴな問い (30 件)</h2>
+      <p>L2 レイヤーは、SF 作品が 200 年スパンで提起してきた哲学的問いを 8 カテゴリ (ontological/epistemological/ethical/political/ecological/existential/temporal/relational) に正規化した層。Contemporary Questions DB (CQ-DB) と <code>was_anticipated_by</code> / <code>is_actualized_in</code> リレーションで接続し、虚構の問いと 2026 年現実の問いの系譜を結ぶ。</p>
+      <h3>カテゴリ分布</h3>
+      <table>
+        <thead><tr><th>カテゴリ</th><th>件数</th></tr></thead>
+        <tbody>
+<tr><td>ontological</td><td>6</td></tr>
+<tr><td>political</td><td>6</td></tr>
+<tr><td>ethical</td><td>5</td></tr>
+<tr><td>epistemological</td><td>4</td></tr>
+<tr><td>existential</td><td>3</td></tr>
+<tr><td>relational</td><td>3</td></tr>
+<tr><td>ecological</td><td>2</td></tr>
+<tr><td>temporal</td><td>1</td></tr>
+        </tbody>
+      </table>
+      <h3>初出年順の問い (20件)</h3>
+      <table>
+        <thead><tr><th>ID</th><th>問い</th><th>カテゴリ</th><th>初出</th></tr></thead>
+        <tbody>
+<tr><td>QUES_012</td><td>非人類人格者との正しい関係とは？</td><td><span class="tag">ethical</span></td><td>1896 / H.G. Wells</td></tr>
+<tr><td>QUES_017</td><td>生命は無限に延長されるべきか？</td><td><span class="tag">existential</span></td><td>1941 / Robert A. Heinlein</td></tr>
+<tr><td>QUES_001</td><td>機械は道徳的地位を持つ人格となりうるか？</td><td><span class="tag">ontological</span></td><td>1942 / Isaac Asimov</td></tr>
+<tr><td>QUES_014</td><td>人類絶滅は道徳的問題なのか？</td><td><span class="tag">ethical</span></td><td>1953 / Arthur C. Clarke</td></tr>
+<tr><td>QUES_004</td><td>真に異質な知性とコミュニケーションは可能か？</td><td><span class="tag">epistemological</span></td><td>1961 / Stanisław Lem</td></tr>
+<tr><td>QUES_016</td><td>歴史は書き換え可能か？</td><td><span class="tag">temporal</span></td><td>1962 / Philip K. Dick</td></tr>
+<tr><td>QUES_003</td><td>私たちはシミュレーションの中に生きているのか？</td><td><span class="tag">epistemological</span></td><td>1964 / Philip K. Dick</td></tr>
+<tr><td>QUES_029</td><td>私たちが存在することをいかに知るのか？</td><td><span class="tag">ontological</span></td><td>1968 / Philip K. Dick</td></tr>
+<tr><td>QUES_028</td><td>身体が可塑的な時、ジェンダーとは何か？</td><td><span class="tag">relational</span></td><td>1969 / Ursula K. Le Guin</td></tr>
+<tr><td>QUES_019</td><td>コミュニケーションはトラウマを超えうるか？</td><td><span class="tag">relational</span></td><td>1979 / Octavia E. Butler</td></tr>
+<tr><td>QUES_024</td><td>感覚が技術的に拡張された時、現実とは何か？</td><td><span class="tag">epistemological</span></td><td>1984 / William Gibson</td></tr>
+<tr><td>QUES_020</td><td>バイオテック後の生殖とは何か？</td><td><span class="tag">ethical</span></td><td>1985 / Margaret Atwood</td></tr>
+<tr><td>QUES_007</td><td>AGI後、労働に代わる人生の意味は何か？</td><td><span class="tag">existential</span></td><td>1987 / Iain M. Banks</td></tr>
+<tr><td>QUES_002</td><td>心の上載を経て自己同一性は保たれるか？</td><td><span class="tag">ontological</span></td><td>1994 / Greg Egan</td></tr>
+<tr><td>QUES_018</td><td>仮想生は本物の生か？</td><td><span class="tag">ontological</span></td><td>1994 / Greg Egan</td></tr>
+<tr><td>QUES_005</td><td>決定論の下で自由意志は残るか？</td><td><span class="tag">epistemological</span></td><td>1998 / Ted Chiang</td></tr>
+<tr><td>QUES_013</td><td>植民地主義は脱構築可能か？</td><td><span class="tag">political</span></td><td>2003 / Grace L. Dillon</td></tr>
+<tr><td>QUES_015</td><td>人類以外の意識とは何か？</td><td><span class="tag">ontological</span></td><td>2006 / Peter Watts</td></tr>
+<tr><td>QUES_021</td><td>宇宙は敵対的か？</td><td><span class="tag">ontological</span></td><td>2008 / Liu Cixin</td></tr>
+<tr><td>QUES_023</td><td>先住民の知は未来に何を教えるか？</td><td><span class="tag">relational</span></td><td>2012 / Grace L. Dillon</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="conditions">
+      <h2>07 L3 未来社会条件 (35 件)</h2>
+      <p>L3 レイヤーは、SF 作品の世界観に潜む「未来社会の構造的前提」を 7 軸 (governance/economy/humanity/nature_relation/time_concept/death_longevity/social_structure) × 10-15 アーキタイプに分解した層。FORESIGHT / FTT / PHAI / GC / PB / MT / CTI と cross_ref で接続。</p>
+      <h3>軸分布</h3>
+      <table>
+        <thead><tr><th>軸</th><th>件数</th></tr></thead>
+        <tbody>
+<tr><td>governance</td><td>7</td></tr>
+<tr><td>nature_relation</td><td>6</td></tr>
+<tr><td>economy</td><td>5</td></tr>
+<tr><td>humanity</td><td>5</td></tr>
+<tr><td>death_longevity</td><td>4</td></tr>
+<tr><td>social_structure</td><td>4</td></tr>
+<tr><td>time_concept</td><td>4</td></tr>
+        </tbody>
+      </table>
+      <h3>条件サンプル (30件、軸順)</h3>
+      <table>
+        <thead><tr><th>ID</th><th>条件名 (ja)</th><th>EN</th><th>軸</th></tr></thead>
+        <tbody>
+<tr><td>COND_029</td><td>仏教的再生技術</td><td>Buddhist Rebirth-Tech</td><td><span class="tag">death_longevity</span></td></tr>
+<tr><td>COND_028</td><td>デジタル来世</td><td>Digital Afterlife</td><td><span class="tag">death_longevity</span></td></tr>
+<tr><td>COND_027</td><td>寿命延長された人類</td><td>Extended-Life Humanity</td><td><span class="tag">death_longevity</span></td></tr>
+<tr><td>COND_026</td><td>可死性基準</td><td>Mortal Baseline</td><td><span class="tag">death_longevity</span></td></tr>
+<tr><td>COND_008</td><td>注意経済</td><td>Attention Economy</td><td><span class="tag">economy</span></td></tr>
+<tr><td>COND_007</td><td>負債束縛社会</td><td>Debt-Bonded Society</td><td><span class="tag">economy</span></td></tr>
+<tr><td>COND_009</td><td>贈与経済</td><td>Gift Economy</td><td><span class="tag">economy</span></td></tr>
+<tr><td>COND_010</td><td>石油採取的崩壊</td><td>Petro-Extractive Collapse</td><td><span class="tag">economy</span></td></tr>
+<tr><td>COND_006</td><td>ポスト稀少性社会主義</td><td>Post-Scarcity Socialist</td><td><span class="tag">economy</span></td></tr>
+<tr><td>COND_003</td><td>AI統治</td><td>AI Governance</td><td><span class="tag">governance</span></td></tr>
+<tr><td>COND_004</td><td>アナーキー的脱国家</td><td>Anarchic Post-State</td><td><span class="tag">governance</span></td></tr>
+<tr><td>COND_001</td><td>企業国家</td><td>Corporate State</td><td><span class="tag">governance</span></td></tr>
+<tr><td>COND_035</td><td>コスモポリタン・アルゴリズム民主主義</td><td>Cosmopolitan Algorithmic Democracy</td><td><span class="tag">governance</span></td></tr>
+<tr><td>COND_002</td><td>惑星評議会</td><td>Planetary Council</td><td><span class="tag">governance</span></td></tr>
+<tr><td>COND_034</td><td>監視ディストピア</td><td>Surveillance Dystopia</td><td><span class="tag">governance</span></td></tr>
+<tr><td>COND_005</td><td>神権政治国家</td><td>Theocratic State</td><td><span class="tag">governance</span></td></tr>
+<tr><td>COND_011</td><td>拡張された人類</td><td>Augmented Humanity</td><td><span class="tag">humanity</span></td></tr>
+<tr><td>COND_013</td><td>キメラ・遺伝子改変人類</td><td>Chimeric / Genemodded Humanity</td><td><span class="tag">humanity</span></td></tr>
+<tr><td>COND_015</td><td>絶滅を見届ける人類</td><td>Extinct-Witnessed Humanity</td><td><span class="tag">humanity</span></td></tr>
+<tr><td>COND_014</td><td>ポストヒューマン多様性</td><td>Posthuman Diversity</td><td><span class="tag">humanity</span></td></tr>
+<tr><td>COND_012</td><td>上載された人類</td><td>Uploaded Humanity</td><td><span class="tag">humanity</span></td></tr>
+<tr><td>COND_018</td><td>崩壊した地球</td><td>Collapsed Earth</td><td><span class="tag">nature_relation</span></td></tr>
+<tr><td>COND_020</td><td>地球外人類</td><td>Off-World Humanity</td><td><span class="tag">nature_relation</span></td></tr>
+<tr><td>COND_016</td><td>再野生化された地球</td><td>Rewilded Earth</td><td><span class="tag">nature_relation</span></td></tr>
+<tr><td>COND_019</td><td>密封された巨大都市</td><td>Sealed Arcology</td><td><span class="tag">nature_relation</span></td></tr>
+<tr><td>COND_017</td><td>テラフォームされた火星・金星</td><td>Terraformed Mars / Venus</td><td><span class="tag">nature_relation</span></td></tr>
+<tr><td>COND_021</td><td>仮想限定的実存</td><td>Virtual-Only Existence</td><td><span class="tag">nature_relation</span></td></tr>
+<tr><td>COND_032</td><td>選択的親族関係</td><td>Chosen Kinship</td><td><span class="tag">social_structure</span></td></tr>
+<tr><td>COND_030</td><td>ジェンダー流動社会</td><td>Gender-Fluid Society</td><td><span class="tag">social_structure</span></td></tr>
+<tr><td>COND_031</td><td>ハイブ集合体</td><td>Hive Collective</td><td><span class="tag">social_structure</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter-section" id="crossdb">
+      <h2>08 cross_db_refs (60 件 / 20 target DBs)</h2>
+      <p>ミラツク既存 64+ DB 体系との横断接続。LIT (文学理論)、POETICS (詩学)、PHIL (哲学)、MY (神話)、AN (人類学)、TK (伝統知)、TC (時間概念)、CQ (現代の問い)、FORESIGHT / FTT / PHAI / AGIR (未来予測系)、GF (人物)、KGH (知の生成史) などと接続。</p>
+      <table>
+        <thead><tr><th>Target DB</th><th>件数</th></tr></thead>
+        <tbody>
+<tr><td>PHIL</td><td>9</td></tr>
+<tr><td>LIT</td><td>7</td></tr>
+<tr><td>CQ</td><td>6</td></tr>
+<tr><td>FTT</td><td>4</td></tr>
+<tr><td>SS</td><td>4</td></tr>
+<tr><td>AN</td><td>3</td></tr>
+<tr><td>GC</td><td>3</td></tr>
+<tr><td>GF</td><td>3</td></tr>
+<tr><td>MG</td><td>3</td></tr>
+<tr><td>TK</td><td>3</td></tr>
+<tr><td>FORESIGHT</td><td>2</td></tr>
+<tr><td>KGH</td><td>2</td></tr>
+<tr><td>PB</td><td>2</td></tr>
+<tr><td>PHAI</td><td>2</td></tr>
+<tr><td>TC</td><td>2</td></tr>
+<tr><td>HIC</td><td>1</td></tr>
+<tr><td>MT</td><td>1</td></tr>
+<tr><td>MY</td><td>1</td></tr>
+<tr><td>PHYS</td><td>1</td></tr>
+<tr><td>POETICS</td><td>1</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Wave 2 で Phase 14 (db-cross-ref-mapper 18 並列) を実行し、各 DB に対し 50-300 件まで拡大予定。</p>
+    </section>
+
+    <section class="chapter-section" id="sample">
+      <h2>09 サンプル概念 (50 件、era順)</h2>
+      <table>
+        <thead><tr><th>ID</th><th>概念名 (ja)</th><th>EN</th><th>SF</th><th>初出</th><th>言語</th><th>文化圏</th></tr></thead>
+        <tbody>
+<tr><td>SFS_0026</td><td>プロトSFとフランケンシュタイン</td><td>Proto-SF and Frankenstein</td><td>SFS-02</td><td>1818</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0062</td><td>ニコライ・フョードロフの蘇生哲学</td><td>Nikolai Fedorov's Philosophy of Resurrection</td><td>SFS-03</td><td>1860</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0027</td><td>ヴェルヌの異常な旅</td><td>Verne's Voyages Extraordinaires</td><td>SFS-02</td><td>1864</td><td>fr</td><td>western</td></tr>
+<tr><td>SFS_0061</td><td>ロシア宇宙主義</td><td>Russian Cosmism</td><td>SFS-03</td><td>1880</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0063</td><td>ツィオルコフスキーのロケット理論とSF</td><td>Tsiolkovsky's Rocket Theory and SF</td><td>SFS-03</td><td>1883</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0028</td><td>ウェルズのSF</td><td>H.G. Wells's Scientific Romances</td><td>SFS-02</td><td>1895</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0509</td><td>向上動物・知性化</td><td>Uplift / Animal Enhancement SF</td><td>SFS-15</td><td>1896</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0142</td><td>押川春浪の冒険科学小説</td><td>Oshikawa Shunro's Adventure Scientific Romance</td><td>SFS-04</td><td>1900</td><td>ja</td><td>non_western</td></tr>
+<tr><td>SFS_0231</td><td>梁啟超『新中国未来記』</td><td>Liang Qichao, The Future of New China</td><td>SFS-05</td><td>1902</td><td>zh</td><td>non_western</td></tr>
+<tr><td>SFS_0232</td><td>魯迅とジュール・ヴェルヌ翻訳</td><td>Lu Xun's Translation of Jules Verne</td><td>SFS-05</td><td>1903</td><td>zh</td><td>non_western</td></tr>
+<tr><td>SFS_0064</td><td>アレクサンドル・ボグダーノフ『赤い星』</td><td>Alexander Bogdanov's Red Star</td><td>SFS-03</td><td>1908</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0123</td><td>カリンティ・フリジェシュ『キャプチャー旅行』</td><td>Frigyes Karinthy's Capillaria & Voyage to Faremido</td><td>SFS-03</td><td>1916</td><td>hu</td><td>non_western</td></tr>
+<tr><td>SFS_0065</td><td>ザミャーチン『われら』</td><td>Yevgeny Zamyatin's We</td><td>SFS-03</td><td>1920</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0111</td><td>カレル・チャペック『R.U.R.』</td><td>Karel Čapek's R.U.R.</td><td>SFS-03</td><td>1920</td><td>cs</td><td>non_western</td></tr>
+<tr><td>SFS_0113</td><td>カレル・チャペック『マクロプロスの処方箋』</td><td>Karel Čapek's The Makropulos Affair</td><td>SFS-03</td><td>1922</td><td>cs</td><td>non_western</td></tr>
+<tr><td>SFS_0129</td><td>ヴラジーミル・ヴェルナツキーの生圏理論</td><td>Vladimir Vernadsky's Noosphere Theory</td><td>SFS-03</td><td>1922</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0066</td><td>アレクセイ・トルストイ『アエリータ』</td><td>Alexei Tolstoy's Aelita</td><td>SFS-03</td><td>1923</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0511</td><td>ディストピア・トポス</td><td>Dystopian Topos</td><td>SFS-16</td><td>1924</td><td>en</td><td>mixed</td></tr>
+<tr><td>SFS_0089</td><td>ソ連SF映画『アエリータ』</td><td>Soviet SF Film: Aelita (1924)</td><td>SFS-03</td><td>1924</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0068</td><td>ブルガーコフ『犬の心臓』</td><td>Mikhail Bulgakov's Heart of a Dog</td><td>SFS-03</td><td>1925</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0069</td><td>ブルガーコフ『運命の卵』</td><td>Mikhail Bulgakov's The Fatal Eggs</td><td>SFS-03</td><td>1925</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0073</td><td>ベリャーエフ『ドウエル教授の首』</td><td>Belyaev's Professor Dowell's Head</td><td>SFS-03</td><td>1925</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0029</td><td>サイエンティフィクション造語</td><td>Coinage of "Scientifiction"</td><td>SFS-02</td><td>1926</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0067</td><td>アレクセイ・トルストイ『技師ガーリンの双曲面』</td><td>Alexei Tolstoy's The Hyperboloid of Engineer Garin</td><td>SFS-03</td><td>1927</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0070</td><td>プラトーノフ『チェヴェングール』</td><td>Andrei Platonov's Chevengur</td><td>SFS-03</td><td>1927</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0072</td><td>ベリャーエフ『両棲人間』</td><td>Alexander Belyaev's Amphibian Man</td><td>SFS-03</td><td>1928</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0141</td><td>海野十三と日本SF黎明</td><td>Unno Juza and the Dawn of Japanese SF</td><td>SFS-04</td><td>1928</td><td>ja</td><td>non_western</td></tr>
+<tr><td>SFS_0071</td><td>プラトーノフ『土台穴』</td><td>Andrei Platonov's The Foundation Pit</td><td>SFS-03</td><td>1929</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0233</td><td>老舎『猫城記』</td><td>Lao She, Cat Country</td><td>SFS-05</td><td>1932</td><td>zh</td><td>non_western</td></tr>
+<tr><td>SFS_0143</td><td>木々高太郎と科学探偵小説</td><td>Kigi Takataro and Scientific Detective Fiction</td><td>SFS-04</td><td>1934</td><td>ja</td><td>non_western</td></tr>
+<tr><td>SFS_0112</td><td>カレル・チャペック『山椒魚戦争』</td><td>Karel Čapek's War with the Newts</td><td>SFS-03</td><td>1935</td><td>cs</td><td>non_western</td></tr>
+<tr><td>SFS_0030</td><td>キャンベルのアスタウンディング期</td><td>Astounding under Campbell</td><td>SFS-02</td><td>1937</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0122</td><td>カリン・ボイエ『カロカイン』</td><td>Karin Boye's Kallocain</td><td>SFS-03</td><td>1940</td><td>sv</td><td>non_western</td></tr>
+<tr><td>SFS_0507</td><td>不死と意味の問題</td><td>Immortality and the Meaning Problem</td><td>SFS-15</td><td>1941</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0031</td><td>ロボット工学三原則</td><td>Three Laws of Robotics</td><td>SFS-02</td><td>1942</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0032</td><td>ファウンデーション・サイクル</td><td>Foundation Cycle</td><td>SFS-02</td><td>1942</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0501</td><td>機械意識の問題</td><td>Machine Consciousness Problem</td><td>SFS-15</td><td>1942</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0074</td><td>オボロト・カザンツェフのUFO/古代宇宙人説SF</td><td>Aleksandr Kazantsev's UFO/Ancient Astronaut SF</td><td>SFS-03</td><td>1946</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0101</td><td>スタニスワフ・レム</td><td>Stanisław Lem</td><td>SFS-03</td><td>1946</td><td>pl</td><td>non_western</td></tr>
+<tr><td>SFS_0512</td><td>SF的監視社会</td><td>SF Surveillance Society</td><td>SFS-16</td><td>1949</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0181</td><td>手塚治虫『鉄腕アトム』</td><td>Tezuka Osamu's Astro Boy</td><td>SFS-04</td><td>1952</td><td>ja</td><td>non_western</td></tr>
+<tr><td>SFS_0303</td><td>サン・ラのミソサイエンス</td><td>Sun Ra's Mythoscience</td><td>SFS-06</td><td>1952</td><td>en</td><td>non_western</td></tr>
+<tr><td>SFS_0033</td><td>チャイルドフッズ・エンド</td><td>Childhood's End</td><td>SFS-02</td><td>1953</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0034</td><td>ファーレンハイト451</td><td>Fahrenheit 451</td><td>SFS-02</td><td>1953</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0182</td><td>手塚治虫『火の鳥』</td><td>Tezuka Osamu's Phoenix</td><td>SFS-04</td><td>1954</td><td>ja</td><td>non_western</td></tr>
+<tr><td>SFS_0199</td><td>ゴジラ（1954初代）</td><td>Godzilla (1954 original)</td><td>SFS-04</td><td>1954</td><td>ja</td><td>non_western</td></tr>
+<tr><td>SFS_0234</td><td>鄭文光</td><td>Zheng Wenguang</td><td>SFS-05</td><td>1954</td><td>zh</td><td>non_western</td></tr>
+<tr><td>SFS_0075</td><td>エフレーモフ『アンドロメダ星雲』</td><td>Ivan Yefremov's Andromeda Nebula</td><td>SFS-03</td><td>1955</td><td>ru</td><td>non_western</td></tr>
+<tr><td>SFS_0502</td><td>心の上載</td><td>Mind Upload</td><td>SFS-15</td><td>1956</td><td>en</td><td>western</td></tr>
+<tr><td>SFS_0508</td><td>SFと自由意志問題</td><td>SF and the Free Will Problem</td><td>SFS-15</td><td>1956</td><td>en</td><td>western</td></tr>
+        </tbody>
+      </table>
+      <p class="note">全 380 件は SQLite DB (<code>~/projects/research/sfs-db/data/sfs.db</code>) で照会可能。/sfs エージェント経由でも検索できる。</p>
+    </section>
+
+    <section class="chapter-section" id="methodology">
+      <h2>10 方法論</h2>
+      <p>本 DB は <code>/academic-db-build</code> v1.1 (Phase 0-15 full-quality) に従って構築された。Phase 0 (スコーピング) では、The New Routledge Companion to Science Fiction (Bould/Butler/Vint 2024, 55章)、The Cambridge Companion to Science Fiction (James/Mendlesohn 2003, 21章)、The Encyclopedia of Science Fiction (Clute/Langford, 6.3M+ words)、Darko Suvin Metamorphoses of Science Fiction (1979) を基盤に 21 サブフィールド構造を確定した。</p>
+      <p>Phase 1-2 で 4 並列 db-concept-builder agents (SFS-03/04/05/06+07) が batch JSON (10 件/file) で逐次保存しながら 295 件の concept を追加。Wave A seed として直接投入された 60 件と合わせて 355 active concepts に到達。Wave 1 MVP として Phase 3-7 を完遂し、Phase 8-11 反復で Production 規模 9,700+ へ拡張する。</p>
+      <h3>3 レイヤー設計</h3>
+      <p><strong>L1 Works</strong> (3,000-5,000 件目標、Wave 1 時点 0 件 — 個別作品テーブル未投入。Wave 2 で ISFDB / SFE / Wikidata から bulk import 予定)。 <strong>L2 Questions</strong> (300-500 件目標、Wave 1: 30 件)。 <strong>L3 Future Society Conditions</strong> (400-700 件目標、Wave 1: 35 件)。 <strong>L_core Concepts</strong> (380 件、SF Studies 学術概念)。</p>
+    </section>
+
+    <section class="chapter-section" id="status">
+      <h2>11 Wave 1 → Wave 2 移行ステータス</h2>
+      <p>Wave 1 (Phase 0-7) で構築された MVP は、 <code>/adb</code> v1.1 の Production 目標 9,700 concept に対し約 3.7% の達成率である。Phase 8 監査 → Phase 9 拡張計画 → Phase 10 大規模並列拡張 (codex 40 + claude 12 並列) → Phase 11 100% 反復のサイクルを Wave 2-4 で実行し、Production-grade に到達する計画。</p>
+      <h3>Wave 2 着手項目 (優先順)</h3>
+      <ol style="padding-left:24px; line-height:1.85; font-family:var(--font-serif);">
+        <li>SFS-07 Indigenous Futurisms 拡張 (現10→目標350) — Grace Dillon / Rebecca Roanhorse / Cherie Dimaline 系列</li>
+        <li>SFS-08 中南米SF (現0→目標400) — Borges/Cortázar/Yoss/Brazilian Tupinipunk</li>
+        <li>SFS-09/10/11/12 南アジア・中東・韓国・欧州大陸 SF</li>
+        <li>SFS-13/14 Subgenres + Media (cyberpunk/solarpunk/anime/manga/game 系統)</li>
+        <li>SFS-15/16/17/18/19 テーマ系の深化</li>
+        <li>L1 Works テーブルへの ISFDB bulk import (~5,000 件)</li>
+        <li>Phase 12 記述深化 (definition 400+字)</li>
+        <li>Phase 13 GTA 階層 + 学派正規化</li>
+        <li>Phase 14 cross_db_refs 18+ DBs × 50-300 件まで拡大</li>
+        <li>Phase 15 launchd 四半期 / 年次更新</li>
+      </ol>
+      <p class="note">出典: <code>~/projects/research/sfs-db/PROJECT_PLAN.md</code> / Generated at 2026-05-16 16:25</p>
+    </section>
+  </main>
+</div>
+
+<script>
+  (() => {
+    const stored = localStorage.getItem('theme');
+    if (stored) document.documentElement.dataset.theme = stored;
+  })();
+</script>
+</body>
+</html>
