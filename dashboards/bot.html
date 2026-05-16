@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Botany Concepts DB (BOT) v1.0</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF;--card:#FFFFFF;--card-hover:#F7F7F5;
+  --accent:#121212;--accent-warm:#CC1400;
+  --text:#121212;--text-secondary:#555555;--text-muted:#6B6B6B;
+  --border:#D9D9D9;--border-light:#EEEEEE;--surface:#F7F7F5;
+  --font:"Noto Sans JP",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+}
+[data-theme="dark"] {
+  --bg:#121212;--card:#1A1A1A;--card-hover:#222222;
+  --accent:#E0E0E0;--accent-warm:#FF4030;
+  --text:#E0E0E0;--text-secondary:#AAAAAA;--text-muted:#8A8A8A;
+  --border:#333333;--border-light:#2A2A2A;--surface:#1A1A1A;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:0.025em;font-feature-settings:"palt";}
+.top-bar{position:sticky;top:0;height:48px;padding:0 24px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:10;}
+.brand{font-weight:900;font-size:14px;letter-spacing:0.05em;}
+.theme-btn{background:none;border:1px solid var(--border);padding:4px 12px;cursor:pointer;color:var(--text);font-size:12px;}
+.layout{display:flex;max-width:1400px;margin:0 auto;gap:36px;padding:36px 24px;}
+.toc{width:240px;flex-shrink:0;position:sticky;top:84px;align-self:flex-start;max-height:calc(100vh - 100px);overflow-y:auto;}
+.toc h3{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin:0 0 12px;font-weight:700;}
+.toc ul{list-style:none;padding:0;margin:0;}
+.toc li{margin:6px 0;font-size:13px;}
+.toc a{color:var(--text-secondary);text-decoration:none;}
+.toc a:hover{color:var(--accent-warm);}
+main{max-width:760px;flex:1 1 auto;min-width:0;}
+h1{font-family:var(--font-serif);font-size:36px;margin:0 0 8px;letter-spacing:0.02em;}
+.subtitle{color:var(--text-muted);font-size:14px;margin-bottom:32px;}
+section{margin-bottom:64px;padding-bottom:32px;border-bottom:1px solid var(--border-light);}
+section h2{font-family:var(--font-serif);font-size:24px;margin:0 0 20px;letter-spacing:0.02em;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;border:1px solid var(--border);margin:16px 0 24px;}
+.kpi-cell{padding:16px 18px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+.kpi-cell:last-child{border-right:none;}
+.kpi-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);}
+.kpi-value{font-family:var(--font-serif);font-size:22px;font-weight:900;margin-top:4px;}
+.sf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
+.sf-card{padding:16px;background:var(--card);border:1px solid var(--border);}
+.sf-id{font-family:"SF Mono",monospace;font-size:11px;color:var(--accent-warm);font-weight:700;}
+.sf-ja{font-family:var(--font-serif);font-size:18px;font-weight:700;margin:4px 0;}
+.sf-en{font-size:12px;color:var(--text-muted);margin-bottom:8px;}
+.sf-stats{font-size:13px;margin:8px 0;color:var(--text-secondary);}
+.sf-desc{font-size:12px;color:var(--text-muted);line-height:1.6;}
+.era-row{display:flex;align-items:center;gap:14px;margin:6px 0;font-size:12px;}
+.era-label{width:240px;text-align:right;flex-shrink:0;}
+.era-range{font-family:"SF Mono",monospace;font-size:11px;font-weight:600;color:var(--text);}
+.era-ctx{font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.3;}
+.era-track{flex:1;background:var(--border-light);height:18px;border-radius:2px;min-width:80px;}
+.era-bar{background:var(--accent-warm);height:100%;border-radius:2px;transition:width 0.3s ease;}
+.era-count{width:70px;flex-shrink:0;}
+.era-n{font-family:"SF Mono",monospace;font-size:12px;font-weight:700;}
+.era-pct{font-size:10px;color:var(--text-muted);margin-top:2px;}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
+table th,table td{padding:8px 10px;border-bottom:1px solid var(--border-light);text-align:left;vertical-align:top;}
+table th{background:var(--surface);font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-muted);}
+@media (max-width:1000px){.layout{flex-direction:column;}.toc{position:static;width:auto;max-height:none;}}
+@media print{.toc{display:none;}}
+</style>
+</head>
+<body data-theme="light">
+<div class="top-bar">
+  <div class="brand">BOTANY CONCEPTS DB v1.0</div>
+  <button class="theme-btn" onclick="toggleTheme()">Dark/Light</button>
+</div>
+<div class="layout">
+  <aside class="toc">
+    <h3>Contents</h3>
+    <ul>
+      <li><a href="#overview">概要</a></li>
+      <li><a href="#kpi">品質指標</a></li>
+      <li><a href="#subfields">13 サブフィールド</a></li>
+      <li><a href="#era">時代分布</a></li>
+      <li><a href="#culture">文化圏分布</a></li>
+      <li><a href="#trad">伝統医療体系</a></li>
+      <li><a href="#nobel">Nobel関連</a></li>
+      <li><a href="#crossdb">他DB接続</a></li>
+      <li><a href="#metrics">メタデータ</a></li>
+    </ul>
+  </aside>
+  <main>
+    <h1>植物学概念DB (BOT) v1.0</h1>
+    <div class="subtitle">5,245 active concepts / 13サブフィールド (植物学全域 + 生態系 + 物質循環 + 薬草 + 伝統医) / Phase 0-15 完遂 / 2026-05-16</div>
+
+    <section id="overview">
+      <h2>概要</h2>
+      <p><code>/academic-db-build</code> v1.1 (Phase 0-15) を適用する経路A概念DB。物理学概念DB (PHYS v1.2) / 化学概念DB (CHEM v1.0) の方法論を継承して構築。植物学全域 (分類・形態・生理・生化学・遺伝・生態) に加え、<strong>生態系エコシステム (SF7) / 生物地球化学的循環 (SF8) / 薬用植物学・本草学 (SF9) / 民族植物学・伝統医 (SF10)</strong> までを統合する 13 サブフィールド構成。古代の本草学 (BC2698 神農) から現代の CRISPR・AlphaFold・気候帯シフトまでを一気通貫で扱う。</p>
+    </section>
+
+    <section id="kpi">
+      <h2>品質指標</h2>
+      <div class="kpi-grid">
+        <div class="kpi-cell"><div class="kpi-label">Active Concepts</div><div class="kpi-value">5,245</div></div>
+        <div class="kpi-cell"><div class="kpi-label">Subfields</div><div class="kpi-value">13</div></div>
+        <div class="kpi-cell"><div class="kpi-label">Relations</div><div class="kpi-value">39,036</div></div>
+        <div class="kpi-cell"><div class="kpi-label">Cross-DB Refs</div><div class="kpi-value">19,655</div></div>
+        <div class="kpi-cell"><div class="kpi-label">Required Theories</div><div class="kpi-value">162/162</div></div>
+        <div class="kpi-cell"><div class="kpi-label">Nobel Related</div><div class="kpi-value">10</div></div>
+        <div class="kpi-cell"><div class="kpi-label">IRR Kappa (broad)</div><div class="kpi-value">0.8602</div></div>
+        <div class="kpi-cell"><div class="kpi-label">Non-Western Rate</div><div class="kpi-value">24.2%</div></div>
+        <div class="kpi-cell"><div class="kpi-label">Verified Rate</div><div class="kpi-value">35.3%</div></div>
+      </div>
+    </section>
+
+    <section id="subfields">
+      <h2>13 サブフィールド</h2>
+      <div class="sf-grid"><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF1</div>
+            <div class="sf-ja">植物分類学</div>
+            <div class="sf-en">Plant Taxonomy</div>
+            <div class="sf-stats"><strong>410</strong> / target 410 (100%)</div>
+            <div class="sf-desc">Linnaeus 二名法 → APG IV / 分子系統 / 命名規約</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF10</div>
+            <div class="sf-ja">民族植物学・伝統医</div>
+            <div class="sf-en">Ethnobotany & Traditional Medicine</div>
+            <div class="sf-stats"><strong>380</strong> / target 380 (100%)</div>
+            <div class="sf-desc">Charaka Samhita → 中医薬 → Schultes 民族植物学 → 先住民植物知</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF11</div>
+            <div class="sf-ja">植物進化学・系統地理</div>
+            <div class="sf-en">Plant Evolution & Phylogeography</div>
+            <div class="sf-stats"><strong>360</strong> / target 360 (100%)</div>
+            <div class="sf-desc">Darwin → 被子植物起源 → 共進化 → 古植物学</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF12</div>
+            <div class="sf-ja">農学・園芸学・育種</div>
+            <div class="sf-en">Agronomy & Horticulture</div>
+            <div class="sf-stats"><strong>410</strong> / target 410 (100%)</div>
+            <div class="sf-desc">農耕起源 → Vavilov 起源センター → 緑の革命 (Borlaug) → CRISPR 育種</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF13</div>
+            <div class="sf-ja">植物保全・気候変動応答</div>
+            <div class="sf-en">Conservation & Climate Response</div>
+            <div class="sf-stats"><strong>320</strong> / target 320 (100%)</div>
+            <div class="sf-desc">Carson 沈黙の春 → IUCN → CBD → REDD+ → Maathai Green Belt</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF2</div>
+            <div class="sf-ja">植物形態学・解剖学</div>
+            <div class="sf-en">Plant Morphology & Anatomy</div>
+            <div class="sf-stats"><strong>385</strong> / target 380 (101%)</div>
+            <div class="sf-desc">Hooke 細胞観察 → 維管束系 → 葉序 → 茎頂分裂組織</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF3</div>
+            <div class="sf-ja">植物生理学</div>
+            <div class="sf-en">Plant Physiology</div>
+            <div class="sf-stats"><strong>450</strong> / target 450 (100%)</div>
+            <div class="sf-desc">Ingenhousz 光合成 → Calvin 回路 → 植物ホルモン → C3/C4/CAM</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF4</div>
+            <div class="sf-ja">植物生化学・分子生物学</div>
+            <div class="sf-en">Plant Biochemistry & Molecular Biology</div>
+            <div class="sf-stats"><strong>410</strong> / target 410 (100%)</div>
+            <div class="sf-desc">Pelletier クロロフィル → RuBisCO → 二次代謝産物</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF5</div>
+            <div class="sf-ja">植物遺伝学・ゲノム学</div>
+            <div class="sf-en">Plant Genetics & Genomics</div>
+            <div class="sf-stats"><strong>380</strong> / target 380 (100%)</div>
+            <div class="sf-desc">Mendel → トランスポゾン (McClintock) → GMO → CRISPR → パンゲノム</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF6</div>
+            <div class="sf-ja">植物生態学</div>
+            <div class="sf-en">Plant Ecology</div>
+            <div class="sf-stats"><strong>460</strong> / target 460 (100%)</div>
+            <div class="sf-desc">Warming → Clements/Gleason 遷移論争 → ニッチ → 多様性</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF7</div>
+            <div class="sf-ja">生態系エコシステム</div>
+            <div class="sf-en">Ecosystems</div>
+            <div class="sf-stats"><strong>480</strong> / target 480 (100%)</div>
+            <div class="sf-desc">Tansley エコシステム → 物質循環 → 生態系サービス (Costanza/MA) → BEF</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF8</div>
+            <div class="sf-ja">生物地球化学的循環</div>
+            <div class="sf-en">Biogeochemical Cycles</div>
+            <div class="sf-stats"><strong>380</strong> / target 380 (100%)</div>
+            <div class="sf-desc">C/N/P/S/水循環 → 微生物ループ → 大気-植物フラックス</div>
+        </div><div class="sf-card" style="border-top:4px solid #CC1400;">
+            <div class="sf-id">SF9</div>
+            <div class="sf-ja">薬用植物学・本草学</div>
+            <div class="sf-en">Medicinal Botany & Pharmacognosy</div>
+            <div class="sf-stats"><strong>420</strong> / target 420 (100%)</div>
+            <div class="sf-desc">Theophrastus → Dioscorides → 李時珍本草綱目 → アルカロイド薬理</div>
+        </div></div>
+    </section>
+
+    <section id="era">
+      <h2>時代分布</h2>
+      <p>古代の本草学 (BC2698 神農) からアーユルヴェーダ (BC300 Charaka)・Linnaeus 二名法 (1753)・Darwin (1859)・McClintock トランスポゾン (1948)・Calvin 光合成サイクル (1957)・緑の革命 (1970)・Maathai Green Belt (1977)・CRISPR (2013)・AlphaFold (2024) まで網羅。</p>
+      <div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">〜BC0</div>
+            <div class="era-ctx">古代 (中医薬・アーユルヴェーダ起源)</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:8%"></div></div>
+          <div class="era-count">
+            <div class="era-n">134</div>
+            <div class="era-pct">2.6%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">AD1-1499</div>
+            <div class="era-ctx">古代-中世 (Theophrastus・Dioscorides・Ibn al-Baitar)</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:6%"></div></div>
+          <div class="era-count">
+            <div class="era-n">106</div>
+            <div class="era-pct">2.0%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">1500-1699</div>
+            <div class="era-ctx">大航海・植物学初期 (李時珍・Linnaeus 前夜)</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:5%"></div></div>
+          <div class="era-count">
+            <div class="era-n">79</div>
+            <div class="era-pct">1.5%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">1700-1799</div>
+            <div class="era-ctx">分類学確立 (Linnaeus)</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:10%"></div></div>
+          <div class="era-count">
+            <div class="era-n">158</div>
+            <div class="era-pct">3.0%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">1800-1849</div>
+            <div class="era-ctx">植物生理学誕生</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:15%"></div></div>
+          <div class="era-count">
+            <div class="era-n">248</div>
+            <div class="era-pct">4.7%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">1850-1899</div>
+            <div class="era-ctx">遺伝学・生態学起源 (Mendel・Darwin)</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:17%"></div></div>
+          <div class="era-count">
+            <div class="era-n">273</div>
+            <div class="era-pct">5.2%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">1900-1949</div>
+            <div class="era-ctx">分子生物学黎明・光合成解明</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:45%"></div></div>
+          <div class="era-count">
+            <div class="era-n">714</div>
+            <div class="era-pct">13.7%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">1950-1979</div>
+            <div class="era-ctx">分子革命・緑の革命</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:57%"></div></div>
+          <div class="era-count">
+            <div class="era-n">898</div>
+            <div class="era-pct">17.2%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">1980-1999</div>
+            <div class="era-ctx">GMO・系統地理</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:56%"></div></div>
+          <div class="era-count">
+            <div class="era-n">872</div>
+            <div class="era-pct">16.7%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">2000-2024</div>
+            <div class="era-ctx">CRISPR・AI植物学</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:100%"></div></div>
+          <div class="era-count">
+            <div class="era-n">1,554</div>
+            <div class="era-pct">29.7%</div>
+          </div>
+        </div><div class="era-row">
+          <div class="era-label">
+            <div class="era-range">2025+</div>
+            <div class="era-ctx">最新研究</div>
+          </div>
+          <div class="era-track"><div class="era-bar" style="width:12%"></div></div>
+          <div class="era-count">
+            <div class="era-n">193</div>
+            <div class="era-pct">3.7%</div>
+          </div>
+        </div></div>
+    </section>
+
+    <section id="culture">
+      <h2>文化圏分布 (非西洋知の体系的収録)</h2>
+      <p>本DBは民族植物学・伝統医療を中核に据え、western 一辺倒の植物学を解体する。中医薬・アーユルヴェーダ・Unani・先住民植物知 (Schultes/Plotkin) を等価収録。</p>
+      <table>
+        <thead><tr><th>文化圏</th><th>件数</th><th>比率</th></tr></thead>
+        <tbody><tr><td>western</td><td style="text-align:right;">3,977</td><td style="text-align:right;">75.8%</td></tr><tr><td>multicultural</td><td style="text-align:right;">489</td><td style="text-align:right;">9.3%</td></tr><tr><td>mixed_eastwest</td><td style="text-align:right;">407</td><td style="text-align:right;">7.8%</td></tr><tr><td>indian</td><td style="text-align:right;">128</td><td style="text-align:right;">2.4%</td></tr><tr><td>indigenous</td><td style="text-align:right;">93</td><td style="text-align:right;">1.8%</td></tr><tr><td>chinese</td><td style="text-align:right;">87</td><td style="text-align:right;">1.7%</td></tr><tr><td>islamic</td><td style="text-align:right;">46</td><td style="text-align:right;">0.9%</td></tr><tr><td>african</td><td style="text-align:right;">17</td><td style="text-align:right;">0.3%</td></tr><tr><td>japanese</td><td style="text-align:right;">1</td><td style="text-align:right;">0.0%</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="trad">
+      <h2>伝統医療体系 (traditional_system タグ)</h2>
+      <table>
+        <thead><tr><th>体系</th><th>件数</th></tr></thead>
+        <tbody><tr><td>Indigenous_Americas</td><td style="text-align:right;">5</td></tr><tr><td>TCM</td><td style="text-align:right;">3</td></tr><tr><td>Ayurveda</td><td style="text-align:right;">2</td></tr><tr><td>Unani</td><td style="text-align:right;">1</td></tr><tr><td>Rongoa_Maori</td><td style="text-align:right;">1</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="nobel">
+      <h2>Nobel関連受賞概念 (10 件)</h2>
+      <p>Calvin (1961 化学/光合成) / McClintock (1983 医学/トランスポゾン) / Deisenhofer-Huber-Michel (1988 化学/光化学系) / Borlaug (1970 平和/緑の革命) / Maathai (2004 平和/Green Belt) / Tu Youyou (2015 医学/アルテミシニン) を含む。</p>
+      <table>
+        <thead><tr><th>受賞年</th><th>カテゴリ</th><th>SF</th><th>概念</th></tr></thead>
+        <tbody><tr><td>1915</td><td></td><td>SF4</td><td><strong>クロロフィル生合成</strong><br><small>Chlorophyll Biosynthesis</small></td></tr><tr><td>1961</td><td>chemistry</td><td>SF3</td><td><strong>Calvin-Benson回路</strong><br><small>Calvin-Benson Cycle</small></td></tr><tr><td>1970</td><td>peace</td><td>SF12</td><td><strong>緑の革命</strong><br><small>Green Revolution (Borlaug)</small></td></tr><tr><td>1983</td><td></td><td>SF5</td><td><strong>トランスポゾン</strong><br><small>Transposable Elements</small></td></tr><tr><td>1988</td><td></td><td>SF3</td><td><strong>光化学系I/II</strong><br><small>Photosystem I/II</small></td></tr><tr><td>1998</td><td></td><td>SF5</td><td><strong>RNAi</strong><br><small>RNA Interference</small></td></tr><tr><td>2004</td><td>peace</td><td>SF13</td><td><strong>Wangari Maathai</strong><br><small>Wangari Maathai Green Belt Movement</small></td></tr><tr><td>2009</td><td></td><td>SF7</td><td><strong>共通プール資源</strong><br><small>Common Pool Resources (Ostrom)</small></td></tr><tr><td>2015</td><td></td><td>SF9</td><td><strong>アルテミシニン</strong><br><small>Artemisinin (Antimalarial)</small></td></tr><tr><td>2020</td><td></td><td>SF5</td><td><strong>CRISPR-Cas9 植物応用</strong><br><small>CRISPR-Cas9 in Plants</small></td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="crossdb">
+      <h2>他DB接続 (cross_db_refs: 19,655件 / 21DB)</h2>
+      <table>
+        <thead><tr><th>Target DB</th><th>件数</th></tr></thead>
+        <tbody><tr><td>great-figures</td><td style="text-align:right;">5,245</td></tr><tr><td>phys</td><td style="text-align:right;">2,490</td></tr><tr><td>chem</td><td style="text-align:right;">2,045</td></tr><tr><td>innovation-db</td><td style="text-align:right;">1,590</td></tr><tr><td>tech-acceleration</td><td style="text-align:right;">1,495</td></tr><tr><td>philosophy</td><td style="text-align:right;">1,250</td></tr><tr><td>myth-narratives</td><td style="text-align:right;">840</td></tr><tr><td>futurology</td><td style="text-align:right;">800</td></tr><tr><td>traditional-knowledge</td><td style="text-align:right;">800</td></tr><tr><td>ftt-db</td><td style="text-align:right;">790</td></tr><tr><td>kgh</td><td style="text-align:right;">420</td></tr><tr><td>cdh</td><td style="text-align:right;">410</td></tr><tr><td>ai-development</td><td style="text-align:right;">380</td></tr><tr><td>anthropology</td><td style="text-align:right;">380</td></tr><tr><td>tc</td><td style="text-align:right;">360</td></tr><tr><td>ai-acceleration</td><td style="text-align:right;">60</td></tr><tr><td>mg</td><td style="text-align:right;">60</td></tr><tr><td>poetics</td><td style="text-align:right;">60</td></tr><tr><td>sgrd</td><td style="text-align:right;">60</td></tr><tr><td>upr</td><td style="text-align:right;">60</td></tr><tr><td>us</td><td style="text-align:right;">60</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="metrics">
+      <h2>品質メタデータ</h2>
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody><tr><td>db_id</td><td>bot</td></tr><tr><td>schema_version</td><td>1.0</td></tr><tr><td>methodology</td><td>academic-db v1.1 / inherits PHYS+CHEM patterns</td></tr><tr><td>concept_count_target</td><td>5240</td></tr><tr><td>subfield_count</td><td>13</td></tr><tr><td>cultural_diversity_target</td><td>30%</td></tr><tr><td>total_active</td><td>5245</td></tr><tr><td>relations_count</td><td>39036</td></tr><tr><td>cross_refs_count</td><td>19655</td></tr><tr><td>has_lineage</td><td>5233/5245</td></tr><tr><td>has_related_tech</td><td>5245/5245</td></tr><tr><td>verified_rate</td><td>35.3%</td></tr><tr><td>irr_cohens_kappa_broad</td><td>0.8602</td></tr><tr><td>non_western_rate</td><td>24.2%</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+<script>
+function toggleTheme() {
+  const cur = document.body.getAttribute('data-theme');
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.body.setAttribute('data-theme', next);
+  localStorage.setItem('bot-theme', next);
+}
+const saved = localStorage.getItem('bot-theme');
+if (saved) document.body.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
