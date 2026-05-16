@@ -15,11 +15,27 @@ ep001.html フォーマットに準拠した99本のHTML（ep002.html ... ep100.
 from __future__ import annotations
 
 import html
+import json
 import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
+
+SITE_BASE_URL = "https://journal.emerging-future.org/futures-series-v2"
+DEFAULT_OG_IMAGE = "https://journal.emerging-future.org/futures-series-v2/og-default.png"
+
+
+def make_meta_description(ep_number: int, subtitle: str, title: str, lead: str) -> str:
+    base = (lead or "").strip().replace('\n', ' ').replace('"', "'")
+    if len(base) > 158:
+        cut = base[:158]
+        idx = cut.rfind('。')
+        base = cut[:idx + 1] if idx > 80 else cut[:155] + '…'
+    elif len(base) < 50:
+        head = f"連載「Futures（未来のかたち）」第{ep_number}話「{subtitle or title}」。"
+        base = (head + base)[:158]
+    return base
 
 # ---------------------------------------------------------------------------
 # 定数
@@ -513,7 +529,6 @@ def build_episode_html(ep: Episode, prev_ep: Optional[Episode], next_ep: Optiona
     cur_part = ep.part()
     eyebrow = f"{cur_part['number']} ― {cur_part['title']}　第{ep.number}話"
     page_title = f"第{ep.number}話 ― {ep.title} | 未来のかたち"
-    page_desc = ep.subtitle or ep.title
     en_subtitle = ""  # English subtitleは原稿に明示なし
 
     # リード文（hero-lead）: 本文1段落目を要約として使う or 副題
@@ -528,6 +543,8 @@ def build_episode_html(ep: Episode, prev_ep: Optional[Episode], next_ep: Optiona
                 break
             lead_buf += s
         lead = lead_buf if lead_buf else first[:160]
+
+    page_desc = make_meta_description(ep.number, ep.subtitle, ep.title, lead)
 
     # 番号表示
     num_display = f"{ep.number:02d}"
@@ -585,8 +602,28 @@ def build_episode_html(ep: Episode, prev_ep: Optional[Episode], next_ep: Optiona
     # 学術領域
     lens_label = lens_for(ep.number)
 
-    # OG description
-    og_desc = (ep.subtitle or ep.title).replace('"', "'")
+    # OG description（meta descriptionと統一）
+    og_desc = page_desc
+
+    canonical_url = f"{SITE_BASE_URL}/{ep.filename}"
+    prev_link_rel = f'<link rel="prev" href="./{prev_ep.filename}">' if prev_ep else ''
+    next_link_rel = f'<link rel="next" href="./{next_ep.filename}">' if next_ep else ''
+
+    jsonld_payload = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": f"第{ep.number}話 ― {ep.title}",
+        "description": page_desc,
+        "inLanguage": "ja",
+        "url": canonical_url,
+        "isPartOf": {
+            "@type": "CreativeWorkSeries",
+            "name": "Futures（未来のかたち）",
+            "position": ep.number,
+        },
+        "publisher": {"@type": "NGO", "name": "NPO法人ミラツク"},
+    }
+    jsonld_block = json.dumps(jsonld_payload, ensure_ascii=False)
 
     html_doc = f"""<!DOCTYPE html>
 <html lang="ja">
@@ -595,9 +632,17 @@ def build_episode_html(ep: Episode, prev_ep: Optional[Episode], next_ep: Optiona
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(page_title)}</title>
 <meta name="description" content="{html.escape(page_desc)}">
+<meta name="theme-color" content="#14110F">
 <meta property="og:title" content="第{ep.number}話 ― {html.escape(ep.title)}">
 <meta property="og:description" content="{html.escape(og_desc)}">
 <meta property="og:type" content="article">
+<meta property="og:url" content="{canonical_url}">
+<meta property="og:image" content="{DEFAULT_OG_IMAGE}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{canonical_url}">
+{prev_link_rel}
+{next_link_rel}
+<script type="application/ld+json">{jsonld_block}</script>
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -637,6 +682,12 @@ a {{ color: var(--accent); text-decoration: none; transition: color .15s; }}
 a:hover {{ color: var(--accent-deep); }}
 
 :focus-visible {{ outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }}
+.skip-link {{ position: absolute; left: -9999px; top: 0; }}
+.skip-link:focus {{ left: 8px; top: 8px; z-index: 9999; background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 4px; font-family: var(--sans); font-size: 13px; }}
+@media (prefers-reduced-motion: reduce) {{
+  html {{ scroll-behavior: auto; }}
+  * {{ transition-duration: .01ms !important; animation-duration: .01ms !important; }}
+}}
 
 .read-progress {{ position: fixed; top: 0; left: 0; right: 0; height: 2px; background: transparent; z-index: 200; pointer-events: none; }}
 .read-progress-bar {{ height: 100%; width: 0%; background: var(--accent); transition: width .1s linear; }}
@@ -781,20 +832,23 @@ a:hover {{ color: var(--accent-deep); }}
 </head>
 <body>
 
+<a class="skip-link" href="#content">本文へジャンプ</a>
 <div class="read-progress" aria-hidden="true"><div class="read-progress-bar" id="readProgressBar"></div></div>
 
 <header class="site-header">
   <div class="site-header-inner">
-    <a href="../../ryoiki-index.html" class="site-brand">
+    <a href="../" class="site-brand">
       <div class="site-brand-text">未来のかたち<small>FUTURES NO KATACHI / 70年先を考えるための100話</small></div>
     </a>
-    <nav class="site-nav">
-      <a href="../../ryoiki-index.html">ホーム</a>
-      <a href="../../ryoiki-index.html#phase-e">全100話</a>
-      <a href="../eight-questions-lp.html">8つの問い</a>
+    <nav class="site-nav" aria-label="サイト内ナビゲーション">
+      <a href="../">ホーム</a>
+      <a href="./index.html">全100話</a>
+      <a href="../8-questions/">8つの問い</a>
     </nav>
   </div>
 </header>
+
+<main id="content" role="main">
 
 <section class="ep-hero">
   <div class="ep-hero-inner">
@@ -848,6 +902,8 @@ a:hover {{ color: var(--accent-deep); }}
     {next_link}
   </div>
 </nav>
+
+</main>
 
 <footer class="site-footer">
   <div class="site-footer-inner">

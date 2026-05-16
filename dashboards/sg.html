@@ -2,783 +2,460 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>シグナル予測力検証ダッシュボード | Insight News</title>
+<title>Strategy Concepts DB (SC) — 戦略概念の横串学術DB</title>
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #FFFFFF; --card: #FFFFFF; --text: #121212; --text-secondary: #555555;
-  --text-muted: #6B6B6B; --border: #D9D9D9; --border-light: #EEEEEE;
-  --surface: #F7F7F5; --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
-  --font: "Noto Sans JP", sans-serif; --font-serif: "Noto Serif JP", serif;
-  --green: #16A34A; --blue: #2563EB; --orange: #EA580C; --red: #DC2626; --cyan: #0891B2;
-  --invalid: #DC2626; --valid: #16A34A;
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
 }
 [data-theme="dark"] {
-  --bg: #121212; --card: #1A1A1A; --text: #E0E0E0; --text-secondary: #AAAAAA;
-  --text-muted: #8A8A8A; --border: #333333; --border-light: #2A2A2A;
-  --surface: #1A1A1A; --accent-warm: #FF4444; --accent-muted: rgba(255,68,68,0.1);
-  --green: #22C55E; --blue: #3B82F6; --orange: #F97316; --red: #EF4444; --cyan: #06B6D4;
-  --invalid: #EF4444; --valid: #22C55E;
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-light: #1A1A1A; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
-.back { display: inline-block; margin-bottom: 20px; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; }
-.back:hover { color: var(--text); }
-h1 { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
-.db-id { font-family: monospace; font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-muted); padding: 2px 8px; margin-right: 8px; }
-.subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 24px; }
-h2 { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
-h3 { font-family: var(--font-serif); font-size: 0.95rem; font-weight: 700; margin: 24px 0 10px; padding-bottom: 4px; border-bottom: 1px solid var(--border-light); }
-.theme-toggle { position: fixed; top: 16px; right: 16px; background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; cursor: pointer; font-size: 1rem; z-index: 100; }
-
-/* KPI */
-.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 28px; }
-.kpi { background: var(--surface); border: 1px solid var(--border-light); padding: 18px 14px; text-align: center; }
-.kpi-value { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
-.kpi-value.accent { color: var(--accent-warm); }
-.kpi-value.green { color: var(--green); }
-.kpi-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; }
-.kpi-sub { font-size: 0.64rem; color: var(--text-muted); margin-top: 2px; }
-
-/* Method cards */
-.method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 8px; }
-.method-card { border: 1px solid var(--border-light); padding: 18px; }
-.method-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 6px; }
-.method-badge { display: inline-block; padding: 2px 8px; font-size: 0.68rem; font-weight: 700; margin-bottom: 10px; }
-.badge-invalid { background: rgba(220,38,38,0.1); color: var(--invalid); }
-.badge-valid { background: rgba(22,163,74,0.1); color: var(--valid); }
-.method-stat { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; }
-.method-stat.red { color: var(--accent-warm); }
-.method-stat.green { color: var(--green); }
-.method-desc { font-size: 0.74rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.6; }
-
-/* Grid layouts */
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-
-/* Panel */
-.panel { background: var(--card); border: 1px solid var(--border-light); padding: 16px; margin-bottom: 16px; }
-.panel-title { font-size: 0.7rem; font-weight: 600; color: var(--accent-warm); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px; }
-
-/* Canvas */
-canvas { display: block; width: 100%; }
-
-/* Bar */
-.bar-group { margin-bottom: 7px; display: flex; align-items: center; gap: 8px; }
-.bar-label { width: 150px; flex-shrink: 0; color: var(--text-secondary); font-size: 0.76rem; }
-.bar-track { flex: 1; height: 18px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
-.bar-fill { height: 100%; }
-.bar-val { width: 58px; text-align: right; font-weight: 500; font-family: monospace; font-size: 0.76rem; }
-
-/* Semantic table */
-.sem-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-.sem-table th { text-align: left; padding: 8px 12px; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
-.sem-table td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); }
-.sem-table tr:last-child td { border-bottom: none; }
-.dim-bar { display: inline-block; height: 8px; vertical-align: middle; margin-right: 6px; }
-.score-sig { color: var(--accent-warm); font-weight: 700; font-family: monospace; }
-.score-bl { font-family: monospace; color: var(--text-muted); }
-.score-diff { font-family: monospace; font-size: 0.74rem; }
-.score-diff.pos { color: var(--green); }
-.score-diff.neg { color: var(--red); }
-
-/* Status distribution */
-.status-row { display: flex; gap: 0; height: 28px; margin: 12px 0 8px; overflow: hidden; border: 1px solid var(--border-light); }
-.status-seg { display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; color: #fff; transition: opacity 0.15s; overflow: hidden; white-space: nowrap; }
-.status-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.72rem; color: var(--text-secondary); }
-.status-legend span { display: flex; align-items: center; gap: 4px; }
-.status-dot { width: 10px; height: 10px; flex-shrink: 0; }
-
-/* Type cards */
-.type-card { border: 1px solid var(--border-light); padding: 14px; background: var(--surface); }
-.type-name { font-weight: 700; font-size: 0.84rem; margin-bottom: 2px; }
-.type-count { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; }
-.type-big { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--accent-warm); }
-.type-row { display: flex; gap: 12px; margin-top: 6px; }
-.type-metric { font-size: 0.7rem; color: var(--text-secondary); }
-.type-metric strong { display: block; font-family: monospace; font-size: 0.84rem; color: var(--text); }
-
-/* Heatmap */
-.hm-wrap { overflow-x: auto; margin-top: 8px; }
-.hm { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
-.hm th { padding: 6px 8px; text-align: center; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.hm td { padding: 5px 4px; text-align: center; }
-.hm .rl { text-align: left; font-weight: 500; padding-left: 6px; color: var(--text-secondary); white-space: nowrap; }
-.hm-cell { padding: 4px 6px; font-weight: 600; font-family: monospace; font-size: 0.72rem; }
-
-/* Top signals table */
-.sig-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-.sig-table th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-weight: 500; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
-.sig-table th:hover { color: var(--text); }
-.sig-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); }
-.sig-table tr:hover td { background: var(--surface); }
-.sig-name { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.type-pill { display: inline-block; padding: 1px 6px; font-size: 0.66rem; font-weight: 600; font-family: monospace; background: var(--accent-muted); color: var(--accent-warm); }
-.score-bar { display: inline-flex; align-items: center; gap: 4px; }
-.score-track { display: inline-block; width: 42px; height: 5px; background: var(--border-light); vertical-align: middle; }
-.score-fill { display: block; height: 100%; background: var(--accent-warm); }
-
-/* Distribution donut-like bars */
-.dist-label { font-size: 0.74rem; color: var(--text-secondary); }
-.dist-value { font-family: monospace; font-size: 0.74rem; }
-
-/* Pie-like bar for type distribution */
-.type-dist-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.type-dist-label { width: 130px; font-size: 0.76rem; color: var(--text-secondary); flex-shrink: 0; }
-.type-dist-track { flex: 1; height: 18px; background: var(--surface); border: 1px solid var(--border-light); overflow: hidden; }
-.type-dist-fill { height: 100%; }
-.type-dist-val { width: 80px; text-align: right; font-size: 0.74rem; font-family: monospace; color: var(--text-muted); }
-
-/* Conclusion box */
-.conclusion { background: var(--accent-muted); border: 1px solid var(--accent-warm); padding: 20px 24px; margin-top: 8px; }
-.conclusion-title { font-family: var(--font-serif); font-size: 1.0rem; font-weight: 700; color: var(--accent-warm); margin-bottom: 14px; }
-.conclusion-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; font-size: 0.84rem; line-height: 1.7; }
-.conclusion-item:last-child { margin-bottom: 0; }
-.conclusion-item::before { content: ''; display: block; width: 3px; height: 3px; border-radius: 50%; background: var(--accent-warm); flex-shrink: 0; margin-top: 11px; }
-
-/* Load more */
-.load-more { display: block; width: 100%; padding: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 0.78rem; color: var(--text-secondary); cursor: pointer; text-align: center; margin-top: 8px; font-family: var(--font); }
-.load-more:hover { background: var(--border-light); color: var(--text); }
-
-/* Footer */
-footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border-light); font-size: 0.72rem; color: var(--text-muted); line-height: 1.8; }
-footer a { color: var(--text-muted); text-decoration: underline; }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .kpi-row { grid-template-columns: repeat(3, 1fr); }
-  .method-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font); background: var(--bg); color: var(--text);
+  font-feature-settings: "palt"; line-height: 1.85; letter-spacing: 0.025em;
 }
+.top-bar {
+  position: sticky; top: 0; z-index: 100; background: var(--bg);
+  border-top: 3px solid #121212; border-bottom: 1px solid var(--border-light);
+  padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; height: 48px;
+}
+.brand { font-weight: 700; font-size: 14px; letter-spacing: 0.05em; color: var(--accent-warm); }
+.theme-toggle {
+  background: transparent; border: 1px solid var(--border); padding: 4px 12px;
+  border-radius: 4px; cursor: pointer; color: var(--text); font-family: var(--font); font-size: 12px;
+}
+.layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1280px; margin: 0 auto; }
+.toc-sidebar {
+  position: sticky; top: 60px; align-self: start; padding: 24px;
+  border-right: 1px solid var(--border-light); height: calc(100vh - 60px); overflow-y: auto;
+}
+.toc-sidebar h3 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+.toc-sidebar a { display: block; padding: 4px 0; color: var(--text-secondary); text-decoration: none; font-size: 13px; }
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.toc-sidebar .ch-num { color: var(--accent-warm); font-family: "SF Mono", "Fira Code", monospace; font-size: 11px; margin-right: 6px; }
+.main { max-width: 760px; padding: 48px 32px; font-family: var(--font-serif); }
+.chapter-section { margin-bottom: 72px; padding-bottom: 32px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+h1 { font-size: 28px; font-weight: 700; margin-bottom: 16px; letter-spacing: 0.02em; }
+h1 .accent { color: var(--accent-warm); }
+h2 { font-size: 22px; font-weight: 700; margin-top: 48px; margin-bottom: 20px; padding-left: 12px; border-left: 4px solid var(--accent-warm); }
+h3 { font-size: 16px; font-weight: 700; margin-top: 24px; margin-bottom: 12px; }
+p { margin-bottom: 16px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lede { font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; padding: 20px; background: var(--surface); border-left: 3px solid var(--accent-warm); }
+table { width: 100%; border-collapse: collapse; margin: 24px 0; font-family: var(--font); font-size: 13px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); }
+th { background: var(--surface); font-weight: 700; color: var(--accent-warm); font-size: 12px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+.stat-card { padding: 20px; border: 1px solid var(--border); border-radius: 4px; }
+.stat-card .num { font-size: 32px; font-weight: 700; color: var(--accent-warm); font-family: "SF Mono", "Fira Code", monospace; }
+.stat-card .label { font-size: 12px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+.bar-row { display: flex; align-items: center; gap: 12px; margin: 6px 0; font-family: var(--font); font-size: 13px; }
+.bar-label { width: 180px; flex-shrink: 0; }
+.bar-track { flex: 1; background: var(--border-light); height: 16px; border-radius: 2px; overflow: hidden; }
+.bar-fill { background: var(--accent-warm); height: 100%; }
+.bar-num { width: 50px; text-align: right; color: var(--text-secondary); font-family: "SF Mono", monospace; }
+@media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); } .main { padding: 24px; } }
+@media print { .top-bar, .toc-sidebar { display: none; } .main { max-width: 100%; padding: 0; } }
 </style>
 </head>
-<body>
-<button class="theme-toggle" onclick="toggleTheme()">&#9789;</button>
-<a class="back" href="../databases.html">&larr; データベース一覧に戻る</a>
-
-<!-- Header -->
-<h1><span class="db-id">SG</span>シグナル予測力検証ダッシュボード</h1>
-<p class="subtitle">7,564 Signals &nbsp;|&nbsp; 1900–2026 &nbsp;|&nbsp; 3-Method Verification</p>
-
-<!-- KPI Row -->
-<div class="kpi-row">
-  <div class="kpi"><div class="kpi-value">7,564</div><div class="kpi-label">総シグナル数</div><div class="kpi-sub">SG データベース</div></div>
-  <div class="kpi"><div class="kpi-value accent">+16.9%</div><div class="kpi-label">頻度差 (H2)</div><div class="kpi-sub">シグナル vs ベースライン</div></div>
-  <div class="kpi"><div class="kpi-value green">2.0x</div><div class="kpi-label">セマンティック実現度</div><div class="kpi-sub">4ホライズン平均</div></div>
-  <div class="kpi"><div class="kpi-value">15.5%</div><div class="kpi-label">部分実現率</div><div class="kpi-sub">partially + substantially</div></div>
-  <div class="kpi"><div class="kpi-value">3方式</div><div class="kpi-label">検証手法</div><div class="kpi-sub">KOR / Semantic / Frequency</div></div>
+<body data-theme="light">
+<div class="top-bar">
+  <div class="brand">Strategy Concepts DB / SC</div>
+  <button class="theme-toggle" onclick="document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';localStorage.setItem('theme',document.body.dataset.theme)">Theme</button>
 </div>
+<div class="layout">
+<aside class="toc-sidebar">
+<h3>目次</h3>
+<a href="#ch1"><span class="ch-num">01</span>概要</a>
+<a href="#ch2"><span class="ch-num">02</span>構築サマリ</a>
+<a href="#ch3"><span class="ch-num">03</span>12サブフィールド</a>
+<a href="#ch4"><span class="ch-num">04</span>多言語・地域分布</a>
+<a href="#ch5"><span class="ch-num">05</span>時代分布</a>
+<a href="#ch6"><span class="ch-num">06</span>関係ネットワーク</a>
+<a href="#ch7"><span class="ch-num">07</span>Cross-DB 統合</a>
+<a href="#ch8"><span class="ch-num">08</span>サンプル概念</a>
+<a href="#ch9"><span class="ch-num">09</span>残作業 (Phase 8-15)</a>
+<a href="#ch10"><span class="ch-num">10</span>使い方</a>
+</aside>
 
-<!-- Section 1: Method Overview -->
-<h2>検証方式の概要</h2>
-<div class="method-grid">
-  <div class="method-card">
-    <div class="method-name">KOR法</div>
-    <div><span class="method-badge badge-invalid">無効</span></div>
-    <div class="method-stat red">0.97倍</div>
-    <div class="method-desc">ランダムシャッフル比較。シグナルとランダム文書の実現スコア差がほぼゼロ（0.97倍）。単一スコアのランキング優位性は確認されなかった。</div>
-  </div>
-  <div class="method-card">
-    <div class="method-name">セマンティック照合</div>
-    <div><span class="method-badge badge-valid">有効</span></div>
-    <div class="method-stat green">2.0x</div>
-    <div class="method-desc">4ホライズン（H1〜Ultra）での意味的実現度を測定。シグナルはベースライン文書の約2倍の実現スコアを示す。方向性・特異性で特に顕著な差。</div>
-  </div>
-  <div class="method-card">
-    <div class="method-name">頻度増加率</div>
-    <div><span class="method-badge badge-valid">有効</span></div>
-    <div class="method-stat green">+16.9pt</div>
-    <div class="method-desc">H2（10年後）での頻度成長率差。シグナル+14.8% vs ベースライン−2.1%。H3・Ultraでも持続的な正の差を確認。</div>
-  </div>
+<main class="main">
+<section class="chapter-section" id="ch1">
+<h1>Strategy Concepts DB <span class="accent">SC</span></h1>
+<p class="lede">戦略という横串概念を 12 サブフィールド（軍事・経営・競争・ゲーム理論・地政学・マーケ・イノベ・組織・プラットフォーム・行動・進化・政策）で統合した学術DB。<code>/adb v1.1</code> Phase 0-15 方法論に基づき、世界最高品質基準（量100% / 多言語30%+ / IRR≥0.80 / 18 DB cross_ref / 年次自動更新）の到達を目指す。</p>
+
+<h2>本DBの位置づけ</h2>
+<p>「戦略」は単一学問分野ではなく、軍事・経営・ゲーム理論・地政学・進化生物学・認知科学・公共政策にまたがる<strong>横串概念</strong>である。本DBは既存 MG-DB（経営学6,314件）/ IN-DB（イノベーション9,839件）/ Startup-DB（9,031件）/ SS-DB（社会科学3,678件）と <code>strategy_cross_db_refs</code> で連携しつつ、独自に軍事戦略・地政学・ゲーム理論・進化戦略・認知戦略・公共政策戦略を主軸として補強する横串DBとして設計されている。</p>
+</section>
+
+<section class="chapter-section" id="ch2">
+<h2>02 / 構築サマリ</h2>
+<div class="stat-grid">
+<div class="stat-card"><div class="num">777</div><div class="label">概念</div></div>
+<div class="stat-card"><div class="num">3800</div><div class="label">関係</div></div>
+<div class="stat-card"><div class="num">4.9x</div><div class="label">関係/概念比</div></div>
+<div class="stat-card"><div class="num">162</div><div class="label">Cross-DB refs</div></div>
+<div class="stat-card"><div class="num">100%</div><div class="label">接続率</div></div>
+<div class="stat-card"><div class="num">29.5%</div><div class="label">非英語</div></div>
+<div class="stat-card"><div class="num">37.8%</div><div class="label">非西洋</div></div>
+<div class="stat-card"><div class="num">12</div><div class="label">サブフィールド</div></div>
 </div>
+<p>2026-05-16 セッション内で Phase 0-7 構築を完遂（Wave 1: 88件、Wave 2: 176件、累計264件）。継続改善ループ Phase 8-15 は別セッションで実行予定。世界最高品質基準到達まで残 $452 / 35h / 6,100件目標との差 5,836件。</p>
+</section>
 
-<!-- Section 2: Horizon Chart -->
-<h2>4ホライズン実現度推移</h2>
-<div class="panel">
-  <div class="panel-title">シグナル vs ベースライン — セマンティック実現スコア</div>
-  <canvas id="horizon-canvas" height="240"></canvas>
-  <div style="display:flex;gap:20px;margin-top:10px;font-size:0.72rem;color:var(--text-secondary);">
-    <span><span style="display:inline-block;width:12px;height:12px;background:#CC1400;vertical-align:middle;margin-right:4px;"></span>シグナル</span>
-    <span><span style="display:inline-block;width:12px;height:12px;background:#D9D9D9;vertical-align:middle;margin-right:4px;"></span>ベースライン</span>
-  </div>
-</div>
+<section class="chapter-section" id="ch3">
+<h2>03 / 12サブフィールド</h2>
+<table>
+<thead><tr><th>ID</th><th>名前</th><th>概念数</th><th>目標</th><th>達成率</th></tr></thead>
+<tbody>
+<tr><td><code>SF01</code></td><td>軍事戦略</td><td>82</td><td>600</td><td>13.7%</td></tr>
+<tr><td><code>SF02</code></td><td>経営戦略</td><td>101</td><td>700</td><td>14.4%</td></tr>
+<tr><td><code>SF03</code></td><td>競争戦略</td><td>58</td><td>500</td><td>11.6%</td></tr>
+<tr><td><code>SF04</code></td><td>ゲーム理論的戦略</td><td>60</td><td>550</td><td>10.9%</td></tr>
+<tr><td><code>SF05</code></td><td>国家戦略・地政学</td><td>103</td><td>600</td><td>17.2%</td></tr>
+<tr><td><code>SF06</code></td><td>マーケティング戦略</td><td>57</td><td>450</td><td>12.7%</td></tr>
+<tr><td><code>SF07</code></td><td>イノベーション戦略</td><td>49</td><td>550</td><td>8.9%</td></tr>
+<tr><td><code>SF08</code></td><td>組織戦略</td><td>51</td><td>450</td><td>11.3%</td></tr>
+<tr><td><code>SF09</code></td><td>デジタル・プラットフォーム戦略</td><td>56</td><td>500</td><td>11.2%</td></tr>
+<tr><td><code>SF10</code></td><td>行動戦略・認知戦略</td><td>48</td><td>400</td><td>12.0%</td></tr>
+<tr><td><code>SF11</code></td><td>進化戦略・生物学的戦略</td><td>48</td><td>350</td><td>13.7%</td></tr>
+<tr><td><code>SF12</code></td><td>公共政策・社会変革戦略</td><td>64</td><td>450</td><td>14.2%</td></tr>
+</tbody></table>
+</section>
 
-<!-- Section 3: Frequency Growth -->
-<h2>頻度増加率比較</h2>
-<div class="panel">
-  <div class="panel-title">各ホライズンでの頻度成長率 (%) — シグナル vs ベースライン</div>
-  <canvas id="freq-canvas" height="220"></canvas>
-  <div style="display:flex;gap:20px;margin-top:10px;font-size:0.72rem;color:var(--text-secondary);">
-    <span><span style="display:inline-block;width:12px;height:12px;background:#CC1400;vertical-align:middle;margin-right:4px;"></span>シグナル</span>
-    <span><span style="display:inline-block;width:12px;height:12px;background:#2563EB;vertical-align:middle;margin-right:4px;"></span>ベースライン</span>
-  </div>
-</div>
+<section class="chapter-section" id="ch4">
+<h2>04 / 多言語・地域分布</h2>
+<h3>言語分布 (ISO 639-1)</h3>
+<div class="bar-row"><span class="bar-label">en</span><div class="bar-track"><div class="bar-fill" style="width:211.6%"></div></div><span class="bar-num">548 (70.5%)</span></div>
+<div class="bar-row"><span class="bar-label">zh</span><div class="bar-track"><div class="bar-fill" style="width:15.4%"></div></div><span class="bar-num">40 (5.1%)</span></div>
+<div class="bar-row"><span class="bar-label">fr</span><div class="bar-track"><div class="bar-fill" style="width:14.7%"></div></div><span class="bar-num">38 (4.9%)</span></div>
+<div class="bar-row"><span class="bar-label">ru</span><div class="bar-track"><div class="bar-fill" style="width:13.5%"></div></div><span class="bar-num">35 (4.5%)</span></div>
+<div class="bar-row"><span class="bar-label">ja</span><div class="bar-track"><div class="bar-fill" style="width:12.4%"></div></div><span class="bar-num">32 (4.1%)</span></div>
+<div class="bar-row"><span class="bar-label">ar</span><div class="bar-track"><div class="bar-fill" style="width:10.4%"></div></div><span class="bar-num">27 (3.5%)</span></div>
+<div class="bar-row"><span class="bar-label">es</span><div class="bar-track"><div class="bar-fill" style="width:9.7%"></div></div><span class="bar-num">25 (3.2%)</span></div>
+<div class="bar-row"><span class="bar-label">hi</span><div class="bar-track"><div class="bar-fill" style="width:6.9%"></div></div><span class="bar-num">18 (2.3%)</span></div>
+<div class="bar-row"><span class="bar-label">de</span><div class="bar-track"><div class="bar-fill" style="width:3.1%"></div></div><span class="bar-num">8 (1.0%)</span></div>
+<div class="bar-row"><span class="bar-label">it</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">nl</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">pt</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">sr</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">vi</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<h3>地域分布</h3>
+<div class="bar-row"><span class="bar-label">北米</span><div class="bar-track"><div class="bar-fill" style="width:149.4%"></div></div><span class="bar-num">387 (49.8%)</span></div>
+<div class="bar-row"><span class="bar-label">西欧</span><div class="bar-track"><div class="bar-fill" style="width:37.1%"></div></div><span class="bar-num">96 (12.4%)</span></div>
+<div class="bar-row"><span class="bar-label">東アジア</span><div class="bar-track"><div class="bar-fill" style="width:26.3%"></div></div><span class="bar-num">68 (8.8%)</span></div>
+<div class="bar-row"><span class="bar-label">USA</span><div class="bar-track"><div class="bar-fill" style="width:23.6%"></div></div><span class="bar-num">61 (7.9%)</span></div>
+<div class="bar-row"><span class="bar-label">東欧</span><div class="bar-track"><div class="bar-fill" style="width:12.7%"></div></div><span class="bar-num">33 (4.2%)</span></div>
+<div class="bar-row"><span class="bar-label">中東</span><div class="bar-track"><div class="bar-fill" style="width:5.4%"></div></div><span class="bar-num">14 (1.8%)</span></div>
+<div class="bar-row"><span class="bar-label">UK</span><div class="bar-track"><div class="bar-fill" style="width:3.5%"></div></div><span class="bar-num">9 (1.2%)</span></div>
+<div class="bar-row"><span class="bar-label">中南米</span><div class="bar-track"><div class="bar-fill" style="width:3.5%"></div></div><span class="bar-num">9 (1.2%)</span></div>
+<div class="bar-row"><span class="bar-label">南アジア</span><div class="bar-track"><div class="bar-fill" style="width:3.5%"></div></div><span class="bar-num">9 (1.2%)</span></div>
+<div class="bar-row"><span class="bar-label">南アジア・インド</span><div class="bar-track"><div class="bar-fill" style="width:2.7%"></div></div><span class="bar-num">7 (0.9%)</span></div>
+<div class="bar-row"><span class="bar-label">CN</span><div class="bar-track"><div class="bar-fill" style="width:1.9%"></div></div><span class="bar-num">5 (0.6%)</span></div>
+<div class="bar-row"><span class="bar-label">IN</span><div class="bar-track"><div class="bar-fill" style="width:1.9%"></div></div><span class="bar-num">5 (0.6%)</span></div>
+<div class="bar-row"><span class="bar-label">Israel/USA</span><div class="bar-track"><div class="bar-fill" style="width:1.9%"></div></div><span class="bar-num">5 (0.6%)</span></div>
+<div class="bar-row"><span class="bar-label">RU</span><div class="bar-track"><div class="bar-fill" style="width:1.9%"></div></div><span class="bar-num">5 (0.6%)</span></div>
+<div class="bar-row"><span class="bar-label">FR</span><div class="bar-track"><div class="bar-fill" style="width:1.5%"></div></div><span class="bar-num">4 (0.5%)</span></div>
+<div class="bar-row"><span class="bar-label">サブサハラ</span><div class="bar-track"><div class="bar-fill" style="width:1.5%"></div></div><span class="bar-num">4 (0.5%)</span></div>
+<div class="bar-row"><span class="bar-label">中南米・ブラジル</span><div class="bar-track"><div class="bar-fill" style="width:1.2%"></div></div><span class="bar-num">3 (0.4%)</span></div>
+<div class="bar-row"><span class="bar-label">国際</span><div class="bar-track"><div class="bar-fill" style="width:1.2%"></div></div><span class="bar-num">3 (0.4%)</span></div>
+<div class="bar-row"><span class="bar-label">Canada</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">Canada/USA</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">Germany/USA</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">中南米・アルゼンチン</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">中南米・メキシコ</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・イラン</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">南アジア・インド（米国で著述）</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">多地域</span><div class="bar-track"><div class="bar-fill" style="width:0.8%"></div></div><span class="bar-num">2 (0.3%)</span></div>
+<div class="bar-row"><span class="bar-label">AE</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">AR</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">DZ</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">EG</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">ES</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">FR/NL</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">Germany</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">Global</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">PE</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">SD</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">SY</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">Sweden</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">UK, Austria</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">UK, USA</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">US/AR</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">USA, Israel</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">USA/France</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">USA/Israel</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">UY</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">オセアニア</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">カナダ</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中南米・チリ</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中南米・ペルー</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・UAE</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・エジプト</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・サウジアラビア</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・スペイン</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・トルコ</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・レバノン</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">中東・北アフリカ</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">北米・米国</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">南アジア・タミルナード</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">東南アジア</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
+<div class="bar-row"><span class="bar-label">欧州</span><div class="bar-track"><div class="bar-fill" style="width:0.4%"></div></div><span class="bar-num">1 (0.1%)</span></div>
 
-<!-- Section 4: Semantic 6-Dimension -->
-<h2>セマンティック6次元分析</h2>
-<div class="panel">
-  <div class="panel-title">シグナル vs ベースライン — 6次元スコア比較</div>
-  <table class="sem-table">
-    <thead>
-      <tr>
-        <th>次元</th>
-        <th>シグナル</th>
-        <th>ベースライン</th>
-        <th>差分</th>
-        <th>比較バー</th>
-        <th>評価</th>
-      </tr>
-    </thead>
-    <tbody id="sem-tbody"></tbody>
-  </table>
-</div>
+<p>多言語率 29.5% / 非西洋率 37.8%。Phase 2.5 補強で 30%+ 到達予定（現在は基本骨格のみ）。</p>
+</section>
 
-<!-- Section 5: Realization Status -->
-<h2>実現ステータス分布</h2>
-<div class="grid-2">
-  <div class="panel">
-    <div class="panel-title">シグナル (n=650)</div>
-    <div class="status-row" id="status-sig"></div>
-    <div class="status-legend" id="status-sig-legend"></div>
-    <div style="margin-top:12px;" id="status-sig-bars"></div>
-  </div>
-  <div class="panel">
-    <div class="panel-title">ベースライン (n=100)</div>
-    <div class="status-row" id="status-bl"></div>
-    <div class="status-legend" id="status-bl-legend"></div>
-    <div style="margin-top:12px;" id="status-bl-bars"></div>
-  </div>
-</div>
+<section class="chapter-section" id="ch5">
+<h2>05 / 時代分布</h2>
+<div class="bar-row"><span class="bar-label">BC ancient</span><div class="bar-track"><div class="bar-fill" style="width:5.0%"></div></div><span class="bar-num">13 (1.7%)</span></div>
+<div class="bar-row"><span class="bar-label">1-1899</span><div class="bar-track"><div class="bar-fill" style="width:12.4%"></div></div><span class="bar-num">32 (4.1%)</span></div>
+<div class="bar-row"><span class="bar-label">1900-1959</span><div class="bar-track"><div class="bar-fill" style="width:25.1%"></div></div><span class="bar-num">65 (8.4%)</span></div>
+<div class="bar-row"><span class="bar-label">1960-1984</span><div class="bar-track"><div class="bar-fill" style="width:64.5%"></div></div><span class="bar-num">167 (21.5%)</span></div>
+<div class="bar-row"><span class="bar-label">1985-1999</span><div class="bar-track"><div class="bar-fill" style="width:70.7%"></div></div><span class="bar-num">183 (23.6%)</span></div>
+<div class="bar-row"><span class="bar-label">2000-2014</span><div class="bar-track"><div class="bar-fill" style="width:88.8%"></div></div><span class="bar-num">230 (29.6%)</span></div>
+<div class="bar-row"><span class="bar-label">2015-</span><div class="bar-track"><div class="bar-fill" style="width:33.6%"></div></div><span class="bar-num">87 (11.2%)</span></div>
 
-<!-- Section 6: Type Analysis -->
-<h2>タイプ別予測力</h2>
-<div class="grid-3" id="type-cards" style="margin-bottom:16px;"></div>
+<p>2000年以降の現代概念 39%、Pre-1960 古典 12.5%。BC 古典（孫子・呉子・アーサシャストラ）から現代（GenAI戦略・Cognitive Warfare）まで2,500年カバー。</p>
+</section>
 
-<!-- Section 7: Decade Heatmap -->
-<h2>年代別実現度ヒートマップ</h2>
-<div class="panel">
-  <div class="panel-title">年代 × ホライズン — セマンティック実現スコア</div>
-  <div class="hm-wrap"><table class="hm" id="hm-table"></table></div>
-  <div style="font-size:0.68rem;color:var(--text-muted);margin-top:8px;">濃い赤ほど高い実現スコアを示す。白〜薄赤は低実現。</div>
-</div>
+<section class="chapter-section" id="ch6">
+<h2>06 / 関係ネットワーク</h2>
+<table>
+<thead><tr><th>関係タイプ</th><th>件数</th><th>%</th></tr></thead>
+<tbody>
+<tr><td><code>related_to</code></td><td>3139</td><td>82.6%</td></tr>
+<tr><td><code>predecessor_of</code></td><td>355</td><td>9.3%</td></tr>
+<tr><td><code>derived_from</code></td><td>293</td><td>7.7%</td></tr>
+<tr><td><code>critiques</code></td><td>5</td><td>0.1%</td></tr>
+<tr><td><code>extends</code></td><td>4</td><td>0.1%</td></tr>
+<tr><td><code>applies_to_policy</code></td><td>2</td><td>0.1%</td></tr>
+<tr><td><code>competes_with</code></td><td>1</td><td>0.0%</td></tr>
+<tr><td><code>synthesizes</code></td><td>1</td><td>0.0%</td></tr>
+</tbody></table>
+<p>関係/概念比 4.89x（目標 3-5x、達成）。Phase 13 で歴史的関係性 + GTA 3層化、Phase 13-α で各概念に前後系譜列を直接付与する予定。</p>
+</section>
 
-<!-- Section 8: Top Signals -->
-<h2>トップシグナル</h2>
-<div style="overflow-x:auto;border:1px solid var(--border-light);">
-  <table class="sig-table" id="top-table">
-    <thead><tr>
-      <th>#</th>
-      <th data-sort="year">Year</th>
-      <th>シグナル名</th>
-      <th data-sort="type">タイプ</th>
-      <th data-sort="score">Composite</th>
-      <th data-sort="realization">Realization</th>
-    </tr></thead>
-    <tbody id="top-tbody"><tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted);font-size:0.8rem;">データを読み込み中...</td></tr></tbody>
-  </table>
-</div>
-<button class="load-more" id="load-more-btn" style="display:none;" onclick="showMoreSignals()">さらに表示（+50件）</button>
+<section class="chapter-section" id="ch7">
+<h2>07 / Cross-DB 統合</h2>
+<table>
+<thead><tr><th>Target DB</th><th>Refs</th></tr></thead>
+<tbody>
+<tr><td><code>marketing_sales</code></td><td>51</td></tr>
+<tr><td><code>great_figures</code></td><td>19</td></tr>
+<tr><td><code>era_talents</code></td><td>14</td></tr>
+<tr><td><code>phil</code></td><td>10</td></tr>
+<tr><td><code>kgh</code></td><td>9</td></tr>
+<tr><td><code>mg</code></td><td>9</td></tr>
+<tr><td><code>ss</code></td><td>7</td></tr>
+<tr><td><code>traditional_knowledge</code></td><td>7</td></tr>
+<tr><td><code>innovation_theory</code></td><td>5</td></tr>
+<tr><td><code>lit</code></td><td>5</td></tr>
+<tr><td><code>startup_theory</code></td><td>5</td></tr>
+<tr><td><code>epo</code></td><td>4</td></tr>
+<tr><td><code>gc</code></td><td>4</td></tr>
+<tr><td><code>myth_narratives</code></td><td>4</td></tr>
+<tr><td><code>ai_acceleration</code></td><td>3</td></tr>
+<tr><td><code>poetics</code></td><td>3</td></tr>
+<tr><td><code>anthropology</code></td><td>2</td></tr>
+<tr><td><code>tech_acceleration</code></td><td>1</td></tr>
+</tbody></table>
+<p>18 の既存DBへ 162 件の cross_ref を確立。Phase 14 では人文知 12 + 歴史 6 = 18 DB への拡張で 3,050+ 件目標。</p>
+</section>
 
-<!-- Section 9: Type Distribution -->
-<h2>シグナルタイプ分布</h2>
-<div class="panel">
-  <div class="panel-title">タイプ別シグナル件数 (総計 7,564件)</div>
-  <div id="type-dist"></div>
-</div>
+<section class="chapter-section" id="ch8">
+<h2>08 / サンプル概念（各SFから古典順）</h2>
+<h3>SF01 軍事戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>太公望六韜</td><td>Six Secret Teachings</td><td>-1100</td><td>太公望/姜子牙</td><td>zh</td></tr>
+<tr><td>孫子兵法</td><td>The Art of War</td><td>-500</td><td>東洋古典軍事戦略</td><td>zh</td></tr>
+<tr><td>武経七書</td><td>Seven Military Classics</td><td>-500</td><td>古代中国統合軍事理論</td><td>zh</td></tr>
+<tr><td>尉繚子</td><td>Wei Liaozi</td><td>-450</td><td>中国古典軍事思想</td><td>zh</td></tr>
+<tr><td>司馬法</td><td>Sima Fa</td><td>-400</td><td>古代中国軍事学派（法家兵学）</td><td>zh</td></tr>
+<tr><td>鬼谷子</td><td>Guiguzi</td><td>-400</td><td>縦横家</td><td>zh</td></tr>
+<tr><td>孫子・呉子</td><td>Wuzi (Wu Qi's Art of War)</td><td>-380</td><td>東洋古典軍事戦略</td><td>zh</td></tr>
+<tr><td>アーサシャストラ</td><td>Arthashastra</td><td>-300</td><td>古代インド戦略学派</td><td>hi</td></tr>
+</tbody></table>
+<h3>SF02 経営戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>韩非子 法家</td><td>Han Feizi Legalism</td><td>-280</td><td>中国法家</td><td>zh</td></tr>
+<tr><td>ティルッククラル タミル古典統治論</td><td>Tirukkural Tamil Classical Governance</td><td>-200</td><td>古代インド倫理・統治哲学</td><td>hi</td></tr>
+<tr><td>アル・ファーラービー 理想国家論</td><td>al-Farabi's Al-Madina al-Fadila</td><td>950</td><td>イスラム哲学政治論</td><td>ar</td></tr>
+<tr><td>Ibn Sina 政治論</td><td>Avicenna On Politics</td><td>1020</td><td>イスラム黄金期</td><td>ar</td></tr>
+<tr><td>ニザーム・アル・ムルク シヤーサトナーマ</td><td>Nizam al-Mulk's Siyasat-nama</td><td>1090</td><td>ペルシア・イスラム統治思想</td><td>ar</td></tr>
+<tr><td>アル・タルトゥーシ シラージ・アル・ムルーク</td><td>al-Tartushi's Siraj al-Muluk</td><td>1100</td><td>イスラム統治論・倫理的政治哲学</td><td>ar</td></tr>
+<tr><td>王の助言</td><td>Counsel for Kings</td><td>1109</td><td>イスラム君主論</td><td>ar</td></tr>
+<tr><td>信仰と哲学の調和</td><td>On the Harmony of Religions and Philosophy</td><td>1180</td><td>イスラム中世哲学</td><td>ar</td></tr>
+</tbody></table>
+<h3>SF03 競争戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>Industry Lifecycle</td><td>Industry Lifecycle</td><td>1966</td><td>Vernon</td><td>en</td></tr>
+<tr><td>Strategic Group Analysis</td><td>Strategic Group Analysis</td><td>1972</td><td>Hunt/Porter</td><td>en</td></tr>
+<tr><td>Niche Strategy</td><td>Niche Strategy</td><td>1976</td><td>Cooper-Schendel</td><td>en</td></tr>
+<tr><td>5 Forces</td><td>Porter Five Forces</td><td>1979</td><td>Porter / Industrial Organization</td><td>en</td></tr>
+<tr><td>ジェネリック戦略</td><td>Generic Competitive Strategies</td><td>1980</td><td>Porter 学派</td><td>en</td></tr>
+<tr><td>Stuck in the Middle</td><td>Stuck in the Middle</td><td>1980</td><td>Porter</td><td>en</td></tr>
+<tr><td>コスト・リーダーシップ戦略</td><td>Cost Leadership Strategy</td><td>1980</td><td>ポーターの汎用戦略論</td><td>en</td></tr>
+<tr><td>差別化戦略</td><td>Differentiation Strategy</td><td>1980</td><td>ポーターの汎用戦略論</td><td>en</td></tr>
+</tbody></table>
+<h3>SF04 ゲーム理論的戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>寡占市場の戦略的競争</td><td>Cournot & Bertrand & Stackelberg Oligopoly</td><td>1838</td><td>Unknown</td><td>en</td></tr>
+<tr><td>マキシミン戦略</td><td>Maximin Strategy</td><td>1928</td><td>ゲーム理論</td><td>en</td></tr>
+<tr><td>鞍点定理</td><td>Saddle Point Theorem</td><td>1928</td><td>ゲーム理論</td><td>en</td></tr>
+<tr><td>Keynes-Nagel</td><td>Beauty Contest Game</td><td>1936</td><td>Unknown</td><td>en</td></tr>
+<tr><td>ゲームの理論と経済行動</td><td>Theory of Games and Economic Behavior</td><td>1944</td><td>Game Theory Founders</td><td>en</td></tr>
+<tr><td>後向き帰納法</td><td>Backward Induction</td><td>1944</td><td>ゲーム理論</td><td>en</td></tr>
+<tr><td>ナッシュ均衡</td><td>Nash Equilibrium</td><td>1950</td><td>Non-cooperative Game Theory</td><td>en</td></tr>
+<tr><td>Coalitional Bargaining</td><td>Coalitional Bargaining</td><td>1950</td><td>Nash/Rubinstein</td><td>en</td></tr>
+</tbody></table>
+<h3>SF05 国家戦略・地政学</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>シャリア政治学</td><td>Siyasa Shar'iyya (Islamic Governance)</td><td>1310</td><td>イスラム政治思想</td><td>ar</td></tr>
+<tr><td>知行合一</td><td>Unity of Knowledge and Action</td><td>1510</td><td>新儒学</td><td>zh</td></tr>
+<tr><td>Raison d'État</td><td>Raison d'État</td><td>1640</td><td>フランス絶対主義</td><td>fr</td></tr>
+<tr><td>Talleyrand外交戦略</td><td>Talleyrand Diplomatic Strategy</td><td>1815</td><td>古典外交</td><td>fr</td></tr>
+<tr><td>Carta de Jamaica</td><td>Letter from Jamaica</td><td>1815</td><td>ラテンアメリカ独立思想</td><td>es</td></tr>
+<tr><td>Nuestra América</td><td>Our America</td><td>1891</td><td>マルティ汎米思想</td><td>es</td></tr>
+<tr><td>Liberal Internationalism</td><td>Liberal Internationalism</td><td>1918</td><td>Wilson/Ikenberry</td><td>en</td></tr>
+<tr><td>永続革命論</td><td>Permanent Revolution</td><td>1928</td><td>トロツキズム</td><td>ru</td></tr>
+</tbody></table>
+<h3>SF06 マーケティング戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>AIDA モデル</td><td>AIDA Model</td><td>1898</td><td>Early Marketing Models</td><td>en</td></tr>
+<tr><td>BTL/ATL Marketing</td><td>Below/Above the Line</td><td>1923</td><td>Hopkins/Ogilvy</td><td>en</td></tr>
+<tr><td>4P フレームワーク</td><td>Marketing Mix (4P)</td><td>1960</td><td>McCarthy 4P</td><td>en</td></tr>
+<tr><td>マーケティング近視眼</td><td>Marketing Myopia</td><td>1960</td><td>Levitt Customer-centric</td><td>en</td></tr>
+<tr><td>効果階層モデル</td><td>Hierarchy of Effects</td><td>1961</td><td>Advertising Effectiveness Theory</td><td>en</td></tr>
+<tr><td>イノベーション拡散論</td><td>Diffusion of Innovations</td><td>1962</td><td>Technology Adoption & Communication</td><td>en</td></tr>
+<tr><td>STP マーケティング</td><td>Segmentation-Targeting-Positioning</td><td>1967</td><td>Kotler STP</td><td>en</td></tr>
+<tr><td>メディオロギー</td><td>Mediology</td><td>1979</td><td>フランスメディア理論</td><td>fr</td></tr>
+</tbody></table>
+<h3>SF07 イノベーション戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>創造的破壊</td><td>Creative Destruction</td><td>1942</td><td>Schumpeter Innovation 学派</td><td>de</td></tr>
+<tr><td>Skunkworks Innovation</td><td>Skunkworks Innovation</td><td>1943</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Intrapreneurship</td><td>Intrapreneurship</td><td>1985</td><td>Unknown</td><td>en</td></tr>
+<tr><td>リード・ユーザー法</td><td>Lead User Method</td><td>1986</td><td>Unknown</td><td>en</td></tr>
+<tr><td>ユーザー・イノベーション</td><td>User Innovation</td><td>1988</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Stage-Gate Process</td><td>Stage-Gate</td><td>1990</td><td>Cooper</td><td>en</td></tr>
+<tr><td>ステージゲート・プロセス</td><td>Stage-Gate Process</td><td>1990</td><td>Unknown</td><td>en</td></tr>
+<tr><td>イノベーション・ファネル</td><td>Innovation Funnel</td><td>1992</td><td>Unknown</td><td>en</td></tr>
+</tbody></table>
+<h3>SF08 組織戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>Scientific Management</td><td>Scientific Management</td><td>1911</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Span of Control Theory</td><td>Span of Control Theory</td><td>1916</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Unity of Command</td><td>Unity of Command</td><td>1916</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Bureaucratic Organization</td><td>Bureaucratic Organization</td><td>1922</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Human Relations School (Hawthorne Studies)</td><td>Human Relations School (Hawthorne Studies)</td><td>1933</td><td>Unknown</td><td>en</td></tr>
+<tr><td>スカンク・ワークス</td><td>Skunk Works</td><td>1943</td><td>Unknown</td><td>en</td></tr>
+<tr><td>ヘテラルキー</td><td>Heterarchy</td><td>1945</td><td>Unknown</td><td>en</td></tr>
+<tr><td>タイガー・チーム</td><td>Tiger Teams</td><td>1960</td><td>Unknown</td><td>en</td></tr>
+</tbody></table>
+<h3>SF09 デジタル・プラットフォーム戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>シナリオ（ロイヤル・ダッチ・シェル）</td><td>Scenarios at Royal Dutch Shell</td><td>1971</td><td>シナリオプランニング・戦略</td><td>fr</td></tr>
+<tr><td>Network Effects</td><td>Network Effects</td><td>1980</td><td>Metcalfe/Reed</td><td>en</td></tr>
+<tr><td>仲介排除戦略</td><td>Disintermediation</td><td>1980</td><td>Digital Strategy</td><td>en</td></tr>
+<tr><td>ネットワーク外部性</td><td>Network Externalities</td><td>1985</td><td>Platform Economics</td><td>en</td></tr>
+<tr><td>切り替えコスト理論</td><td>Switching Costs Theory</td><td>1995</td><td>Industrial Organization Economics</td><td>en</td></tr>
+<tr><td>Information Rules</td><td>Information Rules</td><td>1998</td><td>Shapiro-Varian Information Economics</td><td>en</td></tr>
+<tr><td>ロック・イン戦略</td><td>Lock-in Strategy</td><td>1998</td><td>Information Economics</td><td>en</td></tr>
+<tr><td>バージョニング戦略</td><td>Versioning Strategy</td><td>1998</td><td>Information Economics</td><td>en</td></tr>
+</tbody></table>
+<h3>SF10 行動戦略・認知戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>限定合理性</td><td>Bounded Rationality</td><td>1955</td><td>Simon Behavioral Economics</td><td>en</td></tr>
+<tr><td>認知的不協和</td><td>Cognitive Dissonance</td><td>1957</td><td>Unknown</td><td>en</td></tr>
+<tr><td>確認バイアス</td><td>Confirmation Bias</td><td>1960</td><td>Unknown</td><td>en</td></tr>
+<tr><td>自己利益バイアス</td><td>Self-Serving Bias</td><td>1970</td><td>Unknown</td><td>en</td></tr>
+<tr><td>ゴミ箱モデル</td><td>Garbage Can Model</td><td>1972</td><td>March Organizational Decision</td><td>en</td></tr>
+<tr><td>利用可能性ヒューリスティック</td><td>Availability Heuristic</td><td>1973</td><td>Unknown</td><td>en</td></tr>
+<tr><td>アンカリング効果</td><td>Anchoring</td><td>1974</td><td>Unknown</td><td>en</td></tr>
+<tr><td>代表性ヒューリスティック</td><td>Representativeness Heuristic</td><td>1974</td><td>Unknown</td><td>en</td></tr>
+</tbody></table>
+<h3>SF11 進化戦略・生物学的戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>Darwin 1871 - Andersson</td><td>Sexual Selection</td><td>1871</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Fisher-Hamilton 進化</td><td>Sex Ratio Theory</td><td>1930</td><td>Unknown</td><td>en</td></tr>
+<tr><td>Imanishi 種社会論</td><td>Species Sociology</td><td>1941</td><td>今西錦司</td><td>ja</td></tr>
+<tr><td>Stigmergy</td><td>Stigmergy</td><td>1959</td><td>Grassé</td><td>fr</td></tr>
+<tr><td>動物の種と進化</td><td>Animal Species and Evolution</td><td>1963</td><td>Unknown</td><td>en</td></tr>
+<tr><td>包括適応度</td><td>Inclusive Fitness</td><td>1964</td><td>Hamilton Kin Selection</td><td>en</td></tr>
+<tr><td>意地悪（スパイト）理論と包括適応度</td><td>Spite Theory and Inclusive Fitness</td><td>1964</td><td>Unknown</td><td>en</td></tr>
+<tr><td>微視的進化での背信と協力</td><td>Prisoner's Dilemma in Biology</td><td>1966</td><td>Unknown</td><td>en</td></tr>
+</tbody></table>
+<h3>SF12 公共政策・社会変革戦略</h3>
+<table><thead><tr><th>概念名</th><th>英語名</th><th>年代</th><th>学派</th><th>言語</th></tr></thead><tbody>
+<tr><td>学問のすゝめ</td><td>Encouragement of Learning</td><td>1872</td><td>福沢啓蒙思想</td><td>ja</td></tr>
+<tr><td>ウィッテ体制</td><td>Witte System</td><td>1900</td><td>ロシア近代化論</td><td>ru</td></tr>
+<tr><td>何をなすべきか</td><td>What Is to Be Done</td><td>1902</td><td>レーニン主義</td><td>ru</td></tr>
+<tr><td>ストルイピン改革</td><td>Stolypin Reforms</td><td>1906</td><td>ロシア農業近代化論</td><td>ru</td></tr>
+<tr><td>マハトマ・ガンディー インド・スワラージ</td><td>Mahatma Gandhi's Hind Swaraj</td><td>1909</td><td>インド独立戦略・非暴力革命論</td><td>hi</td></tr>
+<tr><td>ムスリム同胞団の五本柱</td><td>Five Pillars of Brotherhood</td><td>1928</td><td>イスラム政治運動</td><td>ar</td></tr>
+<tr><td>五カ年計画</td><td>Five-Year Plan Strategy</td><td>1928</td><td>スターリン主義</td><td>ru</td></tr>
+<tr><td>大衆の反乱</td><td>The Rebellion of the Masses</td><td>1930</td><td>スペイン文明評論</td><td>es</td></tr>
+</tbody></table>
 
-<!-- Section 10: Conclusion -->
-<h2>結論</h2>
-<div class="conclusion">
-  <div class="conclusion-title">検証サマリー — シグナルは何を教えてくれるか</div>
-  <div class="conclusion-item">シグナルは<strong>方向感知器</strong>として機能する。タイミング予測はできない。セマンティック次元の「timing」では逆にベースラインが上回り（3.01 vs 4.04）、タイミング精度の限界が明確に示された。</div>
-  <div class="conclusion-item"><strong>H2（10年後）以降で有意な予測力が発現</strong>する。H1では頻度差わずか+0.5ptに対し、H2では+16.9ptへ急拡大。短期予測よりも中長期変化の方向性把握に適している。</div>
-  <div class="conclusion-item"><strong>paradigm_shift が最も高い実現度と頻度増加率</strong>を示す。H3実現度4.04、H2頻度成長+25.7%。構造変化を示すシグナルは、より明確に将来を示唆する。</div>
-  <div class="conclusion-item">KOR法（ランダム比較）では有意差なし（0.97倍）。単純なランキングでなく、<strong>意味的・時系列的な文脈</strong>でシグナルを評価することが重要。</div>
-</div>
+</section>
 
-<!-- Footer -->
-<footer>
-  <div>分析日: 2026年4月26日 &nbsp;|&nbsp; データソース: SG Database (7,564 signals), sg_horizon_verification.json, sg_frequency_verification.json, sg_semantic_verification.json, sg_top_signals.json</div>
-  <div style="margin-top:4px;"><a href="sg_verification_report.md">検証レポート全文</a> &nbsp;|&nbsp; 解析手法: Semantic Matching (4-Horizon), Frequency Growth Rate (KDE), KOR Randomization Test</div>
+<section class="chapter-section" id="ch9">
+<h2>09 / 残作業 (Phase 8-15)</h2>
+<table>
+<thead><tr><th>Phase</th><th>内容</th><th>コスト</th><th>時間</th></tr></thead>
+<tbody>
+<tr><td>2.5</td><td>多言語層補強（30%+ 到達）</td><td>$18</td><td>3-4h</td></tr>
+<tr><td>2 Wave3+</td><td>5,836件追加投入</td><td>$120</td><td>10-12h</td></tr>
+<tr><td>8</td><td>4並列監査</td><td>$18</td><td>2h</td></tr>
+<tr><td>10</td><td>codex 40+claude 12 拡張</td><td>$150</td><td>8-12h</td></tr>
+<tr><td>11</td><td>100%反復 (5回想定)</td><td>$400</td><td>20-30h</td></tr>
+<tr><td>12</td><td>記述深化 (400-600字)</td><td>$75</td><td>6-8h</td></tr>
+<tr><td>13-α</td><td>学術系譜チェーン構築</td><td>$28</td><td>3-4h</td></tr>
+<tr><td>14</td><td>18 DB cross_ref 統合</td><td>$53</td><td>3-4h</td></tr>
+<tr><td>15</td><td>年次更新ルーチン</td><td>$2</td><td>30min</td></tr>
+</tbody></table>
+<p>残合計 約 $864 / 60h / 7-8 FDD で世界最高品質基準到達。<code>/ddb sg --auto-deepen</code> で一貫自動化可能。</p>
+</section>
+
+<section class="chapter-section" id="ch10">
+<h2>10 / 使い方</h2>
+<h3>SQLite 直接照会</h3>
+<pre style="background:var(--surface);padding:16px;border-radius:4px;font-family:'SF Mono',monospace;font-size:12px;overflow-x:auto;">sqlite3 ~/projects/research/strategy-concepts-db/data/strategy.db
+&gt; SELECT * FROM strategy_concepts WHERE subfield='SF01' ORDER BY era_start LIMIT 10;
+&gt; SELECT * FROM strategy_concept_relations WHERE source_concept_id='SC_SF02_001';
+&gt; SELECT target_db, COUNT(*) FROM strategy_cross_db_refs GROUP BY target_db;</pre>
+<h3>専属エージェント</h3>
+<p><code>/sg</code> エージェント（Phase 5 完了で起動可能）。「孫子の戦略思想を引いて」「Porter 5 Forces の関連概念」「ゲーム理論的戦略の系譜」等の問いに答える。</p>
+<h3>深化</h3>
+<p><code>/ddb sg --auto-deepen</code> で診断→ボトルネック→/adb Phase 8-15 自動起動の一貫モード実行。</p>
+</section>
+
+<footer style="text-align:center;padding:32px;color:var(--text-muted);font-family:var(--font);font-size:11px;border-top:1px solid var(--border-light);">
+Strategy Concepts DB (SC) v0.1 / Generated 2026-05-16 10:14 / NPO法人ミラツク
 </footer>
-
+</main>
+</div>
 <script>
-/* ============================================================
-   Theme
-============================================================ */
-function toggleTheme() {
-  const cur = document.documentElement.getAttribute('data-theme');
-  document.documentElement.setAttribute('data-theme', cur === 'dark' ? '' : 'dark');
-  setTimeout(() => { renderHorizonChart(); renderFreqChart(); }, 50);
-}
-
-/* ============================================================
-   Utility
-============================================================ */
-const fmt = (n, d=2) => n == null ? '-' : Number(n).toFixed(d);
-function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-function heatColor(v, min, max) {
-  if (v == null) return 'transparent';
-  const t = max === min ? 0.5 : (v - min) / (max - min);
-  const alpha = (0.06 + t * 0.52).toFixed(2);
-  return `rgba(204,20,0,${alpha})`;
-}
-function heatTextColor(v, min, max) {
-  const t = max === min ? 0.5 : (v - min) / (max - min);
-  return t > 0.55 ? '#ffffff' : 'var(--text)';
-}
-
-/* ============================================================
-   Horizon Bar Chart
-============================================================ */
-const HORIZON_DATA = {
-  labels: ['H1 (+5年)', 'H2 (+10年)', 'H3 (+20年)', 'Ultra (+30年)'],
-  signal:   [3.22, 3.22, 3.41, 3.74],
-  baseline: [1.62, 1.74, 1.56, 1.66]
-};
-
-function renderHorizonChart() {
-  const canvas = document.getElementById('horizon-canvas');
-  canvas.width = canvas.parentElement.clientWidth - 32;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const pad = { t: 24, r: 20, b: 44, l: 56 };
-  const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
-  ctx.clearRect(0, 0, W, H);
-
-  const maxV = 5;
-  const n = HORIZON_DATA.labels.length;
-  const groupW = pW / n;
-  const barW = Math.min(groupW * 0.32, 40);
-  const gap = barW * 0.4;
-
-  // Grid
-  ctx.strokeStyle = cssVar('--border-light'); ctx.lineWidth = 1;
-  for (let i = 0; i <= 5; i++) {
-    const y = pad.t + pH * i / 5;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-    ctx.fillStyle = cssVar('--text-muted'); ctx.font = '11px system-ui'; ctx.textAlign = 'right';
-    ctx.fillText(fmt(maxV - maxV * i / 5, 1), pad.l - 8, y + 4);
-  }
-
-  HORIZON_DATA.labels.forEach((label, i) => {
-    const cx = pad.l + i * groupW + groupW / 2;
-    const sigH = (HORIZON_DATA.signal[i] / maxV) * pH;
-    const blH = (HORIZON_DATA.baseline[i] / maxV) * pH;
-
-    // Signal bar
-    ctx.fillStyle = '#CC1400';
-    const sx = cx - barW - gap / 2;
-    ctx.fillRect(sx, pad.t + pH - sigH, barW, sigH);
-
-    // Baseline bar
-    ctx.fillStyle = '#D9D9D9';
-    const bx = cx + gap / 2;
-    ctx.fillRect(bx, pad.t + pH - blH, barW, blH);
-
-    // Value labels
-    ctx.fillStyle = '#CC1400'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
-    ctx.fillText(fmt(HORIZON_DATA.signal[i], 2), sx + barW / 2, pad.t + pH - sigH - 5);
-    ctx.fillStyle = cssVar('--text-muted'); ctx.font = '10px system-ui';
-    ctx.fillText(fmt(HORIZON_DATA.baseline[i], 2), bx + barW / 2, pad.t + pH - blH - 5);
-
-    // X label
-    ctx.fillStyle = cssVar('--text-secondary'); ctx.font = '11px system-ui'; ctx.textAlign = 'center';
-    ctx.fillText(label, cx, H - 6);
-  });
-}
-
-/* ============================================================
-   Frequency Growth Chart
-============================================================ */
-const FREQ_DATA = {
-  labels: ['H1 (+5年)', 'H2 (+10年)', 'H3 (+20年)', 'Ultra (+30年)'],
-  signal:   [16.3, 14.8, 16.2, 13.6],
-  baseline: [15.8, -2.1, -2.7,  2.7]
-};
-
-function renderFreqChart() {
-  const canvas = document.getElementById('freq-canvas');
-  canvas.width = canvas.parentElement.clientWidth - 32;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const pad = { t: 24, r: 20, b: 44, l: 60 };
-  const pW = W - pad.l - pad.r, pH = H - pad.t - pad.b;
-  ctx.clearRect(0, 0, W, H);
-
-  const allVals = [...FREQ_DATA.signal, ...FREQ_DATA.baseline];
-  const maxV = Math.max(...allVals) + 2;
-  const minV = Math.min(...allVals) - 2;
-  const range = maxV - minV;
-  const zeroY = pad.t + pH * (maxV / range);
-
-  const n = FREQ_DATA.labels.length;
-  const groupW = pW / n;
-  const barW = Math.min(groupW * 0.32, 40);
-  const gap = barW * 0.4;
-
-  // Grid lines
-  ctx.strokeStyle = cssVar('--border-light'); ctx.lineWidth = 1;
-  const steps = 5;
-  for (let i = 0; i <= steps; i++) {
-    const v = maxV - range * i / steps;
-    const y = pad.t + pH * i / steps;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-    ctx.fillStyle = cssVar('--text-muted'); ctx.font = '11px system-ui'; ctx.textAlign = 'right';
-    ctx.fillText((v >= 0 ? '+' : '') + fmt(v, 1) + '%', pad.l - 6, y + 4);
-  }
-
-  // Zero line
-  ctx.strokeStyle = cssVar('--border'); ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(W - pad.r, zeroY); ctx.stroke();
-
-  FREQ_DATA.labels.forEach((label, i) => {
-    const cx = pad.l + i * groupW + groupW / 2;
-    const sv = FREQ_DATA.signal[i];
-    const bv = FREQ_DATA.baseline[i];
-
-    const sigH = Math.abs(sv / range * pH);
-    const blH = Math.abs(bv / range * pH);
-    const sigY = sv >= 0 ? zeroY - sigH : zeroY;
-    const blY = bv >= 0 ? zeroY - blH : zeroY;
-
-    // Signal bar
-    ctx.fillStyle = '#CC1400';
-    const sx = cx - barW - gap / 2;
-    ctx.fillRect(sx, sigY, barW, sigH);
-
-    // Baseline bar
-    ctx.fillStyle = '#2563EB';
-    const bx = cx + gap / 2;
-    ctx.fillRect(bx, blY, barW, blH);
-
-    // Value labels
-    ctx.fillStyle = '#CC1400'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
-    const slabelY = sv >= 0 ? sigY - 4 : sigY + sigH + 13;
-    ctx.fillText((sv >= 0 ? '+' : '') + fmt(sv, 1) + '%', sx + barW / 2, slabelY);
-
-    ctx.fillStyle = '#2563EB'; ctx.font = '10px system-ui';
-    const blabelY = bv >= 0 ? blY - 4 : blY + blH + 13;
-    ctx.fillText((bv >= 0 ? '+' : '') + fmt(bv, 1) + '%', bx + barW / 2, blabelY);
-
-    // X label
-    ctx.fillStyle = cssVar('--text-secondary'); ctx.font = '11px system-ui'; ctx.textAlign = 'center';
-    ctx.fillText(label, cx, H - 6);
-  });
-}
-
-/* ============================================================
-   Semantic 6-Dimension Table
-============================================================ */
-const SEM_DIMS = [
-  { name: 'Realization',  key: 'realization',  sig: 2.52, bl: 1.98 },
-  { name: 'Direction',    key: 'direction',     sig: 5.42, bl: 4.95 },
-  { name: 'Scale',        key: 'scale',         sig: 1.56, bl: 1.04 },
-  { name: 'Timing',       key: 'timing',        sig: 3.01, bl: 4.04, worse: true },
-  { name: 'Specificity',  key: 'specificity',   sig: 4.08, bl: 1.04 },
-  { name: 'Confidence',   key: 'confidence',    sig: 6.62, bl: 5.65 },
-];
-
-function renderSemTable() {
-  const maxScore = 8;
-  const tbody = document.getElementById('sem-tbody');
-  tbody.innerHTML = SEM_DIMS.map(d => {
-    const diff = d.sig - d.bl;
-    const isWorse = d.worse;
-    const diffClass = isWorse ? 'neg' : (diff >= 0 ? 'pos' : 'neg');
-    const diffSign = diff >= 0 ? '+' : '';
-    const sigPct = (d.sig / maxScore * 100).toFixed(1);
-    const blPct = (d.bl / maxScore * 100).toFixed(1);
-    return `<tr>
-      <td style="font-weight:600;font-size:0.82rem;">${d.name}${isWorse ? ' <span style="font-size:0.66rem;color:var(--text-muted)">※</span>' : ''}</td>
-      <td><span class="score-sig">${fmt(d.sig, 2)}</span></td>
-      <td><span class="score-bl">${fmt(d.bl, 2)}</span></td>
-      <td><span class="score-diff ${diffClass}">${diffSign}${fmt(diff, 2)}</span></td>
-      <td style="min-width:160px;">
-        <div style="margin-bottom:3px;display:flex;align-items:center;gap:4px;">
-          <span class="dim-bar" style="width:${sigPct}%;max-width:100%;height:7px;background:#CC1400;opacity:0.85;display:inline-block;"></span>
-          <span style="font-size:0.66rem;color:var(--accent-warm);">SIG</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <span class="dim-bar" style="width:${blPct}%;max-width:100%;height:7px;background:#D9D9D9;display:inline-block;"></span>
-          <span style="font-size:0.66rem;color:var(--text-muted);">BL</span>
-        </div>
-      </td>
-      <td style="font-size:0.72rem;color:${isWorse ? 'var(--red)' : 'var(--green)'};">${isWorse ? '▼ シグナル劣位' : '▲ シグナル優位'}</td>
-    </tr>`;
-  }).join('');
-  // Add note
-  tbody.innerHTML += `<tr><td colspan="6" style="font-size:0.68rem;color:var(--text-muted);padding-top:8px;">※ Timing: シグナルはタイミング精度が低い（タイミング予測は苦手）</td></tr>`;
-}
-
-/* ============================================================
-   Status Distribution
-============================================================ */
-const STATUS_DATA = {
-  signal: [
-    { key: 'not_realized',   label: '未実現',  count: 506, pct: 77.8, color: '#D9D9D9' },
-    { key: 'emerging',       label: '萌芽',    count: 43,  pct: 6.6,  color: '#0891B2' },
-    { key: 'partially',      label: '部分実現', count: 75,  pct: 11.5, color: '#EA580C' },
-    { key: 'substantially',  label: '実質実現', count: 26,  pct: 4.0,  color: '#CC1400' },
-  ],
-  baseline: [
-    { key: 'not_realized', label: '未実現', count: 94, pct: 94, color: '#D9D9D9' },
-    { key: 'emerging',     label: '萌芽',   count: 6,  pct: 6,  color: '#0891B2' },
-  ]
-};
-
-function renderStatusDist() {
-  ['sig', 'bl'].forEach(key => {
-    const data = key === 'sig' ? STATUS_DATA.signal : STATUS_DATA.baseline;
-    const row = document.getElementById(`status-${key}`);
-    const legend = document.getElementById(`status-${key}-legend`);
-    const bars = document.getElementById(`status-${key}-bars`);
-    const maxCount = Math.max(...data.map(d => d.count));
-
-    row.innerHTML = data.map(d =>
-      `<div class="status-seg" style="width:${d.pct}%;background:${d.color};${d.pct < 8 ? 'font-size:0;' : ''}" title="${d.label}: ${d.count}件 (${d.pct}%)">${d.pct >= 8 ? d.pct.toFixed(1) + '%' : ''}</div>`
-    ).join('');
-
-    legend.innerHTML = data.map(d =>
-      `<span><span class="status-dot" style="background:${d.color};"></span>${d.label}: ${d.count}件 (${d.pct.toFixed(1)}%)</span>`
-    ).join('');
-
-    bars.innerHTML = data.map(d =>
-      `<div class="bar-group"><div class="bar-label">${d.label} (${d.count})</div><div class="bar-track"><div class="bar-fill" style="width:${(d.count/maxCount*100).toFixed(1)}%;background:${d.color};"></div></div><div class="bar-val">${d.pct.toFixed(1)}%</div></div>`
-    ).join('');
-  });
-}
-
-/* ============================================================
-   Type Cards
-============================================================ */
-const TYPE_DATA = [
-  { key: 'paradigm_shift',  label: 'Paradigm Shift',  count: 1118, pct: 14.8, h3_real: 4.04, h2_growth: '+25.7%' },
-  { key: 'wild_card',       label: 'Wild Card',        count: 1024, pct: 13.5, h3_real: 4.21, h2_growth: '-5.6%'  },
-  { key: 'emerging_trend',  label: 'Emerging Trend',   count: 2252, pct: 29.8, h3_real: 3.01, h2_growth: '+19.5%' },
-  { key: 'counter_trend',   label: 'Counter Trend',    count: 1081, pct: 14.3, h3_real: 3.28, h2_growth: '+19.3%' },
-  { key: 'weak_signal',     label: 'Weak Signal',      count: 2085, pct: 27.6, h3_real: 3.23, h2_growth: '+11.5%' },
-];
-
-const TYPE_COLORS = {
-  paradigm_shift: '#CC1400',
-  wild_card:      '#7C3AED',
-  emerging_trend: '#16A34A',
-  counter_trend:  '#EA580C',
-  weak_signal:    '#0891B2',
-};
-
-function renderTypeCards() {
-  const container = document.getElementById('type-cards');
-  container.innerHTML = TYPE_DATA.map(t => {
-    const color = TYPE_COLORS[t.key] || 'var(--accent-warm)';
-    const growthColor = t.h2_growth.startsWith('+') ? 'var(--green)' : 'var(--red)';
-    return `<div class="type-card">
-      <div class="type-name" style="color:${color};">${t.label}</div>
-      <div class="type-count">${t.count.toLocaleString()} signals (${t.pct}%)</div>
-      <div class="type-big" style="color:${color};">${fmt(t.h3_real, 2)}</div>
-      <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:8px;">H3実現度スコア</div>
-      <div class="type-row">
-        <div class="type-metric">
-          <strong style="color:${growthColor};">${t.h2_growth}</strong>
-          H2頻度成長率
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-/* ============================================================
-   Decade Heatmap
-============================================================ */
-const HEATMAP_DATA = [
-  { decade: '1900s', H1: 3.60, H2: 3.63, H3: 3.00, Ultra: 4.73 },
-  { decade: '1910s', H1: 3.50, H2: 3.87, H3: 4.57, Ultra: 4.17 },
-  { decade: '1920s', H1: 2.60, H2: 3.37, H3: 2.80, Ultra: 3.23 },
-  { decade: '1930s', H1: 4.50, H2: 3.40, H3: 3.33, Ultra: 3.73 },
-  { decade: '1940s', H1: 3.83, H2: 3.27, H3: 3.90, Ultra: 4.10 },
-  { decade: '1950s', H1: 2.73, H2: 3.37, H3: 3.13, Ultra: 3.90 },
-  { decade: '1960s', H1: 2.63, H2: 2.40, H3: 3.23, Ultra: 3.13 },
-  { decade: '1970s', H1: 3.13, H2: 3.13, H3: 3.03, Ultra: 3.50 },
-  { decade: '1980s', H1: 3.03, H2: 2.70, H3: 3.37, Ultra: 3.67 },
-  { decade: '1990s', H1: 2.60, H2: 3.03, H3: 3.77, Ultra: 3.20 },
-];
-
-function renderHeatmap() {
-  const horizons = ['H1', 'H2', 'H3', 'Ultra'];
-  const allVals = HEATMAP_DATA.flatMap(d => horizons.map(h => d[h]));
-  const minV = Math.min(...allVals);
-  const maxV = Math.max(...allVals);
-
-  let html = '<thead><tr><th style="text-align:left;">年代</th>';
-  horizons.forEach(h => html += `<th>${h}</th>`);
-  html += '</tr></thead><tbody>';
-
-  HEATMAP_DATA.forEach(row => {
-    html += `<tr><td class="rl">${row.decade}</td>`;
-    horizons.forEach(h => {
-      const v = row[h];
-      const bg = heatColor(v, minV, maxV);
-      const fg = heatTextColor(v, minV, maxV);
-      html += `<td><div class="hm-cell" style="background:${bg};color:${fg};">${fmt(v, 2)}</div></td>`;
-    });
-    html += '</tr>';
-  });
-
-  html += '</tbody>';
-  document.getElementById('hm-table').innerHTML = html;
-}
-
-/* ============================================================
-   Top Signals Table (loaded from JSON)
-============================================================ */
-let allTopSignals = [];
-let displayedCount = 0;
-const PAGE_SIZE = 50;
-
-const TYPE_ABBR = {
-  paradigm_shift: 'PS',
-  wild_card:      'WC',
-  emerging_trend: 'ET',
-  counter_trend:  'CT',
-  weak_signal:    'WS',
-};
-
-const REAL_LABEL = {
-  not_realized:   '未実現',
-  partially:      '部分実現',
-  substantially:  '実質実現',
-  emerging:       '萌芽',
-  not_evaluated:  '未評価',
-};
-
-function renderTopRows(signals, startIdx) {
-  const tbody = document.getElementById('top-tbody');
-  const frag = signals.map((s, i) => {
-    const abbr = TYPE_ABBR[s.signal_type] || s.signal_type;
-    const real = REAL_LABEL[s.realization_status] || s.realization_status || '-';
-    const score = s.composite_score != null ? s.composite_score : (s.score != null ? s.score : null);
-    const scoreHTML = score != null
-      ? `<span class="score-bar"><span class="score-track"><span class="score-fill" style="width:${Math.min(100, score / 10 * 100).toFixed(0)}%;"></span></span>${fmt(score, 2)}</span>`
-      : '-';
-    const realColor = s.realization_status === 'substantially' ? 'var(--green)'
-      : s.realization_status === 'partially' ? 'var(--orange)'
-      : s.realization_status === 'emerging' ? 'var(--cyan)'
-      : 'var(--text-muted)';
-    const color = TYPE_COLORS[s.signal_type] || 'var(--text-muted)';
-    return `<tr>
-      <td style="color:var(--text-muted);font-family:monospace;">${startIdx + i + 1}</td>
-      <td style="font-family:monospace;">${s.year || s.decade || '-'}</td>
-      <td class="sig-name" title="${s.signal_name || s.name || ''}">${s.signal_name || s.name || '-'}</td>
-      <td><span class="type-pill" style="background:${color}22;color:${color};">${abbr}</span></td>
-      <td>${scoreHTML}</td>
-      <td style="color:${realColor};font-size:0.76rem;">${real}</td>
-    </tr>`;
-  }).join('');
-  if (startIdx === 0) {
-    tbody.innerHTML = frag;
-  } else {
-    tbody.innerHTML += frag;
-  }
-}
-
-function showMoreSignals() {
-  const next = allTopSignals.slice(displayedCount, displayedCount + PAGE_SIZE);
-  renderTopRows(next, displayedCount);
-  displayedCount += next.length;
-  if (displayedCount >= allTopSignals.length) {
-    document.getElementById('load-more-btn').style.display = 'none';
-  }
-}
-
-async function loadTopSignals() {
-  try {
-    const res = await fetch('data/sg_top_signals.json');
-    allTopSignals = await res.json();
-    displayedCount = 0;
-    const first = allTopSignals.slice(0, PAGE_SIZE);
-    renderTopRows(first, 0);
-    displayedCount = first.length;
-    if (allTopSignals.length > PAGE_SIZE) {
-      const btn = document.getElementById('load-more-btn');
-      btn.style.display = 'block';
-      btn.textContent = `さらに表示（+${Math.min(PAGE_SIZE, allTopSignals.length - displayedCount)}件 / 残り${allTopSignals.length - displayedCount}件）`;
-    }
-  } catch (e) {
-    document.getElementById('top-tbody').innerHTML = '<tr><td colspan="6" style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.78rem;">データの読み込みに失敗しました（sg_top_signals.json）</td></tr>';
-    console.warn('Failed to load top signals:', e);
-  }
-}
-
-/* ============================================================
-   Type Distribution
-============================================================ */
-function renderTypeDist() {
-  const total = 7564;
-  const types = [
-    { label: 'Emerging Trend', count: 2252, pct: 29.8, color: TYPE_COLORS.emerging_trend },
-    { label: 'Weak Signal',    count: 2085, pct: 27.6, color: TYPE_COLORS.weak_signal    },
-    { label: 'Paradigm Shift', count: 1118, pct: 14.8, color: TYPE_COLORS.paradigm_shift },
-    { label: 'Counter Trend',  count: 1081, pct: 14.3, color: TYPE_COLORS.counter_trend  },
-    { label: 'Wild Card',      count: 1024, pct: 13.5, color: TYPE_COLORS.wild_card      },
-  ];
-  const maxCount = Math.max(...types.map(t => t.count));
-  document.getElementById('type-dist').innerHTML = types.map(t =>
-    `<div class="type-dist-row">
-      <div class="type-dist-label" style="color:${t.color};font-weight:500;">${t.label}</div>
-      <div class="type-dist-track"><div class="type-dist-fill" style="width:${(t.count/maxCount*100).toFixed(1)}%;background:${t.color};opacity:0.75;"></div></div>
-      <div class="type-dist-val">${t.count.toLocaleString()} (${t.pct}%)</div>
-    </div>`
-  ).join('');
-}
-
-/* ============================================================
-   Sort Top Table
-============================================================ */
-let sortCol = null, sortDir = 1;
-document.querySelectorAll('.sig-table th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const col = th.dataset.sort;
-    if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
-    const keyFn = {
-      year: s => s.year || s.decade || 0,
-      type: s => s.signal_type || '',
-      score: s => s.composite_score || s.score || 0,
-      realization: s => s.realization_status || '',
-    }[col] || (s => 0);
-    allTopSignals.sort((a, b) => {
-      const va = keyFn(a), vb = keyFn(b);
-      return va < vb ? -sortDir : va > vb ? sortDir : 0;
-    });
-    displayedCount = 0;
-    renderTopRows(allTopSignals.slice(0, PAGE_SIZE), 0);
-    displayedCount = Math.min(PAGE_SIZE, allTopSignals.length);
-    const btn = document.getElementById('load-more-btn');
-    btn.style.display = displayedCount < allTopSignals.length ? 'block' : 'none';
-  });
-});
-
-/* ============================================================
-   Init
-============================================================ */
-window.addEventListener('DOMContentLoaded', () => {
-  renderHorizonChart();
-  renderFreqChart();
-  renderSemTable();
-  renderStatusDist();
-  renderTypeCards();
-  renderHeatmap();
-  renderTypeDist();
-  loadTopSignals();
-});
-
-window.addEventListener('resize', () => {
-  renderHorizonChart();
-  renderFreqChart();
-});
+const saved = localStorage.getItem('theme');
+if (saved) document.body.dataset.theme = saved;
 </script>
 </body>
 </html>
