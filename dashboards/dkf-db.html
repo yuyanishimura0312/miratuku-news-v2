@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Deep Knowledge Foresight DB (DKF-DB) — 教科書8章×ミラツク DB 体系の統合層。116概念・76事象・79問い・10章リンクテーブル">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<title>Deep Knowledge Foresight DB ダッシュボード | ミラツク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --bg: #FFFFFF; --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", "Menlo", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-warm-soft: #E0382C; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--font); margin: 0; padding: 0; font-feature-settings: "palt"; line-height: 1.85; letter-spacing: 0.025em; }
+.top-bar { position: sticky; top: 0; z-index: 100; background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border); height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+[data-theme="dark"] .top-bar { border-top: 3px solid #E0E0E0; }
+.brand { font-family: var(--font-serif); font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: var(--accent-warm); text-decoration: none; }
+.brand-sub { color: var(--text-muted); font-size: 11px; margin-left: 12px; letter-spacing: 0.08em; }
+.theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 3px; cursor: pointer; font-family: var(--font); font-size: 12px; letter-spacing: 0.08em; }
+.theme-toggle:hover { background: var(--surface); color: var(--accent-warm); }
+main { max-width: 1100px; margin: 0 auto; padding: 56px 40px 96px; }
+.hero h1 { font-family: var(--font-serif); font-weight: 700; font-size: 32px; line-height: 1.4; margin: 0 0 12px; letter-spacing: 0.04em; }
+.hero p.lead { font-family: var(--font-serif); font-size: 16px; line-height: 1.95; color: var(--text-secondary); margin: 0 0 12px; }
+.hero p.meta { font-size: 12px; color: var(--text-muted); letter-spacing: 0.08em; margin: 16px 0 48px; padding-top: 14px; border-top: 1px solid var(--border-light); }
+.section-title { font-family: var(--font-serif); font-weight: 700; font-size: 13px; letter-spacing: 0.18em; color: var(--text-muted); margin: 56px 0 24px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+footer { margin-top: 96px; padding-top: 24px; border-top: 1px solid var(--border-light); font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border-light); border: 1px solid var(--border-light); margin: 24px 0 48px; }
+.stat { background: var(--bg); padding: 20px 24px; text-align: center; }
+.stat .num { font-family: var(--font-mono); font-size: 32px; font-weight: 700; color: var(--accent-warm); display: block; }
+.stat .label { font-size: 11px; letter-spacing: 0.1em; color: var(--text-muted); margin-top: 6px; display: block; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0 48px; font-family: var(--font); font-size: 13px; line-height: 1.6; }
+th { background: var(--surface); border: 1px solid var(--border); padding: 10px 14px; text-align: left; font-weight: 700; color: var(--accent); letter-spacing: 0.05em; }
+td { border: 1px solid var(--border-light); padding: 10px 14px; vertical-align: top; }
+tbody tr:nth-child(even) { background: var(--surface); }
+.chapter-block { background: var(--bg); border: 1px solid var(--border-light); padding: 24px 28px; margin-bottom: 20px; border-radius: 4px; }
+.chapter-block h3 { font-family: var(--font-serif); margin: 0 0 8px; font-size: 16px; letter-spacing: 0.04em; }
+.meta-line { font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); }
+.concept-list { font-family: var(--font-serif); font-size: 14px; line-height: 1.8; margin: 0 0 14px; padding-left: 1.2em; }
+.ch-link { display: inline-block; color: var(--accent-warm); text-decoration: none; font-size: 13px; letter-spacing: 0.05em; padding: 6px 14px; border: 1px solid var(--accent-warm); border-radius: 3px; }
+.ch-link:hover { background: var(--accent-muted); }
+.tl-list { list-style: none; padding: 0; columns: 2; column-gap: 32px; font-family: var(--font-serif); font-size: 13px; line-height: 1.7; }
+.tl-list li { margin: 4px 0; break-inside: avoid; }
+.tl-year { font-family: var(--font-mono); font-size: 11px; color: var(--accent-warm); margin-right: 8px; min-width: 60px; display: inline-block; }
+.tl-name { font-weight: 500; }
+.tl-era { color: var(--text-muted); font-size: 10px; margin-left: 6px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 0 0 48px; }
+@media (max-width: 720px) {
+  main { padding: 32px 20px 64px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .tl-list { columns: 1; }
+}
+</style>
+</head>
+<body>
+<header class="top-bar">
+  <div>
+    <a class="brand" href="https://yuyanishimura0312.github.io/miratuku-news-v2/">MIRA TUKU</a>
+    <span class="brand-sub">DEEP KNOWLEDGE FORESIGHT DB · INTEGRATION LAYER</span>
+  </div>
+  <button class="theme-toggle" id="themeToggle" type="button">☾ DARK</button>
+</header>
+<main>
+  <div class="hero">
+    <h1>Deep Knowledge Foresight DB</h1>
+    <p class="lead">教科書 <a href="https://journal.emerging-future.org/deep-knowledge-foresight/?v=24" target="_blank" rel="noopener">deep-knowledge-foresight</a> 全8章を AR-DB 起点に10+のミラツク DB と接続し、概念・事象・問いの三層で統合した SQLite 知識基盤。Chapter 7「深い知の時代の再来」を核心軸に、Ch1〜Ch8 を貫く7つの問いを下層母集団から集約した。</p>
+    <p class="meta">作成: 2026-05-18 / 対象: 西村勇也（NPO法人ミラツク代表） / DB: dkf.db / スキーマ: 10テーブル + 3ビュー / 出典: AR-DB 起点 8 並列照会</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat"><span class="num">8</span><span class="label">CHAPTERS</span></div>
+    <div class="stat"><span class="num">116</span><span class="label">CONCEPTS</span></div>
+    <div class="stat"><span class="num">76</span><span class="label">EVENTS</span></div>
+    <div class="stat"><span class="num">79</span><span class="label">QUESTIONS</span></div>
+  </div>
+
+  <h2 class="section-title">CHAPTER OVERVIEW — 章別概要</h2>
+  <table>
+    <thead><tr><th>No.</th><th>章タイトル</th><th>概念</th><th>事象</th><th>問い</th><th>背景レポート</th></tr></thead>
+    <tbody><tr><td style="text-align:center;font-family:var(--font-mono)">01</td>
+              <td><strong>序：うしろ側に見る未来</strong><br><small style="color:var(--text-muted)">opening</small></td>
+              <td style="text-align:right">15</td>
+              <td style="text-align:right">8</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter1-background.html">背景レポート →</a></td>
+            </tr>
+<tr><td style="text-align:center;font-family:var(--font-mono)">02</td>
+              <td><strong>基盤マップ：データベース星座 4×4 と500万レコード</strong><br><small style="color:var(--text-muted)">observation_tool</small></td>
+              <td style="text-align:right">14</td>
+              <td style="text-align:right">8</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter2-background.html">背景レポート →</a></td>
+            </tr>
+<tr><td style="text-align:center;font-family:var(--font-mono)">03</td>
+              <td><strong>三層の未来学アプローチ</strong><br><small style="color:var(--text-muted)">methodology</small></td>
+              <td style="text-align:right">15</td>
+              <td style="text-align:right">9</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter3-background.html">背景レポート →</a></td>
+            </tr>
+<tr><td style="text-align:center;font-family:var(--font-mono)">04</td>
+              <td><strong>歴史変動から見えた所見</strong><br><small style="color:var(--text-muted)">diagnosis</small></td>
+              <td style="text-align:right">15</td>
+              <td style="text-align:right">17</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter4-background.html">背景レポート →</a></td>
+            </tr>
+<tr><td style="text-align:center;font-family:var(--font-mono)">05</td>
+              <td><strong>2026 — 重なりの時代と大哲学時代の到来</strong><br><small style="color:var(--text-muted)">diagnosis_peak</small></td>
+              <td style="text-align:right">15</td>
+              <td style="text-align:right">12</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter5-background.html">背景レポート →</a></td>
+            </tr>
+<tr><td style="text-align:center;font-family:var(--font-mono)">06</td>
+              <td><strong>浅い知の時代の完了</strong><br><small style="color:var(--text-muted)">response_one</small></td>
+              <td style="text-align:right">14</td>
+              <td style="text-align:right">8</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter6-background.html">背景レポート →</a></td>
+            </tr>
+<tr><td style="text-align:center;font-family:var(--font-mono)">07</td>
+              <td><strong>深い知の時代の再来</strong><br><small style="color:var(--text-muted)">core_insight</small></td>
+              <td style="text-align:right">17</td>
+              <td style="text-align:right">8</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter7-background.html">背景レポート →</a></td>
+            </tr>
+<tr><td style="text-align:center;font-family:var(--font-mono)">08</td>
+              <td><strong>崖の上の景色</strong><br><small style="color:var(--text-muted)">invitation</small></td>
+              <td style="text-align:right">15</td>
+              <td style="text-align:right">8</td>
+              <td style="text-align:right">10</td>
+              <td><a href="deep-knowledge-chapter8-background.html">背景レポート →</a></td>
+            </tr></tbody>
+  </table>
+
+  <h2 class="section-title">CHAPTER × KEY CONCEPTS — 章別の重要概念（上位8）</h2>
+  
+<div class="chapter-block">
+  <h3>Chapter 1 :: 序：うしろ側に見る未来</h3>
+  <div class="meta-line">役割: opening ／ 概念 15 ／ 事象 8 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>アイマラ後方未来時間</strong> <small style="color:var(--text-muted)">[time-concept / tc-db]</small></li><li><strong>アイマラ時間論</strong> <small style="color:var(--text-muted)">[philosophy / philosophy-db]</small></li><li><strong>永劫回帰の神話</strong> <small style="color:var(--text-muted)">[myth / tc-db]</small></li><li><strong>道元の有時（存在と時間の一如）</strong> <small style="color:var(--text-muted)">[philosophy / tc-db]</small></li><li><strong>セブン・ジェネレーションズ：七世代先を見る視点</strong> <small style="color:var(--text-muted)">[indigenous-philosophy / philosophy-db]</small></li><li><strong>ベンヤミンのメシア的時間</strong> <small style="color:var(--text-muted)">[philosophy / philosophy-db]</small></li><li><strong>西田幾多郎の永遠の今</strong> <small style="color:var(--text-muted)">[philosophy / tc-db]</small></li><li><strong>ガダマー地平の融合</strong> <small style="color:var(--text-muted)">[philosophy / philosophy-db]</small></li></ul>
+  <a href="deep-knowledge-chapter1-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+<div class="chapter-block">
+  <h3>Chapter 2 :: 基盤マップ：データベース星座 4×4 と500万レコード</h3>
+  <div class="meta-line">役割: observation_tool ／ 概念 14 ／ 事象 8 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>AR-DB（Agent Registry DB）</strong> <small style="color:var(--text-muted)">[method / agent_registry.db]</small></li><li><strong>メタデータ（Metadata）</strong> <small style="color:var(--text-muted)">[method / ss-db]</small></li><li><strong>オープンサイエンス</strong> <small style="color:var(--text-muted)">[method / ss-db]</small></li><li><strong>ベーコンの偶像論（Bacon&#x27;s Idols）／帰納法</strong> <small style="color:var(--text-muted)">[philosophy / philosophy-db]</small></li><li><strong>再現性危機（Replication Crisis）</strong> <small style="color:var(--text-muted)">[method / ss-db]</small></li><li><strong>分類とその帰結（Sorting Things Out）</strong> <small style="color:var(--text-muted)">[method / anthropology-db]</small></li><li><strong>分類体系（Classification Systems）</strong> <small style="color:var(--text-muted)">[method / anthropology-db]</small></li><li><strong>暗黙知と形式知（Polanyi）</strong> <small style="color:var(--text-muted)">[philosophy / academic-knowledge-db]</small></li></ul>
+  <a href="deep-knowledge-chapter2-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+<div class="chapter-block">
+  <h3>Chapter 3 :: 三層の未来学アプローチ</h3>
+  <div class="meta-line">役割: methodology ／ 概念 15 ／ 事象 9 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>因果階層分析（CLA）4層構造</strong> <small style="color:var(--text-muted)">[- / cla.db]</small></li><li><strong>弱い兆候（weak signals）</strong> <small style="color:var(--text-muted)">[- / signal.db]</small></li><li><strong>Three Horizons（3地平）</strong> <small style="color:var(--text-muted)">[- / signal.db]</small></li><li><strong>Ansoff 4階梯（known-unknown matrix）</strong> <small style="color:var(--text-muted)">[- / signal.db]</small></li><li><strong>Brier score（予測精度評価）</strong> <small style="color:var(--text-muted)">[- / signal.db]</small></li><li><strong>メガトレンド</strong> <small style="color:var(--text-muted)">[- / foresight.db]</small></li><li><strong>トレンド外挿法</strong> <small style="color:var(--text-muted)">[- / foresight.db]</small></li><li><strong>Futurology（未来学）</strong> <small style="color:var(--text-muted)">[- / foresight.db]</small></li></ul>
+  <a href="deep-knowledge-chapter3-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+<div class="chapter-block">
+  <h3>Chapter 4 :: 歴史変動から見えた所見</h3>
+  <div class="meta-line">役割: diagnosis ／ 概念 15 ／ 事象 17 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>技術-制度乖離</strong> <small style="color:var(--text-muted)">[- / background_report §3 / Perez 2002 in dkf-mapping CTI v2]</small></li><li><strong>制度疲労</strong> <small style="color:var(--text-muted)">[- / background_report §3 §5 / cla.db integrated_cla (127年・91,550レコード)]</small></li><li><strong>権力軸移動</strong> <small style="color:var(--text-muted)">[- / geopolitical_risk.db (132カ国・385,918 conflict_events + 24,810 gpr_index records) / CTI v2 (db-registry より)]</small></li><li><strong>枢軸時代</strong> <small style="color:var(--text-muted)">[- / background_report §2 / KGH-DB 枢軸時代events (kgh.db, 既存事象)]</small></li><li><strong>長期持続（longue durée）</strong> <small style="color:var(--text-muted)">[- / background_report §2 §5]</small></li><li><strong>世界システム論</strong> <small style="color:var(--text-muted)">[- / background_report §2 §5]</small></li><li><strong>技術経済パラダイム</strong> <small style="color:var(--text-muted)">[- / background_report §2 §3 / cti-v2 (db-registry より Perez 系譜統合指標)]</small></li><li><strong>コンドラチェフ波（長波理論）</strong> <small style="color:var(--text-muted)">[- / background_report §5 / great_figures.db (Schumpeter 1883-1950 確認済)]</small></li></ul>
+  <a href="deep-knowledge-chapter4-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+<div class="chapter-block">
+  <h3>Chapter 5 :: 2026 — 重なりの時代と大哲学時代の到来</h3>
+  <div class="meta-line">役割: diagnosis_peak ／ 概念 15 ／ 事象 12 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>枢軸時代</strong> <small style="color:var(--text-muted)">[- / background_report §2 / KGH-DB 枢軸時代events (kgh.db, 既存事象)]</small></li><li><strong>ヤスパースの『枢軸時代』</strong> <small style="color:var(--text-muted)">[- / philosophy-db]</small></li><li><strong>ヤスパースの歴史哲学</strong> <small style="color:var(--text-muted)">[- / philosophy-db]</small></li><li><strong>仁</strong> <small style="color:var(--text-muted)">[- / philosophy-db]</small></li><li><strong>四聖諦</strong> <small style="color:var(--text-muted)">[- / philosophy-db]</small></li><li><strong>ロゴス</strong> <small style="color:var(--text-muted)">[- / philosophy-db]</small></li><li><strong>プラトンのイデア</strong> <small style="color:var(--text-muted)">[- / philosophy-db]</small></li><li><strong>道</strong> <small style="color:var(--text-muted)">[- / philosophy-db]</small></li></ul>
+  <a href="deep-knowledge-chapter5-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+<div class="chapter-block">
+  <h3>Chapter 6 :: 浅い知の時代の完了</h3>
+  <div class="meta-line">役割: response_one ／ 概念 14 ／ 事象 8 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>形式知</strong> <small style="color:var(--text-muted)">[epistemology / knowledge_management / PHIL/Innovation Theory]</small></li><li><strong>暗黙知</strong> <small style="color:var(--text-muted)">[epistemology / phenomenology / PHIL/Innovation Theory]</small></li><li><strong>生活世界</strong> <small style="color:var(--text-muted)">[western_20c_continental / PHIL]</small></li><li><strong>身体図式 / 知覚の現象学</strong> <small style="color:var(--text-muted)">[western_20c_continental / PHIL]</small></li><li><strong>行為的直観</strong> <small style="color:var(--text-muted)">[japanese_philosophy / PHIL]</small></li><li><strong>文字 (Writing)</strong> <small style="color:var(--text-muted)">[knowledge_externalization_stage_1 / HTP/KGH]</small></li><li><strong>テキスト (Text)</strong> <small style="color:var(--text-muted)">[knowledge_externalization_stage_2 / HTP/KGH]</small></li><li><strong>印刷 (Printing)</strong> <small style="color:var(--text-muted)">[knowledge_externalization_stage_3 / HTP/KGH]</small></li></ul>
+  <a href="deep-knowledge-chapter6-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+<div class="chapter-block">
+  <h3>Chapter 7 :: 深い知の時代の再来</h3>
+  <div class="meta-line">役割: core_insight ／ 概念 17 ／ 事象 8 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>身体図式</strong> <small style="color:var(--text-muted)">[philosophy / philosophy-db]</small></li><li><strong>七世代思考</strong> <small style="color:var(--text-muted)">[tradition / tc-db]</small></li><li><strong>有時</strong> <small style="color:var(--text-muted)">[philosophy / tc-db]</small></li><li><strong>ドウェリング</strong> <small style="color:var(--text-muted)">[anthropology / anthropology-db]</small></li><li><strong>アニミズム</strong> <small style="color:var(--text-muted)">[anthropology / anthropology-db]</small></li><li><strong>ドリームタイム</strong> <small style="color:var(--text-muted)">[tradition / myth-narratives]</small></li><li><strong>ラサ理論</strong> <small style="color:var(--text-muted)">[poetics / academic-knowledge-db]</small></li><li><strong>コモンズの統治</strong> <small style="color:var(--text-muted)">[institution / gc-db]</small></li></ul>
+  <a href="deep-knowledge-chapter7-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+<div class="chapter-block">
+  <h3>Chapter 8 :: 崖の上の景色</h3>
+  <div class="meta-line">役割: invitation ／ 概念 15 ／ 事象 8 ／ 問い 10</div>
+  <ul class="concept-list"><li><strong>we (関係的ウェルビーイング/共同性)</strong> <small style="color:var(--text-muted)">[core_philosophical_axis / gc-db]</small></li><li><strong>源泉への還流 (Reflux to Source)</strong> <small style="color:var(--text-muted)">[core_philosophical_axis / gc-db]</small></li><li><strong>Ubuntu (関係的人格論)</strong> <small style="color:var(--text-muted)">[we_lineage_non_western / philosophy-db]</small></li><li><strong>我と汝 (Ich-Du)</strong> <small style="color:var(--text-muted)">[we_lineage_western / philosophy-db]</small></li><li><strong>間柄 (aidagara)</strong> <small style="color:var(--text-muted)">[we_lineage_japan / philosophy-db]</small></li><li><strong>修証一等 (Practice equals Realization)</strong> <small style="color:var(--text-muted)">[already_there_future_lineage / philosophy-db]</small></li><li><strong>場 (basho)</strong> <small style="color:var(--text-muted)">[we_lineage_japan / philosophy-db]</small></li><li><strong>他者の顔 (Levinas)</strong> <small style="color:var(--text-muted)">[we_lineage_western / philosophy-db]</small></li></ul>
+  <a href="deep-knowledge-chapter8-background.html" class="ch-link">背景レポートへ →</a>
+</div>
+
+
+  <h2 class="section-title">DATA SOURCE DISTRIBUTION — 概念のソース DB 分布</h2>
+  <div class="two-col">
+    <div>
+      <h4 style="font-family:var(--font-serif);font-size:13px;letter-spacing:0.1em;margin:0 0 12px;color:var(--text-muted)">SOURCE DB</h4>
+      <table><thead><tr><th>DB</th><th>件数</th></tr></thead><tbody><tr><td>philosophy-db</td><td style="text-align:right;font-family:var(--font-mono)">27</td></tr>
+<tr><td>tc-db</td><td style="text-align:right;font-family:var(--font-mono)">10</td></tr>
+<tr><td>anthropology-db</td><td style="text-align:right;font-family:var(--font-mono)">10</td></tr>
+<tr><td>ss-db</td><td style="text-align:right;font-family:var(--font-mono)">7</td></tr>
+<tr><td>gc-db</td><td style="text-align:right;font-family:var(--font-mono)">6</td></tr>
+<tr><td>foresight.db</td><td style="text-align:right;font-family:var(--font-mono)">6</td></tr>
+<tr><td>signal.db</td><td style="text-align:right;font-family:var(--font-mono)">5</td></tr>
+<tr><td>academic-knowledge-db</td><td style="text-align:right;font-family:var(--font-mono)">4</td></tr>
+<tr><td>HTP/KGH</td><td style="text-align:right;font-family:var(--font-mono)">4</td></tr>
+<tr><td>time-concepts-db</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>PHIL</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>wayfinding-db</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr></tbody></table>
+    </div>
+    <div>
+      <h4 style="font-family:var(--font-serif);font-size:13px;letter-spacing:0.1em;margin:0 0 12px;color:var(--text-muted)">CATEGORY</h4>
+      <table><thead><tr><th>カテゴリ</th><th>件数</th></tr></thead><tbody><tr><td>(unspecified)</td><td style="text-align:right;font-family:var(--font-mono)">44</td></tr>
+<tr><td>philosophy</td><td style="text-align:right;font-family:var(--font-mono)">13</td></tr>
+<tr><td>method</td><td style="text-align:right;font-family:var(--font-mono)">10</td></tr>
+<tr><td>anthropology</td><td style="text-align:right;font-family:var(--font-mono)">5</td></tr>
+<tr><td>tradition</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>poetics</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>institution</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>western_20c_continental</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>we_lineage_western</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>we_lineage_japan</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>we_lineage_anthropology</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>time-concept</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <h2 class="section-title">QUESTION DEPTH DISTRIBUTION — 問いの深さカテゴリ分布</h2>
+  <table><thead><tr><th>深さカテゴリ</th><th>件数</th></tr></thead><tbody><tr><td>ai_intelligence_consciousness</td><td style="text-align:right;font-family:var(--font-mono)">11</td></tr>
+<tr><td>(unspecified)</td><td style="text-align:right;font-family:var(--font-mono)">10</td></tr>
+<tr><td>method</td><td style="text-align:right;font-family:var(--font-mono)">8</td></tr>
+<tr><td>nonwestern</td><td style="text-align:right;font-family:var(--font-mono)">6</td></tr>
+<tr><td>ai_ethics_alignment</td><td style="text-align:right;font-family:var(--font-mono)">5</td></tr>
+<tr><td>ai_labor_economy</td><td style="text-align:right;font-family:var(--font-mono)">4</td></tr>
+<tr><td>ai_governance_law</td><td style="text-align:right;font-family:var(--font-mono)">4</td></tr>
+<tr><td>body</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>ai_traditional_nonwestern</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>ai_mortality_existence</td><td style="text-align:right;font-family:var(--font-mono)">3</td></tr>
+<tr><td>tradition</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>sacred</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>philosophical_question_2050</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>other</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>ethics</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>ai_religion_sacred</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>ai_embodiment_care</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>ai_democracy_publicsphere</td><td style="text-align:right;font-family:var(--font-mono)">2</td></tr>
+<tr><td>we_ethics</td><td style="text-align:right;font-family:var(--font-mono)">1</td></tr>
+<tr><td>transhuman_posthuman</td><td style="text-align:right;font-family:var(--font-mono)">1</td></tr>
+<tr><td>time</td><td style="text-align:right;font-family:var(--font-mono)">1</td></tr>
+<tr><td>place</td><td style="text-align:right;font-family:var(--font-mono)">1</td></tr>
+<tr><td>kurashi</td><td style="text-align:right;font-family:var(--font-mono)">1</td></tr>
+<tr><td>embodiment</td><td style="text-align:right;font-family:var(--font-mono)">1</td></tr></tbody></table>
+
+  <h2 class="section-title">TIMELINE — 主要事象のタイムライン (上位30)</h2>
+  <ul class="tl-list"><li><span class="tl-year">BC 50000</span> <span class="tl-name">オーストラリア先住民のソングラインと知識地図</span> <small class="tl-era">prehistoric</small></li><li><span class="tl-year">BC 3200</span> <span class="tl-name">HTP-DB が記録する人類テキスト総ストック（BC3200-2024）</span> <small class="tl-era">prehistoric</small></li><li><span class="tl-year">BC 3200</span> <span class="tl-name">メソポタミアの楔形文字成立（浅い知 5,200 年の起点）</span> <small class="tl-era">prehistoric</small></li><li><span class="tl-year">BC 1500</span> <span class="tl-name">ヴェーダの編纂（リグヴェーダ）</span> <small class="tl-era">prehistoric</small></li><li><span class="tl-year">BC 600</span> <span class="tl-name">ウパニシャッドの哲学的展開</span> <small class="tl-era">ancient</small></li><li><span class="tl-year">BC 528</span> <span class="tl-name">仏教の成立とダルマの体系化 (ゴータマ・ブッダ)</span> <small class="tl-era">ancient</small></li><li><span class="tl-year">BC 500</span> <span class="tl-name">孔子と『論語』の成立</span> <small class="tl-era">classical</small></li><li><span class="tl-year">BC 500</span> <span class="tl-name">諸子百家の形成</span> <small class="tl-era">classical</small></li><li><span class="tl-year">BC 500</span> <span class="tl-name">BC500 前後の同時並行的思考体系化（諸子百家＋ギリシア＋アレクサンドリア）</span> <small class="tl-era">classical</small></li><li><span class="tl-year">BC 500</span> <span class="tl-name">ラサ論の確立</span> <small class="tl-era">classical</small></li><li><span class="tl-year">BC 440</span> <span class="tl-name">墨子の兼愛・非攻</span> <small class="tl-era">classical</small></li><li><span class="tl-year">BC 400</span> <span class="tl-name">老子『道徳経』</span> <small class="tl-era">classical</small></li><li><span class="tl-year">BC 380</span> <span class="tl-name">プラトンによる対話篇群の執筆</span> <small class="tl-era">classical</small></li><li><span class="tl-year">BC 335</span> <span class="tl-name">アリストテレスによる諸学問の体系化</span> <small class="tl-era">classical</small></li><li><span class="tl-year">850</span> <span class="tl-name">ドゥヴァニ理論の成立</span> <small class="tl-era">medieval</small></li><li><span class="tl-year">1014</span> <span class="tl-name">アヴィセンナ『治癒の書』百科全書</span> <small class="tl-era">medieval</small></li><li><span class="tl-year">1240</span> <span class="tl-name">道元『正法眼蔵』と日本曹洞宗の創始</span> <small class="tl-era">medieval</small></li><li><span class="tl-year">1240</span> <span class="tl-name">道元『正法眼蔵』有時の巻成立</span> <small class="tl-era">medieval</small></li><li><span class="tl-year">1450</span> <span class="tl-name">グーテンベルクによる活版印刷の実用化</span> <small class="tl-era">medieval</small></li><li><span class="tl-year">1450</span> <span class="tl-name">グーテンベルク活版印刷術</span> <small class="tl-era">medieval</small></li><li><span class="tl-year">1500</span> <span class="tl-name">イロコイ連邦の大いなる平和の法</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1545</span> <span class="tl-name">フローレンティン・コデックス（サアグン百科全書）</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1602</span> <span class="tl-name">オランダ東インド会社（VOC）と株式制度</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1620</span> <span class="tl-name">ベーコン『ノヴム・オルガヌム』と帰納法の定式化</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1648</span> <span class="tl-name">ウェストファリア条約</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1709</span> <span class="tl-name">産業革命と特許制度</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1751</span> <span class="tl-name">ディドロ・ダランベール『百科全書』完結</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1769</span> <span class="tl-name">ワット蒸気機関の改良</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1772</span> <span class="tl-name">清代『四庫全書』編纂事業</span> <small class="tl-era">early_modern</small></li><li><span class="tl-year">1833</span> <span class="tl-name">英国工場法</span> <small class="tl-era">early_modern</small></li></ul>
+
+  <h2 class="section-title">RELATED — 関連レポート</h2>
+  <table>
+    <tr><td><strong>7つの問い LP</strong></td><td><a href="deep-knowledge-seven-questions.html">深い知の時代の7つの問い →</a></td></tr>
+    <tr><td><strong>背景レポート索引</strong></td><td><a href="deep-knowledge-foresight-background-index.html">全8章背景レポート索引 →</a></td></tr>
+    <tr><td><strong>Chapter 7 理解深化レポート</strong></td><td><a href="deep-knowledge-chapter7-deepening.html">10 DB 並列照会による実証分析 →</a></td></tr>
+    <tr><td><strong>教科書本体</strong></td><td><a href="https://journal.emerging-future.org/deep-knowledge-foresight/?v=24" target="_blank">deep-knowledge-foresight v24 →</a></td></tr>
+  </table>
+
+  <footer>© 2026 NPO法人ミラツク / 編集: 西村勇也 / 構築: AR-DB 起点 8 章並列照会 → DKF-DB スキーマ投入 → 7問集約 / SQLite: 10テーブル + 3ビュー / 出典: deep-knowledge-foresight v24</footer>
+</main>
+<script>
+(function() {
+  const KEY = 'mt-theme';
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  const stored = localStorage.getItem(KEY);
+  if (stored === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀ LIGHT'; }
+  btn.addEventListener('click', function() {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    if (isDark) { root.removeAttribute('data-theme'); localStorage.setItem(KEY, 'light'); btn.textContent = '☾ DARK'; }
+    else { root.setAttribute('data-theme', 'dark'); localStorage.setItem(KEY, 'dark'); btn.textContent = '☀ LIGHT'; }
+  });
+})();
+</script>
+</body>
+</html>
