@@ -30,7 +30,9 @@ function initNav(activePageId) {
   _insertHeader(activePageId);
   _insertAlertsBar();
   _insertFooter();
-  _insertRegionFloating();
+  // region-floating is intended for home only (see main.css comment).
+  // Showing it on dense pages (databases, foresight, etc.) overlaps content.
+  if (activePageId === 'home') _insertRegionFloating();
   _insertToastContainer();
   _insertArticleModalShell();
   _setupThemeToggle();

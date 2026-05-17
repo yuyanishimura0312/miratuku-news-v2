@@ -203,13 +203,43 @@ initNav('databases');
       agentBadge = '<span class="db-entry-agent" title="Claude Code\u3067' + escapeHtml(dbItem.agent) + '\u3067\u8d77\u52d5">' + escapeHtml(dbItem.agent) + '</span>';
     }
 
+    var statText = String(dbItem.stat || '');
+    var descText = String(dbItem.description || '');
+    // Heuristic: stat > 80 chars or desc > 180 chars indicates clamp will trigger.
+    var needsToggle = statText.length > 80 || descText.length > 180;
+    var toggleBtn = needsToggle
+      ? '<button type="button" class="db-entry-toggle" data-action="toggle-entry">+ 全文を読む</button>'
+      : '';
     return '<div class="db-entry"><div class="db-entry-header">' +
       '<span class="db-entry-id">' + escapeHtml(dbItem.id) + '</span>' +
       '<span class="db-entry-name">' + escapeHtml(dbItem.nameJa) + '</span>' +
       agentBadge + '</div>' +
-      '<div class="db-entry-stat">' + escapeHtml(dbItem.stat) + '</div>' +
-      '<div class="db-entry-desc">' + escapeHtml(dbItem.description) + '</div>' +
+      '<div class="db-entry-stat">' + escapeHtml(statText) + '</div>' +
+      '<div class="db-entry-desc">' + escapeHtml(descText) + '</div>' +
+      toggleBtn +
       (meta ? '<div class="db-entry-meta">' + meta + '</div>' : '') +
       (links.length ? '<div class="db-entry-links">' + links.join('') + '</div>' : '') + '</div>';
   }
+
+  // Wire up click-to-expand on db-entry cards (event delegation).
+  document.addEventListener('click', function(e) {
+    var toggle = e.target.closest('[data-action="toggle-entry"]');
+    if (toggle) {
+      e.stopPropagation();
+      e.preventDefault();
+      var entry = toggle.closest('.db-entry');
+      if (entry) {
+        var expanded = entry.classList.toggle('is-expanded');
+        toggle.textContent = expanded ? '− 折りたたむ' : '+ 全文を読む';
+      }
+      return;
+    }
+    // Clicking on the card area (but not inside a link or button) toggles too.
+    var entry = e.target.closest('.db-entry');
+    if (!entry) return;
+    if (e.target.closest('a, button')) return;
+    var expanded = entry.classList.toggle('is-expanded');
+    var btn = entry.querySelector('[data-action="toggle-entry"]');
+    if (btn) btn.textContent = expanded ? '− 折りたたむ' : '+ 全文を読む';
+  });
 })();
