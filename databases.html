@@ -436,11 +436,69 @@
       background: var(--card);
     }
     .book-card {
-      padding: 20px 22px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border-light);
     }
     .book-card:last-child { border-bottom: none; }
-    .book-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .book-card-head {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 0;
+      position: relative;
+      padding-right: 28px;
+    }
+    /* Collapsible: closed by default, head only */
+    .book-card[data-collapsible="true"] { cursor: pointer; }
+    .book-card[data-collapsible="true"] .book-card-head::after {
+      content: "▸";
+      position: absolute;
+      right: 4px;
+      top: 0;
+      font-size: 0.8em;
+      color: var(--text-muted);
+      transition: transform 0.18s ease;
+      line-height: 1.4;
+    }
+    .book-card[data-collapsible="true"].is-open .book-card-head::after {
+      transform: rotate(90deg);
+    }
+    .book-card[data-collapsible="true"]:hover .book-card-head::after {
+      color: var(--accent-warm);
+    }
+    .book-card[data-collapsible="true"] .book-card-stat,
+    .book-card[data-collapsible="true"] .book-card-desc,
+    .book-card[data-collapsible="true"] .book-card-meta,
+    .book-card[data-collapsible="true"] .book-card-actions { display: none; }
+    .book-card[data-collapsible="true"].is-open { padding-bottom: 20px; }
+    .book-card[data-collapsible="true"].is-open .book-card-head { margin-bottom: 8px; }
+    .book-card[data-collapsible="true"].is-open .book-card-stat { display: block; }
+    .book-card[data-collapsible="true"].is-open .book-card-desc { display: block; }
+    .book-card[data-collapsible="true"].is-open .book-card-meta { display: flex; }
+    .book-card[data-collapsible="true"].is-open .book-card-actions { display: flex; }
+    /* Section-level controls */
+    .book-section-controls {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin: 0 0 8px;
+    }
+    .book-section-controls button {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+    }
+    .book-section-controls button:hover {
+      border-color: var(--accent-warm);
+      color: var(--accent-warm);
+    }
     .book-card-tag {
       font-family: "SF Mono", monospace;
       font-size: 0.68rem;
@@ -795,7 +853,12 @@
         <span class="section-subtitle">データベースに基づく学術書籍・教科書・分析レポート</span>
       </div>
 
-      <div class="book-grid">
+      <div class="book-section-controls" data-target="#books .book-grid">
+        <button type="button" data-action="expand-all">全て開く</button>
+        <button type="button" data-action="collapse-all">全て閉じる</button>
+      </div>
+
+      <div class="book-grid" data-collapsible-grid="true">
 
         <div class="book-card">
           <div class="book-card-head"><span class="book-card-tag">FS</span><span class="book-card-name">未来を読む力</span></div>
@@ -1207,6 +1270,47 @@
       var w = window.open('book/tech-acceleration/index.html', '_blank');
       setTimeout(function() { try { w.print(); } catch(e) {} }, 2000);
     }
+
+    /* Collapsible book-cards (書籍・レポート セクション) */
+    (function() {
+      function initCollapsibleBookCards() {
+        var grids = document.querySelectorAll('[data-collapsible-grid="true"]');
+        grids.forEach(function(grid) {
+          var cards = grid.querySelectorAll('.book-card');
+          cards.forEach(function(card) {
+            card.setAttribute('data-collapsible', 'true');
+            var head = card.querySelector('.book-card-head');
+            if (!head) return;
+            head.addEventListener('click', function(e) {
+              if (e.target.closest('a, button')) return;
+              card.classList.toggle('is-open');
+            });
+          });
+        });
+        var controlSets = document.querySelectorAll('.book-section-controls');
+        controlSets.forEach(function(ctrl) {
+          var targetSel = ctrl.getAttribute('data-target');
+          if (!targetSel) return;
+          var grid = document.querySelector(targetSel);
+          if (!grid) return;
+          ctrl.addEventListener('click', function(e) {
+            var btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            var action = btn.getAttribute('data-action');
+            var cards = grid.querySelectorAll('.book-card[data-collapsible="true"]');
+            cards.forEach(function(c) {
+              if (action === 'expand-all') c.classList.add('is-open');
+              else if (action === 'collapse-all') c.classList.remove('is-open');
+            });
+          });
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCollapsibleBookCards);
+      } else {
+        initCollapsibleBookCards();
+      }
+    })();
   </script>
 </body>
 </html>
