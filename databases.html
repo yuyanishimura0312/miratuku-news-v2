@@ -701,7 +701,7 @@
     <section class="app-section">
       <div class="section-header">
         <h1 class="section-title">データベース</h1>
-        <span class="section-subtitle">ミラツク・インテリジェンス・パイプラインを支える56データソース＋専門エージェント</span>
+        <span class="section-subtitle" id="topSubtitle">ミラツク・インテリジェンス・パイプラインを支えるデータソース＋専門エージェント</span>
       </div>
       <p class="page-lead">基軸データベースが情報を蓄積し、構造理解が分析フレームを提供し、変化検出がセンサーとして機能し、概念基盤が知識の文脈を与える。4層＋事業化＋補助に分類された統合知識インフラの全体像。各DBには専門エージェント（slash command）が紐づき、Claude Codeから直接対話可能。</p>
       <div class="page-meta">
@@ -749,51 +749,22 @@
         <h2 class="section-title">4層アーキテクチャ</h2>
         <span class="section-subtitle">概念基盤・基軸DB・構造理解・変化検出 — 有望領域の特定に向かうデータの流れ</span>
       </div>
-      <p class="page-lead">概念基盤・基軸DB・構造理解・変化検出という4層のデータベース群が、有望領域の特定という最終出力に向かって流れる。各層は独立した役割を持ちつつ、互いに参照し合うことで、単独では捉えられない構造的変化を可視化する。事業化（7DB）と補助DB（8件）が応用層を成す。</p>
+      <p class="page-lead" id="archLead">概念基盤・基軸DB・構造理解・変化検出という4層のデータベース群が、有望領域の特定という最終出力に向かって流れる。各層は独立した役割を持ちつつ、互いに参照し合うことで、単独では捉えられない構造的変化を可視化する。</p>
 
-      <div class="arch-flow">
-        <div class="arch-cell" data-layer="conceptual">
-          <div class="arch-layer-label">Conceptual</div>
-          <div class="arch-layer-name">概念基盤</div>
-          <div class="arch-layer-count">18<span class="arch-layer-count-unit">DB</span></div>
-          <div class="arch-layer-codes">AK・MY・AN・FS・TA・TK・IT・MG・ETD・LIT・PT・AD・PHIL・PHYS・CHEM・BOT・CEH・ES・TC</div>
-        </div>
-        <div class="arch-cell" data-layer="core">
-          <div class="arch-layer-label">Core</div>
-          <div class="arch-layer-name">基軸DB</div>
-          <div class="arch-layer-count">4<span class="arch-layer-count-unit">DB</span></div>
-          <div class="arch-layer-codes">FK・PE・CI・GR</div>
-        </div>
-        <div class="arch-cell" data-layer="structural">
-          <div class="arch-layer-label">Structural</div>
-          <div class="arch-layer-name">構造理解</div>
-          <div class="arch-layer-count">6<span class="arch-layer-count-unit">DB</span></div>
-          <div class="arch-layer-codes">CLA・MT・AL・GF・SIF・CTI</div>
-        </div>
-        <div class="arch-cell" data-layer="detection">
-          <div class="arch-layer-label">Detection</div>
-          <div class="arch-layer-name">変化検出</div>
-          <div class="arch-layer-count">10<span class="arch-layer-count-unit">DB</span></div>
-          <div class="arch-layer-codes">SG・IR・PD・EX・SI×IC・SGPR・SGRD・AA・UPR・US</div>
-        </div>
-        <div class="arch-cell" data-layer="output">
-          <div class="arch-layer-label">Output</div>
-          <div class="arch-layer-name">有望領域の特定</div>
-          <div class="arch-layer-count">45<span class="arch-layer-count-unit">AGENTS</span></div>
-          <div class="arch-layer-codes">統合分析・予測較正・全エージェント連携</div>
-        </div>
+      <div class="arch-flow" id="archFlow">
+        <!-- Populated dynamically from db-registry.json by databases.js -->
       </div>
     </section>
 
     <section class="app-section" id="dashboard">
       <div class="section-header">
         <h2 class="section-title">統合ダッシュボード</h2>
-        <span class="section-subtitle">56DB横断・ライブKPI・全文検索・エージェント呼び出し</span>
+        <span class="section-subtitle" id="dashSubtitle">ライブKPI・全文検索・エージェント呼び出し</span>
       </div>
 
       <div class="dash-cta">
         <div class="dash-cta-eyebrow">INTEGRATED DASHBOARD</div>
-        <div class="dash-cta-title">56DB横断ライブKPI・レイヤー分析・全文検索・専門エージェント連携</div>
+        <div class="dash-cta-title" id="dashCtaTitle">DB横断ライブKPI・レイヤー分析・全文検索・専門エージェント連携</div>
         <div class="dash-cta-desc">基軸DB・構造理解・変化検出・概念基盤の4層と事業化セクションを横断し、レコード数・更新頻度・データソースの分布をリアルタイムで可視化。各DBへの直接遷移、検索・フィルタリング、Claude Code専用slash commandの呼び出しまで一画面で完結する。</div>
         <div class="dash-cta-buttons">
           <a href="integrated.html" class="action-link action-link--primary">統合ダッシュボードを開く →</a>
@@ -1227,20 +1198,26 @@
   <div id="app-footer"></div>
 
   <script>
-    function renderKpiOverview(stats) {
+    function renderKpiOverview(data) {
       var el = document.getElementById('kpiOverview');
       if (!el) return;
+      var stats = data.totalStats || {};
+      // Compute total from structure to avoid stale totalStats.totalDatabases drift
+      var layerSum = (data.layers || []).reduce(function(a, l) { return a + (l.databases || []).length; }, 0);
+      var extraSum = (data.extraSections || []).reduce(function(a, s) { return a + (s.databases || []).length; }, 0);
+      var supSum = (data.supplementary || []).length;
+      var totalDBs = layerSum + extraSum + supSum;
       el.innerHTML =
-        '<div class="kpi-cell"><div class="kpi-label">DATABASES</div><div class="kpi-value">' + stats.totalDatabases + '</div></div>' +
-        '<div class="kpi-cell"><div class="kpi-label">TOTAL RECORDS</div><div class="kpi-value">' + stats.totalRecords + '</div></div>' +
-        '<div class="kpi-cell"><div class="kpi-label">LAYERS</div><div class="kpi-value">' + stats.layers + '</div></div>' +
-        '<div class="kpi-cell"><div class="kpi-label">UPDATE</div><div class="kpi-value" style="font-size:1.05rem">' + stats.updateFrequency + '</div></div>';
+        '<div class="kpi-cell"><div class="kpi-label">DATABASES</div><div class="kpi-value">' + totalDBs + '</div></div>' +
+        '<div class="kpi-cell"><div class="kpi-label">TOTAL RECORDS</div><div class="kpi-value">' + (stats.totalRecords || '-') + '</div></div>' +
+        '<div class="kpi-cell"><div class="kpi-label">LAYERS</div><div class="kpi-value">' + (stats.layers || '-') + '</div></div>' +
+        '<div class="kpi-cell"><div class="kpi-label">UPDATE</div><div class="kpi-value" style="font-size:1.05rem">' + (stats.updateFrequency || '-') + '</div></div>';
       el.hidden = false;
     }
 
     fetch('data/db-registry.json')
       .then(function(r) { return r.json(); })
-      .then(function(data) { renderKpiOverview(data.totalStats); })
+      .then(function(data) { renderKpiOverview(data); })
       .catch(function() {});
   </script>
   <script src="js/shared/utilities.js"></script>

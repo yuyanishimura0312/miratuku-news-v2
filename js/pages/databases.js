@@ -29,6 +29,9 @@ initNav('databases');
       '<div class="db-overview-card"><div class="db-overview-value">' + escapeHtml(String(stats.layers)) + '</div><div class="db-overview-label">\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u5c64</div></div>' +
       '<div class="db-overview-card"><div class="db-overview-value">' + escapeHtml(String(stats.updateFrequency)) + '</div><div class="db-overview-label">\u66f4\u65b0\u983b\u5ea6</div></div>';
 
+    // Architecture diagram + number-bearing subtitles
+    renderArchitecture(data);
+
     // \u81ea\u52d5\u66f4\u65b0\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u72b6\u614b\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9
     renderPipelineStatus(data);
 
@@ -111,6 +114,75 @@ initNav('databases');
     container.innerHTML = html;
   }
 
+
+  // Render 4-layer architecture from registry (replaces hardcoded HTML)
+  function renderArchitecture(data) {
+    var archFlow = document.getElementById('archFlow');
+    if (!archFlow) return;
+
+    var layersById = {};
+    (data.layers || []).forEach(function(l) { layersById[l.id] = l; });
+
+    // Preserve original visual order: Conceptual → Core → Structural → Detection → Output
+    var order = [
+      { id: 'conceptual', label: 'Conceptual', name: '概念基盤' },
+      { id: 'core',       label: 'Core',       name: '基軸DB' },
+      { id: 'structural', label: 'Structural', name: '構造理解' },
+      { id: 'detection',  label: 'Detection',  name: '変化検出' }
+    ];
+
+    var cellsHtml = order.map(function(spec) {
+      var layer = layersById[spec.id];
+      if (!layer) return '';
+      var dbs = layer.databases || [];
+      var codes = dbs.map(function(x) { return x.id; }).join('・');
+      return '<div class="arch-cell" data-layer="' + escapeHtml(spec.id) + '">' +
+        '<div class="arch-layer-label">' + escapeHtml(spec.label) + '</div>' +
+        '<div class="arch-layer-name">' + escapeHtml(spec.name) + '</div>' +
+        '<div class="arch-layer-count">' + dbs.length + '<span class="arch-layer-count-unit">DB</span></div>' +
+        '<div class="arch-layer-codes">' + escapeHtml(codes) + '</div>' +
+        '</div>';
+    }).join('');
+
+    var totalAgents = (data.totalStats && data.totalStats.totalAgents) || 0;
+    cellsHtml += '<div class="arch-cell" data-layer="output">' +
+      '<div class="arch-layer-label">Output</div>' +
+      '<div class="arch-layer-name">有望領域の特定</div>' +
+      '<div class="arch-layer-count">' + escapeHtml(String(totalAgents)) + '<span class="arch-layer-count-unit">AGENTS</span></div>' +
+      '<div class="arch-layer-codes">統合分析・予測較正・全エージェント連携</div>' +
+      '</div>';
+
+    archFlow.innerHTML = cellsHtml;
+
+    // Update number-bearing subtitles / lead text from registry
+    var commerc = (data.extraSections || []).find(function(s) { return s.id === 'commercialization'; });
+    var commercCount = commerc ? commerc.databases.length : 0;
+    var supCount = (data.supplementary || []).length;
+    // Compute totalDBs from actual structure (avoids stale totalStats.totalDatabases drift)
+    var layerSum = (data.layers || []).reduce(function(acc, l) { return acc + (l.databases || []).length; }, 0);
+    var extraSum = (data.extraSections || []).reduce(function(acc, s) { return acc + (s.databases || []).length; }, 0);
+    var totalDBs = layerSum + extraSum + supCount;
+
+    var topSubtitle = document.getElementById('topSubtitle');
+    if (topSubtitle && totalDBs) {
+      topSubtitle.textContent = 'ミラツク・インテリジェンス・パイプラインを支える' + totalDBs + 'データソース＋専門エージェント';
+    }
+
+    var archLead = document.getElementById('archLead');
+    if (archLead && commercCount && supCount) {
+      archLead.textContent = '概念基盤・基軸DB・構造理解・変化検出という4層のデータベース群が、有望領域の特定という最終出力に向かって流れる。各層は独立した役割を持ちつつ、互いに参照し合うことで、単独では捉えられない構造的変化を可視化する。事業化（' + commercCount + 'DB）と補助DB（' + supCount + '件）が応用層を成す。';
+    }
+
+    var dashSubtitle = document.getElementById('dashSubtitle');
+    if (dashSubtitle && totalDBs) {
+      dashSubtitle.textContent = totalDBs + 'DB横断・ライブKPI・全文検索・エージェント呼び出し';
+    }
+
+    var dashCtaTitle = document.getElementById('dashCtaTitle');
+    if (dashCtaTitle && totalDBs) {
+      dashCtaTitle.textContent = totalDBs + 'DB横断ライブKPI・レイヤー分析・全文検索・専門エージェント連携';
+    }
+  }
 
   function formatTs(ts) {
     if (!ts) return '';
