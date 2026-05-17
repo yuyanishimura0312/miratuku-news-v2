@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="deep-knowledge-foresight Chapter 2「基盤マップ：データベース星座 4×4 と500万レコード」の背景を語れるようになるための12節整理">
+<link rel="canonical" href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/deep-knowledge-chapter2-background.html">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<title>Chapter 2「基盤マップ：データベース星座 4×4 と500万レコード」背景レポート | ミラツク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", "Menlo", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030; --accent-warm-soft: #E0382C;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--font); margin: 0; padding: 0; font-feature-settings: "palt"; line-height: 1.85; letter-spacing: 0.025em; }
+.top-bar { position: sticky; top: 0; z-index: 100; background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border); height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+[data-theme="dark"] .top-bar { border-top: 3px solid #E0E0E0; }
+.brand { font-family: var(--font-serif); font-weight: 700; font-size: 14px; letter-spacing: 0.1em; color: var(--accent-warm); text-decoration: none; }
+.brand-sub { color: var(--text-muted); font-size: 11px; margin-left: 12px; letter-spacing: 0.08em; }
+.theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 4px 12px; border-radius: 3px; cursor: pointer; font-family: var(--font); font-size: 12px; letter-spacing: 0.08em; }
+.theme-toggle:hover { background: var(--card-hover); color: var(--accent-warm); }
+.layout { display: grid; grid-template-columns: 260px 1fr; max-width: 1280px; margin: 0 auto; gap: 0; }
+.sidebar { position: sticky; top: 48px; align-self: start; height: calc(100vh - 48px); overflow-y: auto; padding: 32px 16px 32px 24px; border-right: 1px solid var(--border-light); font-size: 13px; }
+.sidebar-title { font-family: var(--font-serif); font-weight: 700; font-size: 12px; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+.sidebar ol { list-style: none; padding-left: 0; margin: 0; counter-reset: chapter; }
+.sidebar li { margin: 6px 0; counter-increment: chapter; position: relative; padding-left: 28px; }
+.sidebar li::before { content: counter(chapter, decimal-leading-zero); position: absolute; left: 0; top: 0; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; }
+.sidebar a { color: var(--text); text-decoration: none; line-height: 1.5; display: block; padding: 2px 0; }
+.sidebar a:hover { color: var(--accent-warm); }
+main { max-width: 760px; padding: 56px 48px 96px 48px; }
+main h1 { font-family: var(--font-serif); font-weight: 700; font-size: 28px; line-height: 1.4; margin: 0 0 8px; letter-spacing: 0.04em; }
+main h2 { font-family: var(--font-serif); font-weight: 700; font-size: 22px; line-height: 1.5; margin: 64px 0 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); letter-spacing: 0.04em; }
+main h3 { font-family: var(--font-serif); font-weight: 700; font-size: 17px; line-height: 1.5; margin: 40px 0 14px; color: var(--accent-warm); letter-spacing: 0.04em; }
+main h4 { font-family: var(--font-serif); font-weight: 700; font-size: 15px; line-height: 1.5; margin: 28px 0 10px; letter-spacing: 0.04em; }
+main p { font-family: var(--font-serif); font-size: 15px; line-height: 1.95; margin: 0 0 18px; text-indent: 1em; }
+main p:first-of-type, main h2 + p, main h3 + p, main h4 + p, main hr + p, main table + p, main ul + p, main ol + p, main blockquote + p { text-indent: 0; }
+main strong { color: var(--accent-warm); font-weight: 700; }
+main a { color: var(--accent-warm); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+main a:hover { color: var(--accent-warm-soft); }
+main ul, main ol { font-family: var(--font-serif); font-size: 15px; line-height: 1.85; padding-left: 1.5em; margin: 0 0 18px; }
+main li { margin: 4px 0; }
+main code { font-family: var(--font-mono); font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 3px; color: var(--accent-warm); }
+main pre { font-family: var(--font-mono); font-size: 13px; background: var(--surface); padding: 16px 20px; border-radius: 4px; overflow-x: auto; border: 1px solid var(--border-light); margin: 18px 0; }
+main pre code { background: transparent; padding: 0; color: var(--text); }
+main blockquote { margin: 18px 0; padding: 12px 20px; border-left: 4px solid var(--accent-warm); background: var(--accent-muted); font-family: var(--font-serif); font-style: italic; color: var(--text-secondary); }
+main blockquote p { text-indent: 0; margin: 0; }
+main hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+main table { width: 100%; border-collapse: collapse; margin: 20px 0; font-family: var(--font); font-size: 13px; line-height: 1.6; }
+main th { background: var(--surface); border: 1px solid var(--border); padding: 8px 12px; text-align: left; font-weight: 700; color: var(--accent); }
+main td { border: 1px solid var(--border-light); padding: 8px 12px; vertical-align: top; }
+main tbody tr:nth-child(even) { background: var(--surface); }
+.report-meta { font-family: var(--font); font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); padding: 14px 0; margin: 16px 0 40px; display: flex; flex-wrap: wrap; gap: 18px; }
+.report-meta span strong { color: var(--accent-warm); font-weight: 700; }
+.report-subtitle { font-family: var(--font-serif); font-size: 14px; color: var(--text-secondary); letter-spacing: 0.08em; margin: 0 0 24px; font-weight: 400; }
+.nav-prev-next { display: flex; justify-content: space-between; gap: 12px; margin: 64px 0 0; padding-top: 32px; border-top: 1px solid var(--border-light); font-size: 13px; }
+.nav-prev-next a { color: var(--accent-warm); text-decoration: none; padding: 12px 16px; border: 1px solid var(--border); border-radius: 4px; flex: 1; max-width: 48%; }
+.nav-prev-next a:hover { background: var(--card-hover); }
+.nav-prev-next .nav-label { display: block; font-size: 10px; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 4px; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; top: 0; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px; }
+  main { padding: 32px 24px 64px; }
+}
+@media print {
+  .top-bar, .sidebar, .theme-toggle, .nav-prev-next { display: none; }
+  main { max-width: 100%; padding: 0; }
+  body { background: white; color: black; }
+  main h2 { break-after: avoid; }
+  main table, main pre { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="top-bar">
+  <div>
+    <a class="brand" href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/deep-knowledge-foresight-background-index.html">MIRA TUKU</a>
+    <span class="brand-sub">DEEP KNOWLEDGE FORESIGHT · CHAPTER 2 BACKGROUND</span>
+  </div>
+  <button class="theme-toggle" id="themeToggle" type="button">☾ DARK</button>
+</header>
+<div class="layout">
+  <aside class="sidebar" aria-label="目次">
+    <div class="sidebar-title">CONTENTS</div>
+    <ol>
+      <li><a href="#1-chapter-2-が教科書のどこに位置するか-観察道具立てとしての役割">1. Chapter 2 が教科書のどこに位置するか — 観察道具立てとしての役割</a></li>
+      <li><a href="#2-db星座-4-4-分類スキームの出所-知識分類学の系譜">2. 「DB星座 4×4」分類スキームの出所 — 知識分類学の系譜</a></li>
+      <li><a href="#3-500万レコードの内訳と各dbの位置-16セルの構造を説明可能なものに">3. 500万レコードの内訳と各DBの位置 — 16セルの構造を説明可能なものに</a></li>
+      <li><a href="#4-なぜミラツクがdb体系で未来を観るのか-質的研究-vs-量的研究の対比">4. なぜミラツクがDB体系で未来を観るのか — 質的研究 vs 量的研究の対比</a></li>
+      <li><a href="#5-各dbの取得元-ライセンス-更新頻度-open-data-オリジナル収集の境界">5. 各DBの取得元・ライセンス・更新頻度 — Open data / オリジナル収集の境界</a></li>
+      <li><a href="#6-星座-という比喩の出所-単なる集合ではなく-cross_db_refs-で接続される関係性">6. 「星座」という比喩の出所 — 単なる集合ではなく、cross_db_refs で接続される関係性</a></li>
+      <li><a href="#7-ミラツクの組織的背景-10年の蓄積として星座が出来たこと">7. ミラツクの組織的背景 — 10年の蓄積として星座が出来たこと</a></li>
+      <li><a href="#8-ai-を使った-db-解析の前提-大規模言語モデルとの関係">8. AI を使った DB 解析の前提 — 大規模言語モデルとの関係</a></li>
+      <li><a href="#9-本章が-書かない-こと-各dbの個別記述は省略-tier-0-メタとしての全体地図">9. 本章が**書かない**こと — 各DBの個別記述は省略、Tier 0 メタとしての全体地図</a></li>
+      <li><a href="#10-講演-対話で説明する-3分-15分-60分版">10. 講演・対話で説明する — 3分・15分・60分版</a></li>
+      <li><a href="#11-よくある問いとその答え方">11. よくある問いとその答え方</a></li>
+      <li><a href="#12-関連リソース-もう一段深く読みたいときの参照点">12. 関連リソース — もう一段深く読みたいときの参照点</a></li>
+      <li><a href="#おわりに">おわりに</a></li>
+    </ol>
+  </aside>
+  <main>
+    <h1>Chapter 2「基盤マップ：データベース星座 4×4 と500万レコード」背景レポート</h1>
+    <p class="report-subtitle">講演・対話・連載執筆で背景を語れるようになるための12節整理</p>
+    <div class="report-meta">
+      <span>対象: <strong>CHAPTER 2「基盤マップ：データベース星座 4×4 と500万レコード」</strong></span>
+      <span>作成日: <strong>2026-05-17</strong></span>
+      <span>読者: 西村勇也（NPO法人ミラツク代表）</span>
+      <span>用途: <strong>講演・対話・連載執筆で背景を語るための地ならし</strong></span>
+      <span>出典: <a href="https://journal.emerging-future.org/deep-knowledge-foresight/?v=24#foundation-map" target="_blank" rel="noopener">deep-knowledge-foresight v24</a></span>
+    </div>
+<h1 id="chapter-2-44-500">Chapter 2「基盤マップ：データベース星座 4×4 と500万レコード」背景レポート</h1>
+<p><strong>目的</strong>: 教科書 CHAPTER 2 を「書かれた言葉のまま」ではなく「なぜそう書かれたのか」「どこから来た発想なのか」を語れるようになるための背景整理。講演・対話・連載執筆で 3分・15分・60分の任意の長さで Chapter 2 を紹介できる地ならし。
+<strong>読者</strong>: 西村勇也（NPO法人ミラツク代表）
+<strong>作成日</strong>: 2026-05-17
+<strong>対象URL</strong>: https://journal.emerging-future.org/deep-knowledge-foresight/?v=24#foundation-map</p>
+<hr>
+<h2 id="1-chapter-2">1. Chapter 2 が教科書のどこに位置するか — 観察道具立てとしての役割</h2>
+<p>deep-knowledge-foresight は全8章で構成されている。CHAPTER 1「序：うしろ側に見る未来」が問題設定（未来を観るとは何か）を提示し、CHAPTER 2「基盤マップ：データベース星座 4×4 と500万レコード」が<strong>ミラツクが未来を観るために用意した観察道具立て</strong>を物質的に開示する。続く CHAPTER 3「三層の未来学アプローチ — トレンド外挿法・シグナル理論・CLA」が、その道具立てをどう読むかという方法論を述べる。CHAPTER 4「歴史変動から見えた所見 — 3つの緊張期の重なり」と CHAPTER 5「2026 — 大哲学時代の到来」が<strong>観察の結果として何が見えてきたか</strong>を診断し、CHAPTER 6「浅い知の時代の完了」/ CHAPTER 7「深い知の時代の再来」/ CHAPTER 8「崖の上の景色」が<strong>応答の章群</strong>として続く。</p>
+<p>このなかで Chapter 2 は<strong>観察道具立ての提示</strong>を担う。「ミラツクはどんな素材を、どのように整え、どのように接続しているのか」を、誇張も韜晦もなく開示する章である。観察結果（Chapter 4-5）や方法論的応答（Chapter 6-8）が説得力を持つためには、その土台がどう作られているかを先に開示しておく必要がある。Chapter 2 はその「土台の開示」という機能を担う。</p>
+<p>教科書の論理構造でいえば、Chapter 1 が「<strong>未来を観るとはどういう作業か</strong>」という問いの位置を立て、Chapter 2 が「<strong>そのために我々はこれだけの素材を整えてきた</strong>」と物質的基盤を示し、Chapter 3 が「<strong>それをこの三層で読んでいる</strong>」と方法論を述べる。1 → 2 → 3 の三段で「観察の構え」が完成し、4 章以後が「観察によって見えた景色」へ進む。</p>
+<p>Chapter 2 は派手な主張をしない章である。「我々はこれだけのDBを持っている」「合計はこれだけのレコード数になる」「データはこのような国際標準ルールに従って確立している」── 淡々と書く。だが、この章の落ち着いた質感こそが、教科書全体の信頼性の物質的根拠になっている。診断（Chapter 4-5）や応答（Chapter 6-8）の主張が「思想史的な空中楼閣」ではなく「物質的に支えられた観察結果」であることを、Chapter 2 が無言で保証している。</p>
+<hr>
+<h2 id="2-db-44">2. 「DB星座 4×4」分類スキームの出所 — 知識分類学の系譜</h2>
+<p>横軸（時間：過去・歴史・現在・未来）× 縦軸（領域：人文・社会・技術・基盤概念）の 4×4 = 16 マトリックスという分類スキームは、唐突に思いつかれたものではない。背後には西洋・非西洋の知識分類学（taxonomy of knowledge）の長い系譜がある。</p>
+<p>最古層には <strong>Francis Bacon の『Advancement of Learning』(1605)</strong> および『New Organon』(1620)がある。Bacon は知識を「記憶（History）」「想像力（Poesy）」「理性（Philosophy）」の三つに分け、それぞれをさらに細分化した。記憶＝過去事象、理性＝因果探究、想像力＝可能性想像、という三分法は、Chapter 2 の時間軸（過去・歴史・現在・未来）の遠い祖先である。<strong>Carl Linnaeus『Systema Naturae』(1735)</strong> の階層分類、<strong>Denis Diderot と Jean d'Alembert の『百科全書』(1751-1772)</strong> の「人間知識の系統樹（Figurative system of human knowledge）」も同じ系譜に属する。Diderot の系統樹は、記憶（歴史）／理性（哲学・科学）／想像力（芸術）の三本柱で人類の知を整理した。</p>
+<p>20世紀以降は、<strong>John Wilkins『Real Character』(1668)</strong> の人工言語的分類、<strong>Dewey Decimal Classification (1876)</strong>、<strong>Library of Congress Classification (1897)</strong> といった図書館分類学が公的標準として広く普及した。21世紀に入ると <strong>Wikipedia のカテゴリ体系</strong>、<strong>Wikidata のオントロジー（ontology）</strong>、<strong>OWL（Web Ontology Language, 2004）</strong>、<strong>Schema.org（2011）</strong> のように、機械可読な知識分類が現代の標準となった。</p>
+<p>ミラツクの「4×4」が特異なのは、<strong>時間軸を一次元目に据えた</strong>点である。図書館分類学は通常、領域（自然科学・社会科学・人文学・芸術）を一次元目に置き、時代・地域は二次元目以降に従属させる。Chapter 2 が時間軸を一次元目に据えるのは、本書が<strong>未来学の教科書</strong>だからである。未来を観るためには、過去・現在・未来の時間軸での素材分布を一目で見えるようにする必要がある。これは図書館分類学から離れて<strong>未来学固有の分類スキーム</strong>を採用した、ということを意味する。</p>
+<p>非西洋系譜の影響も無視できない。文化人類学の標準分類である <strong>OCM（Outline of Cultural Materials, Murdock 1937-）</strong> は、文化要素を 9 大カテゴリ × 100 サブカテゴリで体系化した。ミラツクの人類学DBは 401 OCM 分類を継承している。<strong>D-PLACE（Database of Places, Language, Culture, and Environment, 2016-）</strong> は地球上の 1,400 以上の社会を地理・言語・文化・環境の多軸で構造化したデータベースで、伝統知DB（3,002 グループ）の土台になっている。OCM や D-PLACE は「西洋一極の分類ではなく、人類学的多元性を保持する分類」として設計されており、Chapter 2 の 4×4 が<strong>非西洋知を構造的に含む</strong>設計になっている思想的根拠でもある。</p>
+<p>つまり Chapter 2 の 4×4 マトリックスは、(a) Bacon 以来の知識分類学、(b) 図書館分類学、(c) 機械可読オントロジー、(d) 文化人類学的多元分類 ── の4つの系譜を踏まえた上で、<strong>未来学固有の時間軸を一次元目に据えた</strong>ハイブリッド分類である。「ミラツクが思いついた4×4」ではなく、「400年の知識分類学を継承した上で未来学固有に組み直した4×4」である。</p>
+<hr>
+<h2 id="3-500db-16">3. 500万レコードの内訳と各DBの位置 — 16セルの構造を説明可能なものに</h2>
+<p>Chapter 2 が示す「約500万レコード」は単一の数字ではない。三層構造の合計である。<strong>メイン（人類が蓄積してきたストックとしての知）約 208 万件 + 素材（日次収集ニュース）約 179 万件 + 解析結果（関係・系譜レコード）約 175 万件 = 約 562 万件</strong>。「500万冊の書籍からハイライトを引くようなボリューム」と Chapter 2 が書くのは、メイン層の単位レコードが「論文・人物・概念・政策」のような書籍化可能な情報単位だからである。</p>
+<p>メイン層 208 万件の内訳は、文献・論文レコード 約 52.3 万件、人物レコード 約 38.4 万件、政策・法令・統計 約 35.3 万件、概念・理論レコード 約 35.0 万件、その他補論 約 28.2 万件、シグナル・フォーサイト 約 19.0 万件である。文献レコードの最大塊は <strong>学術ランドスケープ DB（Academic Landscape DB, 233,779 ジャーナル + 62,379 学会 + 25,583 カンファレンス）</strong>、人物レコードの最大塊は <strong>Great Figures DB（9,178 人）+ esse-sense AWS DB（約 235,000 研究者）</strong>、政策・法令・統計の最大塊は <strong>Policy DB（23 府省・30,118 事業・FY2021-2025 予算事業）+ 規制動態 DB 日本版（1,332 法令）+ Macro Economy DB（61 カ国・42 指標・52,259 件）</strong>、概念・理論レコードは Chapter 7 関連で頻出する <strong>哲学DB（10,292 概念）+ 経営学概念 DB（3,369 概念）+ 神話 DB（11,860 件）+ 伝統知 DB（36,360 項目）+ 詩学 DB（2,785 概念）+ 物理学 DB（5,163 概念）+ 化学 DB（5,038 概念）+ 植物学 DB（5,245 概念）+ 宇宙地球史 DB（5,236 概念）+ 地球科学 DB（5,150 概念）+ 経済学 DB（1,976 概念）+ 数学 DB（390 概念）+ Living Behavior DB（2,700 概念）+ Innovation Theory DB（9,839 概念）</strong> などである。</p>
+<p>素材層 179 万件はニュース・プレスリリース類で、PESTLE DB（124 RSS フィード由来 196,714 記事）、文化ニュース DB（Cultural Intelligence DB、576,434 記事・21 カテゴリ・12,047 ソース）、産学プレスリリース（SGRD、36K 件・SGPR、6,581 件）、大学プレスリリース（UPR、427 大学・42,219 件、カバー率 55.4%）などが構成する。これらは日次自動更新パイプライン（DB Auto-Update Pipeline、launchd 05:30AM）で継続収集され、メインの「ストックとしての知」と対をなす<strong>フローとしての観測材料</strong>である。</p>
+<p>解析結果層 175 万件は、メイン層から自動的に導出される関係・系譜レコードである。SS-DB（社会科学 13 サブフィールド）の 278,062 関係、SI-DB（社会システム法則）の 7,389 事象 + 関係構造、各概念DB の lineage links（PHYS 51,076 / BOT 39K / CEH 39K / ES 38,370）、KGH-DB（知の生成史）の 59 genealogy_links と 387 cross_refs、AR-DB（Agent Registry DB）の 1,490 relations + 564 db_references などが含まれる。</p>
+<p>各DBは 16 セルのどこかに位置づけられる。図A の星座マップで「中核となる 31 DB」が配置される根拠は、(a) 当該セルの代表性、(b) 他DBとの cross_db_refs 接続数、(c) 教科書 8 章本文での参照頻度 ── の三軸で決まっている。例えば「過去 × 人文」セルには神話 DB・伝統知 DB・哲学 DB・人類学 DB・文学 DB・詩学 DB の 6 つが置かれる。「未来 × 社会」セルにはメガトレンド DB・地政学リスク DB・FVCP-Meta・Signal DB・Foresight KB が置かれる。「現在 × 技術」セルには AI 発展系譜 DB・AGI 発展 DB・未来技術動向 DB が置かれる。</p>
+<p>この配置を見ると、ミラツクの観察基盤が「<strong>ある特定の領域に集中していない</strong>」ことが分かる。時間軸でも領域軸でも、16 セル全部に何らかの DB が配置されている。これは Chapter 2 が「分野横断を物質的に支える設計」と書く根拠である。一人の研究者が読みうる書籍は数百冊が現実的な上限という制約に対して、500 万レコードという量的厚みと 16 セル全カバーという構造的網羅性が、未来洞察の解像度を底上げしている。</p>
+<hr>
+<h2 id="4-db-vs">4. なぜミラツクがDB体系で未来を観るのか — 質的研究 vs 量的研究の対比</h2>
+<p>未来を観る方法は一つではない。ミラツクが<strong>DB体系を物質的基盤に据えて未来を観る</strong>という選択を取ったことには、思想的な背景と方法論的な背景の両方がある。</p>
+<p>未来学（futures studies）の歴史を遡ると、20世紀後半までは<strong>質的研究が主流</strong>だった。Herman Kahn のシナリオプランニング（1960s）、Bertrand de Jouvenel『L'Art de la conjecture』(1964)、Pierre Wack の Royal Dutch Shell シナリオ手法（1970s）、Sohail Inayatullah の CLA（Causal Layered Analysis, 1998）── これらはすべて、少数の専門家が深い洞察を持って未来を語る質的方法論である。優れた未来学者の直観・経験・対話力が方法論の中心にあった。</p>
+<p>質的研究には決定的な制約がある。<strong>専門家の認知容量</strong>である。Chapter 2 が冒頭で「一人の研究者が読みうる書籍は生涯で数千冊、専門領域に限れば数百冊が現実的な上限」と書く制約は、質的研究全般の制約でもある。優れた未来学者がどれだけ深く考えても、参照可能な素材の量と幅には人間生物学的限界がある。</p>
+<p>データ駆動型未来学が試みるのは、この制約を<strong>技術的に超える</strong>ことである。500 万レコードの DB 体系に、人類が蓄積してきた知のかなりの部分を共通参照系に配置することで、一人の専門家には不可能な多層的観察を<strong>データ基盤の側で予め準備されている状態</strong>に近づける。「未来洞察の解像度を上げる」と Chapter 2 が書くのは、解像度（resolution）が量と幅の関数だからである。</p>
+<p>ただしミラツクの立場は「量的研究で質的研究を置き換える」ではない。<strong>質的研究と量的研究の両立</strong>である。esse-sense 研究者インタビュー約 180 本、約 500 名の研究者対話、5 連載 × 100 話 × 5 シリーズ = 約 500 話の現場知記述、20 本以上の補論 ── これらは質的研究の蓄積である。これらが質的に深く語られた研究者の声・研究の内容・現場の知の構造を、DB 体系へ構造化することで量的厚みに変換している。</p>
+<p>つまり「DB体系で未来を観る」という選択は、(a) 質的研究の認知容量制約を技術的に超え、(b) 質的研究の蓄積を量的厚みに変換し、(c) 量的厚みを再び質的洞察へ還元する ── という<strong>質と量の往復運動</strong>として設計されている。Chapter 2 が「分野横断を物質的に支える設計」と書くのは、この往復運動を物質的に可能にするためにDB体系が必要だった、ということを意味する。</p>
+<p>もう一つの背景は <strong>AI / LLM との接続</strong>である。データ駆動型未来学の出力（パターン抽出・系譜解析・関係構造の可視化）は、大規模言語モデルの推論精度を支える素材になる。LLM は学習データ範囲外を推論することが苦手だが、ミラツクの DB 体系を参照系として与えることで、未来洞察の質を底上げできる。これは Chapter 8 で示唆される「ともに未来を生きる」の AI 部分の前提でもある。</p>
+<hr>
+<h2 id="5-db-open-data">5. 各DBの取得元・ライセンス・更新頻度 — Open data / オリジナル収集の境界</h2>
+<p>500 万レコードのうち、どれが外部 Open data からの取得で、どれがミラツク独自の収集なのかは、Chapter 2 を語る際に必ず聞かれる質問である。境界を明確にしておく必要がある。</p>
+<p><strong>外部 Open data に依拠する DB 群</strong>：学術メタデータ系は OpenAlex（CC0、論文メタデータ）、Crossref（DOI 解決）、ORCID（研究者識別子）、Wikidata（CC0、概念）、VIAF（典拠コントロール）を主要ソースとする。これらは Chapter 2 が「強いデータ基盤の方法論」として明示する「国際ルール」の中核である。経済・統計系は World Bank Open Data（CC BY 4.0）、IMF、OECD、UN Statistics を活用する。人類学系は D-PLACE（Database of Places, Language, Culture, and Environment, CC BY 4.0）、Glottolog（言語系統）、Ethnologue を、伝統知系は UNESCO Intangible Cultural Heritage（無形文化遺産リスト）を参照する。日本の政策・法令系は EDINET（金融庁、有価証券報告書）、e-Gov 法令 API（総務省）、財務省予算事業データを活用する。これらはすべて公開ライセンスのデータで、ミラツクは構造化・正規化・cross_ref 接続を担う。</p>
+<p><strong>ミラツク独自収集 DB 群</strong>：esse-sense 研究者インタビュー 180 本超、5 連載 × 100 話 × 5 シリーズの現場記述、Futures 100 話、20 本以上の補論プロジェクト、文化ニュース DB（Cultural Intelligence DB、576,434 記事・21 カテゴリ・12,047 ソースの日次収集設計）、PESTLE DB（124 RSS フィード設計）、Signal DB（PESTLE + Cultural Intelligence + 産学PR をシグナル理論で読み解く独自抽出）、産学連携プレスリリース DB（SGRD, SGPR）、大学プレスリリース DB（UPR、ミラツク独自集約）、人類学 DB の現代社会シグナルマッチ（22,138 件、esse-sense / 連載文脈から抽出）、文明転換指数 CTI v2（Morris / Smil / Perez / Romer 等の理論を統合した独自指標）、源泉サイクル GC-DB（esse-sense 中核哲学を学術的に裏打ちする独自翻訳層 237 概念）、知の生成史 KGH-DB（synthesis layer DB、独自構造）、AR-DB（Agent Registry DB、エコシステム自己観察）── これらはミラツク独自の知識生産活動として蓄積された。</p>
+<p><strong>ハイブリッド DB 群</strong>：物理学・化学・植物学・宇宙地球史・地球科学・経済学等の学術概念 DB（PHYS / CHEM / BOT / CEH / ES / EC）は、OpenAlex / Wikidata / 学術文献から半自動収集した素材を、ミラツク独自の <code>/adb</code>（academic-db-build v1.1, Phase 0-15）方法論で構造化したものである。素材は外部 Open data だが、サブフィールド設計・関係構造・cross_db_refs・IRR（Cohen's Kappa）品質管理はミラツク独自の方法論で確立する。</p>
+<p>更新頻度は DB ごとに異なる。日次自動更新は PESTLE / Cultural Intelligence / UPR / SGPR / Signal の 5 DB（DB Auto-Update Pipeline、launchd 05:30AM）。週次更新は学術メタデータ系。年次更新は学術概念 DB（OpenAlex / Wikidata 反映）。連載シリーズ・補論プロジェクトは制作スケジュールに同期して都度更新される。</p>
+<p>ライセンス選好順序は CC BY 4.0 &gt; CC BY-SA / CC BY 3.0 &gt; 政府公開（CC0 相当）&gt; 学術登録制 &gt; 非営利・要登録 &gt; 有料（採用前に代替検証）の順で、Chapter 2 が「CC BY 4.0 優先」と明示するのはこの選好順序のためである。</p>
+<hr>
+<h2 id="6-cross_db_refs">6. 「星座」という比喩の出所 — 単なる集合ではなく、cross_db_refs で接続される関係性</h2>
+<p>Chapter 2 が「データベース<strong>星座</strong>」と呼ぶことには、思想的な含意がある。70+ の DB を単に「コレクション」「ライブラリ」「リポジトリ」と呼ぶこともできた。だが「星座」を選んだ。</p>
+<p>星座とは、天体が物理的に近接しているわけではない（実際の距離は光年スケールで離れている）にもかかわらず、地上から見たとき<strong>特定の関係性</strong>を持って認識される視覚的構造物である。古代バビロニアのムル・アピン文書（BC 1100 頃）、エジプト・デンデラ天体図（BC 1 世紀）、ギリシャの Aratus『Phaenomena』(BC 270)、中国の天文志、インドの Nakshatra ── 文明はそれぞれ独自に星座を編んできた。星座は天体そのものの物理特性ではなく、<strong>観察者の位置と認識の枠組み</strong>が立ち上げる構造である。</p>
+<p>ミラツクが「DB星座」と呼ぶのは、70+ DB が単に併存しているだけではなく、<strong>cross_db_refs（DB間相互参照）</strong> によって関係構造を持っているからである。AR-DB（Agent Registry DB）が示す数値で具体化すると、564 db_references がエージェント間の DB 参照を構造化している。例えば人類学 DB は anthropology / ss / mg / philosophy / great-figures など複数の DB と接続される。哲学 DB（PHIL）は myth-narratives / poetics / lit / great-figures / cq（現代の問い）と接続される。知の生成史 KGH-DB は 13 DB 統合のメタ層として機能する。源泉サイクル GC-DB は 55 cross_refs で 18+ DB と接続される。</p>
+<p>cross_db_refs はミラツクの DB 体系の<strong>生命線</strong>である。単独 DB だけでは答えられない問いに、cross_db_refs を辿ることで答えられるようになる。例えば「文字以後 5,200 年の知の外部化が AI で究極化する」という Chapter 6 の命題は、KGH-DB（知の生成史 112 events / 115 agents）+ HTP-DB（Human Text Production、44 レコード・BC3200-2026 / 5,226 年）+ AI 発展系譜 DB（LLM 1,097 + AGI 1,139 = 2,236 論文）+ tech-acceleration DB（227K レコード）の 4 DB を cross_db_refs で接続して初めて根拠を持つ。</p>
+<p>「星座」比喩のもう一つの含意は、<strong>観察者が居なくとも星座は成立しないが、星座を編む観察者は一人ではない</strong>ということである。古代バビロニア・エジプト・ギリシャ・中国・インドはそれぞれ独自に星座を編んだ。同様にミラツクの DB 星座も、ミラツク一組織が編んだ唯一のスキームではない。他組織が同じ素材から別の星座を編む可能性は常に開かれている。Chapter 2 が淡々と「ミラツクは 4×4 で配置している」と書くのは、この多元性への謙抑である。</p>
+<p>「コレクション」「ライブラリ」「リポジトリ」と呼ばずに「星座」と呼ぶことは、(a) DB 間の関係性が中核であること、(b) 観察者の認識枠組みが構造を立ち上げること、(c) 別の編み方の可能性を排除しないこと ── の三つを同時に示している。</p>
+<hr>
+<h2 id="7-10">7. ミラツクの組織的背景 — 10年の蓄積として星座が出来たこと</h2>
+<p>DB 星座 4×4・500 万レコードは、外部委託や買収で短期間に構築されたデータセットではない。<strong>NPO 法人ミラツク（2011 年設立）の 10 年以上の組織活動の結晶</strong>である。背景を知ると、Chapter 2 の質感が変わる。</p>
+<p>ミラツクの中核ミッションは「これからの社会づくりに資する知識の流通・蓄積・運用」である。「人を集める組織」ではなく「<strong>知識運動体</strong>」というアイデンティティを持つ。2011 年の設立以来、主要な活動は以下のように展開してきた。</p>
+<p>第一に、<strong>研究者対話</strong>である。約 500 名の研究者との一対一対話を 10 年以上蓄積してきた。esse-sense メディア（https://esse-sense.com）に研究者インタビュー記事として 180 本超を公開し、その背後にはより多くの未公開対話がある。これが Great Figures DB（9,178 人）/ esse-sense AWS DB（約 235,000 研究者）/ 人類学 DB / 経営学 DB / 哲学 DB 等の人物・概念基盤となる。</p>
+<p>第二に、<strong>未来予測書籍の読書会</strong>である。約 30 冊の未来予測関連書籍を読書会形式で読み解き、Megatrend / Foresight Taxonomy DB として 18 メガトレンド・5 メガドメイン・Three Horizons に構造化してきた。Foresight Knowledge Base（309 機関・45,323 レポート・23,272 予測・507 トレンド・5,099 シナリオ）はその延長線上にある。</p>
+<p>第三に、<strong>5 連載 × 100 話 × 5 シリーズの制作</strong>である。暮らしのかたち（100 話）・事業のかたち（100 話）・変化のかたち（100 話）・経営のかたち（制作中）・いとなみのかたち（制作中）の 5 シリーズが順次制作されてきた。各話は研究者 1 名以上の参照と DEEPER（学術的補足）と KEY REFERENCE（5-8 件の典拠）を持つ。500 話で累積される研究者参照は 2,500 以上、典拠は 2,500-4,000 件に達する。これが連載 DB 群（kurashi / jigyo / henka / keiei / itonami）に構造化される。</p>
+<p>第四に、<strong>Futures 連載 100 話</strong>と <strong>20 本以上の補論プロジェクト</strong>（製造現場のオーケストラ化 2030-2100、食と農の 2030-2100、移動の 2030-2100 など）が、未来洞察の具体的応用として続く。これらが FVCP-Meta DB として横断管理される。</p>
+<p>第五に、<strong>産学連携・大学発スタートアップ・研究助成財団</strong> の実データ DB が、知識の社会実装を観察する基盤として整備されてきた。University Press Releases DB（427 大学・42,219 件）、Sangaku R&amp;D（7,836 社・36K 件）、University Startups DB（5,050 社・97 大学）、Research Foundation DB（2,140 団体・540 プログラム）── これらは「学知が社会へ流出する経路」を実データで追跡可能にする。</p>
+<p>第六に、<strong>学術知識 DB 群の本格構築</strong>が 2024-2026 年に加速した。<code>/academic-db-build v1.1</code>（Phase 0-15、世界最高品質基準）方法論で、物理学 5,163 / 化学 5,038 / 植物学 5,245 / 宇宙地球史 5,236 / 地球科学 5,150 / 経済学 1,976 / Living Behavior 2,700 / Social Sciences 9,658 / Strategy Concepts 747 / Mathematics 390 / Innovation Theory 9,839 / 哲学 10,292 / 神話 11,860 / 伝統知 36,360 / 詩学 2,785 等の学術概念 DB が積み重ねられた。</p>
+<p>これらが<strong>並行進行</strong>してきた。一つの DB を完成させてから次へ進むのではなく、500 名の研究者対話と読書会と連載制作と補論プロジェクトと学術 DB 構築が同時並行で進む中で、互いに cross_db_refs で接続されながら 4×4 の星座が浮かび上がってきた。Chapter 2 が淡々と「分野横断を物質的に支える設計」と書くのは、この 10 年の積層が結果として 16 セル全カバーの星座を成立させた、という事実を背景に持つ。</p>
+<hr>
+<h2 id="8-ai-db">8. AI を使った DB 解析の前提 — 大規模言語モデルとの関係</h2>
+<p>500 万レコードという量は、人間が読み通せるサイズを遥かに超えている。500 万件は、一人が毎日 100 件のレコードを読んでも 137 年かかる量である。DB 体系を「持つ」ことと「使う」ことの間には、別の方法論が必要になる。それが <strong>AI / 大規模言語モデルを介した DB 解析</strong>である。</p>
+<p>ミラツクの DB 解析は、(a) LLM が DB を参照系として活用し、(b) ミラツク独自の専属エージェント（Agent Registry DB に 82 エージェント登録）が各 DB をルーティングし、(c) 並列処理で複数 DB を横断照会する ── という三層構造で動く。AR-DB（Agent Registry DB v1.0）は 358 records（agents 82 + commands 215 + skills 51 + rules 11）+ 1,490 relations + 564 db_references + 43 tools を管理する自己観察 DB であり、エコシステム全体の「DB をどう使うか」のメタ知識を蓄積する。</p>
+<p>ここで重要なのは <strong>AI を使うことの危険性も同時に意識している</strong>ことである。Chapter 2 が「<strong>ハルシネーションを含めた偽データの混入が残らないよう、繰り返しの検証を行い、一定以上の信頼度を示すデータのみを残す</strong>」と書くのは、LLM の確率的生成が時に存在しないデータを「もっともらしく」生成してしまう問題（ハルシネーション）への直接的応答である。</p>
+<p>対策は四層構造になっている。第一に <strong>IRR（評価者間信頼性）の Cohen's Kappa ≥ 0.80（almost perfect 水準）</strong> を品質ゲートに据える。物理学 DB 0.87、宇宙地球史 DB 0.99、地球科学 DB 0.96、植物学 DB 0.86 ── すべて almost perfect 水準を達成している。第二に <strong>gta_status フラグで推定値・補間値を明示</strong>し、確定値と区別する。第三に <strong>doc-verify エージェント</strong>が定期的に横断検証を行い、「スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合」の <strong>4 大品質問題</strong>を継続的に監視する。第四に <strong>日次自動更新パイプラインの 80% 閾値保護</strong>（ローカル DB 件数が registry の 80% 未満なら更新スキップ）で部分 DB の誤上書きを防ぐ。</p>
+<p>加えて、<code>/adb v1.1</code>（Academic DB Build v1.1, Phase 0-15）方法論には <strong>多言語化（30%+目標）/ IRR Kappa≥0.80 / 18 DB cross_ref / 年次自動更新</strong> の世界最高品質基準が組み込まれている。<code>/ddb v1.1</code>（DB Coverage Diagnostic）は Variety+多言語 / Volume / Quality+IRR の 3 軸スコアで全 DB の質を継続診断する。<code>/db-master</code>（Tier 0 メタオーケストレーター）は型自動判定 → Wave 段階展開 → 4 大品質問題自動チェック → 学習ループまで完結する自己改善メカニズムを持つ。</p>
+<p>つまりミラツクの AI 活用は、「LLM の能力を最大限活用しつつ、LLM の限界を構造的に補正する」という設計になっている。生成と検証を分離し、検証を生成より優先するという<strong>メタ原則</strong>（feedback_process_meta_principles）が、500 万レコード規模の DB 体系を「強い基盤」として確立する物質的方法論である。</p>
+<hr>
+<h2 id="9-dbtier-0">9. 本章が<strong>書かない</strong>こと — 各DBの個別記述は省略、Tier 0 メタとしての全体地図</h2>
+<p>背景を語るときに重要なのは、Chapter 2 が<strong>何を書いているか</strong>だけでなく、<strong>何を意図的に書いていないか</strong>を把握しておくことである。</p>
+<p>第一に、Chapter 2 は <strong>各 DB の個別解説をしない</strong>。70+ DB それぞれに何が入っているか、どんなレコード構造を持つか、誰が構築したか、どんな解析が可能か ── これらは各 DB の専属エージェント（<code>/phys</code> <code>/chem</code> <code>/bot</code> <code>/anthropology</code> <code>/myth-narratives</code> <code>/traditional-knowledge</code> <code>/philosophy</code> <code>/cq</code> <code>/gc</code> 等、計 82 エージェント）と各 DB のダッシュボード HTML（赤白 CI textbook.html style）が担う。Chapter 2 は <strong>Tier 0 メタ層</strong>として、個別 DB の上を漂う全体地図の役割に徹する。</p>
+<p>第二に、<strong>個別 DB の優劣を論じない</strong>。「神話 DB は哲学 DB より重要だ」「物理学 DB より人類学 DB の方が未来洞察に効く」 ── そういう比較を一切しない。Chapter 2 の立場は「16 セル全てに何らかの DB が配置されている、それが分野横断の物質的基盤である」というところに留まる。優劣の議論は、教科書本文の Chapter 4-8 で具体的な観察結果として、また連載・補論で個別テーマに応じて展開される。</p>
+<p>第三に、<strong>完成度を誇示しない</strong>。500 万レコードという数字は印象的だが、Chapter 2 はそれを「世界最大級の」「人類最高峰の」と修飾しない。「500 万冊の書籍からハイライトを引くようなボリュームに相当する」と比喩的に位置づけるだけである。これは（a）他組織の DB 体系（OpenAlex は 2.4 億論文、Wikidata は 1 億アイテム）と比べれば 500 万は決して最大ではないこと、（b）量より構造（4×4 と cross_db_refs）が中核であること ── を踏まえた節度ある記述である。</p>
+<p>第四に、<strong>個別 DB の構築苦労話を書かない</strong>。10 年以上かけて 70+ DB を構築する過程には、無数の試行錯誤・失敗・方法論的転換があった。<code>/adb v1.1</code> の Phase 0-15 への拡張、IRR Kappa≥0.80 の導入、4 大品質問題の発見と対策、DB Coverage Diagnostic の新設、source_url 100% 必須化 ── これらは各 feedback メモリと各 DB の commit history に蓄積されているが、Chapter 2 はそれらを語らない。教科書の読者にとって構築苦労話は不要であり、「今ある基盤」だけを淡々と示せばよい。</p>
+<p>第五に、<strong>法的・倫理的議論を脇に置く</strong>。Open data ライセンス選好順序や source_url 100% 記録は触れるが、データ収集の倫理、研究者プライバシー、ニュース集約の著作権議論、AI 学習データの法的位置づけといった大きな議論は Chapter 2 では扱わない。これらは別途、各 DB 構築時のガイドラインとミラツクの組織倫理として運用される。</p>
+<p>これらの「書かないこと」を把握しておくと、Chapter 2 に対する質問・批判を<strong>章の外側に丁寧に振り分ける</strong>ことができる。「神話 DB の中身を詳しく」→「<code>/myth-narratives</code> エージェント」、「学術概念 DB の構築方法は」→「<code>/adb v1.1</code> Phase 0-15」、「優劣はどう判断するのか」→「Chapter 4-8 と各個別 DB エージェント」、「データの法的問題は」→「DB 構築ガイドラインで個別対応」── という具合に。</p>
+<hr>
+<h2 id="10-31560">10. 講演・対話で説明する — 3分・15分・60分版</h2>
+<p>実用的に、Chapter 2 を任意の長さで紹介するための骨子を提示する。</p>
+<h3 id="3">3分版（電車内・名刺交換後の立ち話）</h3>
+<p>「ミラツクは、未来を観るためのデータ基盤を 10 年以上かけて作ってきました。横軸が時間（過去・歴史・現在・未来）、縦軸が領域（人文・社会・技術・基盤概念）の 4×4 = 16 マトリックスに、70+ のデータベースを配置しています。神話・伝統知・哲学・人類学・物理学・経済学・現代の問い・シグナル・メガトレンド ── 人類が蓄積してきた知の主要領域をほぼカバーします。中身は約 500 万レコード。500 万冊の書籍からハイライトを引くようなボリュームに相当します。一人の専門家には不可能な多層的観察が、データ基盤の側で予め準備されている状態に近づけたい、というのが設計思想です。データの確立は、OpenAlex / Crossref / ORCID / Wikidata / VIAF など国際的な学術メタデータ標準に従い、CC BY 4.0 優先で取得元を明示し、IRR（評価者間信頼性）の Cohen's Kappa ≥ 0.80 を品質ゲートに据えています。AI を使った解析の前提として、ハルシネーション対策の検証層を四重に組み込んでいます。これが、教科書全 8 章の物質的な土台です。」</p>
+<h3 id="15">15分版（オンライン勉強会・対話の導入）</h3>
+<p>3分版に加えて、以下を補強する。</p>
+<p><strong>4×4 マトリックスの分類学的系譜</strong>: 横軸の時間軸（過去・歴史・現在・未来）と縦軸の領域軸（人文・社会・技術・基盤概念）は、Bacon『学問の進歩』(1605)、Diderot『百科全書』(1751-1772) の系統樹、Linnaeus の階層分類、現代の Wikidata・OWL・Schema.org、文化人類学の OCM・D-PLACE といった 400 年の知識分類学を継承している。ただし<strong>時間軸を一次元目に据えた</strong>点が特異で、これは未来学固有の選択である。未来を観るには時間軸の素材分布が一目で見える必要がある。</p>
+<p><strong>三層構造の内訳</strong>: メイン（人類が蓄積してきたストックとしての知）208 万件 + 素材（日次収集ニュース）179 万件 + 解析結果（関係・系譜レコード）175 万件 = 約 562 万件。メイン層の最大塊は文献・論文 52.3 万件（学術ランドスケープ DB が中核）、人物 38.4 万件（Great Figures + esse-sense AWS DB）、政策・法令・統計 35.3 万件（Policy DB / 規制動態 DB / Macro Economy DB）、概念・理論 35.0 万件（哲学 10,292 / 伝統知 36,360 / 神話 11,860 / 物理学 5,163 / 等）。</p>
+<p><strong>「星座」比喩の含意</strong>: 単なる集合ではなく cross_db_refs（DB 間相互参照）で接続される関係構造である。AR-DB（Agent Registry DB）が示す通り、564 db_references がエージェント間の DB 参照を構造化する。源泉サイクル GC-DB は 55 cross_refs で 18+ DB と接続される。Chapter 6/7 の「文字以後 5,200 年の知の外部化が AI で究極化する」という命題は、KGH-DB + HTP-DB + AI 発展系譜 + tech-acceleration の 4 DB を cross_db_refs で接続して初めて根拠を持つ。</p>
+<p><strong>強い基盤の四方法論</strong>: ①国際メタデータ標準（OpenAlex / Crossref / ORCID / Wikidata / VIAF + CC BY 4.0 優先）、②一次資料優先・複数ソース三角測量・source_url 100% 必須、③IRR Cohen's Kappa ≥ 0.80（物理学 0.87 / 宇宙地球史 0.99 / 地球科学 0.96 / 植物学 0.86）、④doc-verify エージェントによる 4 大品質問題（スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合）の継続監視。</p>
+<h3 id="60">60分版（講演・ワークショップ）</h3>
+<p>15分版に加えて、以下を立体化する。</p>
+<p>(a) <strong>教科書全 8 章の中での位置づけ</strong>（§1）── Chapter 2 は「観察道具立ての開示」を担う。1→2→3 の三段で観察の構えが完成し、4 章以降が観察結果へ進む。</p>
+<p>(b) <strong>4×4 マトリックスの 400 年系譜</strong>（§2）── Bacon / Linnaeus / Diderot / Wikipedia / OWL / OCM / D-PLACE。時間軸を一次元目に据えた未来学固有の選択。</p>
+<p>(c) <strong>500 万レコードの三層構造と 16 セル配置</strong>（§3）── 各セル代表 DB、メイン層 6 カテゴリ、素材層日次収集パイプライン、解析結果層の関係・系譜レコード。</p>
+<p>(d) <strong>質的研究と量的研究の往復運動</strong>（§4）── 質的研究の認知容量制約を技術的に超え、質的蓄積を量的厚みに変換し、量的厚みを再び質的洞察へ還元する。</p>
+<p>(e) <strong>Open data とオリジナル収集の境界</strong>（§5）── 外部 Open data 依拠 DB / ミラツク独自収集 DB / ハイブリッド DB の三分類。日次・週次・年次の更新頻度。CC BY 4.0 優先のライセンス選好順序。</p>
+<p>(f) <strong>「星座」比喩の三重含意</strong>（§6）── DB 間関係性が中核、観察者の認識枠組みが構造を立ち上げる、別の編み方の可能性を排除しない。</p>
+<p>(g) <strong>10 年の組織的蓄積</strong>（§7）── 約 500 名研究者対話、約 30 冊未来予測書籍読書会、5 連載 × 100 話、Futures 100 話、20 本以上補論、学術概念 DB 群本格構築。並行進行が結果として星座を成立させた。</p>
+<p>(h) <strong>AI / LLM との接続と限界補正</strong>（§8）── 4 層ハルシネーション対策、<code>/adb v1.1</code> Phase 0-15、<code>/ddb v1.1</code> 3 軸スコア、<code>/db-master</code> Tier 0 メタオーケストレーター。</p>
+<p>(i) <strong>書いていないこと</strong>（§9）── 各 DB の個別解説、優劣比較、完成度誇示、構築苦労話、法的・倫理的議論。Tier 0 メタ層としての謙抑。</p>
+<p>(j) <strong>質疑応答</strong>（§11）── 500 万は世界最大か／LLM のハルシネーションは本当に防げるか／質的研究の価値は薄れないか／DB は誰がどう更新するか／非西洋知をなぜ重視するかなど。</p>
+<hr>
+<h2 id="11">11. よくある問いとその答え方</h2>
+<p>講演・対話で出やすい問いと、Chapter 2 の論理に沿った答え方の骨子を準備しておく。</p>
+<p><strong>Q1: 500 万レコードは世界最大級のデータベースですか？</strong></p>
+<p>A: いいえ、最大級ではありません。OpenAlex は 2.4 億論文、Wikidata は 1 億アイテム、Google Books は 4,000 万冊以上をスキャンしています。500 万レコードは決して最大ではない。ミラツクの DB 体系の特異性は量ではなく<strong>構造</strong>にあります。4×4 の 16 セルに分野横断的に配置され、cross_db_refs で互いに接続されている。一人の専門家には不可能な多層的観察が、データ基盤の側で予め準備されている状態に近づける ── これが目的であって、レコード数の世界記録を狙う設計ではありません。500 万冊の書籍からハイライトを引くようなボリュームに相当する、と比喩したのも、量より「知の総体への手の届き方」を伝えるためです。</p>
+<p><strong>Q2: LLM のハルシネーションは本当に防げますか？</strong></p>
+<p>A: 完全には防げません。ただし大幅に低減できます。対策は四層構造で、(i) IRR Cohen's Kappa ≥ 0.80（almost perfect 水準）の品質ゲート、(ii) gta_status フラグによる推定値・補間値の明示、(iii) doc-verify エージェントの 4 大品質問題継続監視、(iv) 日次自動更新パイプラインの 80% 閾値保護を組み合わせている。物理学 DB で 0.87、宇宙地球史 DB で 0.99、地球科学 DB で 0.96 を達成しているのは、これら対策の実証です。それでも残るリスクはあります。だから「強い基盤」と呼びつつ「絶対基盤」とは呼ばない。誤りが残る前提で、誤りを発見し続ける運用そのものが基盤の強さです。</p>
+<p><strong>Q3: 質的研究の価値は薄れないか？</strong></p>
+<p>A: 逆です。むしろ前提として質的研究の蓄積が必要です。esse-sense 研究者インタビュー 180 本超、約 500 名の研究者対話、5 連載 × 100 話の現場記述、20 本以上の補論 ── これらすべてが質的研究の蓄積です。DB 体系はこれらを量的厚みに変換する仕組みであって、質的研究の代替ではありません。質的研究と量的研究の往復運動として設計されている。深く語られた一人の研究者の声が DB へ構造化され、その声が他の研究者の声・データ・概念と cross_db_refs で接続されることで、質的洞察の射程が伸びる ── という関係です。</p>
+<p><strong>Q4: DB は誰がどう更新するんですか？</strong></p>
+<p>A: 三層で違います。第一に<strong>日次自動更新</strong>（PESTLE / Cultural Intelligence / UPR / SGPR / Signal）は launchd 05:30AM のパイプラインで完全自動。第二に<strong>学術メタデータ系・学術概念 DB</strong> は週次・年次で OpenAlex / Wikidata 等の更新を反映。第三に<strong>連載・補論・研究者対話</strong>は制作スケジュールに同期して都度更新。すべて GitHub private repo で正本管理され、各 DB のダッシュボード HTML が公開されています。AR-DB（Agent Registry DB）が DB 体系全体の自己観察を担当し、エージェント・コマンド・ルールの変更時に自動同期されます。</p>
+<p><strong>Q5: 非西洋知をなぜ重視するんですか？</strong></p>
+<p>A: 二つの理由があります。第一に<strong>人類の知の生成史への忠実性</strong>。伝統知 DB の非西洋率 88.7%、神話 DB 詩文層の非西洋率 56.1%、知の生成史 KGH-DB の非西洋率 88.4%、時間概念 TC-DB の循環時間非西洋率 63.8% ── これらの数値は「西洋近代科学は人類の知の生成史のごく一部の局所現象に過ぎない」というデータ駆動的事実を示します。データに忠実であれば、非西洋知が自然に厚みを持つ。第二に<strong>未来洞察の解像度向上</strong>。Chapter 7 で詳述する「深い知の再来」のように、未来洞察の核心は身体・場所・関係・時間の四軸に埋め込まれた知の総体にある。これらは非西洋知（七世代思考・Dreamtime・道元の有時・西田の純粋経験・アユルヴェーダ・中医薬・Aboriginal の Sand Talk 等）に膨大に蓄積されている。非西洋知を厚く持つことが、未来洞察の解像度を直接上げます。</p>
+<p><strong>Q6: 4×4 マトリックスの分類は西洋的すぎないか？</strong></p>
+<p>A: マトリックス<strong>形式</strong>は西洋知識分類学の継承ですが、<strong>配置されている DB の中身</strong>は構造的に非西洋知を含む設計になっています。OCM（Outline of Cultural Materials, Murdock 1937-）や D-PLACE（2016-）の人類学的多元分類を取り込んでいるため、「西洋的形式に非西洋知を構造的に配置する」ハイブリッド設計です。完全に非西洋的な分類形式（例：アーユルヴェーダの三体液論や中国五行思想に基づく分類）を採用する選択肢もありましたが、(a) cross_db_refs で接続する技術的要件、(b) 機械可読オントロジーとの互換性、(c) 国際的な学術メタデータ標準との接続 ── を考慮して西洋形式 + 非西洋内容のハイブリッドを選択しました。</p>
+<p><strong>Q7: 教科書の他章を読まなくても Chapter 2 だけ理解できますか？</strong></p>
+<p>A: できます。Chapter 2 は教科書全体の「観察道具立ての開示」を担う独立した章として読めるよう設計されています。ただし Chapter 2 を<strong>読んだあとで</strong>他章へ進むと、各章の主張が「物質的に支えられた観察結果」として立体化します。Chapter 4-5 の歴史変動分析、Chapter 6-7 の浅い知・深い知の二分法、Chapter 8 の共同的実践 ── これらすべてが「500 万レコードの DB 星座から立ち上がる観察」だと分かると、各章の信頼性の質感が変わります。Chapter 2 は単独で読めるが、他章を立体化させる入口でもある、という二重の役割を持ちます。</p>
+<p><strong>Q8: ミラツクの DB 体系を外部から参照することは可能ですか？</strong></p>
+<p>A: 部分的に可能です。学術概念 DB（PHYS / CHEM / BOT / CEH / ES / EC / MATH 等）は GitHub public repo で公開している DB と private repo の DB が混在します。esse-sense 記事は esse-sense.com で公開。5 連載は各シリーズの GitHub Pages で公開。Foresight Knowledge Base のダッシュボードは公開予定。ただし全 DB を一括公開する計画はなく、(a) ライセンス制約のある外部 Open data、(b) 構築途上のもの、(c) 内部運用ツール ── 等は非公開のままです。外部連携・データ提供については個別のお問い合わせとして対応する方針です。</p>
+<hr>
+<h2 id="12">12. 関連リソース — もう一段深く読みたいときの参照点</h2>
+<ul>
+<li><strong>教科書本体</strong>: https://journal.emerging-future.org/deep-knowledge-foresight/?v=24 ── 全 8 章構成。Chapter 1「序」と Chapter 3「三層の未来学アプローチ」を Chapter 2 の前後文脈として併読推奨。</li>
+<li><strong>DB ダッシュボード集</strong>: https://yuyanishimura0312.github.io/miratuku-news-v2/databases.html ── 70+ DB の公開ダッシュボード一覧。各 DB のレコード数・更新頻度・カバー範囲を確認可能。</li>
+<li><strong>AR-DB（Agent Registry DB）</strong>: https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/ar-db.html ── ミラツクエコシステムのエージェント・コマンド・スキル・ルール統合 DB。358 records / 1,490 relations / 564 db_references / 43 tools。エコシステム全体の自己観察。</li>
+<li><strong>DB 関連エージェント一覧</strong>: <code>/dbo</code>（Tier 0 / 全 DB ルーティング）、<code>/dom-science</code>（自然科学 8DB）、<code>/dom-society</code>（社会科学・人文学・人物 20DB）、<code>/dom-foresight</code>（フォーサイト・未来学 11DB）、<code>/dom-enterprise</code>（産業・大学・政策・技術加速 25DB）、<code>/dom-culture</code>（連載・文化・コンテンツ 13DB）、<code>/dom-infra</code>（メタ・基盤・横串統合 11DB）── 6 領域メタ。</li>
+<li><strong>DB 構築方法論</strong>: <code>/db-master</code>（Tier 0 メタオーケストレーター）、<code>/adb v1.1</code>（Academic DB Build, Phase 0-15、世界最高品質基準）、<code>/ddb v1.1</code>（DB Coverage Diagnostic、3 軸スコア + 多言語 + IRR）、<code>/db-blindspot</code>（盲点抽出）、<code>/db-build</code>（自律構築 Phase 0-6）。</li>
+<li><strong>DB Auto-Update Pipeline</strong>: <code>~/.claude/rules/db-auto-update-pipeline.md</code> ── PESTLE / Cultural Intelligence / UPR / SGPR / Signal の毎日自動更新統合構造。launchd 04:00 → 05:30 → 06:30 → 08:00 ヘルスチェックの 4 段チェーン。GitHub <code>miratuku-daily-pipeline</code>（private）で正本管理。</li>
+<li><strong>AR-DB Auto-Update</strong>: <code>~/.claude/rules/agent-registry-update.md</code> ── エージェント・コマンド・スキル・ルール追加/更新時に AR-DB を自動同期する仕組み。PostToolUse hook 8 件 + <code>auto_update.sh</code>（debounce 10s, 冪等）。</li>
+<li><strong>知識分類学の系譜（一次文献）</strong>: Francis Bacon <em>The Advancement of Learning</em> (1605) / <em>Novum Organum</em> (1620) / Carl Linnaeus <em>Systema Naturae</em> (1735) / Diderot &amp; d'Alembert <em>Encyclopédie</em> (1751-1772) / John Wilkins <em>An Essay towards a Real Character and a Philosophical Language</em> (1668) / George Peter Murdock <em>Outline of Cultural Materials</em> (1937-) / Kirby et al. <em>D-PLACE: A Global Database of Cultural, Linguistic and Environmental Diversity</em> (2016, PLoS ONE).</li>
+<li><strong>国際メタデータ標準</strong>: OpenAlex（https://openalex.org）/ Crossref（https://crossref.org）/ ORCID（https://orcid.org）/ Wikidata（https://wikidata.org）/ VIAF（https://viaf.org）.</li>
+<li><strong>品質方法論</strong>: Cohen's Kappa（Cohen 1960, Educational and Psychological Measurement 20:37-46）/ Landis &amp; Koch 解釈基準（1977, Biometrics 33:159-174、almost perfect ≥ 0.81）.</li>
+<li><strong>ミラツク自身の活動</strong>: esse-sense 研究者インタビュー 180 本以上（https://esse-sense.com）/ 暮らしのかたち連載 100 話（https://yuyanishimura0312.github.io/kurashi-no-katachi/）/ 事業のかたち連載（https://stg.miratuku-journal.org/i_academias/）/ 変化のかたち連載（https://yuyanishimura0312.github.io/henka-no-katachi/）/ Futures 連載 / 補論プロジェクト（製造現場のオーケストラ化 / 食と農 / 移動）.</li>
+</ul>
+<hr>
+<h2 id="_1">おわりに</h2>
+<p>Chapter 2 を「読む」ことと「背景を語れる」ことは別の作業である。本レポートは前者を超えて後者に進むための足場として書いた。背景を語れるようになると、Chapter 2 は単独の章ではなく、知識分類学 400 年の継承・ミラツクの 10 年の組織活動・質的研究と量的研究の往復運動・AI 時代の方法論的応答が交差する場所として立体的に見えるようになる。</p>
+<p>実際に背景を語る場面では、すべてを語る必要はない。聞き手が必要としている層だけを取り出して語れることが、背景を持っているということである。3 分版は「4×4 × 500 万 × 国際標準ルール」、15 分版は「分類学的系譜 + 三層構造 + 星座比喩 + 四方法論」、60 分版は「全 8 章位置づけ + 400 年系譜 + 質量往復 + 組織背景 + AI 限界補正 + 書かないこと」── という階層で出し入れする。</p>
+<p>最後に、Chapter 2 を語るときの<strong>口調の規範</strong>を一つだけ書いておく。それは「<strong>諦めも煽りもなく、淡々と</strong>」である。Chapter 2 は「世界最大級の」「人類最高峰の」と煽らず、「我々はまだ足りない」と卑下せず、500 万レコードを淡々と開示する。「16 セルに DB を配置している」「合計は約 562 万件」「IRR Kappa ≥ 0.80 を品質ゲートにする」── この一連の事実列挙が示す姿勢、すなわち<strong>当たり前のことを当たり前として開示する</strong>姿勢こそが、教科書全体の信頼性の根を作る。背景を語る際も、この口調を踏襲したい。</p>
+<hr>
+<p><em>本レポートは Chapter 2「基盤マップ：データベース星座 4×4 と500万レコード」の背景を、教科書全体構造・知識分類学的系譜・三層構造の内訳・組織的背景・データ駆動的方法論・関連リソースの 6 層で整理したものである。Chapter 7 背景レポートと同型 12 節構成を取り、相補的に運用されることを想定する。</em></p>
+    <nav class="nav-prev-next" aria-label="章ナビゲーション">
+      <a href="deep-knowledge-chapter1-background.html"><span class="nav-label">← PREV</span>Chapter 1「序：うしろ側に見る未来」</a>
+      <a href="deep-knowledge-chapter3-background.html" style="text-align:right;"><span class="nav-label">NEXT →</span>Chapter 3「三層の未来学アプローチ — トレンド外挿法・シグナル理論・CLA」</a>
+    </nav>
+  </main>
+</div>
+<script>
+(function() {
+  const STORAGE_KEY = 'mt-theme';
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === 'dark') { root.setAttribute('data-theme', 'dark'); btn.textContent = '☀ LIGHT'; }
+  btn.addEventListener('click', function() {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    if (isDark) { root.removeAttribute('data-theme'); localStorage.setItem(STORAGE_KEY, 'light'); btn.textContent = '☾ DARK'; }
+    else { root.setAttribute('data-theme', 'dark'); localStorage.setItem(STORAGE_KEY, 'dark'); btn.textContent = '☀ LIGHT'; }
+  });
+})();
+</script>
+</body>
+</html>
