@@ -131,37 +131,9 @@ a { color: var(--pr-wine-bright); text-decoration: none; border-bottom: 1px soli
   .pr-cover-title { font-size: 26px; }
 }
 
-/* ============ INLINE EDITOR (direct text edit) ============ */
-#edit-toolbar {
-  position: fixed; top: 12px; right: 12px; z-index: 9999;
-  background: var(--pr-wine); color: var(--pr-cream);
-  padding: 10px 14px; border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-  font-family: var(--pr-font-jp-sans); font-size: 12px;
-  display: flex; align-items: center; gap: 10px;
-  letter-spacing: 0.04em;
-}
-#edit-toolbar button {
-  background: var(--pr-gold); color: var(--pr-wine-deep);
-  border: none; padding: 6px 12px; border-radius: 3px;
-  font-family: var(--pr-font-jp-sans); font-size: 11px; font-weight: 700;
-  cursor: pointer; letter-spacing: 0.06em;
-}
-#edit-toolbar button:hover { opacity: 0.85; }
-#edit-toolbar button.is-active { background: var(--pr-cream); color: var(--pr-wine); }
-#edit-toolbar .edit-status { font-size: 10px; opacity: 0.85; min-width: 100px; }
-body.editing [contenteditable="true"] {
-  outline: 1px dashed rgba(139,58,46,0.45);
-  outline-offset: 2px;
-  background: rgba(255,224,180,0.18);
-  cursor: text;
-}
-body.editing [contenteditable="true"]:focus {
-  outline: 2px solid var(--pr-wine-bright);
-  background: rgba(255,224,180,0.35);
-}
-@media print { #edit-toolbar { display: none !important; } }
+/* インライン編集モジュールは外部CSS/JSとして読み込み */
 </style>
+<link rel="stylesheet" href="https://journal.emerging-future.org/shared/miratuku-inline-editor.css">
 </head>
 <body>
 
@@ -624,123 +596,11 @@ body.editing [contenteditable="true"]:focus {
 </section>
 
 
-<!-- ============ INLINE EDITOR PANEL ============ -->
-<div id="edit-toolbar">
-  <strong>編集</strong>
-  <button id="edit-toggle">編集 ON</button>
-  <button id="edit-save" style="display:none;">保存HTMLダウンロード</button>
-  <button id="edit-reset" style="display:none;">変更を破棄</button>
-  <span class="edit-status" id="edit-status">OFF</span>
-</div>
-
-<script>
-(function() {
-  const SAVE_KEY = 'ddf-report-edits';
-  const EDIT_SELECTORS = [
-    '.pr-cover-title', '.pr-cover-subtitle', '.pr-cover-eyebrow', '.pr-cover-en',
-    '.pr-cover-pull p', '.pr-cover-meta div',
-    '.pr-toc-title-text',
-    '.pr-chapter-title', '.pr-chapter-num',
-    '.pr-section-h',
-    '.pr-lead p', '.pr-callout-text', '.pr-callout-label',
-    '.pr-body-text p',
-    '.pr-stat-num', '.pr-stat-label',
-    '.pr-figcaption',
-    '.pr-header-meta'
-  ].join(',');
-
-  const toggleBtn = document.getElementById('edit-toggle');
-  const saveBtn = document.getElementById('edit-save');
-  const resetBtn = document.getElementById('edit-reset');
-  const statusEl = document.getElementById('edit-status');
-
-  function getEditables() { return document.querySelectorAll(EDIT_SELECTORS); }
-
-  // Auto-restore saved edits on load
-  function restoreEdits() {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return 0;
-      const edits = JSON.parse(raw);
-      let n = 0;
-      Object.entries(edits).forEach(([sel, html]) => {
-        const els = document.querySelectorAll(sel);
-        if (els.length === 1) { els[0].innerHTML = html; n++; }
-        else if (els.length > 1) {
-          // For duplicate selectors, restore by index
-          edits[sel] && edits[sel].forEach((v, i) => { if (els[i] && v) els[i].innerHTML = v; });
-        }
-      });
-      if (n > 0) statusEl.textContent = `復元 ${n} 件`;
-      return n;
-    } catch(e) { console.warn('restore failed', e); return 0; }
-  }
-  restoreEdits();
-
-  function snapshot() {
-    // Save innerHTML of every editable element by index-based map
-    const data = {};
-    getEditables().forEach((el, i) => {
-      const key = `${el.tagName}.${(el.className || '').split(' ').join('.')}#${i}`;
-      data[key] = el.innerHTML;
-    });
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  }
-
-  toggleBtn.addEventListener('click', () => {
-    const on = document.body.classList.toggle('editing');
-    toggleBtn.textContent = on ? '編集 OFF' : '編集 ON';
-    toggleBtn.classList.toggle('is-active', on);
-    saveBtn.style.display = on ? 'inline-block' : 'none';
-    resetBtn.style.display = on ? 'inline-block' : 'none';
-    statusEl.textContent = on ? '編集モード' : 'OFF';
-    getEditables().forEach(el => el.setAttribute('contenteditable', on ? 'true' : 'false'));
-    if (on) {
-      // Auto-save on input
-      document.body.addEventListener('input', autoSave);
-    } else {
-      document.body.removeEventListener('input', autoSave);
-    }
-  });
-
-  let saveTimer = null;
-  function autoSave() {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      snapshot();
-      statusEl.textContent = '自動保存 ' + new Date().toLocaleTimeString();
-    }, 800);
-  }
-
-  saveBtn.addEventListener('click', () => {
-    // Take the entire document, strip the editor UI, and download
-    const clone = document.documentElement.cloneNode(true);
-    const tb = clone.querySelector('#edit-toolbar'); if (tb) tb.remove();
-    const scripts = clone.querySelectorAll('script'); scripts.forEach(s => {
-      // Keep only non-editor scripts (none currently). Remove all to be safe — re-add nothing.
-      s.remove();
-    });
-    // Remove contenteditable attributes
-    clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-    // Remove the editor <style> rules block? Easier: keep them; @media print hides toolbar anyway. Leave style.
-    const html = '<!DOCTYPE html>\n' + clone.outerHTML;
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    a.href = url; a.download = `report-edited-${ts}.html`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    statusEl.textContent = 'ダウンロード完了';
-  });
-
-  resetBtn.addEventListener('click', () => {
-    if (!confirm('編集内容を破棄して元に戻しますか？\n(localStorage の保存も削除されます)')) return;
-    localStorage.removeItem(SAVE_KEY);
-    location.reload();
-  });
-})();
-</script>
+<!-- ============ INLINE EDITOR (外部モジュール) ============ -->
+<script src="https://journal.emerging-future.org/shared/miratuku-inline-editor.js"
+        data-mie-preset="report"
+        data-mie-key="ddf-report"
+        defer></script>
 
 </body>
 </html>
