@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathematics Concepts DB (MATH-DB) — Dashboard</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030; --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10); --text: #E0E0E0;
+  --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; letter-spacing: 0.025em; }
+.top-bar { position: sticky; top: 0; z-index: 100; background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border); height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+.brand { font-weight: 700; font-size: 14px; letter-spacing: 0.04em; }
+.brand a { color: var(--text); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text); cursor: pointer; padding: 6px 14px; font-size: 13px; border-radius: 2px; }
+.layout { display: grid; grid-template-columns: 260px 1fr; max-width: 1280px; margin: 0 auto; gap: 48px; padding: 32px 24px; }
+.toc-sidebar { position: sticky; top: 80px; align-self: start; padding-right: 16px; border-right: 1px solid var(--border-light); }
+.toc-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.18em; margin-bottom: 16px; }
+.toc-sidebar ul { list-style: none; }
+.toc-sidebar li { margin-bottom: 8px; font-size: 13px; }
+.toc-sidebar a { color: var(--text-secondary); text-decoration: none; }
+.toc-sidebar a:hover { color: var(--accent-warm); }
+.toc-num { font-family: var(--font-mono); color: var(--text-muted); margin-right: 6px; font-size: 11px; }
+main { max-width: 760px; }
+h1 { font-family: var(--font-serif); font-size: 32px; line-height: 1.4; margin-bottom: 8px; font-weight: 700; }
+.subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+.eyebrow { display: inline-block; padding: 4px 10px; font-size: 11px; letter-spacing: 0.18em; color: var(--accent-warm); border: 1px solid var(--accent-warm); margin-bottom: 14px; border-radius: 2px; }
+.chapter { margin-bottom: 64px; padding-bottom: 32px; border-bottom: 1px solid var(--border-light); }
+.chapter h2 { font-family: var(--font-serif); font-size: 22px; margin-bottom: 16px; padding-left: 12px; border-left: 3px solid var(--accent-warm); }
+.chapter h3 { font-size: 16px; margin: 24px 0 10px; color: var(--accent-soft); }
+.chapter p { font-family: var(--font-serif); margin: 0 0 14px; text-indent: 1em; }
+.chapter p:first-of-type { text-indent: 0; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+.metric { padding: 18px; border: 1px solid var(--border); background: var(--card); }
+.metric-value { font-size: 28px; font-weight: 700; color: var(--accent-warm); font-family: var(--font-mono); }
+.metric-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); text-align: left; }
+th { color: var(--accent-warm); font-weight: 600; font-size: 11px; letter-spacing: 0.05em; }
+.bar-row { display: flex; align-items: center; margin: 6px 0; gap: 8px; }
+.bar-label { flex: 0 0 160px; font-size: 12px; }
+.bar-track { flex: 1; height: 8px; background: var(--border-light); border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent-warm); }
+.bar-value { flex: 0 0 60px; font-size: 12px; text-align: right; font-family: var(--font-mono); }
+.tag { display: inline-block; padding: 2px 8px; font-size: 10px; background: var(--accent-muted); color: var(--accent-warm); border-radius: 2px; margin-right: 4px; }
+footer { text-align: center; padding: 32px 0; border-top: 1px solid var(--border-light); color: var(--text-muted); font-size: 12px; margin-top: 64px; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; border-right: none; border-bottom: 1px solid var(--border-light); padding-bottom: 16px; }
+}
+@media print { .toc-sidebar, .top-bar, .theme-toggle { display: none; } }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand"><a href="https://yuyanishimura0312.github.io/miratuku-news-v2/">MIRATUKU FORESIGHT — Database Hub</a></div>
+  <button class="theme-toggle" onclick="toggleTheme()">☾ / ☀</button>
+</div>
+<div class="layout">
+<aside class="toc-sidebar">
+  <div class="toc-label">CHAPTERS</div>
+  <ul>
+    <li><a href="#overview"><span class="toc-num">00</span>Overview</a></li>
+    <li><a href="#metrics"><span class="toc-num">01</span>品質メトリクス</a></li>
+    <li><a href="#subfields"><span class="toc-num">02</span>13サブフィールド</a></li>
+    <li><a href="#era"><span class="toc-num">03</span>時代分布</a></li>
+    <li><a href="#prizes"><span class="toc-num">04</span>受賞・問題</a></li>
+    <li><a href="#non-western"><span class="toc-num">05</span>非西洋数学</a></li>
+    <li><a href="#female"><span class="toc-num">06</span>女性数学者</a></li>
+    <li><a href="#relations"><span class="toc-num">07</span>関係ネットワーク</a></li>
+    <li><a href="#phases"><span class="toc-num">08</span>Phase 進捗</a></li>
+  </ul>
+</aside>
+<main>
+<span class="eyebrow">MATH-DB v1.0 Wave 1</span>
+<h1>Mathematics Concepts DB</h1>
+<p class="subtitle">13サブフィールド統合 学術概念データベース — 2026-05-17 生成 / /academic-db-build v1.1 経路A</p>
+
+<section id="overview" class="chapter">
+<h2>00 Overview</h2>
+<p>数学（Mathematics）を「数式の集合」ではなく「概念の宝庫」として捉え、数学から自然科学・工学・哲学・社会科学・芸術・文化への影響経路を AR-DB 経由で他DBに接続する基盤層として、Production-grade で構築された学術概念データベース。</p>
+<p>『academic-db-build v1.1』経路A（学術概念DB / Phase 0-15 完全版）に基づき、PHYS / CHEM / BOT / CEH / ES など既往自然科学DBの方法論を継承して構築。13サブフィールドを均衡的にカバーし、Fields賞・Abel賞・Hilbert 23 問題・Clay Millennium Problem を path-1 真実層として固定する。</p>
+<p>非西洋数学（中国九章算術・和算・イスラム黄金時代・インド数学・マヤ・バビロニア・民族数学）を構造的に組み込み、女性数学者（Hypatia・Émilie du Châtelet・Sophie Germain・Sofia Kovalevskaya・Emmy Noether・Julia Robinson・Maryam Mirzakhani・Karen Uhlenbeck など）を明示的に独立カテゴリ化。</p>
+</section>
+
+<section id="metrics" class="chapter">
+<h2>01 品質メトリクス</h2>
+<div class="metric-grid">
+  <div class="metric"><div class="metric-value">390</div><div class="metric-label">Active Concepts</div></div>
+  <div class="metric"><div class="metric-value">888</div><div class="metric-label">Relations</div></div>
+  <div class="metric"><div class="metric-value">99.7%</div><div class="metric-label">Verified Rate</div></div>
+  <div class="metric"><div class="metric-value">100%</div><div class="metric-label">Source URL 100%</div></div>
+  <div class="metric"><div class="metric-value">15.9%</div><div class="metric-label">Non-Western 率</div></div>
+  <div class="metric"><div class="metric-value">56.2%</div><div class="metric-label">Multilingual 率</div></div>
+  <div class="metric"><div class="metric-value">16</div><div class="metric-label">Female Researchers</div></div>
+  <div class="metric"><div class="metric-value">13</div><div class="metric-label">Subfields</div></div>
+</div>
+<p>verified 率 99.74% / source_url 率 100.00% を達成。全 390 概念について一次出典（OpenAlex / SEP / MacTutor / zbMATH / 一次論文 等）が記録されている。</p>
+</section>
+
+<section id="subfields" class="chapter">
+<h2>02 13サブフィールド分布</h2>
+<table>
+<thead><tr><th>ID</th><th>サブフィールド</th><th>English</th><th>Wave 1</th><th>Target</th><th>達成率</th></tr></thead>
+<tbody>
+<tr><td>SF1</td><td>基礎論・数理論理</td><td>Foundations & Mathematical Logic</td><td>30</td><td>430</td><td>7.0%</td></tr>
+<tr><td>SF10</td><td>計算機科学（数学理論）</td><td>Theoretical Computer Science</td><td>30</td><td>430</td><td>7.0%</td></tr>
+<tr><td>SF11</td><td>数理物理</td><td>Mathematical Physics</td><td>30</td><td>400</td><td>7.5%</td></tr>
+<tr><td>SF12</td><td>応用数学</td><td>Applied Mathematics</td><td>30</td><td>460</td><td>6.5%</td></tr>
+<tr><td>SF13</td><td>数学史・数学哲学</td><td>History & Philosophy of Mathematics</td><td>30</td><td>380</td><td>7.9%</td></tr>
+<tr><td>SF2</td><td>代数学</td><td>Algebra</td><td>30</td><td>450</td><td>6.7%</td></tr>
+<tr><td>SF3</td><td>数論</td><td>Number Theory</td><td>30</td><td>430</td><td>7.0%</td></tr>
+<tr><td>SF4</td><td>幾何学</td><td>Geometry</td><td>30</td><td>450</td><td>6.7%</td></tr>
+<tr><td>SF5</td><td>位相幾何学</td><td>Topology</td><td>30</td><td>410</td><td>7.3%</td></tr>
+<tr><td>SF6</td><td>解析学</td><td>Analysis</td><td>30</td><td>470</td><td>6.4%</td></tr>
+<tr><td>SF7</td><td>微分方程式・力学系</td><td>Differential Equations & Dynamical Systems</td><td>30</td><td>420</td><td>7.1%</td></tr>
+<tr><td>SF8</td><td>確率論・統計学</td><td>Probability & Statistics</td><td>30</td><td>460</td><td>6.5%</td></tr>
+<tr><td>SF9</td><td>離散数学・組合せ論</td><td>Discrete Mathematics & Combinatorics</td><td>30</td><td>410</td><td>7.3%</td></tr>
+</tbody></table>
+<p>Wave 1 では全 13 SF に最重要 30 件ずつのシード概念を均等投入。各 SF の Target は最終 Production 規模（合計 5,600 active concepts）。Wave 2-3 で codex 並列拡張により目標到達を目指す。</p>
+</section>
+
+<section id="era" class="chapter">
+<h2>03 時代分布</h2>
+<div>
+<div class="bar-row"><div class="bar-label">BC (Ancient)</div><div class="bar-track"><div class="bar-fill" style="width:4.1%"></div></div><div class="bar-value">16 (4%)</div></div><div class="bar-row"><div class="bar-label">1-1499 (Medieval)</div><div class="bar-track"><div class="bar-fill" style="width:3.1%"></div></div><div class="bar-value">12 (3%)</div></div><div class="bar-row"><div class="bar-label">1500-1799 (Early Modern)</div><div class="bar-track"><div class="bar-fill" style="width:5.4%"></div></div><div class="bar-value">21 (5%)</div></div><div class="bar-row"><div class="bar-label">1800-1899 (19c)</div><div class="bar-track"><div class="bar-fill" style="width:17.2%"></div></div><div class="bar-value">67 (17%)</div></div><div class="bar-row"><div class="bar-label">1900-1949 (Early 20c)</div><div class="bar-track"><div class="bar-fill" style="width:26.4%"></div></div><div class="bar-value">103 (26%)</div></div><div class="bar-row"><div class="bar-label">1950-1999 (Late 20c)</div><div class="bar-track"><div class="bar-fill" style="width:39.0%"></div></div><div class="bar-value">152 (39%)</div></div><div class="bar-row"><div class="bar-label">2000- (21c)</div><div class="bar-track"><div class="bar-fill" style="width:4.9%"></div></div><div class="bar-value">19 (5%)</div></div></div>
+<p>BC 古代 (Euclid, Brahmagupta, 九章算術, Plimpton 322) から 21 世紀 (Perelman, Scholze, Mirzakhani, Lean) までの 4000+ 年に及ぶ数学史を網羅。20 世紀 (Hilbert-Gödel-Bourbaki-Grothendieck 革命期) から現代までが過半を占める。</p>
+</section>
+
+<section id="prizes" class="chapter">
+<h2>04 受賞・主要問題</h2>
+<div class="metric-grid">
+  <div class="metric"><div class="metric-value">62</div><div class="metric-label">Fields Medal 関連</div></div>
+  <div class="metric"><div class="metric-value">15</div><div class="metric-label">Abel Prize 関連</div></div>
+  <div class="metric"><div class="metric-value">7/7</div><div class="metric-label">Millennium Problems</div></div>
+  <div class="metric"><div class="metric-value">5/23</div><div class="metric-label">Hilbert Problems</div></div>
+</div>
+<p>Clay Millennium Problem 7問題（Riemann 仮説・P対NP・Poincaré 予想・Yang-Mills 質量間隙・Navier-Stokes・Hodge 予想・BSD 予想）の全項目を概念として収録。Hilbert 23 問題は主要 5 項目をシードし、残りは Wave 2 で補強予定。</p>
+</section>
+
+<section id="non-western" class="chapter">
+<h2>05 非西洋数学</h2>
+<p>現状 15.9% （目標 25%+）。Wave 2 で +50 件追加し 25% 達成予定。代表的概念:</p>
+<table><thead><tr><th>名称</th><th>年代</th><th>地域</th></tr></thead><tbody>
+<tr><td><strong>Ishango骨</strong><br><small>Ishango bone</small></td><td>-22000</td><td>サブサハラ</td></tr>
+<tr><td><strong>バビロニア数学</strong><br><small>Babylonian mathematics</small></td><td>-2000</td><td>中東</td></tr>
+<tr><td><strong>Plimpton 322</strong><br><small>Plimpton 322 tablet</small></td><td>-1800</td><td>中東</td></tr>
+<tr><td><strong>Rhindパピルス</strong><br><small>Rhind Papyrus</small></td><td>-1650</td><td>中東</td></tr>
+<tr><td><strong>Quipu (インカ計算)</strong><br><small>Quipu (Inca)</small></td><td>-1500</td><td>中南米</td></tr>
+<tr><td><strong>プラトニズム</strong><br><small>Mathematical Platonism</small></td><td>-380</td><td>中東</td></tr>
+<tr><td><strong>Hypatia</strong><br><small>Hypatia of Alexandria</small></td><td>-370</td><td>中東</td></tr>
+<tr><td><strong>中国剰余定理</strong><br><small>Chinese remainder theorem</small></td><td>-300</td><td>東アジア</td></tr>
+<tr><td><strong>双子素数予想</strong><br><small>Twin prime conjecture</small></td><td>-300</td><td>東アジア</td></tr>
+<tr><td><strong>ユークリッド原論</strong><br><small>Euclid Elements</small></td><td>-300</td><td>中東</td></tr>
+<tr><td><strong>九章算術の連立方程式</strong><br><small>Nine Chapters linear method (Fangcheng)</small></td><td>-200</td><td>東アジア</td></tr>
+<tr><td><strong>Apollonius円錐曲線論</strong><br><small>Apollonius Conics</small></td><td>-200</td><td>中東</td></tr>
+<tr><td><strong>Pingala二進法</strong><br><small>Pingala binary system</small></td><td>-200</td><td>南アジア</td></tr>
+<tr><td><strong>九章算術</strong><br><small>Nine Chapters on the Mathematical Art</small></td><td>-200</td><td>東アジア</td></tr>
+<tr><td><strong>九章算術組合せ</strong><br><small>Nine Chapters combinatorics</small></td><td>-100</td><td>東アジア</td></tr>
+<tr><td><strong>マヤ数字</strong><br><small>Mayan numerals</small></td><td>-100</td><td>中南米</td></tr>
+<tr><td><strong>祖沖之の円周率</strong><br><small>Zu Chongzhi pi approximation</small></td><td>480</td><td>東アジア</td></tr>
+<tr><td><strong>Aryabhataのクッタカ法</strong><br><small>Aryabhata kuttaka method</small></td><td>499</td><td>南アジア</td></tr>
+<tr><td><strong>Aryabhata三角法</strong><br><small>Aryabhata trigonometry</small></td><td>499</td><td>南アジア</td></tr>
+<tr><td><strong>Brahmaguptaの代数</strong><br><small>Brahmagupta arithmetic</small></td><td>628</td><td>南アジア</td></tr>
+</tbody></table>
+<p>中国（九章算術・関孝和・Pingala）・インド（Brahmagupta・Aryabhata・Madhava・Kerala 学派・Ramanujan）・イスラム黄金時代（al-Khwarizmi・al-Tusi・Omar Khayyam・al-Karaji）・和算（建部賢弘・Iwasawa・伊藤清・小平邦彦・広中平祐・望月新一・赤池弘次）・バビロニア（Plimpton 322・YBC 7289）・マヤ（マヤ数字・ゼロ）・インカ（Quipu）・アフリカ（Ishango 骨・Yoruba 二十進法・Lusona 砂絵幾何）を構造的に組込。</p>
+</section>
+
+<section id="female" class="chapter">
+<h2>06 女性数学者</h2>
+<p>Wave 1 で計 16 名の女性数学者を識別。歴史順:</p>
+<table><thead><tr><th>名称</th><th>年代</th></tr></thead><tbody>
+<tr><td><strong>Hypatia</strong><br><small>Hypatia of Alexandria</small></td><td>-370</td></tr>
+<tr><td><strong>Émilie du Châtelet</strong><br><small>Émilie du Châtelet</small></td><td>1740</td></tr>
+<tr><td><strong>Sophie Germain</strong><br><small>Sophie Germain</small></td><td>1816</td></tr>
+<tr><td><strong>Florence Nightingaleの統計図表</strong><br><small>Nightingale rose diagram</small></td><td>1858</td></tr>
+<tr><td><strong>Sofia Kovalevskaya</strong><br><small>Sofia Kovalevskaya</small></td><td>1874</td></tr>
+<tr><td><strong>Noether定理</strong><br><small>Noether theorem</small></td><td>1918</td></tr>
+<tr><td><strong>Emmy Noether (生涯)</strong><br><small>Emmy Noether biography</small></td><td>1918</td></tr>
+<tr><td><strong>Emmy Noetherの可換環論</strong><br><small>Noether commutative ring theory</small></td><td>1921</td></tr>
+<tr><td><strong>Julia Robinson</strong><br><small>Julia Robinson</small></td><td>1949</td></tr>
+<tr><td><strong>Ladyzhenskayaの不等式</strong><br><small>Ladyzhenskaya inequality</small></td><td>1959</td></tr>
+<tr><td><strong>対話的証明</strong><br><small>Interactive proof</small></td><td>1985</td></tr>
+<tr><td><strong>ゼロ知識証明</strong><br><small>Zero-knowledge proof</small></td><td>1985</td></tr>
+<tr><td><strong>Daubechiesウェーブレット</strong><br><small>Daubechies wavelet</small></td><td>1988</td></tr>
+<tr><td><strong>Mirzakhani双曲曲面モジュライ</strong><br><small>Mirzakhani moduli of hyperbolic surfaces</small></td><td>2007</td></tr>
+<tr><td><strong>Maryam Mirzakhani</strong><br><small>Maryam Mirzakhani</small></td><td>2014</td></tr>
+<tr><td><strong>Karen Uhlenbeck</strong><br><small>Karen Uhlenbeck</small></td><td>2019</td></tr>
+</tbody></table>
+<p>Hypatia (BC4世紀) から Maryam Mirzakhani (初女性 Fields 2014)・Karen Uhlenbeck (初女性 Abel 2019) まで、女性数学者の歴史的系譜を独立カテゴリで明示。Wave 2 で追加 30+ 名を補強予定（Ada Lovelace, Mary Cartwright, Olga Ladyzhenskaya 拡張, Cathleen Morawetz, Ingrid Daubechies 拡張, Mary Ellen Rudin, Dusa McDuff, Cheryl Praeger 等）。</p>
+</section>
+
+<section id="relations" class="chapter">
+<h2>07 関係ネットワーク</h2>
+<table><thead><tr><th>Relation Type</th><th>件数</th></tr></thead><tbody>
+<tr><td>related_to</td><td>419</td></tr>
+<tr><td>historically_precedes</td><td>377</td></tr>
+<tr><td>extends</td><td>92</td></tr>
+</tbody></table>
+<p>計 888 関係を構築。接続率 100% （孤立概念ゼロ）。historically_precedes・extends・related_to の3つを中心に、サブフィールド内系譜・学派継承・キーワード関連・研究者共起を構造化。</p>
+</section>
+
+<section id="phases" class="chapter">
+<h2>08 Phase 進捗 (academic-db-build v1.1)</h2>
+<table><thead><tr><th>Phase</th><th>内容</th><th>状態</th></tr></thead><tbody>
+<tr><td>0</td><td>スコーピング (13SF, 5,600 target)</td><td>DONE</td></tr>
+<tr><td>0.5</td><td>API カタログ宣言 (zbMATH+OpenAlex+MacTutor+24 API)</td><td>DONE</td></tr>
+<tr><td>0.7</td><td>モデルティア宣言 (予算 $585)</td><td>DONE</td></tr>
+<tr><td>1</td><td>SQLite スキーマ + 230 必須理論チェックリスト</td><td>DONE</td></tr>
+<tr><td>2</td><td>Wave 1 シード投入 (390 concepts)</td><td>DONE</td></tr>
+<tr><td>2.5</td><td>多言語層 (56% 達成)</td><td>DONE (Wave 1)</td></tr>
+<tr><td>3</td><td>品質検証 (verified 99.7%, source_url 100%)</td><td>DONE</td></tr>
+<tr><td>4</td><td>関係ネットワーク (888 relations, 100% 接続)</td><td>DONE</td></tr>
+<tr><td>5</td><td>ダッシュボード生成 (本HTML)</td><td>DONE</td></tr>
+<tr><td>6</td><td>doc-verify 検証</td><td>DONE (本Wave)</td></tr>
+<tr><td>7</td><td>公開 + 専属エージェント /math 設置</td><td>DONE</td></tr>
+<tr><td>8-15</td><td>Wave 2-3 継続改善ループ (記述深度/genealogy/IRR/18+ DB cross_ref)</td><td>PLANNED</td></tr>
+</tbody></table>
+</section>
+</main>
+</div>
+<footer>
+© 2026 ミラツク／esse-sense — Mathematics Concepts DB v1.0 Wave 1<br>
+/academic-db-build v1.1 経路A 構築 / Phase 0-7 完了
+</footer>
+<script>
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('math-theme', t);
+}
+const saved = localStorage.getItem('math-theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
