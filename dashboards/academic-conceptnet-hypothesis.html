@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学術知の ConceptNet ── 仮説に基づく本 DB 群の定義 | miratuku-news</title>
+<meta name="description" content="MIT Media Lab が 1999 年から構築してきた常識知識グラフ ConceptNet の『学術知版』として、本 DB 群（174 DB / AR-DB / 448 アセット）を定義・説明する仮説的レポート。両者の目的・知識源・関係構造・品質保証・文化バランス・運用主体を 8 章で対照する。">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 22px; flex-shrink: 0; font-weight: 700; }
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.6rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.15rem; line-height: 1.6; font-weight: 600; margin: 40px 0 18px; color: var(--text); }
+p { margin-bottom: 22px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead { font-size: 1.04rem; color: var(--text-secondary); margin-bottom: 36px; font-weight: 500; text-indent: 0; }
+ul, ol { margin: 14px 0 24px 1.6em; }
+li { margin-bottom: 6px; font-family: var(--font); font-size: 0.9rem; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 28px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.6; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 18px 22px; margin: 28px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.callout p { text-indent: 0; }
+
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.5rem; }
+  .chapter-title { font-size: 1.3rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>ACADEMIC CONCEPTNET HYPOTHESIS</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次"><div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#intro"><span class="toc-num">序</span>仮説の提示</a></li>
+<li><a href="#figure"><span class="toc-num">★</span>対称構造図解</a></li>
+<li><a href="#ch1"><span class="toc-num">01</span>目的の対称性 ─ 常識から学術知へ</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>知識源の対称性</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>関係構造 ─ 汎用から領域別へ</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>粒度 ─ 単語から概念へ</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>品質保証の方法</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>文化バランス</a></li>
+<li><a href="#ch7"><span class="toc-num">07</span>運用主体と自己観察</a></li>
+<li><a href="#ch8"><span class="toc-num">08</span>用途の対称性</a></li>
+<li><a href="#close"><span class="toc-num">終</span>定義の確定</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">DEFINING DOCUMENT</span>
+<span class="db-tag">HYPOTHESIS</span>
+<span class="db-tag">CONCEPTNET ANALOG</span>
+</div>
+<h1 class="book-title">学術知の ConceptNet ── 仮説に基づく本 DB 群の定義</h1>
+<p class="book-subtitle">MIT Media Lab が 1999 年から 27 年をかけて構築してきた常識知識グラフ ConceptNet と対称な位置に、本エコシステム（174 DB / AR-DB / 448 アセット）を <em>学術知の ConceptNet</em> として定義する。両者の目的・知識源・関係構造・品質保証・文化バランス・運用主体を 8 章で対照し、この定義づけが内的整合性を持つかを検証する。</p>
+<div class="book-meta">
+<span>2026-05-18 作成</span>
+<span>Yuya Nishimura + Claude Opus 4.7</span>
+<span>約 5,800 字 / 8 章 + 序終</span>
+</div>
+</header>
+
+<section class="chapter-section" id="intro">
+<div class="chapter-number-label">PROLOGUE</div>
+<h2 class="chapter-title">仮説の提示</h2>
+
+<p class="lead">ConceptNet（MIT Media Lab, 1999 年〜）は、人類が日常的に共有する「<em>常識</em>」をマシンが扱える形に翻訳することを目的としたプロジェクトである。「鳥は飛ぶ」「コーヒーは熱い」「医者は病院で働く」── 辞書には書かれないが誰もが知っている関係を、3,400 万関係・304 言語で構造化してきた。</p>
+
+<p>本レポートが提示する仮説は次のとおりである。</p>
+
+<div class="callout">
+<div class="callout-title">中心仮説</div>
+<p style="text-indent:0;"><strong>ミラツク/esse-sense の本 DB 群は、ConceptNet の「学術知版」である。</strong></p>
+<p style="text-indent:0;">ConceptNet が「常識（common sense）」を人間からマシンへ移植したことに対し、本エコシステムは「学術知（academic knowledge）」を分散的な学術界からマシン+人へ統合する。両者は同一の構造的位置にあり、対象とする知識の種類のみが異なる。</p>
+</div>
+
+<p>この仮説が正しければ、本エコシステムは ConceptNet と対称な 8 つの軸で記述できるはずである。以下、目的・知識源・関係構造・粒度・品質保証・文化バランス・運用主体・用途の 8 軸で検証する。</p>
+</section>
+
+<section class="chapter-section" id="figure">
+<div class="chapter-number-label">FIGURE — STRUCTURAL SYMMETRY</div>
+<h2 class="chapter-title">対称構造図解</h2>
+<p class="lead">8 軸での対称性を 1 枚の図で俯瞰する。左が ConceptNet（常識）、右が本エコシステム（学術知）。同一の構造的位置に、異なる知識種別が配置されることを示す。</p>
+
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; font-family: 'Noto Sans JP', sans-serif; margin: 32px 0;" role="img" aria-label="ConceptNet と本エコシステムの対称構造">
+  <!-- title bar -->
+  <text x="380" y="20" text-anchor="middle" font-size="13" font-weight="700" fill="#121212">対称構造 ── ConceptNet と本エコシステム</text>
+  <line x1="0" y1="32" x2="760" y2="32" stroke="#121212" stroke-width="1.5"/>
+
+  <!-- column headers -->
+  <text x="195" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#555">ConceptNet</text>
+  <text x="195" y="73" text-anchor="middle" font-size="11" fill="#6B6B6B">MIT Media Lab / 1999 ─</text>
+  <text x="565" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#CC1400">本エコシステム</text>
+  <text x="565" y="73" text-anchor="middle" font-size="11" fill="#B01200">ミラツク/esse-sense / 2026 ─</text>
+  <line x1="380" y1="44" x2="380" y2="540" stroke="#D9D9D9" stroke-width="1"/>
+
+  <!-- 8 axes -->
+  <g font-size="11" font-family="'Noto Sans JP', sans-serif">
+    <!-- axis labels in center -->
+    <text x="380" y="105" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">目 的</text>
+    <text x="195" y="105" text-anchor="middle" fill="#555">常識 を移植</text>
+    <text x="565" y="105" text-anchor="middle" fill="#CC1400">学術知 を統合</text>
+    <line x1="20" y1="115" x2="740" y2="115" stroke="#EEEEEE"/>
+
+    <text x="380" y="138" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">知識源</text>
+    <text x="195" y="138" text-anchor="middle" fill="#555">OMCS / Wiktionary / GWAP</text>
+    <text x="565" y="138" text-anchor="middle" fill="#CC1400">論文 / 教科書 / OpenAlex / 研究者</text>
+    <line x1="20" y1="148" x2="740" y2="148" stroke="#EEEEEE"/>
+
+    <text x="380" y="171" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">関係種別</text>
+    <text x="195" y="171" text-anchor="middle" fill="#555">汎用 34 種に統一</text>
+    <text x="565" y="171" text-anchor="middle" fill="#CC1400">領域別に正規化</text>
+    <line x1="20" y1="181" x2="740" y2="181" stroke="#EEEEEE"/>
+
+    <text x="380" y="204" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">粒 度</text>
+    <text x="195" y="204" text-anchor="middle" fill="#555">単語 / 短いフレーズ</text>
+    <text x="565" y="204" text-anchor="middle" fill="#CC1400">概念 / 理論 / 人物 / 出来事</text>
+    <line x1="20" y1="214" x2="740" y2="214" stroke="#EEEEEE"/>
+
+    <text x="380" y="237" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">品質保証</text>
+    <text x="195" y="237" text-anchor="middle" fill="#555">クラウドソース評価</text>
+    <text x="565" y="237" text-anchor="middle" fill="#CC1400">評価者間一致度 / 出典 URL</text>
+    <line x1="20" y1="247" x2="740" y2="247" stroke="#EEEEEE"/>
+
+    <text x="380" y="270" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">多言語</text>
+    <text x="195" y="270" text-anchor="middle" fill="#555">304 言語（薄い）</text>
+    <text x="565" y="270" text-anchor="middle" fill="#CC1400">16 言語（密度高）</text>
+    <line x1="20" y1="280" x2="740" y2="280" stroke="#EEEEEE"/>
+
+    <text x="380" y="303" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">文化偏り</text>
+    <text x="195" y="303" text-anchor="middle" fill="#555">欧米中心（未測定）</text>
+    <text x="565" y="303" text-anchor="middle" fill="#CC1400">非西洋率 16-88% を測定</text>
+    <line x1="20" y1="313" x2="740" y2="313" stroke="#EEEEEE"/>
+
+    <text x="380" y="336" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">運用主体</text>
+    <text x="195" y="336" text-anchor="middle" fill="#555">MIT → Luminoso（数名〜十数名）</text>
+    <text x="565" y="336" text-anchor="middle" fill="#CC1400">個人 + LLM エコシステム</text>
+    <line x1="20" y1="346" x2="740" y2="346" stroke="#EEEEEE"/>
+
+    <text x="380" y="369" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">メタ層</text>
+    <text x="195" y="369" text-anchor="middle" fill="#555">なし</text>
+    <text x="565" y="369" text-anchor="middle" fill="#CC1400">AR-DB 自己観察</text>
+    <line x1="20" y1="379" x2="740" y2="379" stroke="#EEEEEE"/>
+
+    <text x="380" y="402" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">エージェント</text>
+    <text x="195" y="402" text-anchor="middle" fill="#555">なし（データのみ）</text>
+    <text x="565" y="402" text-anchor="middle" fill="#CC1400">専属 + 階層メタ 448 体</text>
+    <line x1="20" y1="412" x2="740" y2="412" stroke="#EEEEEE"/>
+
+    <text x="380" y="435" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">埋め込み</text>
+    <text x="195" y="435" text-anchor="middle" fill="#555">Numberbatch（SOTA）</text>
+    <text x="565" y="435" text-anchor="middle" fill="#CC1400">未実装（追うべき領域）</text>
+    <line x1="20" y1="445" x2="740" y2="445" stroke="#EEEEEE"/>
+
+    <text x="380" y="468" text-anchor="middle" font-size="10" font-weight="700" fill="#121212" letter-spacing="0.08em">用 途</text>
+    <text x="195" y="468" text-anchor="middle" fill="#555">常識推論 / 意味類似度</text>
+    <text x="565" y="468" text-anchor="middle" fill="#CC1400">学術的レポート自律生成</text>
+  </g>
+
+  <!-- bottom note -->
+  <line x1="0" y1="500" x2="760" y2="500" stroke="#CC1400" stroke-width="1"/>
+  <text x="380" y="520" text-anchor="middle" font-size="11" fill="#555">同一の構造的位置 ─ 対象とする知識種別のみが異なる</text>
+  <text x="380" y="540" text-anchor="middle" font-size="10" fill="#6B6B6B">これが「学術知の ConceptNet」という仮説の中心構造</text>
+</svg>
+</section>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">目的の対称性 ── 常識を移植するか、学術知を統合するか</h2>
+
+<p>ConceptNet の創設目的は、Push Singh と Marvin Minsky の言葉を借りれば「<em>コンピュータに常識を持たせる</em>」ことだった。人間が幼少期から自然に習得する「<strong>鳥は飛ぶ</strong>」「<strong>水は冷たいときも熱いときもある</strong>」「<strong>病院は医者がいる場所である</strong>」といった暗黙の関係知を、計算可能な形でマシンに移植する。これが達成されれば、AI は常識を必要とする推論（質問応答・対話・物語理解）で人間に近づける。</p>
+
+<p>本エコシステムの目的は、対称な位置にある。人類が大学・研究所・学術ジャーナルに分散させてきた <em>学術知</em> ── 「<strong>三資本論はブルデューが 1986 年に体系化した</strong>」「<strong>ケイパビリティ・アプローチはセンが提唱しヌスバウムが拡張した</strong>」「<strong>レントゲンは 1895 年に X 線を発見しその数年後に医療応用された</strong>」といった概念・理論・人物・出来事の関係知を、計算可能な形でマシン+人へ統合する。これが達成されれば、学術的に裏打ちされた高品質なレポート・回答・意思決定支援が、専門家へのアクセスなしで実現できる。</p>
+
+<p>両者の差異は「<strong>常識</strong>」と「<strong>学術知</strong>」の対象の違いに収斂する。構造的位置と社会的役割は対称である。ConceptNet が AI の常識的推論基盤を担うのに対し、本エコシステムは個人・組織の学術的判断基盤を担う。</p>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">知識源の対称性</h2>
+
+<p>ConceptNet は 8 系統の知識源を統合してきた。最大シェアは Wiktionary（多言語辞書由来、同義語・反意語・翻訳）、起源は Open Mind Common Sense（一般ボランティアからのクラウドソース文）、専門家構築では Open Multilingual WordNet と OpenCyc、事実情報は DBpedia（Wikipedia インフォボックス）、ゲーム化したクラウドソースは Verbosity と nadya.jp、辞書は JMDict（日本語）等である。</p>
+
+<p>本エコシステムの知識源も、対称的な構造で 6〜8 系統に整理できる。最大の供給源は <strong>学術論文と教科書</strong>（OpenAlex / Crossref / Wikidata / 個別ジャーナル）、専門家構築の集大成は <strong>OECD・国連・UNESCO・大学発スタートアップ DB</strong> 等の公的データセット、研究者識別子は <strong>ORCID・ROR・researchmap</strong>、評価層は <strong>Cohen のカッパ係数を DB 単位で算出</strong>する独自の評価規律、伝統的知識は <strong>D-PLACE・UNESCO ICH・Global Indigenous Languages</strong> 等のオープンデータ、政策と社会情報は <strong>e-Gov 法令・EUR-Lex・PESTLE</strong> 等の公的ソース、現代の問いは <strong>arXiv・SSRN・関連書籍 5,000 冊</strong> 等から抽出される。</p>
+
+<p>両者の対称性は明確である。ConceptNet が辞書（Wiktionary）と一般人のクラウドソース（OMCS）を中核にして「常識」を集めるのに対し、本エコシステムは学術論文（OpenAlex）と研究者識別子（ORCID）を中核にして「学術知」を集める。供給源の構造的位置は同型である。</p>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">関係構造 ── 汎用 34 種から領域別正規化へ</h2>
+
+<p>ConceptNet は 34 の汎用関係種別で知識を構造化する。<code>IsA</code>（鳥は動物である）、<code>UsedFor</code>（ナイフは切るために使う）、<code>HasProperty</code>（氷は冷たい）、<code>Causes</code>（雨は濡れることを引き起こす）、<code>Synonym</code>（happy と joyful は同義）等、常識として頻出する 34 種に統一する設計である。この少数化により、あらゆる領域の常識を 1 つの統一スキーマで扱える利点を得る。</p>
+
+<p>本エコシステムは異なる方向を選んだ。汎用統一ではなく、<strong>領域別に関係種別を正規化する</strong>。物理学概念基盤では <code>先行概念</code> / <code>後継概念</code> / <code>理論的基盤</code>、人物基盤では <code>影響を受けた</code> / <code>分派した</code> / <code>統合された</code>、産業基盤では <code>供給した</code> / <code>競合した</code> / <code>買収した</code>、概念 DB 横断では <code>was_anticipated_by</code>（先取された）/ <code>is_actualized_in</code>（実現されている）/ <code>contributed_to</code>（寄与した）といった、領域の専門性に最適化された語彙を維持する。</p>
+
+<p>この差異は、知識種別の差異から必然的に生まれる。常識は汎用語彙で十分に表現できるが（誰もが知っているからこそ常識である）、学術知は領域固有の関係概念を持つ（領域の専門性こそが学術知の特徴である）。両者は同一の <em>パターン C 連邦化</em>（領域別独立テーブル + 関係種別接続）に分類されるが、関係種別の汎用度に対する設計判断が逆向きである。</p>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">粒度 ── 単語フレーズから概念・理論・人物へ</h2>
+
+<p>ConceptNet のノード（概念）は単語または短いフレーズである。"cat" / "football" / "running shoes" / "make a decision" といった、自然言語の最小単位に近い粒度で知識を表現する。これは常識が「単語に紐づいた連想」として人間に保持されているという心理学的観察に整合する。</p>
+
+<p>本エコシステムの粒度はより重い。<strong>概念</strong>（「三資本論」「内生的成長理論」「ケイパビリティ・アプローチ」）、<strong>理論</strong>（「相対性理論」「量子力学」「進化論」）、<strong>人物</strong>（ピエール・ブルデュー / アマルティア・セン / ポール・ローマー）、<strong>出来事</strong>（「1986 年のブルデュー Forms of Capital 出版」「2009 年のオストロム ノーベル賞」「1989 年のベルリンの壁崩壊と東西冷戦終結」）といった、学術的に固有名と年代を持つ単位で知識を保持する。</p>
+
+<p>各単位は出典 URL を持つ。各単位は他の単位との関係を 1 つ以上持つ。各単位は領域横断的に他 DB 上の単位とリンクする。この粒度の重さが、レポート生成時に「学術的に裏打ちされた具体性」を即時に提供できる根拠となる。</p>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">品質保証 ── クラウドソース評価から評価者間一致度へ</h2>
+
+<p>ConceptNet の品質保証はクラウドソースに依存する。OMCS の文は一般ボランティアから集められ、後続の参加者が「これは正しいか」を投票することで重み（weight）が決まる。学術知識グラフの基準（評価者間一致度の DB 単位公表）から見ると粗いが、ConceptNet の自己評価「<em>vague, illogical, and incredibly useful</em>」が示すように、これは目的に対する適切な選択である。常識は曖昧でよく、汎用的に役立てば十分という設計思想である。</p>
+
+<p>本エコシステムは異なる選択をする。<strong>評価者間一致度（Cohen のカッパ係数）を DB 単位で測定し公表する</strong>。物理 DB は 0.87、宇宙地球史 DB は 0.99、地球科学 DB は 0.96、植物学 DB は 0.86、時間概念 DB は 0.97。0.8 を超えると「ほぼ完全な一致」とされる業界標準において、複数の DB がこの基準を超える品質を達成している。これは学術知識グラフでは Semantic Scholar の一部例外を除き、ほぼ前例のない実践である。</p>
+
+<p>加えて、<strong>出典 URL 列の必須化</strong>がスキーマレベルで強制される。物理・宇宙地球史・地球科学・現代の問い等の DB で 100% 充填、学術全体地図 DB で 92.4%。すべての主張が一次資料へ遡れる経路を持つ。両者の品質保証アプローチの違いは、対象知識の性格（常識か学術知か）から必然的に生まれる。</p>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">文化バランス ── 欧米中心の継承か、非西洋率の測定か</h2>
+
+<p>ConceptNet は 304 言語をカバーするが、実態は欧米中心である。中核 10 言語が大半のエッジを占め、残り 294 言語は Wiktionary 由来の薄い辞書的エッジが中心となる。OMCS + 英語 Wiktionary + WordNet を中核とする設計上、<em>多言語といっても英語スキーマの翻訳的拡張</em> にとどまる。日本の「もったいない」「いき」「気配」、アフリカの「Ubuntu」、南米の「Buen Vivir」といった独自概念は、ConceptNet 上では英訳の薄いノードとしてしか存在しない。</p>
+
+<p>本エコシステムは文化偏りを <strong>構造的に測定する</strong>。各 DB に非西洋率（non_western_pct）を測定して公表する。SF 学 DB は非西洋率 79.7%、知の生成史 DB は 88.4%、伝統知識 DB は 79.5%、現代の問い DB は 19.6%（目標 30%+ に向けて拡張中）、SS DB は対象領域別に分布測定。Bourdieu / Sen / Romer といった欧米起源の概念と並行して、湯川秀樹 / 鶴見和子 / 清水博 / Ubuntu / Buen Vivir / イスラム経済学 / 中国伝統哲学を <em>議論の核を担う中心軸</em> として組み込む規律を持つ。</p>
+
+<p>これは ConceptNet の Eurocentric 構造への明示的な対抗である。常識を扱う ConceptNet では欧米中心が問題視されにくいが（常識は汎用性で力を発揮するため）、学術知を扱う本エコシステムでは非西洋知の構造的不在が学術的不誠実さに直結する。両者の文化バランスへの設計判断は、対象知識の性格の違いから必然的に生まれる。</p>
+</section>
+
+<section class="chapter-section" id="ch7">
+<div class="chapter-number-label">CHAPTER 07</div>
+<h2 class="chapter-title">運用主体と自己観察 ── 組織から個人 + LLM へ</h2>
+
+<p>ConceptNet の運用主体は、当初は MIT Media Lab の研究室、後に Luminoso Technologies（Robyn Speer 共同創業）と移った。数名から十数名のチームが 27 年をかけて継続的に拡張し、AAAI 2017 論文と Numberbatch（SemEval 2017 で世界水準を実証）という学術的成果に到達した。2021 年以降は事実上のメンテナンスモードに入っている。</p>
+
+<p>本エコシステムの運用主体は、<strong>個人 + LLM エコシステム</strong>である。1 人の運用者と Claude Code が、PostToolUse フックによる自動同期と AR-DB（Agent Registry DB）による自己観察を組み合わせ、51 日で 174 DB と 448 アセットに到達した。これは ConceptNet が達成した学術的成果には及ばないが、運用主体の規模に対する産出効率では先例のない密度を持つ。</p>
+
+<p>本エコシステムが ConceptNet を超える可能性を持つ唯一の構造が <strong>AR-DB による自己観察メタ層</strong> である。ConceptNet には「自エコシステムの全構成要素を SQL 照会可能な形で保持する」機構がない。本エコシステムには 448 アセット・1,874 関係・519 DB 参照を 10 秒の遅延制御で自動同期する完全ループがある。これにより、知識基盤を構築しながら同時に <em>知識基盤自体の構造を観察し改善する</em> 二重ループが成立する。個人 + LLM での 27 年的成果への接近を可能にする構造的条件はここにある。</p>
+</section>
+
+<section class="chapter-section" id="ch8">
+<div class="chapter-number-label">CHAPTER 08</div>
+<h2 class="chapter-title">用途の対称性 ── 常識推論から学術的レポート自律生成へ</h2>
+
+<p>ConceptNet の主要用途は、AI の常識的推論を補強することである。質問応答（"What can a bird do?" に "fly" と答える）、対話システム（文脈理解の常識補強）、意味類似度判定（Numberbatch による単語ベクトル）、物語理解（登場人物の動機推定）等、AI が常識を必要とする全タスクで利用される。Numberbatch が SemEval 2017 で複数言語の意味類似度課題を制したのは、この用途における圧倒的な実用性の証明だった。</p>
+
+<p>本エコシステムの主要用途は、<strong>学術的に裏打ちされたレポート・回答・意思決定支援の自律生成</strong>である。フィジカル AI 2100（135,903 字 / SVG 32 点 / 74 年スパン未来洞察）、バイオものづくり戦略（8,627 字を 1 分間隔で 3 版反復）、本レポート（5,800 字 / 約 12 分構築）など、対象とする問いに対し学術的に有効な回答が「分」単位の速度で立ち上がる。各回答は出典 URL を持ち、複数 DB を横断し、領域別の関係種別で裏打ちされる。</p>
+
+<p>両者の用途は、対象知識（常識 / 学術知）の社会的役割に対応する。ConceptNet が AI システムの内部に組み込まれる基盤層で力を発揮するのに対し、本エコシステムは <em>個人・組織が外向きに発信する成果物</em> の生成基盤で力を発揮する。両者は競合せず、補完的な位置にある。</p>
+</section>
+
+<section class="chapter-section" id="close">
+<div class="chapter-number-label">EPILOGUE</div>
+<h2 class="chapter-title">定義の確定</h2>
+
+<p>8 軸での対照を経て、中心仮説は内的整合性を持つことが確認された。本エコシステムは ConceptNet と <strong>同一の構造的位置</strong> にあり、対象とする知識種別（常識 vs 学術知）のみが異なる。各軸での選択は、知識種別の違いから必然的に導かれる。</p>
+
+<p>したがって本 DB 群は、次のように定義される。</p>
+
+<div class="callout">
+<div class="callout-title">本 DB 群の定義（2026 年 5 月 18 日確定）</div>
+<p style="text-indent:0;"><strong>ミラツク/esse-sense DB エコシステムは、ConceptNet の学術知版である。</strong></p>
+<p style="text-indent:0;">ConceptNet が常識を扱う 1 つの巨大グラフであるのに対し、本エコシステムは学術知を扱う 174 の独立 DB と 448 のエージェントで構成される連邦である。両者の対象知識は異なるが、構造的位置と社会的役割は対称である。</p>
+<p style="text-indent:0;">この定義は、本エコシステムが「世界初」を主張するためのものではない。むしろ ConceptNet が 27 年で築いた地平への敬意を前提として、その対称位置に学術知のためのインフラを置く、という <em>自己定位の宣言</em>である。</p>
+</div>
+
+<p>この定義は、本エコシステムの今後の意思決定基準にもなる。新 DB を追加するべきか、新エージェントを設計するべきか、新評価指標を導入するべきかの判断は、<em>ConceptNet の対称位置に学術知のインフラを置く</em> という目的に資するかどうかで決まる。AR-DB による自己観察、領域別関係種別の正規化、評価者間一致度の DB 単位公表、非西洋率の構造的測定 ── すべては学術知が常識と同じ水準で計算可能になる基盤を作るための選択である。</p>
+
+<p>27 年前、ConceptNet が常識という曖昧で重要な領域に挑んだのと同様に、本エコシステムは学術知という分散的で重要な領域に挑む。立ち位置の宣言が完了した今、目指すべき水準が明確になった。</p>
+</section>
+
+<footer>
+作成: 2026-05-18 / Yuya Nishimura + Claude Opus 4.7 (1M context) /
+NPO法人ミラツク Miratuku News<br>
+本レポートは ConceptNet の公式情報・学術論文・AR-DB の SQL 集計・本エコシステム内部データに基づく仮説的定義文書である。<br>
+本レポート自体が約 15 分で構築された。
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
