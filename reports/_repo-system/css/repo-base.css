@@ -1,0 +1,517 @@
+/* ===================================================================
+ * /repo system — base layer (theme 非依存)
+ *
+ * 構造・印刷ルール・コンポーネント枠組みを定義する。
+ * テーマ固有のカラー / フォント / ロゴは repo-<theme>.css 側で上書きする。
+ * progress-report.css (journal.emerging-future.org) を ベース CSS として
+ * import 前提。既存トークン名 (--pr-paper / --pr-ink / --pr-wine ...) を
+ * 流用し、テーマ層で値を差し替える。
+ * =================================================================== */
+
+/* ---- フォント差替（Cormorant 不使用：英数 italic を Inter italic に） ---- */
+.pr-cover-en em,
+.pr-chapter-en em,
+.pr-researcher-theme,
+.pr-researcher-sim,
+blockquote .pr-quote-attr {
+  font-family: "Inter", "Noto Serif JP", serif !important;
+}
+.pr-chapter-num em,
+.pr-section-num em,
+.pr-toc-num em,
+.pr-researcher-rank em,
+.pr-stat-num,
+.pr-grade-pill {
+  font-family: "Inter", "Noto Sans JP", sans-serif !important;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ---- 画面・印刷ともに A4 換算サイズへ統一 ------------------------ */
+.pr-cover, .pr-page {
+  box-sizing: border-box !important;
+  width: 210mm !important;
+  max-width: none !important;
+  min-height: 297mm !important;
+  margin: 24px auto !important;
+  padding: 22mm 20mm !important;
+  /* 日本語組版精度：プロポーショナル詰め + カーニング + リガチャ */
+  font-feature-settings: "palt" 1, "kern" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.pr-cover-body { padding: 24mm 0 14mm !important; }
+.pr-cover-top  { padding-bottom: 14mm !important; }
+.pr-cover-meta { padding-top:    14mm !important; }
+
+/* ---- 表紙：cover-body の grid 比率を 1.6/1 に最適化 ------------- */
+.pr-cover-body {
+  grid-template-columns: 1.6fr 1fr !important;
+  gap: 36px !important;
+  align-items: center !important;
+}
+
+/* ---- 章ヘッダーのリズムを統一 ----------------------------------- */
+.pr-chapter {
+  margin: 0 0 18mm 0 !important;
+  page-break-inside: avoid;
+}
+.pr-chapter-num em {
+  font-style: normal !important;
+  letter-spacing: 0.04em;
+}
+
+/* ---- 本文段落のウィドウ/オーファン抑制 ------------------------- */
+.pr-body-text p, .pr-lead p, .pr-qa-body {
+  orphans: 3;
+  widows: 3;
+}
+
+/* ---- ヘッダー/フッターの寸法と整列 ----------------------------- */
+.pr-header {
+  padding-bottom: 8mm !important;
+  margin-bottom: 8mm !important;
+  align-items: center !important;
+}
+.pr-header-meta {
+  font-size: 9.5px !important;
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+  text-align: right;
+}
+.pr-footer {
+  margin-top: auto !important;
+  padding-top: 6mm !important;
+  align-items: baseline !important;
+  font-size: 9.5px !important;
+}
+.pr-pagenum {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+}
+
+/* ---- 印刷 ---------------------------------------------------------- */
+@page { size: A4; margin: 0; }
+
+@media print {
+  html, body, body.pr-body { margin: 0 !important; padding: 0 !important; }
+  .pr-cover, .pr-page {
+    height: 297mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+    break-after: page !important;
+    break-inside: avoid !important;
+  }
+  /* 段落のウィドウ/オーファン抑制 (印刷時に強化) */
+  .pr-body-text p, .pr-lead p, .pr-qa-body, .pr-researcher-note {
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+  /* 章ヘッダー直後の改ページを禁止 (見出しだけ残らない) */
+  .pr-chapter { page-break-after: avoid !important; break-after: avoid !important; }
+  .pr-section { page-break-after: avoid !important; break-after: avoid !important; }
+  .pr-qa-block h4, .pr-info-label, .pr-stat-strip {
+    page-break-after: avoid !important; break-after: avoid !important;
+  }
+  body > section:last-of-type {
+    page-break-after: auto !important; break-after: auto !important;
+  }
+  .pr-no-print { display: none !important; }
+}
+
+/* ---- 引用ボックス -------------------------------------------------- */
+.pr-quote-dark { display: none; }  /* 黒帯引用は廃止 (赤白CI 規範) */
+
+/* ===================================================================
+ * レポート固有の小コンポーネント
+ * =================================================================== */
+
+.pr-q-box {
+  background: var(--pr-terracotta);
+  border-left: 4px solid var(--pr-terracotta-rim);
+  padding: 18px 22px;
+  margin: 18px 0 22px;
+  font-family: "Noto Serif JP", serif;
+  font-size: 13.5px;
+  line-height: 1.95;
+  color: var(--pr-ink);
+}
+.pr-q-box .pr-q-label {
+  display: block;
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pr-wine-bright);
+  margin-bottom: 6px;
+}
+.pr-q-box p { margin: 0; }
+.pr-q-box strong { color: var(--pr-wine); }
+
+/* info-grid: ラベル左寄せの軽量カード */
+.pr-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 14px 0 20px;
+}
+.pr-info-card {
+  border: 0;
+  border-top: 2px solid var(--pr-wine);
+  background: var(--pr-paper);
+  padding: 12px 4px 16px;
+  page-break-inside: avoid;
+}
+.pr-info-label {
+  font-family: "Inter", sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--pr-wine-bright);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.pr-info-value {
+  font-family: "Noto Serif JP", serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pr-ink);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.pr-info-meta {
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 11px;
+  line-height: 1.75;
+  color: var(--pr-ink-soft);
+}
+.pr-info-meta ul { margin: 4px 0 0 0; padding-left: 18px; }
+.pr-info-meta li { margin-bottom: 2px; }
+
+/* stat-strip: 数値を強く・ラベルを抑えるリズム */
+.pr-stat-strip {
+  display: flex;
+  gap: 24px;
+  background: var(--pr-paper-deep);
+  border-top:    1px solid var(--pr-terracotta-rim);
+  border-bottom: 1px solid var(--pr-terracotta-rim);
+  border-left: 0; border-right: 0;
+  padding: 14px 4px;
+  margin: 8px 0 22px;
+  font-family: "Inter", sans-serif;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pr-ink-soft);
+  flex-wrap: wrap;
+}
+.pr-stat-strip > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.pr-stat-strip .pr-stat-num {
+  font-family: "Inter", sans-serif;
+  font-style: normal;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--pr-wine);
+  margin-right: 2px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.pr-qa-block {
+  border: 1px solid var(--pr-terracotta-rim);
+  background: var(--pr-paper);
+  padding: 14px 18px;
+  margin: 10px 0;
+}
+.pr-qa-block h4 {
+  font-family: "Noto Serif JP", serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pr-wine);
+  margin: 0 0 4px;
+}
+.pr-qa-block .pr-qa-aim {
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 10.5px;
+  color: var(--pr-ink-mute);
+  line-height: 1.7;
+  margin: 0 0 8px;
+}
+.pr-qa-block p.pr-qa-body {
+  font-family: "Noto Serif JP", serif;
+  font-size: 12px;
+  line-height: 1.95;
+  letter-spacing: 0.03em;
+  color: var(--pr-ink);
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-character;
+}
+.pr-qa-chars {
+  float: right;
+  font-family: "Inter", sans-serif;
+  font-size: 9.5px;
+  color: var(--pr-ink-mute);
+}
+
+/* score-table: 数値カラムに tabular-nums、バーは細く精緻に */
+.pr-score-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0 18px;
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 11px;
+}
+.pr-score-table th,
+.pr-score-table td {
+  border-bottom: 1px solid var(--pr-terracotta-rim);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+.pr-score-table td:nth-child(2),
+.pr-score-table td:nth-child(3) {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--pr-ink);
+}
+.pr-score-table th {
+  background: transparent;
+  border-bottom: 2px solid var(--pr-wine);
+  font-family: "Inter", sans-serif;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pr-wine);
+  font-weight: 700;
+  padding-bottom: 6px;
+}
+.pr-score-bar {
+  display: block;
+  height: 4px;
+  background: var(--pr-paper);
+  border: 0;
+  border-bottom: 1px solid rgba(18,18,18,0.20);
+  position: relative;
+  border-radius: 0;
+}
+.pr-score-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: var(--pct, 0%);
+  background: var(--pr-wine-bright);
+  border-radius: 0;
+}
+.pr-score-bar.is-low::after { background: var(--pr-ink-mute); opacity: 0.6; }
+.pr-grade-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  background: var(--pr-wine);
+  color: #FFFFFF;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  margin-right: 10px;
+}
+
+.pr-query-list {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 14px;
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--pr-ink);
+}
+.pr-query-list li {
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--pr-terracotta-rim);
+}
+.pr-query-tag {
+  font-family: "Inter", sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--pr-wine-bright);
+  margin-right: 6px;
+  text-transform: uppercase;
+}
+
+/* researcher-card：rank | (head + meta) の 2 カラム精緻化 */
+.pr-researcher-card {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  column-gap: 16px;
+  row-gap: 6px;
+  padding: 14px 0 16px;
+  border-bottom: 1px solid var(--pr-terracotta-rim);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.pr-researcher-card:last-child { border-bottom: 0; padding-bottom: 0; }
+.pr-researcher-rank {
+  font-family: "Inter", sans-serif;
+  font-style: normal;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--pr-wine-bright);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  border-right: 1px solid var(--pr-terracotta-rim);
+  padding-right: 12px;
+  padding-top: 2px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pr-researcher-head {
+  font-family: "Noto Serif JP", serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--pr-ink);
+  margin: 0 0 2px;
+  letter-spacing: 0.02em;
+}
+.pr-researcher-affil {
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 10.5px;
+  color: var(--pr-ink-soft);
+  margin: 0 0 6px;
+  letter-spacing: 0.04em;
+}
+.pr-researcher-theme {
+  font-family: "Noto Serif JP", serif;
+  font-size: 11.5px;
+  color: var(--pr-wine);
+  font-style: italic;
+  margin: 0 0 6px;
+}
+.pr-researcher-note {
+  font-family: "Noto Serif JP", serif;
+  font-size: 11.5px;
+  line-height: 1.95;
+  color: var(--pr-ink);
+  margin: 0;
+  text-align: justify;
+  text-justify: inter-character;
+  hyphens: auto;
+}
+.pr-researcher-sim {
+  float: right;
+  font-family: "Inter", sans-serif;
+  font-size: 9.5px;
+  color: var(--pr-ink-mute);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-toc-list {
+  font-family: "Noto Serif JP", serif;
+  font-size: 12.5px;
+  line-height: 2.1;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  color: var(--pr-ink);
+}
+.pr-toc-list li {
+  display: grid;
+  grid-template-columns: 36px 1fr 60px;
+  align-items: baseline;
+  border-bottom: 1px dotted var(--pr-terracotta-rim);
+  padding: 3px 0;
+}
+.pr-toc-num {
+  font-family: "Inter", sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--pr-wine-bright);
+  font-size: 14px;
+}
+.pr-toc-page {
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  color: var(--pr-ink-mute);
+  text-align: right;
+  letter-spacing: 0.06em;
+}
+
+.pr-disclaimer-block {
+  background: var(--pr-paper);
+  border-left: 4px solid var(--pr-ink);
+  padding: 16px 22px;
+  margin: 24px 0;
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--pr-ink-soft);
+}
+.pr-disclaimer-block strong { color: var(--pr-ink); }
+
+/* ===================================================================
+ * 画面のみ表示：統合ツールバー (PRINT + EDIT)
+ * =================================================================== */
+.repo-toolbar {
+  position: fixed;
+  top: 18px; right: 18px;
+  z-index: 9999;
+  display: inline-flex;
+  background: #FFFFFF;
+  border: 1px solid rgba(18,18,18,0.16);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+  font-family: "Inter", "Noto Sans JP", sans-serif;
+  overflow: hidden;
+}
+.repo-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--pr-ink);
+  border: 0;
+  border-right: 1px solid rgba(18,18,18,0.12);
+  cursor: pointer;
+  font: 600 12px/1.2 inherit;
+  letter-spacing: 0.10em;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.repo-toolbar button:last-child { border-right: 0; }
+.repo-toolbar button:hover { background: rgba(204,20,0,0.06); color: var(--pr-wine); }
+.repo-toolbar button.is-primary {
+  background: var(--pr-wine); color: #FFFFFF; border-right-color: var(--pr-wine);
+}
+.repo-toolbar button.is-primary:hover { background: var(--pr-wine-deep); color: #FFFFFF; }
+.repo-toolbar button:focus-visible { outline: 2px solid var(--pr-wine); outline-offset: -2px; }
+.repo-toolbar small {
+  display: block; font-size: 9px; letter-spacing: 0.20em;
+  opacity: 0.85; font-weight: 500; margin-bottom: 2px;
+}
+
+/* レガシー .print-fab (後方互換、retrofit ファイル向け) */
+.print-fab {
+  position: fixed; top: 18px; right: 18px; z-index: 9998;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px 10px 14px;
+  background: var(--pr-wine); color: #FFFFFF;
+  border: 0; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  font: 600 13px/1.2 "Inter","Noto Sans JP",sans-serif;
+  letter-spacing: 0.08em;
+}
+.print-fab:hover { background: var(--pr-wine-deep); }
+.print-fab small {
+  display: block; font-size: 9px; letter-spacing: 0.18em;
+  opacity: 0.85; font-weight: 500; margin-bottom: 2px;
+}
