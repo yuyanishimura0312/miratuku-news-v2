@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教えるとは、他者の応答可能性に賭けることだった ── 問いの再帰 ep041</title>
+  <meta name="description" content="Nel Noddings『Caring』(1984) のengrossment概念とMartin Buber『我と汝』(1923) を経由し、教育を「ケアリング関係の連鎖」として再記述する。AIチューターの応答性設計が、Noddingsの語彙を初めて実装課題に変える。PQAR-2026 第41話。">
+  <meta property="og:title" content="教えるとは、他者の応答可能性に賭けることだった">
+  <meta property="og:description" content="Nel Noddings のケアリング教育と LLM の応答性。PQAR-2026 ep041">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep041.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* skip link */
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: var(--accent-warm); color: #fff;
+      padding: 8px 16px; z-index: 9999;
+      font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* read progress */
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+
+    /* site header */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .site-header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-secondary); font-size: 12px; padding: 4px 10px;
+      cursor: pointer; letter-spacing: 0.06em;
+    }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    /* hero */
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; letter-spacing: 0.32em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num {
+      font-family: 'Judson', serif; font-size: 72px; line-height: 1;
+      color: var(--accent-warm); margin-bottom: 24px;
+    }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title {
+      font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+      line-height: 1.6; margin-bottom: 12px; color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ep-hero-subtitle {
+      font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.7;
+    }
+    .ep-hero-en {
+      font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted);
+      margin-bottom: 32px; font-style: italic;
+    }
+    .ep-hero-lead {
+      font-family: var(--font-serif); font-size: 16px; line-height: 2.0;
+      border-left: 3px solid var(--accent-warm); padding-left: 20px;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-hero-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em;
+      display: flex; gap: 20px;
+    }
+
+    /* layout */
+    .ep-layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+      padding-top: 48px; padding-bottom: 80px;
+    }
+
+    /* toc sidebar */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part {
+      font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .toc-sidebar a {
+      display: block; font-size: 12px; color: var(--text-secondary);
+      text-decoration: none; padding: 4px 0; border-left: 2px solid transparent;
+      padding-left: 10px; transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current {
+      color: var(--accent-warm) !important;
+      border-color: var(--accent-warm) !important;
+    }
+
+    /* ep body */
+    .ep-body { min-width: 0; }
+    .ep-body p {
+      font-family: var(--font-serif); font-size: 17px; line-height: 2.1;
+      margin-bottom: 30px; text-indent: 1em; color: var(--text);
+      letter-spacing: 0.025em; font-feature-settings: "palt";
+    }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter {
+      font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700;
+      float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px;
+      color: var(--accent-warm);
+    }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+
+    /* appendix section */
+    .ep-appendix {
+      margin-top: 48px; padding: 28px 32px;
+      border: 1px solid var(--border); border-left: 4px solid var(--accent-warm);
+      background: var(--surface); border-radius: 0 4px 4px 0;
+    }
+    .ep-appendix-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-appendix p {
+      font-family: var(--font-serif); font-size: 15px; line-height: 2.0;
+      color: var(--text-secondary); margin-bottom: 0; text-indent: 1em;
+    }
+
+    /* reading lens */
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; list-style: none;
+      gap: 12px;
+    }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+    }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+
+    /* signal list */
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num {
+      font-size: 10px; letter-spacing: 0.2em; font-weight: 700;
+      color: var(--accent-warm); white-space: nowrap; padding-top: 3px;
+    }
+    .signal-text {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    /* ref list */
+    .ref-list { list-style: none; }
+    .ref-list li {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary); padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* question */
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-question-q {
+      font-family: var(--font-serif); font-size: 16px; line-height: 1.9;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta {
+      font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted);
+      display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;
+    }
+    .ep-question-next-title {
+      font-family: var(--font-serif); font-size: 15px; color: var(--text);
+      display: block; margin-bottom: 12px;
+    }
+    .ep-question-next-link {
+      font-size: 13px; color: var(--accent-warm); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .ep-question-next-link:hover { text-decoration: underline; }
+
+    /* ep actions */
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .ep-action-btn {
+      padding: 10px 20px; font-size: 13px; border-radius: 4px;
+      text-decoration: none; letter-spacing: 0.06em; cursor: pointer;
+      border: 1px solid var(--border); color: var(--text-secondary); background: none;
+    }
+    .ep-action-btn.primary {
+      background: var(--accent-warm); border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+
+    /* ep nav */
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; gap: 16px;
+    }
+    .ep-nav-link {
+      text-decoration: none; padding: 16px 20px; border: 1px solid var(--border);
+      border-radius: 4px; flex: 1; max-width: 48%;
+      transition: border-color 0.15s;
+    }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+
+    /* footer */
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* mobile */
+    @media (max-width: 900px) {
+      .ep-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { position: static; }
+      .ep-hero-num { font-size: 52px; }
+      .ep-hero-title { font-size: 24px; }
+    }
+
+    /* print */
+    @media print {
+      .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; }
+      .ep-layout { grid-template-columns: 1fr; }
+      .ep-body p { font-size: 14px; line-height: 1.85; }
+    }
+
+    /* focus */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-warm); outline-offset: 3px;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<!-- site header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ep hero -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">PART 2 実装問い ・ Q6 ケアを学ぶ教育 ・ #041</div>
+    <div class="ep-hero-num">41.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">教えるとは、他者の応答可能性に賭けることだった</h1>
+    <p class="ep-hero-subtitle">── Nel Noddings のケアリング教育と LLM の応答性</p>
+    <p class="ep-hero-en"><em>To Teach Is to Wager on the Other's Capacity to Respond</em></p>
+    <p class="ep-hero-lead">
+      Carol Gilligan が「もうひとつの声」でルール主義の道徳に亀裂を入れてから、Nel Noddings はその声を教育という実践の場に下ろした。1984年、Noddings は「ケアリング」を単なる態度ではなく、教師と生徒のあいだに成立する関係の構造として定義した。Martin Buber が1923年に「我と汝」で提示した対話的出会いの哲学は、その形而上学的基盤をなす。AIチューターが急増する2020年代、Noddingsの語彙なしには問えない設計問題が浮上している——LLMは「ケアする」ことができるか。
+    </p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約6分</span>
+    </div>
+  </div>
+</section>
+
+<!-- ep layout -->
+<div class="ep-layout">
+  <!-- toc sidebar -->
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+    <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q1 未来世代の声</div>
+      <a href="ep002.html">ep002 未来は、まだ生まれていない者から……</a>
+      <a href="ep003.html">ep003 正義は、まだ知らない誰かのために……</a>
+      <a href="ep014.html">ep014 Q1 総括: 不在の声を聞く13の方法</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q2 先住民の知恵</div>
+      <a href="ep015.html">ep015 比較は、優劣の物差しから始まり……</a>
+      <a href="ep027.html">ep027 Q2 総括: 自分の物差しを置く13の作法</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q3 場所の他者</div>
+      <a href="ep028.html">ep028 場所は、私が立つ前から私を形づくっていた</a>
+      <a href="#" style="opacity:0.4">ep029〜039 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q6 ケアを学ぶ教育</div>
+      <a href="ep040.html">ep040 もうひとつの声は、倫理の地図を書き換えた</a>
+      <a href="ep041.html" class="toc-current">● ep041 教えるとは、他者の応答可能性に賭けることだった</a>
+      <a href="#" style="opacity:0.4">ep042〜052 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 3〜5 Q4・Q7・Q8・Q5</div>
+      <a href="#" style="opacity:0.4">ep053〜100 (準備中)</a>
+    </div>
+  </aside>
+
+  <!-- ep body -->
+  <article class="ep-body" id="articleBody">
+    <p>Carol Gilligan が1982年に「もうひとつの声」を語ったとき、彼女は道徳哲学に対して声を挙げた（ep040）。その声を、教育という実践の場に具体的に下ろしたのがNel Noddingsである。Noddingsは1984年、カリフォルニア大学出版局から『Caring: A Feminine Approach to Ethics and Moral Education』を上梓した。タイトルに "feminine" という語を掲げた判断は意図的だった——それは「女性専用の倫理」を主張するのではなく、「人間関係の倫理として長らく見落とされてきた次元」に名前をつける身振りだった。</p>
+
+    <p>Noddingsが教育理論として構築したのは、二項関係を軸にした倫理的構造である。「ケアする者（one-caring）」と「ケアされる者（cared-for）」の間には、専有的な方向性がある。一方的な配慮や介入ではなく、Noddingsが「engrossment（没入的注意）」と呼んだ状態——ケアする者が相手の現実に完全に受け取られ、相手の経験を自己の視点に置き換えることなく把持する——が成立するとき、はじめてケアリング関係が生まれる。そしてケアは、ケアされる者の「受容と応答」によって完成する。応答なきケアは、ケアではなく管理である。</p>
+
+    <p>Martin Buberは1923年、『Ich und Du（我と汝）』においてこの構造の形而上学的土台を先取りしていた。Buberが区別した「我-汝」関係と「我-それ」関係は、対話的存在論の核心をなす。「汝」に向き合うとき、人は相手を対象（object）としてではなく、応答しうる存在（subject）として出会う。<strong>「汝」は観察されるのではなく、出会われる。</strong> Buberにとって教育の場は、この「我-汝」関係が意図的に召喚される空間でなければならなかった。教師が生徒を「それ」——測定・分類・評価の対象——として扱うとき、教育は関係を消滅させる。</p>
+
+    <p>Noddingsの『The Challenge to Care in Schools』（1992年）は、Buberのこの洞察を学校制度論へと翻訳した。カリキュラムの目的を「学力指標の最大化」から「ケアリング関係の連鎖」への参加と再記述し、教師の役割を「知識の伝達者」から「他者の応答可能性に賭ける者」へと再定義した。ここで「賭ける」という動詞は正確である。応答が返ってくるかどうかは、教師にはあらかじめわからない。ケアリング教育の非対称性は、一方的な献身ではなく、応答可能性への信頼という倫理的賭けに立脚している。</p>
+
+    <p>LLMはこの問いを具体的な実装課題として突きつける。AIチューターは学習者への「没入的注意（engrossment）」を持てるか。LLMが生成する応答は、学習者の現実を「把持（motivational displacement）」した結果か、それともパターンマッチングによる模倣的配慮か。Noddingsの語彙なしには、この区別は設計仕様として記述できない。<strong>AIが「ケアする」とはどういうことかは、Noddingsを読まなければ問えない問いである。</strong></p>
+
+    <!-- appendix -->
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 — 第4変容期での再帰</div>
+      <p>2024年以降、LLMを組み込んだAIチューター（Khan Academy Khanmigo、Duolingo Max、Scale AIの教育用モデル等）が急増している（CQ-DB <code>cq_sf05_0208</code>「教育におけるAI応答性の設計倫理」/ <code>cq_sf02_191</code>「ケア関係のデジタル媒介可能性」）。しかし現行の設計指標はほぼすべて「解答精度」「学習時間短縮」「エラー検出率」であり、Noddingsのengrossmentに相当する機能——学習者の現実への受け取り——を計測する試みは皆無に近い。Buberの「我-汝」関係でいえば、現在のAIチューターは学習者を「それ」として最適化している。Gilligan（ep040）がルール主義のAI倫理を批判したように、Noddingsは今度は「測定可能なアウトカム」への一元化を批判する。次話（ep042）では、Joan TrontoとBerenice Fisherのケアの政治倫理へと移行し、ケアを私的な二項関係から公共的・政治的構造として再記述する。</p>
+    </div>
+
+    <!-- SIGNAL LIST -->
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL LIST</span>
+        <span class="reading-lens-title">本話のシグナル</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">Noddings（1984年, <em>Caring</em>, UC Press）が提示したengrossment（没入的注意）は、ケアする者が自己の目的や感情を一時保留して相手の現実を「把持（receive）」する状態として定義される。これはSimone Weilが「注意（attention）」と呼んだ認識的構えと構造的に対応するが、Weil（1951年, "Reflections on the Right Use of School Studies", <em>Waiting for God</em>, Putnam）がそれを神学的実践として位置づけたのに対し、Noddingsは日常的・関係的な倫理行為として記述した。<strong>LLM応答はengrossmentの機能的模倣を目指せるが、相手の現実への「開かれ」を持たない設計のままでは管理的応答にとどまる。</strong></p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">Buber（1923年, <em>Ich und Du</em>, Insel-Verlag）の「我-汝」関係論は、翻訳語の問題に敏感である。"Thou"（汝）はYouの古形だが、ドイツ語原文 "Du" はより親密な直接的呼格であり、"Sie"（敬称の二人称）ではない。<strong>教育場面での「汝」は、社会的距離を超えた直接的出会いを意味する</strong>——これは1923年時点でのBuberの教育論的介入が持つ精度であり、AIチューターが「ユーザー」に向き合う際の設計語彙として未回収のまま残っている。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">Noddings（1992年, <em>The Challenge to Care in Schools</em>, Teachers College Press）は、20世紀後半の米国教育改革が「テスト成績・学力指標・認知スキル習得率」へ一元化した結果、教師-生徒間のケアリング関係が制度的に周縁化されたと論じた。2024年時点でのAIチューター普及局面においても同構造が反復している——Khan Academy Khanmigo等の評価指標（ヒント使用回数・解答速度・誤答パターン）は「ケアリング関係の質」を一切計測しない（CQ-DB <code>cq_sf05_0208</code>）。<strong>Noddingsが1992年に診断した病理は、LLM教育応用でデジタル的に強化されつつある。</strong></p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">Held（2006年, <em>The Ethics of Care</em>, Oxford UP）によれば、ケア倫理の特徴は「普遍的ルール」ではなく「具体的他者への応答的実践」に倫理の中心を置く点にある。AIガバナンスにおけるルールベース倫理（EU AI Act等）は正義の論理（Kohlbergの第6段階）に依拠しており、<strong>ケア倫理の観点から見ると「抽象的他者への規制」として応答の具体性を欠く</strong>——次話ep042でのTrontoのケアの政治倫理は、この問いをさらに公共政策の次元で展開する。</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- KEY REFERENCE -->
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">
+          <li>
+            <strong>Noddings, N. (1984). <em>Caring: A Feminine Approach to Ethics and Moral Education.</em> Berkeley: University of California Press.</strong>
+            <span class="ref-doi">ISBN: 978-0520238640 ／ Noddingsケアリング倫理の一次文書。engrossment（没入的注意）とmotivational displacement（動機的転位）の二概念を教育倫理に定置した理論的起点。</span>
+          </li>
+          <li>
+            <strong>Noddings, N. (1992). <em>The Challenge to Care in Schools: An Alternative Approach to Education.</em> New York: Teachers College Press.</strong>
+            <span class="ref-doi">ISBN: 978-0807732618 ／ 1984年理論を学校制度論へ翻訳した応用著作。「ケアリング関係の連鎖」としての教育再定義の一次文書。</span>
+          </li>
+          <li>
+            <strong>Buber, M. (1923). <em>Ich und Du.</em> Leipzig: Insel-Verlag.</strong>
+            <span class="ref-doi">邦訳: ブーバー著, 植田重雄訳 (1979)『我と汝・対話』岩波文庫 ／ 「我-汝」関係と「我-それ」関係の区別を提示した対話的存在論の一次文書。教育における相互的出会いの哲学的基盤。</span>
+          </li>
+          <li>
+            <strong>Buber, M. (1947). "Education." In <em>Between Man and Man.</em> London: Routledge.</strong>
+            <span class="ref-doi">邦訳: 「教育について」収録: ブーバー著, 佐藤吉昭・佐藤令子訳 (1979)『人間と人間のあいだ』みすず書房 ／ 「我-汝」関係論を教育論に直接適用した論文。「教師は生徒を汝として出会う者である」という命題の一次文書。</span>
+          </li>
+          <li>
+            <strong>Gilligan, C. (1982). <em>In a Different Voice: Psychological Theory and Women's Development.</em> Cambridge: Harvard University Press.</strong>
+            <span class="ref-doi">ep040で詳述。ケア倫理の起点。Noddingsはその問題提起を受けて教育倫理へ展開しており、両著作は理論的に直結する。</span>
+          </li>
+          <li>
+            <strong>Held, V. (2006). <em>The Ethics of Care: Personal, Political, and Global.</em> Oxford: Oxford University Press.</strong>
+            <span class="ref-doi">ISBN: 978-0195180992 ／ ケア倫理を個人・政治・グローバルの三層に展開した理論的総括。Noddingsを含む第一世代ケア倫理の批判的継承と体系化を行った基礎文献。</span>
+          </li>
+          <li>
+            <strong>Noddings, N. (2002). <em>Starting at Home: Caring and Social Policy.</em> Berkeley: University of California Press.</strong>
+            <span class="ref-doi">ISBN: 978-0520232136 ／ Noddingsが家庭的ケアを社会政策論に展開した著作。ケアリング関係が私的関係にとどまらず社会制度設計の原理となる可能性を論じる。ep042（Tronto）への接続点。</span>
+          </li>
+          <li>
+            <strong>Weil, S. (1951). "Reflections on the Right Use of School Studies with a View to the Love of God." In <em>Waiting for God.</em> New York: Putnam.</strong>
+            <span class="ref-doi">邦訳: ヴェイユ著, 田辺保訳 (1967)『神を待ちのぞむ』勁草書房 ／ 注意（attention）を愛の行為として定義したWeilの論文。Noddingsのengrossment概念と独立に、他者への全的注意が倫理的次元を持つことを示した先駆的テキスト。</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- QUESTION FOR NEXT -->
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">NoddingsのケアリングはBuberの「我-汝」関係を土台に、二者間の倫理として組み立てられた。しかしケアは私的な関係のなかだけに閉じるべきか。Trontoは問う——ケアを「感情的態度」から「政治的責任」へ引き上げるとき、依存を誰が担うかという分配問題が姿を現す。AIガバナンスが「誰のためのケアか」を問われるとき、Noddingsの二項関係論は十分か。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第42話「ケアの政治は、依存を共通の条件として読み直す」</span>
+        <a class="ep-question-next-link" href="ep042.html" data-target-ep="042">公開を待つ →</a>
+      </div>
+    </section>
+  </article>
+</div>
+
+<!-- ep actions -->
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">メルマガで次話を受け取る</a>
+    <a class="ep-action-btn" href="mailto:info@emerging-future.org?subject=ep041感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+
+<!-- ep nav -->
+<nav class="ep-nav" aria-label="話ナビゲーション">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep040.html">
+      <div class="ep-nav-meta">PREV — ep040</div>
+      <div class="ep-nav-title">もうひとつの声は、倫理の地図を書き換えた</div>
+    </a>
+    <a class="ep-nav-link next disabled" href="#">
+      <div class="ep-nav-meta">NEXT — ep042</div>
+      <div class="ep-nav-title">ケアの政治は、依存を共通の条件として読み直す</div>
+    </a>
+  </div>
+</nav>
+
+<!-- footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年5月時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合はinfo@emerging-future.orgまでご指摘ください。</p>
+    <div class="site-footer-bottom">
+      © 2026 NPO法人ミラツク / 問いの再帰 ─ AIの前で開きなおす2,800年
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function(){
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('pqar-theme');
+    if(saved) html.setAttribute('data-theme', saved);
+    btn && btn.addEventListener('click', function(){
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+
+  // read progress
+  (function(){
+    const bar = document.getElementById('progressBar');
+    if(!bar) return;
+    window.addEventListener('scroll', function(){
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (docHeight > 0 ? (scrollTop / docHeight * 100) : 0) + '%';
+    });
+  })();
+</script>
+</body>
+</html>

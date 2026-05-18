@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>時間割引論争は、何を割り引くのか ── 問いの再帰 ep006</title>
+  <meta name="description" content="1928年ラムゼーの公式 r = ρ + η×g が気候経済学に組み込まれたとき、将来世代の重みをめぐる倫理的論爆弾に変容した。スターン(ρ=0.1%)対ノードハウス(ρ≈1.5-3%)の割引率論争は、現在偏重が「心の癖」ではなく制度として設計された事実を露わにした。PQAR-2026 第6話。">
+  <meta property="og:title" content="時間割引論争は、何を割り引くのか">
+  <meta property="og:description" content="気候経済学が、将来世代の重みを数値化したあいだ。PQAR-2026 ep006">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep006.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* skip link */
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: var(--accent-warm); color: #fff;
+      padding: 8px 16px; z-index: 9999;
+      font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* read progress */
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+
+    /* site header */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .site-header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-secondary); font-size: 12px; padding: 4px 10px;
+      cursor: pointer; letter-spacing: 0.06em;
+    }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    /* hero */
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; letter-spacing: 0.32em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num {
+      font-family: 'Judson', serif; font-size: 72px; line-height: 1;
+      color: var(--accent-warm); margin-bottom: 24px;
+    }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title {
+      font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+      line-height: 1.6; margin-bottom: 12px; color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ep-hero-subtitle {
+      font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.7;
+    }
+    .ep-hero-en {
+      font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted);
+      margin-bottom: 32px; font-style: italic;
+    }
+    .ep-hero-lead {
+      font-family: var(--font-serif); font-size: 16px; line-height: 2.0;
+      border-left: 3px solid var(--accent-warm); padding-left: 20px;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-hero-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em;
+      display: flex; gap: 20px;
+    }
+
+    /* layout */
+    .ep-layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+      padding-top: 48px; padding-bottom: 80px;
+    }
+
+    /* toc sidebar */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part {
+      font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .toc-sidebar a {
+      display: block; font-size: 12px; color: var(--text-secondary);
+      text-decoration: none; padding: 4px 0; border-left: 2px solid transparent;
+      padding-left: 10px; transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current {
+      color: var(--accent-warm) !important;
+      border-color: var(--accent-warm) !important;
+    }
+
+    /* ep body */
+    .ep-body { min-width: 0; }
+    .ep-body p {
+      font-family: var(--font-serif); font-size: 17px; line-height: 2.1;
+      margin-bottom: 30px; text-indent: 1em; color: var(--text);
+      letter-spacing: 0.025em; font-feature-settings: "palt";
+    }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter {
+      font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700;
+      float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px;
+      color: var(--accent-warm);
+    }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+
+    /* appendix section */
+    .ep-appendix {
+      margin-top: 48px; padding: 28px 32px;
+      border: 1px solid var(--border); border-left: 4px solid var(--accent-warm);
+      background: var(--surface); border-radius: 0 4px 4px 0;
+    }
+    .ep-appendix-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-appendix p {
+      font-family: var(--font-serif); font-size: 15px; line-height: 2.0;
+      color: var(--text-secondary); margin-bottom: 0; text-indent: 1em;
+    }
+
+    /* reading lens (KEY REF / SIGNAL) */
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; list-style: none;
+      gap: 12px;
+    }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+    }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+
+    /* signal list */
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num {
+      font-size: 10px; letter-spacing: 0.2em; font-weight: 700;
+      color: var(--accent-warm); white-space: nowrap; padding-top: 3px;
+    }
+    .signal-text {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    /* ref list */
+    .ref-list { list-style: none; }
+    .ref-list li {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary); padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* question */
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-question-q {
+      font-family: var(--font-serif); font-size: 16px; line-height: 1.9;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta {
+      font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted);
+      display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;
+    }
+    .ep-question-next-title {
+      font-family: var(--font-serif); font-size: 15px; color: var(--text);
+      display: block; margin-bottom: 12px;
+    }
+    .ep-question-next-link {
+      font-size: 13px; color: var(--accent-warm); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .ep-question-next-link:hover { text-decoration: underline; }
+
+    /* ep actions */
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .ep-action-btn {
+      padding: 10px 20px; font-size: 13px; border-radius: 4px;
+      text-decoration: none; letter-spacing: 0.06em; cursor: pointer;
+      border: 1px solid var(--border); color: var(--text-secondary); background: none;
+    }
+    .ep-action-btn.primary {
+      background: var(--accent-warm); border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+
+    /* ep nav */
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; gap: 16px;
+    }
+    .ep-nav-link {
+      text-decoration: none; padding: 16px 20px; border: 1px solid var(--border);
+      border-radius: 4px; flex: 1; max-width: 48%;
+      transition: border-color 0.15s;
+    }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+
+    /* footer */
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* mobile */
+    @media (max-width: 900px) {
+      .ep-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { position: static; }
+      .ep-hero-num { font-size: 52px; }
+      .ep-hero-title { font-size: 24px; }
+    }
+
+    /* print */
+    @media print {
+      .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; }
+      .ep-layout { grid-template-columns: 1fr; }
+      .ep-body p { font-size: 14px; line-height: 1.85; }
+    }
+
+    /* focus */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-warm); outline-offset: 3px;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<!-- site header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ep hero -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">PART 1 規範問い ・ Q1 未来世代の声 #006</div>
+    <div class="ep-hero-num">06.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">時間割引論争は、何を割り引くのか</h1>
+    <p class="ep-hero-subtitle">── 気候経済学が、将来世代の重みを数値化したあいだ</p>
+    <p class="ep-hero-en"><em>What Does the Discount Rate Actually Discount</em></p>
+    <p class="ep-hero-lead">
+      1928年、フランク・ラムゼーは「社会はどれだけ貯蓄すべきか」という問いに一行の公式で答えた。r = ρ + η×g。ρは時間選好——今の自分を未来より重く扱う程度だ。この公式が気候変動の政策コスト計算に組み込まれたとき、倫理的論爆弾に変容した。前話の七世代律が未来を「席」として制度化したのに対し、割引率の論理はρが正である限り将来世代を数学的に軽量化する。現在偏重は心の癖ではない——式として書き込まれた制度だ。
+    </p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約5分</span>
+    </div>
+  </div>
+</section>
+
+<!-- ep layout -->
+<div class="ep-layout">
+  <!-- toc sidebar -->
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+    <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 規範問い / Q1 未来世代</div>
+      <a href="ep002.html">ep002 未来は、まだ生まれていない者から……</a>
+      <a href="ep003.html">ep003 ヴェールの下で、未来世代と契約する</a>
+      <a href="ep004.html">ep004 人格は続くか：パーフィットの削減論</a>
+      <a href="ep005.html">ep005 未来は、子孫から借りているのではない</a>
+      <a href="ep006.html" class="toc-current">● ep006 時間割引論争は、何を割り引くのか</a>
+      <a href="ep007.html">ep007 未来を、シミュレーションが先取りするとき</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q2 先住民の知</div>
+      <a href="#" style="opacity:0.4">ep015〜027 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2〜5</div>
+      <a href="#" style="opacity:0.4">ep028〜100 (準備中)</a>
+    </div>
+  </aside>
+
+  <!-- ep body -->
+  <article class="ep-body" id="articleBody">
+    <p>1928年、フランク・ラムゼーは「A Mathematical Theory of Saving」を <em>Economic Journal</em> に発表した。問いはシンプルだった——今の消費と将来の消費を、いかに配分すべきか。解答は r = ρ + η×g という一行に圧縮される。ρは時間選好（今の自分を未来より重く扱う程度）、gは成長率だ（Ramsey, 1928, <em>EJ</em>, 38(152): 543-559）。やがてこの公式が気候変動の政策コスト計算に組み込まれたとき、倫理的論爆弾に変容した。</p>
+
+    <p>前話で見た七世代律は遠い未来を制度の中心に据えた。ハウデノサウニー連邦の評議会は七世代後の声を「席」として確保した。割引率の論理はこれと正反対だ——ρが正である限り、将来世代の利益は現世代より軽く扱われることを数学的に前提として組み込む。経済学は時間を測定可能にした。その代償として、将来を薄める操作にも数値という正当性を与えた。</p>
+
+    <p>2006年、英国財務省はニコラス・スターンに報告書を委嘱した。<em>Stern Review on the Economics of Climate Change</em> はρ=0.1%というほぼゼロの純時間選好率を選んだ（Stern, 2006, HM Treasury）。根拠は倫理だ——まだ生まれていない人間の福祉を現在より劣ったものとみなす理由はない。気候変動を放置した際の現在価値被害はGDPの5-20%に達し、年間GDP1%を投じる緩和策が正当化された。</p>
+
+    <p>イェール大学のウィリアム・ノードハウスは翌年の <em>JEL</em> で正面から反論した（Nordhaus, 2007, JEL, 45(3): 686-702）。割引率はρ≈1.5-3%——市場の利子率だ。2013年の <em>The Climate Casino</em> でも緩やかな炭素税の漸進が最適と論じた（Nordhaus, 2013, Yale UP）。ρが0.1%と1.5%では50年後の現在価値は約95セントと約47セントに分岐する。倫理的直観のわずかな差が将来世代の重みを<strong>半減</strong>させる。</p>
+
+    <p>マーティン・ワイツマンは第三の視角を持ち込んだ。2001年の <em>AER</em> 論文「Gamma Discounting」で割引率の不確実性を問題化した（Weitzman, 2001, <em>AER</em>, 91(1): 260-271）。将来成長率が不確実なとき、割引率は時間とともに逓減すべきだ——短期4-6%、超長期では1%以下。ガンマ割引は英仏と欧州委員会のガイドラインに採用された。</p>
+
+    <p>論争が示すのは一つの事実だ。時間割引率とは技術的パラメータではない。「将来世代の命を現在世代の便益といかに秤にかけるか」という倫理的選択を、数値という形式に翻訳したものだ。数値が中立の外観をまとうとき、価値判断は視野から消える。ノードハウスの2018年ノーベル経済学賞受賞は、「市場割引率を採用する立場」に学術的正統性が付与されたとも読める。現在偏重は心の癖ではない——制度として設計され、式として書き込まれた。</p>
+
+    <!-- appendix -->
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 — 第4変容期での再帰</div>
+      <p>時間割引の問いは2026年のAI開発で奇妙な形で再帰している。短期的なユーザー満足度を最大化する報酬関数は、高いρ値を前提とした最適化と構造的に同型だ。「安全なAIを将来実現する」より「今すぐ使えるAIを出す」圧力は、AIアライメント研究が指摘してきた時間的非整合問題そのものだ。CQ-DB <code>cq_00575</code>「デジタルツイン地球」と <code>cq_00611</code>「成層圏エアロゾル注入リスク」が照準する問いも、このズレの上にある——AIが気候シナリオを計算するとき、どのρ値を前提としているかユーザーには見えない。スターンとノードハウスが闘わせた倫理的論争は、AIが気候政策に組み込まれる時代に、ブラックボックスの内部で静かに決着してしまう。次話では、未来のシミュレーションが政策時間を先取りするとき、現在の熟議に何が起きるかを問う。</p>
+    </div>
+
+    <!-- SIGNAL LIST -->
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL LIST</span>
+        <span class="reading-lens-title">本話のシグナル</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">ラムゼー割引率公式 r = ρ + η×g において、Stern (2006) は<strong>純時間選好率ρ=0.1%</strong>を採用し社会的割引率を約1.4%とした。Nordhaus (2007) はρ≈1.5-3%を採用した。50年後の便益の現在価値は、ρ=0.1%では約95%が維持されるが、ρ=1.5%では約47%に減少する——わずか1.4ポイントの差が将来世代の重みを<strong>半減</strong>させる（Ramsey, 1928, <em>Economic Journal</em> 38(152): 543-559; Stern, 2006, HM Treasury; Nordhaus, 2007, JEL 45(3): 686-702）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">Weitzman (2001) が2,160人の経済学者への調査から導出した「ガンマ割引」では、社会的割引率は<strong>短期（1-5年）で4%、超長期（300年以上）では1%以下</strong>に逓減する（Weitzman, 2001, <em>AER</em> 91(1): 260-271）。英国・フランス・欧州委員会の政府評価ガイドラインはこの原理を採用し、長期インフラ・気候投資評価に時間逓減的割引率を公式適用している。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">Nordhaus のDICEモデルによる炭素の社会的費用（SCC）推計は、DICE-2013Rでは<strong>18.6ドル/tCO2</strong>、DICE-2023では<strong>66ドル/tCO2</strong>に上昇した（Nordhaus, 2017, <em>PNAS</em> 114(7): 1518-1523）。対して Stern (2006) の低割引率アプローチでは早期行動の便益が飛躍的に高まる——数値の差の背後にあるのは、技術的前提ではなく<strong>倫理的選択</strong>である。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">CQ-DB <code>cq_00575</code>「デジタルツイン地球」（urgency_horizon: 2027-2030）が照準する問いは、AIが気候シナリオを計算するとき、そのシミュレーション内部に組み込まれた割引率の倫理的前提が<strong>ユーザーに非可視のまま政策に影響を与える</strong>リスクを指摘する。スターン-ノードハウス論争の未決問題が、AIの計算ブラックボックスの中で静かに決着してしまう可能性がある。</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- KEY REFERENCE -->
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">
+          <li>
+            <strong>Ramsey, F.P. (1928). "A mathematical theory of saving." <em>Economic Journal</em>, 38(152): 543-559.</strong>
+            <span class="ref-doi">社会的割引率公式 r = ρ + η×g の原典。最適貯蓄論の基礎式が気候経済学の核心パラメータとなった経緯の出発点。</span>
+          </li>
+          <li>
+            <strong>Stern, N. (2006). <em>Stern Review on the Economics of Climate Change.</em> London: HM Treasury; Cambridge: Cambridge University Press.</strong>
+            <span class="ref-doi">ISBN: 978-0521700801 ／ ρ=0.1%の倫理的割引率採用により「今すぐ積極的緩和を」と結論した包括的報告書。スターン・ノードハウス論争の震源。</span>
+          </li>
+          <li>
+            <strong>Nordhaus, W.D. (2007). "A Review of the Stern Review on the Economics of Climate Change." <em>Journal of Economic Literature</em>, 45(3): 686-702.</strong>
+            <span class="ref-doi">DOI: 10.1257/jel.45.3.686 ／ ρ≈1.5%の市場割引率を根拠に緩やかな削減パスを主張したスターンへの正面反論。割引率論争の最重要対論文。</span>
+          </li>
+          <li>
+            <strong>Nordhaus, W.D. (2013). <em>The Climate Casino: Risk, Uncertainty, and Economics for a Warming World.</em> New Haven: Yale University Press.</strong>
+            <span class="ref-doi">ISBN: 978-0300189513 ／ 漸進的炭素税論の集大成。2018年ノーベル経済学賞受賞根拠となるDICEモデル系譜の一般向け提示。</span>
+          </li>
+          <li>
+            <strong>Nordhaus, W.D. (1992). "An optimal transition path for controlling greenhouse gases." <em>Science</em>, 258(5086): 1315-1319.</strong>
+            <span class="ref-doi">DOI: 10.1126/science.258.5086.1315 ／ DICEモデルの原型論文。気候・経済を統合した最適制御アプローチの起点。</span>
+          </li>
+          <li>
+            <strong>Weitzman, M.L. (2001). "Gamma Discounting." <em>American Economic Review</em>, 91(1): 260-271.</strong>
+            <span class="ref-doi">DOI: 10.1257/aer.91.1.260 ／ 割引率の不確実性が時間逓減的な割引率（超長期は1%以下）を正当化することを示した論文。英・仏・EU各政府ガイドラインに採用。</span>
+          </li>
+          <li>
+            <strong>Dasgupta, P. (2008). "Discounting climate change." <em>Journal of Risk and Uncertainty</em>, 37(2-3): 141-169.</strong>
+            <span class="ref-doi">DOI: 10.1007/s11166-008-9049-6 ／ ケンブリッジ大学のパーサ・ダスグプタが、スターン報告の倫理的前提を擁護しつつ世代間衡平の規範的基礎を精緻化した論文。ラムゼー公式の哲学的含意を正面から論じる。</span>
+          </li>
+          <li>
+            <strong>Nordhaus, W.D. (2017). "Revisiting the Social Cost of Carbon." <em>Proceedings of the National Academy of Sciences</em>, 114(7): 1518-1523.</strong>
+            <span class="ref-doi">DOI: 10.1073/pnas.1609244114 ／ DICE-2016Rに基づく炭素の社会的費用（SCC）の更新推計。政策適用のための最新一次資料。</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- QUESTION FOR NEXT -->
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">割引率の倫理的前提がAIのブラックボックスに隠れる問題から、デジタルツイン地球が政策時間そのものを先取りするとき熟議が失われる問題へ。AIが未来のシミュレーションを「実行」するとき、現在の意思決定者は何を失っているのかを次は問う。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第7話「未来を、シミュレーションが先取りするとき、現在は何を失うのか」</span>
+        <a class="ep-question-next-link" href="ep007.html" data-target-ep="007">公開を待つ →</a>
+      </div>
+    </section>
+  </article>
+</div>
+
+<!-- ep actions -->
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">メルマガで次話を受け取る</a>
+    <a class="ep-action-btn" href="mailto:info@emerging-future.org?subject=ep006感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+
+<!-- ep nav -->
+<nav class="ep-nav" aria-label="話ナビゲーション">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep005.html">
+      <div class="ep-nav-meta">PREV — ep005</div>
+      <div class="ep-nav-title">ep005 七世代律は、時間を制度にしていた</div>
+    </a>
+    <a class="ep-nav-link next" href="ep007.html">
+      <div class="ep-nav-meta">NEXT — ep007</div>
+      <div class="ep-nav-title">未来を、シミュレーションが先取りするとき、現在は何を失うのか</div>
+    </a>
+  </div>
+</nav>
+
+<!-- footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年5月時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合はinfo@emerging-future.orgまでご指摘ください。</p>
+    <div class="site-footer-bottom">
+      © 2026 NPO法人ミラツク / 問いの再帰 ─ AIの前で開きなおす2,800年
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function(){
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('pqar-theme');
+    if(saved) html.setAttribute('data-theme', saved);
+    btn && btn.addEventListener('click', function(){
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+
+  // read progress
+  (function(){
+    const bar = document.getElementById('progressBar');
+    if(!bar) return;
+    window.addEventListener('scroll', function(){
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (docHeight > 0 ? (scrollTop / docHeight * 100) : 0) + '%';
+    });
+  })();
+</script>
+</body>
+</html>

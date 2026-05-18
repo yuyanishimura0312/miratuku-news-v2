@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ケアロボットは欺くのか、媒介するのか ── 問いの再帰 ep050</title>
+  <meta name="description" content="Aimee van Wynsberghe『Healthcare Robots』(2015 Ashgate) と Amanda Sharkey の Care Robot Ethics 論争を軸に、欺瞞・尊厳・自律性のトリレンマを記述する。PARO から会話型AIエージェントへ。PQAR-2026 第50話。">
+  <meta property="og:title" content="ケアロボットは欺くのか、媒介するのか">
+  <meta property="og:description" content="van Wynsberghe と Sharkey のケアロボット倫理論争。欺瞞か媒介か——設計上の選択問題として。PQAR-2026 ep050">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep050.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* skip link */
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: var(--accent-warm); color: #fff;
+      padding: 8px 16px; z-index: 9999;
+      font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* read progress */
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+
+    /* site header */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .site-header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-secondary); font-size: 12px; padding: 4px 10px;
+      cursor: pointer; letter-spacing: 0.06em;
+    }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    /* hero */
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; letter-spacing: 0.32em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num {
+      font-family: 'Judson', serif; font-size: 72px; line-height: 1;
+      color: var(--accent-warm); margin-bottom: 24px;
+    }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title {
+      font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+      line-height: 1.6; margin-bottom: 12px; color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ep-hero-subtitle {
+      font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.7;
+    }
+    .ep-hero-en {
+      font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted);
+      margin-bottom: 32px; font-style: italic;
+    }
+    .ep-hero-lead {
+      font-family: var(--font-serif); font-size: 16px; line-height: 2.0;
+      border-left: 3px solid var(--accent-warm); padding-left: 20px;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-hero-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em;
+      display: flex; gap: 20px;
+    }
+
+    /* layout */
+    .ep-layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+      padding-top: 48px; padding-bottom: 80px;
+    }
+
+    /* toc sidebar */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part {
+      font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .toc-sidebar a {
+      display: block; font-size: 12px; color: var(--text-secondary);
+      text-decoration: none; padding: 4px 0; border-left: 2px solid transparent;
+      padding-left: 10px; transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current {
+      color: var(--accent-warm) !important;
+      border-color: var(--accent-warm) !important;
+    }
+
+    /* ep body */
+    .ep-body { min-width: 0; }
+    .ep-body p {
+      font-family: var(--font-serif); font-size: 17px; line-height: 2.1;
+      margin-bottom: 30px; text-indent: 1em; color: var(--text);
+      letter-spacing: 0.025em; font-feature-settings: "palt";
+    }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter {
+      font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700;
+      float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px;
+      color: var(--accent-warm);
+    }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+
+    /* appendix section */
+    .ep-appendix {
+      margin-top: 48px; padding: 28px 32px;
+      border: 1px solid var(--border); border-left: 4px solid var(--accent-warm);
+      background: var(--surface); border-radius: 0 4px 4px 0;
+    }
+    .ep-appendix-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-appendix p {
+      font-family: var(--font-serif); font-size: 15px; line-height: 2.0;
+      color: var(--text-secondary); margin-bottom: 0; text-indent: 1em;
+    }
+    .ep-appendix p:first-of-type { text-indent: 0; }
+
+    /* reading lens */
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; list-style: none;
+      gap: 12px;
+    }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+    }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+
+    /* signal list */
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num {
+      font-size: 10px; letter-spacing: 0.2em; font-weight: 700;
+      color: var(--accent-warm); white-space: nowrap; padding-top: 3px;
+    }
+    .signal-text {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    /* ref list */
+    .ref-list { list-style: none; }
+    .ref-list li {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary); padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* question */
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-question-q {
+      font-family: var(--font-serif); font-size: 16px; line-height: 1.9;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta {
+      font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted);
+      display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;
+    }
+    .ep-question-next-title {
+      font-family: var(--font-serif); font-size: 15px; color: var(--text);
+      display: block; margin-bottom: 12px;
+    }
+    .ep-question-next-link {
+      font-size: 13px; color: var(--accent-warm); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .ep-question-next-link:hover { text-decoration: underline; }
+
+    /* ep actions */
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .ep-action-btn {
+      padding: 10px 20px; font-size: 13px; border-radius: 4px;
+      text-decoration: none; letter-spacing: 0.06em; cursor: pointer;
+      border: 1px solid var(--border); color: var(--text-secondary); background: none;
+    }
+    .ep-action-btn.primary {
+      background: var(--accent-warm); border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+
+    /* ep nav */
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; gap: 16px;
+    }
+    .ep-nav-link {
+      text-decoration: none; padding: 16px 20px; border: 1px solid var(--border);
+      border-radius: 4px; flex: 1; max-width: 48%;
+      transition: border-color 0.15s;
+    }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+
+    /* footer */
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* mobile */
+    @media (max-width: 900px) {
+      .ep-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { position: static; }
+      .ep-hero-num { font-size: 52px; }
+      .ep-hero-title { font-size: 24px; }
+    }
+
+    /* print */
+    @media print {
+      .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; }
+      .ep-layout { grid-template-columns: 1fr; }
+      .ep-body p { font-size: 14px; line-height: 1.85; }
+    }
+
+    /* focus */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-warm); outline-offset: 3px;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<!-- site header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ep hero -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">PART 2 実装問い ・ Q6 ケアを学ぶ教育 ・ #050</div>
+    <div class="ep-hero-num">50.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">ケアロボットは欺くのか、媒介するのか</h1>
+    <p class="ep-hero-subtitle">── Care Robot Ethics と高齢化社会の実装課題</p>
+    <p class="ep-hero-en"><em>Does the Care Robot Deceive or Mediate?</em></p>
+    <p class="ep-hero-lead">
+      アザラシ型ロボットのPAROが認知症の高齢者の手の中で温かく動くとき、その人は生き物を抱いていると信じている——これは欺瞞か、それとも治療的な媒介か。この問いは倫理学の傍論ではない。設計者・介護者・家族・本人という四者が異なる答えを持ちながら、ひとつの病室に同居する問いだ。
+    </p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約5分</span>
+    </div>
+  </div>
+</section>
+
+<!-- ep layout -->
+<div class="ep-layout">
+  <!-- toc sidebar -->
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+    <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q1 未来世代の声</div>
+      <a href="ep002.html">ep002 未来は、まだ生まれていない者から……</a>
+      <a href="#" style="opacity:0.4">ep003〜013 (準備中)</a>
+      <a href="ep014.html">ep014 Q1 総括</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q2 先住民の知恵</div>
+      <a href="#" style="opacity:0.4">ep015〜026 (準備中)</a>
+      <a href="ep027.html">ep027 Q2 総括</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q3 どこにいるか</div>
+      <a href="ep028.html">ep028 場所はハウデノサウニーの語り……</a>
+      <a href="ep029.html">ep029 大地に埋め込まれた知識は……</a>
+      <a href="ep030.html">ep030 Yi-Fu Tuan が「場所愛」……</a>
+      <a href="ep031.html">ep031 非場所が広がるほど……</a>
+      <a href="ep032.html">ep032 場所の記憶は、女性が……</a>
+      <a href="ep033.html">ep033 移動は、故郷を発明する</a>
+      <a href="ep034.html">ep034 家は、身体の延長である</a>
+      <a href="ep035.html">ep035 空間は権力の刻印である</a>
+      <a href="ep036.html">ep036 場所は複数の時間帯に……</a>
+      <a href="ep037.html">ep037 場所の感触は、文化が……</a>
+      <a href="ep038.html">ep038 和辻哲郎の「風土」……</a>
+      <a href="ep039.html">ep039 触れることは、最初の……</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q6 ケアを学ぶ教育</div>
+      <a href="ep040.html">ep040 もうひとつの声は……</a>
+      <a href="ep041.html">ep041 ケアリングは教えられる</a>
+      <a href="ep042.html">ep042 ケアの政治は……</a>
+      <a href="ep043.html">ep043 依存は、人間条件の……</a>
+      <a href="ep044.html">ep044 感情労働は……</a>
+      <a href="ep045.html">ep045 ケアは、時間の……</a>
+      <a href="ep046.html">ep046 ケアの共同性……</a>
+      <a href="ep047.html">ep047 ケアは、正義と……</a>
+      <a href="ep048.html">ep048 テクノロジーは……</a>
+      <a href="ep049.html">ep049 コンパニオン AI が……</a>
+      <a href="ep050.html" class="toc-current">ep050 ケアロボットは欺くのか、媒介するのか</a>
+      <a href="ep051.html">ep051 ケアを学ぶ教育は……</a>
+      <a href="ep052.html">ep052 ケアの未来は……</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 3〜5 (準備中)</div>
+      <a href="#" style="opacity:0.4">ep053〜100</a>
+    </div>
+  </aside>
+
+  <!-- ep body -->
+  <article class="ep-body" id="articleBody">
+
+    <p>2015年、エイミー・ファン・ウィンスバーグは『Healthcare Robots: Ethics, Design and Implementation』（Ashgate）を刊行し、「ケアの倫理（ethics of care）」をロボット設計の中核に置くという挑戦的な問いを立てた。ファン・ウィンスバーグの出発点は、当時のロボット倫理が問いの立て方を誤っているという診断だった。「ロボットはケアできるか」という問いに代えて、「ロボットが介在するケアの実践において、何がケアの本質的要素として保存されなければならないか」と問い直す。ケアの本質要素を分解すると四つになる——他者の必要への注意（attentiveness）、責任の引き受け（responsibility）、能力の発揮（competence）、応答性（responsiveness）。これらは「感情」ではなく「実践の構造」であり、ロボットとの協働においても維持可能だとファン・ウィンスバーグは主張した（第2章・第4章）。</p>
+
+    <p>この楽観的命題に対して、アマンダ・シャーキーは同時期に体系的な批判を展開した。シャーキーとノール・シャーキーの共著論文「Granny and the robots: Ethical issues in robot care for the elderly」（Ethics and Information Technology, 2012, 14(1): 27–40）は、六つの倫理的懸念を整理した。①プライバシーの侵害、②孤独感の増大、③人間関係の低下、④尊厳の毀損、⑤欺瞞、⑥自律性の喪失である。シャーキーがとりわけ強調したのは⑤と⑥の関係だ。PAROのようなアザラシ型ロボットが認知症高齢者に「生き物である」という錯覚を引き起こすとき、それは「欺瞞（deception）」なのか、それとも「治療的介入」なのか。シャーキーの立場は慎重だ——同意能力が低下した人々に対して設計的に誤解を誘導することは、どれほど善意のものであれ、自律性の基盤を損なう（pp. 33–35）。</p>
+
+    <p>欺瞞論争の核心は「誰に向けられた欺瞞か」という問いにある。ファン・ウィンスバーグは区別を立てる。意図的に事実と異なる情報を提示する欺瞞（deceptive deception）と、社会的・情動的関与を引き出すために感情的手がかりを用いる欺瞞（evocative deception）は性質が異なる（van Wynsberghe, 2015, ch. 5）。PAROのケアは後者であり、それが「欺くもの」か「媒介するもの」かは、ケアの目的——対象者の情動的安定と生活の質の維持——に照らして評価されなければならない。欺瞞か媒介かを問うのではなく、「このロボット的関与はケアの実践構造を実現しているか」が問いの正しい立て方だとファン・ウィンスバーグは論じる。</p>
+
+    <p>この論争が2026年に向けて示す輪郭はいくつかある。第一に、欺瞞・尊厳・自律性はトリレンマを形成する——三つを同時に最大化することは不可能であり、設計上の優先順位付けが避けられない。第二に、HAL（ハイブリッド・アシスティブ・リム）系の機能補助ロボットとPARO系の情動的関与ロボットでは、トリレンマの構成が異なる。第三に、ピーター＝ポール・ヴェルベークが「道徳化するもの（moralizing things）」と呼んだ視点から見れば（Verbeek, 2011, <em>Moralizing Technology</em>, Univ. of Chicago Press）、ロボットは価値中立な道具でなく、行為者と価値観の分配をつくり直す技術的メディエーターだ。ケアロボットは欺くか媒介するか——その問いの前に、誰に向けてどの価値を保存しようとしているかを設計の優先度として問う必要がある。</p>
+
+    <!-- appendix -->
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 ── 第4変容期での再帰</div>
+      <p>ep049（Turkle / Vallor）は「関係的真正性（relational authenticity）」を哲学的争点として定式化した。ep050 はその問いをケアロボットの制度設計レベルに接続する。ファン・ウィンスバーグとシャーキーの論争は、2015–2016年時点でのケアロボット倫理の対立軸を最も精緻に記述したが、2026年時点では新たな文脈が加わっている。大規模言語モデルを搭載した会話型ケアエージェント（GPT-4o の音声インターフェース応用含む）は、PAROよりも高次の「情動的関与」を引き起こすことができ、シャーキーの六懸念のすべてを同時に内包しうる。CQ-DB <code>cq_sf05_0184</code>「AIは人間の孤独を解決するか悪化させるか」と <code>cq_sf02_031</code>「介護ロボット・AIの普及は人間的ケア関係を代替するか」の問いは、この文脈で解像度を増す。欺瞞か媒介かというトリレンマを、誰が・どの実践共同体の内部で・誰の同意のもとで決定するかという政治的問いへと展開することが、次話（ep051）への接続となる——ケアの教育はその決定能力を誰がどのように育てるかを問う。</p>
+    </div>
+
+    <!-- signal list -->
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL</span>
+        <span class="reading-lens-title">実証データ・政策文書との照合</span>
+        <span class="reading-lens-arrow">&#9662;</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">PAROの実証研究（Wada &amp; Shibata, 2007, <em>IEEE Transactions on Robotics</em>, 23(5): 972–980）は、4週間の介入で認知症高齢者グループの<strong>コルチゾール値が有意に低下</strong>し、行動問題の発生頻度が減少したことを報告した。シャーキーが指摘した「欺瞞による尊厳毀損」リスクに対し、測定可能な生理的・行動的改善が実証的に対置される構図がここで成立している——「欺瞞かもしれないが有効」という議論の構造が、ケアロボット倫理の最初の経験的分割線となった。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">van Wynsberghe（2015, <em>Healthcare Robots</em>, Ashgate, ch. 2）が提示した四要素モデル——注意・責任・能力・応答性——は、Tronto の五段階ケア論（Fisher &amp; Tronto, 1990; ep042 参照）からの操作的抽出である。この評価枠組みに照らすと、現行の会話型 AI エージェントは<strong>「注意」と「応答性」の自動化には高い適合性を示すが、「責任の引き受け」については制度的帰属が未解決</strong>のままである。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">Sharkey &amp; Sharkey（2012, <em>Ethics and Information Technology</em>, 14(1): 34）は<strong>「分岐した代理決定者問題」</strong>を提起した——同意能力の低下した利用者に対して、誰が・どの基準で・誰のために、ロボットとの情動的関与を「適切」と判断するか。EU AI Act（2024年施行）は高リスクAIシステムとして介護分野のAIを列挙しているが、代理決定者の倫理的制度化については加盟国国内法に委ねており、トリレンマの解像度は規制レベルでも未確定のままだ。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">日本の介護施設のロボット導入率は、2022年時点で調査対象施設の<strong>約58%</strong>（厚生労働省「介護ロボット等の普及に向けた取組について」2022年度版）に達している。HAL 系（機能補助）と PARO 系（情動的関与）が同一施設内に共存するこの現実は、欺瞞か媒介かというトリレンマを抽象的倫理論の問いとしてではなく、施設設計・職員教育・利用者同意のプロセス設計として解決する必要を示している。</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- key reference -->
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">&#9662;</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">
+          <li>
+            <strong>van Wynsberghe, A. (2015). <em>Healthcare Robots: Ethics, Design and Implementation.</em> Farnham: Ashgate. ISBN: 978-1409469018</strong>
+            <span class="ref-doi">本話の中心一次資料。ケアの倫理をロボット設計の評価枠組みとして適用したケアロボット倫理の基礎文献。四要素（注意・責任・能力・応答性）の分析的導入と欺瞞論への応答を詳論。</span>
+          </li>
+          <li>
+            <strong>Sharkey, A., &amp; Sharkey, N. (2012). "Granny and the robots: Ethical issues in robot care for the elderly." <em>Ethics and Information Technology</em>, 14(1): 27–40.</strong>
+            <span class="ref-doi">DOI: 10.1007/s10676-010-9234-6 ／ 本話の中心一次資料。六倫理的懸念（プライバシー・孤独・人間関係・尊厳・欺瞞・自律性）を整理し、ケアロボット批判的評価の準拠論文となった。</span>
+          </li>
+          <li>
+            <strong>Verbeek, P.-P. (2011). <em>Moralizing Technology: Understanding and Designing the Morality of Things.</em> Chicago: University of Chicago Press. ISBN: 978-0226852904</strong>
+            <span class="ref-doi">技術的メディエーションとモラル外部化の理論。ロボットが「道徳化するもの（moralizing things）」として価値と行為の配分を再構成する論点を提供。</span>
+          </li>
+          <li>
+            <strong>Sparrow, R. (2002). "The Turing Triage Test." <em>Ethics and Information Technology</em>, 4(4): 257–270.</strong>
+            <span class="ref-doi">DOI: 10.1023/A:1021386120522 ／ ロボット倫理における「欺瞞」問題の先行論文。ケアロボットが与える感情的関係への問いをTuring テスト的文脈で最初に定式化した。</span>
+          </li>
+          <li>
+            <strong>van Wynsberghe, A. (2013). "Designing robots for care: Care centered value-sensitive design." <em>Science and Engineering Ethics</em>, 19(2): 407–433.</strong>
+            <span class="ref-doi">DOI: 10.1007/s11948-011-9343-6 ／ 2015年著作の理論的前駆論文。価値感受的設計（value-sensitive design）をケアに適用する方法論を展開。</span>
+          </li>
+          <li>
+            <strong>Wada, K., &amp; Shibata, T. (2007). "Living with seal robots: Its sociopsychological and physiological influences on the elderly at a care house." <em>IEEE Transactions on Robotics</em>, 23(5): 972–980.</strong>
+            <span class="ref-doi">DOI: 10.1109/TRO.2007.906261 ／ PAROに関する実証的先行研究。認知症高齢者への社会心理的・生理的効果（コルチゾール・心拍・社会的行動の変化）を測定。欺瞞論争に対する実証的反証として機能。</span>
+          </li>
+          <li>
+            <strong>Nussbaum, M. C. (2006). <em>Frontiers of Justice: Disability, Nationality, Species Membership.</em> Cambridge, MA: Belknap Press/Harvard University Press. ISBN: 978-0674024106</strong>
+            <span class="ref-doi">ケイパビリティ・アプローチからの尊厳論。依存と自律性の哲学的基礎として、ケアロボット倫理における「尊厳の毀損」問いの準拠。ep043 との接続。</span>
+          </li>
+          <li>
+            <strong>Floridi, L., et al. (2018). "An ethical framework for a good AI society: Opportunities, risks, principles, and recommendations." <em>Minds and Machines</em>, 28(4): 689–707.</strong>
+            <span class="ref-doi">DOI: 10.1007/s11023-018-9482-5 ／ AI倫理の制度的フレームワーク論。ケアロボット設計が遭遇する欺瞞・自律性トリレンマをAI倫理の規範的枠組みに接続するための参照文献。</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- question for next -->
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">欺瞞か媒介かというトリレンマを誰が・誰の同意のもとで決定するかは、決定能力を育てる教育の問いに直結する。ケアロボットの設計倫理を教えることは、単なる技術倫理の一分野ではなく、依存・尊厳・自律性という人間条件の哲学を教室で問い直すことを意味する——ならば、その教育を行う「教師」とは何者か。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第51話「ケアを学ぶ教育は、教師の概念ごと書き換える」</span>
+        <a class="ep-question-next-link" href="ep051.html" data-target-ep="051">公開を待つ →</a>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<!-- ep actions -->
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">次話をメルマガで受け取る</a>
+    <a class="ep-action-btn" href="mailto:miratuku.esse@gmail.com?subject=ep050感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+
+<!-- ep nav -->
+<nav class="ep-nav" aria-label="前後のエピソード">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep049.html">
+      <div class="ep-nav-meta">PREV — ep049</div>
+      <div class="ep-nav-title">コンパニオン AI が偽の応答を返すとき、何が傷つくのか</div>
+    </a>
+    <a class="ep-nav-link next" href="ep051.html">
+      <div class="ep-nav-meta">NEXT — ep051</div>
+      <div class="ep-nav-title">ケアを学ぶ教育は、教師の概念ごと書き換える</div>
+    </a>
+  </div>
+</nav>
+
+<!-- footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。健康・医療・介護に関わる判断は、必ず専門家にご相談ください。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合はメールからご指摘ください。</p>
+    <p class="site-footer-bottom">© 2026 NPO法人ミラツク ／ 連載「問いの再帰 ─ AIの前で開きなおす2,800年」</p>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function() {
+    var saved = localStorage.getItem('pqar-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeBtn').addEventListener('click', function() {
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+
+  // read progress
+  window.addEventListener('scroll', function() {
+    var docEl = document.documentElement;
+    var scrollTop = docEl.scrollTop || document.body.scrollTop;
+    var scrollHeight = docEl.scrollHeight - docEl.clientHeight;
+    var progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    document.getElementById('progressBar').style.width = progress + '%';
+  });
+</script>
+</body>
+</html>

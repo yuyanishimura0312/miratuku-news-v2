@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>風景は、共に動く線として読まれるべきだった ── 問いの再帰 ep036</title>
+  <meta name="description" content="Tim Ingold の wayfaring 論とハウデノサウニー連邦の歩く知を並置し、「知識は移動する身体が地面と交わす対話の堆積」という命題を導く。VLA 系ロボット学習が輸送の線の模倣に留まることを示し、Q3「どこにいるか」の問いをフィジカル AI の核心へと接合する。PQAR-2026 第36話。">
+  <meta property="og:title" content="風景は、共に動く線として読まれるべきだった">
+  <meta property="og:description" content="Tim Ingold のライン・オブ・ライフと先住民の歩く知。PQAR-2026 ep036">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep036.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* skip link */
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: var(--accent-warm); color: #fff;
+      padding: 8px 16px; z-index: 9999;
+      font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* read progress */
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+
+    /* site header */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .site-header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-secondary); font-size: 12px; padding: 4px 10px;
+      cursor: pointer; letter-spacing: 0.06em;
+    }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    /* hero */
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; letter-spacing: 0.32em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num {
+      font-family: 'Judson', serif; font-size: 72px; line-height: 1;
+      color: var(--accent-warm); margin-bottom: 24px;
+    }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title {
+      font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+      line-height: 1.6; margin-bottom: 12px; color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ep-hero-subtitle {
+      font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.7;
+    }
+    .ep-hero-en {
+      font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted);
+      margin-bottom: 32px; font-style: italic;
+    }
+    .ep-hero-lead {
+      font-family: var(--font-serif); font-size: 16px; line-height: 2.0;
+      border-left: 3px solid var(--accent-warm); padding-left: 20px;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-hero-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em;
+      display: flex; gap: 20px;
+    }
+
+    /* layout */
+    .ep-layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+      padding-top: 48px; padding-bottom: 80px;
+    }
+
+    /* toc sidebar */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part {
+      font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .toc-sidebar a {
+      display: block; font-size: 12px; color: var(--text-secondary);
+      text-decoration: none; padding: 4px 0; border-left: 2px solid transparent;
+      padding-left: 10px; transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current {
+      color: var(--accent-warm) !important;
+      border-color: var(--accent-warm) !important;
+    }
+
+    /* ep body */
+    .ep-body { min-width: 0; }
+    .ep-body p {
+      font-family: var(--font-serif); font-size: 17px; line-height: 2.1;
+      margin-bottom: 30px; text-indent: 1em; color: var(--text);
+      letter-spacing: 0.025em; font-feature-settings: "palt";
+    }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter {
+      font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700;
+      float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px;
+      color: var(--accent-warm);
+    }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+
+    /* appendix section */
+    .ep-appendix {
+      margin-top: 48px; padding: 28px 32px;
+      border: 1px solid var(--border); border-left: 4px solid var(--accent-warm);
+      background: var(--surface); border-radius: 0 4px 4px 0;
+    }
+    .ep-appendix-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-appendix p {
+      font-family: var(--font-serif); font-size: 15px; line-height: 2.0;
+      color: var(--text-secondary); margin-bottom: 0; text-indent: 1em;
+    }
+
+    /* reading lens */
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; list-style: none;
+      gap: 12px;
+    }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+    }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+
+    /* signal list */
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num {
+      font-size: 10px; letter-spacing: 0.2em; font-weight: 700;
+      color: var(--accent-warm); white-space: nowrap; padding-top: 3px;
+    }
+    .signal-text {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    /* ref list */
+    .ref-list { list-style: none; }
+    .ref-list li {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary); padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* question */
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-question-q {
+      font-family: var(--font-serif); font-size: 16px; line-height: 1.9;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta {
+      font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted);
+      display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;
+    }
+    .ep-question-next-title {
+      font-family: var(--font-serif); font-size: 15px; color: var(--text);
+      display: block; margin-bottom: 12px;
+    }
+    .ep-question-next-link {
+      font-size: 13px; color: var(--accent-warm); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .ep-question-next-link:hover { text-decoration: underline; }
+
+    /* ep actions */
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .ep-action-btn {
+      padding: 10px 20px; font-size: 13px; border-radius: 4px;
+      text-decoration: none; letter-spacing: 0.06em; cursor: pointer;
+      border: 1px solid var(--border); color: var(--text-secondary); background: none;
+    }
+    .ep-action-btn.primary {
+      background: var(--accent-warm); border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+
+    /* ep nav */
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; gap: 16px;
+    }
+    .ep-nav-link {
+      text-decoration: none; padding: 16px 20px; border: 1px solid var(--border);
+      border-radius: 4px; flex: 1; max-width: 48%;
+      transition: border-color 0.15s;
+    }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+
+    /* footer */
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* mobile */
+    @media (max-width: 900px) {
+      .ep-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { position: static; }
+      .ep-hero-num { font-size: 52px; }
+      .ep-hero-title { font-size: 24px; }
+    }
+
+    /* print */
+    @media print {
+      .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; }
+      .ep-layout { grid-template-columns: 1fr; }
+      .ep-body p { font-size: 14px; line-height: 1.85; }
+    }
+
+    /* focus */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-warm); outline-offset: 3px;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<!-- site header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ep hero -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">PART 2 実装問い ・ Q3 場所の他者 ・ #036</div>
+    <div class="ep-hero-num">36.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">風景は、共に動く線として読まれるべきだった</h1>
+    <p class="ep-hero-subtitle">── Tim Ingold のライン・オブ・ライフと先住民の歩く知</p>
+    <p class="ep-hero-en"><em>The Landscape Should Have Been Read as Lines We Move Together</em></p>
+    <p class="ep-hero-lead">
+      地図は場所の要約であり、歩くことは場所の生成である。ティム・インゴルドが「輸送の線（transport line）」と「旅の線（wayfaring line）」を対置したとき、彼は認識論の問いを足裏の問いとして再設定した。ハウデノサウニー連邦の land-based pedagogy がまったく異なる回路から到達した命題——「知識は、移動する身体が地面と交わす対話の堆積である」——と重なる。VLA ロボットが学ぶ「軌跡データ」は、輸送の線の精密なコピーだ。wayfaring には、まだ届いていない。
+    </p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約6分</span>
+    </div>
+  </div>
+</section>
+
+<!-- ep layout -->
+<div class="ep-layout">
+  <!-- toc sidebar -->
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+    <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q1 未来世代の声</div>
+      <a href="ep002.html">ep002 未来は、まだ生まれていない者から……</a>
+      <a href="ep014.html">ep014 Q1 総括: 不在の声を聞く13の方法</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q2 先住民の知恵</div>
+      <a href="ep015.html">ep015 比較は、優劣の物差しから始まり……</a>
+      <a href="ep027.html">ep027 先住民の知恵は、過去の遺物ではない [Q2 総括]</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q3 どこにいるか</div>
+      <a href="ep028.html">ep028 場所は、私が立つ前から私を形づくっていた</a>
+      <a href="ep029.html">ep029 風土は、思考の容器ではなく……</a>
+      <a href="ep030.html">ep030 場所には、愛着という名の認知がある</a>
+      <a href="ep031.html">ep031 非場所が広がるほど、場所への渇きは深くなる</a>
+      <a href="ep032.html">ep032 場所は権力の沈黙した文法である</a>
+      <a href="ep033.html">ep033 身体は世界に開かれた問いの装置である</a>
+      <a href="ep034.html">ep034 物質は静かな主体として、私たちを動かしていた</a>
+      <a href="ep035.html">ep035 アクターは人間に限らない、と気づいた地点から</a>
+      <a href="ep036.html" class="toc-current">● ep036 風景は、共に動く線として読まれるべきだった</a>
+      <a href="#" style="opacity:0.4">ep037〜039 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q6 ケアの教育</div>
+      <a href="#" style="opacity:0.4">ep040〜052 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 3〜5 Q4・Q7・Q8</div>
+      <a href="#" style="opacity:0.4">ep053〜100 (準備中)</a>
+    </div>
+  </aside>
+
+  <!-- ep body -->
+  <article class="ep-body" id="articleBody">
+    <p>ある地図を広げてみる。縮尺は正確で、等高線は地形を忠実に記録し、道路は細い線で示されている。ところが、その地図で同じ道を10年歩き続けてきた人の「知っている」感覚は、どこにも収まらない。地図が「場所の点と点の要約」であるのに対し、歩くという行為は「点の間を満たす経験の線」だ。ティム・インゴルドがアバディーン大学から提出し続けてきた問いはここから始まる——地図は世界を描くか、それとも世界を隠すか。後者だとすれば、地図化できない何かとはいったい何なのか。</p>
+
+    <p>インゴルドは2000年に『知覚の環境論（The Perception of the Environment）』をルートリッジから刊行し、生態学的知覚論と人類学を接合した。彼が批判したのは「世界はあらかじめ完成した物体の集合として存在し、人間はそれを認知する」という模型的認識論である。インゴルドにとって人間は、世界の「中を移動する存在」ではなく、世界と「ともに生成する存在」だ。2007年刊行の『ラインズ（Lines）』では、<strong>点と点を結ぶ輸送の線（transport line）</strong>と<strong>歩きながら編まれる旅の線（wayfaring line）</strong>を対置した。輸送は始点と終点を前提するが、wayfaring は「行きながら場所を生む」。</p>
+
+    <p>この人類学的転回を、ハウデノサウニー（Haudenosaunee、イロコイ連邦）の land-based pedagogy は別の回路から先取りしていた。六民族——モホーク・オノンダガ・セネカ・カユーガ・オナイダ・タスカローラ——は、土地に関する知識を「場所について語ること」ではなく「場所とともに動くこと」として継承してきた。コヴァックが2009年に著した『Indigenous Methodologies』（トロント大学出版会）はこうした実践を「経験的に埋め込まれた（land-grounded）方法論」として体系化した。バティステが1998年に論じたように、先住民の認識論は土地・身体・知識を切り離せない三角形として構成する——その三角形はどこか一つの頂点だけを切り取ることを拒む。</p>
+
+    <p>インゴルドの wayfaring とハウデノサウニーの歩く知は、驚くほど同一の命題に収束する。「<strong>知識は、移動する身体が地面と交わす対話の堆積である</strong>」。ところが2024年以降の VLA（Vision-Language-Action）系ロボットが学ぼうとしている「軌跡データ」は、wayfaring と根本的に異なる。RT-2 や π0 はデモンストレーションの軌跡を最適化するが、その軌跡に「なぜここで立ち止まったか」の文脈はない。輸送の線を圧縮しても旅の線には到達しない。インゴルドが2011年の『Being Alive』で示した定義——生きることとは環境との継続的な応答である——は、AI が現在最も苦手とするものの正確な記述になっている。</p>
+
+    <!-- appendix -->
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 — 第4変容期での再帰</div>
+      <p>Ingold の wayfaring 概念が人類学の周辺論文として扱われていた2000年代に、誰もロボット軌跡学習の哲学的問題として読み返すことはなかった。2024年以降のフィジカル AI 競争がその問いを前景化させた——これが「問いの再帰」の典型形である。PHAI-DB の5ストリーム合流では、VLA モデルが imitation learning と self-supervised learning で環境との対話を学ぼうとしているが、いずれも身体が地面に記憶を刻む堆積を持たない。ハウデノサウニーの land pedagogy が問うのはこの欠落の名前だ。「知ることは、場所と共に生成することだ」——この命題は、AI が何を学んでいないかを正確に示す。次話（ep037）では Moreton-Robinson の土地・身体・主権の三位一体論へ深める。</p>
+    </div>
+
+    <!-- SIGNAL LIST -->
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL LIST</span>
+        <span class="reading-lens-title">本話のシグナル</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">インゴルドが『Lines』(2007, Routledge) で提示した分類によれば、旅人の歩みが生む wayfaring line と乗り物が引く transport line は<strong>目的論的に逆向き</strong>である。輸送は始点と終点を事前に設定し最短経路を実現するが、wayfaring は「出発しながら目的地を生む」。RT-2（Google DeepMind, 2023, <em>arXiv</em>: 2307.15818）に代表される VLA 系ロボット学習は、デモンストレーション軌跡の模倣に基づく——これは transport line の精密なコピーであって、wayfaring の学習ではない（CQ-DB <code>cq_sf02_215</code>）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">バティステが1998年に記述したハウデノサウニーの land-based pedagogy は、<strong>知識を場所から切り離して転送できるという前提を原理的に否定</strong>する（Battiste, 1998, <em>Canadian Journal of Native Education</em>, 22(1): 16–27）。この立場は、LLM が「テキストから文脈を抽出し、どこでも再利用できる汎用知識を形成する」という設計思想と正面から対立する。UNESCO の先住民知識保護指針（2017）は、この文脈依存性を「知識の地霊性（geospirituality）」として概念化している（CQ-DB <code>cq_sf06_044</code>）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">インゴルドは2000年の『The Perception of the Environment』(Routledge) で、建築家の「building」と居住者の「dwelling」を対置した。Building は完成した空間を外部から設計するが、dwelling は空間を内部から継続的に生成する。この対置は、<strong>AI が「最適解を学習して出力すること」と「生きながら場所を編むこと」の差</strong>を概念化する語彙を提供する。現代のロボティクスは building の精度を上げているが、dwelling の問いには答えていない（PHAI-DB <code>phai_cog_embodied</code>）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">コヴァックが記録した先住民方法論のうち、ハウデノサウニー系譜の特徴は「<strong>口述が場所と同期している</strong>」ことにある（Kovach, 2009, Univ Toronto Press）。語りは特定の地形・季節・身体状態と連動してのみ完全に活性化する。LLM の文章生成がこの「場所-身体-語り」の三位一体を持たないことは、AI 倫理では「文脈の問題」として扱われるが、wayfaring の観点からは「根本的な存在様式の違い」として問われる必要がある（CQ-DB <code>cq_sf06_096</code>）。</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- KEY REFERENCE -->
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">
+          <li>
+            <strong>Ingold, T. (2000). <em>The Perception of the Environment: Essays on Livelihood, Dwelling and Skill.</em> London: Routledge.</strong>
+            <span class="ref-doi">ISBN: 978-0415228329 ／ wayfaring 概念の理論的基盤。生態学的知覚論と人類学の統合論文集。dwelling と building の区別が先住民知識論に接続する核心一次資料。</span>
+          </li>
+          <li>
+            <strong>Ingold, T. (2007). <em>Lines: A Brief History.</em> London: Routledge.</strong>
+            <span class="ref-doi">ISBN: 978-0415424272 ／ wayfaring line と transport line の対置を提示した著作。歩き・書き・歌うことを線の人類学として統一した一次資料。</span>
+          </li>
+          <li>
+            <strong>Ingold, T. (2011). <em>Being Alive: Essays on Movement, Knowledge and Description.</em> London: Routledge.</strong>
+            <span class="ref-doi">ISBN: 978-0415576840 ／ 生きることを「環境との継続的応答」として定義し直した論文集。AI の身体性欠如を哲学的に測る基準線。</span>
+          </li>
+          <li>
+            <strong>Kovach, M. (2009). <em>Indigenous Methodologies: Characteristics, Conversations, and Contexts.</em> Toronto: University of Toronto Press.</strong>
+            <span class="ref-doi">ISBN: 978-0802096104 ／ 先住民の land-grounded 方法論の体系的な学術的定式化。ハウデノサウニーを含む先住民認識論の主要テキスト。</span>
+          </li>
+          <li>
+            <strong>Battiste, M. (1998). "Enabling the Autumn Seed: Toward a Decolonized Approach to Aboriginal Knowledge, Language, and Education." <em>Canadian Journal of Native Education</em>, 22(1): 16–27.</strong>
+            <span class="ref-doi">ハウデノサウニーを含む先住民の土地・身体・知識の三角形を教育論として整理した先駆的論文。land-based pedagogy の基礎文献。</span>
+          </li>
+          <li>
+            <strong>Gibson, J. J. (1979). <em>The Ecological Approach to Visual Perception.</em> Boston: Houghton Mifflin.</strong>
+            <span class="ref-doi">Ingold の wayfaring 論の理論的先駆。アフォーダンス概念が身体-環境の共生成を記述する起点となる古典的一次資料。</span>
+          </li>
+          <li>
+            <strong>Tuhiwai Smith, L. (1999). <em>Decolonizing Methodologies: Research and Indigenous Peoples.</em> London: Zed Books.</strong>
+            <span class="ref-doi">ISBN: 978-1856496247 ／ 先住民研究方法論の正本。Kovach・Battiste と同系譜で、土地に根ざした知識実践の脱植民地化論を展開する。</span>
+          </li>
+          <li>
+            <strong>Noe, A. (2004). <em>Action in Perception.</em> Cambridge: MIT Press.</strong>
+            <span class="ref-doi">ISBN: 978-0262140881 ／ 知覚を行為として捉えた哲学的神経科学の一次資料。Ingold の dwelling 論と enactive cognition の哲学的基盤を接合する。</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- QUESTION FOR NEXT -->
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">wayfaring は「場所と共に歩む知」であり、ハウデノサウニーの歩く知はその思想的対応物だった。次話では、Aileen Moreton-Robinson が提示する土地・身体・主権の三位一体へと問いが深まる——「どこにいるか」は、単なる認識の問いではなく、主権と存在の問いであるとはどういうことか。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第37話「土地・身体・主権は、ほどけない一つの結び目だった」</span>
+        <a class="ep-question-next-link" href="ep037.html" data-target-ep="037">公開を待つ →</a>
+      </div>
+    </section>
+  </article>
+</div>
+
+<!-- ep actions -->
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">メルマガで次話を受け取る</a>
+    <a class="ep-action-btn" href="mailto:info@emerging-future.org?subject=ep036感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+
+<!-- ep nav -->
+<nav class="ep-nav" aria-label="話ナビゲーション">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep035.html">
+      <div class="ep-nav-meta">PREV — ep035</div>
+      <div class="ep-nav-title">アクターは人間に限らない、と気づいた地点から</div>
+    </a>
+    <a class="ep-nav-link next disabled" href="#">
+      <div class="ep-nav-meta">NEXT — ep037</div>
+      <div class="ep-nav-title">土地・身体・主権は、ほどけない一つの結び目だった</div>
+    </a>
+  </div>
+</nav>
+
+<!-- footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年5月時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合は info@emerging-future.org までご指摘ください。</p>
+    <div class="site-footer-bottom">
+      © 2026 NPO法人ミラツク / 問いの再帰 ─ AIの前で開きなおす2,800年
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function(){
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('pqar-theme');
+    if(saved) html.setAttribute('data-theme', saved);
+    btn && btn.addEventListener('click', function(){
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+
+  // read progress
+  (function(){
+    const bar = document.getElementById('progressBar');
+    if(!bar) return;
+    window.addEventListener('scroll', function(){
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (docHeight > 0 ? (scrollTop / docHeight * 100) : 0) + '%';
+    });
+  })();
+</script>
+</body>
+</html>

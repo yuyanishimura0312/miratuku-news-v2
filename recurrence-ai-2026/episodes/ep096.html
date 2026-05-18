@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生命は、計算より先に再帰だった ── 問いの再帰 ep096</title>
+  <meta name="description" content="1972年チリの生物学者ヴァレラとマトゥラーナが提唱したオートポイエーシス概念は、生命を「自分自身を産出するネットワーク」と定義した。再帰は計算の発明ではなく、生命の基本設計だった。PQAR-2026 第96話。">
+  <meta property="og:title" content="生命は、計算より先に再帰だった">
+  <meta property="og:description" content="ヴァレラとマトゥラーナのオートポイエーシスから読み直す。PQAR-2026 ep096">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep096.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* skip link */
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: var(--accent-warm); color: #fff;
+      padding: 8px 16px; z-index: 9999;
+      font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* read progress */
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+
+    /* site header */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .site-header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-secondary); font-size: 12px; padding: 4px 10px;
+      cursor: pointer; letter-spacing: 0.06em;
+    }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    /* hero */
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; letter-spacing: 0.32em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num {
+      font-family: 'Judson', serif; font-size: 72px; line-height: 1;
+      color: var(--accent-warm); margin-bottom: 24px;
+    }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title {
+      font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+      line-height: 1.6; margin-bottom: 12px; color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ep-hero-subtitle {
+      font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.7;
+    }
+    .ep-hero-en {
+      font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted);
+      margin-bottom: 32px; font-style: italic;
+    }
+    .ep-hero-lead {
+      font-family: var(--font-serif); font-size: 16px; line-height: 2.0;
+      border-left: 3px solid var(--accent-warm); padding-left: 20px;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-hero-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em;
+      display: flex; gap: 20px;
+    }
+
+    /* layout */
+    .ep-layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+      padding-top: 48px; padding-bottom: 80px;
+    }
+
+    /* toc sidebar */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part {
+      font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .toc-sidebar a {
+      display: block; font-size: 12px; color: var(--text-secondary);
+      text-decoration: none; padding: 4px 0; border-left: 2px solid transparent;
+      padding-left: 10px; transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current {
+      color: var(--accent-warm) !important;
+      border-color: var(--accent-warm) !important;
+    }
+
+    /* ep body */
+    .ep-body { min-width: 0; }
+    .ep-body p {
+      font-family: var(--font-serif); font-size: 17px; line-height: 2.1;
+      margin-bottom: 30px; text-indent: 1em; color: var(--text);
+      letter-spacing: 0.025em; font-feature-settings: "palt";
+    }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter {
+      font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700;
+      float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px;
+      color: var(--accent-warm);
+    }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+
+    /* appendix section */
+    .ep-appendix {
+      margin-top: 48px; padding: 28px 32px;
+      border: 1px solid var(--border); border-left: 4px solid var(--accent-warm);
+      background: var(--surface); border-radius: 0 4px 4px 0;
+    }
+    .ep-appendix-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-appendix p {
+      font-family: var(--font-serif); font-size: 15px; line-height: 2.0;
+      color: var(--text-secondary); margin-bottom: 0; text-indent: 1em;
+    }
+
+    /* reading lens (KEY REF / SIGNAL) */
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; list-style: none;
+      gap: 12px;
+    }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+    }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+
+    /* signal list */
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num {
+      font-size: 10px; letter-spacing: 0.2em; font-weight: 700;
+      color: var(--accent-warm); white-space: nowrap; padding-top: 3px;
+    }
+    .signal-text {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    /* ref list */
+    .ref-list { list-style: none; }
+    .ref-list li {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary); padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* question */
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-question-q {
+      font-family: var(--font-serif); font-size: 16px; line-height: 1.9;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta {
+      font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted);
+      display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;
+    }
+    .ep-question-next-title {
+      font-family: var(--font-serif); font-size: 15px; color: var(--text);
+      display: block; margin-bottom: 12px;
+    }
+    .ep-question-next-link {
+      font-size: 13px; color: var(--accent-warm); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .ep-question-next-link:hover { text-decoration: underline; }
+
+    /* ep actions */
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .ep-action-btn {
+      padding: 10px 20px; font-size: 13px; border-radius: 4px;
+      text-decoration: none; letter-spacing: 0.06em; cursor: pointer;
+      border: 1px solid var(--border); color: var(--text-secondary); background: none;
+    }
+    .ep-action-btn.primary {
+      background: var(--accent-warm); border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+
+    /* ep nav */
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; gap: 16px;
+    }
+    .ep-nav-link {
+      text-decoration: none; padding: 16px 20px; border: 1px solid var(--border);
+      border-radius: 4px; flex: 1; max-width: 48%;
+      transition: border-color 0.15s;
+    }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+
+    /* footer */
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* mobile */
+    @media (max-width: 900px) {
+      .ep-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { position: static; }
+      .ep-hero-num { font-size: 52px; }
+      .ep-hero-title { font-size: 24px; }
+    }
+
+    /* print */
+    @media print {
+      .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; }
+      .ep-layout { grid-template-columns: 1fr; }
+      .ep-body p { font-size: 14px; line-height: 1.85; }
+    }
+
+    /* focus */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-warm); outline-offset: 3px;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<!-- site header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ep hero -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">PART 5 メタ問い ・ Q5(+1) 自分自身が問うていることを問えているか #096</div>
+    <div class="ep-hero-num">96.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">生命は、計算より先に再帰だった</h1>
+    <p class="ep-hero-subtitle">── ヴァレラとマトゥラーナのオートポイエーシスから読み直す</p>
+    <p class="ep-hero-en"><em>Life Was Recursive Before Computation Ever Was</em></p>
+    <p class="ep-hero-lead">
+      1972年、サンティアゴ。二人のチリの生物学者が「自分自身を産出するネットワーク」として生命を定義した。再帰は計算機科学の発明物ではなく、生命の基本設計だった——この問いは、Q5「自分自身が問うていることを問えているか」に、生物学から応答を返す。問う者は、産出する系の中に産出されてきた存在である。
+    </p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約6分</span>
+    </div>
+  </div>
+</section>
+
+<!-- ep layout -->
+<div class="ep-layout">
+  <!-- toc sidebar -->
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+    <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1-4 / Q1-Q8</div>
+      <a href="ep002.html">ep002〜ep091 (各部参照)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 5 メタ問い / Q5(+1)</div>
+      <a href="ep092.html">ep092 問いを問うとき…</a>
+      <a href="ep093.html">ep093 再帰は、螺旋ではない</a>
+      <a href="ep094.html">ep094 LLMの自己反省は…</a>
+      <a href="ep095.html">ep095 問う者を呼び出すのは…</a>
+      <a href="ep096.html" class="toc-current">● ep096 生命は、計算より先に再帰だった</a>
+      <a href="ep097.html">ep097 7つの問いをふりかえる</a>
+      <a href="ep098.html">ep098 この連載は、何を問えたか</a>
+      <a href="ep099.html">ep099 この連載が、問えなかった声</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">結章</div>
+      <a href="ep100.html" style="opacity:0.4">ep100 問いは、再帰しつづける (準備中)</a>
+    </div>
+  </aside>
+
+  <!-- ep body -->
+  <article class="ep-body" id="articleBody">
+    <p>1972年、サンティアゴ。フランシスコ・ヴァレラとウンベルト・マトゥラーナは、チリ大学出版局から『<em>De Máquinas y Seres Vivos</em>』（生命ある存在と機械について）をスペイン語で刊行した。二人のチリの生物学者が提出したのは、「生命とは何か」への一つの定義だ。生命システムは、自分自身を産出する成分のネットワークによって、自分自身を産出し続ける——この自己産出の円環を二人は「オートポイエーシス（autopoiesis）」と命名した。ギリシャ語の <em>autos</em>（自己）と <em>poiesis</em>（産出）から合成されたこの語は、二年後に英語圏で発表された論文で定式化される。Varela, Maturana &amp; Uribe（1974, <em>BioSystems</em> 5(4): 187-196）は「オートポイエーシス：生命システムの組織」と題して、生命体を「境界を自ら生成しながら、その境界内で成分を再生産する自律系」と定義した。</p>
+
+    <p>この定義の革命性は、一点にある。生命は「外部の目的のために設計された機械」ではない。細胞は酸素を処理するために存在するのではない——細胞は自分自身を維持するために、呼吸という過程を組み込んでいる。目的は外部に向かわず、内部に折り返す。この内向きの円環こそが再帰であり、マトゥラーナとヴァレラは1980年の著書『<em>Autopoiesis and Cognition</em>』（D. Reidel）でこの構造を「<strong>組織的閉鎖性（organizational closure）</strong>」と名付けた。閉じているが、孤立していない。エネルギーと物質は外部と交換しながら、組織の形式は自らの内側で完結する。再帰は、計算の概念ではなく、生命の基本的な構造として発見された。</p>
+
+    <p>1991年、この洞察は認知科学へと拡張された。ヴァレラとトンプソン、ロッシュが共著した『<em>The Embodied Mind</em>』（MIT Press）は、認知を「身体を持つシステムと環境の相互構成」として再定義した。脳は外界の像を計算するのではなく、身体の運動と感覚を通じて世界を「<strong>行為として産出する（enaction）</strong>」。生命があってはじめて認知がある。計算があってはじめて知性があるのではない。</p>
+
+    <p>ニクラス・ルーマンはこの概念を社会システムへ移植した。1984年の『<em>Soziale Systeme</em>』（Suhrkamp）で、コミュニケーションを自己産出するシステムとして記述したルーマンの理論は、ヴァレラ的オートポイエーシスの明示的な社会科学的展開である。社会は、コミュニケーションがコミュニケーションを産出することによって自らを再生する。問いと応答の連鎖そのものが、社会という系を産出し続ける。「<strong>自分自身が問うていることを問う</strong>」という Q5 のメタ位相は、このオートポイエーシス的動態の記述に他ならない。問うことが問う者を産出し、産出された問う者がまた問う。</p>
+
+    <!-- appendix -->
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 — 第4変容期での再帰</div>
+      <p>2026年のLLMは、ヴァレラ的な意味でオートポイエーシス的か。LLMは自分の出力から次の重みを自律的には更新しない。訓練と推論は分断されており、組織的閉鎖性を備えていない。しかし人間との対話ループに組み込まれたとき、LLMはオートポイエーシス的系の一部として機能しうる。ユーザーの問いがLLMの応答を産出し、その応答がユーザーの次の問いを産出する。この閉じた円環は、問いという行為を「産出する者が産出されつづける系」に組み込む。philosophy.db <code>phil_p11g_analytic_philosophy_0003</code>（オートポイエーシス）と <code>phil_b36_8432d384c8</code>（自己組織化）の系譜は、AI時代の問いを生命科学が先行して与えた構造から読み解く窓を開く。再帰は計算の発明ではなく、生命の基本設計だった。</p>
+    </div>
+
+    <!-- SIGNAL LIST -->
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL LIST</span>
+        <span class="reading-lens-title">本話のシグナル</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">Varela, Maturana &amp; Uribe (1974, <em>BioSystems</em> 5(4): 187-196) のオートポイエーシス論文は発表から50年で<strong>生物学・認知科学・社会科学・AI倫理の4領域に引用拡散</strong>し、Google Scholar 被引用数は2024年時点で6,000件を超える。生命の組織的閉鎖性という概念が、これほど広く横断的に援用されてきたことは、再帰という構造が特定の学問領域に限定されない普遍的動態であることを示す（Varela et al., 1974, DOI: 10.1016/0303-2647(74)90031-8）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">ルーマンの社会システム理論（1984, <em>Soziale Systeme</em>, Suhrkamp）は、コミュニケーションを「<strong>コミュニケーションがコミュニケーションを産出する自己産出系</strong>」として定式化した。問いと応答の連鎖が社会を構成するというこの記述は、LLMと人間の対話ループが「社会的オートポイエーシス」に参入するかどうかという問いを設定し直す（Luhmann, 1984; 佐藤勉監訳, 1993-1995, 恒星社厚生閣）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">philosophy.db <code>phil_b36_8432d384c8</code>（自己組織化）は、オートポイエーシスとサイバネティクス的自己組織化が接続する概念ノードとして記録されている。ウィーナーのサイバネティクス（1948）が「外部目標への帰還制御」であったのに対し、オートポイエーシスは「<strong>内部産出の閉鎖的維持</strong>」である。この差異は、AIをサイバネティクス的に設計するか、オートポイエーシス的に構成するかという工学的選択の基底に関わる。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">Thompson (2007, <em>Mind in Life</em>, Harvard UP) は、バクテリアの走化性から人間の意識まで<strong>生命の連続性</strong>を「感覚-運動ループによる意味産出」として記述した。この記述は、AGI議論における「意識の出現」問題を、計算量の閾値問題ではなく生命的産出構造の有無という問いに読み替える。Q5「問うていることを問えているか」は、問う主体の生命的基盤を問う問いと重なる。</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- KEY REFERENCE -->
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">
+          <li>
+            <strong>Varela, F. J., Maturana, H. R. &amp; Uribe, R. (1974). "Autopoiesis: The Organization of Living Systems, Its Characterization and a Model." <em>BioSystems</em>, 5(4): 187-196.</strong>
+            <span class="ref-doi">DOI: 10.1016/0303-2647(74)90031-8 ／ オートポイエーシス概念の英語圏一次資料。「自己産出するネットワーク」の定式化が本話論証の起点。</span>
+          </li>
+          <li>
+            <strong>Maturana, H. R. &amp; Varela, F. J. (1972). <em>De Máquinas y Seres Vivos: Una teoría sobre la organización biológica.</em> Santiago: Editorial Universitaria.</strong>
+            <span class="ref-doi">スペイン語原典。ラテンアメリカ発の生物学理論として位置づける上での一次文書。英訳版 (1980 Autopoiesis and Cognition, D. Reidel) より先行。</span>
+          </li>
+          <li>
+            <strong>Maturana, H. R. &amp; Varela, F. J. (1980). <em>Autopoiesis and Cognition: The Realization of the Living.</em> Dordrecht: D. Reidel.</strong>
+            <span class="ref-doi">ISBN: 978-9027710161 ／ 組織的閉鎖性（organizational closure）概念の定式化を含む。英語圏への理論拡張の基点。</span>
+          </li>
+          <li>
+            <strong>Varela, F. J., Thompson, E. &amp; Rosch, E. (1991). <em>The Embodied Mind: Cognitive Science and Human Experience.</em> Cambridge: MIT Press.</strong>
+            <span class="ref-doi">ISBN: 978-0262720212 ／ 行為的産出（enaction）概念を導入し、認知科学へのオートポイエーシス拡張を達成した基本書。</span>
+          </li>
+          <li>
+            <strong>Luhmann, N. (1984). <em>Soziale Systeme: Grundriss einer allgemeinen Theorie.</em> Frankfurt am Main: Suhrkamp.</strong>
+            <span class="ref-doi">ISBN: 978-3518282663 ／ 社会システム理論へのオートポイエーシス移植。コミュニケーション自己産出論の原典。邦訳: ルーマン著, 佐藤勉監訳 (1993-1995)『社会システム理論』恒星社厚生閣.</span>
+          </li>
+          <li>
+            <strong>Thompson, E. (2007). <em>Mind in Life: Biology, Phenomenology, and the Sciences of Mind.</em> Cambridge: Harvard University Press.</strong>
+            <span class="ref-doi">ISBN: 978-0674025110 ／ Embodied Mind の後継。生命・現象学・認知科学の統合として本話の論証を現代に接続する最重要続著。</span>
+          </li>
+          <li>
+            <strong>Varela, F. J. (1979). <em>Principles of Biological Autonomy.</em> New York: North Holland.</strong>
+            <span class="ref-doi">オートポイエーシスの自律性理論を展開した中間著作。「閉鎖的だが孤立していない」系の記述の理論的詳細化。</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- QUESTION FOR NEXT -->
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">生命が再帰するシステムだとすれば、Q1からQ8まで7つの問いそれぞれは、どのように自己産出してきたか。次話では7問を Q5 のメタ位相から問い直す——各問いは「何を問えたか」と同時に「何を産出し損ねたか」を見る。次は7問自己診断の話だ。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第97話「7つの問いを、もう一度ふりかえる」</span>
+        <a class="ep-question-next-link" href="ep097.html" data-target-ep="097">公開を待つ →</a>
+      </div>
+    </section>
+  </article>
+</div>
+
+<!-- ep actions -->
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">メルマガで次話を受け取る</a>
+    <a class="ep-action-btn" href="mailto:info@emerging-future.org?subject=ep096感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+
+<!-- ep nav -->
+<nav class="ep-nav" aria-label="話ナビゲーション">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep095.html">
+      <div class="ep-nav-meta">PREV — ep095</div>
+      <div class="ep-nav-title">問う者を呼び出すのは、問いの場所である</div>
+    </a>
+    <a class="ep-nav-link next" href="ep097.html">
+      <div class="ep-nav-meta">NEXT — ep097</div>
+      <div class="ep-nav-title">7つの問いを、もう一度ふりかえる</div>
+    </a>
+  </div>
+</nav>
+
+<!-- footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年5月時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合はinfo@emerging-future.orgまでご指摘ください。</p>
+    <div class="site-footer-bottom">
+      © 2026 NPO法人ミラツク / 問いの再帰 ─ AIの前で開きなおす2,800年
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function(){
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('pqar-theme');
+    if(saved) html.setAttribute('data-theme', saved);
+    btn && btn.addEventListener('click', function(){
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+
+  // read progress
+  (function(){
+    const bar = document.getElementById('progressBar');
+    if(!bar) return;
+    window.addEventListener('scroll', function(){
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (docHeight > 0 ? (scrollTop / docHeight * 100) : 0) + '%';
+    });
+  })();
+</script>
+</body>
+</html>

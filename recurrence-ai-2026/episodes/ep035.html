@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アクターは人間に限らない、と気づいた地点から ── 問いの再帰 ep035</title>
+  <meta name="description" content="ラトゥールANTとハラウェイのサイボーグ論——AIエージェントが「アクター」として配置されるとき、誰の利益が翻訳されるかを問う。PQAR-2026 第35話。">
+  <meta property="og:title" content="アクターは人間に限らない、と気づいた地点から">
+  <meta property="og:description" content="ANT の「黒箱化」と「翻訳」概念がAIシステム分析に再帰する。アクターネットワーク理論から見たAI設計の政治学。PQAR-2026 ep035">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep035.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212; --card: #1A1A1A; --accent: #E0E0E0;
+      --accent-warm: #FF4030; --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+      --border: #333333; --border-light: #2A2A2A; --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF; --card: #FFFFFF; --accent: #121212;
+      --accent-warm: #CC1400; --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+      --border: #D9D9D9; --border-light: #EEEEEE; --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.9; -webkit-font-smoothing: antialiased; }
+    .skip-link { position: absolute; top: -40px; left: 0; background: var(--accent-warm); color: #fff; padding: 8px 16px; z-index: 9999; font-size: 14px; text-decoration: none; }
+    .skip-link:focus { top: 0; }
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+    .site-header { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); height: 56px; }
+    .site-header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 100%; }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-size: 12px; padding: 4px 10px; cursor: pointer; letter-spacing: 0.06em; }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow { display: flex; align-items: center; gap: 12px; font-size: 11px; letter-spacing: 0.32em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; margin-bottom: 24px; }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num { font-family: 'Judson', serif; font-size: 72px; line-height: 1; color: var(--accent-warm); margin-bottom: 24px; }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title { font-family: var(--font-serif); font-size: 30px; font-weight: 700; line-height: 1.6; margin-bottom: 12px; color: var(--text); letter-spacing: 0.02em; }
+    .ep-hero-subtitle { font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7; }
+    .ep-hero-en { font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted); margin-bottom: 32px; font-style: italic; }
+    .ep-hero-lead { font-family: var(--font-serif); font-size: 16px; line-height: 2.0; border-left: 3px solid var(--accent-warm); padding-left: 20px; color: var(--text); margin-bottom: 24px; }
+    .ep-hero-meta { font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em; display: flex; gap: 20px; }
+    .ep-layout { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: 240px 1fr; gap: 48px; padding-top: 48px; padding-bottom: 80px; }
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label { font-size: 10px; letter-spacing: 0.28em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px; }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part { font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+    .toc-sidebar a { display: block; font-size: 12px; color: var(--text-secondary); text-decoration: none; padding: 4px 0; border-left: 2px solid transparent; padding-left: 10px; transition: all 0.15s; }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current { color: var(--accent-warm) !important; border-color: var(--accent-warm) !important; }
+    .ep-body { min-width: 0; }
+    .ep-body p { font-family: var(--font-serif); font-size: 17px; line-height: 2.1; margin-bottom: 30px; text-indent: 1em; color: var(--text); letter-spacing: 0.025em; font-feature-settings: "palt"; }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter { font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700; float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px; color: var(--accent-warm); }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+    .ep-body em { font-style: italic; }
+    .ep-body code { font-size: 13px; background: var(--surface); padding: 2px 6px; border-radius: 3px; color: var(--text-secondary); font-family: "SF Mono", "Fira Code", monospace; }
+    .ep-appendix { margin-top: 48px; padding: 28px 32px; border: 1px solid var(--border); border-left: 4px solid var(--accent-warm); background: var(--surface); border-radius: 0 4px 4px 0; }
+    .ep-appendix-label { font-size: 10px; letter-spacing: 0.28em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px; }
+    .ep-appendix p { font-family: var(--font-serif); font-size: 15px; line-height: 2.0; color: var(--text-secondary); margin-bottom: 0; text-indent: 1em; }
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; list-style: none; gap: 12px; }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label { font-size: 10px; letter-spacing: 0.28em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num { font-size: 10px; letter-spacing: 0.2em; font-weight: 700; color: var(--accent-warm); white-space: nowrap; padding-top: 3px; }
+    .signal-text { font-family: var(--font-serif); font-size: 14px; line-height: 1.85; color: var(--text-secondary); }
+    .ref-list { list-style: none; }
+    .ref-list li { font-family: var(--font-serif); font-size: 14px; line-height: 1.85; color: var(--text-secondary); padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label { font-size: 10px; letter-spacing: 0.28em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px; }
+    .ep-question-q { font-family: var(--font-serif); font-size: 16px; line-height: 1.9; color: var(--text); margin-bottom: 24px; }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta { font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; }
+    .ep-question-next-title { font-family: var(--font-serif); font-size: 15px; color: var(--text); display: block; margin-bottom: 12px; }
+    .ep-question-next-link { font-size: 13px; color: var(--accent-warm); text-decoration: none; letter-spacing: 0.08em; }
+    .ep-question-next-link:hover { text-decoration: underline; }
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .ep-action-btn { padding: 10px 20px; font-size: 13px; border-radius: 4px; text-decoration: none; letter-spacing: 0.06em; cursor: pointer; border: 1px solid var(--border); color: var(--text-secondary); background: none; }
+    .ep-action-btn.primary { background: var(--accent-warm); border-color: var(--accent-warm); color: #fff; }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; gap: 16px; }
+    .ep-nav-link { text-decoration: none; padding: 16px 20px; border: 1px solid var(--border); border-radius: 4px; flex: 1; max-width: 48%; transition: border-color 0.15s; }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+    @media (max-width: 900px) { .ep-layout { grid-template-columns: 1fr; } .toc-sidebar { position: static; } .ep-hero-num { font-size: 52px; } .ep-hero-title { font-size: 24px; } }
+    @media print { .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; } .ep-layout { grid-template-columns: 1fr; } .ep-body p { font-size: 14px; line-height: 1.85; } }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent-warm); outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">PART 2 実装問い ・ Q3 どこにいるか #035</div>
+    <div class="ep-hero-num">35.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">アクターは人間に限らない、と気づいた地点から</h1>
+    <p class="ep-hero-subtitle">── Bruno Latour の ANT と AI エージェンシーの再配置</p>
+    <p class="ep-hero-en"><em>Actors Beyond the Human — Latour's ANT and the Redistribution of Agency in AI Systems</em></p>
+    <p class="ep-hero-lead">1987年、ブルーノ・ラトゥールは「科学的事実は実験室の外に客観的に存在するのではない」と宣言した。研究者・機器・資金提供者・論文審査者というアクターのネットワークが「黒箱化」することで初めて事実になる——これがActor-Network Theory（ANT）の出発点だった。ダナ・ハラウェイは1985年の「サイボーグ宣言」で人間と機械の境界を無効化した。2030年代、AIエージェントが医療・金融・法律の意思決定に「アクター」として配置されるとき、誰の利益が「翻訳」されるかが実装上の争点になる。</p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約6分</span>
+    </div>
+  </div>
+</section>
+<div class="ep-layout">
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+        <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>    <div class="toc-section">
+      <div class="toc-part">PART 1 規範問い / Q1 未来世代</div>
+      <a href="ep002.html">ep002 未来は、まだ生まれていない者から……</a>
+      <a href="ep003.html">ep003 ヴェールの下で、未来世代と契約する</a>
+      <a href="ep004.html">ep004 存在しない者は、存在することで損なわれうる</a>
+      <a href="ep005.html">ep005 未来は、子孫から借りているのではない</a>
+      <a href="ep006.html">ep006 現在偏重は、心の癖ではない</a>
+      <a href="ep007.html">ep007 未来を、シミュレーションが先取りするとき</a>
+      <a href="ep008.html">ep008 気候難民は、まだ生まれていない国境の被害者</a>
+      <a href="ep009.html">ep009 生まないことが、最も道徳的でありうるとき</a>
+      <a href="ep010.html">ep010 ロングタームは、思想ではない</a>
+      <a href="ep011.html">ep011 予防原則は、知らないことを根拠に……</a>
+      <a href="ep012.html">ep012 未来世代の代理人を、誰が選ぶか</a>
+      <a href="ep013.html">ep013 想像力は、訓練できる倫理的能力である</a>
+      <a href="ep014.html">ep014 未来世代の声は、聞こえないことを聞く技法</a>
+    </div>    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q2 先住民の知</div>
+      <a href="ep015.html">ep015 比較は、優劣の物差しから始まり</a>
+      <a href="ep016.html">ep016 構造は、対話を可能にする最小の文法である</a>
+      <a href="#" style="opacity:0.4">ep017〜027 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 実装問い / Q3 どこにいるか</div>
+      <a href="ep028.html">ep028〜034 Q3前半</a>
+      <a href="ep035.html" class="toc-current">● ep035 アクターは人間に限らない</a>
+      <a href="#" style="opacity:0.4">ep036〜047 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2〜5（後半）</div>
+      <a href="#" style="opacity:0.4">ep048〜100 (準備中)</a>
+    </div>
+  </aside>
+  <article class="ep-body" id="articleBody">
+        <p>1987年、ブルーノ・ラトゥールはハーバード大学出版局から『科学が作られるとき（<em>Science in Action</em>）』を刊行した。核心命題はこうだ。科学的事実は実験室の「外」に客観的に存在するのではない——研究者、機器、資金提供者、論文審査者、教科書という異質なアクターのネットワークが交渉を重ねて「黒箱化」することで初めて事実になる（Chapter 1）。これが Actor-Network Theory（ANT）の方法論的起点だった。翌年の『微生物の戦争と平和（<em>The Pasteurization of France</em>）』（1988年、ハーバード大学出版局）でラトゥールはこの論点を歴史的に実証する。パスツールは一人の天才ではない——農民・医師・牛・炭疽菌・政府機関というアクターのネットワークを組み替えることで「細菌説」を現実にした（Part I）。</p>
+
+    <p>ANT の哲学的核心は「人間と非人間の対称性」にある。従来の社会学は物質や技術を「道具」とみなして社会的関係の外に置いた。ラトゥールは逆転を迫る。ドアクローザーは「礼儀を強いるアクター」として作用し、スピードバンプは「ドライバーの意図を形成するアクター」として機能する。マイケル・カロンが1986年に定式化した「翻訳（translation）」の概念——アクターが他のアクターの利益・目標を「翻訳」しながらネットワークを組み替えるプロセス——は、ANT を記述理論から分析ツールへと精緻化した（Callon, <em>The Sociological Review Monograph</em>, 32）。</p>
+
+    <p>同じ1985年、サンタクルーズのカリフォルニア大学でダナ・ハラウェイは「サイボーグ宣言（<em>A Cyborg Manifesto</em>）」を <em>Socialist Review</em> に発表した（後に1991年の『類人猿・サイボーグ・女』に収録）。起点はフェミニズムと科学技術の交差点にある。サイボーグは人間と機械の境界を無効化する比喩として提示されたが、その射程はより深い。<strong>自然/文化、有機体/機械、男性/女性という近代が前提とした二項対立は、歴史的に構築されたものだ。</strong> ハラウェイはその解体の政治的含意を問うた。</p>
+
+    <p>ラトゥールは2005年の『社会的なものを組み直す（<em>Reassembling the Social</em>）』（オックスフォード大学出版局）においてANT の方法論的立場を完成させる。「社会（the social）」は先在する安定した実体ではない——異質なアクターが翻訳と同盟を形成し解体しながら組み直されるプロセスそのものだ（Part I）。ハラウェイは2016年の『トラブルと共に生きる（<em>Staying with the Trouble</em>）』（デューク大学出版局）でこの問いを生態学の文脈へと拡張した。人新世概念が人間の主体性を前景化することで他の種を再び「背景」に押しやると批判し、「クトゥルセン（Chthulucene）」を提案する。<strong>アクターとは応答できる存在のことだ</strong> という定式化でラトゥールの ANT と共鳴し、社会記述論を倫理の問いへと引き上げる。</p>
+
+    <p>ANT は1987年の記述理論として生まれた。だが2030年代、AI エージェントが金融・医療・物流・法律の意思決定プロセスに「アクター」として配置される局面では、ANT は規範的問いを突きつける。<strong>どのアクターの利益が「翻訳」され、どのアクターが「黒箱」の中に封じ込められるのか。</strong> 設計者の意図・訓練データ・推論アルゴリズム・インフラ企業・規制機関・ユーザー・非ユーザーというネットワークとして AI を記述するとき、「誰がアクターか」という問い自体が実装上の争点になる。</p>
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 — 第4変容期での再帰</div>
+      <p>CQ-DB <code>cq_00099</code>「AI エージェントは道具か主体か」と <code>cq_sf05_0106</code>「自律システムの agency はどのように配分されるべきか」は、ANT の問いの 2030 年代版として読める。ラトゥールの「翻訳」概念は、AI エージェントが人間の意図をどのように「翻訳」し同盟を組み替えるかを追跡する分析フレームとして機能しうる。ハラウェイの「応答可能性（response-ability）」概念は、AI の責任帰属論において「応答できる存在として設計する」という規範的方向性を示す。ep034 で Bennett と Barad が示した「物質の能動性」は ANT の対称性原則を深化させたものとして読むことができ、ep036（Ingold のライン論）では ANT の空間観に対して「歩くことで生まれる線」という人類学的対抗概念が接合される。</p>
+    </div>
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL LIST</span>
+        <span class="reading-lens-title">本話のシグナル</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">ラトゥールの ANT はカロン（1986, <em>Sociological Review Monograph</em> 32）と共同で開発された「四段階翻訳モデル（問題設定・関心喚起・登録・動員）」として定式化された。この分析フレームは、<strong>AI プロジェクトにおけるステークホルダー分析の先行理論</strong>として再読される（Gillespie et al. 2022 がANT枠組みでAI規制ネットワークを追跡）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">ハラウェイが1985年に提示した「サイボーグ」の比喩は、ウェアラブル機器・BCI（Brain-Computer Interface）・人工臓器の実用化によって<strong>比喩から記述へと移行している</strong>。Neuralink 第一次臨床試験（2023-）は、人間/機械の境界溶解をハラウェイが想定した文化批評の射程をはるかに超えた速度で進行させている。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">Campolo &amp; Crawford (2020, <em>Engaging Science, Technology, and Society</em>, 6: 1–19, DOI: 10.17351/ests2020.277) は、機械学習モデルの「<strong>ブラックボックス化（black-boxing）</strong>」が ANT の黒箱化プロセスと同型であることを示し、AI の説明可能性要求を「脱黒箱化」として再定式化している。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">ハラウェイ『Staying with the Trouble』(2016, Duke UP) の「応答可能性（response-ability）」概念は、EU AI Act（2024年発効）の「高リスク AI の人間によるオーバーサイト要件（Article 14）」の哲学的基盤として参照される論脈が生まれている。<strong>「誰が応答できるか、誰が応答に組み込まれていないか」</strong>を問う ANT＋ハラウェイ的視座は、アルゴリズム監査の設計原則として翻訳可能性を持つ（CQ-DB <code>cq_sf05_0106</code>）。</p>
+          </div></div>
+      </div>
+    </details>
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">          <li>
+            <strong>Latour, B. (1987). <em>Science in Action: How to Follow Scientists and Engineers Through Society.</em> Cambridge, MA: Harvard University Press.</strong>
+            <span class="ref-doi">— ANT の方法論的原典。科学的事実の「黒箱化」プロセスとアクターネットワーク分析の基本概念を提示。</span>
+          </li>
+          <li>
+            <strong>Latour, B. (1988). <em>The Pasteurization of France.</em> Cambridge, MA: Harvard University Press.</strong>
+            <span class="ref-doi">(仏語原著: <em>Les microbes: Guerre et paix</em>, Paris: La Découverte, 1984) — ANT の歴史的実証。パスツール事例を通じて「翻訳」と「同盟形成」の概念を具体化。</span>
+          </li>
+          <li>
+            <strong>Latour, B. (2005). <em>Reassembling the Social: An Introduction to Actor-Network-Theory.</em> Oxford: Oxford University Press.</strong>
+            <span class="ref-doi">ISBN: 978-0199256051 — ANT の完成形テキスト。社会を「安定した実体」でなく「組み直しのプロセス」として再定義。</span>
+          </li>
+          <li>
+            <strong>Haraway, D. (1985). "A Cyborg Manifesto: Science, Technology, and Socialist-Feminism in the Late Twentieth Century." <em>Socialist Review</em>, 80: 65–108.</strong>
+            <span class="ref-doi">(1991年改訂版: <em>Simians, Cyborgs, and Women</em>. New York: Routledge) — 人間/機械/自然/文化の二項対立解体の政治的宣言。</span>
+          </li>
+          <li>
+            <strong>Haraway, D. (2016). <em>Staying with the Trouble: Making Kin in the Chthulucene.</em> Durham, NC: Duke University Press.</strong>
+            <span class="ref-doi">ISBN: 978-0822362241 — Chthulucene 概念と「応答可能性（response-ability）」の倫理的定式化。</span>
+          </li>
+          <li>
+            <strong>Callon, M. (1986). "Some Elements of a Sociology of Translation." In J. Law (Ed.), <em>Power, Action and Belief: A New Sociology of Knowledge? The Sociological Review Monograph</em>, 32: 196–233.</strong>
+            <span class="ref-doi">— ANT の「翻訳」概念の原典論文。ホタテ貝・漁師・科学者のネットワーク分析として広く参照される。</span>
+          </li>
+          <li>
+            <strong>Law, J. (1992). "Notes on the Theory of the Actor-Network: Ordering, Strategy, and Heterogeneity." <em>Systems Practice</em>, 5(4): 379–393.</strong>
+            <span class="ref-doi">DOI: 10.1007/BF01059830 — ANT における「異種混合ネットワーク（heterogeneous network）」の理論的整理。</span>
+          </li>
+          <li>
+            <strong>Haraway, D. (2003). <em>The Companion Species Manifesto: Dogs, People, and Significant Otherness.</em> Chicago: Prickly Paradigm Press.</strong>
+            <span class="ref-doi">ISBN: 978-0971757585 — 種間の「重要な他者性（significant otherness）」概念。Staying with the Trouble の理論的前駆。</span>
+          </li></ul>
+      </div>
+    </details>
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">ANT は「誰がアクターか」を記述することで、AIエージェントを含む組み合わせのネットワークを追跡する方法論を提供する。次話では、Tim Ingold が「歩くことで生まれる線」という視点から、場所をネットワークではなく「通路（wayfaring）」として再記述する試みを読みます。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第036話「風景は、共に動く線として読まれるべきだった」</span>
+        <a class="ep-question-next-link" href="ep036.html">読む →</a>
+      </div>
+    </section>
+  </article>
+</div>
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">メルマガで次話を受け取る</a>
+    <a class="ep-action-btn" href="mailto:info@emerging-future.org?subject=ep035感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+<nav class="ep-nav" aria-label="話ナビゲーション">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep034.html">
+      <div class="ep-nav-meta">PREV — ep034</div>
+      <div class="ep-nav-title">物質は静かな主体として、私たちを動かしていた</div>
+    </a>
+    <a class="ep-nav-link next" href="ep036.html">
+      <div class="ep-nav-meta">NEXT — ep036</div>
+      <div class="ep-nav-title">風景は、共に動く線として読まれるべきだった</div>
+    </a>
+  </div>
+</nav>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年5月時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合は info@emerging-future.org までご指摘ください。</p>
+    <div class="site-footer-bottom">© 2026 NPO法人ミラツク / 問いの再帰 ─ AIの前で開きなおす2,800年</div>
+  </div>
+</footer>
+<script>
+  (function(){
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('pqar-theme');
+    if(saved) html.setAttribute('data-theme', saved);
+    btn && btn.addEventListener('click', function(){
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+  (function(){
+    const bar = document.getElementById('progressBar');
+    if(!bar) return;
+    window.addEventListener('scroll', function(){
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (docHeight > 0 ? (scrollTop / docHeight * 100) : 0) + '%';
+    });
+  })();
+</script>
+</body>
+</html>

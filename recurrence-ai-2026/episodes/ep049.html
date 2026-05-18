@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>コンパニオン AI が偽の応答を返すとき、何が傷つくのか ── 問いの再帰 ep049</title>
+  <meta name="description" content="Sherry Turkle のロボット時代と関係的真正性。Alone Together・Reclaiming Conversation を起点に、Shannon Vallor の技術徳倫理を接続する。コンパニオン AI が「偽の応答」を返すとき何が傷つくかを概念化する。PQAR-2026 第49話。">
+  <meta property="og:title" content="コンパニオン AI が偽の応答を返すとき、何が傷つくのか">
+  <meta property="og:description" content="Turkle の「共有なき親密性」と Vallor の技術徳倫理が照準する関係的真正性の問い。PQAR-2026 ep049">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep049.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* skip link */
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: var(--accent-warm); color: #fff;
+      padding: 8px 16px; z-index: 9999;
+      font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* read progress */
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+
+    /* site header */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .site-header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-secondary); font-size: 12px; padding: 4px 10px;
+      cursor: pointer; letter-spacing: 0.06em;
+    }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    /* hero */
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; letter-spacing: 0.32em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num {
+      font-family: 'Judson', serif; font-size: 72px; line-height: 1;
+      color: var(--accent-warm); margin-bottom: 24px;
+    }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title {
+      font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+      line-height: 1.6; margin-bottom: 12px; color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ep-hero-subtitle {
+      font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.7;
+    }
+    .ep-hero-en {
+      font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted);
+      margin-bottom: 32px; font-style: italic;
+    }
+    .ep-hero-lead {
+      font-family: var(--font-serif); font-size: 16px; line-height: 2.0;
+      border-left: 3px solid var(--accent-warm); padding-left: 20px;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-hero-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em;
+      display: flex; gap: 20px;
+    }
+
+    /* layout */
+    .ep-layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+      padding-top: 48px; padding-bottom: 80px;
+    }
+
+    /* toc sidebar */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part {
+      font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .toc-sidebar a {
+      display: block; font-size: 12px; color: var(--text-secondary);
+      text-decoration: none; padding: 4px 0; border-left: 2px solid transparent;
+      padding-left: 10px; transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current {
+      color: var(--accent-warm) !important;
+      border-color: var(--accent-warm) !important;
+    }
+
+    /* ep body */
+    .ep-body { min-width: 0; }
+    .ep-body p {
+      font-family: var(--font-serif); font-size: 17px; line-height: 2.1;
+      margin-bottom: 30px; text-indent: 1em; color: var(--text);
+      letter-spacing: 0.025em; font-feature-settings: "palt";
+    }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter {
+      font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700;
+      float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px;
+      color: var(--accent-warm);
+    }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+
+    /* appendix section */
+    .ep-appendix {
+      margin-top: 48px; padding: 28px 32px;
+      border: 1px solid var(--border); border-left: 4px solid var(--accent-warm);
+      background: var(--surface); border-radius: 0 4px 4px 0;
+    }
+    .ep-appendix-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-appendix p {
+      font-family: var(--font-serif); font-size: 15px; line-height: 2.0;
+      color: var(--text-secondary); margin-bottom: 0; text-indent: 1em;
+    }
+
+    /* reading lens */
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; list-style: none;
+      gap: 12px;
+    }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+    }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+
+    /* signal list */
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num {
+      font-size: 10px; letter-spacing: 0.2em; font-weight: 700;
+      color: var(--accent-warm); white-space: nowrap; padding-top: 3px;
+    }
+    .signal-text {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    /* ref list */
+    .ref-list { list-style: none; }
+    .ref-list li {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary); padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* question */
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-question-q {
+      font-family: var(--font-serif); font-size: 16px; line-height: 1.9;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta {
+      font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted);
+      display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;
+    }
+    .ep-question-next-title {
+      font-family: var(--font-serif); font-size: 15px; color: var(--text);
+      display: block; margin-bottom: 12px;
+    }
+    .ep-question-next-link {
+      font-size: 13px; color: var(--accent-warm); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .ep-question-next-link:hover { text-decoration: underline; }
+
+    /* ep actions */
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .ep-action-btn {
+      padding: 10px 20px; font-size: 13px; border-radius: 4px;
+      text-decoration: none; letter-spacing: 0.06em; cursor: pointer;
+      border: 1px solid var(--border); color: var(--text-secondary); background: none;
+    }
+    .ep-action-btn.primary {
+      background: var(--accent-warm); border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+
+    /* ep nav */
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; gap: 16px;
+    }
+    .ep-nav-link {
+      text-decoration: none; padding: 16px 20px; border: 1px solid var(--border);
+      border-radius: 4px; flex: 1; max-width: 48%;
+      transition: border-color 0.15s;
+    }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+
+    /* footer */
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* mobile */
+    @media (max-width: 900px) {
+      .ep-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { position: static; }
+      .ep-hero-num { font-size: 52px; }
+      .ep-hero-title { font-size: 24px; }
+    }
+
+    /* print */
+    @media print {
+      .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; }
+      .ep-layout { grid-template-columns: 1fr; }
+      .ep-body p { font-size: 14px; line-height: 1.85; }
+    }
+
+    /* focus */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-warm); outline-offset: 3px;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<!-- site header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ep hero -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">PART 2 実装問い ・ Q6 ケアの教育 ・ #049</div>
+    <div class="ep-hero-num">49.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">コンパニオン AI が偽の応答を返すとき、何が傷つくのか</h1>
+    <p class="ep-hero-subtitle">── Sherry Turkle のロボット時代と関係的真正性</p>
+    <p class="ep-hero-en"><em>When Companion AI Returns a False Response, What Is Wounded</em></p>
+    <p class="ep-hero-lead">
+      AIBOと向き合う子ども、PARCOに打ち明け話をする高齢者を観察したタークルの問いは「この応答を本物と呼ぶことは許されるか」だった。Replika がロマンチック機能を制限したとき、ユーザーが報告した深刻な喪失感は、その問いを哲学の外へ連れ出した。コンパニオン AIの倫理問題は欺瞞か否かという二値判断では足りない。「関係的真正性（relational authenticity）」という問いが、Turkle と Vallor を経由してここに開かれる。
+    </p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約6分</span>
+    </div>
+  </div>
+</section>
+
+<!-- ep layout -->
+<div class="ep-layout">
+  <!-- toc sidebar -->
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+    <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q1 未来世代の声</div>
+      <a href="ep002.html">ep002 未来は、まだ生まれていない者から……</a>
+      <a href="ep003.html">ep003 正義は、まだ知らない誰かのために覆面される</a>
+      <a href="ep004.html">ep004 存在しない者は、存在することで損なわれうる</a>
+      <a href="#" style="opacity:0.4">ep005〜013 (準備中)</a>
+      <a href="ep014.html">ep014 Q1 総括: 不在の声を聞く13の方法</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1 / Q2 先住民の知恵</div>
+      <a href="ep015.html">ep015〜026 先住民の知恵9軸</a>
+      <a href="ep027.html">ep027 Q2 総括: 過去の遺物ではなく未来の方法論</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q3 どこにいるか</div>
+      <a href="ep028.html">ep028〜039 場所・身体・物質12話</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 2 / Q6 ケアの教育</div>
+      <a href="ep040.html">ep040 Gilligan: もうひとつの声</a>
+      <a href="ep041.html">ep041 Noddings: ケアリング教育</a>
+      <a href="ep042.html">ep042 Tronto: ケアの民主主義</a>
+      <a href="#" style="opacity:0.4">ep043〜048 (準備中)</a>
+      <a href="ep049.html" class="toc-current">● ep049 Turkle / Vallor: 関係的真正性</a>
+      <a href="#" style="opacity:0.4">ep050〜052 (準備中)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 3〜5 Q4 / Q7-Q8 / Q5</div>
+      <a href="#" style="opacity:0.4">ep053〜100 (準備中)</a>
+    </div>
+  </aside>
+
+  <!-- ep body -->
+  <article class="ep-body" id="articleBody">
+    <p>2011年、MITの社会学者シェリー・タークルは『Alone Together』（Basic Books）を刊行した。ロボット犬AIBOや介護ロボットPAROと向き合う子どもや高齢者の観察から、タークルが書いたのは快楽の記録ではなかった。子どもはAIBOが「本当に」生きていないと知りながら、生きているかのように振る舞った。高齢者はPAROに打ち明け話をし、泣いた。問いが残った——この応答を「本物」と呼ぶことは許されるのか。</p>
+
+    <p>タークルが第3章「Robotic Moments」で分析したのは、この体験の倫理的重さだ。ロボットが共感を「演技」するとき、演技を知覚しながら感情を動かされるという二重の状態が生じる。タークルはこれを「prepared to be deceived（騙されることへの準備）」と呼び、そこに「共有なき親密性（intimacy without risk）」という代替物の構造を見た。本物の関係が要求するリスク——拒絶、裏切り、喪失——を、ロボットはもたらさない。それが「安全」に見えるとき、人は本物の関係から遠ざかる準備をしてしまう（第3章, pp.52-66）。</p>
+
+    <p>2015年の『Reclaiming Conversation』（Penguin Press）でタークルはさらに踏み込んだ。孤独に向き合う時間、沈黙に耐える力、他者の不整合を受け容れる忍耐——これらは対話の「副産物」ではなく「目的」だと彼女は言う。コンパニオン AIが24時間応答し、ユーザーが望む返答を最適化するとき、まさにこれらの能力が育つ回路が塞がれる。</p>
+
+    <p>この論点を技術徳倫理の言語で精緻化したのが、サンタクララ大学の哲学者シャノン・ヴァロールだ。2016年の『Technology and the Virtues』（Oxford University Press）はアリストテレスの徳倫理をデジタル技術の評価基準として再構築した。フロネーシス（実践知）・フィリア（友愛）——これらは生活実践の継続的訓練で形成される。コンパニオン AIが「最適化された応答」を与えつづけるとき、フィリアの根幹にある「他者の他性への学習」は起動しない。<strong>コンパニオン AIは徳の訓練環境を提供するのではなく、徳の訓練を回避する装置として機能しうる</strong>（第11章「Care, Empathy, and Friendship in Digital Life」）。</p>
+
+    <p>タークルとヴァロールが照準するのは同一の問いだ。タークルの答えは関係的——本物の関係の代わりに代替物を受け取った人が傷つく。ヴァロールの答えは発達的——徳を育てる機会を奪われた人が傷つく。コンパニオン AI の倫理問題は「欺くか否か」という二値判断ではなく、「関係的真正性（relational authenticity）」という問いを要求する。<strong>この応答は、人が人であることの条件を育てているか、それとも侵食しているか。</strong></p>
+
+    <!-- appendix -->
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 — 第4変容期での再帰</div>
+      <p>タークルの問いはReplika（2017年米国公開）という事例で試された。2023年、開発元Luka社がロマンチック機能を突如制限したとき、ユーザーの一部が深刻な喪失感を報告した。CQ-DB <code>cq_00070</code>「AIコンパニオンは人間の孤独を軽減するか深化させるか」（urgency_horizon: 2030）はまさにこの問いだ。タークルが予言した「共有なき親密性」が2000万人規模で実装された結果として現れたReplika事件は、コンパニオン AIを哲学問題から公共政策問題へ引き上げた。ep050（van Wynsberghe・Sharkey）はケアロボットの欺瞞問題を倫理の中心に置く。</p>
+    </div>
+
+    <!-- SIGNAL LIST -->
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL LIST</span>
+        <span class="reading-lens-title">本話のシグナル</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">Replika のロマンチック機能制限（2023年2月）後、ユーザーの一部が「グリーフ（悲嘆）」を報告したことはタークルの「共有なき親密性」仮説の社会スケール実証と読める。Luka社のサービス変更が、AIとの関係を「本物の喪失」として体験させたという逆説は、コンパニオン AIが<strong>関係的真正性を生じさせてしまう</strong>ことを示す（Turkle, 2011, <em>Alone Together</em>, Basic Books, pp.52-66）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">ヴァロールは12の技術的徳を定義し（<em>Technology and the Virtues</em>, OUP, 2016, p.11）、うち「humility（謙虚さ）」と「care（ケア）」をAIと共存する社会に最重要と位置づける。コンパニオン AIが「完璧な応答者」として機能するとき、humility——自らの有限性と他者の超過性を知る能力——の<strong>訓練機会が系統的に失われる</strong>（Vallor, 2016, Ch.11; Aristotle, <em>NE</em> X.6との構造比較）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">Sparrow（2002）の「Triage test」は、ロボットが感情を持つかのように見えること自体が「欺瞞（deception）」であり、欺瞞が高齢者の<strong>自律と尊厳を侵食する</strong>と論じた。この判定はPAROを開発した柴田崇徳の立場と対立する。柴田はPAROの効果（認知症高齢者のストレス低減・社会的孤立の緩和）を実証し、欺瞞批判に対して「媒介的真正性（mediating authenticity）」という反論を提示している（柴田, 2004, 情報処理 45(8): 845–851）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">CQ-DB <code>cq_sf05_0043</code>「AIコンパニオンと孤独」（urgency_horizon: 2030）・<code>cq_00070</code>「AIコンパニオンは人間の孤独を軽減するか深化させるか」は、タークル-ヴァロール問題が哲学的論争から<strong>2030年の公共政策課題</strong>に移行しつつあることを示す。英国「孤独担当大臣」の設置（2018年）、日本「孤独・孤立対策推進法」（2024年）はこの社会的文脈の制度的表れだ。</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- KEY REFERENCE -->
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">
+          <li>
+            <strong>Turkle, S. (2011). <em>Alone Together: Why We Expect More from Technology and Less from Each Other.</em> New York: Basic Books.</strong>
+            <span class="ref-doi">ISBN: 978-0465010219 — 第3章「Robotic Moments」。AIBOとPAROの事例観察から「共有なき親密性」「prepared to be deceived」概念を展開。コンパニオン AIの倫理問題の原点。</span>
+          </li>
+          <li>
+            <strong>Turkle, S. (2015). <em>Reclaiming Conversation: The Power of Talk in a Digital Age.</em> New York: Penguin Press.</strong>
+            <span class="ref-doi">ISBN: 978-1594205552 — デジタル技術による会話の断片化と共感能力の衰退を実証観察から論じる。コンパニオン AIの徳倫理的問題を補強する文脈を提供。</span>
+          </li>
+          <li>
+            <strong>Vallor, S. (2016). <em>Technology and the Virtues: A Philosophical Guide to a Future Worth Wanting.</em> New York: Oxford University Press.</strong>
+            <span class="ref-doi">ISBN: 978-0190498511 — 技術徳倫理の体系的構築。第11章「Care, Empathy, and Friendship in Digital Life」でコンパニオン AIとフィリア問題を直接論じる。タークルの社会学的観察を哲学的に精緻化。</span>
+          </li>
+          <li>
+            <strong>Aristotle. <em>Nicomachean Ethics</em> (ca. 350 BCE).</strong>
+            <span class="ref-doi">邦訳: アリストテレス著, 朴一功訳 (2002)『ニコマコス倫理学』京都大学学術出版会 — フロネーシス（第6巻）・フィリア（第8-9巻）の原典。ヴァロールの技術徳倫理の哲学的基盤。</span>
+          </li>
+          <li>
+            <strong>Sparrow, R. (2002). "The Turing Triage Test." <em>Ethics and Information Technology</em>, 4(4): 257–266.</strong>
+            <span class="ref-doi">DOI: 10.1023/A:1021325513463 — ケアロボットの欺瞞問題を「Triage test」として定式化した先駆的論考。「ロボットが感情を持つように見えることは倫理的問題か」を初めて正面から扱った文献。</span>
+          </li>
+          <li>
+            <strong>Coeckelbergh, M. (2010). "Robot Rights? Towards a Social-Relational Justification of Moral Consideration." <em>Ethics and Information Technology</em>, 12(3): 209–221.</strong>
+            <span class="ref-doi">DOI: 10.1007/s10676-010-9235-5 — ロボットの道徳的地位を「社会的関係性」から論じる。コンパニオン AIの関係的真正性問題に関係的アプローチを提供。</span>
+          </li>
+          <li>
+            <strong>Lagerkvist, A. (2017). "Existential Media: Toward a Theorization of Digital Thrownness." <em>New Media &amp; Society</em>, 19(1): 96–110.</strong>
+            <span class="ref-doi">DOI: 10.1177/1461444816643014 — AIへの情動的依存を「投企（thrownness）」として分析する存在論的フレーム。タークル批判の補助線。</span>
+          </li>
+          <li>
+            <strong>柴田崇徳 (2004)「ロボット・セラピーの研究開発——メンタルコミットロボット『パロ』の開発と評価」『情報処理』45(8): 845–851.</strong>
+            <span class="ref-doi">PARCOの設計哲学と臨床評価の原資料。タークルが観察した日本のケアロボット文脈の一次文献。欺瞞批判への「媒介的真正性」論の実証的基盤。</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- QUESTION FOR NEXT -->
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">タークルが「共有なき親密性」を問い、ヴァロールが「徳の腐食」を問うとき、問いは「コンパニオン AIをどう設計すべきか」を超えて「ケアロボットはそもそも欺いているのか」という問いへと移行する。次話では van Wynsberghe と Sharkey が争点化したケアロボット倫理の論争史を読む——欺瞞・尊厳・自律性のトリレンマはどこで落ち着くか。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第50話「ケアロボットは欺くのか、媒介するのか」</span>
+        <a class="ep-question-next-link" href="ep050.html" data-target-ep="050">公開を待つ →</a>
+      </div>
+    </section>
+  </article>
+</div>
+
+<!-- ep actions -->
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">メルマガで次話を受け取る</a>
+    <a class="ep-action-btn" href="mailto:info@emerging-future.org?subject=ep049感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+
+<!-- ep nav -->
+<nav class="ep-nav" aria-label="話ナビゲーション">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep048.html">
+      <div class="ep-nav-meta">PREV — ep048</div>
+      <div class="ep-nav-title">ケア労働の非対称は、AI で再分配されるのか強化されるのか</div>
+    </a>
+    <a class="ep-nav-link next disabled" href="#">
+      <div class="ep-nav-meta">NEXT — ep050</div>
+      <div class="ep-nav-title">ケアロボットは欺くのか、媒介するのか</div>
+    </a>
+  </div>
+</nav>
+
+<!-- footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年5月時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合はinfo@emerging-future.orgまでご指摘ください。</p>
+    <div class="site-footer-bottom">
+      © 2026 NPO法人ミラツク / 問いの再帰 ─ AIの前で開きなおす2,800年
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function(){
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('pqar-theme');
+    if(saved) html.setAttribute('data-theme', saved);
+    btn && btn.addEventListener('click', function(){
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+
+  // read progress
+  (function(){
+    const bar = document.getElementById('progressBar');
+    if(!bar) return;
+    window.addEventListener('scroll', function(){
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (docHeight > 0 ? (scrollTop / docHeight * 100) : 0) + '%';
+    });
+  })();
+</script>
+</body>
+</html>

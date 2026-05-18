@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第92話「問いを問うとき、問いはすでに自分を呼んでいる」── 問いの再帰 PQAR-2026</title>
+  <meta name="description" content="ゲーデルの不完全性定理・ラッセルのパラドックス・ホフスタッターのStrange Loop。自己言及の構造から、問いを問うこととLLMの自己評価能力の限界を読み解く。PQAR-2026 第92話。">
+  <meta property="og:title" content="問いを問うとき、問いはすでに自分を呼んでいる ── 問いの再帰 ep092">
+  <meta property="og:description" content="ゲーデル・ラッセル・ホフスタッターが解いた自己言及の構造。Q5(+1)メタ問いの起点。">
+  <meta property="og:type" content="article">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500&family=Judson:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --highlight: #FF4030;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --highlight: #CC1400;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 17px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-serif);
+      line-height: 1.95;
+      letter-spacing: 0.025em;
+      font-feature-settings: "palt";
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-top: 3px solid var(--accent);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 48px;
+      font-family: var(--font);
+    }
+    .top-bar-brand {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .top-bar-brand strong { color: var(--highlight); }
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .theme-toggle:hover { border-color: var(--highlight); color: var(--highlight); }
+
+    /* ── Hero ── */
+    .ep-hero {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 64px 24px 48px;
+    }
+    .ep-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font);
+      font-size: 12px;
+      letter-spacing: 0.28em;
+      color: var(--highlight);
+      margin-bottom: 20px;
+    }
+    .ep-eyebrow-line {
+      display: inline-block;
+      width: 28px;
+      height: 2px;
+      background: var(--highlight);
+    }
+    .ep-num {
+      font-family: "Judson", Georgia, serif;
+      font-size: 72px;
+      font-weight: 400;
+      line-height: 1;
+      color: var(--highlight);
+      margin-bottom: 16px;
+    }
+    .ep-num-total {
+      font-size: 28px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+    .ep-title {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .ep-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+    .ep-en {
+      font-family: "Judson", Georgia, serif;
+      font-style: italic;
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .ep-meta {
+      font-family: var(--font);
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Layout ── */
+    .ep-layout {
+      display: flex;
+      gap: 48px;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      align-items: flex-start;
+    }
+
+    /* ── Sidebar ── */
+    .toc-sidebar {
+      flex: 0 0 220px;
+      position: sticky;
+      top: 64px;
+      font-family: var(--font);
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+    .toc-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--highlight);
+      margin-bottom: 12px;
+    }
+    .toc-item {
+      display: block;
+      padding: 3px 0;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      padding-left: 8px;
+    }
+    .toc-item:hover { color: var(--text); }
+    .toc-current {
+      color: var(--text);
+      border-left-color: var(--highlight);
+      font-weight: 500;
+    }
+    @media (max-width: 860px) {
+      .toc-sidebar { display: none; }
+      .ep-layout { padding: 0 16px 64px; }
+    }
+
+    /* ── Body ── */
+    .ep-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Section headings */
+    .ep-section-label {
+      font-family: var(--font);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: var(--highlight);
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Body text */
+    .ep-prose {
+      font-size: 17px;
+      line-height: 2.05;
+      color: var(--text);
+      margin-bottom: 48px;
+    }
+    .ep-prose p {
+      margin-bottom: 26px;
+      text-indent: 1em;
+    }
+    .ep-prose p:first-of-type {
+      text-indent: 0;
+    }
+    .ep-prose strong { color: var(--text); }
+
+    /* Supplement */
+    .ep-supplement {
+      background: var(--surface);
+      border-left: 3px solid var(--highlight);
+      padding: 24px 28px;
+      margin-bottom: 48px;
+      border-radius: 0 4px 4px 0;
+    }
+    .ep-supplement .ep-section-label { margin-bottom: 14px; border-bottom: none; }
+    .ep-supplement p {
+      font-size: 15px;
+      line-height: 2.0;
+      color: var(--text-secondary);
+      text-indent: 1em;
+      margin-bottom: 0;
+    }
+    .ep-supplement p:first-of-type { text-indent: 0; }
+
+    /* Key References */
+    .ep-refs {
+      margin-bottom: 48px;
+    }
+    .ep-refs ol {
+      padding-left: 20px;
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--text-secondary);
+    }
+    .ep-refs li {
+      margin-bottom: 12px;
+    }
+    .ep-refs li strong { color: var(--text); }
+
+    /* Signal list */
+    .ep-signals {
+      margin-bottom: 48px;
+    }
+    .signal-item {
+      border-top: 1px solid var(--border);
+      padding: 16px 0;
+    }
+    .signal-num {
+      font-family: var(--font);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--highlight);
+      margin-bottom: 6px;
+    }
+    .signal-text {
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--text-secondary);
+    }
+    .signal-text strong { color: var(--text); }
+
+    /* Nav */
+    .ep-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .ep-nav-link {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-decoration: none;
+      max-width: 45%;
+    }
+    .ep-nav-dir {
+      font-family: var(--font);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+    }
+    .ep-nav-title {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .ep-nav-link:hover .ep-nav-title { color: var(--highlight); }
+    .ep-nav-link.disabled { opacity: 0.35; pointer-events: none; }
+
+    /* Footer */
+    .site-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      font-family: var(--font);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .site-footer p { margin-bottom: 6px; }
+
+    @media print {
+      .toc-sidebar, .top-bar, .theme-toggle { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#ep-body" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;
+    background:var(--bg);color:var(--text);padding:8px 16px;z-index:9999;border-radius:4px;">本文へスキップ</a>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <a class="top-bar-brand" href="../">問いの再帰 <strong>PQAR-2026</strong></a>
+    <button class="theme-toggle" onclick="toggleTheme()">☾ / ☀</button>
+  </div>
+
+  <!-- Hero -->
+  <header class="ep-hero">
+    <div class="ep-eyebrow">
+      <span class="ep-eyebrow-line"></span>
+      PART 5 メタ問い &nbsp;·&nbsp; Q5(+1) 自己言及 &nbsp;·&nbsp; Ep.092 &nbsp;·&nbsp; 数学基礎論 / 認知科学
+    </div>
+    <div class="ep-num">092.<span class="ep-num-total">/ 100</span></div>
+    <h1 class="ep-title">問いを問うとき、問いはすでに自分を呼んでいる</h1>
+    <p class="ep-subtitle">─ ゲーデル・ラッセル・ホフスタッターが解いた自己言及の構造</p>
+    <p class="ep-en"><em>When a Question Is Asked, the Question Is Already Calling Itself</em></p>
+    <div class="ep-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約6分</span>
+      <span>horizon: permanent</span>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="ep-layout">
+
+    <!-- Sidebar TOC -->
+    <aside class="toc-sidebar" aria-label="連載目次">
+      <div class="toc-label">PART 5 — メタ問い</div>
+      <a class="toc-item toc-current" href="ep092.html">● ep092 ゲーデル・ラッセル・ホフスタッター</a>
+      <a class="toc-item" href="ep093.html">ep093 許煜 再帰と螺旋</a>
+      <a class="toc-item" href="ep094.html">ep094 LLM の自己反省</a>
+      <a class="toc-item" href="ep095.html">ep095 西田 場所の論理</a>
+      <a class="toc-item" href="ep096.html">ep096 ヴァレラ オートポイエーシス</a>
+      <a class="toc-item" href="ep097.html">ep097 7問の自己診断</a>
+      <a class="toc-item" href="ep098.html">ep098 連載が問えたこと</a>
+      <a class="toc-item" href="ep099.html">ep099 連載が問えなかった声</a>
+      <a class="toc-item" href="ep100.html">ep100 問いは再帰しつづける（結章）</a>
+    </aside>
+
+    <!-- Main body -->
+    <article class="ep-body" id="ep-body">
+
+      <!-- 本文 -->
+      <div class="ep-section-label">BODY — 本文（1,210字）</div>
+      <div class="ep-prose">
+        <p>1903年、バートランド・ラッセルは数学基礎論の核に奇妙な亀裂を発見した。「自分自身を含まない集合すべての集合」を考えると、その集合は自分自身を含むのか、含まないのか——どちらを選んでも矛盾が生じる（『The Principles of Mathematics』Cambridge UP, 1903, §102）。これがラッセルのパラドックスであり、問いが問いの対象に自分自身を含むとき、形式系は閉じることができないという構造的限界の最初の定式化だった。</p>
+
+        <p>ゲーデルは1931年、ラッセルが切り開いた亀裂をさらに深く掘った。論文「Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme」（<em>Monatshefte für Mathematik und Physik</em>, 38: 173–198）において、ゲーデルは「この命題は証明できない」と主張する算術的命題を構成してみせた（KGH event 237）。この命題が真ならば証明不可能であり、偽ならば体系が矛盾する。ペアノ算術を含む十分に強い無矛盾な形式系は、自身の無矛盾性を自身の内部では証明できない。不完全性定理が示したのは欠陥ではなく、自己を含む系の構造的な限界だった。問いは、その形式系を使う限り、形式系そのものを問うことができない。</p>
+
+        <p>ダグラス・ホフスタッターは1979年、この構造を「Strange Loop（奇妙なループ）」と命名した（<em>Gödel, Escher, Bach: An Eternal Golden Braid</em>, Basic Books, 1979）。ゲーデルの算術命題、エッシャーの「描く手が手を描く」版画、バッハのカノンにおける声部の自己回帰——これらに共通する動態は、階層を一周して元の場所に戻るとき、戻ってきた場所がすでに変わっているという点にある。Strange Loop は矛盾ではなく、自己言及が生み出す認知と意味の動態的な生成機構である。ホフスタッターにとって、人間の意識そのものがこの構造を持つ。「私」という主語は、「私を語る私」を内包し、その内包がさらに「語る私」を呼び出し続ける。問いを問う行為は、この無終の自己呼び出しの別名である。</p>
+
+        <p>Q5(+1)「我々は、自分自身が問うていることを問えているか」は、このラッセル→ゲーデル→ホフスタッターの系譜が提示した問いの直接継承である。形式的証明の言語で言えば、問い手を含む問いの体系は、その体系の完全性を問い手の内部から証明できない。しかしこれは不能の宣言ではない。ゲーデルの不完全性定理は数学を破壊しなかった。ラッセルのパラドックスは論理学を無効にしなかった。Strange Loop は思考を停止させなかった。それらはいずれも、閉じた体系の外部に何かがあることを、内部から示す装置だった。問いを問うことは、問いの限界の縁を問いの内部から可視化する実践である。</p>
+      </div>
+
+      <!-- 追記 -->
+      <div class="ep-section-label">SUPPLEMENT — 追記（第4変容期での再帰）</div>
+      <div class="ep-supplement">
+        <p>LLMが「自分の答えをもう一度見直せ」と促されて訂正した出力を返すとき、その訂正は何を実行しているのか。表面的には自己反省のように見えるが、ゲーデル的に問えばこうなる——訂正プロセスを生成するモデル自身が訂正の正しさを保証できるか。モデルは自身の重みを参照して応答し、その応答はまた重みによって評価されうるが、重みの完全性を重みで証明する閉回路はゲーデルの不完全性定理が禁じた構造に相当する。philosophy.db <code>phil_b16_analytic_philosophy_0004</code>（ゲーデル不完全性定理）および <code>phil_b37_f05ee8d177</code>（ラッセルのパラドックス）が記録するこの構造は、LLMの自己評価能力の設計上の限界として、2026年の AI 安全性研究の文脈で活発に参照されている。ホフスタッターの Strange Loop から補強すれば、限界の認識は限界の克服ではなく、限界の縁を歩き続ける動態である。問いを問うとは、答えの不在を受け入れながら問いを精緻化し続ける実践であり、それはゲーデルが1931年に数学に対してやったことと構造的に同一である。第5部は、この問いの自己呼び出し構造から始まる。</p>
+      </div>
+
+      <!-- Key References -->
+      <div class="ep-refs">
+        <div class="ep-section-label">KEY REFERENCE</div>
+        <ol>
+          <li><strong>Russell, B. (1903). <em>The Principles of Mathematics.</em> Cambridge University Press.</strong> — §102「ラッセルのパラドックス」の原典。自己を含む集合論の矛盾として自己言及の形式的限界を最初に定式化した哲学・数学基礎論の古典。</li>
+          <li><strong>Gödel, K. (1931). "Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I." <em>Monatshefte für Mathematik und Physik</em>, 38: 173–198.</strong> — 不完全性定理の原著論文。「この命題は証明できない」という自己言及的算術命題の構成により、形式系の内的限界を証明した。KGH event 237 で記録。</li>
+          <li><strong>Hofstadter, D. R. (1979). <em>Gödel, Escher, Bach: An Eternal Golden Braid.</em> Basic Books.</strong> — ゲーデルの不完全性定理・エッシャーの版画・バッハのカノンを「Strange Loop」として統合。自己言及が認知・意識・意味に与える動態的構造を描いた。ピュリツァー賞受賞。</li>
+          <li><strong>Hofstadter, D. R. (2007). <em>I Am a Strange Loop.</em> Basic Books.</strong> — GEB のテーゼを「私という自己言及的構造」として再精緻化。意識を Strange Loop として定義し、脳と心の関係に自己参照の動態を適用した。</li>
+          <li><strong>Whitehead, A. N. &amp; Russell, B. (1913). <em>Principia Mathematica.</em> Cambridge University Press.</strong> — 数学の論理的基礎づけの大著。ゲーデルが1931年に論証した「不完全性」の対象となった体系の原典。KGH event 501 で記録（1913年の出版完了）。</li>
+          <li><strong>Nagel, E. &amp; Newman, J. R. (1958). <em>Gödel's Proof.</em> New York University Press.</strong> — ゲーデルの証明を数学的素養のある読者に向けて解説した古典的入門書。原論文の構造的骨格を平明に再現しながら、不完全性定理の哲学的含意を論じる。</li>
+          <li><strong>philosophy.db: <code>phil_b16_analytic_philosophy_0004</code>（ゲーデル不完全性定理）; <code>phil_b37_f05ee8d177</code>（ラッセルのパラドックス）; KGH event 237（1931 ゲーデル）; KGH event 501（1913 Principia Mathematica）.</strong> — 本連載の一次資料照合基盤。</li>
+        </ol>
+      </div>
+
+      <!-- Signal list -->
+      <div class="ep-signals">
+        <div class="ep-section-label">SIGNAL LIST</div>
+        <div class="signal-item">
+          <div class="signal-num">SIGNAL 01</div>
+          <p class="signal-text">ゲーデルが1931年に論文で示したのは、<strong>ペアノ算術を含む任意の「十分に強い」一階述語論理の形式系において、真であるが証明不可能な命題が存在する</strong>という事実である（KGH event 237 / <em>Monatshefte für Mathematik und Physik</em> 38: 173–198）。この定理は「数学が不完全だ」という敗北宣言ではなく、「形式系の内側から形式系の限界を正確に記述できる」という能力の証明であった。</p>
+        </div>
+        <div class="signal-item">
+          <div class="signal-num">SIGNAL 02</div>
+          <p class="signal-text">ラッセルのパラドックス（1902年、フレーゲへの書簡で最初に言明 / 1903年 <em>The Principles of Mathematics</em> §102 で公開）は、カントール集合論の「すべての集合の集合」に潜む自己言及の矛盾を暴いた。この発見はフレーゲの『算術の基本法則』第2巻を出版直前に論理的に崩壊させた。<strong>自己言及は形式系にとって例外ではなく、構造的な境界条件</strong>であることが確定したのはこの瞬間である（Russell, 1903, Cambridge UP; philosophy.db <code>phil_b37_f05ee8d177</code>）。</p>
+        </div>
+        <div class="signal-item">
+          <div class="signal-num">SIGNAL 03</div>
+          <p class="signal-text">ホフスタッター（1979, Basic Books）が命名した<strong>Strange Loop（奇妙なループ）</strong>は、「上昇し続けると下降になる」「拡大し続けると縮小になる」という階層横断的な自己回帰構造を指す。GEB はこの構造をゲーデル・エッシャー・バッハの三者に同時に見出した。単なる比喩ではなく、自己言及を持つ任意の系に普遍的に現れる動態的特性として定式化している。</p>
+        </div>
+        <div class="signal-item">
+          <div class="signal-num">SIGNAL 04</div>
+          <p class="signal-text">2020年代の LLM 安全性研究において、モデルの<strong>自己評価能力の限界</strong>はゲーデル的文脈で繰り返し参照されている。philosophy.db <code>phil_b16_analytic_philosophy_0004</code> が記録する「形式系の自己言及的不完全性」は、LLM が自身の誤りを自身の推論で完全に検出できるかという問いと構造的に接続している。閉じた推論系は自己の完全性を自己では証明できない——これは2026年の AI 解釈可能性研究の基本的緊張の一つである。</p>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="ep-nav" aria-label="前後のエピソード">
+        <a class="ep-nav-link" href="ep091.html">
+          <span class="ep-nav-dir">PREV</span>
+          <span class="ep-nav-title">第91話（PART 4 遠未来 最終話）</span>
+        </a>
+        <a class="ep-nav-link" href="ep093.html">
+          <span class="ep-nav-dir">NEXT</span>
+          <span class="ep-nav-title">第93話「再帰は、螺旋ではない」── 許煜が分けたrecurrenceとrecursionの界面</span>
+        </a>
+      </nav>
+
+      <p style="margin-top:32px;font-size:12px;color:var(--text-muted);font-family:var(--font);">
+        生成: PQAR-2026 Phase 5 Stage B / claude-sonnet-4-6 / 一次資料照合済（Russell 1903 §102 / Gödel 1931 <em>Monatshefte</em> 38: 173–198 / Hofstadter 1979 Basic Books / philosophy.db phil_b16_analytic_philosophy_0004; phil_b37_f05ee8d177 / KGH event 237, 501）/ 2026-05-19
+      </p>
+
+    </article>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p><strong>問いの再帰 ─ AIの前で開きなおす2,800年</strong></p>
+    <p>PQAR-2026 / 連載100話 / journal.emerging-future.org</p>
+    <p style="margin-top:12px;">本連載で紹介する思想・哲学的内容は各著者の著作に基づく解釈であり、研究上の誤りを発見された場合はご指摘ください。</p>
+    <p style="margin-top:8px;">&copy; 2026 NPO法人ミラツク</p>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      try { localStorage.setItem('pqar-theme', next); } catch(e) {}
+    }
+    (function() {
+      try {
+        const saved = localStorage.getItem('pqar-theme');
+        if (saved) document.documentElement.setAttribute('data-theme', saved);
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>

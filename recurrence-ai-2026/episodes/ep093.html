@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>再帰は、螺旋ではない ── 問いの再帰 ep093</title>
+  <meta name="description" content="許煜（ユク・ホイ）が2019年に定式化した recurrence（螺旋）と recursion（自己折り返し）の界面。ホワイトヘッドの過程哲学と宇宙技芸概念を通じて、AIの再帰は文明の選択であることを示す。PQAR-2026 第93話。">
+  <meta property="og:title" content="再帰は、螺旋ではない">
+  <meta property="og:description" content="許煜が分けた recurrence と recursion の界面。PQAR-2026 ep093">
+  <meta property="og:type" content="article">
+  <link rel="canonical" href="https://journal.emerging-future.org/toi-no-saiki/ep093.html">
+  <link rel="icon" href="https://esse-sense.com/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Judson:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #121212;
+      --card: #1A1A1A;
+      --accent: #E0E0E0;
+      --accent-warm: #FF4030;
+      --accent-muted: rgba(255,64,48,0.10);
+      --text: #E0E0E0;
+      --text-secondary: #AAAAAA;
+      --text-muted: #8A8A8A;
+      --border: #333333;
+      --border-light: #2A2A2A;
+      --surface: #1A1A1A;
+      --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+      --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    }
+    [data-theme="light"] {
+      --bg: #FFFFFF;
+      --card: #FFFFFF;
+      --accent: #121212;
+      --accent-warm: #CC1400;
+      --accent-muted: rgba(204,20,0,0.06);
+      --text: #121212;
+      --text-secondary: #555555;
+      --text-muted: #6B6B6B;
+      --border: #D9D9D9;
+      --border-light: #EEEEEE;
+      --surface: #F7F7F5;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* skip link */
+    .skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: var(--accent-warm); color: #fff;
+      padding: 8px 16px; z-index: 9999;
+      font-size: 14px; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* read progress */
+    .read-progress { position: fixed; top: 0; left: 0; width: 100%; height: 3px; z-index: 999; background: transparent; }
+    .read-progress-bar { height: 100%; background: var(--accent-warm); width: 0%; transition: width 0.1s linear; }
+
+    /* site header */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+    .site-header-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 100%;
+    }
+    .site-brand { display: flex; flex-direction: column; gap: 2px; text-decoration: none; }
+    .site-brand-text { font-family: var(--font); font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: var(--accent-warm); text-transform: uppercase; }
+    .site-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+    .site-nav { display: flex; align-items: center; gap: 20px; }
+    .site-nav a { font-size: 12px; color: var(--text-secondary); text-decoration: none; letter-spacing: 0.06em; }
+    .site-nav a:hover { color: var(--accent-warm); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-secondary); font-size: 12px; padding: 4px 10px;
+      cursor: pointer; letter-spacing: 0.06em;
+    }
+    .theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+    /* hero */
+    .ep-hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+    .ep-hero-inner { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+    .ep-hero-eyebrow {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; letter-spacing: 0.32em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .ep-hero-eyebrow::before { content: ''; display: block; width: 32px; height: 2px; background: var(--accent-warm); }
+    .ep-hero-num {
+      font-family: 'Judson', serif; font-size: 72px; line-height: 1;
+      color: var(--accent-warm); margin-bottom: 24px;
+    }
+    .ep-hero-num-total { font-size: 24px; color: var(--text-muted); }
+    .ep-hero-title {
+      font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+      line-height: 1.6; margin-bottom: 12px; color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .ep-hero-subtitle {
+      font-family: var(--font-serif); font-size: 16px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.7;
+    }
+    .ep-hero-en {
+      font-family: 'Judson', serif; font-size: 15px; color: var(--text-muted);
+      margin-bottom: 32px; font-style: italic;
+    }
+    .ep-hero-lead {
+      font-family: var(--font-serif); font-size: 16px; line-height: 2.0;
+      border-left: 3px solid var(--accent-warm); padding-left: 20px;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-hero-meta {
+      font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em;
+      display: flex; gap: 20px;
+    }
+
+    /* layout */
+    .ep-layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: grid; grid-template-columns: 240px 1fr; gap: 48px;
+      padding-top: 48px; padding-bottom: 80px;
+    }
+
+    /* toc sidebar */
+    .toc-sidebar { position: sticky; top: 72px; height: fit-content; }
+    .toc-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .toc-section { margin-bottom: 20px; }
+    .toc-part {
+      font-size: 10px; letter-spacing: 0.14em; color: var(--text-muted);
+      font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .toc-sidebar a {
+      display: block; font-size: 12px; color: var(--text-secondary);
+      text-decoration: none; padding: 4px 0; border-left: 2px solid transparent;
+      padding-left: 10px; transition: all 0.15s;
+    }
+    .toc-sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+    .toc-current {
+      color: var(--accent-warm) !important;
+      border-color: var(--accent-warm) !important;
+    }
+
+    /* ep body */
+    .ep-body { min-width: 0; }
+    .ep-body p {
+      font-family: var(--font-serif); font-size: 17px; line-height: 2.1;
+      margin-bottom: 30px; text-indent: 1em; color: var(--text);
+      letter-spacing: 0.025em; font-feature-settings: "palt";
+    }
+    .ep-body p:first-of-type { text-indent: 0; }
+    .ep-body p:first-of-type::first-letter {
+      font-family: 'Judson', serif; font-size: 4.4em; font-weight: 700;
+      float: left; line-height: 0.8; margin-right: 8px; margin-top: 8px;
+      color: var(--accent-warm);
+    }
+    .ep-body strong { color: var(--accent-warm); font-weight: 700; }
+
+    /* appendix section */
+    .ep-appendix {
+      margin-top: 48px; padding: 28px 32px;
+      border: 1px solid var(--border); border-left: 4px solid var(--accent-warm);
+      background: var(--surface); border-radius: 0 4px 4px 0;
+    }
+    .ep-appendix-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-appendix p {
+      font-family: var(--font-serif); font-size: 15px; line-height: 2.0;
+      color: var(--text-secondary); margin-bottom: 0; text-indent: 1em;
+    }
+    .ep-appendix p:first-of-type { text-indent: 0; }
+
+    /* reading lens (KEY REF / SIGNAL) */
+    .reading-lens { margin-top: 48px; border: 1px solid var(--border); border-radius: 4px; }
+    .reading-lens-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer; list-style: none;
+      gap: 12px;
+    }
+    .reading-lens-trigger::-webkit-details-marker { display: none; }
+    .reading-lens-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase;
+    }
+    .reading-lens-title { font-size: 13px; color: var(--text-secondary); flex: 1; }
+    .reading-lens-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+    details[open] .reading-lens-arrow { transform: rotate(180deg); }
+    .reading-lens-body { padding: 20px 20px 24px; border-top: 1px solid var(--border); }
+
+    /* signal list */
+    .signal-list { margin-top: 16px; }
+    .signal-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+    .signal-num {
+      font-size: 10px; letter-spacing: 0.2em; font-weight: 700;
+      color: var(--accent-warm); white-space: nowrap; padding-top: 3px;
+    }
+    .signal-text {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    /* ref list */
+    .ref-list { list-style: none; }
+    .ref-list li {
+      font-family: var(--font-serif); font-size: 14px; line-height: 1.85;
+      color: var(--text-secondary); padding: 12px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ref-list li:last-child { border-bottom: none; }
+    .ref-doi { display: block; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* question */
+    .ep-question { margin-top: 56px; padding: 32px; background: var(--surface); border-radius: 4px; }
+    .ep-question-label {
+      font-size: 10px; letter-spacing: 0.28em; font-weight: 700;
+      color: var(--accent-warm); text-transform: uppercase; margin-bottom: 16px;
+    }
+    .ep-question-q {
+      font-family: var(--font-serif); font-size: 16px; line-height: 1.9;
+      color: var(--text); margin-bottom: 24px;
+    }
+    .ep-question-next { border-top: 1px solid var(--border); padding-top: 16px; }
+    .ep-question-next-meta {
+      font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted);
+      display: block; margin-bottom: 6px; font-weight: 700; text-transform: uppercase;
+    }
+    .ep-question-next-title {
+      font-family: var(--font-serif); font-size: 15px; color: var(--text);
+      display: block; margin-bottom: 12px;
+    }
+    .ep-question-next-link {
+      font-size: 13px; color: var(--accent-warm); text-decoration: none;
+      letter-spacing: 0.08em;
+    }
+    .ep-question-next-link:hover { text-decoration: underline; }
+
+    /* ep actions */
+    .ep-actions { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-actions-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .ep-action-btn {
+      padding: 10px 20px; font-size: 13px; border-radius: 4px;
+      text-decoration: none; letter-spacing: 0.06em; cursor: pointer;
+      border: 1px solid var(--border); color: var(--text-secondary); background: none;
+    }
+    .ep-action-btn.primary {
+      background: var(--accent-warm); border-color: var(--accent-warm);
+      color: #fff;
+    }
+    .ep-action-btn:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+    .ep-action-btn.primary:hover { background: #e03020; }
+
+    /* ep nav */
+    .ep-nav { border-top: 1px solid var(--border); padding: 32px 0; }
+    .ep-nav-inner {
+      max-width: 720px; margin: 0 auto; padding: 0 24px;
+      display: flex; justify-content: space-between; gap: 16px;
+    }
+    .ep-nav-link {
+      text-decoration: none; padding: 16px 20px; border: 1px solid var(--border);
+      border-radius: 4px; flex: 1; max-width: 48%;
+      transition: border-color 0.15s;
+    }
+    .ep-nav-link:hover { border-color: var(--accent-warm); }
+    .ep-nav-link.disabled { opacity: 0.45; pointer-events: none; }
+    .ep-nav-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.14em; margin-bottom: 6px; }
+    .ep-nav-title { font-family: var(--font-serif); font-size: 14px; color: var(--text); }
+    .ep-nav-link.next { text-align: right; }
+
+    /* footer */
+    .site-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 48px 0 32px; }
+    .site-footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .site-disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.8; margin-bottom: 24px; }
+    .site-footer-bottom { font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+
+    /* mobile */
+    @media (max-width: 900px) {
+      .ep-layout { grid-template-columns: 1fr; }
+      .toc-sidebar { position: static; }
+      .ep-hero-num { font-size: 52px; }
+      .ep-hero-title { font-size: 24px; }
+    }
+
+    /* print */
+    @media print {
+      .toc-sidebar, .site-header, .ep-actions, .ep-nav, .theme-toggle { display: none; }
+      .ep-layout { grid-template-columns: 1fr; }
+      .ep-body p { font-size: 14px; line-height: 1.85; }
+    }
+
+    /* focus */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-warm); outline-offset: 3px;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip-link" href="#articleBody">本文へスキップ</a>
+<div class="read-progress"><div class="read-progress-bar" id="progressBar"></div></div>
+
+<!-- site header -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="../index.html">
+      <span class="site-brand-text">MIRA TUKU</span>
+      <span class="site-brand-sub">問いの再帰 ─ AIの前で開きなおす2,800年</span>
+    </a>
+    <nav class="site-nav" aria-label="サイトナビゲーション">
+      <a href="../index.html">連載トップ</a>
+      <a href="../articles.html">全100話</a>
+      <button class="theme-toggle" id="themeBtn" aria-label="ライト/ダークモード切替">☾ / ☀</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ep hero -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <div class="ep-hero-eyebrow">第5部 メタ問い ・ Q5(+1) 我々は問えているか #093</div>
+    <div class="ep-hero-num">93.<span class="ep-hero-num-total">/ 100</span></div>
+    <h1 class="ep-hero-title">再帰は、螺旋ではない</h1>
+    <p class="ep-hero-subtitle">── 許煜が分けた recurrence と recursion の界面</p>
+    <p class="ep-hero-en"><em>Recursion Is Not Recurrence: Where Yuk Hui Drew the Line</em></p>
+    <p class="ep-hero-lead">
+      この連載のタイトル「問いの再帰」——その「再帰」が指しているのは螺旋的反復か、自己折り返しの構造か。2019年、香港出身の哲学者許煜（ユク・ホイ）は recurrence と recursion を峻別した。前者は時間軸上の位相反復、後者は構造の自己呼び出しである。この区別はホワイトヘッドの過程哲学と共鳴しつつ、AIの設計倫理へ問いを折り返す。
+    </p>
+    <div class="ep-hero-meta">
+      <span>著者: 西村 勇也</span>
+      <span>2026-05-19</span>
+      <span>読了 約6分</span>
+    </div>
+  </div>
+</section>
+
+<!-- ep layout -->
+<div class="ep-layout">
+  <!-- toc sidebar -->
+  <aside class="toc-sidebar" aria-label="連載目次">
+    <div class="toc-label">FULL SERIES — 全100話</div>
+    <div class="toc-section">
+      <div class="toc-part">序章</div>
+      <a href="ep001.html">ep001 問いは答えに先立つ</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">PART 1〜4</div>
+      <a href="ep002.html">ep002〜ep091 (各話へ)</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">第5部 メタ問い / Q5(+1)</div>
+      <a href="ep092.html">ep092 問いを問うとき、問いはすでに……</a>
+      <a href="ep093.html" class="toc-current">● ep093 再帰は、螺旋ではない</a>
+      <a href="ep094.html" style="opacity:0.5">ep094 LLMの自己反省は……</a>
+      <a href="ep095.html" style="opacity:0.5">ep095 問う者を呼び出すのは……</a>
+      <a href="ep096.html" style="opacity:0.5">ep096 生命は、計算より先に……</a>
+      <a href="ep097.html" style="opacity:0.5">ep097 7つの問いを、もう一度……</a>
+      <a href="ep098.html" style="opacity:0.5">ep098 この連載は、何を問えたか</a>
+      <a href="ep099.html" style="opacity:0.5">ep099 この連載が、問えなかった声</a>
+    </div>
+    <div class="toc-section">
+      <div class="toc-part">結章</div>
+      <a href="ep100.html" style="opacity:0.5">ep100 問いは、再帰しつづける</a>
+    </div>
+  </aside>
+
+  <!-- ep body -->
+  <article class="ep-body" id="articleBody">
+    <p>この連載のタイトルを、もう一度声に出してほしい。「問いの再帰」——その「再帰」は何を指しているか。螺旋か、それとも自己折り返しか。二つは似ているが、根本的に異なる構造である。2019年、香港出身の哲学者<strong>許煜（ユク・ホイ）</strong>は著書『Recursivity and Contingency』（Rowman &amp; Littlefield International）でこの区別を鋭く定式化した。recurrence（再帰・螺旋）とは時間軸上の位相反復である。季節が戻るように、問いが繰り返し現れるように。しかし recursion（再帰・再び折り返す）は構造の自己呼び出しだ。関数が自分自身を呼び、問いが問いそのものを対象とする、あの構造である。</p>
+
+    <p>許煜がこの区別に執着した理由は一見地味だが、その射程は深い。20世紀のサイバネティクスと計算機科学は「recursion」をノルベルト・ウィーナーとジョン・フォン・ノイマンが構築した技術概念として整備した。しかし許煜は問う——その再帰は、西洋の技術的合理性が選び取った特定の自己折り返しにすぎないのではないか。著書前半の中核をなすのは、ギルベール・シモンドンの個体化論（individuation）である。シモンドンは1958年の論文で「個体とは操作のない純粋な存在でなく、継続的な個体化の過程である」と論じた。許煜はここから、再帰を「個体化する系が自分自身の生成を畳み込む運動」として読み直す。</p>
+
+    <p>この議論は<strong>アルフレッド・ノース・ホワイトヘッド</strong>の過程哲学（KGH event 333）と深く共鳴する。ホワイトヘッドは1929年の『Process and Reality』（Macmillan）で「合生（concrescence）」という概念を提示した。それは複数の現実的契機が新しい現実的契機として「把握（prehension）」され凝縮する過程であり、世界はこの連続的な自己産出によって流れている。ホワイトヘッドにとって、反復は同一のものの再現ではなく、過去を取り込みながら新たな差異として到来する。許煜の recursion とホワイトヘッドの concrescence は同型の直観を持つ。しかし許煜はさらに問いを一歩進める——ならば、異なる文明はそれぞれ独自の「宇宙技芸（cosmotechnics）」を持つのではないか。</p>
+
+    <p>宇宙技芸とは、許煜が2016年の『The Question Concerning Technology in China』（Urbanomic）で展開した概念である。ハイデッガーが「技術の問い」で描いた西洋の技術的Gestell（集立）は普遍的な技術本質ではなく、ひとつの宇宙—技術的関係にすぎない。中国の道家的自然観と技術関係は、西洋とは異なる合生の論理を持つ。spiralとして繰り返されるように見える問いが実は異なる文明の recursion を通じて複数の形で自己組織化しているとすれば、「再帰」は単一構造ではない。<strong>AIは今、この多様な recursion のひとつを採用して設計されている。どの宇宙技芸から引き出された再帰か、を問うことが技術倫理の核心になる。</strong></p>
+
+    <!-- appendix -->
+    <div class="ep-appendix">
+      <div class="ep-appendix-label">追記 — 第4変容期での再帰</div>
+      <p>2026年のLLMは、文脈窓の中で自分自身の出力を「再評価せよ」と促されたとき、ゲーデル的意味での決定不能に直面する一方で、許煜的意味での「どの recursion を選ぶか」という問いにも晒されている。GPT系アーキテクチャのTransformerは次トークン予測という線形処理に見えて、アテンション機構によって文脈内の自分自身を参照する構造的な再帰系である。しかしその再帰が採用しているのは西洋計算論的な自己折り返しであり、他の宇宙技芸が描きうる recursion ではない。philosophy.db <code>phil_b45_dbdff702b4</code>（許煜 Cosmotechnics）と KGH event 333（ホワイトヘッド過程哲学 1929）は、この問いへの一次ソースとして機能する。前話 ep092 の Hofstadter が「Strange Loop とは何か」を問ったとすれば、本話の許煜は「どの文明の Loop を選ぶか」を問う。</p>
+    </div>
+
+    <!-- SIGNAL LIST -->
+    <details class="reading-lens" id="lens-signal">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">SIGNAL LIST</span>
+        <span class="reading-lens-title">本話のシグナル</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <div class="signal-list">
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 01</div>
+            <p class="signal-text">許煜『Recursivity and Contingency』(2019) は西洋計算論的 recursion を特殊ケースとして位置づけ直し、シモンドンの個体化論を経由して <strong>recursion を宇宙技芸の文明別差異として再定義した</strong>。この提案は「AI技術は文化中立的である」という通説に対する哲学的反証として機能する（Hui, 2019, Rowman &amp; Littlefield International; philosophy.db <code>phil_b45_dbdff702b4</code>）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 02</div>
+            <p class="signal-text">ホワイトヘッドの合生（concrescence）概念は、<strong>1929年の出版時から現代の複雑系科学・プロセス神学・生命倫理の三分野に参照され続けており</strong>、許煜が2019年に発見した recurrence ↔ recursion の界面は、KGH event 333 が示す過程哲学の系譜上に位置する（Whitehead, 1929, <em>Process and Reality</em>, Macmillan; great-figures id 5834）。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 03</div>
+            <p class="signal-text">philosophy.db <code>phil_b45_dbdff702b4</code>（許煜 Cosmotechnics）は、既存の <strong>18以上の関連DB</strong>（kgh / sfs / tc / philosophical-questions）とのcross_ref接続を持ち、PQAR-2026 連載の3底流「東西南北の対等動員」を技術哲学の次元で実装する一次概念ノードとして機能している。</p>
+          </div>
+          <div class="signal-item">
+            <div class="signal-num">SIGNAL 04</div>
+            <p class="signal-text">シモンドンの個体化論（1958）は当初仏語圏でのみ参照されたが、2000年代以降ドゥルーズ・ガタリ研究、STS（科学技術社会論）、計算機科学哲学の三方向から<strong>同時的に再発見</strong>されており、許煜による recursion 再定式化（2019）はそのシモンドン再評価の最前線として位置づけられる（Simondon, 1958, repr. 1995/2005; cited in Hui, 2019）。</p>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- KEY REFERENCE -->
+    <details class="reading-lens" id="lens-key-reference">
+      <summary class="reading-lens-trigger">
+        <span class="reading-lens-label">KEY REFERENCE</span>
+        <span class="reading-lens-title">この回の典拠</span>
+        <span class="reading-lens-arrow">▾</span>
+      </summary>
+      <div class="reading-lens-body">
+        <ul class="ref-list">
+          <li>
+            <strong>Hui, Y. (2019). <em>Recursivity and Contingency.</em> London: Rowman &amp; Littlefield International.</strong>
+            <span class="ref-doi">ISBN: 978-1786600509 ／ 連載タイトル「問いの再帰」の直接的一次ソース。recursion と contingency の弁証法的関係。philosophy.db <code>phil_b45_dbdff702b4</code> 参照。</span>
+          </li>
+          <li>
+            <strong>Hui, Y. (2016). <em>The Question Concerning Technology in China: An Essay in Cosmotechnics.</em> Falmouth: Urbanomic.</strong>
+            <span class="ref-doi">宇宙技芸概念の原典。ハイデッガー技術論への非西洋的応答。中国の道家的技術関係と西洋 Gestell の比較論。</span>
+          </li>
+          <li>
+            <strong>Whitehead, A. N. (1929). <em>Process and Reality: An Essay in Cosmology.</em> New York: Macmillan.</strong>
+            <span class="ref-doi">合生（concrescence）・把握（prehension）概念の原典。KGH event 333。great-figures id 5834。現代過程哲学の基盤作。</span>
+          </li>
+          <li>
+            <strong>Simondon, G. (1958). <em>L'individuation à la lumière des notions de forme et d'information.</em> Grenoble: Millon.</strong>
+            <span class="ref-doi">邦訳: 藤井千佳世訳 (2018)『形態と情報の概念に照らした個体化』法政大学出版局 ／ 個体化論の原典。許煜の recursivity 再定式化の直接的先駆。</span>
+          </li>
+          <li>
+            <strong>Wiener, N. (1948). <em>Cybernetics: Or Control and Communication in the Animal and the Machine.</em> New York: MIT Press/Wiley.</strong>
+            <span class="ref-doi">サイバネティクスにおける再帰概念の制度化の起点。許煜が批判的に受け継ぐ西洋技術論の基礎。</span>
+          </li>
+          <li>
+            <strong>Heidegger, M. (1954). 'Die Frage nach der Technik.' In <em>Vorträge und Aufsätze.</em> Pfullingen: Günther Neske.</strong>
+            <span class="ref-doi">邦訳: 関口浩訳 (2009)「技術への問い」『技術論』平凡社ライブラリー ／ 技術的 Gestell 論の原典。許煜が宇宙技芸で応答する対話相手。</span>
+          </li>
+          <li>
+            <strong>Stiegler, B. (1994). <em>Technics and Time, Vol. 1: The Fault of Epimetheus.</em> Stanford: Stanford University Press.</strong>
+            <span class="ref-doi">技術の時間論。許煜の cosmotechnics と連続する系譜。retentions（保持）概念と recursion の接続。</span>
+          </li>
+          <li>
+            <strong>中村雄二郎 (1993)『哲学の現在 — 生きることと考えること』岩波書店.</strong>
+            <span class="ref-doi">日本語圏における技術と身体・過程哲学の接続点。許煜とホワイトヘッドの問いを日本語文脈で参照するための基底文献。</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- QUESTION FOR NEXT -->
+    <section class="ep-question">
+      <div class="ep-question-label">QUESTION FOR NEXT — 次話への問い</div>
+      <p class="ep-question-q">許煜は「どの宇宙技芸の recursion を選ぶか」を問うた。次話では、recursion を選ぶのが誰なのかが問われる。LLMが「もう一度考えて」と促されて応答を修正するとき、その「もう一度考える」主体は何者か。反省する自己の所在を工学的・哲学的に切り分けることが、次の問いの出発点になる。</p>
+      <div class="ep-question-next">
+        <span class="ep-question-next-meta">NEXT EPISODE</span>
+        <span class="ep-question-next-title">第94話「LLMの自己反省は、誰が反省しているのか」</span>
+        <a class="ep-question-next-link" href="ep094.html" data-target-ep="094">公開を待つ →</a>
+      </div>
+    </section>
+  </article>
+</div>
+
+<!-- ep actions -->
+<section class="ep-actions">
+  <div class="ep-actions-inner">
+    <a class="ep-action-btn primary" href="../index.html#newsletter">メルマガで次話を受け取る</a>
+    <a class="ep-action-btn" href="mailto:info@emerging-future.org?subject=ep093感想">この話に感想を送る</a>
+    <a class="ep-action-btn" href="../articles.html">全100話の地図へ</a>
+  </div>
+</section>
+
+<!-- ep nav -->
+<nav class="ep-nav" aria-label="話ナビゲーション">
+  <div class="ep-nav-inner">
+    <a class="ep-nav-link prev" href="ep092.html">
+      <div class="ep-nav-meta">PREV — ep092</div>
+      <div class="ep-nav-title">問いを問うとき、問いはすでに自分を呼んでいる</div>
+    </a>
+    <a class="ep-nav-link next" href="ep094.html">
+      <div class="ep-nav-meta">NEXT — ep094</div>
+      <div class="ep-nav-title">LLMの自己反省は、誰が反省しているのか</div>
+    </a>
+  </div>
+</nav>
+
+<!-- footer -->
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="site-disclaimer"><strong>本連載の利用について</strong><br>
+    本連載で紹介する研究内容は2026年5月時点までの公表知見に基づくもので、その後の研究で更新される可能性があります。引用した数値・効果は集団の傾向であり、個人差が大きいことが前提です。研究の存在・年代・著者は実在検証を行っていますが、解釈や要約に誤りを発見された場合はinfo@emerging-future.orgまでご指摘ください。</p>
+    <div class="site-footer-bottom">
+      &copy; 2026 NPO法人ミラツク / 問いの再帰 ─ AIの前で開きなおす2,800年
+    </div>
+  </div>
+</footer>
+
+<script>
+  // theme toggle
+  (function(){
+    const btn = document.getElementById('themeBtn');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('pqar-theme');
+    if(saved) html.setAttribute('data-theme', saved);
+    btn && btn.addEventListener('click', function(){
+      const cur = html.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('pqar-theme', next);
+    });
+  })();
+
+  // read progress
+  (function(){
+    const bar = document.getElementById('progressBar');
+    if(!bar) return;
+    window.addEventListener('scroll', function(){
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (docHeight > 0 ? (scrollTop / docHeight * 100) : 0) + '%';
+    });
+  })();
+</script>
+</body>
+</html>
