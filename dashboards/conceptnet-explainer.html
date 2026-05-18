@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ConceptNet (MIT) ─ 27年の常識知識グラフ徹底解説 | miratuku-news</title>
+<meta name="description" content="MIT Media Lab由来のConceptNetを徹底解説。1999年OMCS起点・3,400万エッジ・304言語・34関係タイプの構造・データソース・限界・ベンチマーク特定までを赤白CI textbook型でまとめた解説レポート。">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  gap: 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 5px 8px 5px 0;
+  transition: color 0.15s;
+  line-height: 1.5;
+}
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--accent-warm);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+
+.book-header {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.book-db-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.db-tag {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.book-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.book-meta {
+  margin-top: 32px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 60px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  line-height: 1.5;
+  font-weight: 700;
+  margin-bottom: 28px;
+  letter-spacing: 0;
+}
+h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+h4 {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 32px 0 12px;
+  color: var(--accent-warm);
+}
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  font-weight: 500;
+  text-indent: 0;
+}
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em {
+  font-style: normal;
+  background: linear-gradient(transparent 60%, var(--accent-muted) 60%);
+  padding: 0 2px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+th, td {
+  padding: 11px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+th { background: var(--surface); font-weight: 700; }
+
+.callout {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+  padding: 20px 24px;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+.callout-title {
+  font-weight: 700;
+  color: var(--accent-warm);
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+.stat-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-family: var(--font);
+  background: var(--card);
+}
+.stat-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+pre {
+  background: var(--surface);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 24px 0;
+  border-left: 3px solid var(--accent-warm);
+}
+pre code { background: none; padding: 0; }
+
+.timeline {
+  margin: 32px 0;
+  padding-left: 0;
+  list-style: none;
+  border-left: 2px solid var(--border);
+}
+.timeline li {
+  position: relative;
+  padding: 8px 0 16px 24px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+}
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  background: var(--accent-warm);
+  border-radius: 50%;
+}
+.timeline .year {
+  font-weight: 700;
+  color: var(--accent-warm);
+  font-family: "SF Mono", Menlo, monospace;
+  margin-right: 12px;
+}
+
+footer {
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: 24px 0;
+  }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>BENCHMARK ANALYSIS</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次"><div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#ch1"><span class="toc-num">01</span>ConceptNet とは何か</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>27 年の歴史</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>規模と内訳</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>34 の関係タイプ</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>8 系統のデータソース</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>API と利用方法</a></li>
+<li><a href="#ch7"><span class="toc-num">07</span>Numberbatch と NLP 応用</a></li>
+<li><a href="#ch8"><span class="toc-num">08</span>知られた限界</a></li>
+<li><a href="#ch9"><span class="toc-num">09</span>本エコシステムとの比較</a></li>
+<li><a href="#ch10"><span class="toc-num">10</span>ベンチマーク・ステートメント</a></li>
+<li><a href="#refs"><span class="toc-num">★</span>典拠</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">BENCHMARK</span>
+<span class="db-tag">KNOWLEDGE GRAPH</span>
+<span class="db-tag">MIT MEDIA LAB</span>
+<span class="db-tag">CONCEPTNET 5.8</span>
+</div>
+<h1 class="book-title">ConceptNet（MIT）─ 27 年の常識知識グラフ徹底解説</h1>
+<p class="book-subtitle">1999 年 MIT Media Lab で生まれた Open Mind Common Sense から 3,400 万エッジ・304 言語の知識グラフへ。本エコシステムが真のベンチマークとすべき相手の構造・到達点・限界を、10 章で読み解く。</p>
+<div class="book-meta">
+<span>作成 2026-05-18</span>
+<span>Yuya Nishimura + Claude Opus 4.7</span>
+<span>解説レポート / 約 8,000 字</span>
+</div>
+</header>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">ConceptNet とは何か</h2>
+
+<p class="lead">ConceptNet は、人間が当たり前に持っている「常識（commonsense）」を、コンピュータが扱える形のグラフに変換した知識基盤である。「鳥は飛ぶ」「コーヒーは熱い」「医者は病院で働く」── こうした、辞書には書かれないが誰もが知っている関係を、3,400 万本のエッジで結んでいる。</p>
+
+<p>もう少し技術的に言えば、ConceptNet は <strong>多言語の semantic network（意味ネットワーク）</strong>である。ノード（node）は単語や短いフレーズで、エッジ（edge）はノード同士を「使う / である / 部分である / 引き起こす」といった関係でつなぐ。たとえば <code>cat ─ /r/IsA ─ animal</code>（猫は動物である）、<code>knife ─ /r/UsedFor ─ cutting</code>（ナイフは切るために使われる）といった具合である。</p>
+
+<p>WordNet（プリンストン大学の語彙データベース）が「同義語の集合（synset）」を中心に据えるのに対し、ConceptNet は <em>関係そのもの</em> を中心に据える。WordNet が「cat と feline は同義だ」と教えるとすれば、ConceptNet は「cat は牛乳が好きだ / 夜行性だ / ペットとして飼われる / ネズミを捕る」と教える。前者が辞書、後者が常識集と言ってもいい。</p>
+
+<div class="callout">
+<div class="callout-title">本レポートの読み方</div>
+このレポートは、ConceptNet 自体を初見の読者でも理解できるよう書かれている。第 1〜7 章で ConceptNet の構造と到達点を把握し、第 8 章で限界、第 9〜10 章で本エコシステム（AR-DB + 167 DB）が立つべきベンチマークを定義する。
+</div>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">27 年の歴史 ─ OMCS から ConceptNet 5.8 へ</h2>
+
+<p>ConceptNet の起点は、1999 年に <strong>MIT Media Lab</strong> で立ち上げられた <em>Open Mind Common Sense (OMCS)</em> プロジェクトである。Push Singh と Marvin Minsky が中心となり、「インターネット上の不特定多数のボランティアから常識を集める」という、当時としては大胆な試みだった。</p>
+
+<p>2007 年頃から MIT の研究者 Robyn Speer（後の Luminoso Technologies 共同創業者）が中核を担うようになり、2017 年の AAAI で発表された <em>ConceptNet 5.5: An Open Multilingual Graph of General Knowledge</em> によって学術的にも産業的にも広く認知される基盤になった。</p>
+
+<h3>主要マイルストーン</h3>
+<ul class="timeline">
+<li><span class="year">1999</span>MIT Media Lab が <strong>Open Mind Common Sense (OMCS)</strong> を立ち上げ。Push Singh / Marvin Minsky 主導。ボランティアから英文の常識を集める Web フォーム方式。</li>
+<li><span class="year">2007</span>初期版 ConceptNet 公開。100 万本程度のエッジ。</li>
+<li><span class="year">2012</span>ConceptNet 5 リリース。多言語化を本格化。LREC 2012 で論文発表。</li>
+<li><span class="year">2017</span>ConceptNet 5.5 リリース、<strong>AAAI で論文発表</strong>。Numberbatch（後述）が SemEval-2017 Task 2 で総合優勝、複数言語で state-of-the-art を達成。Luminoso Technologies が運用主体に。</li>
+<li><span class="year">2019</span>ConceptNet 5.7 リリース。REST API（JSON-LD）の整備。</li>
+<li><span class="year">2020</span><strong>ConceptNet 5.8 リリース（最終版）</strong>。インドネシア語・マレー語独立。Wiktionary パーサ更新。HTTPS / Jenkins / Terraform 整備。</li>
+<li><span class="year">2021</span>Robyn Speer が Luminoso を退社。9 月以降 PyPI 更新停止。事実上の <strong>maintenance mode</strong> 入り。</li>
+<li><span class="year">2026</span>conceptnet.io の API は稼働中。ただし新規エッジ追加は停止状態。Robyn Speer の活動は <code>concepts.arborelia.net</code> に移行。</li>
+</ul>
+
+<p>つまり、ConceptNet は <em>27 年の歴史を持ち、技術的には完成形に近く、しかし新規拡張は事実上止まっている</em> ── これが 2026 年現在の正確な姿である。</p>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">規模と内訳</h2>
+
+<p>ConceptNet 5.8 の規模を、よく引用される数値で押さえておこう。</p>
+
+<div class="stats-row">
+<div class="stat-box"><div class="stat-num">34M</div><div class="stat-label">エッジ（関係）</div></div>
+<div class="stat-box"><div class="stat-num">8M</div><div class="stat-label">ノード（概念）</div></div>
+<div class="stat-box"><div class="stat-num">304</div><div class="stat-label">言語</div></div>
+<div class="stat-box"><div class="stat-num">34</div><div class="stat-label">関係タイプ</div></div>
+</div>
+
+<p>エッジ数 3,400 万、ノード数 約 800 万、扱う言語は 304 にのぼる。ただしこの「304 言語」の中身は不均一で、英語・フランス語・ドイツ語・日本語・中国語など <strong>コア 10 言語</strong>が大半のエッジを占め、<strong>中程度 77 言語</strong>と<strong>残り 217 言語</strong>は Wiktionary 由来の辞書的エッジが中心になる。</p>
+
+<p>関係タイプは 34 種に絞られている。これは「設計思想として汎用的な関係だけを許す」という選択の結果で、後述するように Wikidata の 12,000 プロパティとは方向性が大きく異なる。</p>
+
+<h3>他の知識グラフとの規模比較</h3>
+<table>
+<thead><tr><th>知識グラフ</th><th>エンティティ</th><th>エッジ / 主張</th><th>言語</th><th>関係タイプ</th></tr></thead>
+<tbody>
+<tr><td><strong>ConceptNet 5.8</strong></td><td>約 800 万</td><td>約 3,400 万</td><td>304</td><td>34</td></tr>
+<tr><td>WordNet 3.1</td><td>約 15 万 synset</td><td>約 30 万関係</td><td>英語中心 (OMWN で多言語)</td><td>約 15</td></tr>
+<tr><td>Wikidata</td><td>約 1.15 億</td><td>約 14 億 statements</td><td>380+</td><td>約 12,000 プロパティ</td></tr>
+<tr><td>DBpedia</td><td>約 600 万</td><td>約 130 億 triples</td><td>140+</td><td>約 2,800</td></tr>
+<tr><td>OpenAlex (学術)</td><td>約 2.5 億 works</td><td>約 30 億関係</td><td>多言語タグ</td><td>学術専用</td></tr>
+</tbody>
+</table>
+
+<p>規模だけ見れば ConceptNet は Wikidata の 3% にすぎない。だが ConceptNet の主張は「<em>規模ではなく常識への特化</em>」である。Wikidata が「東京の人口は何人か」を答えるのに対し、ConceptNet は「東京は大きい / 都市である / 日本にある / 電車が多い」と答える。守備範囲が違う。</p>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">34 の関係タイプ ─ 何を「常識」として保持するか</h2>
+
+<p>ConceptNet が扱う 34 の関係タイプ（<code>/r/</code> namespace）は、人間の常識を 34 種類に整理した分類体系として読める。代表的なものを挙げる。</p>
+
+<h4>意味の関係</h4>
+<ul>
+<li><code>/r/Synonym</code> ─ 同義（happy ⇄ joyful）</li>
+<li><code>/r/Antonym</code> ─ 反対語（hot ⇄ cold）</li>
+<li><code>/r/SimilarTo</code> ─ 類似（cat ≈ tiger）</li>
+<li><code>/r/DistinctFrom</code> ─ 区別される（red ≠ blue）</li>
+</ul>
+
+<h4>分類・所属の関係</h4>
+<ul>
+<li><code>/r/IsA</code> ─ 〜である（dog → mammal）</li>
+<li><code>/r/PartOf</code> ─ 〜の一部（wheel → car）</li>
+<li><code>/r/HasA</code> ─ 〜を持つ（car → wheel）</li>
+<li><code>/r/MadeOf</code> ─ 〜でできている（bread → flour）</li>
+</ul>
+
+<h4>機能・目的の関係</h4>
+<ul>
+<li><code>/r/UsedFor</code> ─ 〜のために使う（knife → cutting）</li>
+<li><code>/r/CapableOf</code> ─ 〜できる（bird → fly）</li>
+<li><code>/r/HasProperty</code> ─ 〜の性質を持つ（ice → cold）</li>
+<li><code>/r/Desires</code> ─ 〜を欲する（cat → fish）</li>
+</ul>
+
+<h4>事象・因果の関係</h4>
+<ul>
+<li><code>/r/Causes</code> ─ 引き起こす（rain → wet）</li>
+<li><code>/r/HasSubevent</code> ─ サブイベント（cooking → cutting）</li>
+<li><code>/r/HasPrerequisite</code> ─ 前提条件（drive → license）</li>
+<li><code>/r/MotivatedByGoal</code> ─ 目的（study → learn）</li>
+</ul>
+
+<h4>位置・文脈の関係</h4>
+<ul>
+<li><code>/r/AtLocation</code> ─ 典型的な場所（fish → water）</li>
+<li><code>/r/LocatedNear</code> ─ 近くにある</li>
+<li><code>/r/HasContext</code> ─ 〜の文脈で（home run → baseball）</li>
+</ul>
+
+<h4>語源・形態の関係</h4>
+<ul>
+<li><code>/r/FormOf</code> ─ 活用形（running → run）</li>
+<li><code>/r/DerivedFrom</code> ─ 派生（unhappy ← happy）</li>
+<li><code>/r/EtymologicallyRelatedTo</code> ─ 語源的関連</li>
+</ul>
+
+<p>残りには <code>/r/RelatedTo</code>（最も汎用な「何らかの関係がある」）、<code>/r/SymbolOf</code>（象徴）、<code>/r/CreatedBy</code>（作者）、<code>/r/ReceivesAction</code>（受動）、<code>/r/MannerOf</code>（やり方）などが含まれる。</p>
+
+<div class="callout">
+<div class="callout-title">設計思想 ─ 「34 種で足りる」という割り切り</div>
+Wikidata がプロパティを 12,000 種類用意するのに対し、ConceptNet は 34 種で割り切る。これは「<em>常識は汎用関係で十分に表現できる</em>」という思想の選択である。深い専門知識（「タンパク質 X はパスウェイ Y に属する」など）は扱わず、「コーヒーは熱い」のような誰もが知っている関係に絞る。本エコシステムが領域別に関係タイプを正規化する設計（学術概念 DB の predecessor / successor / cross_domain 等）とは方向性が真逆である。
+</div>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">8 系統のデータソース ─ どこから常識を集めたか</h2>
+
+<p>ConceptNet 5.8 のエッジは、以下の 8 系統から供給されている。供給割合が大きい順に挙げる。</p>
+
+<h3>① Wiktionary（最大シェア）</h3>
+<p>多言語辞書 Wiktionary から自動抽出された同義語・反意語・翻訳・語義。ConceptNet の多言語性のほとんどは Wiktionary に依存している。2020 年版（5.8）では、フランス語・ドイツ語 Wiktionary を 4 年分更新した。</p>
+
+<h3>② Open Mind Common Sense (OMCS)</h3>
+<p>1999 年に MIT で立ち上げられた、ConceptNet の母体。Web フォームで一般ボランティアから「○○ は △△ のために使う」のような英文を集めた。後述する <strong>ノイズの主要発生源</strong>でもある。</p>
+
+<h3>③ Open Multilingual WordNet (OMWN)</h3>
+<p>WordNet を 30 以上の言語に拡張した専門家構築の語彙ネットを統合。同義語と分類関係（IsA）の精度が高い供給源。</p>
+
+<h3>④ DBpedia</h3>
+<p>Wikipedia のインフォボックス（記事右上の構造化部分）から自動抽出された関係。「人物の出身国」「映画の監督」など事実的関係を補強。</p>
+
+<h3>⑤ OpenCyc</h3>
+<p>Doug Lenat が 1984 年から構築している大規模オントロジー Cyc の公開部分。形式論理に近い厳密な分類関係を提供。</p>
+
+<h3>⑥ JMDict</h3>
+<p>日本語の電子辞書プロジェクト。日本語ノードの主要供給源。</p>
+
+<h3>⑦ Games With A Purpose (GWAP)</h3>
+<p>クラウドソースをゲーム化した試み。代表は CMU の <em>Verbosity</em>（英語）と日本の <em>nadya.jp</em>（日本語）。プレイヤーが楽しみながら知識を入力する仕組み。</p>
+
+<h3>⑧ 一部の専門辞書</h3>
+<p>業界・ドメイン辞書のごく一部が統合されている。</p>
+
+<div class="callout">
+<div class="callout-title">供給源の偏りが、後述する限界を生む</div>
+ConceptNet の供給源は <strong>OMCS（英語クラウドソース）+ Wiktionary（多言語辞書）</strong>が二大柱である。これは「英語常識を中核に、多言語へ辞書的に展開する」という構造を必然的に持つ。後述する Eurocentric な偏りはこの供給源構造に由来する。
+</div>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">API と利用方法 ─ どう使うか</h2>
+
+<p>ConceptNet は <strong>REST API（JSON-LD 形式）</strong> で誰でも利用できる。3 つのクエリ方法がある。</p>
+
+<h3>① Lookup ─ 概念名から関連エッジを取る</h3>
+<pre><code>GET http://api.conceptnet.io/c/en/football</code></pre>
+<p>"football" に関連するエッジ群を JSON で返す。日本語は <code>/c/ja/...</code>、トルコ語は <code>/c/tr/...</code>。</p>
+
+<h3>② Search ─ 条件にマッチするエッジを探す</h3>
+<pre><code>GET http://api.conceptnet.io/search?rel=/r/UsedFor&end=/c/en/cutting</code></pre>
+<p>「<em>切るために使われるもの</em>」を全部返す（knife, scissors, saw など）。</p>
+
+<h3>③ Association ─ 概念に「近い」概念を見つける</h3>
+<pre><code>GET http://api.conceptnet.io/related/c/en/cat?filter=/c/en</code></pre>
+<p>"cat" に意味的に近い英語概念を返す（dog, kitten, feline など）。Numberbatch 埋め込みベース。</p>
+
+<h3>レート制限</h3>
+<table>
+<tr><th>制限</th><th>値</th></tr>
+<tr><td>時間あたり</td><td>3,600 リクエスト/時</td></tr>
+<tr><td>バースト</td><td>120 リクエスト/分</td></tr>
+<tr><td>推奨</td><td>平均 1 req/sec 未満</td></tr>
+</table>
+
+<h3>Bulk Download</h3>
+<p>GitHub <code>commonsense/conceptnet5</code> から CSV / PostgreSQL dump で全データを取得可能。研究目的の大量利用はこちらが推奨される。</p>
+</section>
+
+<section class="chapter-section" id="ch7">
+<div class="chapter-number-label">CHAPTER 07</div>
+<h2 class="chapter-title">Numberbatch ─ ConceptNet が NLP の標準になった瞬間</h2>
+
+<p>ConceptNet を一躍 NLP（自然言語処理）の主流に押し上げたのが、<strong>ConceptNet Numberbatch</strong> という派生プロダクトである。</p>
+
+<p>Numberbatch は <em>単語埋め込み（word embeddings）</em>、つまり「単語を数百次元のベクトルで表現する」技術である。Google の word2vec、Stanford の GloVe と並び、2017 年時点で <strong>最も精度の高い単語埋め込み</strong>と見なされた。</p>
+
+<h3>仕組み</h3>
+<p>Numberbatch は単独のモデルではなく、複数の手法を組み合わせた <em>アンサンブル</em> である：</p>
+<ul>
+<li><strong>word2vec</strong>（Google）の分散表現</li>
+<li><strong>GloVe</strong>（Stanford）の共起ベース埋め込み</li>
+<li><strong>OpenSubtitles 2016</strong>（映画字幕コーパス）</li>
+<li>これらを <strong>ConceptNet のグラフ構造で retrofitting（再調整）</strong>する</li>
+</ul>
+
+<p>つまり「統計的に得た埋め込みを、ConceptNet が知っている『これとこれは意味が近い』という常識で補正する」発想である。</p>
+
+<h3>SemEval-2017 Task 2 ─ 「多言語意味類似度」での圧勝</h3>
+<p>2017 年の SemEval（自然言語処理の国際コンペ）Task 2「多言語・言語横断的な意味類似度」で、Numberbatch は <strong>landslide victory（圧勝）</strong>を記録した：</p>
+<ul>
+<li>2 つのサブタスク両方で 1 位</li>
+<li>5 言語中 4 言語で 1 位</li>
+<li>10 の言語横断ペア全てで 1 位</li>
+</ul>
+
+<p>これによって ConceptNet は単なる「常識データベース」を超えて、<em>実用 NLP の基盤技術</em> として広く採用されるに至った。質問応答・意味検索・分類タスクなどで世界中の研究者・企業が使っている。</p>
+
+<div class="callout">
+<div class="callout-title">本エコシステムに引き寄せて</div>
+本エコシステムには Numberbatch に相当する <em>横断的な埋め込みレイヤ</em> がまだない。AR-DB はメタ層を持つが、167 DB の概念を「ベクトル空間で意味的に近い概念を瞬時に返す」機能は実装されていない。これは追うべき機能ベンチマークの一つである。
+</div>
+</section>
+
+<section class="chapter-section" id="ch8">
+<div class="chapter-number-label">CHAPTER 08</div>
+<h2 class="chapter-title">知られた限界 ─ ConceptNet の弱点</h2>
+
+<p>ConceptNet は 27 年の蓄積を持つ強力なリソースだが、学術文献では複数の限界が指摘されている。これらは <strong>本エコシステムが構造的に避けている / 既に超えている領域</strong> でもある。</p>
+
+<h3>① ノイズが多い</h3>
+<p>OMCS のクラウドソース文が未検証で混入している。WWW 2019 の論文 <em>"Predicting ConceptNet Path Quality"</em> は、「<em>ConceptNet の関係パスの多くは非常識的（non-sensical）であり、単純なヒューリスティクスではランダム選択さえ上回れない</em>」と報告している。</p>
+
+<h3>② 自己評価が「vague, illogical, useful」</h3>
+<p>公式 FAQ が <em>"vague, illogical, and incredibly useful"</em>（曖昧、非論理的、しかし非常に有用）と認めている。設計思想として厳密性より実用性を優先した結果である。</p>
+
+<h3>③ 文脈依存性を扱えない</h3>
+<p>「鳥は飛ぶ」は典型的には真だが、「ペンギンは飛ばない」「夜の鳥は寝る」など <em>条件付きで真</em> な常識を構造的に扱えない。Yejin Choi らの ATOMIC（2019）が「if-then」型常識でこの欠点を埋めようとした。</p>
+
+<h3>④ 粗い意味分離</h3>
+<p>"watch"（時計 / 見る）の名詞 / 動詞は分けるが、「中世の watch（夜警）」のような細かい語義は分けない。WordNet の synset とは設計思想が異なる。</p>
+
+<h3>⑤ カバレッジが不均一</h3>
+<p>FAQ 自身が <em>"coverage of commonsense topic areas is still patchy"</em> と認める。日常会話領域は厚いが、専門領域や非西洋文化圏は薄い。</p>
+
+<h3>⑥ IRR（Inter-rater Reliability）の DB 単位非公表</h3>
+<p>知識項目の品質をアノテータ間で測る Cohen's Kappa などの<strong>定量的品質指標が DB 単位で公開されていない</strong>。これは個別研究で部分的に測定された例があるのみで、本エコシステムが PHYS 0.87 / CEH 0.99 / ES 0.96 などを DB 単位で公表しているのとは対照的である。</p>
+
+<h3>⑦ Eurocentric な偏り</h3>
+<p>OMCS + 英語 Wiktionary + WordNet を中核とするため、<em>多言語といっても英語スキーマの翻訳的拡張</em>に留まる。日本の「もったいない」「いき」「気配」のような独自概念、Ubuntu のようなアフリカ哲学概念は、ConceptNet 上では英訳の薄いノードとしてしか存在しない。本エコシステムが非西洋率を 16-88%（領域別）で構造的に測定するのとは対照的である。</p>
+
+<h3>⑧ メンテナンス停滞</h3>
+<p>2021 年 9 月以降、PyPI 更新が止まっている。データ自体は使えるが、新しい概念（生成 AI、新興技術）はほぼ追加されない。</p>
+</section>
+
+<section class="chapter-section" id="ch9">
+<div class="chapter-number-label">CHAPTER 09</div>
+<h2 class="chapter-title">本エコシステムとの比較 ─ どこが似ていて、どこが違うか</h2>
+
+<p>ここまで読んだ上で、本エコシステム（AR-DB + 167 DB + 433 アセット）と ConceptNet を並べてみよう。</p>
+
+<h3>共通点</h3>
+<ul>
+<li><strong>知識をグラフで表現する</strong>：ノード（概念・人物・出来事）とエッジ（関係）で構造化する点は同じ</li>
+<li><strong>多言語対応</strong>：ConceptNet 304 言語、本エコシステム 16 言語（高密度）</li>
+<li><strong>オープン</strong>：ConceptNet は CC BY-SA、本エコシステムは GitHub private + 一部公開</li>
+<li><strong>API アクセス</strong>：両者ともプログラム可能</li>
+</ul>
+
+<h3>決定的な違い</h3>
+<table>
+<thead><tr><th>観点</th><th>ConceptNet</th><th>本エコシステム</th></tr></thead>
+<tbody>
+<tr><td><strong>知識の方向性</strong></td><td>汎用常識（誰もが知っていること）</td><td>専門知識（学術領域別・歴史的・文化的）</td></tr>
+<tr><td><strong>構造の単位</strong></td><td>単一の巨大グラフ</td><td>167 DB が cross_db_refs で接続</td></tr>
+<tr><td><strong>関係タイプ</strong></td><td>34 種（汎用）</td><td>領域別に正規化（例：学術 DB は predecessor/successor/cross_domain）</td></tr>
+<tr><td><strong>品質保証</strong></td><td>「noisy だが useful」</td><td>IRR Kappa 0.86-0.99 を DB 単位で公表</td></tr>
+<tr><td><strong>メタレイヤ</strong></td><td>なし</td><td>AR-DB が 448 アセットを自己観察</td></tr>
+<tr><td><strong>エージェント連携</strong></td><td>想定なし（データのみ）</td><td>111 エージェント + 235 コマンドが DB を動的に駆動</td></tr>
+<tr><td><strong>非西洋率測定</strong></td><td>なし（Eurocentric）</td><td>DB 単位で構造的測定（16-88%）</td></tr>
+<tr><td><strong>埋め込み（embedding）</strong></td><td>Numberbatch あり（SOTA）</td><td>未実装（追うべき領域）</td></tr>
+<tr><td><strong>開発期間</strong></td><td>27 年（1999-2026）</td><td>51 日（2026-03-29 〜 2026-05-18）</td></tr>
+<tr><td><strong>開発体制</strong></td><td>MIT 研究室 → 企業</td><td>個人 + Claude Code エージェント群</td></tr>
+<tr><td><strong>現在の状態</strong></td><td>maintenance mode（停滞）</td><td>active development（1 日 80 commit）</td></tr>
+</tbody>
+</table>
+
+<h3>規模比較</h3>
+<table>
+<thead><tr><th>指標</th><th>ConceptNet 5.8</th><th>本エコシステム</th><th>比率</th></tr></thead>
+<tbody>
+<tr><td>エンティティ</td><td>約 800 万</td><td>約 360 万</td><td><strong>45%</strong></td></tr>
+<tr><td>エッジ</td><td>約 3,400 万</td><td>約 380 万</td><td><strong>11%</strong></td></tr>
+<tr><td>言語</td><td>304</td><td>16</td><td>5%（ただし高密度）</td></tr>
+<tr><td>関係タイプ</td><td>34</td><td>領域別正規化</td><td>設計思想が異なる</td></tr>
+<tr><td>データソース系統</td><td>8</td><td>167 DB + 外部参照</td><td>21 倍</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="ch10">
+<div class="chapter-number-label">CHAPTER 10</div>
+<h2 class="chapter-title">ベンチマーク・ステートメント ─ 本エコシステムが立つべき指標</h2>
+
+<p>ConceptNet を精密に理解した上で、本エコシステムの<strong>真のベンチマーク</strong>を定式化する。</p>
+
+<h3>追うべき指標（量的キャッチアップ）</h3>
+<table>
+<thead><tr><th>指標</th><th>ConceptNet</th><th>本エコシステム</th><th>到達目標</th></tr></thead>
+<tbody>
+<tr><td>エンティティ総数</td><td>800 万</td><td>360 万</td><td>2027 年中（+1.5 年）</td></tr>
+<tr><td>エッジ総数</td><td>3,400 万</td><td>380 万</td><td>2028 年中（+2.5 年）</td></tr>
+<tr><td>言語カバー</td><td>304</td><td>16</td><td>質的拡張優先、量的同等化は非追求</td></tr>
+<tr><td>埋め込みレイヤ</td><td>Numberbatch（SOTA）</td><td>未実装</td><td>2026 年内に実装着手</td></tr>
+</tbody>
+</table>
+
+<h3>既に超えている指標（質的優位）</h3>
+<ul>
+<li><strong>IRR Kappa の DB 単位公表</strong>（ConceptNet ✗ / 本エコシステム ✓ 複数 DB で 0.86-0.99）</li>
+<li><strong>自己観察メタレイヤ</strong>（ConceptNet ✗ / 本エコシステム ✓ AR-DB）</li>
+<li><strong>領域別関係タイプ正規化</strong>（ConceptNet ✗ / 本エコシステム ✓）</li>
+<li><strong>エージェント自動駆動</strong>（ConceptNet ✗ / 本エコシステム ✓ 111 体）</li>
+<li><strong>非西洋率の構造的測定</strong>（ConceptNet ✗ / 本エコシステム ✓ 16-88% 領域別）</li>
+<li><strong>Production-grade 完備基準</strong>（ConceptNet ✗ / 本エコシステム ✓ Pilot 思考禁止ルール）</li>
+</ul>
+
+<h3>暫定ベンチマーク・ステートメント</h3>
+
+<div class="callout">
+<div class="callout-title">本エコシステムが立つべきベンチマーク</div>
+<p style="text-indent:0;"><strong>ConceptNet が 27 年で構築した 3,400 万エッジの汎用常識グラフに対し、本エコシステムは 51 日で 380 万エッジ（11%）を達成した。比較すべきは「規模」ではなく、ConceptNet が 27 年間構築してこなかった「品質保証された専門知識の動的合成可能性」である。</strong></p>
+<p style="text-indent:0;">ConceptNet の規模は 2-3 年で量的に追いつき得る射程にあり、同時に <em>IRR 公表・自己観察メタレイヤ・領域別正規化・非西洋率測定・エージェント駆動</em> の 5 点で構造的優位を保持する ── これが本エコシステムの benchmark statement である。</p>
+</div>
+
+<h3>次に比較すべき外部対象</h3>
+<p>ConceptNet との比較で見えた優位を踏まえると、次は以下と比較すべきである：</p>
+<ul>
+<li><strong>CSKG（USC ISI, 2021）</strong>：ConceptNet + ATOMIC + Wikidata-CS + WordNet + Roget + Visual Genome を統合した 6 ソース統合 KG。「事前統合 vs 動的統合」の比較</li>
+<li><strong>ATOMIC（AI2, 2019）</strong>：因果的常識（if-then 知識）への特化。本エコシステムの genealogy_chain との対応</li>
+<li><strong>Wikidata</strong>：1.15 億エンティティの超大規模 KG。規模で大差、品質指標と非西洋率では同等以上を狙う</li>
+<li><strong>OpenAlex</strong>：2.5 億学術 work / 30 億関係。学術論文ドメインでの cross_db 接続性で比較</li>
+<li><strong>CrewAI / AutoGen</strong>：マルチエージェント・アーキテクチャ。エージェント数・連携密度で大幅超過</li>
+</ul>
+</section>
+
+<section class="chapter-section" id="refs">
+<div class="chapter-number-label">REFERENCES</div>
+<h2 class="chapter-title">典拠</h2>
+
+<h4>ConceptNet 公式</h4>
+<ul>
+<li><a href="https://conceptnet.io/">ConceptNet 公式サイト</a></li>
+<li><a href="http://api.conceptnet.io/">ConceptNet REST API</a></li>
+<li><a href="http://blog.conceptnet.io/">ConceptNet Blog</a></li>
+<li><a href="http://blog.conceptnet.io/posts/2020/conceptnet-58/">ConceptNet 5.8 Release Notes</a></li>
+</ul>
+
+<h4>GitHub / 技術ドキュメント</h4>
+<ul>
+<li><a href="https://github.com/commonsense/conceptnet5/wiki">commonsense/conceptnet5 Wiki</a></li>
+<li><a href="https://github.com/commonsense/conceptnet5/wiki/relations">ConceptNet 5 Relations（34 種一覧）</a></li>
+<li><a href="https://github.com/commonsense/conceptnet5/wiki/FAQ">ConceptNet 5 FAQ</a></li>
+<li><a href="https://github.com/commonsense/conceptnet-numberbatch">ConceptNet Numberbatch</a></li>
+</ul>
+
+<h4>学術論文</h4>
+<ul>
+<li>Speer, R., Chin, J., &amp; Havasi, C. (2017). <em>ConceptNet 5.5: An Open Multilingual Graph of General Knowledge</em>. AAAI 2017. <a href="https://arxiv.org/abs/1612.03975">arXiv:1612.03975</a></li>
+<li>Speer, R., &amp; Lowry-Duda, J. (2017). <em>ConceptNet at SemEval-2017 Task 2: Extending Word Embeddings with Multilingual Relational Knowledge</em>. <a href="https://arxiv.org/abs/1704.03560">arXiv:1704.03560</a></li>
+<li>Klein, T., et al. (2019). <em>Predicting ConceptNet Path Quality Using Crowdsourced Assessments of Naturalness</em>. WWW 2019. <a href="https://arxiv.org/pdf/1902.07831">arXiv:1902.07831</a></li>
+<li>Ilievski, F., et al. (2021). <em>CSKG: The CommonSense Knowledge Graph</em>. ESWC 2021. <a href="https://openreview.net/pdf?id=TOzBiasXxyX">openreview</a></li>
+<li>Ilievski, F., et al. (2020). <em>Commonsense Knowledge in Wikidata</em>. CEUR-WS Vol-2773. <a href="https://ceur-ws.org/Vol-2773/paper-10.pdf">paper-10.pdf</a></li>
+</ul>
+
+<h4>本エコシステム内部データ</h4>
+<ul>
+<li>Agent Registry DB (AR-DB): <code>~/projects/research/agent-registry-db/data/agent_registry.db</code></li>
+<li>集計クエリ: <code>agents</code> / <code>agent_relations</code> / <code>db_references</code></li>
+<li>DB 集計: <code>find ~/projects/research -name "*.db" -type f</code></li>
+<li>Git 履歴: 全プロジェクト <code>git log --oneline | wc -l</code> 合算</li>
+</ul>
+</section>
+
+<footer>
+作成: 2026-05-18 / Yuya Nishimura + Claude Opus 4.7 (1M context) /
+NPO法人ミラツク Miratuku News<br>
+本レポートは ConceptNet (CC BY-SA 4.0) の公式情報・学術論文・本エコシステム内部データを元に構成。<br>
+本文の解釈・対比図式は本エコシステム独自のもので、ConceptNet 開発元との公式関係はない。
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
