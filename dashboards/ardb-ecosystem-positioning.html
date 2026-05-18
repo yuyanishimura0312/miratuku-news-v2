@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AR-DB エコシステムの運用特徴と先行事業との関係性 | miratuku-news</title>
+<meta name="description" content="ミラツク/esse-sense DBエコシステム（AR-DB + 167 DB / 448アセット）の運用特徴を、ConceptNet・AWS Agent Registry・ChatDev・OpenAlex・WeKnora等の世界的先行事業との関係性に位置づけて約5,000字で解説。">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 22px; flex-shrink: 0; font-weight: 700; }
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.6rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.15rem; line-height: 1.6; font-weight: 600; margin: 40px 0 18px; color: var(--text); }
+p { margin-bottom: 22px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead { font-size: 1.04rem; color: var(--text-secondary); margin-bottom: 36px; font-weight: 500; text-indent: 0; }
+ul, ol { margin: 14px 0 24px 1.6em; }
+li { margin-bottom: 6px; font-family: var(--font); font-size: 0.9rem; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 28px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.6; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 18px 22px; margin: 28px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.callout p { text-indent: 0; }
+
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.5rem; }
+  .chapter-title { font-size: 1.3rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>ECOSYSTEM POSITIONING</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次"><div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#intro"><span class="toc-num">序</span>立ち位置</a></li>
+<li><a href="#ch1"><span class="toc-num">01</span>領域別独立 DB 連邦</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>自己観察メタ DB</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>多層階層メタオーケストレーション</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>学術正本層との接続</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>LLM-native 知識基盤</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>運用規律の組合せ密度</a></li>
+<li><a href="#close"><span class="toc-num">終</span>位置づけの輪郭</a></li>
+<li><a href="#refs"><span class="toc-num">★</span>典拠</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">POSITIONING</span>
+<span class="db-tag">AR-DB</span>
+<span class="db-tag">167 DBs</span>
+<span class="db-tag">448 ASSETS</span>
+</div>
+<h1 class="book-title">AR-DB エコシステムの運用特徴と先行事業との関係性</h1>
+<p class="book-subtitle">ミラツク/esse-sense DB エコシステム（AR-DB + 167 DB / 448 アセット）の運用特徴を、世界の優れた先行事業 ConceptNet・AWS Agent Registry・ChatDev・OpenAlex・WeKnora 等との関係性に位置づけて 5,000 字で解説する。</p>
+<div class="book-meta">
+<span>2026-05-18 作成</span>
+<span>Yuya Nishimura + Claude Opus 4.7</span>
+<span>5,000字 / 6章</span>
+</div>
+</header>
+
+<section class="chapter-section" id="intro">
+<div class="chapter-number-label">PROLOGUE</div>
+<h2 class="chapter-title">立ち位置 ─ 先行の地平に立つ</h2>
+
+<p class="lead">本エコシステムは、世界の知識基盤プロジェクトが切り拓いた地平の上に立っている。ConceptNet が 27 年、Wikidata が 14 年、OpenAlex が 4 年、AWS Agent Registry が 2 年と、各分野には強力な先行事業がある。本レポートは「世界初」を主張するためのものではない。各先行事業と並ぶ輪郭で、本エコシステムが採った設計選択と運用特徴を 6 領域に分けて記述する。各章で先行事業を必ず参照し、その地平の上で何を選択したかを明示する。</p>
+</section>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">領域別独立 DB 連邦 ─ ConceptNet・ASER のパターン C を継承する</h2>
+
+<p><strong>ConceptNet（MIT Media Lab, 1999-）</strong>は、1999 年に Push Singh と Marvin Minsky が始めた Open Mind Common Sense を起点に、27 年をかけて 3,400 万エッジ・304 言語の常識知識グラフを構築した。Robyn Speer 主導の AAAI 2017 論文で世界的に認知され、Numberbatch 単語埋め込みは SemEval-2017 で複数言語の意味類似度タスクを総合優勝した。ConceptNet が確立した設計は、領域別独立テーブル × 34 関係型による接続という「<em>パターン C 連邦化</em>」である。<strong>ASER（HKUST）</strong>がイベント領域でこれを継承し、<strong>USC ISI の CSKG（2021）</strong>は ConceptNet・ATOMIC・Wikidata-CS・WordNet・Roget・Visual Genome を統合した 6 ソース連邦の代表例となった。</p>
+
+<p>本エコシステムも同パターン C に分類される。167 の独立 SQLite DB が、各々独自スキーマを保ち、<code>cross_db_refs</code> テーブルで意図的に接続される。差異はひとつ。ConceptNet が汎用 34 関係型に統一するのに対し、本エコシステムは<strong>領域別に関係型を正規化する</strong>。物理学概念 DB では <code>predecessor</code> / <code>successor</code> / <code>theoretical_basis</code>、人物 DB では <code>influenced_by</code> / <code>branched_from</code> / <code>merged_with</code>、産業 DB では <code>supplied_by</code> / <code>competed_with</code> といった具合に、領域に最適化された関係語彙を持つ。これは ConceptNet が獲得した「汎用性」を犠牲にする代わりに、「<em>専門性の解像度</em>」を取る設計選択である。</p>
+
+<p>この選択により、本エコシステムは ConceptNet が苦手とする領域（人文学・古典・非西洋哲学など）でも構造化を保てる。一方、ConceptNet が圧倒的に強い「常識的関連性の汎用検索」は対象外として割り切る。両者の関係は競合ではなく、<em>住み分け</em>に近い。</p>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">自己観察メタ DB ─ AWS Agent Registry・Portkey・MLflow の方向性を翻訳する</h2>
+
+<p><strong>AWS Agent Registry（2024 preview）</strong>は、エージェント定義のクラウド集約管理という方向性を業界に提示した先駆プロジェクトである。エージェント・スキル・ツール・MCP サーバを 4 層メタデータで管理し、IAM 統合による承認ワークフローと semantic search を実装した。<strong>Portkey Agent Gateway</strong>は、組織内の全エージェントを中央レジストリで管理し、アクセス制御・ガバナンス・権限を一体化する SaaS を展開している。<strong>MLflow Prompt Registry / Model Registry</strong>は、プロンプト・モデル成果物の版管理と Linked Foundation Model 配下のオープンソース基盤を提供する。<strong>OpenAI Agents SDK と Anthropic Claude Skills</strong>は、API レベルでエージェント定義のパッケージ化を進めている。</p>
+
+<p>本エコシステムの AR-DB は、これら先行事業が示した「エージェント定義の構造化メタ DB」という方向性を、<strong>ローカル SQLite に翻訳した実装</strong>にあたる。クラウド API ではなく SQL 直接照会（agents 448 / agent_relations 1,874 / db_references 518 / agent_tools 1,353 / tools 46）、手動登録ではなくファイル変更からの自動同期（<code>~/.claude/settings.json</code> の PostToolUse hook 9 件 / 10 秒 debounce）を採った。エージェント間関係は 9 種類に typed されており、<code>calls</code>（1,110）・<code>orchestrates</code>（222）・<code>aggregates</code>（183）・<code>extends</code>（108）・<code>observed_by</code>（77）・<code>governed_by</code>（73）・<code>replaces</code>（59）・<code>delegates_to</code>（27）・<code>alias_of</code>（15）と分布する。</p>
+
+<p>AWS が「クラウド集約 × 承認ワークフロー」を選んだのに対し、本エコシステムは「ローカル自律 × 自動同期 × SQL 自由照会」を選んだ。これは個人運用環境の制約から生まれた設計選択であり、AWS と競合せず、補完関係に立つ。Model tier 別の運用（opus 38 / sonnet 75 / haiku 8）も AR-DB から直接照会可能であり、コスト最適化と判断品質のトレードオフが SQL レベルで可視化されている。</p>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">多層階層メタオーケストレーション ─ ChatDev・AgentOrchestra の系譜を 5 層に展開する</h2>
+
+<p><strong>ChatDev（OpenBMB）</strong>は、CEO オーケストレーター層 + designers / developers / testers の 2 層構造で、マルチエージェント協業によるソフトウェア開発を実証した。<strong>AgentOrchestra（arXiv 2506.12508, 2025）</strong>は、階層型マルチエージェントフレームワークを理論的に整理し、上位エージェントが下位エージェントの能力を動的に組み合わせる設計を提示した。これらは「<em>メタオーケストレーション層を明示的に持つ</em>」という方向性を切り拓いた重要な系譜である。</p>
+
+<p>本エコシステムはこの系譜を 5 層（Tier -1〜3）に展開した。Tier -1 meta（34 体、全エコシステムを横断する判断層）、Tier 0 orchestrator（27 体、<code>/db-master</code> / <code>/dbo</code> / <code>/process-orchestrator</code> 等の最上位指揮）、Tier 1 team（26 体、領域メタ <code>/dom-science</code> / <code>/dom-society</code> 等 6 領域 + 連載チーム）、Tier 2 specialist（110 体、個別 DB エージェント + 編集部）、Tier 3 utility（251 体、検索・整形・保存等の道具的役割）。総 448 アセットがこの 5 層で配置される。</p>
+
+<p>特徴は<strong>型自動判定の組込み</strong>にある。<code>/db-master</code> はユーザーの DB 構築要求を受け取り、概念 DB（<code>/adb</code>）・実データ DB（<code>/db-blindspot</code> + <code>/db-build</code>）・既存深化（<code>/ddb</code>）の 3 経路を自動判定する。ChatDev の CEO は単一プロジェクト内の役割分担を行うが、本エコシステムの Tier 0 は<em>プロジェクト類型そのもの</em>を判定してルーティングする。この設計選択は、領域別 DB の数（30+）が前提として大きいことから生まれた必然である。</p>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">学術正本層との接続 ─ OpenAlex・Wikidata・ORCID・ROR を基盤として組み込む</h2>
+
+<p><strong>OpenAlex（2022, OurResearch）</strong>は、廃止された Microsoft Academic Graph の後継として、Crossref・ORCID・ROR を統合した約 2.5 億 works の学術メタデータを CC0 ライセンスで公開する。S3 バケットでの 330 GB bulk snapshot を四半期ごと無料配布し、API は 100K req/日まで無料で利用可能。<strong>Wikidata</strong>は 1.15 億エンティティ・14 億 statements を 380+ 言語で抱える Wikimedia Foundation 運営の構造化ナレッジベース。<strong>ORCID</strong>は研究者の永続的識別子、<strong>ROR</strong>は研究機関の永続的識別子として、それぞれの領域でデファクト標準を確立している。</p>
+
+<p>本エコシステムは、これらを<strong>学術領域の正本層</strong>として組み込む方針を採っている。実際、167 DB のうち 23+ DB が <code>openalex_id</code> 列をスキーマに実装済。academic-landscape-db は 233,779 ジャーナル中 215,983 件（92.4%）に OpenAlex ID を充填済。academic-outcomes-db には専用の 4 phase ETL（<code>phase1_openalex_pilot</code> → <code>phase2b_openalex_recent</code> → <code>phase5_openalex_1980_99</code> → <code>phaseProd_fill_15_domains</code>）が稼働。FTT-DB v2 は 18,524 件の OpenAlex 論文を統合済。CQ-DB は 7,082 研究者中 3,496 件（49.4%）に紐付けが進む。</p>
+
+<p>住み分けは明確だ。OpenAlex が「論文・著者・機関の<em>正本</em>」を担い、本エコシステムは「<em>意味構造</em>（subfield / 系譜 / 概念関係）」を担う。両者を <code>openalex_id</code> という Linked Data 識別子で接続することで、学術領域での内部 DB の規模制約を OpenAlex 側に逃がしつつ、本エコシステムの構造化価値を保てる。</p>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">LLM-native 知識基盤 ─ Karpathy・WeKnora・AGENTiGraph の系譜に位置する</h2>
+
+<p><strong>Andrej Karpathy（旧 OpenAI/Tesla）</strong>が 2024 年に Gist で提示した「LLM-maintained wiki」の概念は、知識基盤を人間が更新するのではなく、LLM エージェントが継続更新する self-evolving モデルを示した。<strong>WeKnora（Tencent）</strong>は、エンタープライズ向けに Document + Entity + Relation を multi-agent orchestration で統合する OSS を展開する。<strong>AGENTiGraph（arXiv 2508.02999, 2025）</strong>は、エージェントが知識グラフを動的に拡張する task routing 設計を提案している。これらは「<em>LLM-native</em>」な知識基盤の系譜である。</p>
+
+<p>本エコシステムはこの系譜に明確に属する。167 独立 DB × 各 DB 専属エージェント × cross_db_refs という構成は、Karpathy の LLM-maintained wiki を個人運用環境で実装した形態にあたる。各 DB の構築・更新・品質検証は、<code>db-concept-builder</code> / <code>db-timeseries-builder</code> / <code>db-people-builder</code> / <code>db-network-builder</code> 等のドメイン特化ビルダーエージェントが分担する。<code>db-quality-auditor</code> は独立監査の役割を担い、生成と検証の分離（メタ原則）を構造化する。</p>
+
+<p>規模は WeKnora（エンタープライズ、3-5 エージェント）の規模感とは異なる。Karpathy の提案も個別 wiki 単位だった。本エコシステムは個人 + LLM 環境で 100+ エージェントを同時運用する密度で、この系譜の<em>個人スケール実装</em>に位置する。</p>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">運用規律の組合せ密度 ─ 単一構造ではなく密度で輪郭を持つ</h2>
+
+<p>本エコシステムの輪郭は「単一構造の新規性」ではなく「<strong>運用規律の組合せ密度</strong>」にある。以下、5 種の規律を列挙する。</p>
+
+<p><strong>(1) DB 単位の IRR Cohen's Kappa 公表</strong>。物理 DB の Kappa 0.8745、宇宙地球史 DB の 0.9863、地球科学 DB の 0.9550、植物学 DB の 0.8602、時間概念 DB の 0.97 等、複数 DB で<em>個別</em>に inter-rater reliability を測定・公表する。学術 KG では Semantic Scholar の一部例外を除き、ほぼ前例がない実践である。</p>
+
+<p><strong>(2) source_url 列スキーマ必須化</strong>。全 DB の主要レコードに source_url を強制する。PHYS / CEH / ES / CQ 等で 100% 充填、academic-landscape-db で 92.4%。これは OpenAlex・Wikidata の <code>references</code> 設計を内部 DB レベルに継承した実装である。</p>
+
+<p><strong>(3) path-1（LP as truth）ルール</strong>。多層文書（LP / Book / 詳細）が並存する場合、LP を正本とし内側層を追随させる原則。7+1 問いランディングで実証済。</p>
+
+<p><strong>(4) 3 経路必須提示ルール</strong>。DB 構築の意思決定時、<code>/adb</code>（概念 DB）/ <code>/db-blindspot+/db-build</code>（実データ DB）/ <code>/ddb</code>（既存深化）の 3 経路を必ず明示提示する。<code>meta-principles-enforcer</code> が違反を検出する。</p>
+
+<p><strong>(5) Production-grade 完備基準（Pilot 思考禁止）</strong>。各領域 publications 1,500+ / 主要エンティティ 300+ を絶対達成基準として運用。MVP・Pilot・Mid・Production の階層表現を排除する。</p>
+
+<p>これらの規律は、個々には他所に類例がある。だが個人 + LLM 運用環境で<em>同時に運用する密度</em>は、市場の主流（runtime tracing 偏重 / 単一グラフ偏重 / Pilot 思考）から見て uncommon である。これが本エコシステムの輪郭を形作る。</p>
+</section>
+
+<section class="chapter-section" id="close">
+<div class="chapter-number-label">EPILOGUE</div>
+<h2 class="chapter-title">位置づけの輪郭 ─ 翻訳としての実装</h2>
+
+<p>本エコシステムは、ConceptNet が拓いたパターン C 連邦の系譜にあり、AWS Agent Registry が示した自己観察メタ DB の方向性をローカル翻訳し、ChatDev・AgentOrchestra の階層メタ系譜を 5 層に展開し、OpenAlex を学術正本層として接続し、Karpathy・WeKnora の LLM-native 系譜に個人スケールで属する。</p>
+
+<p>世界初の主張は適切ではない。最も誠実な記述は、<strong>「先行事業が拓いた地平に立ち、Claude Code + ローカルファイル運用という特殊な環境に固有の運用規律として翻訳した実装」</strong>である。</p>
+
+<p>この立ち位置は、ConceptNet・Wikidata・OpenAlex のような<em>世界的インフラ</em>と並ぶものではない。それらの規模には及ばない。だが、それらが拓いた地平の上で、個人 + LLM が運用できる密度で領域別構造化を実践する<em>輪郭</em>は持つ。先行事業との関係は、競合ではなく、地平の上での独自配置にある。</p>
+</section>
+
+<section class="chapter-section" id="refs">
+<div class="chapter-number-label">REFERENCES</div>
+<h2 class="chapter-title">典拠</h2>
+
+<h3>領域 KG 連邦</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/1612.03975">Speer, Chin & Havasi (2017). ConceptNet 5.5 (AAAI)</a></li>
+<li><a href="https://hkust-knowcomp.github.io/ASER/">ASER (HKUST)</a></li>
+<li><a href="https://github.com/usc-isi-i2/cskg">CSKG (USC ISI, 2021)</a></li>
+</ul>
+
+<h3>自己観察 / レジストリ</h3>
+<ul>
+<li><a href="https://aws.amazon.com/blogs/machine-learning/the-future-of-managing-agents-at-scale-aws-agent-registry-now-in-preview/">AWS Agent Registry Preview (2024)</a></li>
+<li><a href="https://portkey.ai/docs/product/agent-gateway">Portkey Agent Gateway</a></li>
+<li><a href="https://mlflow.org/docs/latest/genai/tracing/">MLflow LLM Tracing</a></li>
+<li><a href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview">Anthropic Claude Agent Skills</a></li>
+</ul>
+
+<h3>階層メタオーケストレーション</h3>
+<ul>
+<li><a href="https://github.com/OpenBMB/ChatDev">ChatDev (OpenBMB)</a></li>
+<li><a href="https://arxiv.org/html/2506.12508v1">AgentOrchestra (arXiv 2506.12508)</a></li>
+</ul>
+
+<h3>学術正本層</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2205.01833">Priem, Piwowar & Orr (2022). OpenAlex</a></li>
+<li><a href="https://www.wikidata.org/">Wikidata</a></li>
+<li><a href="https://orcid.org/">ORCID</a></li>
+<li><a href="https://ror.org/">ROR (Research Organization Registry)</a></li>
+</ul>
+
+<h3>LLM-native 知識基盤</h3>
+<ul>
+<li><a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f">Karpathy LLM Wiki Gist (2024)</a></li>
+<li><a href="https://github.com/Tencent/WeKnora">WeKnora (Tencent)</a></li>
+<li><a href="https://arxiv.org/abs/2508.02999">AGENTiGraph (arXiv 2508.02999, 2025)</a></li>
+</ul>
+
+<h3>本エコシステム内部</h3>
+<ul>
+<li>AR-DB: <code>~/projects/research/agent-registry-db/data/agent_registry.db</code></li>
+<li>ETL: <code>~/projects/research/agent-registry-db/etl/auto_update.sh</code></li>
+<li>Hooks: <code>~/.claude/settings.json</code> PostToolUse 9 件</li>
+<li>Dashboard: <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/ar-db.html">ar-db.html</a></li>
+</ul>
+</section>
+
+<footer>
+作成: 2026-05-18 / Yuya Nishimura + Claude Opus 4.7 (1M context) /
+NPO法人ミラツク Miratuku News<br>
+本レポートは AR-DB 内部 SQL 監査と外部一次資料 60+ URL の客観調査に基づく。<br>
+解釈と対比図式は本エコシステム独自で、各先行事業との公式関係はない。
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
