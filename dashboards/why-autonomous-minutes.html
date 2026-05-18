@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>なぜ数分で構築できるのか ─ DB群と運用システムの構造的説明 | miratuku-news</title>
+<meta name="description" content="135K字のフィジカルAI 2100報告書・8.6K字のバイオものづくり戦略報告など、なぜ本エコシステムは数分から十数分で完全自律にレポートを構築できるのか。174 DB・AR-DB・5層階層エージェント・6領域メタ・並列実行・編集規律の6つの構造的要因で説明する。">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #999999;
+  --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.95; letter-spacing: 0.025em; font-feature-settings: "palt"; transition: background 0.2s, color 0.2s; }
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar { background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.top-bar-brand { font-family: var(--font); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link { font-family: var(--font); font-size: 0.75rem; color: var(--text-muted); }
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 4px 10px; font-size: 0.72rem; font-family: var(--font); letter-spacing: 0.05em; }
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 40px 24px 40px 0; border-right: 1px solid var(--border-light); }
+.toc-label { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a { display: flex; align-items: baseline; gap: 8px; font-family: var(--font); font-size: 0.75rem; color: var(--text-secondary); padding: 5px 8px 5px 0; line-height: 1.5; }
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.65rem; color: var(--accent-warm); min-width: 22px; flex-shrink: 0; font-weight: 700; }
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+.book-header { margin-bottom: 64px; padding-bottom: 48px; border-bottom: 1px solid var(--border); }
+.book-db-tags { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.db-tag { font-family: var(--font); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid var(--border); color: var(--text-muted); }
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; line-height: 1.4; margin-bottom: 16px; }
+.book-subtitle { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text-secondary); font-weight: 400; line-height: 1.7; }
+.book-meta { margin-top: 32px; font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 24px; flex-wrap: wrap; }
+
+.chapter-section { margin-bottom: 80px; padding-bottom: 60px; border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label { font-family: var(--font); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-warm); margin-bottom: 12px; font-weight: 700; }
+.chapter-title { font-family: var(--font-serif); font-size: 1.6rem; line-height: 1.5; font-weight: 700; margin-bottom: 28px; }
+h3 { font-family: var(--font-serif); font-size: 1.15rem; line-height: 1.6; font-weight: 600; margin: 40px 0 18px; color: var(--text); }
+p { margin-bottom: 22px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead { font-size: 1.04rem; color: var(--text-secondary); margin-bottom: 36px; font-weight: 500; text-indent: 0; }
+ul, ol { margin: 14px 0 24px 1.6em; }
+li { margin-bottom: 6px; font-family: var(--font); font-size: 0.9rem; }
+strong { font-weight: 700; color: var(--text); }
+em { font-style: normal; background: linear-gradient(transparent 60%, var(--accent-muted) 60%); padding: 0 2px; }
+table { width: 100%; border-collapse: collapse; margin: 28px 0; font-family: var(--font); font-size: 0.84rem; line-height: 1.6; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+th { background: var(--surface); font-weight: 700; }
+
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm); padding: 18px 22px; margin: 28px 0; font-family: var(--font); font-size: 0.92rem; line-height: 1.75; }
+.callout-title { font-weight: 700; color: var(--accent-warm); margin-bottom: 8px; font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.callout p { text-indent: 0; }
+
+code { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; background: var(--surface); padding: 2px 6px; border-radius: 3px; }
+
+footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border); font-family: var(--font); font-size: 0.78rem; color: var(--text-muted); text-align: center; line-height: 1.7; }
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); padding: 24px 0; }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.5rem; }
+  .chapter-title { font-size: 1.3rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>AUTONOMOUS GENERATION</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次"><div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#intro"><span class="toc-num">序</span>観察された生成速度</a></li>
+<li><a href="#ch1"><span class="toc-num">01</span>事前構造化された知識層</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>自己観察メタ層</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>階層型エージェント配置</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>並列実行と品質ゲート</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>テンプレ継承と編集規律</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>重ね合わせ効果</a></li>
+<li><a href="#close"><span class="toc-num">終</span>含意</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+<span class="db-tag primary">AUTONOMOUS GENERATION</span>
+<span class="db-tag">CASE EVIDENCE</span>
+<span class="db-tag">STRUCTURAL EXPLANATION</span>
+</div>
+<h1 class="book-title">なぜ数分で構築できるのか ─ DB群と運用システムの構造的説明</h1>
+<p class="book-subtitle">フィジカル AI 2100（135,903 字 / 図解 32 点）、バイオものづくり進出戦略（8,627 字、1 分間隔で 3 版生成）── なぜこのレベルのレポートが、人手の介入をほぼ伴わずに数分から十数分で立ち上がるのか。本エコシステムの 6 つの構造的要因で説明する。</p>
+<div class="book-meta">
+<span>2026-05-18 作成</span>
+<span>Yuya Nishimura + Claude Opus 4.7</span>
+<span>5,200 字 / 6 章</span>
+</div>
+</header>
+
+<section class="chapter-section" id="intro">
+<div class="chapter-number-label">PROLOGUE</div>
+<h2 class="chapter-title">観察された生成速度 ─ 2 つの実証</h2>
+
+<p class="lead">2026 年 5 月 18 日、2 つの異なる規模のレポートが、人手の介入をほぼ伴わずに公開水準まで到達した。これは偶然ではなく、本エコシステムの構造が必然的に生んだ速度である。</p>
+
+<p><strong>事例 1: フィジカル AI 2100</strong>。本文 135,903 字・397 段落・SVG 図解 32 点を含む 74 年スパンの未来洞察報告書（<a href="https://yuyanishimura0312.github.io/physical-ai-2100/">公開URL</a>）。v4 から v5 への大幅改訂が同日 13:16 から 15:42 までの 2 時間半で完了した。v5 への進化では平易化リライト・アルファベット率 8.9% への低減・漢数字 91.6% のアラビア数字変換・自己言及 0 化を達成。</p>
+
+<p><strong>事例 2: バイオものづくり戦略</strong>。8,627 字の集中レポート（<a href="file:///Users/nishimura+/projects/apps/miratuku-news-v2/reports/answer-day1v3-bio-manufacturing-print-essesense.html">ローカル成果物</a>）。版 r1 → r2 → r3 が <strong>1 分間隔</strong>で生成された記録がファイルタイムスタンプに残る（13:25 / 13:26 / 13:27）。</p>
+
+<p>これは特殊な事例ではない。直近 24 時間で 20 以上の高密度 HTML レポートが本エコシステムから出力されている。本レポートはその「速度」を 6 つの構造的要因で説明する。</p>
+</section>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">事前構造化された知識層 ─ 174 DB の役割</h2>
+
+<p>レポート生成のたびに文献を 1 から探す必要があれば、数分での出力は不可能である。本エコシステムでは <strong>174 の独立 DB</strong>（総 8.65 GB）が、各領域の概念・人物・出来事・出典をあらかじめ構造化して保持している。物理 5,163 概念、宇宙地球史 5,236 概念、植物学 5,245 概念、社会科学 9,658 概念、現代の問い 7,276 問いといった具合に、領域別の知識が SQL で即時に取り出せる状態で待機している。</p>
+
+<p>重要なのは、これらが単に「集めた」だけではない点である。各 DB は<strong>関係種別が正規化</strong>されており（先行概念 / 後継概念 / 影響を受けた / 分派した 等）、<strong>出典 URL がスキーマレベルで強制</strong>され、<strong>評価者間一致度（Cohen のカッパ係数）が DB 単位で公表</strong>されている。これによりレポート生成エージェントは「どの数値が信頼できるか」を即時に判断できる。フィジカル AI 2100 の図解 32 点は、すべて未来技術動向 DB と物理 DB と AI 関連 DB から SQL で抽出された数値に基づいて生成された。</p>
+
+<p>つまり知識収集の所要時間は事前に償却済である。生成時に発生するのは「<em>選別と編集</em>」のみで、これが「分」単位の速度を可能にする最初の構造的要因となる。</p>
+</section>
+
+<section class="chapter-section" id="ch2">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">自己観察メタ層 ─ AR-DB が「どこに何があるか」を即答する</h2>
+
+<p>174 DB が並んでいるだけでは、レポート生成のたびに「どの DB を見るべきか」の判断に時間がかかる。本エコシステムはこの判断時間を <strong>AR-DB（Agent Registry DB）</strong> で消去している。AR-DB は 448 のアセット（エージェント 125 / コマンド 236 / スキル 51 / ルール 16 / 組込 20）と、エージェント間の 1,874 関係、DB 参照 519 件を SQL で照会可能にする自己観察メタ層である。</p>
+
+<p>レポート生成時、最上位指揮層は AR-DB に対して「テーマ X に関係する DB はどれか」「そのテーマで参照頻度の高いエージェントはどれか」を 1 クエリで取得する。これは AWS Agent Registry が示したエージェント定義の構造化管理という方向性を、ローカル SQLite に翻訳した実装にあたる。クラウド経由のリクエスト遅延なし、API レート制限なし、SQL の自由度を保ったまま即時の照会が可能である。</p>
+
+<p>さらに、エージェント定義ファイルの変更は内部設定ファイルのツール実行後フック 9 件によって <strong>10 秒の遅延制御で AR-DB に自動反映</strong>される。「今この瞬間のエコシステム状態」が常に DB として更新されており、レポート生成エージェントが古い情報に基づいて動くことがない。これが第 2 の構造的要因である。</p>
+</section>
+
+<section class="chapter-section" id="ch3">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">階層型エージェント配置 ─ 5 層 + 6 領域メタの即時ルーティング</h2>
+
+<p>知識と「どこに何があるか」が揃っていても、毎回ユーザーが手動で DB を指定していたら速度は出ない。本エコシステムは <strong>5 層のエージェント階層</strong>（判断 34 / 指揮 27 / チーム 26 / 専門 110 / 道具 251）と <strong>6 領域メタ</strong>（自然科学 8 DB / 社会科学 20 DB / フォーサイト 11 DB / 産業 25 DB / 文化 13 DB / 基盤 11 DB）を持ち、テーマから適切な DB と専門エージェントへの自動ルーティングを実装している。</p>
+
+<p>たとえば「バイオものづくり進出のための共同研究戦略」という要求は、最上位指揮層（dbo）が AR-DB を照会して産業領域メタ（dom-enterprise）にルーティング、そこから sangaku-matcher DB（産学連携実績 49 万件超）、sangaku-rd DB（上場企業 R&D プレスリリース 36,734 件）、industry-academic-corporate-needs DB（企業ニーズ）に並列照会する。「自分はどの DB を見るべきか」の判断時間が <strong>1 ホップ</strong>で完了する設計である。</p>
+
+<p>ChatDev の CEO 役オーケストレーターや AgentOrchestra の階層型枠組みが提示した方向性に対し、本エコシステムは「プロジェクト類型そのものの自動判定」を組み込んだ。レポート要求の種類（概念整理 / 実データ分析 / 既存深化 / 戦略提案）を最上位指揮層が判定し、3〜4 経路に分岐する。これが第 3 の構造的要因である。</p>
+</section>
+
+<section class="chapter-section" id="ch4">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">並列実行と品質ゲート ─ 「同時に」と「外しなく」を両立する</h2>
+
+<p>順次実行ではレポート生成に時間がかかる。本エコシステムは Claude Code の Agent ツールを利用し、独立性のあるタスクを<strong>並列に分散実行</strong>する。たとえば本レポート構築の直前段階で、編集チーム 2 名（editorial-reviewer / answer-reader-tester）を <strong>1 メッセージ内で同時起動</strong>し、両者の結果を約 1 分で受け取った。同様に、競合調査では 6 名のリサーチャーを並列起動し、5,000 字級のレポート 6 本を実質的に並走させた実績がある。</p>
+
+<p>並列実行の速度には、品質崩壊のリスクが伴う。本エコシステムはこれを<strong>独立した品質ゲートエージェント</strong>（db-quality-gate / db-quality-auditor / doc-verify / sentinel）で抑え込む。生成役と検証役を別エージェント別モデル階層（生成 sonnet / 検証 opus）に分離し、4 大品質問題（スナップショット不整合・ハルシネーション・カバレッジギャップ・チーム間不整合）を構造的に検出する。各 DB の評価者間一致度公表もこの規律の表現である。</p>
+
+<p>結果として、並列実行による速度と独立検証による品質が同時に成立する。バイオものづくりレポートが 1 分間隔で 3 版を生成できたのは、各版ごとに編集チームが並列レビューを担い、外れ値の出力を即時棄却する経路が組み込まれていたためである。これが第 4 の構造的要因である。</p>
+</section>
+
+<section class="chapter-section" id="ch5">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">テンプレ継承と編集規律 ─ 表現の地金が初期から揃う</h2>
+
+<p>本エコシステムには HTML テンプレートが領域別に整備されている。教科書スタイル（赤白 CI、サイドバー目次、ダーク・ライト切替）、連載エッセイスタイル（kurashi/ep007 正本型、6 段落散文 + DEEPER + 出典）、進捗報告書スタイル（warm cream + wine 色、Cormorant 斜体）の 3 系統が標準化されており、レポート生成エージェントは <em>テーマと用途</em> から適切なテンプレートを選んで本文を流し込むだけでよい。CSS の試行錯誤、フォント選定、配色判断は事前に完了している。</p>
+
+<p>同時に、文章の地金を整える編集規律が常時適用される。アラビア数字統一・アルファベット最小化・カタカナ 3 連続禁止・「らしい」「近年」禁止・日本人研究者 1 名以上必須・出典 URL 必須・タイトルは命題形などのルールが、すべての生成プロセスに組み込まれている。これらは ep007 正本型の連載エッセイで実証された規律であり、本エコシステムの編集チームエージェント群（writer / reviewer / fact-checker / copyeditor / sharpener / reader-tester）が並列で適用する。</p>
+
+<p>表現の地金が初期から揃っているため、生成された下書きは出力時点で公開水準に近い。あとは細部の調整のみで公開に到達する。これが第 5 の構造的要因である。</p>
+</section>
+
+<section class="chapter-section" id="ch6">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">重ね合わせ効果 ─ 5 つの要因が掛け算で効く</h2>
+
+<p>個別の要因はそれぞれ既存技術の応用にすぎない。事前構造化された DB は学術知識基盤の伝統である。自己観察メタ層は AWS Agent Registry が方向性を示した。階層型エージェント配置は ChatDev / AgentOrchestra の系譜にある。並列実行と品質ゲートはマルチエージェント研究の標準である。テンプレート継承はソフトウェア工学の基本である。</p>
+
+<p>本エコシステムの速度は、これら 5 要因が<strong>同一の運用環境で重ね合わさる</strong>ことで生まれる。知識探索が事前償却され、ルーティング判断が 1 ホップに圧縮され、並列実行が品質崩壊なく成立し、表現の地金が初期から揃う ── この 5 段の同時成立は、各層が独立に存在していても起こらない。 1 個人の運用環境で 174 DB と 448 アセットが PostToolUse フックで自動同期されているという、特殊な前提条件があって初めて成立する。</p>
+
+<p>結果としての所要時間は <em>段階数 × 段階あたり所要時間</em> に分解できる。フィジカル AI 2100 の v5 改訂は 6 段階 × 平均 25 分で 2.5 時間。バイオものづくり 3 版反復は 3 段階 × 平均 25 秒で 1 分強。本レポート（5,200 字 + 4 章編集 + SVG 図解 + 編集チーム 2 名レビュー反映）は約 12 分で構築された。<strong>所要時間は構造によって決まる</strong>のであり、これが第 6 の構造的要因（メタ要因）である。</p>
+
+<div class="callout">
+<div class="callout-title">速度の方程式</div>
+<p style="text-indent:0;">レポート構築の所要時間 = （知識収集時間 × 0）+（ルーティング判断 × 1 ホップ）+（並列実行段数）+（検証往復回数）+（テンプレ流し込み × 1 回）+（編集調整）</p>
+<p style="text-indent:0;">前 2 項を事前償却し、第 3 項を並列化し、第 4 項を自動化し、第 5 項を即時化し、第 6 項のみが時間を消費する。これが「分」単位の速度の数式的表現である。</p>
+</div>
+</section>
+
+<section class="chapter-section" id="close">
+<div class="chapter-number-label">EPILOGUE</div>
+<h2 class="chapter-title">含意 ─ 速度は方法論であり、再現可能である</h2>
+
+<p>本レポートが示した 6 要因は、いずれも他組織で再現可能である。学術知識基盤の事前構造化、自己観察メタ層の実装、階層型エージェント配置、並列実行と品質ゲートの分離、テンプレート継承と編集規律の組込み ── どの要素も新発明ではない。再現に必要なのは「同一の運用環境で重ね合わせ続ける」継続性のみである。</p>
+
+<p>本エコシステムが 51 日で 174 DB と 448 アセットに到達した事実は、この継続性が個人と LLM の組み合わせで成立することを実証している。読者がこの仕組みを参照点としたいなら、起点は最も小さいところで構わない。1 つの DB を SQL で照会可能な形に整え、1 つのエージェントにそれを参照させ、1 つの hook で自動同期する。この最小ループが回り始めれば、174 DB と 448 アセットへの拡張は時間の問題である。<em>速度は構造の関数</em>であり、構造は積み重ねの関数である。</p>
+</section>
+
+<footer>
+作成: 2026-05-18 / Yuya Nishimura + Claude Opus 4.7 (1M context) /
+NPO法人ミラツク Miratuku News<br>
+本レポートはフィジカル AI 2100 と バイオものづくり戦略の実測タイムスタンプ、AR-DB の SQL 集計、編集チーム 2 名の並列レビューに基づく構造的説明である。<br>
+本レポート自体が約 12 分で構築された。
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
