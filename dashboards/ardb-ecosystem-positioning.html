@@ -153,16 +153,16 @@ footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border);
 <div class="chapter-number-label">PROLOGUE</div>
 <h2 class="chapter-title">立ち位置 ─ 先行の地平に立つ</h2>
 
-<p class="lead">本エコシステムは、世界の知識基盤プロジェクトが切り拓いた地平の上に立っている。ConceptNet が 27 年、Wikidata が 14 年、OpenAlex が 4 年、AWS Agent Registry が 2 年と、各分野には強力な先行事業がある。本レポートは「世界初」を主張するためのものではない。各先行事業と並ぶ輪郭で、本エコシステムが採った設計選択と運用特徴を 6 領域に分けて記述する。各章で先行事業を必ず参照し、その地平の上で何を選択したかを明示する。</p>
+<p class="lead">本エコシステムは、世界の知識基盤プロジェクトが切り拓いた地平の上に立っている。ConceptNet が 27 年、Wikidata が 14 年、OpenAlex が 4 年、AWS Agent Registry が 2 年と、各分野には強力な先行事業がある。本レポートは「世界初」を主張するためのものではない。各先行事業と並ぶ輪郭で、本エコシステムが採った設計選択と運用上の特徴を 6 領域に分けて記述する。各章で先行事業を必ず参照し、その地平の上で何を選択したかを明示する。</p>
 </section>
 
 <section class="chapter-section" id="ch1">
 <div class="chapter-number-label">CHAPTER 01</div>
 <h2 class="chapter-title">領域別独立 DB 連邦 ─ ConceptNet・ASER のパターン C を継承する</h2>
 
-<p><strong>ConceptNet（MIT Media Lab, 1999-）</strong>は、1999 年に Push Singh と Marvin Minsky が始めた Open Mind Common Sense を起点に、27 年をかけて 3,400 万エッジ・304 言語の常識知識グラフを構築した。Robyn Speer 主導の AAAI 2017 論文で世界的に認知され、Numberbatch 単語埋め込みは SemEval-2017 で複数言語の意味類似度タスクを総合優勝した。ConceptNet が確立した設計は、領域別独立テーブル × 34 関係型による接続という「<em>パターン C 連邦化</em>」である。<strong>ASER（HKUST）</strong>がイベント領域でこれを継承し、<strong>USC ISI の CSKG（2021）</strong>は ConceptNet・ATOMIC・Wikidata-CS・WordNet・Roget・Visual Genome を統合した 6 ソース連邦の代表例となった。</p>
+<p><strong>ConceptNet（MIT Media Lab, 1999-）</strong>は、1999 年に Push Singh と Marvin Minsky が始めた Open Mind Common Sense を起点に、27 年をかけて 3,400 万関係・304 言語の常識知識グラフを構築した。Robyn Speer 主導の AAAI 2017 論文で世界的に認知され、Numberbatch 単語埋め込みは SemEval-2017 で複数言語の意味類似度課題を総合優勝した。ConceptNet が確立した設計は、領域別独立テーブル × 34 関係種別による接続という「<em>パターン C 連邦化</em>」である。<strong>ASER（HKUST）</strong>が出来事領域でこれを継承し、<strong>USC ISI の CSKG（2021）</strong>は ConceptNet・ATOMIC・Wikidata-CS・WordNet・Roget・Visual Genome を統合した 6 ソース連邦の代表例となった。</p>
 
-<p>本エコシステムも同パターン C に分類される。167 の独立 SQLite DB が、各々独自スキーマを保ち、<code>cross_db_refs</code> テーブルで意図的に接続される。差異はひとつ。ConceptNet が汎用 34 関係型に統一するのに対し、本エコシステムは<strong>領域別に関係型を正規化する</strong>。物理学概念 DB では <code>predecessor</code> / <code>successor</code> / <code>theoretical_basis</code>、人物 DB では <code>influenced_by</code> / <code>branched_from</code> / <code>merged_with</code>、産業 DB では <code>supplied_by</code> / <code>competed_with</code> といった具合に、領域に最適化された関係語彙を持つ。これは ConceptNet が獲得した「汎用性」を犠牲にする代わりに、「<em>専門性の解像度</em>」を取る設計選択である。</p>
+<p>本エコシステムも同パターン C に分類される。167 の独立 SQLite が、各々独自のスキーマを保ち、横断参照テーブル（cross_db_refs）で意図的に接続される。差異はひとつ。ConceptNet が汎用 34 関係種別に統一するのに対し、本エコシステムは<strong>領域別に関係種別を正規化する</strong>。物理学概念基盤では「先行概念 / 後継概念 / 理論的基盤」、人物基盤では「影響を受けた / 分派した / 統合された」、産業基盤では「供給された / 競合した」といった具合に、領域に最適化された関係語彙を持つ。これは ConceptNet が獲得した「汎用性」を犠牲にする代わりに、「<em>専門性の解像度</em>」を取る設計選択である。</p>
 
 <p>この選択により、本エコシステムは ConceptNet が苦手とする領域（人文学・古典・非西洋哲学など）でも構造化を保てる。一方、ConceptNet が圧倒的に強い「常識的関連性の汎用検索」は対象外として割り切る。両者の関係は競合ではなく、<em>住み分け</em>に近い。</p>
 </section>
@@ -171,44 +171,44 @@ footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border);
 <div class="chapter-number-label">CHAPTER 02</div>
 <h2 class="chapter-title">自己観察メタ DB ─ AWS Agent Registry・Portkey・MLflow の方向性を翻訳する</h2>
 
-<p><strong>AWS Agent Registry（2024 preview）</strong>は、エージェント定義のクラウド集約管理という方向性を業界に提示した先駆プロジェクトである。エージェント・スキル・ツール・MCP サーバを 4 層メタデータで管理し、IAM 統合による承認ワークフローと semantic search を実装した。<strong>Portkey Agent Gateway</strong>は、組織内の全エージェントを中央レジストリで管理し、アクセス制御・ガバナンス・権限を一体化する SaaS を展開している。<strong>MLflow Prompt Registry / Model Registry</strong>は、プロンプト・モデル成果物の版管理と Linked Foundation Model 配下のオープンソース基盤を提供する。<strong>OpenAI Agents SDK と Anthropic Claude Skills</strong>は、API レベルでエージェント定義のパッケージ化を進めている。</p>
+<p><strong>AWS Agent Registry（2024 年公開予告）</strong>は、エージェント定義のクラウド集約管理という方向性を業界に提示した先駆プロジェクトである。エージェント・スキル・ツール・MCP サーバを 4 層のメタデータで管理し、IAM 統合による承認手続きと意味的検索を実装した。<strong>Portkey Agent Gateway</strong>は、組織内の全エージェントを中央レジストリで管理し、アクセス制御・統制・権限を一体化する商用クラウド基盤を展開している。<strong>MLflow Prompt Registry / Model Registry</strong>は、プロンプト・モデル成果物の版管理と Linux Foundation 配下のオープンソース基盤を提供する。<strong>OpenAI Agents SDK と Anthropic Claude Skills</strong>は、開発者向けインターフェースの水準でエージェント定義のパッケージ化を進めている。</p>
 
-<p>本エコシステムの AR-DB は、これら先行事業が示した「エージェント定義の構造化メタ DB」という方向性を、<strong>ローカル SQLite に翻訳した実装</strong>にあたる。クラウド API ではなく SQL 直接照会（agents 448 / agent_relations 1,874 / db_references 518 / agent_tools 1,353 / tools 46）、手動登録ではなくファイル変更からの自動同期（<code>~/.claude/settings.json</code> の PostToolUse hook 9 件 / 10 秒 debounce）を採った。エージェント間関係は 9 種類に typed されており、<code>calls</code>（1,110）・<code>orchestrates</code>（222）・<code>aggregates</code>（183）・<code>extends</code>（108）・<code>observed_by</code>（77）・<code>governed_by</code>（73）・<code>replaces</code>（59）・<code>delegates_to</code>（27）・<code>alias_of</code>（15）と分布する。</p>
+<p>本エコシステムの AR-DB は、これら先行事業が示した「エージェント定義の構造化メタ DB」という方向性を、<strong>ローカル SQLite に翻訳した実装</strong>にあたる。クラウド経由の呼び出しではなく SQL 直接照会（エージェント 448 / 関係 1,874 / DB 参照 518 / ツール接続 1,353 / ツール 46）、手動登録ではなくファイル変更からの自動同期（<code>~/.claude/settings.json</code> のツール実行後フック 9 件 / 10 秒の遅延制御）を採った。エージェント間の関係は 9 種に類型化されており、呼び出し 1,110 / 統括 222 / 集約 183 / 拡張 108 / 観察 77 / 統制 73 / 置換 59 / 委譲 27 / 別名 15 と分布する。</p>
 
-<p>AWS が「クラウド集約 × 承認ワークフロー」を選んだのに対し、本エコシステムは「ローカル自律 × 自動同期 × SQL 自由照会」を選んだ。これは個人運用環境の制約から生まれた設計選択であり、AWS と競合せず、補完関係に立つ。Model tier 別の運用（opus 38 / sonnet 75 / haiku 8）も AR-DB から直接照会可能であり、コスト最適化と判断品質のトレードオフが SQL レベルで可視化されている。</p>
+<p>AWS が「クラウド集約 × 承認手続き」を選んだのに対し、本エコシステムは「ローカル自律 × 自動同期 × SQL 自由照会」を選んだ。これは個人運用環境の制約から生まれた設計選択であり、AWS と競合せず、補完関係に立つ。モデル階層別の運用（opus 38 / sonnet 75 / haiku 8）も AR-DB から直接照会可能であり、費用最適化と判断品質のトレードオフが SQL の水準で可視化されている。</p>
 </section>
 
 <section class="chapter-section" id="ch3">
 <div class="chapter-number-label">CHAPTER 03</div>
 <h2 class="chapter-title">多層階層メタオーケストレーション ─ ChatDev・AgentOrchestra の系譜を 5 層に展開する</h2>
 
-<p><strong>ChatDev（OpenBMB）</strong>は、CEO オーケストレーター層 + designers / developers / testers の 2 層構造で、マルチエージェント協業によるソフトウェア開発を実証した。<strong>AgentOrchestra（arXiv 2506.12508, 2025）</strong>は、階層型マルチエージェントフレームワークを理論的に整理し、上位エージェントが下位エージェントの能力を動的に組み合わせる設計を提示した。これらは「<em>メタオーケストレーション層を明示的に持つ</em>」という方向性を切り拓いた重要な系譜である。</p>
+<p><strong>ChatDev（OpenBMB）</strong>は、CEO 役の統括エージェント層と設計者・開発者・検証者の 2 層構造で、複数エージェント協業によるソフトウェア開発を実証した。<strong>AgentOrchestra（arXiv 2506.12508, 2025）</strong>は、階層型の複数エージェント枠組みを理論的に整理し、上位エージェントが下位エージェントの能力を動的に組み合わせる設計を提示した。これらは「<em>メタ統括層を明示的に持つ</em>」という方向性を切り拓いた重要な系譜である。</p>
 
-<p>本エコシステムはこの系譜を 5 層（Tier -1〜3）に展開した。Tier -1 meta（34 体、全エコシステムを横断する判断層）、Tier 0 orchestrator（27 体、<code>/db-master</code> / <code>/dbo</code> / <code>/process-orchestrator</code> 等の最上位指揮）、Tier 1 team（26 体、領域メタ <code>/dom-science</code> / <code>/dom-society</code> 等 6 領域 + 連載チーム）、Tier 2 specialist（110 体、個別 DB エージェント + 編集部）、Tier 3 utility（251 体、検索・整形・保存等の道具的役割）。総 448 アセットがこの 5 層で配置される。</p>
+<p>本エコシステムはこの系譜を 5 層に展開した。最上位の判断層 -1（34 体、全エコシステムを横断するメタ）、上位指揮層 0（27 体、<code>/db-master</code> / <code>/dbo</code> / <code>/process-orchestrator</code> 等）、領域チーム層 1（26 体、領域メタ <code>/dom-science</code> / <code>/dom-society</code> 等 6 領域と連載チーム）、専門担当層 2（110 体、個別 DB エージェントと編集部）、道具層 3（251 体、検索・整形・保存等）。総 448 のアセットがこの 5 層で配置される。</p>
 
-<p>特徴は<strong>型自動判定の組込み</strong>にある。<code>/db-master</code> はユーザーの DB 構築要求を受け取り、概念 DB（<code>/adb</code>）・実データ DB（<code>/db-blindspot</code> + <code>/db-build</code>）・既存深化（<code>/ddb</code>）の 3 経路を自動判定する。ChatDev の CEO は単一プロジェクト内の役割分担を行うが、本エコシステムの Tier 0 は<em>プロジェクト類型そのもの</em>を判定してルーティングする。この設計選択は、領域別 DB の数（30+）が前提として大きいことから生まれた必然である。</p>
+<p>特徴は<strong>型自動判定の組込み</strong>にある。<code>/db-master</code> は DB 構築の要求を受け取り、概念 DB（<code>/adb</code>）・実データ DB（<code>/db-blindspot</code> + <code>/db-build</code>）・既存深化（<code>/ddb</code>）の 3 経路を自動判定する。ChatDev の CEO 役は単一プロジェクト内の役割分担を行うが、本エコシステムの最上位指揮層は<em>プロジェクト類型そのもの</em>を判定して振り分ける。この設計選択は、領域別 DB の数（30+）が前提として大きいことから生まれた必然である。</p>
 </section>
 
 <section class="chapter-section" id="ch4">
 <div class="chapter-number-label">CHAPTER 04</div>
 <h2 class="chapter-title">学術正本層との接続 ─ OpenAlex・Wikidata・ORCID・ROR を基盤として組み込む</h2>
 
-<p><strong>OpenAlex（2022, OurResearch）</strong>は、廃止された Microsoft Academic Graph の後継として、Crossref・ORCID・ROR を統合した約 2.5 億 works の学術メタデータを CC0 ライセンスで公開する。S3 バケットでの 330 GB bulk snapshot を四半期ごと無料配布し、API は 100K req/日まで無料で利用可能。<strong>Wikidata</strong>は 1.15 億エンティティ・14 億 statements を 380+ 言語で抱える Wikimedia Foundation 運営の構造化ナレッジベース。<strong>ORCID</strong>は研究者の永続的識別子、<strong>ROR</strong>は研究機関の永続的識別子として、それぞれの領域でデファクト標準を確立している。</p>
+<p><strong>OpenAlex（2022 年, OurResearch）</strong>は、廃止された Microsoft Academic Graph の後継として、Crossref・ORCID・ROR を統合した約 2.5 億件の学術成果メタデータを CC0 ライセンスで公開する。S3 配下に 330 GB の一括スナップショットを四半期ごと無料配布し、接続インターフェースは 1 日 10 万要求まで無料で利用可能。<strong>Wikidata</strong>は 1.15 億の対象項目・14 億の言明を 380+ 言語で抱える Wikimedia Foundation 運営の構造化知識基盤。<strong>ORCID</strong>は研究者の永続的識別子、<strong>ROR</strong>は研究機関の永続的識別子として、それぞれの領域で事実上の標準を確立している。</p>
 
-<p>本エコシステムは、これらを<strong>学術領域の正本層</strong>として組み込む方針を採っている。実際、167 DB のうち 23+ DB が <code>openalex_id</code> 列をスキーマに実装済。academic-landscape-db は 233,779 ジャーナル中 215,983 件（92.4%）に OpenAlex ID を充填済。academic-outcomes-db には専用の 4 phase ETL（<code>phase1_openalex_pilot</code> → <code>phase2b_openalex_recent</code> → <code>phase5_openalex_1980_99</code> → <code>phaseProd_fill_15_domains</code>）が稼働。FTT-DB v2 は 18,524 件の OpenAlex 論文を統合済。CQ-DB は 7,082 研究者中 3,496 件（49.4%）に紐付けが進む。</p>
+<p>本エコシステムは、これらを<strong>学術領域の正本層</strong>として組み込む方針を採っている。実際、167 DB のうち 23+ DB が「OpenAlex 識別子（openalex_id）」をスキーマに実装済。academic-landscape-db は 233,779 ジャーナル中 215,983 件（92.4%）に OpenAlex 識別子を充填済。academic-outcomes-db には専用の 4 段階データ取り込みパイプライン（pilot → recent → 1980-99 → production 充填）が稼働。FTT-DB v2 は 18,524 件の OpenAlex 論文を統合済。CQ-DB は 7,082 研究者中 3,496 件（49.4%）に紐付けが進む。</p>
 
-<p>住み分けは明確だ。OpenAlex が「論文・著者・機関の<em>正本</em>」を担い、本エコシステムは「<em>意味構造</em>（subfield / 系譜 / 概念関係）」を担う。両者を <code>openalex_id</code> という Linked Data 識別子で接続することで、学術領域での内部 DB の規模制約を OpenAlex 側に逃がしつつ、本エコシステムの構造化価値を保てる。</p>
+<p>住み分けは明確だ。OpenAlex が「論文・著者・機関の<em>正本</em>」を担い、本エコシステムは「<em>意味構造</em>（下位領域 / 系譜 / 概念関係）」を担う。両者を OpenAlex 識別子というリンクトデータ規格で接続することで、学術領域での内部 DB の規模制約を OpenAlex 側に逃がしつつ、本エコシステムの構造化価値を保てる。</p>
 </section>
 
 <section class="chapter-section" id="ch5">
 <div class="chapter-number-label">CHAPTER 05</div>
 <h2 class="chapter-title">LLM-native 知識基盤 ─ Karpathy・WeKnora・AGENTiGraph の系譜に位置する</h2>
 
-<p><strong>Andrej Karpathy（旧 OpenAI/Tesla）</strong>が 2024 年に Gist で提示した「LLM-maintained wiki」の概念は、知識基盤を人間が更新するのではなく、LLM エージェントが継続更新する self-evolving モデルを示した。<strong>WeKnora（Tencent）</strong>は、エンタープライズ向けに Document + Entity + Relation を multi-agent orchestration で統合する OSS を展開する。<strong>AGENTiGraph（arXiv 2508.02999, 2025）</strong>は、エージェントが知識グラフを動的に拡張する task routing 設計を提案している。これらは「<em>LLM-native</em>」な知識基盤の系譜である。</p>
+<p><strong>Andrej Karpathy（旧 OpenAI/Tesla）</strong>が 2024 年に GitHub Gist で提示した「LLM が維持するウィキ」の概念は、知識基盤を人間が更新するのではなく、LLM エージェントが継続更新する自己進化型モデルを示した。<strong>WeKnora（Tencent）</strong>は、企業向けに「文書 + 実体 + 関係」を複数エージェント協調で統合するオープンソースを展開する。<strong>AGENTiGraph（arXiv 2508.02999, 2025）</strong>は、エージェントが知識グラフを動的に拡張するタスク振り分け設計を提案している。これらは「<em>LLM ネイティブ</em>」な知識基盤の系譜である。</p>
 
-<p>本エコシステムはこの系譜に明確に属する。167 独立 DB × 各 DB 専属エージェント × cross_db_refs という構成は、Karpathy の LLM-maintained wiki を個人運用環境で実装した形態にあたる。各 DB の構築・更新・品質検証は、<code>db-concept-builder</code> / <code>db-timeseries-builder</code> / <code>db-people-builder</code> / <code>db-network-builder</code> 等のドメイン特化ビルダーエージェントが分担する。<code>db-quality-auditor</code> は独立監査の役割を担い、生成と検証の分離（メタ原則）を構造化する。</p>
+<p>本エコシステムはこの系譜に明確に属する。167 独立 DB × 各 DB 専属エージェント × 横断参照という構成は、Karpathy の LLM 維持型ウィキを個人運用環境で実装した形態にあたる。各 DB の構築・更新・品質検証は、概念ビルダー・時系列ビルダー・人物ビルダー・ネットワークビルダー等の領域特化エージェントが分担する。品質監査エージェントは独立監査の役割を担い、生成と検証の分離（メタ原則）を構造化する。</p>
 
-<p>規模は WeKnora（エンタープライズ、3-5 エージェント）の規模感とは異なる。Karpathy の提案も個別 wiki 単位だった。本エコシステムは個人 + LLM 環境で 100+ エージェントを同時運用する密度で、この系譜の<em>個人スケール実装</em>に位置する。</p>
+<p>規模は WeKnora（企業向け、3〜5 エージェント）の規模感とは異なる。Karpathy の提案も個別ウィキ単位だった。本エコシステムは個人 + LLM 環境で 100 以上のエージェントを同時運用する密度で、この系譜の<em>個人スケール実装</em>に位置する。</p>
 </section>
 
 <section class="chapter-section" id="ch6">
@@ -217,28 +217,28 @@ footer { margin-top: 80px; padding: 40px 0; border-top: 1px solid var(--border);
 
 <p>本エコシステムの輪郭は「単一構造の新規性」ではなく「<strong>運用規律の組合せ密度</strong>」にある。以下、5 種の規律を列挙する。</p>
 
-<p><strong>(1) DB 単位の IRR Cohen's Kappa 公表</strong>。物理 DB の Kappa 0.8745、宇宙地球史 DB の 0.9863、地球科学 DB の 0.9550、植物学 DB の 0.8602、時間概念 DB の 0.97 等、複数 DB で<em>個別</em>に inter-rater reliability を測定・公表する。学術 KG では Semantic Scholar の一部例外を除き、ほぼ前例がない実践である。</p>
+<p><strong>(1) DB 単位の評価者間一致度（Cohen のカッパ係数）公表</strong>。物理 DB のカッパ 0.8745、宇宙地球史 DB の 0.9863、地球科学 DB の 0.9550、植物学 DB の 0.8602、時間概念 DB の 0.97 等、複数 DB で<em>個別</em>に評価者間信頼性を測定・公表する。学術知識グラフでは Semantic Scholar の一部例外を除き、ほぼ前例がない実践である。</p>
 
-<p><strong>(2) source_url 列スキーマ必須化</strong>。全 DB の主要レコードに source_url を強制する。PHYS / CEH / ES / CQ 等で 100% 充填、academic-landscape-db で 92.4%。これは OpenAlex・Wikidata の <code>references</code> 設計を内部 DB レベルに継承した実装である。</p>
+<p><strong>(2) 出典 URL 列の必須化</strong>。全 DB の主要レコードに出典 URL を強制する。物理・宇宙地球史・地球科学・現代の問い等で 100% 充填、academic-landscape-db で 92.4%。これは OpenAlex・Wikidata の参照設計を内部 DB の水準に継承した実装である。</p>
 
-<p><strong>(3) path-1（LP as truth）ルール</strong>。多層文書（LP / Book / 詳細）が並存する場合、LP を正本とし内側層を追随させる原則。7+1 問いランディングで実証済。</p>
+<p><strong>(3) ランディング正本ルール（path-1）</strong>。多層の文書（ランディング / 書籍 / 詳細）が並存する場合、ランディングを正本とし内側層を追随させる原則。7+1 問いランディングで実証済。</p>
 
-<p><strong>(4) 3 経路必須提示ルール</strong>。DB 構築の意思決定時、<code>/adb</code>（概念 DB）/ <code>/db-blindspot+/db-build</code>（実データ DB）/ <code>/ddb</code>（既存深化）の 3 経路を必ず明示提示する。<code>meta-principles-enforcer</code> が違反を検出する。</p>
+<p><strong>(4) 3 経路必須提示ルール</strong>。DB 構築の意思決定時、<code>/adb</code>（概念 DB）/ <code>/db-blindspot+/db-build</code>（実データ DB）/ <code>/ddb</code>（既存深化）の 3 経路を必ず明示提示する。メタ原則順守監視エージェントが違反を検出する。</p>
 
-<p><strong>(5) Production-grade 完備基準（Pilot 思考禁止）</strong>。各領域 publications 1,500+ / 主要エンティティ 300+ を絶対達成基準として運用。MVP・Pilot・Mid・Production の階層表現を排除する。</p>
+<p><strong>(5) 本番水準の完備基準（試作思考の禁止）</strong>。各領域で論文 1,500 件以上 / 主要エンティティ 300 件以上を絶対達成基準として運用。試作・中規模・本番の階層表現を排除する。</p>
 
-<p>これらの規律は、個々には他所に類例がある。だが個人 + LLM 運用環境で<em>同時に運用する密度</em>は、市場の主流（runtime tracing 偏重 / 単一グラフ偏重 / Pilot 思考）から見て uncommon である。これが本エコシステムの輪郭を形作る。</p>
+<p>これらの規律は、個々には他所に類例がある。だが個人 + LLM 運用環境で<em>同時に運用する密度</em>は、市場の主流（実行時計測への偏り / 単一グラフへの偏り / 試作思考）から見て稀少である。これが本エコシステムの輪郭を形作る。</p>
 </section>
 
 <section class="chapter-section" id="close">
 <div class="chapter-number-label">EPILOGUE</div>
 <h2 class="chapter-title">位置づけの輪郭 ─ 翻訳としての実装</h2>
 
-<p>本エコシステムは、ConceptNet が拓いたパターン C 連邦の系譜にあり、AWS Agent Registry が示した自己観察メタ DB の方向性をローカル翻訳し、ChatDev・AgentOrchestra の階層メタ系譜を 5 層に展開し、OpenAlex を学術正本層として接続し、Karpathy・WeKnora の LLM-native 系譜に個人スケールで属する。</p>
+<p>本エコシステムは、ConceptNet が拓いたパターン C 連邦の系譜にあり、AWS Agent Registry が示した自己観察メタ DB の方向性をローカル環境に翻訳し、ChatDev・AgentOrchestra の階層メタ系譜を 5 層に展開し、OpenAlex を学術正本層として接続し、Karpathy・WeKnora の LLM ネイティブ系譜に個人スケールで属する。</p>
 
 <p>世界初の主張は適切ではない。最も誠実な記述は、<strong>「先行事業が拓いた地平に立ち、Claude Code + ローカルファイル運用という特殊な環境に固有の運用規律として翻訳した実装」</strong>である。</p>
 
-<p>この立ち位置は、ConceptNet・Wikidata・OpenAlex のような<em>世界的インフラ</em>と並ぶものではない。それらの規模には及ばない。だが、それらが拓いた地平の上で、個人 + LLM が運用できる密度で領域別構造化を実践する<em>輪郭</em>は持つ。先行事業との関係は、競合ではなく、地平の上での独自配置にある。</p>
+<p>この立ち位置は、ConceptNet・Wikidata・OpenAlex のような<em>世界的な基盤</em>と並ぶものではない。それらの規模には及ばない。だが、それらが拓いた地平の上で、個人 + LLM が運用できる密度で領域別の構造化を実践する<em>輪郭</em>は持つ。先行事業との関係は、競合ではなく、地平の上での独自配置にある。</p>
 </section>
 
 <section class="chapter-section" id="refs">
