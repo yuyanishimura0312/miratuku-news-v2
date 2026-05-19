@@ -1,0 +1,222 @@
+<!doctype html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LPM-DB Dashboard / Launch Playbook & Mathematics</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-soft: #AAAAAA;
+  --accent-warm: #FF4030; --accent-warm-soft: #E03525;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-feature-settings:"palt";line-height:1.85;letter-spacing:0.025em}
+.top-bar{position:sticky;top:0;height:48px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;z-index:100}
+.brand{font-weight:700;font-size:14px;letter-spacing:0.1em}
+.brand-mark{color:var(--accent-warm);font-weight:700;margin-right:8px}
+.theme-toggle{margin-left:auto;background:transparent;border:1px solid var(--border);color:var(--text);padding:4px 12px;font-size:12px;cursor:pointer;border-radius:2px}
+.layout{display:grid;grid-template-columns:240px 1fr;gap:48px;max-width:1100px;margin:0 auto;padding:32px 24px}
+.toc{position:sticky;top:80px;align-self:start;font-size:13px}
+.toc-label{font-weight:600;font-size:11px;letter-spacing:0.18em;color:var(--text-muted);margin-bottom:12px}
+.toc ul{list-style:none}
+.toc li{margin-bottom:6px}
+.toc a{color:var(--text-secondary);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:1px;transition:all .2s}
+.toc a:hover{color:var(--accent-warm);border-bottom-color:var(--accent-warm)}
+.toc-num{display:inline-block;width:24px;color:var(--accent-warm);font-family:var(--font-mono);font-size:11px}
+main{max-width:760px}
+h1{font-family:var(--font-serif);font-size:32px;font-weight:600;margin-bottom:8px}
+.sub{color:var(--text-secondary);font-size:14px;margin-bottom:32px}
+section{margin-bottom:64px;border-bottom:1px solid var(--border-light);padding-bottom:48px}
+section:last-child{border-bottom:none}
+h2{font-family:var(--font-serif);font-size:22px;font-weight:600;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid var(--accent)}
+h2 .num{font-family:var(--font-mono);color:var(--accent-warm);font-size:14px;margin-right:12px}
+h3{font-family:var(--font-serif);font-size:17px;font-weight:600;margin:24px 0 12px;color:var(--text)}
+p{margin-bottom:14px;text-indent:1em;font-size:15px}
+p:first-of-type{text-indent:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.kpi{background:var(--card);border:1px solid var(--border-light);padding:16px;text-align:center;border-radius:2px}
+.kpi-val{font-family:var(--font-mono);font-size:24px;color:var(--accent-warm);font-weight:600;line-height:1.2}
+.kpi-label{font-size:11px;color:var(--text-muted);letter-spacing:0.08em;margin-top:4px}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border-light)}
+th{font-weight:600;color:var(--text-secondary);background:var(--surface);font-size:11px;letter-spacing:0.06em}
+td.num{font-family:var(--font-mono);text-align:right;color:var(--accent-warm-soft)}
+.bar-track{display:inline-block;width:120px;height:8px;background:var(--border-light);vertical-align:middle;border-radius:1px;margin-right:8px;position:relative}
+.bar-fill{height:100%;background:var(--accent-warm);border-radius:1px}
+.note{font-size:12px;color:var(--text-muted);margin-top:8px;font-style:italic}
+.tag{display:inline-block;padding:2px 6px;background:var(--accent-muted);color:var(--accent-warm);border-radius:2px;font-size:11px;font-family:var(--font-mono);margin-right:4px}
+pre{background:var(--surface);padding:16px;font-family:var(--font-mono);font-size:12px;overflow-x:auto;border-left:3px solid var(--accent-warm)}
+@media print{.top-bar,.toc,.theme-toggle{display:none}.layout{display:block;padding:0}}
+@media(max-width:1000px){.layout{grid-template-columns:1fr;padding:16px}.toc{position:static;margin-bottom:32px}}
+</style></head>
+<body>
+<div class="top-bar">
+  <span class="brand-mark">●</span><span class="brand">LPM-DB Dashboard</span>
+  <button class="theme-toggle" onclick="toggleTheme()">☾ / ☀</button>
+</div>
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-label">CONTENTS</div>
+    <ul>
+      <li><a href="#overview"><span class="toc-num">01</span>概要</a></li>
+      <li><a href="#kpi"><span class="toc-num">02</span>主要KPI</a></li>
+      <li><a href="#subfields"><span class="toc-num">03</span>サブフィールド</a></li>
+      <li><a href="#culture"><span class="toc-num">04</span>文化分布</a></li>
+      <li><a href="#multilingual"><span class="toc-num">05</span>多言語</a></li>
+      <li><a href="#must-have"><span class="toc-num">06</span>必須理論</a></li>
+      <li><a href="#math"><span class="toc-num">07</span>数学検証</a></li>
+      <li><a href="#relations"><span class="toc-num">08</span>関係</a></li>
+      <li><a href="#crossref"><span class="toc-num">09</span>横断DB</a></li>
+      <li><a href="#tables"><span class="toc-num">10</span>固有テーブル</a></li>
+      <li><a href="#use"><span class="toc-num">11</span>使い方</a></li>
+    </ul>
+  </aside>
+  <main>
+
+    <h1>LPM-DB / Launch Playbook &amp; Mathematics Database</h1>
+    <div class="sub">ウェブ・アプリのローンチと収益化を学術知見と数学的検証で支える概念データベース ／ 最終更新 2026-05-20 02:35</div>
+
+    <section id="overview">
+      <h2><span class="num">01</span>このDBの位置づけ</h2>
+      <p>LPM-DBは、ウェブサービスやアプリを「プロダクトが固まった後、実際にローンチして収益化する」段階に必要な学術概念を体系化したデータベースです。値付け、収益モデル、ユニット・エコノミクス、市場規模算定、ゴー・トゥ・マーケット戦略、ローンチ順序設計、グロースループ数学、ファネル帰属、アクティベーションUX、リテンション科学、実験統計、価格戦術、行動経済学の応用、という13のサブフィールドで構成しています。</p>
+      <p>既存DBとの棲み分けは明確で、WMD（収益化技法カタログ）や monetization-db（一般技法集）が「何があるか」を集めるのに対し、LPM-DBは「どう数式で表現するか」「どう実証検証するか」を学術論文に基づいて整理します。MGや Startup-DB が経営理論・起業理論全般を扱うのに対し、LPM-DBは Launch局面の実行可能プレイブックに特化します。MPVがプロダクト確定前の検証を担う一方、LPM-DBはプロダクト確定後の局面を担います。</p>
+      <p>本DBは、ある事業仮説が具体化しプロダクト化した後、「値付けをどう設計するか」「マーケティングプランをどう組み立てるか」「ユーザー体験の構築をどう数学で支えるか」を学術論文と数式に基づいて検証可能にすることを狙いとしています。経験則ではなく、Popperの反証可能性条件まで含めて反証検証可能な命題として整備しています。</p>
+    </section>
+
+    <section id="kpi">
+      <h2><span class="num">02</span>主要KPI</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-val">3,923</div><div class="kpi-label">CONCEPTS / 5,500 TARGET</div></div>
+        <div class="kpi"><div class="kpi-val">21,649</div><div class="kpi-label">RELATIONS / 20,000 TARGET</div></div>
+        <div class="kpi"><div class="kpi-val">60</div><div class="kpi-label">RESEARCHERS / 350 TARGET</div></div>
+        <div class="kpi"><div class="kpi-val">196</div><div class="kpi-label">MUST-HAVE / 150 TARGET</div></div>
+        <div class="kpi"><div class="kpi-val">43.5%</div><div class="kpi-label">NON-WESTERN RATE</div></div>
+        <div class="kpi"><div class="kpi-val">100.0%</div><div class="kpi-label">SOURCE_URL COVERAGE</div></div>
+        <div class="kpi"><div class="kpi-val">2,260</div><div class="kpi-label">VERIFIED</div></div>
+        <div class="kpi"><div class="kpi-val">5,363</div><div class="kpi-label">CROSS-DB REFS (22 DBs)</div></div>
+        <div class="kpi"><div class="kpi-val">28.1%</div><div class="kpi-label">MULTILINGUAL RATE</div></div>
+      </div>
+      <p class="note">5件セット品質指標（Po／Gwet AC1／κ／有病率／サンプル数）は Phase 13 で正式測定し _quality_metadata に記録します。</p>
+    </section>
+
+    <section id="subfields">
+      <h2><span class="num">03</span>サブフィールド別カバレッジ</h2>
+      <p>13サブフィールドそれぞれにProduction目標を設定し、概念数・検証済率・平均字数を可視化しています。値付け（PSCI）から行動経済学の応用（BEPROD）まで、ローンチ実行に必要な領域を横串で整備しています。</p>
+      <table>
+        <thead><tr><th>ID</th><th>名称</th><th class="num">target</th><th class="num">現在</th><th>進捗</th><th class="num">verified</th><th class="num">avg字数</th></tr></thead>
+        <tbody><tr><td><strong>PSCI</strong></td><td>価格科学</td><td class='num'>480</td><td class='num'>364</td><td><span class='bar-track'><span class='bar-fill' style='width:76%'></span></span> 75.8%</td><td class='num'>258</td><td class='num'>109</td></tr><tr><td><strong>UECON</strong></td><td>ユニット・エコノミクス</td><td class='num'>460</td><td class='num'>300</td><td><span class='bar-track'><span class='bar-fill' style='width:65%'></span></span> 65.2%</td><td class='num'>148</td><td class='num'>101</td></tr><tr><td><strong>REVMOD</strong></td><td>収益モデリング</td><td class='num'>420</td><td class='num'>298</td><td><span class='bar-track'><span class='bar-fill' style='width:71%'></span></span> 71.0%</td><td class='num'>217</td><td class='num'>112</td></tr><tr><td><strong>MSIZE</strong></td><td>市場規模算定</td><td class='num'>380</td><td class='num'>317</td><td><span class='bar-track'><span class='bar-fill' style='width:83%'></span></span> 83.4%</td><td class='num'>161</td><td class='num'>106</td></tr><tr><td><strong>GTM</strong></td><td>GTM戦略</td><td class='num'>440</td><td class='num'>250</td><td><span class='bar-track'><span class='bar-fill' style='width:57%'></span></span> 56.8%</td><td class='num'>61</td><td class='num'>95</td></tr><tr><td><strong>LSEQ</strong></td><td>ローンチ順序設計</td><td class='num'>380</td><td class='num'>305</td><td><span class='bar-track'><span class='bar-fill' style='width:80%'></span></span> 80.3%</td><td class='num'>142</td><td class='num'>100</td></tr><tr><td><strong>GLOOP</strong></td><td>グロース・ループ数学</td><td class='num'>460</td><td class='num'>358</td><td><span class='bar-track'><span class='bar-fill' style='width:78%'></span></span> 77.8%</td><td class='num'>204</td><td class='num'>105</td></tr><tr><td><strong>FUNMATH</strong></td><td>ファネル・帰属数学</td><td class='num'>460</td><td class='num'>367</td><td><span class='bar-track'><span class='bar-fill' style='width:80%'></span></span> 79.8%</td><td class='num'>218</td><td class='num'>103</td></tr><tr><td><strong>ACTUX</strong></td><td>アクティベーションUX数学</td><td class='num'>380</td><td class='num'>217</td><td><span class='bar-track'><span class='bar-fill' style='width:57%'></span></span> 57.1%</td><td class='num'>151</td><td class='num'>107</td></tr><tr><td><strong>RETSCI</strong></td><td>リテンション科学</td><td class='num'>440</td><td class='num'>345</td><td><span class='bar-track'><span class='bar-fill' style='width:78%'></span></span> 78.4%</td><td class='num'>151</td><td class='num'>99</td></tr><tr><td><strong>EXPSTAT</strong></td><td>実験統計</td><td class='num'>460</td><td class='num'>274</td><td><span class='bar-track'><span class='bar-fill' style='width:60%'></span></span> 59.6%</td><td class='num'>182</td><td class='num'>108</td></tr><tr><td><strong>PRTACT</strong></td><td>価格戦術・心理価格</td><td class='num'>380</td><td class='num'>314</td><td><span class='bar-track'><span class='bar-fill' style='width:83%'></span></span> 82.6%</td><td class='num'>191</td><td class='num'>105</td></tr><tr><td><strong>BEPROD</strong></td><td>プロダクト行動経済学</td><td class='num'>360</td><td class='num'>214</td><td><span class='bar-track'><span class='bar-fill' style='width:59%'></span></span> 59.4%</td><td class='num'>176</td><td class='num'>111</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="culture">
+      <h2><span class="num">04</span>文化的多元性</h2>
+      <p>北米偏重を避け、欧州・日本・中国・インド・中東・アフリカ・ラテンアメリカ発の概念を意識的に収集しました。非西洋（日本・中国・インド・中東・アフリカ・ラテンアメリカ）の概念比率は<strong> 43.5%</strong>に達し、目標25%を大幅に超過しています。中国のPinduoduo team-purchase、インドのJio value-pricing、イスラム経済のSukuk product financing、日本の楠木建ストーリー戦略、ラ米のMercado Libre anti-PayPal、アフリカのM-Pesa monetization 等を体系的に組み込んでいます。</p>
+      <table>
+        <thead><tr><th>地域</th><th class="num">件数</th><th>シェア</th></tr></thead>
+        <tbody><tr><td>north_america</td><td class='num'>1454</td><td>37.1%</td></tr><tr><td>china</td><td class='num'>553</td><td>14.1%</td></tr><tr><td>india</td><td class='num'>548</td><td>14.0%</td></tr><tr><td>europe</td><td class='num'>453</td><td>11.5%</td></tr><tr><td>global</td><td class='num'>309</td><td>7.9%</td></tr><tr><td>africa</td><td class='num'>179</td><td>4.6%</td></tr><tr><td>japan</td><td class='num'>179</td><td>4.6%</td></tr><tr><td>middle_east</td><td class='num'>149</td><td>3.8%</td></tr><tr><td>latin_america</td><td class='num'>99</td><td>2.5%</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="multilingual">
+      <h2><span class="num">05</span>多言語対応</h2>
+      <p>英語（3731件）・日本語（顧客生涯価値モデル件）・中国語（46件）・ドイツ語（7件）・フランス語（0件）・韓国語（3件）・スペイン語（0件）の7言語で概念名を整備しています。多言語率（7言語平均）は <strong>28.1%</strong>です。</p>
+    </section>
+
+    <section id="must-have">
+      <h2><span class="num">06</span>必須理論 196件カバー</h2>
+      <p>Van Westendorp PSM、Bass Diffusion、Crossing the Chasm、AARRR、JTBD、Lean Startup、NPS、Prospect Theory、Multi-Armed Bandit、CUPED、Hook Model、Fogg Behavior Model、North Star Metric、LTV/CAC、Rule of 40 等、ローンチ実行に不可欠な必須理論を <code>is_must_have=1</code> フラグで分類しています。</p>
+      <table>
+        <thead><tr><th>SF</th><th>概念名</th><th>提唱者</th><th class="num">年</th></tr></thead>
+        <tbody><tr><td><span class='tag'>ACTUX</span></td><td>Multi-Armed Bandit<br><span style='color:var(--text-muted);font-size:12px'>多腕バンディット</span></td><td>Herbert Robbins</td><td class='num'>1952</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Hyperbolic Discounting<br><span style='color:var(--text-muted);font-size:12px'>双曲割引</span></td><td>George Ainslie</td><td class='num'>1975</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Prospect Theory<br><span style='color:var(--text-muted);font-size:12px'>プロスペクト理論</span></td><td>Daniel Kahneman, Amos Tversky</td><td class='num'>1979</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Framing Effect<br><span style='color:var(--text-muted);font-size:12px'>フレーミング効果</span></td><td>Amos Tversky and Daniel Kahneman</td><td class='num'>1981</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Peak-End Rule<br><span style='color:var(--text-muted);font-size:12px'>ピーク・エンドの法則</span></td><td>Barbara L. Fredrickson, Daniel Kahneman</td><td class='num'>1993</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Default Effect<br><span style='color:var(--text-muted);font-size:12px'>デフォルト効果</span></td><td>Eric J. Johnson, Daniel Goldstein</td><td class='num'>2003</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>AARRR Pirate Metrics<br><span style='color:var(--text-muted);font-size:12px'>AARRRパイレーツ指標</span></td><td>Dave McClure</td><td class='num'>2007</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Fogg Behavior Model<br><span style='color:var(--text-muted);font-size:12px'>フォッグ行動モデル</span></td><td>B.J. Fogg</td><td class='num'>2009</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Activation Rate Optimization<br><span style='color:var(--text-muted);font-size:12px'>アクティベーション率最適化</span></td><td>Sean Ellis</td><td class='num'>2009</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>CUPED<br><span style='color:var(--text-muted);font-size:12px'>事前実験データによる分散削減</span></td><td>Alex Deng, Ya Xu, Ron Kohavi, Toby Walker</td><td class='num'>2013</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>CUPED Variance Reduction<br><span style='color:var(--text-muted);font-size:12px'>CUPED分散削減法</span></td><td>Alex Deng, Ya Xu, Ron Kohavi, Toby Walker</td><td class='num'>2013</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>Hook Model<br><span style='color:var(--text-muted);font-size:12px'>フック・モデル</span></td><td>Nir Eyal</td><td class='num'>2014</td></tr><tr><td><span class='tag'>ACTUX</span></td><td>North Star Metric<br><span style='color:var(--text-muted);font-size:12px'>ノーススター指標</span></td><td>Amplitude</td><td class='num'>2017</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Anchoring and Adjustment<br><span style='color:var(--text-muted);font-size:12px'>アンカリングと調整</span></td><td>Amos Tversky and Daniel Kahneman</td><td class='num'>1974</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Prospect Theory<br><span style='color:var(--text-muted);font-size:12px'>プロスペクト理論</span></td><td>Daniel Kahneman</td><td class='num'>1979</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Framing Effect<br><span style='color:var(--text-muted);font-size:12px'>フレーミング効果</span></td><td>Amos Tversky and Daniel Kahneman</td><td class='num'>1981</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Attraction Effect<br><span style='color:var(--text-muted);font-size:12px'>おとり効果</span></td><td>Joel Huber; John W. Payne; Christopher Puto</td><td class='num'>1982</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Asymmetric Dominance Effect<br><span style='color:var(--text-muted);font-size:12px'>非対称支配効果（デコイ効果）</span></td><td>Joel Huber, John W. Payne, Christopher Puto</td><td class='num'>1982</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Decoy Effect<br><span style='color:var(--text-muted);font-size:12px'>おとり効果</span></td><td>Joel Huber, John W. Payne and Christopher Puto</td><td class='num'>1982</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Endowment Effect<br><span style='color:var(--text-muted);font-size:12px'>保有効果</span></td><td>Daniel Kahneman, Jack L. Knetsch and Richard H. Thaler</td><td class='num'>1991</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Peak-End Rule<br><span style='color:var(--text-muted);font-size:12px'>ピーク・エンドの法則</span></td><td>Barbara L. Fredrickson and Daniel Kahneman</td><td class='num'>1993</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Hyperbolic Discounting<br><span style='color:var(--text-muted);font-size:12px'>双曲割引</span></td><td>David Laibson</td><td class='num'>1997</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Default Bias in Retirement Savings<br><span style='color:var(--text-muted);font-size:12px'>退職貯蓄のデフォルト・バイアス</span></td><td>Brigitte C. Madrian; Dennis F. Shea</td><td class='num'>2001</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Default Effect<br><span style='color:var(--text-muted);font-size:12px'>デフォルト効果</span></td><td>Richard H. Thaler and Cass R. Sunstein</td><td class='num'>2003</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Nudge Theory<br><span style='color:var(--text-muted);font-size:12px'>ナッジ理論</span></td><td>Richard H. Thaler</td><td class='num'>2008</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Fogg Behavior Model<br><span style='color:var(--text-muted);font-size:12px'>フォッグ行動モデル</span></td><td>B.J. Fogg</td><td class='num'>2009</td></tr><tr><td><span class='tag'>BEPROD</span></td><td>Hook Model<br><span style='color:var(--text-muted);font-size:12px'>フック・モデル</span></td><td>Nir Eyal</td><td class='num'>2014</td></tr><tr><td><span class='tag'>EXPSTAT</span></td><td>Multi-Armed Bandit<br><span style='color:var(--text-muted);font-size:12px'>多腕バンディット</span></td><td>Herbert Robbins</td><td class='num'>1952</td></tr><tr><td><span class='tag'>EXPSTAT</span></td><td>CUPED<br><span style='color:var(--text-muted);font-size:12px'>CUPED分散削減</span></td><td>Alex Deng and Ya Xu</td><td class='num'>2013</td></tr><tr><td><span class='tag'>EXPSTAT</span></td><td>Controlled-experiment Using Pre-Experiment Data<br><span style='color:var(--text-muted);font-size:12px'>事前実験データによる分散削減</span></td><td>Alex Deng, Ya Xu, Ron Kohavi, Toby Walker</td><td class='num'>2013</td></tr><tr><td><span class='tag'>EXPSTAT</span></td><td>CUPED Variance Reduction<br><span style='color:var(--text-muted);font-size:12px'>CUPED分散削減法</span></td><td>Alex Deng</td><td class='num'>2013</td></tr><tr><td><span class='tag'>EXPSTAT</span></td><td>Controlled-experiment Using Pre-Experiment Data (CUPED)<br><span style='color:var(--text-muted);font-size:12px'>事前実験データによる分散削減</span></td><td>Alex Deng; Ya Xu; Ron Kohavi; Toby Walker</td><td class='num'>2013</td></tr><tr><td><span class='tag'>EXPSTAT</span></td><td>Bayesian A/B Testing<br><span style='color:var(--text-muted);font-size:12px'>ベイズ型A/Bテスト</span></td><td>Chris Stucchio</td><td class='num'>2015</td></tr><tr><td><span class='tag'>FUNMATH</span></td><td>Multi-Armed Bandit Allocation<br><span style='color:var(--text-muted);font-size:12px'>多腕バンディット配分</span></td><td>William R. Thompson</td><td class='num'>1933</td></tr><tr><td><span class='tag'>FUNMATH</span></td><td>Multi-Armed Bandit<br><span style='color:var(--text-muted);font-size:12px'>多腕バンディット</span></td><td>Herbert Robbins</td><td class='num'>1952</td></tr><tr><td><span class='tag'>FUNMATH</span></td><td>Bass Diffusion Model<br><span style='color:var(--text-muted);font-size:12px'>バス普及モデル</span></td><td>Frank M. Bass</td><td class='num'>1969</td></tr><tr><td><span class='tag'>FUNMATH</span></td><td>Cohort Analysis<br><span style='color:var(--text-muted);font-size:12px'>コホート分析</span></td><td>Norval D. Glenn</td><td class='num'>1977</td></tr><tr><td><span class='tag'>FUNMATH</span></td><td>Pareto/NBD Customer Base Analysis<br><span style='color:var(--text-muted);font-size:12px'>Pareto/NBD顧客ベース分析</span></td><td>David C. Schmittlein, Donald G. Morrison, Richard Colombo</td><td class='num'>1987</td></tr><tr><td><span class='tag'>FUNMATH</span></td><td>Discounted Customer Lifetime Value Model<br><span style='color:var(--text-muted);font-size:12px'>割引現在価値型カスタマー・ライフタイム・バリュー</span></td><td>Paul D. Berger and Nada I. Nasr</td><td class='num'>1998</td></tr><tr><td><span class='tag'>FUNMATH</span></td><td>Customer Lifetime Value Model<br><span style='color:var(--text-muted);font-size:12px'>顧客生涯価値モデル</span></td><td>Paul D. Berger, Nada I. Nasr</td><td class='num'>1998</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="math">
+      <h2><span class="num">07</span>数学的検証可能性</h2>
+      <p>各概念は可能な限り <code>formal_notation</code>（数式表現）と <code>falsifiability</code>（Popperの反証可能性条件）を備えています。<strong>3125件</strong>が形式モデル付き、<strong>3613件</strong>が実証研究で検証済みです。</p>
+      <p>これにより、ローンチ意思決定を「経験則」ではなく「学術的に検証可能な命題」として扱える基盤を提供します。たとえば「LTV/CAC > 3.0が健全」という業界慣行は、David Skok由来の実証ベースの目安として記録されると同時に、その反証条件（高チャーン環境では3.0でも不健全になる）も明示しています。</p>
+    </section>
+
+    <section id="relations">
+      <h2><span class="num">08</span>関係ネットワーク</h2>
+      <p>概念間の関係は21,649件記録されています。同一サブフィールド内のpredecessor/successor、学派を共有するinfluenced_by、intellectual_lineage を共有する derives_from、定理が定式化する operationalizes など多角的に接続しています。</p>
+      <table>
+        <thead><tr><th>関係タイプ</th><th class="num">件数</th></tr></thead>
+        <tbody><tr><td>predecessor</td><td class='num'>5723</td></tr><tr><td>successor</td><td class='num'>5723</td></tr><tr><td>operationalizes</td><td class='num'>4419</td></tr><tr><td>influenced_by</td><td class='num'>4344</td></tr><tr><td>derives_from</td><td class='num'>1440</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="crossref">
+      <h2><span class="num">09</span>横断DB接続</h2>
+      <p>cross_db_refs テーブルで 5,363件の参照を22個のDBへ記録。WMD、monetization-db、ec（経済学）、sg（戦略）、lab（生活行動）、dsd（デザイン学）、philosophy 等とexact/fuzzy マッチでリンクしています。</p>
+      <table>
+        <thead><tr><th>target_db</th><th class="num">refs</th></tr></thead>
+        <tbody><tr><td>ec</td><td class='num'>917</td></tr><tr><td>wcps</td><td class='num'>641</td></tr><tr><td>philosophy</td><td class='num'>509</td></tr><tr><td>si</td><td class='num'>467</td></tr><tr><td>monetization</td><td class='num'>447</td></tr><tr><td>lab</td><td class='num'>411</td></tr><tr><td>dsd</td><td class='num'>401</td></tr><tr><td>sg</td><td class='num'>323</td></tr><tr><td>wmd-patterns</td><td class='num'>321</td></tr><tr><td>fmi</td><td class='num'>263</td></tr><tr><td>wmd-concepts</td><td class='num'>177</td></tr><tr><td>anthropology</td><td class='num'>134</td></tr><tr><td>tc</td><td class='num'>122</td></tr><tr><td>ar-db-agents</td><td class='num'>77</td></tr><tr><td>inv-signal</td><td class='num'>65</td></tr><tr><td>phil-researchers</td><td class='num'>34</td></tr><tr><td>myth-narratives</td><td class='num'>22</td></tr><tr><td>researcher-field</td><td class='num'>10</td></tr><tr><td>fvcp-meta</td><td class='num'>8</td></tr><tr><td>great-figures</td><td class='num'>7</td></tr><tr><td>frontier</td><td class='num'>5</td></tr><tr><td>ar-db-tools</td><td class='num'>2</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="tables">
+      <h2><span class="num">10</span>LPM-DB固有テーブル（実装層）</h2>
+      <p>concepts/relations 等の概念DB基本構造に加えて、ローンチ実行に直結する固有テーブル群を整備しています。これらが LPM-DB を単なる概念辞典から「実行可能な意思決定支援基盤」へと変える層です。</p>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th class="num">件数</th></tr></thead>
+        <tbody>
+          <tr><td><code>pricing_methods</code></td><td>値付け手法の formula_latex / 入出力変数 / 業界適用例</td><td class="num">0</td></tr>
+          <tr><td><code>unit_economics_formulas</code></td><td>LTV/CAC/Rule of 40 等の正典式と業界基準</td><td class="num">0</td></tr>
+          <tr><td><code>launch_sequences</code></td><td>Waitlist→Beta→GA等のフェーズ設計 phases_json</td><td class="num">0</td></tr>
+          <tr><td><code>growth_loops</code></td><td>バイラル/Retention/Paid/Contentループ図 DOT</td><td class="num">0</td></tr>
+          <tr><td><code>experiment_protocols</code></td><td>A/B、MAB、Bayesian、CUPED プロトコル</td><td class="num">0</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="use">
+      <h2><span class="num">11</span>使い方</h2>
+      <p><code>/lpm</code> エージェントから検索・系譜分析・cross_db_refs 経由の生態系連携が可能です。CLIから直接 sqlite3 で照会することもできます。</p>
+      <pre>sqlite3 launch_playbook_mathematics.db &lt;&lt;'EOF'
+-- 必須理論を SF 別に閲覧
+SELECT subfield_id, canonical_name, primary_originator, origin_year
+FROM concepts WHERE is_must_have=1
+ORDER BY subfield_id, origin_year;
+
+-- LTV/CAC を扱う概念を横断検索
+SELECT canonical_name, name_ja, definition, source_url
+FROM concepts
+WHERE canonical_name LIKE '%LTV%' OR name_ja LIKE '%LTV%';
+EOF</pre>
+      <p class="note">DBは <code>/Users/nishimura+/projects/research/launch-playbook-mathematics-db/launch_playbook_mathematics.db</code> に配置。/adb v1.1 経路A Phase 0-15 / Production-Max（25並列codex+10並列claude）で構築。</p>
+    </section>
+  </main>
+</div>
+<script>
+function toggleTheme(){
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('lpm-theme', next);
+}
+(function(){
+  const saved = localStorage.getItem('lpm-theme');
+  if(saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+</body></html>

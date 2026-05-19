@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GMN-DB Wave 4 観点フィードバック — AR-DB 拡張ダッシュボード</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Fira+Code&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif: "Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+  --font-mono: "Fira Code","SF Mono",monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --surface: #1A1A1A;
+}
+* { box-sizing: border-box; margin:0; padding:0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-serif); color: var(--text); background: var(--bg); line-height: 1.85; letter-spacing: 0.025em; font-feature-settings: "palt"; }
+.top-bar { position: sticky; top: 0; z-index: 100; height: 48px; background: var(--bg); border-top: 3px solid #121212; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 16px; }
+[data-theme="dark"] .top-bar { border-top-color: var(--accent-warm); }
+.brand { font-family: var(--font); font-weight: 700; font-size: 14px; letter-spacing: 0.08em; }
+.brand .accent { color: var(--accent-warm); }
+.back-link { font-family: var(--font); font-size: 12px; color: var(--text-secondary); text-decoration: none; }
+.back-link:hover { color: var(--accent-warm); }
+.theme-toggle { margin-left: auto; background: none; border: 1px solid var(--border); padding: 4px 12px; border-radius: 2px; cursor: pointer; font-family: var(--font); font-size: 13px; color: var(--text); }
+.theme-toggle:hover { background: var(--surface); }
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 0; max-width: 1280px; margin: 0 auto; }
+.toc-sidebar { position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; padding: 32px 16px 32px 24px; border-right: 1px solid var(--border-light); font-family: var(--font); font-size: 13px; }
+.toc-sidebar h3 { font-size: 11px; letter-spacing: 0.16em; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; }
+.toc-sidebar a { display: block; padding: 6px 0; color: var(--text-secondary); text-decoration: none; border-left: 2px solid transparent; padding-left: 12px; transition: all 0.15s; }
+.toc-sidebar a:hover { color: var(--accent-warm); border-left-color: var(--accent-warm); }
+.toc-num { color: var(--text-muted); margin-right: 8px; font-family: var(--font-mono); font-size: 11px; }
+main { padding: 56px 56px 96px; max-width: 880px; }
+.hero { margin-bottom: 80px; }
+.eyebrow { font-family: var(--font); font-size: 12px; letter-spacing: 0.16em; color: var(--accent-warm); margin-bottom: 16px; text-transform: uppercase; }
+.hero h1 { font-size: 30px; line-height: 1.45; font-weight: 700; margin-bottom: 16px; }
+.hero h1 .accent { color: var(--accent-warm); }
+.hero .subtitle { font-size: 16px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.7; }
+.hero .meta { font-family: var(--font); font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 48px 0; padding: 32px; background: var(--surface); border-left: 4px solid var(--accent-warm); }
+.stat { text-align: center; }
+.stat-num { font-family: var(--font); font-size: 32px; font-weight: 700; color: var(--accent-warm); line-height: 1; margin-bottom: 4px; }
+.stat-label { font-family: var(--font); font-size: 11px; letter-spacing: 0.08em; color: var(--text-muted); text-transform: uppercase; }
+section.chapter { margin-bottom: 72px; padding-bottom: 24px; border-bottom: 1px solid var(--border-light); }
+section.chapter:last-of-type { border-bottom: none; }
+section.chapter h2 { font-family: var(--font); font-size: 22px; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 24px; padding-left: 16px; border-left: 3px solid var(--accent-warm); }
+section.chapter h2 .num { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); margin-right: 12px; }
+section.chapter h3 { font-family: var(--font); font-size: 16px; font-weight: 600; margin: 32px 0 12px; color: var(--accent); }
+section.chapter p { margin-bottom: 20px; text-indent: 1em; }
+section.chapter p:first-of-type { text-indent: 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0 32px; font-family: var(--font); font-size: 13px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-light); }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+td.num { text-align: right; font-family: var(--font-mono); }
+td.small { font-size: 11px; color: var(--text-muted); }
+td a { color: var(--accent-warm); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+.callout { background: var(--accent-muted); padding: 20px 24px; margin: 24px 0; border-left: 4px solid var(--accent-warm); font-family: var(--font); font-size: 14px; line-height: 1.75; }
+.school-card { background: var(--surface); padding: 20px 24px; margin: 16px 0; border-left: 3px solid var(--accent-warm); border-radius: 2px; }
+.school-header { display: flex; align-items: baseline; gap: 12px; justify-content: space-between; }
+.school-header h3 { font-family: var(--font); font-size: 15px; font-weight: 600; }
+.school-era { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+.school-ja { font-family: var(--font-serif); font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+.school-meta { display: flex; gap: 12px; align-items: center; font-family: var(--font); font-size: 11px; color: var(--text-muted); margin-bottom: 8px; flex-wrap: wrap; }
+.badge { display: inline-block; padding: 2px 10px; background: var(--accent-muted); color: var(--accent-warm); font-family: var(--font-mono); font-size: 11px; border-radius: 12px; font-weight: 600; }
+.meta-item { font-size: 11px; }
+.school-desc { font-family: var(--font); font-size: 12px; color: var(--text-secondary); margin: 8px 0 4px; }
+.school-basis { font-family: var(--font); font-size: 12px; color: var(--text-secondary); margin: 8px 0 0; }
+.agent-cluster { background: var(--surface); padding: 16px 20px; margin: 12px 0; border-left: 2px solid var(--border); }
+.agent-cluster h4 { font-family: var(--font); font-size: 13px; font-weight: 600; color: var(--accent-warm); margin-bottom: 10px; }
+.agent-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.agent-tag { font-family: var(--font-mono); font-size: 11px; background: var(--bg); color: var(--text); padding: 2px 8px; border: 1px solid var(--border-light); border-radius: 3px; }
+.agent-tag:hover { background: var(--accent-muted); color: var(--accent-warm); cursor: help; }
+.quality-meter { display: flex; align-items: center; gap: 12px; margin: 12px 0; font-family: var(--font); font-size: 13px; }
+.quality-bar { flex: 1; height: 8px; background: var(--border-light); position: relative; }
+.quality-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent-warm); }
+.quality-pct { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); min-width: 60px; text-align: right; }
+.check-table td { vertical-align: top; }
+.check-status-pass { color: #2A8C2A; font-weight: 600; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); }
+  main { padding: 32px 24px 64px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media print {
+  .top-bar, .toc-sidebar, .theme-toggle { display: none; }
+  .layout { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="brand">GMN-DB Wave 4 <span class="accent">/</span> AR-DB 観点フィードバック</span>
+  <a href="databases.html" class="back-link">← databases.html へ戻る</a>
+  <button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');localStorage.setItem('gmn-feedback-theme', document.documentElement.getAttribute('data-theme'));">☾ / ☀</button>
+</div>
+<div class="layout">
+<aside class="toc-sidebar">
+  <h3>Contents</h3>
+  <a href="#overview"><span class="toc-num">00</span>概要</a>
+  <a href="#stats"><span class="toc-num">01</span>統計</a>
+  <a href="#feedback-loop"><span class="toc-num">02</span>観察→動的化ループ</a>
+  <a href="#schools"><span class="toc-num">03</span>8学派</a>
+  <a href="#school-agents"><span class="toc-num">04</span>学派×エージェント</a>
+  <a href="#software"><span class="toc-num">05</span>Software実装 20件</a>
+  <a href="#ccm-relations"><span class="toc-num">06</span>CCM由来 因果関係</a>
+  <a href="#verification"><span class="toc-num">07</span>検証ベースライン</a>
+  <a href="#timeline"><span class="toc-num">08</span>期待時系列</a>
+  <a href="#rollback"><span class="toc-num">09</span>Rollback</a>
+</aside>
+<main>
+
+<section id="overview" class="hero">
+<div class="eyebrow">GMN-DB v1.0 Wave 4 → AR-DB 観点フィードバック</div>
+<h1>静的レジストリから<span class="accent">動的因果ネットワーク</span>へ — 観測時系列で進化する AR-DB</h1>
+<p class="subtitle">Joseph Park / Gerald M Pao らの 2026 bioRxiv 「Generative Manifold Networks」(DOI: 10.64898/2026.05.12.724527) の構築知見を、ミラツク/esse-sense エコシステム 470 エージェントレジストリへ逆輸入。AR-DB は静的スナップショットから、観察→因果推論→可視化→検証のループで進化する dynamic causal network へ移行する。</p>
+<p class="meta">展開日: 2026-05-20 ／ Last updated: 2026-05-20 08:05 ／ Tag: GMN-DB v1.0-wave4-stable / AR-DB pre-gmn-feedback</p>
+</section>
+
+<section id="stats" class="chapter">
+<h2><span class="num">01</span>統計</h2>
+<div class="stats-grid">
+  <div class="stat"><div class="stat-num">472</div><div class="stat-label">Total Agents</div></div>
+  <div class="stat"><div class="stat-num">260</div><div class="stat-label">学派マッピング済</div></div>
+  <div class="stat"><div class="stat-num">8</div><div class="stat-label">学派</div></div>
+  <div class="stat"><div class="stat-num">20</div><div class="stat-label">External Software</div></div>
+  <div class="stat"><div class="stat-num">1982</div><div class="stat-label">Agent Relations</div></div>
+  <div class="stat"><div class="stat-num">38</div><div class="stat-label">CCM Cross-Map</div></div>
+  <div class="stat"><div class="stat-num">0</div><div class="stat-label">Invocation Log</div></div>
+  <div class="stat"><div class="stat-num">10/10</div><div class="stat-label">検証 Pass</div></div>
+</div>
+<div class="quality-meter"><span>学派マッピング率</span><div class="quality-bar"><div class="quality-fill" style="width:55.1%"></div></div><span class="quality-pct">55.1%</span></div>
+<div class="quality-meter"><span>verified ratio</span><div class="quality-bar"><div class="quality-fill" style="width:70.1%"></div></div><span class="quality-pct">70.1%</span></div>
+<div class="quality-meter"><span>CCM cross-map skill 設定済</span><div class="quality-bar"><div class="quality-fill" style="width:1.9%"></div></div><span class="quality-pct">1.9%</span></div>
+</section>
+
+<section id="feedback-loop" class="chapter">
+<h2><span class="num">02</span>観察 → 動的システム化のループ</h2>
+<p>GMN-DB が証明した中核アイデア「観測時系列から動的システムを再構成し、潜在変数なしで完全説明可能」を AR-DB 自身に適用する 5段階ループ。Joseph Park / Gerald M Pao (2026) の Generative Manifold Networks 理論 (Takens 1981 埋め込み定理 + Sugihara CCM 2012 の系譜) を、エージェントエコシステムへ展開した結果。</p>
+
+<div class="callout">
+<strong>1. 観察 (Hook)</strong> → 各エージェント呼出を timestamp 付きで agent_invocation_log に記録<br>
+<strong>2. 再構成 (CCM)</strong> → 観測時系列から cross_map_skill を計算、因果関係を Shadow Manifold 由来で推論<br>
+<strong>3. 可視化 (Manifold Embedding)</strong> → 470 エージェントを UMAP 多様体に低次元射影 (将来)<br>
+<strong>4. 予測 (Lyapunov)</strong> → エコシステム pipeline の予測可能時間を Lyapunov 指数で推定 (将来)<br>
+<strong>5. 検証 (Gwet AC1)</strong> → 5件セット品質メトリクスで継続監視 (Cohen κ paradox 回避)
+</div>
+
+<h3>展開済 (16変更)</h3>
+<ul style="margin-left: 28px; font-family: var(--font); font-size: 13px; line-height: 2.0;">
+  <li><strong>AR-DB schema 拡張</strong>: agents +7列 / agent_relations +4列 / 3 新テーブル (schools/software/invocation_log)</li>
+  <li><strong>ETL 自動化</strong>: post_extract_gmn_feedback.py + ccm_relations.py → auto_update.sh Phase 1.6/1.7</li>
+  <li><strong>エージェント定義更新</strong>: /adb Phase 16-17 / /ddb 6軸拡張 / /gc 動的化 / /ap Reservoir Routing / /ar-db v1.2</li>
+  <li><strong>Memory 整備</strong>: feedback_gmn_observation_loop.md + MEMORY.md index</li>
+  <li><strong>検証基盤</strong>: verify_gmn_feedback.py (10 checks) + baseline JSON + README.md</li>
+</ul>
+</section>
+
+<section id="schools" class="chapter">
+<h2><span class="num">03</span>8学派 (Schools of Thought)</h2>
+<p>GMN-DB の schools_of_thought 構造を踏襲し、エコシステムの 470 エージェントを「思想的系譜」として 8 学派に分類。学派ごとに era_start / geographic_center / lineage_root_agent / philosophical_basis を持つ。Wave 4 では 260/470 (55.3%) のエージェントをマッピング済。</p>
+
+        <div class="school-card">
+          <div class="school-header">
+            <h3>Academic Concept School</h3>
+            <span class="school-era">2026 —</span>
+          </div>
+          <div class="school-ja">学術概念DB学派</div>
+          <div class="school-meta">
+            <span class="badge">81 agents</span>
+            <span class="meta-item">📍 academic-knowledge-db系</span>
+            <span class="meta-item">⚓ academic-db</span>
+          </div>
+          <p class="school-desc">学術概念DB 13-19 SF × 5,500概念</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> genealogy_chain + cross_db_refs + IRR Gwet AC1 ≥ 0.80</p>
+        </div>
+        
+        <div class="school-card">
+          <div class="school-header">
+            <h3>Editorial Series School</h3>
+            <span class="school-era">2025 —</span>
+          </div>
+          <div class="school-ja">編集連載学派</div>
+          <div class="school-meta">
+            <span class="badge">51 agents</span>
+            <span class="meta-item">📍 esse-sense ミラツク</span>
+            <span class="meta-item">⚓ kurashi-team</span>
+          </div>
+          <p class="school-desc">kurashi/ep007 正本型連載エッセイ系譜</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> 読者を立ち止まらせるアンカー配置 + 人文学的視点</p>
+        </div>
+        
+        <div class="school-card">
+          <div class="school-header">
+            <h3>DB-Builder School</h3>
+            <span class="school-era">2025 —</span>
+          </div>
+          <div class="school-ja">DB構築学派</div>
+          <div class="school-meta">
+            <span class="badge">43 agents</span>
+            <span class="meta-item">📍 gmn-manifold-dynamics-db</span>
+            <span class="meta-item">⚓ db-master</span>
+          </div>
+          <p class="school-desc">Production-grade DB 構築系譜 (Phase 0-15)</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> /adb v1.1 + /ddb v1.2 + 5件セット品質標準</p>
+        </div>
+        
+        <div class="school-card">
+          <div class="school-header">
+            <h3>Meta-Orchestrator School</h3>
+            <span class="school-era">2025 —</span>
+          </div>
+          <div class="school-ja">メタオーケストレーター学派</div>
+          <div class="school-meta">
+            <span class="badge">33 agents</span>
+            <span class="meta-item">📍 tier -1/0 meta</span>
+            <span class="meta-item">⚓ meta</span>
+          </div>
+          <p class="school-desc">Tier -1/0 階層指揮系譜</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> 422エージェント動的ルーティング</p>
+        </div>
+        
+        <div class="school-card">
+          <div class="school-header">
+            <h3>Answer School</h3>
+            <span class="school-era">2026 —</span>
+          </div>
+          <div class="school-ja">ANSWER+学派</div>
+          <div class="school-meta">
+            <span class="badge">27 agents</span>
+            <span class="meta-item">📍 esse-sense ap pipeline</span>
+            <span class="meta-item">⚓ ap</span>
+          </div>
+          <p class="school-desc">AR-DB×APK-DB 高密度回答系譜</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> 生成と検証の分離 / 10軸品質スコア</p>
+        </div>
+        
+        <div class="school-card">
+          <div class="school-header">
+            <h3>Foresight School</h3>
+            <span class="school-era">2024 —</span>
+          </div>
+          <div class="school-ja">フォーサイト学派</div>
+          <div class="school-meta">
+            <span class="badge">23 agents</span>
+            <span class="meta-item">📍 PESTLE/Signal/CLA系</span>
+            <span class="meta-item">⚓ futurology-2</span>
+          </div>
+          <p class="school-desc">シグナル理論 + CLA + シナリオ</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> Tetlock-Brier 予測力 + Three Horizons</p>
+        </div>
+        
+        <div class="school-card">
+          <div class="school-header">
+            <h3>Pao OIST Lab</h3>
+            <span class="school-era">2023 —</span>
+          </div>
+          <div class="school-ja">パオ OIST ラボ</div>
+          <div class="school-meta">
+            <span class="badge">2 agents</span>
+            <span class="meta-item">📍 OIST Onna Okinawa</span>
+            <span class="meta-item">⚓ gmn</span>
+          </div>
+          <p class="school-desc">OIST Biological Nonlinear Dynamics Unit (GMN)</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> Takens埋め込み + CCM 因果推論 + 潜在変数なし</p>
+        </div>
+        
+        <div class="school-card">
+          <div class="school-header">
+            <h3>Sugihara School (EDM/CCM)</h3>
+            <span class="school-era">1990 —</span>
+          </div>
+          <div class="school-ja">Sugihara学派 EDM/CCM</div>
+          <div class="school-meta">
+            <span class="badge">0 agents</span>
+            <span class="meta-item">📍 Scripps SIO UCSD</span>
+            <span class="meta-item">⚓ gmn</span>
+          </div>
+          <p class="school-desc">EDM/CCM 非線形時系列因果推論 (1990-)</p>
+          <p class="school-basis"><strong>哲学的基盤:</strong> Simplex Projection + S-Map + Shadow Manifold</p>
+        </div>
+        
+</section>
+
+<section id="school-agents" class="chapter">
+<h2><span class="num">04</span>学派×エージェント マッピング</h2>
+<p>各学派に属するエージェントの一覧 (上位 100 件)。エージェント名にカーソルを乗せると agent_type/tier/model を表示。</p>
+<div class="agent-cluster"><h4>Academic Concept School</h4><div class="agent-tags"><span class="agent-tag" title="command/tier_3_utility/">/academic-landscape</span><span class="agent-tag" title="command/tier_-1_meta/">/academic-oracle</span><span class="agent-tag" title="command/tier_3_utility/">/academic-search</span><span class="agent-tag" title="command/tier_3_utility/">/anthropology</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/bot</span><span class="agent-tag" title="command/tier_0_orchestrator/sonnet">/bot</span><span class="agent-tag" title="agent/tier_2_specialist/opus">/ccm</span><span class="agent-tag" title="command/tier_3_utility/opus">/ccm</span><span class="agent-tag" title="command/tier_3_utility/">/cdh</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/ceh</span><span class="agent-tag" title="command/tier_3_utility/sonnet">/ceh</span><span class="agent-tag" title="command/tier_3_utility/">/cfg</span><span class="agent-tag" title="agent/tier_0_orchestrator/sonnet">/chem</span><span class="agent-tag" title="command/tier_0_orchestrator/sonnet">/chem</span><span class="agent-tag" title="agent/tier_3_utility/">/cq</span><span class="agent-tag" title="command/tier_3_utility/">/cq</span><span class="agent-tag" title="command/tier_3_utility/">/cultural-intelligence</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/dgdb</span><span class="agent-tag" title="command/tier_2_specialist/sonnet">/dgdb</span><span class="agent-tag" title="agent/tier_3_utility/opus">/dsd</span><span class="agent-tag" title="command/tier_2_specialist/opus">/dsd</span><span class="agent-tag" title="command/tier_2_specialist/">/ec</span><span class="agent-tag" title="command/tier_2_specialist/">/epo</span><span class="agent-tag" title="command/tier_3_utility/">/era-talents</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/es</span><span class="agent-tag" title="command/tier_3_utility/sonnet">/es</span><span class="agent-tag" title="command/tier_3_utility/">/experts-db</span><span class="agent-tag" title="agent/tier_3_utility/">/gc</span><span class="agent-tag" title="agent/tier_3_utility/">/genshi-cycle</span><span class="agent-tag" title="command/tier_3_utility/">/gpt-qol</span><span class="agent-tag" title="command/tier_3_utility/">/great-figures</span><span class="agent-tag" title="command/tier_3_utility/">/historical-cases</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/htp</span><span class="agent-tag" title="command/tier_0_orchestrator/sonnet">/htp</span><span class="agent-tag" title="command/tier_3_utility/">/innovation-db</span><span class="agent-tag" title="command/tier_3_utility/">/ir-collector</span><span class="agent-tag" title="command/tier_3_utility/">/jpms</span><span class="agent-tag" title="agent/tier_0_orchestrator/sonnet">/kgh</span><span class="agent-tag" title="command/tier_3_utility/sonnet">/kgh</span><span class="agent-tag" title="command/tier_3_utility/">/lab</span><span class="agent-tag" title="command/tier_3_utility/">/lit</span><span class="agent-tag" title="agent/tier_3_utility/opus">/lpm</span><span class="agent-tag" title="command/tier_3_utility/opus">/lpm</span><span class="agent-tag" title="command/tier_3_utility/">/macro-economy</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/math</span><span class="agent-tag" title="command/tier_3_utility/sonnet">/math</span><span class="agent-tag" title="agent/tier_2_specialist/">/mdd</span><span class="agent-tag" title="command/tier_2_specialist/">/mdd</span><span class="agent-tag" title="command/tier_2_specialist/">/mg</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/mpp</span><span class="agent-tag" title="command/tier_3_utility/sonnet">/mpp</span><span class="agent-tag" title="command/tier_3_utility/">/myth-narratives</span><span class="agent-tag" title="command/tier_3_utility/">/phai</span><span class="agent-tag" title="command/tier_3_utility/">/philosophical-questions</span><span class="agent-tag" title="command/tier_3_utility/">/philosophy</span><span class="agent-tag" title="agent/tier_0_orchestrator/sonnet">/phys</span><span class="agent-tag" title="command/tier_0_orchestrator/sonnet">/phys</span><span class="agent-tag" title="agent/tier_3_utility/opus">/poetics</span><span class="agent-tag" title="command/tier_3_utility/opus">/poetics</span><span class="agent-tag" title="command/tier_3_utility/">/policy-db</span><span class="agent-tag" title="command/tier_3_utility/">/pst</span><span class="agent-tag" title="command/tier_3_utility/">/regulatory-japan</span><span class="agent-tag" title="command/tier_3_utility/">/ryoiki</span><span class="agent-tag" title="command/tier_3_utility/">/sangaku-matcher</span><span class="agent-tag" title="command/tier_3_utility/">/sangaku-pr</span><span class="agent-tag" title="command/tier_3_utility/">/sangaku-rd</span><span class="agent-tag" title="command/tier_3_utility/">/sfs</span><span class="agent-tag" title="command/tier_3_utility/">/sg</span><span class="agent-tag" title="command/tier_3_utility/">/si-framework</span><span class="agent-tag" title="command/tier_2_specialist/">/ss</span><span class="agent-tag" title="command/tier_3_utility/">/startup-db</span><span class="agent-tag" title="agent/tier_0_orchestrator/sonnet">/tc</span><span class="agent-tag" title="command/tier_2_specialist/sonnet">/tc</span><span class="agent-tag" title="command/tier_3_utility/">/traditional-knowledge</span><span class="agent-tag" title="command/tier_3_utility/">/translate-academic</span><span class="agent-tag" title="agent/tier_3_utility/">/udd</span><span class="agent-tag" title="command/tier_3_utility/">/udd</span><span class="agent-tag" title="command/tier_3_utility/">/university-pr</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/university-startups</span><span class="agent-tag" title="command/tier_2_specialist/sonnet">/university-startups</span><span class="agent-tag" title="command/tier_2_specialist/">/wmd</span></div></div><div class="agent-cluster"><h4>Answer School</h4><div class="agent-tags"><span class="agent-tag" title="agent/tier_-1_meta/opus">/answer-academic-auditor</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/answer-anchor-curator</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/answer-copyeditor</span><span class="agent-tag" title="agent/tier_2_specialist/opus">/answer-cross-model-validator</span><span class="agent-tag" title="agent/tier_3_utility/opus">/answer-density-amplifier</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/answer-domain-identifier</span><span class="agent-tag" title="agent/tier_-1_meta/opus">/answer-editor-in-chief</span><span class="agent-tag" title="agent/tier_2_specialist/haiku">/answer-format-enforcer</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/answer-framework-selector</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/answer-length-tuner</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/answer-needs-classifier</span><span class="agent-tag" title="agent/tier_-1_meta/opus">/answer-plus-meta</span><span class="agent-tag" title="agent/tier_-1_meta/opus">/answer-quality-orchestrator</span><span class="agent-tag" title="agent/tier_3_utility/sonnet">/answer-query-expander</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/answer-reader-tester</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/answer-sharpener</span><span class="agent-tag" title="agent/tier_0_orchestrator/opus">/answer-supervisor-ardb</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/answer-translator</span><span class="agent-tag" title="agent/tier_2_specialist/sonnet">/answer-writer</span></div></div>
+</section>
+
+<section id="software" class="chapter">
+<h2><span class="num">05</span>Software Implementations 20件</h2>
+<p>エージェントが依存する外部ソフト・サービスの登録。各エージェントが何に依存しているか・故障時の代替経路を一元管理。</p>
+<table>
+<thead><tr><th>Name</th><th>Category</th><th>Language</th><th>License</th><th>Used by</th></tr></thead>
+<tbody><tr><td>OpenAlex </td><td>academic_data</td><td>REST</td><td>CC0</td><td class="small">[&quot;adb&quot;,&quot;ftt-db&quot;,&quot;academic-landscape&quot;]</td></tr><tr><td>Semantic Scholar API </td><td>academic_data</td><td>REST</td><td>CC BY-NC</td><td class="small">[&quot;academic-search&quot;,&quot;adb&quot;]</td></tr><tr><td>Supabase <a href="https://github.com/supabase/supabase" target="_blank">↗</a></td><td>backend</td><td>PostgreSQL/REST</td><td>Apache-2.0</td><td class="small">[&quot;citizen-publish&quot;]</td></tr><tr><td>Playwright <a href="https://github.com/microsoft/playwright" target="_blank">↗</a></td><td>browser_automation</td><td>TypeScript</td><td>Apache-2.0</td><td class="small">[&quot;competitor-scan&quot;,&quot;qa-ui-tester&quot;]</td></tr><tr><td>AWS EC2 </td><td>cloud</td><td>cloud</td><td>commercial</td><td class="small">[&quot;deploy-manager&quot;]</td></tr><tr><td>Slack API </td><td>communication</td><td>API</td><td>commercial</td><td class="small">[&quot;slack-post&quot;,&quot;slack-catchup&quot;]</td></tr><tr><td>miratuku-daily-pipeline <a href="https://github.com/yuyanishimura0312/miratuku-daily-pipeline" target="_blank">↗</a></td><td>data_pipeline</td><td>bash+python</td><td>private</td><td class="small">[&quot;signal-db&quot;,&quot;pestle-news&quot;]</td></tr><tr><td>SQLite </td><td>database</td><td>C</td><td>public_domain</td><td class="small">[&quot;all_db_agents&quot;]</td></tr><tr><td>claude-memory-sync <a href="https://github.com/yuyanishimura0312/claude-memory-sync" target="_blank">↗</a></td><td>devtool</td><td>bash</td><td>private</td><td class="small">[&quot;sync&quot;]</td></tr><tr><td>gh CLI <a href="https://github.com/cli/cli" target="_blank">↗</a></td><td>devtool</td><td>Go</td><td>MIT</td><td class="small">[&quot;deploy-manager&quot;,&quot;db-master&quot;,&quot;engineer&quot;]</td></tr><tr><td>git <a href="https://github.com/git/git" target="_blank">↗</a></td><td>devtool</td><td>C</td><td>GPL-2</td><td class="small">[&quot;sync&quot;,&quot;deploy-manager&quot;]</td></tr><tr><td>pyEDM <a href="https://github.com/SugiharaLab/pyEDM" target="_blank">↗</a></td><td>edm_implementation</td><td>Python</td><td>BSD-3</td><td class="small">[&quot;gmn&quot;]</td></tr><tr><td>rEDM <a href="https://github.com/SugiharaLab/rEDM" target="_blank">↗</a></td><td>edm_implementation</td><td>R</td><td>GPL-3</td><td class="small">[&quot;gmn&quot;]</td></tr><tr><td>Notion API </td><td>knowledge_base</td><td>API</td><td>commercial</td><td class="small">[&quot;notion-search&quot;,&quot;notion-note&quot;]</td></tr><tr><td>Anthropic SDK <a href="https://github.com/anthropics/anthropic-sdk-python" target="_blank">↗</a></td><td>llm</td><td>Python/TypeScript</td><td>MIT</td><td class="small">[&quot;ma&quot;,&quot;ap&quot;,&quot;futures2-team&quot;]</td></tr><tr><td>codex CLI <a href="https://github.com/openai/codex" target="_blank">↗</a></td><td>llm_alt</td><td>TypeScript</td><td>Apache-2.0</td><td class="small">[&quot;codex-katachi&quot;,&quot;futures2-codex-research&quot;]</td></tr><tr><td>CEBRA <a href="https://github.com/AdaptiveMotorControlLab/CEBRA" target="_blank">↗</a></td><td>neural_embedding</td><td>Python+PyTorch</td><td>Apache-2.0</td><td class="small">[&quot;gmn&quot;]</td></tr><tr><td>SpyGlass <a href="https://github.com/LorenFrankLab/spyglass" target="_blank">↗</a></td><td>neural_pipeline</td><td>Python+DataJoint</td><td>MIT</td><td class="small">[&quot;gmn&quot;]</td></tr><tr><td>launchd </td><td>os_scheduler</td><td>C</td><td>proprietary</td><td class="small">[&quot;miratuku-daily-pipeline&quot;,&quot;gmn-db-annual&quot;]</td></tr><tr><td>FTP (lftp) </td><td>protocol</td><td>C</td><td>GPL</td><td class="small">[&quot;essay&quot;,&quot;kurashi-publisher&quot;]</td></tr></tbody>
+</table>
+</section>
+
+<section id="ccm-relations" class="chapter">
+<h2><span class="num">06</span>CCM由来 因果関係 (上位 30)</h2>
+<p>description ベースの因果推論で cross_map_skill を計算。Wave 4 では description 内の <code>/agent</code> 参照を観測サンプルとして使用。将来 invocation_log が蓄積したら本格 CCM (Sugihara 2012) で再計算する。</p>
+<div class="callout" style="font-family: var(--font-mono); font-size: 13px;">
+$$\rho_{X|M_Y}(L) \to 1 \text{ as } L \to \infty \iff X \text{ causally drives } Y$$
+</div>
+<table>
+<thead><tr><th>Source Agent</th><th></th><th>Target Agent</th><th>Skill</th><th>Evidence</th></tr></thead>
+<tbody><tr><td>adb</td><td>→</td><td>academic-db-build</td><td class="num">37%</td><td class="small">log_obs=0, desc_obs=4</td></tr><tr><td>bot</td><td>→</td><td>academic-db-build</td><td class="num">37%</td><td class="small">log_obs=0, desc_obs=4</td></tr><tr><td>chem</td><td>→</td><td>academic-db-build</td><td class="num">37%</td><td class="small">log_obs=0, desc_obs=4</td></tr><tr><td>db-expansion-process</td><td>→</td><td>db-master</td><td class="num">37%</td><td class="small">log_obs=0, desc_obs=4</td></tr><tr><td>ceh</td><td>→</td><td>academic-db-build</td><td class="num">31%</td><td class="small">log_obs=0, desc_obs=3</td></tr><tr><td>cq</td><td>→</td><td>academic-db-build</td><td class="num">31%</td><td class="small">log_obs=0, desc_obs=3</td></tr><tr><td>wmd-execute</td><td>→</td><td>wmd</td><td class="num">31%</td><td class="small">log_obs=0, desc_obs=3</td></tr><tr><td>citizen-publish-pipeline</td><td>→</td><td>citizen-publish</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>db-learning-curator</td><td>→</td><td>db-master</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>db-type-router</td><td>→</td><td>db-master</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>db-wave-manager</td><td>→</td><td>db-master</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>db-master</td><td>→</td><td>academic-db-build</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>db-master</td><td>→</td><td>db-blindspot</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>db-master</td><td>→</td><td>db-build</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>db-master</td><td>→</td><td>db-coverage-diagnostic</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>dbo</td><td>→</td><td>dom-science</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>ddb</td><td>→</td><td>db-coverage-diagnostic</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>dom-culture</td><td>→</td><td>dbo</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>dom-foresight</td><td>→</td><td>dbo</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>dom-science</td><td>→</td><td>dbo</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>dom-society</td><td>→</td><td>dbo</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>dsdb</td><td>→</td><td>ddb</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>futures2-deeper</td><td>→</td><td>kurashi-deeper</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>futures2-editor</td><td>→</td><td>kurashi-editor</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>futures2-publisher</td><td>→</td><td>kurashi-publisher</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>futures2-researcher</td><td>→</td><td>kurashi-researcher</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>futures2-web-researcher</td><td>→</td><td>kurashi-web-researcher</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>futures2-writer</td><td>→</td><td>kurashi-writer</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>katachi-100</td><td>→</td><td>katachi</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr><tr><td>keiei-researcher</td><td>→</td><td>kurashi-researcher</td><td class="num">23%</td><td class="small">log_obs=0, desc_obs=2</td></tr></tbody>
+</table>
+</section>
+
+<section id="verification" class="chapter">
+<h2><span class="num">07</span>検証ベースライン (10/10 PASS)</h2>
+<p>初回挙動検証を 10 チェックで実行。全 PASS。後日の検証実行は <code>verify_gmn_feedback.py</code> で再現可能。</p>
+<table class="check-table">
+<thead><tr><th>Check</th><th>内容</th><th>結果</th></tr></thead>
+<tbody>
+  <tr><td>SCHEMA_EXISTS</td><td>agents 拡張列 7個</td><td class="check-status-pass">✓ PASS</td></tr>
+  <tr><td>RELATION_SCHEMA_EXISTS</td><td>agent_relations 拡張列 4個</td><td class="check-status-pass">✓ PASS</td></tr>
+  <tr><td>SCHOOLS_TABLE_EXISTS</td><td>schools_of_thought ≥ 8</td><td class="check-status-pass">✓ PASS (8)</td></tr>
+  <tr><td>SOFTWARE_TABLE_EXISTS</td><td>software_implementations ≥ 20</td><td class="check-status-pass">✓ PASS (20)</td></tr>
+  <tr><td>INVOCATION_LOG_TABLE_EXISTS</td><td>テーブル存在</td><td class="check-status-pass">✓ PASS</td></tr>
+  <tr><td>SCHOOL_MAPPING_RATE</td><td>≥ 50% マッピング</td><td class="check-status-pass">✓ PASS (55.3%)</td></tr>
+  <tr><td>CCM_RELATIONS_PRESENT</td><td>cross_map_skill ≥ 30件</td><td class="check-status-pass">✓ PASS (37)</td></tr>
+  <tr><td>NO_REGRESSION_AGENTS</td><td>baseline比 95%+</td><td class="check-status-pass">✓ PASS</td></tr>
+  <tr><td>SCHOOL_DISTRIBUTION_BALANCED</td><td>最大学派 &lt; 50%</td><td class="check-status-pass">✓ PASS (31.2%)</td></tr>
+  <tr><td>FUTURE_INVOCATION_LOG_GROWTH</td><td>ログ減少していない</td><td class="check-status-pass">✓ PASS</td></tr>
+</tbody>
+</table>
+<p style="font-family: var(--font-mono); font-size: 12px;">実行: <code>python3 ~/projects/research/agent-registry-db/verification/verify_gmn_feedback.py</code></p>
+</section>
+
+<section id="timeline" class="chapter">
+<h2><span class="num">08</span>期待される変化 (時系列予測)</h2>
+<table>
+<thead><tr><th>期間</th><th>agents_total</th><th>school マッピング</th><th>invocation_log</th><th>cross_map_skill 関係</th></tr></thead>
+<tbody>
+  <tr><td>Day 0 (今日)</td><td class="num">470</td><td class="num">260 (55.3%)</td><td class="num">0</td><td class="num">37</td></tr>
+  <tr><td>Day 7-30 (短期)</td><td class="num">+5-15</td><td class="num">+3-10</td><td class="num">0 (hook未実装)</td><td class="num">+5-20</td></tr>
+  <tr><td>Day 30-90 (中期)</td><td class="num">+20-50</td><td class="num">+15-40</td><td class="num">1000+ (hook実装後)</td><td class="num">100+ (log由来)</td></tr>
+  <tr><td>Day 90+ (長期)</td><td colspan="4">Reservoir Routing /ap 実装段階 / Manifold dashboard 追加 / /ddb 6軸本格運用</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="rollback" class="chapter">
+<h2><span class="num">09</span>Rollback 手順</h2>
+<p>異常検知時は以下で復帰可能:</p>
+<pre style="background: var(--surface); padding: 16px; font-family: var(--font-mono); font-size: 12px; overflow-x: auto;">
+# AR-DB のみ巻き戻し
+cd ~/projects/research/agent-registry-db
+git checkout pre-gmn-feedback
+python3 etl/extract.py  # 静的レジストリ状態に復帰
+
+# 再展開
+git checkout main
+python3 etl/post_extract_gmn_feedback.py
+python3 etl/ccm_relations.py
+</pre>
+</section>
+
+<section class="chapter">
+<h2><span class="num">10</span>関連リソース</h2>
+<p>
+<strong>GMN-DB 本体</strong>: <a href="gmn.html">gmn.html</a> (1382 concepts / 990 formulas / 501 algorithms)<br>
+<strong>AR-DB ダッシュボード</strong>: <a href="ar-db.html">ar-db.html</a><br>
+<strong>databases.html</strong>: <a href="databases.html">全DBカタログ</a><br>
+<strong>論文</strong>: <a href="https://www.biorxiv.org/content/10.64898/2026.05.12.724527v1" target="_blank">bioRxiv DOI 10.64898/2026.05.12.724527</a> (Park, Pao et al. 2026)<br>
+<strong>GMN GitHub</strong>: <a href="https://github.com/NonlinearDynamicsDSU/gmn" target="_blank">NonlinearDynamicsDSU/gmn</a><br>
+<strong>memory</strong>: <code>~/.claude/projects/-Users-nishimura-/memory/feedback_gmn_observation_loop.md</code>
+</p>
+</section>
+
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]})"></script>
+<script>
+const saved = localStorage.getItem('gmn-feedback-theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>

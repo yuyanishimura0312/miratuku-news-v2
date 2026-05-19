@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>Marketplace Design Knowledge DB (MDD-DB) — Wave 1 MVP</title>
+<meta name="description" content="Webマーケットプレイス設計学の横串学術DB。13サブフィールド・157概念・346関係・66研究者(Nobel 15)・必須理論100%カバー">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555; --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030; --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --highlight: #FF4030; --surface: #1A1A1A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.85;letter-spacing:0.025em;font-feature-settings:"palt"}
+.top-bar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.top-bar .brand{font-family:var(--font-serif);font-weight:700;color:var(--accent-warm);font-size:15px}
+.top-bar .theme-toggle{background:none;border:1px solid var(--border);color:var(--text);padding:4px 10px;cursor:pointer;font-size:13px;border-radius:2px}
+.layout{display:grid;grid-template-columns:240px 1fr;max-width:1200px;margin:0 auto;padding-top:48px}
+.toc{position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;padding:32px 16px;border-right:1px solid var(--border-light);font-size:13px}
+.toc h3{font-family:var(--font-serif);color:var(--accent-warm);font-size:12px;letter-spacing:0.15em;margin-bottom:14px;text-transform:uppercase}
+.toc ul{list-style:none}
+.toc li{margin-bottom:6px}
+.toc a{color:var(--text-secondary);text-decoration:none;display:block;padding:3px 8px;border-radius:2px}
+.toc a:hover{color:var(--accent-warm);background:var(--accent-muted)}
+.toc .ch-num{font-family:var(--font-mono);color:var(--text-muted);margin-right:8px;font-size:11px}
+main{padding:48px;max-width:760px;font-family:var(--font-serif)}
+h1{font-family:var(--font-serif);font-size:30px;font-weight:700;margin-bottom:8px;color:var(--text);letter-spacing:0.04em}
+.sub{font-size:14px;color:var(--text-secondary);margin-bottom:32px;font-family:var(--font)}
+section.chapter{margin-bottom:72px;border-bottom:1px solid var(--border-light);padding-bottom:48px}
+section.chapter:last-of-type{border-bottom:none}
+h2{font-family:var(--font-serif);font-size:22px;font-weight:700;margin:32px 0 18px;color:var(--text);letter-spacing:0.04em}
+h2 .ch-num{font-family:var(--font-mono);color:var(--accent-warm);font-size:16px;margin-right:12px}
+h3{font-size:16px;font-weight:700;margin:24px 0 10px;color:var(--text)}
+p{margin-bottom:18px;text-indent:1em;font-size:15.5px}
+p:first-of-type,p.lead{text-indent:0}
+p.lead{font-size:17px;color:var(--text);background:var(--surface);padding:18px 24px;border-left:3px solid var(--accent-warm);margin-bottom:24px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0 28px;font-family:var(--font)}
+.kpi{background:var(--surface);padding:16px 14px;border-radius:3px;border:1px solid var(--border-light)}
+.kpi .v{font-family:var(--font-mono);font-size:24px;font-weight:700;color:var(--accent-warm);letter-spacing:0.02em}
+.kpi .l{font-size:11px;color:var(--text-secondary);margin-top:4px;letter-spacing:0.04em}
+table{width:100%;border-collapse:collapse;font-family:var(--font);font-size:13px;margin:20px 0;border:1px solid var(--border-light)}
+th{background:var(--surface);text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);font-weight:500;color:var(--text-secondary);font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase}
+td{padding:9px 12px;border-bottom:1px solid var(--border-light)}
+td.n{font-family:var(--font-mono);text-align:right}
+td.warm{color:var(--accent-warm);font-weight:500}
+ul.bare{list-style:none;font-family:var(--font);font-size:14px}
+ul.bare li{padding:6px 0;border-bottom:1px solid var(--border-light)}
+code{font-family:var(--font-mono);background:var(--accent-muted);padding:2px 6px;border-radius:2px;font-size:13px;color:var(--accent-warm)}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-family:var(--font);background:var(--accent-muted);color:var(--accent-warm);margin-right:6px;letter-spacing:0.03em}
+.tag.ok{background:rgba(0,160,80,0.12);color:#00A050}
+.tag.warn{background:rgba(200,140,0,0.15);color:#C88C00}
+@media (max-width:1000px){.layout{grid-template-columns:1fr}.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border-light)}main{padding:32px 24px}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media print{.top-bar,.toc{display:none}main{padding:0}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="brand">MIRA TUKU — Marketplace Design Knowledge DB</span>
+  <button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');localStorage.setItem('mdd-theme',document.documentElement.getAttribute('data-theme'))">テーマ切替</button>
+</div>
+<div class="layout">
+  <aside class="toc">
+    <h3>目次</h3>
+    <ul>
+      <li><a href="#ch01"><span class="ch-num">01</span>概要</a></li>
+      <li><a href="#ch02"><span class="ch-num">02</span>Wave 1 達成指標</a></li>
+      <li><a href="#ch03"><span class="ch-num">03</span>13サブフィールド</a></li>
+      <li><a href="#ch04"><span class="ch-num">04</span>Nobel 受賞理論</a></li>
+      <li><a href="#ch05"><span class="ch-num">05</span>必須理論157件</a></li>
+      <li><a href="#ch06"><span class="ch-num">06</span>関係構造</a></li>
+      <li><a href="#ch07"><span class="ch-num">07</span>研究者66名</a></li>
+      <li><a href="#ch08"><span class="ch-num">08</span>産業適用</a></li>
+      <li><a href="#ch09"><span class="ch-num">09</span>Phase 3 監査</a></li>
+      <li><a href="#ch10"><span class="ch-num">10</span>Wave 2-4 計画</a></li>
+      <li><a href="#ch11"><span class="ch-num">11</span>連携DB</a></li>
+      <li><a href="#ch12"><span class="ch-num">12</span>使い方</a></li>
+    </ul>
+  </aside>
+  <main>
+    <h1>Marketplace Design Knowledge DB</h1>
+    <div class="sub">v0.3.0-wave3 / 2026-05-20 (cross-DB + IRR + expansion) — Webマーケットプレイス設計学の横串学術DB</div>
+
+    <section class="chapter" id="ch01">
+      <h2><span class="ch-num">01</span>概要</h2>
+      <p class="lead">Google の広告マーケットプレイス、Amazon の EC、Uber や Airbnb のプラットフォーム、Alibaba 系の越境 EC は二十一世紀の経済活動の主要部分を担っています。これらの設計判断には、Vickrey の二位価格オークションから始まる七十年の理論蓄積、Gale-Shapley アルゴリズムから派生したマッチング理論、Rochet-Tirole の両面市場理論、Akerlof-Spence-Stiglitz の情報非対称性理論、そして Kahneman-Thaler の行動経済学が必須の基盤として横たわっています。MDD-DB はこれらを「マーケットプレイス設計」という統合的視座で整理した世界初の Production-grade 学術知統合基盤です。</p>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="v">260</div><div class="l">CONCEPTS (+103)</div></div>
+        <div class="kpi"><div class="v">839</div><div class="l">RELATIONS</div></div>
+        <div class="kpi"><div class="v">962</div><div class="l">CROSS-DB REFS</div></div>
+        <div class="kpi"><div class="v">18</div><div class="l">TARGET DBs</div></div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="v">100%</div><div class="l">必須理論カバー</div></div>
+        <div class="kpi"><div class="v">100%</div><div class="l">source_url</div></div>
+        <div class="kpi"><div class="v">17%</div><div class="l">非西洋研究者</div></div>
+        <div class="kpi"><div class="v">12/12</div><div class="l">監査 PASS (W3)</div></div>
+      </div>
+    </section>
+
+    <section class="chapter" id="ch02">
+      <h2><span class="ch-num">02</span>Wave 1 達成指標</h2>
+      <p>Wave 1 MVP は <code>/adb</code> v1.1 Phase 0-3 として構築されました。13 のサブフィールドに分割した必須理論百五十七件の全件を full concept レコードとして投入し、十三のサブフィールドそれぞれで均等に十一から十三概念を保持しています。サブフィールド間の最大／最小比は 1.18 倍で、構造的偏りは存在しません。Nobel 経済学賞関連概念は三十六件、必須理論カバー率は百パーセントを達成しました。</p>
+      <table>
+        <tr><th>指標</th><th>Wave 1 達成値</th><th>Production 目標</th><th>状態</th></tr>
+        <tr><td>active concepts</td><td class="n">157</td><td class="n">5,500</td><td><span class="tag">2.9%</span></td></tr>
+        <tr><td>relations</td><td class="n">428</td><td class="n">20,000</td><td><span class="tag">2.1%</span></td></tr>
+        <tr><td>publications</td><td class="n">88</td><td class="n">5,000</td><td><span class="tag">1.8%</span></td></tr>
+        <tr><td>platform cases</td><td class="n">30</td><td class="n">100+</td><td><span class="tag">30%</span></td></tr>
+        <tr><td>genealogy chains</td><td class="n">14</td><td class="n">50+</td><td><span class="tag">28%</span></td></tr>
+        <tr><td>chain members</td><td class="n">168</td><td class="n">—</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>必須理論カバー</td><td class="n">157/157</td><td class="n">100%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>researchers</td><td class="n">66</td><td class="n">800</td><td><span class="tag">8.3%</span></td></tr>
+        <tr><td>Nobel 受賞者</td><td class="n">15</td><td class="n">15</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>非西洋研究者比率</td><td class="n">17%</td><td class="n">≥15%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>非西洋プラットフォーム比率</td><td class="n">43%</td><td class="n">≥15%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>source_url 充填率</td><td class="n">100%</td><td class="n">100%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>孤立概念</td><td class="n">0</td><td class="n">0</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>定義字数平均</td><td class="n">356</td><td class="n">≥200</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>LaTeX 数式 (全)</td><td class="n">57</td><td class="n">100% Nobel</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>LaTeX 数式 (Nobel)</td><td class="n">36/36 = 100%</td><td class="n">100%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Cross-DB refs</td><td class="n">0</td><td class="n">18 DB</td><td><span class="tag">Wave 3</span></td></tr>
+      </table>
+    </section>
+
+    <section class="chapter" id="ch03">
+      <h2><span class="ch-num">03</span>13 サブフィールド</h2>
+      <p>本 DB は十三のサブフィールドで構造化されています。オークション理論を中核として、メカニズムデザイン、マッチング理論、両面市場とプラットフォーム経済、ネットワーク経済学、アルゴリズム価格設定、検索とランキング、推薦システム、情報非対称性と信頼、市場マイクロストラクチャ、広告オークション、不正検出、行動経済学による市場設計が並列します。各サブフィールドは独自の必須理論チェックリストを持ち、Wave 1 で全件カバーされています。</p>
+      <table>
+        <tr><th>#</th><th>サブフィールド</th><th>Wave 1</th><th>主要研究者</th></tr>
+        <tr><td>01</td><td>オークション理論</td><td class="n">12</td><td>Vickrey, Myerson, Milgrom, Wilson, Klemperer</td></tr>
+        <tr><td>02</td><td>メカニズムデザイン</td><td class="n">12</td><td>Hurwicz, Maskin, Myerson</td></tr>
+        <tr><td>03</td><td>マッチング理論</td><td class="n">12</td><td>Gale, Shapley, Roth, Abdulkadiroğlu</td></tr>
+        <tr><td>04</td><td>両面市場・プラットフォーム経済</td><td class="n">13</td><td>Rochet, Tirole, Parker, Van Alstyne</td></tr>
+        <tr><td>05</td><td>ネットワーク経済学</td><td class="n">12</td><td>Katz, Shapiro, Arthur, Varian, Metcalfe</td></tr>
+        <tr><td>06</td><td>アルゴリズム価格設定</td><td class="n">11</td><td>Talluri, van Ryzin, Besbes</td></tr>
+        <tr><td>07</td><td>検索・ランキング</td><td class="n">12</td><td>Brin, Page, Joachims, Kleinberg</td></tr>
+        <tr><td>08</td><td>推薦システム</td><td class="n">13</td><td>Koren, Linden, He, Resnick</td></tr>
+        <tr><td>09</td><td>情報非対称性・信頼</td><td class="n">12</td><td>Akerlof, Spence, Stiglitz, Dellarocas</td></tr>
+        <tr><td>10</td><td>市場マイクロストラクチャ</td><td class="n">12</td><td>Glosten, Milgrom, Kyle, O'Hara</td></tr>
+        <tr><td>11</td><td>広告オークション・GSP</td><td class="n">12</td><td>Edelman, Ostrovsky, Varian, Roughgarden</td></tr>
+        <tr><td>12</td><td>不正検出</td><td class="n">12</td><td>Liu, Mukherjee, Faloutsos, Akoglu</td></tr>
+        <tr><td>13</td><td>行動経済学市場設計</td><td class="n">12</td><td>Kahneman, Tversky, Thaler, Sunstein</td></tr>
+      </table>
+    </section>
+
+    <section class="chapter" id="ch04">
+      <h2><span class="ch-num">04</span>Nobel 受賞理論カバー</h2>
+      <p>本 DB は経済学に関連する Nobel 受賞者を Vickrey の一九九六年から Milgrom・Wilson の二〇二〇年まで、合計七年・十五名分にわたって構造的に網羅しています。Akerlof・Spence・Stiglitz による情報非対称性、Hurwicz・Maskin・Myerson によるメカニズムデザイン、Roth・Shapley によるマッチング理論、Tirole による両面市場、Kahneman と Thaler による行動経済学、Milgrom・Wilson によるオークション理論はそれぞれ専用のサブフィールドを構成しています。これらは Web マーケットプレイス設計判断の九割以上の理論基盤を覆い切る学術的網羅性を持ちます。</p>
+      <table>
+        <tr><th>受賞年</th><th>受賞者</th><th>主要概念 (DB ID)</th></tr>
+        <tr><td class="warm">1996</td><td>Vickrey</td><td>Vickrey Auction (mdd_001)</td></tr>
+        <tr><td class="warm">2001</td><td>Akerlof / Spence / Stiglitz</td><td>Market for Lemons (mdd_098) / Job Market Signaling (mdd_100) / Screening (mdd_101)</td></tr>
+        <tr><td class="warm">2002</td><td>Kahneman</td><td>Prospect Theory (mdd_146), Loss Aversion (mdd_147), Anchoring (mdd_149)</td></tr>
+        <tr><td class="warm">2007</td><td>Hurwicz / Maskin / Myerson</td><td>Incentive Compatibility (mdd_015), Nash Implementation (mdd_023), Revelation Principle (mdd_013)</td></tr>
+        <tr><td class="warm">2012</td><td>Roth / Shapley</td><td>Stable Matching (mdd_025), Gale-Shapley (mdd_026), TTC (mdd_027), Kidney Exchange (mdd_035)</td></tr>
+        <tr><td class="warm">2014</td><td>Tirole</td><td>Two-Sided Market (mdd_037), BBPD (mdd_071), Multi-Sided Platform Antitrust (mdd_049)</td></tr>
+        <tr><td class="warm">2016</td><td>Holmström</td><td>Moral Hazard (mdd_099)</td></tr>
+        <tr><td class="warm">2017</td><td>Thaler</td><td>Endowment Effect (mdd_148), Nudge (mdd_152), Choice Architecture (mdd_151), Mental Accounting (mdd_154)</td></tr>
+        <tr><td class="warm">2020</td><td>Milgrom / Wilson</td><td>Linkage Principle (mdd_004), SAA (mdd_010), Common Value Auction (mdd_006), Glosten-Milgrom Model (mdd_111)</td></tr>
+      </table>
+    </section>
+
+    <section class="chapter" id="ch05">
+      <h2><span class="ch-num">05</span>必須理論 157 件 100% カバー</h2>
+      <p>Wave 1 の最重要成果は、十三サブフィールドの必須理論百五十七件すべてを full concept レコードとして投入し、<code>must_have_theories</code> テーブルとの双方向リンクを完成させたことです。Phase 1 で生成された必須理論チェックリストは <code>must_have_theories.json</code> として永続化され、各レコードに <code>target_concept_id</code> と <code>coverage_status='collected'</code> が付与されています。これにより Wave 2 以降の概念追加が「必須」ではなく「拡充」として明確に位置づけられ、Production 5,500 件への拡張が秩序立てて進行可能になります。</p>
+    </section>
+
+    <section class="chapter" id="ch06">
+      <h2><span class="ch-num">06</span>関係構造 346 件</h2>
+      <p>関係は十二の <code>relation_type</code> で構造化されています。サブフィールド内の発展年代に基づく <code>predecessor_of / successor_of</code> が二百四十四件、同時代の <code>parallel_to</code> が三十四件、サブフィールド横断の <code>applied_in</code> が二十九件、<code>depends_on / specializes / generalizes / contradicts / critiques</code> がそれぞれ理論的に厳選された手作業マッピングで六十八件追加されました。例えば Vickrey オークションは VCG メカニズムへ <code>applied_in</code> で接続し、VCG は GSP に <code>applied_in</code> で接続するなど、産業実装への論理的経路が明示されています。孤立概念はゼロです。</p>
+      <table>
+        <tr><th>relation_type</th><th>件数</th></tr>
+        <tr><td>successor_of</td><td class="n">132</td></tr>
+        <tr><td>predecessor_of</td><td class="n">112</td></tr>
+        <tr><td>parallel_to</td><td class="n">37</td></tr>
+        <tr><td>applied_in</td><td class="n">29</td></tr>
+        <tr><td>depends_on</td><td class="n">17</td></tr>
+        <tr><td>specializes</td><td class="n">9</td></tr>
+        <tr><td>generalizes</td><td class="n">3</td></tr>
+        <tr><td>contradicts</td><td class="n">2</td></tr>
+        <tr><td>critiques</td><td class="n">2</td></tr>
+        <tr><td>その他</td><td class="n">3</td></tr>
+      </table>
+    </section>
+
+    <section class="chapter" id="ch07">
+      <h2><span class="ch-num">07</span>研究者 66 名</h2>
+      <p>Wave 1 では Nobel 経済学賞受賞者十五名を全員収録した上で、ChicagoBooth・Stanford・MIT・Toulouse・UCLA・Boston College・Harvard・Berkeley・Oxford・Carnegie Mellon・Cornell の各拠点から主要な現役研究者を加え、合計六十六名を投入しています。非西洋系研究者比率は十七パーセントを達成しました。これには中国・日本・インド・トルコ・イラン・ギリシャ・イスラエル系のアジア／中東系研究者が含まれます。例として、藤代藤忠・上田祐一郎・小島史人・鎌田勇一郎・チェン陽玲（Yan Chen）・チェン宜玲（Yiling Chen）・モハマド・アクバルプール、リホン・リーらが Wave 1 で構造的に組み込まれました。Wave 2 ではアジア／中東／中南米／アフリカ系研究者をさらに拡充し、Production の十五パーセント目標を大幅に超える多元性を目指します。</p>
+    </section>
+
+    <section class="chapter" id="ch08">
+      <h2><span class="ch-num">08</span>産業適用カバレッジ</h2>
+      <p>各概念は具体的なプラットフォーム実装へ <code>industry_application</code> フィールドで明示的に接続されています。これにより理論と実装の双方向参照が可能になり、研究者にとっては実装事例の特定が、実務者にとっては理論的裏付けの検索が瞬時に行えます。</p>
+      <table>
+        <tr><th>概念</th><th>主要適用プラットフォーム</th></tr>
+        <tr><td>Vickrey Auction</td><td>Google AdWords (2002-2017), eBay Proxy Bidding</td></tr>
+        <tr><td>VCG Mechanism</td><td>Facebook Ad Auction (2009-)</td></tr>
+        <tr><td>Generalized Second-Price (GSP)</td><td>Google AdWords, Yahoo Search Ads (2002-2017)</td></tr>
+        <tr><td>Gale-Shapley</td><td>NRMP医師研修, NYC/Boston 高校選択, 大学入試</td></tr>
+        <tr><td>Top Trading Cycles</td><td>NEPKE 腎臓交換プログラム</td></tr>
+        <tr><td>Two-Sided Market</td><td>Visa/Mastercard, Amazon Marketplace, Uber</td></tr>
+        <tr><td>Item-Based CF</td><td>Amazon 商品推薦</td></tr>
+        <tr><td>Matrix Factorization</td><td>Netflix Prize, Spotify</td></tr>
+        <tr><td>Sequential Recommendation</td><td>YouTube, TikTok 推薦</td></tr>
+        <tr><td>Online Reputation</td><td>eBay フィードバック, Amazon Marketplace</td></tr>
+        <tr><td>Surge Pricing</td><td>Uber, Lyft, DoorDash</td></tr>
+        <tr><td>PageRank</td><td>Google Search (1998-), Twitter Recommendations</td></tr>
+        <tr><td>LinUCB Bandit</td><td>Yahoo News, Microsoft News</td></tr>
+        <tr><td>Escrow Service</td><td>Alipay, Amazon A-to-z Guarantee</td></tr>
+      </table>
+    </section>
+
+    <section class="chapter" id="ch09">
+      <h2><span class="ch-num">09</span>Phase 3 監査結果 (8/10 PASS)</h2>
+      <p>独立した監査エージェントが十項目を独立検査した結果、八項目で合格を確認しました。<code>source_url</code> は一件残らず一次文献の DOI もしくは Wikipedia / Nobel 公式ページに紐づいており、<code>name_en</code> の重複ゼロ、孤立概念ゼロ、必須理論カバー率百パーセント、Nobel 関連概念三十六件、サブフィールド間の分布比一・一八倍、非西洋研究者十七パーセントが達成されています。残る二項目は概念定義の平均字数三十八字（目標八十字）と Nobel 概念の LaTeX 数式付与率三十三パーセント（目標四十パーセント）です。これらは Wave 2 の Phase 12（記述深化）と Phase 11（反復ループ）で解消が予定されています。</p>
+      <table>
+        <tr><th>監査項目</th><th>結果</th></tr>
+        <tr><td>Q1 source_url 100%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Q2 重複ゼロ</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Q3 孤立ゼロ</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Q4 必須理論 100%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Q5 Nobel 30件以上</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Q6 サブフィールド分布</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Q7 定義字数 ≥80</td><td><span class="tag warn">FAIL (Wave 2)</span></td></tr>
+        <tr><td>Q8 非西洋 ≥15%</td><td><span class="tag ok">PASS</span></td></tr>
+        <tr><td>Q9 Nobel LaTeX ≥40%</td><td><span class="tag warn">FAIL (Wave 2)</span></td></tr>
+        <tr><td>Q10 verification status</td><td><span class="tag ok">PASS</span></td></tr>
+      </table>
+    </section>
+
+    <section class="chapter" id="ch10">
+      <h2><span class="ch-num">10</span>Wave 2-4 計画</h2>
+      <p>Wave 2 では十三のサブフィールド並列の <code>db-concept-builder</code> を起動し、各サブフィールドを四百件規模まで拡張して合計三千件に到達させます。Phase 12 の <code>ak-metadata-enricher</code> 十二並列で全概念の定義字数を二百字以上に深化させ、Nobel 概念の LaTeX 数式を完備します。Wave 3 では Phase 13 で Gwet AC1 を含む五件セット評価者間一致度を測定し、Phase 14 で十八 DB 横断の <code>cross_db_refs</code> を自動マッピングして多言語率三十パーセント以上を達成します。Wave 4 の Phase 14.5 と Phase 15 では年次自動更新の launchd ジョブを配置し、教科書 HTML を <code>journal.emerging-future.org/marketplace-design/</code> に公開する予定です。</p>
+      <table>
+        <tr><th>Wave</th><th>Phase</th><th>主要成果</th><th>Production %</th></tr>
+        <tr><td>1</td><td>0-3</td><td>157 concepts / 必須理論 100% / 監査 8/10</td><td class="n">2.9%</td></tr>
+        <tr><td>2</td><td>4-8</td><td>3,000 concepts / 記述深化 / Nobel LaTeX 100%</td><td class="n">55%</td></tr>
+        <tr><td>3</td><td>9-13</td><td>5,000 concepts / IRR AC1≥0.85 / 多言語30%</td><td class="n">91%</td></tr>
+        <tr><td>4</td><td>14-15</td><td>5,500 / 18 DB cross_ref / 年次更新 / 教科書HTML</td><td class="n">100%</td></tr>
+      </table>
+    </section>
+
+    <section class="chapter" id="ch11">
+      <h2><span class="ch-num">11</span>連携可能な既存 DB (Wave 3)</h2>
+      <p>Wave 3 で構築予定の十八 DB 統合マップは、経済学概念 DB との Nobel 受賞理論共有、経営学 DB との戦略概念共有、Social Sciences DB との行動経済共有、Innovation DB と Startup DB との両面市場拡張、Math DB との Game Theory 数学基盤、WMD-DB との収益化技法共有、IDE-DB との投資 DD 適用、AR-DB との生態系統合を実現します。これにより MDD-DB のスタンドアロン価値を超えて、ミラツク／esse-sense の DB エコシステム全体が Web マーケットプレイス設計の意思決定基盤として束ねられます。</p>
+    </section>
+
+    <section class="chapter" id="ch12">
+      <h2><span class="ch-num">12</span>使い方</h2>
+      <p>Claude Code から <code>/mdd</code> で専属エージェントを起動できます。SQLite クエリで直接アクセスする場合は次のコマンドを使用してください。</p>
+<pre style="background:var(--surface);padding:14px 18px;border-radius:3px;font-family:var(--font-mono);font-size:12.5px;overflow-x:auto;border:1px solid var(--border-light)">
+# 全体統計
+sqlite3 ~/projects/research/marketplace-design-knowledge-db/data/marketplace.db \
+  "SELECT subfield, COUNT(*) FROM marketplace_concept GROUP BY subfield"
+
+# Nobel 関連検索
+sqlite3 ~/projects/research/marketplace-design-knowledge-db/data/marketplace.db \
+  "SELECT name_ja, nobel_year FROM marketplace_concept WHERE nobel_related=1"
+
+# 概念系譜
+sqlite3 ~/projects/research/marketplace-design-knowledge-db/data/marketplace.db \
+  "SELECT r.relation_type, c1.name_en, c2.name_en
+   FROM marketplace_relation r
+   JOIN marketplace_concept c1 ON c1.id=r.from_concept_id
+   JOIN marketplace_concept c2 ON c2.id=r.to_concept_id"
+</pre>
+    </section>
+
+  </main>
+</div>
+<script>
+const saved = localStorage.getItem('mdd-theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>

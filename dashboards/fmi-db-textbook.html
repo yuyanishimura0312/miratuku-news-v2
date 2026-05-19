@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="utf-8">
+<title>FMI-DB Textbook — Financial Markets Intelligence DB v1.0</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif: "Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+  --font-mono: "SF Mono","Fira Code",ui-monospace,monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+       font-family: var(--font-serif); line-height: 1.95; letter-spacing: 0.025em;
+       font-feature-settings: "palt"; }
+.top-bar { position: sticky; top: 0; height: 48px; background: var(--bg);
+           border-top: 3px solid #121212; border-bottom: 1px solid var(--border);
+           display: flex; align-items: center; padding: 0 24px; z-index: 100; }
+.brand { font-family: var(--font-serif); font-weight: 600; }
+.brand .accent { color: var(--accent-warm); }
+.theme-toggle { margin-left: auto; cursor: pointer; background: none;
+                border: 1px solid var(--border); padding: 4px 12px; border-radius: 4px;
+                color: var(--text); font-family: var(--font); font-size: 13px; }
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 32px; max-width: 1200px;
+          margin: 0 auto; padding: 32px 24px; }
+.toc { position: sticky; top: 80px; align-self: start; max-height: calc(100vh - 100px);
+       overflow-y: auto; font-family: var(--font); font-size: 13px;
+       border-right: 1px solid var(--border-light); padding-right: 16px; }
+.toc-label { color: var(--text-muted); font-size: 11px; letter-spacing: 0.15em;
+             text-transform: uppercase; margin-bottom: 12px; }
+.toc-list { list-style: none; padding: 0; margin: 0; }
+.toc-list li { margin: 4px 0; }
+.toc-list a { color: var(--text-secondary); text-decoration: none; display: block;
+              padding: 4px 8px; border-radius: 3px; }
+.toc-list a:hover { color: var(--accent-warm); background: var(--accent-muted); }
+.toc-num { font-family: var(--font-mono); color: var(--accent-warm); margin-right: 6px; }
+main { max-width: 760px; font-family: var(--font-serif); }
+.preface { color: var(--text-secondary); font-style: italic; padding: 24px 0;
+           border-bottom: 1px solid var(--border-light); margin-bottom: 32px; }
+h1 { font-family: var(--font-serif); font-weight: 600; font-size: 34px;
+     border-bottom: 2px solid var(--accent-warm); padding-bottom: 12px; line-height: 1.5; }
+h2.chapter { font-family: var(--font-serif); font-weight: 600; font-size: 24px;
+             margin-top: 64px; padding-top: 32px; padding-left: 12px;
+             border-left: 4px solid var(--accent-warm);
+             border-top: 1px solid var(--border-light); }
+h2.chapter .num { font-family: var(--font-mono); color: var(--accent-warm);
+                  display: inline-block; min-width: 50px; font-size: 18px; }
+h3 { font-family: var(--font-serif); font-weight: 600; font-size: 17px;
+     margin-top: 32px; color: var(--accent-warm-soft); }
+p { margin: 16px 0; text-indent: 1em; font-size: 15.5px; }
+p:first-of-type { text-indent: 0; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent-warm);
+           padding: 16px 20px; margin: 24px 0; font-size: 14px; }
+.callout-label { font-family: var(--font); font-size: 11px; letter-spacing: 0.15em;
+                 text-transform: uppercase; color: var(--accent-warm);
+                 margin-bottom: 8px; font-weight: 600; }
+.formula { background: var(--surface); border: 1px solid var(--border-light);
+           padding: 12px 16px; margin: 16px 0; font-family: var(--font-mono);
+           font-size: 14px; overflow-x: auto; text-indent: 0; }
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-family: var(--font);
+        font-size: 13px; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border-light); }
+th { color: var(--accent-warm); font-weight: 600; letter-spacing: 0.05em;
+     font-size: 11px; text-transform: uppercase; }
+.footer { margin: 80px 0 40px; padding-top: 24px; border-top: 1px solid var(--border-light);
+          color: var(--text-muted); font-size: 13px; font-family: var(--font); }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc { position: static; max-height: none; border-right: none; padding-right: 0;
+         border-bottom: 1px solid var(--border-light); padding-bottom: 16px;
+         margin-bottom: 24px; }
+}
+@media print {
+  .top-bar, .toc { display: none; }
+  .layout { grid-template-columns: 1fr; }
+  main { max-width: none; }
+}
+</style>
+</head><body>
+<div class="top-bar">
+  <span class="brand">FMI-DB <span class="accent">Textbook</span> v1.0</span>
+  <button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('theme', document.documentElement.dataset.theme)">Theme</button>
+</div>
+<div class="layout">
+  <nav class="toc">
+    <div class="toc-label">CHAPTERS — 全25章</div>
+    <ul class="toc-list">
+<li><a href="#ch01"><span class="toc-num">01</span>序章 — 全体像</a></li>
+<li><a href="#ch02"><span class="toc-num">02</span>15サブフィールド地図</a></li>
+<li><a href="#ch03"><span class="toc-num">03</span>マクロ経済学（ME）</a></li>
+<li><a href="#ch04"><span class="toc-num">04</span>金融工学（FE）</a></li>
+<li><a href="#ch05"><span class="toc-num">05</span>確率論（SP）</a></li>
+<li><a href="#ch06"><span class="toc-num">06</span>確率微分方程式（SDE）</a></li>
+<li><a href="#ch07"><span class="toc-num">07</span>数値解析（NM）</a></li>
+<li><a href="#ch08"><span class="toc-num">08</span>最適化（OPT）</a></li>
+<li><a href="#ch09"><span class="toc-num">09</span>計量経済学（EM）</a></li>
+<li><a href="#ch10"><span class="toc-num">10</span>行動ファイナンス（BF）</a></li>
+<li><a href="#ch11"><span class="toc-num">11</span>市場マイクロストラクチャ（MM）</a></li>
+<li><a href="#ch12"><span class="toc-num">12</span>リスク管理（RM）</a></li>
+<li><a href="#ch13"><span class="toc-num">13</span>デリバティブ（DV）</a></li>
+<li><a href="#ch14"><span class="toc-num">14</span>信用市場（CR）</a></li>
+<li><a href="#ch15"><span class="toc-num">15</span>国際金融（IF）</a></li>
+<li><a href="#ch16"><span class="toc-num">16</span>中央銀行論（CB）</a></li>
+<li><a href="#ch17"><span class="toc-num">17</span>イスラム金融・伝統金融（IS）</a></li>
+<li><a href="#ch18"><span class="toc-num">18</span>8データ層 — 金利</a></li>
+<li><a href="#ch19"><span class="toc-num">19</span>8データ層 — 為替・株式・債券</a></li>
+<li><a href="#ch20"><span class="toc-num">20</span>8データ層 — 商品・政策・地政学</a></li>
+<li><a href="#ch21"><span class="toc-num">21</span>市場マイクロストラクチャ観測</a></li>
+<li><a href="#ch22"><span class="toc-num">22</span>10ルールベース・シグナル</a></li>
+<li><a href="#ch23"><span class="toc-num">23</span>35+ 既存DBとの連携</a></li>
+<li><a href="#ch24"><span class="toc-num">24</span>品質基準と Gwet AC1 5件セット</a></li>
+<li><a href="#ch25"><span class="toc-num">25</span>将来展望と継続改善</a></li>
+</ul>
+    <div class="toc-label" style="margin-top:24px;">基盤指標</div>
+    <ul class="toc-list">
+      <li>概念 605</li>
+      <li>関係 818</li>
+      <li>研究者 270</li>
+      <li>市場事件 30</li>
+    </ul>
+  </nav>
+  <main>
+    <h1>Financial Markets Intelligence DB v1.0<br><small style="font-size:18px;color:var(--text-muted);font-weight:400;">金融市場動向データベース 教科書</small></h1>
+    <div class="preface">
+      <p>NPO法人ミラツク / esse-sense ─ 西村勇也<br>
+      最終更新 2026-05-19 23:46</p>
+      <p>金融市場の動向は、経済学・金融工学・数学・確率論・心理学・地政学・歴史の交差点に位置する。本書は、それら15サブフィールドの中核概念と、リアルタイムで観測される8データ層、10ルールベース・シグナルを、35+ の既存学術DBと統合した知識基盤の教科書である。</p>
+    </div>
+    
+<section id="ch01">
+<h2 class="chapter"><span class="num">01.</span> 序章 — なぜ金融市場動向 DB が必要か<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Introduction</small></h2>
+<p>金融市場の動向は、経済学・金融工学・数学・確率論・心理学・地政学・歴史の交差点に位置する。単一の理論や指標で捉えきれず、複数のディシプリンから観察軸を統合してはじめて、実務に耐える理解が立ち上がる。</p>
+        <p>本書 FMI-DB は、15サブフィールドにまたがる学術概念と、リアルタイムで観測される8データ層、そして10種類のルールベース・シグナル抽出を統合する。1973年の Black-Scholes-Merton 方程式、1944年の伊藤の補題、1730年の堂島米市場、1985年のプラザ合意、2008年のリーマン破綻、2020年の COVID-19 急落、2024年の円キャリー解消まで、金融の知の系譜と現実の市場事件を一つの構造として並置する。</p>
+<div class="callout"><div class="callout-label">本書の構成</div>
+        <p>第1-2章で全体像、第3-17章で15サブフィールドの中核概念、第18-21章で8データ層の観測、第22章で10シグナル、第23章で35+ 既存DBとの連携、第24章で品質基準、第25章で将来展望を扱う。</p></div>
+</section>
+
+
+<section id="ch02">
+<h2 class="chapter"><span class="num">02.</span> 第2章 — 15サブフィールドの全体地図<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">15-Subfield Map</small></h2>
+<p>FMI-DB は次の15軸で金融市場の理解を切り分ける。各軸は別個のディシプリン的伝統を持ち、概念・数式・引用論文・歴史的事件を内包する。</p>
+<table><thead><tr><th>ID</th><th>サブフィールド</th><th>英名</th><th>収録</th><th>目標</th></tr></thead><tbody><tr><td><b>FE</b></td><td>金融工学</td><td>Financial Engineering</td><td>42</td><td>500</td></tr><tr><td><b>DV</b></td><td>デリバティブ</td><td>Derivatives</td><td>35</td><td>400</td></tr><tr><td><b>EM</b></td><td>計量経済学</td><td>Econometrics</td><td>31</td><td>400</td></tr><tr><td><b>ME</b></td><td>マクロ経済学</td><td>Macroeconomics</td><td>68</td><td>400</td></tr><tr><td><b>RM</b></td><td>リスク管理</td><td>Risk Management</td><td>73</td><td>400</td></tr><tr><td><b>SP</b></td><td>確率論</td><td>Stochastic Processes</td><td>52</td><td>400</td></tr><tr><td><b>CR</b></td><td>信用市場</td><td>Credit Markets</td><td>12</td><td>350</td></tr><tr><td><b>IF</b></td><td>国際金融</td><td>International Finance</td><td>66</td><td>350</td></tr><tr><td><b>MM</b></td><td>市場マイクロストラクチャ</td><td>Market Microstructure</td><td>3</td><td>350</td></tr><tr><td><b>NM</b></td><td>数値解析</td><td>Numerical Methods</td><td>109</td><td>350</td></tr><tr><td><b>OPT</b></td><td>最適化</td><td>Optimization</td><td>2</td><td>350</td></tr><tr><td><b>SDE</b></td><td>確率微分方程式</td><td>Stochastic Differential Equations</td><td>20</td><td>350</td></tr><tr><td><b>BF</b></td><td>行動ファイナンス</td><td>Behavioral Finance</td><td>20</td><td>300</td></tr><tr><td><b>CB</b></td><td>中央銀行論</td><td>Central Banking</td><td>31</td><td>300</td></tr><tr><td><b>IS</b></td><td>イスラム金融・伝統金融</td><td>Islamic &amp; Traditional Finance</td><td>41</td><td>250</td></tr></tbody></table>
+</section>
+
+
+<section id="ch03">
+<h2 class="chapter"><span class="num">03.</span> 第3章 — マクロ経済学（ME）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Macroeconomics</small></h2>
+<p>国民経済全体の動学と金融政策の効果。マクロ経済学の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Quantity Theory of Money <small style="color:var(--text-muted);font-weight:400;">（貨幣数量説）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1911 ／ Irving Fisher; Milton Friedman ／ Nobel経済学賞 1976年 — Milton Friedman</p>
+<p>Irving Fisher（1911年）が定式化したMV=PYという交換方程式に基づく貨幣理論。貨幣数量M・流通速度V・物価水準P・実質産出量Yを結ぶ。Milton Friedmanのシカゴ学派では「インフレは常に至るところで貨幣的現象」として展開された。2020-2022年の量的緩和後の急激なインフレでQTMが再注目されたが、Vの不安定性が現代的修正を要求する。河野龍太郎・翁邦雄・岩田規久男の日本リフレ論争もQTMをめぐる議論が中核。</p>
+<div class="formula">MV = PY</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.cambridge.org/core/books/purchasing-power-of-money/" style="color:var(--accent-warm);">https://www.cambridge.org/core/books/purchasing-power-of-money/</a></p>
+<h3>Interwar Great Depression <small style="color:var(--text-muted);font-weight:400;">（大恐慌（1929-1939年））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1929 ／ N/A (historical event)</p>
+<p>1929年10月のウォール街株式大暴落（Black Thursday/Tuesday）に始まり、1930年代に世界全体に波及した未曾有の不況。米国の失業率が25%超に達し、世界貿易が60%以上縮小した。Keynesのマクロ経済学・フィリップス曲線・Fisher型債務デフレ・Friedman-Schwartz（1963年）の貨幣的解釈（FedのM2収縮が主因）など、現代マクロの主要概念の原点となった。Bernanke（2004年）が「二度と繰り返さない」とFed総裁としてQEを用いた思想的背景。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.federalreservehistory.org/essays/great-depression" style="color:var(--accent-warm);">https://www.federalreservehistory.org/essays/great-depression</a></p>
+<h3>Fisher Equation <small style="color:var(--text-muted);font-weight:400;">（フィッシャー方程式）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1930 ／ Irving Fisher</p>
+<p>Irving Fisher（1930年）が提示した名目利子率・実質利子率・期待インフレ率の恒等式。名目利子率 i = r + π^e（近似式）。フィッシャー効果とはインフレ率上昇が名目金利を1対1でほぼ引き上げること（実質金利安定）を意味する。金融政策の実質金利経路・テーラー・ルール・インフレ目標の理論基礎。実証的には短期では不完全成立（Mundell-Tobin効果、ZLB下の非対称性）。</p>
+<div class="formula">i = r + \pi^e \quad (\text{近似式}); \quad (1+i) = (1+r)(1+\pi^e) \quad (\text{正確な定義})</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1837564" style="color:var(--accent-warm);">https://www.jstor.org/stable/1837564</a></p>
+<h3>Liquidity Trap <small style="color:var(--text-muted);font-weight:400;">（流動性の罠）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1936 ／ John M. Keynes; Paul Krugman</p>
+<p>John Maynard Keynes（1936年）が理論的に示した金融政策の限界状況。名目利子率がゼロ近傍（またはゼロ下限）に達すると、貨幣需要の利子弾性が無限大となり、追加的な貨幣供給が利子率低下に繋がらず実体経済に波及しない。Paul Krugman（1998年）は1990年代日本のデフレ・低成長をこの枠組みで分析し、フォワードコミットメントや財政拡張の必要性を論じた。ゼロ金利制約（ZLB）・非伝統的金融政策の理論的背景となる。日本銀行の岩田規久男・翁邦雄・浜田宏一の論争もこの概念を核心とした。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.brookings.edu/wp-content/uploads/1998/06/1998b_bpea_krugman_dominquez_rogoff.pdf" style="color:var(--accent-warm);">https://www.brookings.edu/wp-content/uploads/1998/06/1998b_bpea_krugman_dominque</a></p>
+<h3>IS-LM Model <small style="color:var(--text-muted);font-weight:400;">（IS-LMモデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1937 ／ John R. Hicks ／ Nobel経済学賞 1972年 — John R. Hicks</p>
+<p>John Hicks（1937年）がJohn Maynard KeynesのGeneral Theoryを数学的に定式化したモデル。財市場均衡（Investment-Saving）と貨幣市場均衡（Liquidity preference-Money supply）の2本の曲線が利子率と産出量を同時決定する。財政政策（IS曲線シフト）と金融政策（LM曲線シフト）の効果分析に不可欠。Paul Samuelsonらのニュー・ケインジアン統合の基礎となり、現在でもマクロ経済学入門の核心テキストに採用される。批判としては、マクロ基礎が弱い・動学的不整合・金融摩擦の欠如が挙げられる。</p>
+<div class="formula">Y = C(Y-T) + I(r) + G \quad \text{(IS)}; \quad M/P = L(Y, r) \quad \text{(LM)}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1907242" style="color:var(--accent-warm);">https://www.jstor.org/stable/1907242</a></p>
+<h3>Solow Growth Model <small style="color:var(--text-muted);font-weight:400;">（ソロー成長モデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1956 ／ Robert M. Solow; Trevor W. Swan ／ Nobel経済学賞 1987年 — Robert M. Solow</p>
+<p>Robert Solow（1956年）とTrevor Swan（1956年）が独立に発表した新古典派成長モデル。コブ・ダグラス型生産関数を仮定し、資本の限界生産力逓減により定常状態（steady state）が一意に存在することを示す。技術進歩のみが長期的な1人当たり所得成長をもたらす。Solow残差（全要素生産性）の計測手法としても重要。成長会計（Jorgenson, Griliches）の基礎。</p>
+<div class="formula">\dot{k} = sf(k) - (n + \delta + g)k</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1884513" style="color:var(--accent-warm);">https://www.jstor.org/stable/1884513</a></p>
+
+</section>
+
+
+<section id="ch04">
+<h2 class="chapter"><span class="num">04.</span> 第4章 — 金融工学（FE）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Financial Engineering</small></h2>
+<p>デリバティブ価格・ボラティリティ構造・複製戦略。金融工学の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Bachelier Model <small style="color:var(--text-muted);font-weight:400;">（バシュリエモデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1900 ／ Louis Bachelier</p>
+<p>1900年にルイ・バシュリエがソルボンヌ大学での博士論文「投機の理論」で提案した、現代金融数学の起源。原資産価格を算術ブラウン運動（正規分布増分）でモデル化し、オプション価格の閉形式解を初めて導出した。幾何ブラウン運動を前提とするブラック・ショールズより73年早い成果だが、当時の数学界では評価されず、ポール・サミュエルソンによって再発見されたのは1950年代のことである。負の価格を許容する欠点があるが、金利系デリバティブ（SABR/正規SABR）や負金利環境での応用が2010年代以降に再注目されている。</p>
+<div class="formula">C = (F - K)\Phi\left(\frac{F-K}{\sigma\sqrt{T}}\right) + \sigma\sqrt{T}\phi\left(\frac{F-K}{\sigma\sqrt{T}}\right)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.numdam.org/article/ASENS_1900_3_17__21_0.pdf" style="color:var(--accent-warm);">https://www.numdam.org/article/ASENS_1900_3_17__21_0.pdf</a></p>
+<h3>Modern Portfolio Theory <small style="color:var(--text-muted);font-weight:400;">（現代ポートフォリオ理論）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1952 ／ Harry Markowitz ／ Nobel経済学賞 1990年 — Harry Markowitz</p>
+<p>Harry Markowitz が 1952 年に発表したポートフォリオ選択理論。期待リターンと分散のトレードオフを定式化し、効率的フロンティアの概念を導入した。後の CAPM・APT・要因モデルの基礎。</p>
+<div class="formula">\min_w w^T \Sigma w \quad \text{s.t.} \quad w^T \mu = \mu_p, \quad \sum w_i = 1</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2975974" style="color:var(--accent-warm);">https://www.jstor.org/stable/2975974</a></p>
+<h3>Modigliani-Miller Theorem <small style="color:var(--text-muted);font-weight:400;">（モジリアーニ・ミラー定理）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1958 ／ Franco Modigliani; Merton Miller ／ Nobel経済学賞 1985年 — Franco Modigliani; Merton Miller (1990)</p>
+<p>Franco Modigliani と Merton Miller が 1958 年に発表した、完全市場下での企業価値の資本構成無関連性命題。負債・株式の比率は企業価値を変えない (Proposition I)。後の trade-off theory, pecking order theory への出発点。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1809766" style="color:var(--accent-warm);">https://www.jstor.org/stable/1809766</a></p>
+<h3>Girsanov Theorem <small style="color:var(--text-muted);font-weight:400;">（ジルサノフの定理）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1960 ／ Igor Vladimirovich Girsanov</p>
+<p>1960年にロシアの数学者イゴール・ジルサノフが発表した確率測度の変換定理。確率過程のドリフト係数をRadon-Nikodym導関数（Girsanov指数）によって消去し、現実世界測度Pのもとでドリフトをもつブラウンへの過程を、別の測度Qのもとでドリフトなしの標準ブラウン運動に変換する。金融工学においては、リスク中立測度への移行の数学的根拠を与え、資産価格のドリフトを無リスク金利に置き換えることを正当化する。ブラック・ショールズ方程式の導出、HJM金利モデル、最適停止問題における測度変換に不可欠。Cameron-Martin（1940年代）の先行研究を確率過程の一般設定に拡張したものである。</p>
+<div class="formula">\frac{dQ}{dP}\bigg|_{\mathcal{F}_T} = \exp\!\left(-\int_0^T \theta_s\,dW_s - \frac{1}{2}\int_0^T \theta_s^2\,ds\right)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/Girsanov_theorem" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/Girsanov_theorem</a></p>
+<h3>Capital Asset Pricing Model <small style="color:var(--text-muted);font-weight:400;">（資本資産価格モデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1964 ／ William F. Sharpe; John Lintner; Jan Mossin ／ Nobel経済学賞 1990年 — William F. Sharpe</p>
+<p>Sharpe, Lintner, Mossin により 1964-1966 年に独立に提案された均衡資産価格モデル。個別資産の期待超過リターンが市場ポートフォリオに対するベータに比例することを示す。Markowitz の MPT の市場均衡版。</p>
+<div class="formula">E[R_i] = R_f + \beta_i (E[R_m] - R_f)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2977928" style="color:var(--accent-warm);">https://www.jstor.org/stable/2977928</a></p>
+<h3>Sharpe Ratio <small style="color:var(--text-muted);font-weight:400;">（シャープ・レシオ）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1966 ／ William F. Sharpe ／ Nobel経済学賞 1990年 — William F. Sharpe</p>
+<p>William F. Sharpe が 1966 年に提案したリスク調整後リターン指標。超過リターンを標準偏差で正規化することで、異なるリスク水準のポートフォリオを比較可能にする。Sortino ratio, Treynor ratio, Information ratio 等への発展系がある。</p>
+<div class="formula">SR = \frac{E[R_p - R_f]}{\sigma_p}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2351741" style="color:var(--accent-warm);">https://www.jstor.org/stable/2351741</a></p>
+
+</section>
+
+
+<section id="ch05">
+<h2 class="chapter"><span class="num">05.</span> 第5章 — 確率論（SP）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Stochastic Processes</small></h2>
+<p>ブラウン運動・マルチンゲール・マルコフ過程。確率論の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Markov Chain <small style="color:var(--text-muted);font-weight:400;">（マルコフ連鎖）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1906 ／ Andrey Andreyevich Markov</p>
+<p>アンドレイ・マルコフが1906年に定義した確率過程の基礎概念。「過去の全情報を与えられても、現在の状態だけを知れば未来の分布は変わらない（マルコフ性）」という条件のみを持つ確率過程。離散時間・状態の場合は遷移確率行列 P = {p_{ij}} で完全に記述され、定常分布（π P = π）・ルーティング理論・MCMC（Markov Chain Monte Carlo）の基盤をなす。連続時間マルコフ連鎖はジャンプ過程の一種でキュー理論・信用格付け推移に応用される。マルコフが当初「独立でない事象への大数の法則の拡張」を証明するために導入したことは、科学史的に興味深い（プーシキンの詩のテキスト分析が動機）。金融工学では信用格付けの推移モデル（Jarrow-Lando-Turnbull 1997）に使われる。</p>
+<div class="formula">P(X_{n+1}=j \mid X_n=i, X_{n-1}=i_{n-1}, \ldots) = P(X_{n+1}=j \mid X_n=i) = p_{ij}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/Markov_chain" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/Markov_chain</a></p>
+<h3>Brownian Motion (Wiener Process) <small style="color:var(--text-muted);font-weight:400;">（ブラウン運動 (ウィーナー過程)）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1923 ／ Norbert Wiener (数学厳密化); Albert Einstein (1905 物理解釈); Robert Brown (1827 観察)</p>
+<p>Robert Brown (1827) の花粉観察に端を発し、Einstein (1905), Wiener (1923) により数学的に厳密化された連続時間確率過程。独立増分・正規分布・ほぼ確実に非微分。金融工学・物理学・統計力学の中核。</p>
+<div class="formula">W_0 = 0, \quad W_t - W_s \sim N(0, t-s), \quad t &gt; s</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1989512" style="color:var(--accent-warm);">https://www.jstor.org/stable/1989512</a></p>
+<h3>Ornstein-Uhlenbeck Process <small style="color:var(--text-muted);font-weight:400;">（オーンスタイン・ウーレンベック過程）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1930 ／ George E. Uhlenbeck; Leonard S. Ornstein</p>
+<p>ジョージ・ウーレンベックとレオナルド・オーンスタインが 1930 年に「ブラウン運動の粒子が力場中に置かれた場合」の物理モデルとして導出した平均回帰ガウス過程。確率微分方程式 dX_t = κ(θ - X_t)dt + σdW_t（κ=平均回帰速度、θ=長期均衡水準）で定義され、これを満たす唯一の定常マルコフ・ガウス過程。閉形式の遷移密度（正規分布）をもち、長期定常分布は N(θ, σ²/2κ)。Vasicek（1977）金利モデルはこの過程に無リスク金利の枠組みを与えた。SABRモデルの相関ブラウン部分、Hull-White 拡張 Vasicek モデル、コモディティ・オイルの現物価格平均回帰モデル（Schwartz 1997）に採用される。金融工学においては CIR 過程（非負性保証あり）の前身として位置づけられる。</p>
+<div class="formula">dX_t = \kappa(\theta - X_t)\,dt + \sigma\,dW_t</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://link.aps.org/doi/10.1103/PhysRev.36.823" style="color:var(--accent-warm);">https://link.aps.org/doi/10.1103/PhysRev.36.823</a></p>
+<h3>Kolmogorov Extension Theorem <small style="color:var(--text-muted);font-weight:400;">（コルモゴロフの拡張定理（整合性定理））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1933 ／ Andrey Kolmogorov</p>
+<p>アンドレイ・コルモゴロフが 1933 年の著作「確率論の基礎」で確立した確率論の基本定理。「任意の有限次元マルジナル分布の整合族」（Kolmogorov 整合条件：置換対称性 + 周辺化整合性）が与えられると、これら全ての有限次元マルジナルを再現する確率測度が（可測空間の積空間上に）一意に存在することを保証する。この定理はブラウン運動・ガウス過程・マルコフ過程など全ての確率過程の数学的存在を正当化する根幹。金融工学では「無裁定条件を満たす無限期間の資産価格過程が存在する」ことの背後にある定理でもある。整合条件を満たさないモデルは無矛盾な確率過程として構成できないため、モデルの数学的整合性チェックに間接的に使われる。</p>
+<div class="formula">\forall\, (t_1,\ldots,t_n) \in T^n, \exists!\, P \text{ on } (\mathbb{R}^T, \mathcal{B}^T): P_{t_1,\ldots,t_n} = \text{given}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/Kolmogorov_extension_theorem" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/Kolmogorov_extension_theorem</a></p>
+<h3>Itô Stochastic Integral <small style="color:var(--text-muted);font-weight:400;">（伊藤確率積分）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ 伊藤 清 (Kiyosi Itô)</p>
+<p>伊藤清 1944 年定式化。決定論的 Riemann-Stieltjes 積分とは異なり、ブラウン運動の無限変分性により点ごとの積分は定義不可能。L^2 等長性とマルチンゲール性質を用いて構成する。後の Skorohod 積分・Stratonovich 積分との対比でも論じられる。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://projecteuclid.org/journals/proceedings-of-the-imperial-academy/volume-20/issue-8/On-a-stochastic-integral-equation" style="color:var(--accent-warm);">https://projecteuclid.org/journals/proceedings-of-the-imperial-academy/volume-20</a></p>
+<h3>Martingale <small style="color:var(--text-muted);font-weight:400;">（マルチンゲール）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1953 ／ Joseph L. Doob (formal theory); Paul Lévy (concept originator, 1934) ／ Nobel経済学賞 1997年 — Myron Scholes; Robert C. Merton</p>
+<p>確率過程 {X_t} がマルチンゲールであるとは、フィルトレーション {F_t} に関して任意の s ≤ t に対して E[X_t | F_s] = X_s が成立することをいう。条件付き期待値が現在値と等しいため「公平なゲーム」を数学的に定義し、将来の情報が現在のドリフトに反映されない過程を表す。Joseph Doob が 1953 年に現代的定義を確立し、劣マルチンゲール（E[X_t|F_s] ≥ X_s）と優マルチンゲール（≤）も含む概念体系を整備した。金融工学での意義は、「無裁定均衡市場では割引資産価格がリスク中立測度のもとでマルチンゲールになる（第 1 基本定理）」という核心命題に集約される。ドゥーブ・マイヤー分解、停止時刻の定理（任意抽出定理）、マルチンゲール表現定理など確率論の主要定理群がマルチンゲール概念を中核とする。</p>
+<div class="formula">\mathbb{E}[X_t \mid \mathcal{F}_s] = X_s \quad \text{for all } s \leq t</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/Martingale_(probability_theory)" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/Martingale_(probability_theory)</a></p>
+
+</section>
+
+
+<section id="ch06">
+<h2 class="chapter"><span class="num">06.</span> 第6章 — 確率微分方程式（SDE）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Stochastic Differential Equations</small></h2>
+<p>伊藤積分・BSDE・Feynman-Kac。確率微分方程式の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Fokker-Planck Equation (Kolmogorov Forward Equation) <small style="color:var(--text-muted);font-weight:400;">（フォッカー・プランク方程式（コルモゴロフ前進方程式））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1931 ／ Andrey Kolmogorov (rigorous formulation 1931); Fokker 1914; Planck 1917</p>
+<p>アドリアン・フォッカー（1914）とマックス・プランク（1917）が物理学で導出し、コルモゴロフが1931年に一般的確率論の文脈で厳密に定式化した偏微分方程式。確率微分方程式 dX_t = μ(X_t)dt + σ(X_t)dW_t で記述されるマルコフ過程の遷移確率密度 p(x,t) が満たす前進方程式で、確率密度の時間発展を規定する。コルモゴロフ後退方程式と対をなす（条件付き期待値の時間変化を規定）。金融工学では局所ボラティリティの較正（Dupire 方程式がフォッカー・プランク方程式の一形態）、信用リスクの遷移確率計算、確率ボラティリティのリスク中立密度推計に直接応用される。統計物理・生物数学・機械学習（スコアマッチング）にも広く波及している。</p>
+<div class="formula">\frac{\partial p}{\partial t} = -\frac{\partial}{\partial x}[\mu(x,t) p] + \frac{1}{2}\frac{\partial^2}{\partial x^2}[\sigma^2(x,t) p]</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/Fokker%E2%80%93Planck_equation" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/Fokker%E2%80%93Planck_equation</a></p>
+<h3>Kolmogorov Backward Equation <small style="color:var(--text-muted);font-weight:400;">（コルモゴロフ後退方程式）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1931 ／ Andrey Kolmogorov</p>
+<p>アンドレイ・コルモゴロフが1931年に発表した、確率微分方程式に付随する後退型偏微分方程式。初期状態 (x,s) から出発した拡散過程の期待値 u(x,s)=E[h(X_T)|X_s=x] が満たす PDE で、前進（フォッカー・プランク）方程式と対をなす。この後退方程式は、オプション価格の偏微分方程式（ブラック・ショールズ方程式）と本質的に同一の構造をもち、Feynman-Kac 公式を介して「SDE の確率論的解釈 ⟺ PDE の決定論的解法」という双対性をもたらす。金融工学においては、デリバティブの価格 PDE がコルモゴロフ後退方程式の一特例として位置づけられ、数値解法（有限差分・有限要素）の理論根拠となる。ブラック・ショールズ PDE の導出においてリスク中立測度変換と結合することで完結する。</p>
+<div class="formula">\frac{\partial u}{\partial s} + \mu(x,s)\frac{\partial u}{\partial x} + \frac{1}{2}\sigma^2(x,s)\frac{\partial^2 u}{\partial x^2} = 0</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/Kolmogorov_backward_equations_(diffusion)" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/Kolmogorov_backward_equations_(diffusion)</a></p>
+<h3>Lévy Process <small style="color:var(--text-muted);font-weight:400;">（レヴィ過程）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1934 ／ Paul Lévy</p>
+<p>ポール・レヴィが1930年代に基礎を築いた確率過程のクラスで、ブラウン運動（連続パス）とポアソン過程（純ジャンプ）を統一する枠組み。「定常独立増分」（任意の区間 [s,t] の増分がその前の増分と独立で分布が t-s だけに依存する）という性質を持つ確率過程全体を指す。レヴィ・キンチン公式によれば、レヴィ過程は線型ドリフト + ガウス拡散 + ジャンプ過程（小ジャンプと大ジャンプ）の 3 成分に一意的に分解できる（レヴィ・伊藤分解）。金融工学での具体例としては幾何ブラウン運動（σW_t）、バリアンス・ガンマ、CGMY（コール・ゲマン・マダン・ヨー）過程、Normal Inverse Gaussian 過程などがある。無限分解可能分布との同値性が基礎にある。</p>
+<div class="formula">\log \mathbb{E}[e^{i\theta X_t}] = t\Psi(\theta), \quad \Psi(\theta) = ib\theta - \frac{1}{2}\sigma^2\theta^2 + \int_{\mathbb{R}\setminus\{0\}} \left(e^{i\theta x}-1-i\theta x \mathbf{1}_{|x|&lt;1}\right)\nu(dx)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/L%C3%A9vy_process" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/L%C3%A9vy_process</a></p>
+<h3>Itô&#x27;s Lemma <small style="color:var(--text-muted);font-weight:400;">（伊藤の補題）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ 伊藤 清 (Kiyosi Itô)</p>
+<p>伊藤清により 1944 年に発表された確率微分方程式の連鎖律。決定論的微分の場合と異なり、ブラウン運動の二乗変分が時間に等しいことを反映する第二項を含む。金融工学・物理学・統計力学で広範に応用される。</p>
+<div class="formula">df(X_t) = f&#x27;(X_t) dX_t + \frac{1}{2} f&#x27;&#x27;(X_t) d\langle X \rangle_t</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://projecteuclid.org/journals/proceedings-of-the-imperial-academy/volume-20/issue-8/On-a-stochastic-integral-equation/10.3792/pia/1195572871.full" style="color:var(--accent-warm);">https://projecteuclid.org/journals/proceedings-of-the-imperial-academy/volume-20</a></p>
+<h3>Itô&#x27;s Isometry <small style="color:var(--text-muted);font-weight:400;">（伊藤の等距離性）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ 伊藤 清 (Kiyosi Itô)</p>
+<p>伊藤清が確率積分の理論を構築する際に確立した基本的等式で、確率積分（マルチンゲール）としての L2 ノルムと決定論的積分（Lebesgue）としての L2 ノルムが等しいことを述べる。この等式は確率積分を L2 空間の等距離写像として定義する基礎をなし、確率積分の線型拡張・連続性・一意性を保証する。伊藤積分の構成において、まず単純確率過程（ステップ関数）に対して積分を定義し、伊藤の等距離性を用いて一般適合過程への L2 拡張を行う。マルチンゲール表現定理・確率微分方程式の解の一意性・BSDE の解析にいずれも不可欠な基礎ツール。Wiener 積分では同様の等式が決定論的関数について成立する（Wiener&#x27;s isometry）。</p>
+<div class="formula">\mathbb{E}\left[\left(\int_0^T \phi_t\, dW_t\right)^2\right] = \mathbb{E}\left[\int_0^T \phi_t^2\, dt\right]</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://projecteuclid.org/journals/proceedings-of-the-imperial-academy/volume-20/issue-8/On-a-stochastic-integral-equation/10.3792/pia/1195572871.full" style="color:var(--accent-warm);">https://projecteuclid.org/journals/proceedings-of-the-imperial-academy/volume-20</a></p>
+<h3>Itô-Doeblin Formula (Multidimensional) <small style="color:var(--text-muted);font-weight:400;">（多次元伊藤・ドエブリン公式）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ 伊藤 清 (Kiyosi Itô, 1944); Wolfgang Doeblin (1940, posthumously published 2000)</p>
+<p>伊藤の補題を多次元（複数の確率過程の関数）に拡張した公式で、ウォルフガング・ドエブリン（1940年、死後発見）と伊藤清（1944年）がほぼ独立に証明した。n 個の伊藤過程 X_i_t の滑らかな関数 f(X_1,...,X_n) の確率微分は、一階偏微分項 + 二次変分（対角項）+ 交差二次変分（非対角項）の和となる。ブラウン運動 W_i と W_j の相関（dW_i dW_j = ρ_ij dt）による交差項が多次元の本質的特徴であり、Black-Scholes-Merton の導出、Heston モデルの解析、HJM 金利モデルの多因子版、最適ポートフォリオ問題のハミルトン・ヤコビ・ベルマン方程式の導出に必須。ドエブリンは第二次大戦でフランス兵として戦死したため業績が半世紀以上埋もれた悲劇的数学者。</p>
+<div class="formula">df = \sum_i \frac{\partial f}{\partial x_i} dX_i + \frac{1}{2}\sum_{i,j} \frac{\partial^2 f}{\partial x_i \partial x_j} d\langle X_i, X_j \rangle</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://en.wikipedia.org/wiki/It%C3%B4%27s_lemma" style="color:var(--accent-warm);">https://en.wikipedia.org/wiki/It%C3%B4%27s_lemma</a></p>
+
+</section>
+
+
+<section id="ch07">
+<h2 class="chapter"><span class="num">07.</span> 第7章 — 数値解析（NM）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Numerical Methods</small></h2>
+<p>Monte Carlo・PDE solver・FFT。数値解析の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Monte Carlo Simulation <small style="color:var(--text-muted);font-weight:400;">（モンテカルロ・シミュレーション）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1949 ／ Stanislaw Ulam; John von Neumann (数学); Phelim Boyle (1977 金融応用)</p>
+<p>Stanislaw Ulam と John von Neumann が Manhattan 計画 (1940年代) で発展させた数値計算手法。乱数による反復試行で期待値・積分・分布を推定。Boyle (1977) が金融に応用、現在では American option, path-dependent option, VaR, CVA 計算の主要手法。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.1080/01621459.1949.10483310" style="color:var(--accent-warm);">https://doi.org/10.1080/01621459.1949.10483310</a></p>
+<h3>Monte Carlo Simulation — Financial Applications <small style="color:var(--text-muted);font-weight:400;">（モンテカルロシミュレーション（金融応用））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1949 ／ Stanislaw Ulam; John von Neumann (1940s); 金融: Phelim Boyle (1977)</p>
+<p>Stanislaw Ulam と John von Neumann が 1940 年代後半に核物理計算で開発した乱数シミュレーション法。金融では GBM 経路を大量生成して期待ペイオフを平均することでオプション価格を推定する。次元に依存しない O(N^{-1/2}) 収束が高次元でも均一な利点（有限差分・解析解が非適用の多資産・パス依存商品に有効）。Boyle (1977) が欧米オプション評価に初めて体系的適用し、その後準 MC・分散削減・MLMC など改良手法の基盤となっている。</p>
+<div class="formula">\hat{\mu}_N = \frac{1}{N} \sum_{i=1}^N h(X^{(i)}), \quad \text{RMSE} = \frac{\sigma_h}{\sqrt{N}}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2327149" style="color:var(--accent-warm);">https://www.jstor.org/stable/2327149</a></p>
+<h3>Binomial Tree Method <small style="color:var(--text-muted);font-weight:400;">（二項樹モデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1979 ／ John C. Cox; Stephen A. Ross; Mark Rubinstein</p>
+<p>Cox, Ross, Rubinstein が 1979 年 Journal of Financial Economics に発表したオプション評価の二項格子モデル。各期に原資産価格が u 倍または d=1/u 倍に変化すると仮定し、リスク中立確率 q=(e^{r Delta t}-d)/(u-d) でバックワード帰納法により価格を決定する。Delta t -&gt; 0 の極限で BSM に収束する。アメリカンオプション、配当付き株式オプション、転換社債評価の標準手法。</p>
+<div class="formula">V_i^n = e^{-r\Delta t}\left[q V_{i+1}^{n+1} + (1-q) V_i^{n+1}\right], \quad q = \frac{e^{r\Delta t} - d}{u - d}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.sciencedirect.com/science/article/pii/0304405X79900151" style="color:var(--accent-warm);">https://www.sciencedirect.com/science/article/pii/0304405X79900151</a></p>
+<h3>Nelson-Siegel Model <small style="color:var(--text-muted);font-weight:400;">（ネルソン・シーゲルモデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1987 ／ Charles R. Nelson; Andrew F. Siegel</p>
+<p>Charles Nelson と Andrew Siegel が 1987 年 Journal of Business に発表したイールドカーブの3 因子パラメトリックモデル。レベル (beta_0)、傾き (beta_1)、曲率 (beta_2) の 3 パラメータと形状パラメータ lambda で瞬間フォワードレートを表現する。ECB・FRB など中央銀行での公式イールドカーブ推定に広く採用される。Svensson (1994) は第4因子を追加し曲率の柔軟性を向上させた。</p>
+<div class="formula">f(\tau) = \beta_0 + \beta_1 e^{-\tau/\lambda} + \beta_2 \frac{\tau}{\lambda} e^{-\tau/\lambda}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2352957" style="color:var(--accent-warm);">https://www.jstor.org/stable/2352957</a></p>
+<h3>Heston Model — Numerical Pricing <small style="color:var(--text-muted);font-weight:400;">（ヘストンモデルの数値評価法）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1993 ／ Steven L. Heston</p>
+<p>Steven Heston が 1993 年に発表した確率的ボラティリティモデルの数値実装。主要アプローチは 3 系統: (1) 特性関数 phi_Heston(u) が半解析的に得られるため FFT/COS 法でヨーロピアンオプションを高速評価、(2) v と S の 2D PDE を ADI 有限差分法で解く、(3) CIR 過程の数値スキーム（フル打ち切り Euler、Quadrature-based Exact スキーム、Broadie-Kaya 正確サンプリング）で MC 経路生成。モデルキャリブレーションでは FFT + 最小化アルゴリズムを組み合わせる。</p>
+<div class="formula">\phi_H(u) = \exp\!\left(iu(\ln S_0 + rT) + \frac{v_0 (\kappa - i\rho\sigma u - d)}{\sigma^2}(1 - e^{-dT}) / (1 - g e^{-dT}) + \frac{\kappa \theta}{\sigma^2}(\ldots)\right)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://academic.oup.com/rfs/article-abstract/6/2/327/1576790" style="color:var(--accent-warm);">https://academic.oup.com/rfs/article-abstract/6/2/327/1576790</a></p>
+<h3>Dupire Local Volatility <small style="color:var(--text-muted);font-weight:400;">（デュピレ局所ボラティリティモデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1994 ／ Bruno Dupire</p>
+<p>Bruno Dupire が 1994 年に発表したリスク中立測度下でのローカルボラティリティ関数 sigma_L(S,t) を市場オプション価格曲面から逆算する公式。Dupire 公式（前進 Kolmogorov 方程式の逆問題として導出）により、すべてのヨーロピアンオプション価格を厳密に再現する局所ボラティリティを閉形式で求められる。数値的には連続する満期・行使価格グリッドが必要で、市場の疎なクオートに対しては補間（スプライン・パラメトリック）を先行させる。Derman-Kani の implied binomial tree と双対的。</p>
+<div class="formula">\sigma_L^2(K, T) = \frac{2\left(\frac{\partial C}{\partial T} + rK\frac{\partial C}{\partial K}\right)}{K^2 \frac{\partial^2 C}{\partial K^2}}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://risk.net/derivatives/1506024/pricing-smiling" style="color:var(--accent-warm);">https://risk.net/derivatives/1506024/pricing-smiling</a></p>
+
+</section>
+
+
+<section id="ch08">
+<h2 class="chapter"><span class="num">08.</span> 第8章 — 最適化（OPT）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Optimization</small></h2>
+<p>Convex・HJB・Risk Parity・最適執行。最適化の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Hamilton-Jacobi-Bellman Equation <small style="color:var(--text-muted);font-weight:400;">（ハミルトン・ヤコビ・ベルマン方程式）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1957 ／ Richard Bellman; William Hamilton; Carl Jacobi</p>
+<p>Richard Bellman の動的計画法を連続時間確率最適制御に拡張した偏微分方程式。Merton (1969, 1971) が消費・投資の終身最適化問題に応用し、金融工学における動的ポートフォリオ理論の基盤となる。</p>
+<div class="formula">\frac{\partial V}{\partial t} + \max_u \{ L^u V + f(x,u,t) \} = 0</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.rand.org/pubs/papers/P550.html" style="color:var(--accent-warm);">https://www.rand.org/pubs/papers/P550.html</a></p>
+<h3>Kelly Criterion <small style="color:var(--text-muted);font-weight:400;">（ケリー基準）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1956 ／ John L. Kelly Jr.</p>
+<p>John L. Kelly Jr. が 1956 年に Shannon の情報理論を応用して導出した、繰り返し賭けにおける対数効用最大化の最適ベットサイズ。長期的な富の幾何成長率を最大化する。Edward Thorp が実証的に投資戦略に応用、Buffett, Munger も支持。</p>
+<div class="formula">f^* = \frac{p(b+1) - 1}{b}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://archive.org/details/bstj35-4-917" style="color:var(--accent-warm);">https://archive.org/details/bstj35-4-917</a></p>
+
+</section>
+
+
+<section id="ch09">
+<h2 class="chapter"><span class="num">09.</span> 第9章 — 計量経済学（EM）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Econometrics</small></h2>
+<p>GARCH・VAR・Cointegration・Causal ML。計量経済学の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Ordinary Least Squares <small style="color:var(--text-muted);font-weight:400;">（通常最小二乗法）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1805 ／ Carl Friedrich Gauss; Adrien-Marie Legendre ／ Nobel経済学賞 2021年 — Joshua D. Angrist</p>
+<p>Carl Friedrich Gauss（1809年）とAdrien-Marie Legendre（1805年）が独立に開発した線形回帰の基本推定量。目的変数と説明変数の線形関係を最小化するパラメータを推定する。Gauss-Markov定理：均一分散・自己相関なし・外生性の仮定下でBLUE（最良線形不偏推定量）。内生性・不均一分散・系列相関がある場合はIV・GLS・HAC標準誤差で修正が必要。経済学の実証研究の基礎であり、Angrist-Pischke（2009年）の「Mostly Harmless Econometrics」が実践普及の主著。</p>
+<div class="formula">\hat{\beta} = (X&#x27;X)^{-1}X&#x27;y</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://mitpress.mit.edu/9780262232586/mostly-harmless-econometrics/" style="color:var(--accent-warm);">https://mitpress.mit.edu/9780262232586/mostly-harmless-econometrics/</a></p>
+<h3>Maximum Likelihood Estimation <small style="color:var(--text-muted);font-weight:400;">（最尤推定法）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1922 ／ Ronald A. Fisher</p>
+<p>Ronald Fisher（1922年）が確立した統計推定の中心手法。観測データの生成確率（尤度関数）を最大化するパラメータを推定量とする。大標本では漸近有効・一致・正規分布収束という良性質を持つ（Cramér-Rao下界を達成）。計量経済学ではロジット・プロビット・トービット・GARCH・DSGEのBayesian推定（事後分布の最大化=MAP）・共和分の最尤検定（Johansen 1988）など広範囲に使われる。情報行列（Fisher情報量）とHessianに基づく標準誤差計算も重要。</p>
+<div class="formula">\hat{\theta}_{MLE} = \arg\max_{\theta} \sum_{i=1}^n \log f(x_i | \theta)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://royalsocietypublishing.org/doi/10.1098/rsta.1922.0009" style="color:var(--accent-warm);">https://royalsocietypublishing.org/doi/10.1098/rsta.1922.0009</a></p>
+<h3>Instrumental Variables Estimation <small style="color:var(--text-muted);font-weight:400;">（操作変数法）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1928 ／ Philip Wright; Henri Theil; Joshua D. Angrist ／ Nobel経済学賞 2021年 — Joshua D. Angrist</p>
+<p>Philip Wright（1928年）が需要・供給の同時方程式識別に導入し、Jan Tinbergen・Lawrence Klein・Henri Theil（1953年）が一般化した推定法。内生性（逆因果・欠落変数）のある回帰で、OLSは非一致になるが、条件（関連性・排他性制約）を満たす操作変数Zを用いることで一致推定が可能。2SLS（二段階最小二乗法）が最も一般的な実装。Angrist-Krueger（1991年）の誕生四半期IVで因果推論革命が進展。Card（1995年）の近隣大学への距離IVによる教育収益率推定が著名事例。Angristは2021年ノーベル賞受賞。</p>
+<div class="formula">\hat{\beta}_{IV} = (Z&#x27;X)^{-1}Z&#x27;y</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2006474" style="color:var(--accent-warm);">https://www.jstor.org/stable/2006474</a></p>
+<h3>Vector Autoregression <small style="color:var(--text-muted);font-weight:400;">（ベクトル自己回帰）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1980 ／ Christopher A. Sims ／ Nobel経済学賞 2011年 — Christopher Sims</p>
+<p>Christopher Sims が 1980 年に提唱した、構造方程式モデルへの批判から生まれた多変量時系列モデル。識別仮定を最小化し、データに語らせるアプローチ。インパルス応答関数・分散分解で政策効果を測定。SVAR, BVAR, FAVAR へ発展。</p>
+<div class="formula">Y_t = A_1 Y_{t-1} + ... + A_p Y_{t-p} + \epsilon_t</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1912017" style="color:var(--accent-warm);">https://www.jstor.org/stable/1912017</a></p>
+<h3>Generalized Method of Moments <small style="color:var(--text-muted);font-weight:400;">（一般化モーメント法）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1982 ／ Lars Peter Hansen ／ Nobel経済学賞 2013年 — Lars Peter Hansen</p>
+<p>Lars Peter Hansen（1982年）が提案した推定の一般的枠組み。モーメント条件（母集団での期待値ゼロ条件）を最小化することでパラメータを推定する。OLS・IV・2SLS・MLEの特殊ケースを包含する統一的理論を提供し、モデルの識別・過識別テスト（J統計量）も可能にする。合理的期待仮説・CCAPM（消費ベースCAPM）・金利ダイナミクスの推定に使われる。資産価格モデルの検証（Hansen-Singleton 1982：確率的割引因子GMMが株式プレミアム・パズルを明示）で不可欠。Hansenは2013年ノーベル経済学賞受賞。</p>
+<div class="formula">\hat{\theta}_{GMM} = \arg\min_{\theta} [\bar{g}(\theta)]&#x27; W [\bar{g}(\theta)]</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1912775" style="color:var(--accent-warm);">https://www.jstor.org/stable/1912775</a></p>
+<h3>ARCH Model <small style="color:var(--text-muted);font-weight:400;">（ARCHモデル（自己回帰条件付き不均一分散））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1982 ／ Robert F. Engle ／ Nobel経済学賞 2003年 — Robert F. Engle</p>
+<p>Robert Engle（1982年）が提案した金融収益率のボラティリティ・クラスタリング（大きな変動の後に大きな変動が続く）を捉えるモデル。条件付き分散を過去の誤差の二乗の線形関数として定式化。Bollerslev（1986年）はGARCH（一般化ARCH）に拡張し、条件付き分散の自己回帰項を追加。VaR計算・オプション評価・リスク管理の実務標準。Engleは2003年ノーベル経済学賞受賞（「時系列の条件付き不均一分散分析」）。</p>
+<div class="formula">\epsilon_t = \sigma_t z_t; \quad \sigma_t^2 = \omega + \sum_{i=1}^q \alpha_i \epsilon_{t-i}^2</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1912773" style="color:var(--accent-warm);">https://www.jstor.org/stable/1912773</a></p>
+
+</section>
+
+
+<section id="ch10">
+<h2 class="chapter"><span class="num">10.</span> 第10章 — 行動ファイナンス（BF）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Behavioral Finance</small></h2>
+<p>Prospect Theory・Herding・Limits to Arbitrage。行動ファイナンスの中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Prospect Theory <small style="color:var(--text-muted);font-weight:400;">（プロスペクト理論）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1979 ／ Daniel Kahneman; Amos Tversky ／ Nobel経済学賞 2002年 — Daniel Kahneman</p>
+<p>Daniel Kahneman と Amos Tversky が 1979 年に発表した不確実性下の意思決定の記述理論。基準点依存・損失回避(損失は利得の約 2.25 倍重く感じる)・確率加重関数 (小確率過大評価) の3要素で構成。期待効用理論の異常を説明。</p>
+<div class="formula">V = \sum_i \pi(p_i) v(x_i), \quad v(x) = \begin{cases} x^\alpha &amp; x \ge 0 \\ -\lambda(-x)^\beta &amp; x &lt; 0 \end{cases}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1914185" style="color:var(--accent-warm);">https://www.jstor.org/stable/1914185</a></p>
+<h3>Mental Accounting <small style="color:var(--text-muted);font-weight:400;">（心的会計）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1980 ／ Richard H. Thaler ／ Nobel経済学賞 2017年 — Richard H. Thaler</p>
+<p>Richard Thaler（1980年、1999年）が提唱した行動経済学の核心概念。人々は同一のお金を「別の財布」（生活費・娯楽費・退職貯蓄）に分けて管理し、財布間のお金が代替可能でないように振る舞う。ハウスマネー効果（利益で賭けを拡大）・サンクコスト効果・クレジットカード使用時の支払い感覚の鈍化・臨時収入の消費先（消費しやすい非常時預金など）がその表れ。Thaler-Benartzi（2004年）のSave More Tomorrow（SMarT）プログラムは心的会計を利用したナッジ政策の実例。Thalerは2017年ノーベル経済学賞受賞。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/183836" style="color:var(--accent-warm);">https://www.jstor.org/stable/183836</a></p>
+<h3>Equity Premium Puzzle <small style="color:var(--text-muted);font-weight:400;">（株式プレミアムパズル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1985 ／ Rajnish Mehra, Edward Prescott ／ Nobel経済学賞 2004年 — Edward Prescott</p>
+<p>Mehra と Prescott (1985) は、米国の1889〜1978年データを用いて、株式の平均超過リターン（株式プレミアム）が年率約6%であるのに対し、標準的な消費ベース資産価格モデル（CCAPM）でこれを説明するには相対的リスク回避度が30以上必要となり、現実的ではないことを示した。実際の消費増加率の分散は小さく（年率約3%）、これほどリスク回避的なら消費の平滑化は観察されない矛盾が生じる（リスクフリーレートパズルとセット）。解決策として提案された理論：（1）習慣形成モデル（Campbell-Cochrane 1999）、（2）長期リスクモデル（Bansal-Yaron 2004）、（3）災害リスクモデル（Barro 2006）、（4）異質エージェントモデル（Constantinides-Duffie 1996）。行動ファイナンスからはベナルツィ=セイラー（1995）が近視眼的損失回避（Myopic Loss Aversion）で説明。Siegel (1992) は生存バイアスを指摘。</p>
+<div class="formula">E[R^e - R^f] \approx \gamma \cdot \text{Cov}(R^e, \Delta c) \cdot \frac{1}{\text{Var}(\Delta c)} \cdot \text{Var}(\Delta c)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.sciencedirect.com/science/article/pii/0304393285900613" style="color:var(--accent-warm);">https://www.sciencedirect.com/science/article/pii/0304393285900613</a></p>
+<h3>Loss Aversion <small style="color:var(--text-muted);font-weight:400;">（損失回避）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1991 ／ Amos Tversky; Daniel Kahneman ／ Nobel経済学賞 2002年 — Daniel Kahneman</p>
+<p>Tversky-Kahneman（1991年）が系統的に実証した心理的偏向。「損失の痛みは同額の利得の喜びの約2倍」（λ≈2.25）。処分効果（利益銘柄を早期に売却・損失銘柄を保有し続ける）、リスクプレミアムの行動的説明、デフォルト設定への依存（エンダウメント効果）、賃下げへの強い抵抗（名目賃金硬直性の一因）など幅広い経済現象に関与する。Barberis-Huang-Santos（2001年）はプロスペクト理論的損失回避で株式プレミアムを説明しようとした。</p>
+<div class="formula">\lambda = \frac{|MU(\text{loss})|}{MU(\text{gain})} \approx 2.0 - 2.5</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2006869" style="color:var(--accent-warm);">https://www.jstor.org/stable/2006869</a></p>
+<h3>Momentum Anomaly <small style="color:var(--text-muted);font-weight:400;">（モメンタム効果（株式リターン））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1993 ／ Narasimhan Jegadeesh, Sheridan Titman</p>
+<p>Jegadeesh と Titman (1993) は、過去3〜12ヶ月の株式リターンで上位10%（ウィナー）と下位10%（ルーザー）を選別し、ロングショート戦略で翌3〜12ヶ月に月次1%以上の超過リターン（モメンタムプレミアム）を得られることを示した。Carhart (1997) の4ファクターモデルでは市場・規模・バリューに加えてモメンタム（MOM/WML）を追加。行動ファイナンスからは過小反応（underreaction）仮説（Barberis et al. 1998）と正のフィードバック取引（DeLong et al. 1990）で説明。Asness et al. (2013) は複数資産クラス（株式・債券・商品・通貨）でモメンタムが普遍的に存在することを確認。Fama-French (2015) も5ファクターモデルにモメンタムを部分的に組み込む。2009年3月など景気底打ち時の急反転（モメンタムクラッシュ）が重要なリスク。</p>
+<div class="formula">MOM_t = \frac{1}{n_W} \sum_{i \in W} R_{i,t} - \frac{1}{n_L} \sum_{j \in L} R_{j,t}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://onlinelibrary.wiley.com/doi/10.1111/j.1540-6261.1993.tb04702.x" style="color:var(--accent-warm);">https://onlinelibrary.wiley.com/doi/10.1111/j.1540-6261.1993.tb04702.x</a></p>
+<h3>Limits to Arbitrage <small style="color:var(--text-muted);font-weight:400;">（裁定の限界）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1997 ／ Andrei Shleifer; Robert W. Vishny</p>
+<p>Shleifer-Vishny（1997年）が定式化した行動ファイナンスの基盤理論。効率的市場仮説では合理的裁定者がミスプライシングを瞬時に解消するとされるが、（1）実施コスト（資本・情報収集）（2）ノイズトレーダーリスク（DeLong et al. 1990年）（3）同期リスク（他の裁定者がいなければ孤独な賭け）（4）代理人問題（運用者の短期評価）により、合理的投資家でも裁定が限定的になる。これにより価格異常（モメンタム・バリュー・サイズ）が持続できる論理的根拠を提供する。LTCMの崩壊（1998年）は裁定の限界の現実的帰結。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2329555" style="color:var(--accent-warm);">https://www.jstor.org/stable/2329555</a></p>
+
+</section>
+
+
+<section id="ch11">
+<h2 class="chapter"><span class="num">11.</span> 第11章 — 市場マイクロストラクチャ（MM）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Market Microstructure</small></h2>
+<p>Kyle・Glosten-Milgrom・HFT・LOB。市場マイクロストラクチャの中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Bid-Ask Spread <small style="color:var(--text-muted);font-weight:400;">（ビッド・アスク・スプレッド）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1968 ／ Harold Demsetz</p>
+<p>市場メーカーの提示する売値 (ask) と買値 (bid) の差額。Demsetz (1968), Stoll (1978), Glosten-Milgrom (1985), Roll (1984) が成分分解 (流動性プレミアム・在庫リスク・逆選択) を提示。市場流動性のリアルタイム指標。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1882244" style="color:var(--accent-warm);">https://www.jstor.org/stable/1882244</a></p>
+<h3>Kyle Model <small style="color:var(--text-muted);font-weight:400;">（カイル・モデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1985 ／ Albert S. Kyle</p>
+<p>Albert S. Kyle が 1985 年に発表した、情報を持つ戦略的トレーダー・ノイズトレーダー・市場メーカーの3者からなる動的市場均衡モデル。価格情報含有・市場流動性 (Kyle lambda)・情報非対称の関係を定式化。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/1913210" style="color:var(--accent-warm);">https://www.jstor.org/stable/1913210</a></p>
+<h3>Limit Order Book <small style="color:var(--text-muted);font-weight:400;">（指値注文板）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">2010 ／ Rama Cont; Sasha Stoikov; Rishi Talreja</p>
+<p>電子取引所における買い指値・売り指値注文の価格時間優先順位キュー。最良気配 (best bid/ask), bid-ask spread, market depth, order flow imbalance 等が観測可能。Cont, Stoikov, Talreja (2010) 以降、確率モデル化が進む。HFT, market making, optimal execution の基盤。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.1287/opre.1090.0780" style="color:var(--accent-warm);">https://doi.org/10.1287/opre.1090.0780</a></p>
+
+</section>
+
+
+<section id="ch12">
+<h2 class="chapter"><span class="num">12.</span> 第12章 — リスク管理（RM）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Risk Management</small></h2>
+<p>VaR・Expected Shortfall・Coherent Risk・Basel。リスク管理の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Initial Margin and Variation Margin <small style="color:var(--text-muted);font-weight:400;">（初期証拠金と変動証拠金）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1922 ／ Chicago Board of Trade (CBOT)</p>
+<p>証拠金制度はデリバティブ取引のカウンターパーティーリスクを担保として軽減する仕組みであり、初期証拠金（Initial Margin: IM）と変動証拠金（Variation Margin: VM）の2種類から構成される。初期証拠金は潜在的将来エクスポージャー（PFE）をカバーするために取引時点で徴収・差入れされる担保であり、ポジションが通常の変動範囲内でクローズアウトされるまでの潜在損失に対する緩衝材となる。変動証拠金はポジションの日次MTM（時価）変動を反映し毎日授受される。2016年以降、清算義務のないバイラテラルOTCデリバティブ（非清算OTC）に対しても証拠金規制（Uncleared Margin Rules）が段階的に適用され、ISDA SIMMが業界標準の初期証拠金計算モデルとなった。CCPでの清算取引では別途取引所ルールに従う。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.isda.org/2016/09/01/isda-simm-methodology/" style="color:var(--accent-warm);">https://www.isda.org/2016/09/01/isda-simm-methodology/</a></p>
+<h3>Copula <small style="color:var(--text-muted);font-weight:400;">（コピュラ）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1959 ／ Abe Sklar</p>
+<p>Abe Sklar が 1959 年に定理化した、多変量分布の依存構造を周辺分布から分離して扱う数学的道具。金融では Gaussian copula, Student-t copula, Clayton, Gumbel, Frank copula 等が用いられる。Li (2000) の Gaussian copula は 2008 金融危機での CDO 評価誤用で批判される。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/4615842" style="color:var(--accent-warm);">https://www.jstor.org/stable/4615842</a></p>
+<h3>Scenario Analysis <small style="color:var(--text-muted);font-weight:400;">（シナリオ分析）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1960 ／ Herman Kahn (RAND Corporation)</p>
+<p>シナリオ分析は複数のリスクファクターが同時に動くことを前提とした想定シナリオの下でポートフォリオ損益・資本影響を評価するリスク管理手法である。感応度分析（1変数の単独変動）とは異なり、リスクファクター間の相関・非線形効果を捉えられる点が重要である。シナリオの種類: (1)歴史的シナリオ（1987年ブラックマンデー、1998年LTCM、2008年GFC、2020年COVID急落等の過去危機を再現）、(2)仮想的シナリオ（中央銀行が設計するストレスシナリオ、地政学的イベント等）、(3)リバーススストレステスト（破綻を引き起こすシナリオを逆算）。バーゼルIIIのFRTB内部モデルアプローチでは期待ショートフォール計算のためのシナリオ設計が規定されており、ECB・FRBのストレステストでは経済シナリオ設計が規制の中核を担う。気候リスクのTCFDシナリオ（1.5℃・2℃・4℃）も規制的シナリオ分析の重要応用となっている。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.bis.org/bcbs/publ/d457.htm" style="color:var(--accent-warm);">https://www.bis.org/bcbs/publ/d457.htm</a></p>
+<h3>Tail Risk <small style="color:var(--text-muted);font-weight:400;">（テールリスク）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1963 ／ Benoit Mandelbrot</p>
+<p>テールリスクとは確率分布の裾野に位置する稀少かつ甚大な損失事象のリスクを指す。正規分布仮定では過小評価されやすく、金融資産収益率が示すファットテール特性（尖度過大・歪度）によって実際の発生確率は正規分布の予測を大幅に上回る。1987年ブラックマンデー、1998年LTCM危機、2008年金融危機はいずれも標準的VaRモデルが捕捉できなかったテールイベントの典型例であり、Nassim Taleb の『ブラック・スワン』（2007年）がその概念を大衆に普及させた。リスク管理実務ではCVaR（期待ショートフォール）、ストレステスト、シナリオ分析によってテールリスクを定量化する。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.sciencedirect.com/science/article/pii/S0304405X03002283" style="color:var(--accent-warm);">https://www.sciencedirect.com/science/article/pii/S0304405X03002283</a></p>
+<h3>Fat Tails <small style="color:var(--text-muted);font-weight:400;">（ファットテール）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1963 ／ Benoit Mandelbrot; Eugene Fama</p>
+<p>ファットテール（重い裾）とは、確率分布の裾野が正規分布に比べて厚く、極端な値が正規分布の予測よりも高頻度で発生する特性を指す。過剰尖度（excess kurtosis &gt; 0）で定量化される。Mandelbrot（1963）は株価収益率がパレート分布に従うファットテール特性を実証し、後に安定分布族（Stable Distributions）として一般化された。Fama（1965）も同様の発見をした。金融リスク実務では、正規分布を前提とするVaRモデルはファットテール下で著しくリスクを過小評価し、1987年ブラックマンデーや1998年LTCM危機はその典型例である。現代リスク管理ではEVT（極値理論）、t分布、コピュラ関数などファットテール対応手法が標準化されている。</p>
+<div class="formula">\kappa = \frac{\mu_4}{\sigma^4} - 3 &gt; 0</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2350970" style="color:var(--accent-warm);">https://www.jstor.org/stable/2350970</a></p>
+<h3>Diamond-Dybvig Model <small style="color:var(--text-muted);font-weight:400;">（ダイアモンド・ディブビッグ・モデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1983 ／ Douglas W. Diamond; Philip H. Dybvig ／ Nobel経済学賞 2022年 — Douglas W. Diamond; Philip H. Dybvig</p>
+<p>ダイアモンド・ディブビッグ・モデルはDouglas Diamond（シカゴ大学）とPhilip Dybvig（ワシントン大学）が1983年に発表した銀行取り付け（バンクラン）の古典的理論モデルであり、2022年のノーベル経済学賞受賞理由（銀行と金融危機の研究）の中核をなす。モデルは3時点（t=0,1,2）・流動性需要が不確実な預金者・長期資産と短期流動性需要の間の満期ミスマッチを持つ銀行という設定で、バンクランが「均衡」として発生しうる複数均衡（good equilibrium: 流動性共有、bad equilibrium: パニック的引き出し）を示した。解決策として預金保険制度（FDIC等）が均衡選択装置として機能することを理論的に示した。2023年SVB崩壊（ソーシャルメディアを通じたデジタルバンクラン）がモデルの現代的妥当性を再確認させた。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.journals.uchicago.edu/doi/10.1086/261155" style="color:var(--accent-warm);">https://www.journals.uchicago.edu/doi/10.1086/261155</a></p>
+
+</section>
+
+
+<section id="ch13">
+<h2 class="chapter"><span class="num">13.</span> 第13章 — デリバティブ（DV）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Derivatives</small></h2>
+<p>Options・Swaps・Greeks・Structured。デリバティブの中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Futures Contract <small style="color:var(--text-muted);font-weight:400;">（先物契約）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1865 ／ Chicago Board of Trade (CBOT)</p>
+<p>先物契約（フューチャーズ）は取引所で標準化された条件（契約単位・受渡方法・限月）で取引されるフォワード・コントラクトの交換市場版であり、中央清算機関（CCP）が間に入り日次値洗い（変動証拠金）制度によって信用リスクを管理する。先物と先渡しの主要差異: (1)日次MTM（Variation Margin）の授受 vs 満期一括決済、(2)取引所上場・標準化 vs OTC個別交渉、(3)CCP清算による信用リスク遮断 vs バイラテラル信用リスク。先物の価格（Cost-of-Carry理論）: F = S × e^{(r-q)T}（金融先物）。先物市場は農業（シカゴCBOT: 小麦・大豆・トウモロコシ）→エネルギー（WTI原油・天然ガス）→金融（国債先物・株価指数先物・通貨先物・金利先物）の順に発展してきた。大阪取引所（日経225先物・TOPIX先物）、東京商品取引所（TOCOM）が日本の主要先物市場。</p>
+<div class="formula">F = S_0 e^{(r-q)T}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.cmegroup.com/education/courses/introduction-to-futures.html" style="color:var(--accent-warm);">https://www.cmegroup.com/education/courses/introduction-to-futures.html</a></p>
+<h3>Forward Contract <small style="color:var(--text-muted);font-weight:400;">（先渡し契約）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1900 ／ Louis Bachelier (theoretical); commodity markets (practical)</p>
+<p>先渡し契約（フォワード・コントラクト）は2者間で合意した将来の特定日に特定価格（フォワード価格）で資産を売買するOTC（店頭）取引であり、標準化された先物（フューチャーズ）とは異なり取引所を経由しない個別交渉の契約である。フォワード価格: F₀ = S₀e^{(r-q)T}（r=無リスク金利、q=配当利回りまたはコンビニエンス・イールド、T=満期）。取引開始時に現金授受はなくMTM損益は満期日に決済される（先物の日次値洗いとの主要差異）。為替フォワード（外国為替の将来レート固定）、商品フォワード（石油・農産物の将来価格固定）、金利フォワード（FRA: 将来の借入金利固定）が主要市場。コスト・オブ・キャリー（Cost-of-Carry）モデルがフォワード価格理論の基礎であり、フォワードとスポットの乖離（ベーシス）は配当・コンビニエンス・イールド・保管コスト・資金調達コストの関数として説明される。</p>
+<div class="formula">F_0 = S_0 e^{(r-q)T}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.bis.org/statistics/derstats.htm" style="color:var(--accent-warm);">https://www.bis.org/statistics/derstats.htm</a></p>
+<h3>Convexity (Bond) <small style="color:var(--text-muted);font-weight:400;">（コンベキシティ（債券））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1952 ／ Frederick Macaulay (Duration); later convexity formalization</p>
+<p>コンベキシティ（凸性）は債券価格の利回り変化に対する二次感応度であり、デュレーション（一次感応度）では捉えられない価格と利回りの非線形（曲線的）な関係を定量化する。コンベキシティが正の値（通常の固定利付債）の場合、利回り低下時の価格上昇がデュレーション予測より大きく、利回り上昇時の価格下落がデュレーション予測より小さいという非対称な有利な性質（「コンベキシティの有利性」）を持つ。コンベキシティ調整後の価格変化: ΔP/P ≈ -D×Δy + ½C×(Δy)²（D=修正デュレーション、C=コンベキシティ）。コンベキシティが高い債券: (1)長期ゼロクーポン債、(2)低クーポン・長期債、(3)オプションなし債（コーラブル債はネガティブコンベキシティの可能性）。MBS・コーラブル債は繰上返済・期限前償還オプションにより負のコンベキシティ領域（価格上昇が鈍化）を持つ。デリバティブでのコンベキシティ（オプションのガンマ）と並んで金融数学の核心概念。</p>
+<div class="formula">C = \frac{1}{P} \frac{\partial^2 P}{\partial y^2}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.cfainstitute.org/en/membership/professional-development/refresher-readings/introduction-to-fixed-income-valuation" style="color:var(--accent-warm);">https://www.cfainstitute.org/en/membership/professional-development/refresher-re</a></p>
+<h3>Put-Call Parity <small style="color:var(--text-muted);font-weight:400;">（プット・コール・パリティ）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1969 ／ Hans R. Stoll</p>
+<p>プット・コール・パリティはヨーロピアン・オプションのコール価格 C とプット価格 P の間の裁定なし条件から導かれる恒等式: C - P = S₀ - Ke^{-rT}（現在のスポット価格 S₀、行使価格 K、無リスク金利 r、満期 T）。直感的解釈: コール購入＋現金（PV(K)）= プット購入＋スポット買い（どちらも満期時max(S_T, K)のペイオフ）。パリティ違反はリスクフリー裁定機会を生むため、効率的市場では常に成立する（配当・早期行使・信用リスク等の調整は必要）。Hans Stoll（1969年）が現代的形式で証明した。応用: (1)合成ポジションの構築（例：コール+現金でプット+スポット購入を合成）、(2)オプション評価の一貫性チェック、(3)オプションマーケットの裁定機会モニタリング（特にオプション市場の非効率性検知）。アメリカン・オプションでは厳密な等号は成立せず不等式のみ。配当付き株式では S₀を S₀-PV(D)に調整する。</p>
+<div class="formula">C - P = S_0 - K e^{-rT}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.1111/j.1540-6261.1969.tb01694.x" style="color:var(--accent-warm);">https://doi.org/10.1111/j.1540-6261.1969.tb01694.x</a></p>
+<h3>Mortgage-Backed Securities <small style="color:var(--text-muted);font-weight:400;">（住宅ローン担保証券）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1970 ／ Ginnie Mae (Government National Mortgage Association)</p>
+<p>住宅ローン担保証券（MBS）は住宅ローンのプールを担保として発行される資産担保証券であり、元利金が住宅ローン債務者の返済から投資家にパス・スルーされる。主要種別: (1)エージェンシーMBS（Fannie Mae・Freddie Mac・Ginnie Maeが保証・発行、信用リスク低い）、(2)プライベート・ラベルMBS（民間が発行、信用リスクあり、2008年GFCの震源地）。プレペイメント・リスク（繰上返済リスク）がMBSの主要リスクであり、金利低下時に住宅ローン借り手が低利で借り換えを行い元本の早期返済が発生する（コンベキシティのマイナス特性）。CMO（担保付き住宅ローン債）はMBSをトランシェ化してプレペイメントリスクを再分配する。PSA基準（Public Securities Association）がプレペイメント速度の業界標準モデルとして使われる。2007-2008年のサブプライムMBSの評価崩壊がGFCの引き金となった。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.sifma.org/resources/research/us-mortgage-related-issuance-and-outstanding/" style="color:var(--accent-warm);">https://www.sifma.org/resources/research/us-mortgage-related-issuance-and-outsta</a></p>
+<h3>European Call Option <small style="color:var(--text-muted);font-weight:400;">（ヨーロピアン・コール・オプション）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1973 ／ Fischer Black; Myron Scholes; Robert C. Merton ／ Nobel経済学賞 1997年 — Myron Scholes; Robert C. Merton</p>
+<p>ヨーロピアン・コール・オプションは原資産を満期日 T にのみ行使価格 K で購入する権利（義務なし）を保有者に与えるオプションであり、行使可能時点が満期日のみという特性からヨーロピアン型と呼ばれる。ペイオフは max(S_T - K, 0) で表される（原資産価格が行使価格を超えた場合のみ正の価値）。ブラック・ショールズ・マートン（BSM）モデルの閉形式解: C = S₀N(d₁) - Ke^{-rT}N(d₂)（N は標準正規累積分布関数）が導出され、d₁ = [ln(S₀/K) + (r + σ²/2)T]/(σ√T)、d₂ = d₁ - σ√T。コール・プット・パリティ: C - P = S - Ke^{-rT} によりプット価格とも連動する。市場では株式オプション・指数オプション・ETFオプション・FXオプションとして広く取引される。ヒストリカル・インプライド・ボラティリティの算出基準となる基本的デリバティブ商品。</p>
+<div class="formula">C = S_0 N(d_1) - K e^{-rT} N(d_2)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.journals.uchicago.edu/doi/10.1086/260062" style="color:var(--accent-warm);">https://www.journals.uchicago.edu/doi/10.1086/260062</a></p>
+
+</section>
+
+
+<section id="ch14">
+<h2 class="chapter"><span class="num">14.</span> 第14章 — 信用市場（CR）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Credit Markets</small></h2>
+<p>CDS・Merton structural・Reduced-form。信用市場の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Yield Curve <small style="color:var(--text-muted);font-weight:400;">（イールドカーブ）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1940 ／ John Hicks (期待理論); Frederic Mishkin (実証)</p>
+<p>同一発行体の異なる満期の債券利回りを満期に対してプロットした曲線。Expectations Hypothesis, Liquidity Premium, Preferred Habitat, Market Segmentation 等の理論で形状を説明。10y-2y スプレッドの逆転は米国 NBER 認定景気後退を 8/8 回予測した強力な先行指標。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.newyorkfed.org/research/capital_markets/ycfaq" style="color:var(--accent-warm);">https://www.newyorkfed.org/research/capital_markets/ycfaq</a></p>
+<h3>Merton Structural Model of Credit Risk <small style="color:var(--text-muted);font-weight:400;">（マートン構造型信用リスクモデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1974 ／ Robert C. Merton ／ Nobel経済学賞 1997年 — Robert C. Merton</p>
+<p>Robert C. Merton が 1974 年に発表した、企業負債をオプション理論で評価する枠組み。企業デフォルトを資産価値が負債額面を下回る事象と定義し、株式 = call option, debt = risk-free - put として評価する。KMV/Moody&#x27;s の格付モデル基盤。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.2307/2978814" style="color:var(--accent-warm);">https://doi.org/10.2307/2978814</a></p>
+<h3>Probability of Default <small style="color:var(--text-muted);font-weight:400;">（デフォルト確率）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1974 ／ Robert Merton</p>
+<p>デフォルト確率（PD: Probability of Default）は借り手または発行体が一定の期間内に債務を履行できない確率であり、バーゼルII/IIIの内部格付手法（IRB）における与信リスク計量の最重要パラメータの一つである。期待損失の計算式: EL = PD × LGD × EAD（Loss Given Default × Exposure at Default）。PDの推計方法: (1)格付け機関の歴史的デフォルト率（Through-the-Cycle: TTC型、長期平均PDを使用）、(2)マーケットインプライドPD（CDS・信用スプレッドから）、(3)KMV-Mertonモデル（株価・負債比率から期待デフォルト頻度EDFを算出）、(4)統計的スコアリングモデル（ロジスティック回帰・機械学習：Point-in-Time型、現時点の経済環境を反映）。TTC-PDとPIT-PDの差異は景気サイクルへの感応度の違いを反映し、バーゼル規制では両者の用途が区別される。日本の金融機関では金融庁のガイドラインに基づく内部格付制度（IRBアドバンスド）が大手行に適用されている。</p>
+<div class="formula">EL = PD \times LGD \times EAD</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.bis.org/bcbs/publ/d347.htm" style="color:var(--accent-warm);">https://www.bis.org/bcbs/publ/d347.htm</a></p>
+<h3>Merton Structural Credit Model <small style="color:var(--text-muted);font-weight:400;">（マートン構造型信用リスクモデル）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1974 ／ Robert C. Merton ／ Nobel経済学賞 1997年 — Robert C. Merton</p>
+<p>マートン構造型信用リスクモデルはRobert Mertonが1974年に発表した信用リスクの最初の体系的モデルであり、企業のエクイティを企業資産価値 V に対するヨーロピアン・コール・オプション（行使価格 = 負債額 F、満期 = 負債満期 T）として評価する。デット保有者の視点では: デット = リスクフリー債券 - プット・オプション（企業がデフォルトした場合の損失リスク）。デフォルトは V_T &lt; F のとき発生する（資産価値が負債を下回る）。BSMモデルの閉形式解を使って: E = V × N(d₁) - F × e^{-rT} × N(d₂)（エクイティ価値）、クレジットスプレッド = -ln[N(d₂) + (V/B)N(-d₁)]/T。モデルの限界: (1)負債が単一・簡単な構造、(2)デフォルトが満期にのみ発生（連続デフォルト境界はBlack-Cox 1976が拡張）、(3)資産価値・ボラティリティが直接観察不可（KMVが実用化）。Merton（1974）は構造型モデルの起点として現代の信用デリバティブ・CDOプライシング理論の基礎となっている。</p>
+<div class="formula">E = V N(d_1) - F e^{-rT} N(d_2)</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.1016/0304-405X(74)90022-2" style="color:var(--accent-warm);">https://doi.org/10.1016/0304-405X(74)90022-2</a></p>
+<h3>Exposure at Default <small style="color:var(--text-muted);font-weight:400;">（デフォルト時エクスポージャー）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1988 ／ Basel Committee on Banking Supervision</p>
+<p>デフォルト時エクスポージャー（EAD: Exposure at Default）はデフォルト発生時点における予想残高であり、EL = PD × LGD × EAD の計算上の基礎値となる。ローン・債券等の与信では現在の残高または未引き出しのコミットメントライン部分（Credit Conversion Factor: CCFを適用）がEADとなる。デリバティブのEAD計算はより複雑で、MTM価値（現在のリプレースメントコスト）と将来の潜在エクスポージャー（PFE: Potential Future Exposure）を組み合わせる。バーゼルIIIではデリバティブのEAD算出に標準化手法（SA-CCR: 2014年）または内部格付モデル（IMM）を使用する。SA-CCRは: EAD = α × (RC + PFE_add-on)（α = 1.4、RC = ネット化後の代替コスト）として計算する。ネッティング合意（ISDA基本契約）と担保（CSA）によってEADは大幅に削減される。</p>
+<div class="formula">\text{EAD}_{SA-CCR} = \alpha \times (RC + PFE_{add-on})</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.bis.org/publ/bcbs279.htm" style="color:var(--accent-warm);">https://www.bis.org/publ/bcbs279.htm</a></p>
+<h3>KMV Expected Default Frequency <small style="color:var(--text-muted);font-weight:400;">（KMV期待デフォルト頻度）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1989 ／ Stephen Kealhofer; John McQuown; Oldrich Vasicek</p>
+<p>KMV（Kealhofer-McQuown-Vasicek）モデルはMertonの構造型信用リスクモデルを実用化したシステムであり、株式価格・株式ボラティリティ・負債額から企業の資産価値（V）と資産ボラティリティ（σ_V）を逆算し、デフォルトまでの距離（DD: Distance to Default）および期待デフォルト頻度（EDF: Expected Default Frequency）を計算する。DDの定義: DD = (V - F) / (V × σ_V)（V = 資産価値、F = デフォルト閾値として総負債）。EDFはKMVの独自データベース（実際のデフォルトデータ）でDDからマッピングされ、格付け機関の格付けよりもリアルタイム性が高いとされる。Moody&#x27;sが2002年にKMV Corporationを買収しMoody&#x27;s KMVとして商業化。日本ではメガバンク・大手証券がバーゼルIRBのPD推計に活用するほか、社債スプレッド予測・信用デリバティブ取引の前分析としても広く使われる。</p>
+<div class="formula">DD = \frac{V - F}{V \cdot \sigma_V}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.moodys.com/researchandratings/products-and-solutions/credit-research-and-analytics/EDF/005006003012/-/article-list" style="color:var(--accent-warm);">https://www.moodys.com/researchandratings/products-and-solutions/credit-research</a></p>
+
+</section>
+
+
+<section id="ch15">
+<h2 class="chapter"><span class="num">15.</span> 第15章 — 国際金融（IF）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">International Finance</small></h2>
+<p>Mundell-Fleming・UIP・PPP・Carry。国際金融の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Purchasing Power Parity <small style="color:var(--text-muted);font-weight:400;">（購買力平価）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1918 ／ Gustav Cassel</p>
+<p>Gustav Cassel が 1918 年に体系化した為替レート決定理論。同一財は国際的に同一価格で取引されるべきとの一物一価の法則を為替レートに適用する。絶対的 PPP（価格水準の均等化）と相対的 PPP（インフレ格差が為替変化率と等しい）の2形式がある。Balassa-Samuelson 効果（生産性格差に起因する組織的乖離）、Penn Effect（所得水準と実質為替の正相関）など修正理論も発展した。長期均衡レート推計・通貨過小評価の判定・経済規模の国際比較に使用される。</p>
+<div class="formula">S = \frac{P}{P^*}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.jstor.org/stable/2223329" style="color:var(--accent-warm);">https://www.jstor.org/stable/2223329</a></p>
+<h3>Covered Interest Rate Parity <small style="color:var(--text-muted);font-weight:400;">（カバー付き金利平価）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1923 ／ John Maynard Keynes</p>
+<p>カバー付き金利平価（CIP）は、同一満期のスポット・フォワード為替レートと2通貨間の金利差が等しくなるという裁定条件。ドル調達コスト（クロスカレンシー・ベーシス）をゼロに保つ。2008 年危機以前は概ね成立していたが、危機後は規制資本コスト・担保ルール・バランスシート制約により持続的乖離（CIP 乖離）が観察されるようになった。</p>
+<div class="formula">\frac{F}{S} = \frac{1 + r_d}{1 + r_f}</div>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.cambridge.org/core/books/tract-on-monetary-reform/" style="color:var(--accent-warm);">https://www.cambridge.org/core/books/tract-on-monetary-reform/</a></p>
+<h3>Bretton Woods System <small style="color:var(--text-muted);font-weight:400;">（ブレトン・ウッズ体制）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ John Maynard Keynes; Harry Dexter White</p>
+<p>1944 年 New Hampshire 州ブレトンウッズ会議で構築された戦後国際通貨体制。USD を金 (USD 35/oz) にペッグし、他通貨を USD にペッグする固定相場制。IMF・World Bank 設立。1971 年 8 月 15 日 Nixon Shock で米国が金兌換を停止し崩壊、後の Smithsonian Agreement, Plaza Accord, Louvre Accord へ。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.imf.org/external/about/histcoop.htm" style="color:var(--accent-warm);">https://www.imf.org/external/about/histcoop.htm</a></p>
+<h3>Multilateral Development Banks <small style="color:var(--text-muted);font-weight:400;">（多国間開発銀行）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ Bretton Woods Conference (World Bank設立)</p>
+<p>複数の加盟国政府が出資し、途上国・新興国への開発融資・技術支援を行う国際金融機関の総称。世界銀行グループ（IBRD、IDA、IFC）・アジア開発銀行（ADB、1966年設立）・アジアインフラ投資銀行（AIIB、中国主導、2015年設立、103カ国加盟）・新開発銀行（NDB、BRICS設立、2015年）・米州開発銀行（IDB）・アフリカ開発銀行（AfDB）等。AIIB と NDB の台頭は西側主導の既存 MDB 体制への挑戦として注目される。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.aiib.org/en/about-aiib/index.html" style="color:var(--accent-warm);">https://www.aiib.org/en/about-aiib/index.html</a></p>
+<h3>USD Hegemony and Dollar Dominance <small style="color:var(--text-muted);font-weight:400;">（ドル覇権）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ Bretton Woods Agreement; Eichengreen B (学術的体系化)</p>
+<p>米ドルが世界の貿易決済・外貨準備・金融取引で占める不均衡に大きい役割。IMF COFER データ（2023Q4）では世界外貨準備の 58.4% がドル建て。貿易決済では 40-50%（Gopinath 2015 の dominant currency paradigm）。ドル優位の根拠として、Eichengreen（2022）は「強力なネットワーク効果・深い金融市場・法の支配・軍事力の裏付け」の複合要因を挙げる。トリフィンのジレンマ・脱ドル化の圧力・中国の台頭がドル覇権を漸進的に侵食しつつある。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.1257/jep.12.4.85" style="color:var(--accent-warm);">https://doi.org/10.1257/jep.12.4.85</a></p>
+<h3>IMF Quota and Governance <small style="color:var(--text-muted);font-weight:400;">（IMFクォータと統治構造）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1944 ／ IMF Articles of Agreement</p>
+<p>IMF のクォータ（出資割当額）は各加盟国の経済規模・貿易・金融開放度等に応じて決定され、投票権（議決シェア）・借入上限・SDR 配分の基礎となる。米国は拒否権を持つ 17.4% の議決権を保有（クォータ 17.4%）。2010 年コータ改革（発効 2016 年）で新興国のシェアが増加したが、中国の経済規模（世界 GDP の約 18%、PPP 基準）に比して依然として過少（6.4%）との批判がある。G20 を通じた IMF ガバナンス改革は継続中。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.imf.org/en/About/Factsheets/Sheets/2023/IMF-Quotas" style="color:var(--accent-warm);">https://www.imf.org/en/About/Factsheets/Sheets/2023/IMF-Quotas</a></p>
+
+</section>
+
+
+<section id="ch16">
+<h2 class="chapter"><span class="num">16.</span> 第16章 — 中央銀行論（CB）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Central Banking</small></h2>
+<p>QE・Forward Guidance・NIRP・CBDC。中央銀行論の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Lender of Last Resort <small style="color:var(--text-muted);font-weight:400;">（最後の貸し手）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1873 ／ Walter Bagehot</p>
+<p>Walter Bagehot が 1873 年「ロンバード街」で体系化した中央銀行の機能原則。流動性危機に陥った（しかし支払い能力のある）銀行に対し、中央銀行が惜しみなく（freely）・高利率で・優良担保を条件に貸し付けることで、パニックの連鎖（取り付け騒ぎ）が金融システム全体に波及するのを防ぐ。現代では ECB の ELA・Fed の割引窓口・FRB の 2020 年コロナ緊急ファシリティがこの原則の実践形態。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.gutenberg.org/ebooks/4359" style="color:var(--accent-warm);">https://www.gutenberg.org/ebooks/4359</a></p>
+<h3>Discount Window <small style="color:var(--text-muted);font-weight:400;">（ディスカウント・ウィンドウ（割引窓口））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1913 ／ Federal Reserve Act 1913</p>
+<p>連邦準備銀行が預金取扱金融機関に対して担保付きで提供する短期融資ファシリティ。プライマリー・クレジット（健全機関向け、有担保・翌日物・政策金利より高い水準）・セカンダリー・クレジット（財務上の課題を抱える機関向け）・シーズナル・クレジット（農業・観光業等の季節性資金需要向け）の 3 種類からなる。バジョット原則の制度化。歴史的に利用は「スティグマ」（脆弱性の表明）とみなされてきたが、2020 年 COVID 危機では Fed が積極的な活用を推奨した。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.federalreserve.gov/monetarypolicy/discountrate.htm" style="color:var(--accent-warm);">https://www.federalreserve.gov/monetarypolicy/discountrate.htm</a></p>
+<h3>Federal Open Market Committee <small style="color:var(--text-muted);font-weight:400;">（連邦公開市場委員会）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1933 ／ Banking Act of 1933 (Glass-Steagall Act)</p>
+<p>米連邦準備制度の金融政策決定機関。理事会（Board of Governors）の 7 名全員と、ニューヨーク連邦準備銀行総裁（常任）+他 11 地区連銀総裁が輪番で 4 席を担う計 12 名の議決権メンバーで構成される。年 8 回（約 6 週間ごと）開催し、フェデラル・ファンド金利目標・資産購入プログラムを決定する。会議後に声明・議事録（3 週間後）・SEP（経済見通しサマリー、Dot Plot）を公表し、議長が記者会見を行うことで市場へのコミュニケーションを図る。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.federalreserve.gov/monetarypolicy/fomc.htm" style="color:var(--accent-warm);">https://www.federalreserve.gov/monetarypolicy/fomc.htm</a></p>
+<h3>Deposit Insurance <small style="color:var(--text-muted);font-weight:400;">（預金保険）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1933 ／ US Congress (Banking Act of 1933); FDIC ／ Nobel経済学賞 2022年 — Douglas Diamond; Philip Dybvig (銀行取り付けモデル)</p>
+<p>大恐慌期（1930-33 年）に約 9,000 行の銀行が破綻したことへの対応として、Banking Act of 1933（グラス・スティーガル法）により連邦預金保険公社（FDIC）が設立された。当初の保護上限は 2,500 ドル。2008 年 GFC では上限が 10 万ドルから 25 万ドルに引き上げられた。Diamond-Dybvig（1983、2022 年 Nobel 受賞）の銀行取り付けモデルは預金保険が複数均衡のうち「取り付けなし」均衡を選択させる重要な役割を持つことを示した。2023 年の Silicon Valley Bank 破綻では保護上限超過の無保険預金の動向が注目された。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.fdic.gov/about/history/" style="color:var(--accent-warm);">https://www.fdic.gov/about/history/</a></p>
+<h3>Central Bank Independence <small style="color:var(--text-muted);font-weight:400;">（中央銀行の独立性）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1977 ／ Kydland FE; Prescott EC (時間的非整合性論) ／ Nobel経済学賞 2004年 — Finn Kydland; Edward Prescott (時間的非整合性原論文 1977)</p>
+<p>政府・議会の短期的な政治圧力から中央銀行を制度的に分離することで、インフレ抑制のコミットメントを高める仕組み。Kydland-Prescott（1977）の時間的非整合性問題（政治家はインフレを利用するインセンティブを持つ）を解決する制度的解答として、Rogoff（1985）が「保守的な中央銀行家」委任理論を提示し、Cukierman（1992）が独立性の計量的指標を開発した。インフレ・ターゲティング国（ニュージーランド 1989・英国 1997・チェコ・イスラエル等）で制度化が進んだ。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.1086/261117" style="color:var(--accent-warm);">https://doi.org/10.1086/261117</a></p>
+<h3>Time Inconsistency in Monetary Policy <small style="color:var(--text-muted);font-weight:400;">（金融政策の時間的非整合性）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">1977 ／ Finn Kydland; Edward Prescott ／ Nobel経済学賞 2004年 — Finn Kydland; Edward Prescott</p>
+<p>Finn Kydland と Edward Prescott が 1977 年に示した、裁量的金融政策の本質的問題。政府・中銀が低インフレを事前に約束しても、事後的には驚きのインフレで産出・雇用を増やすインセンティブが生じる。このことが民間に「どうせインフレになる」という期待を形成させ、長期的に高インフレ・高名目金利の均衡をもたらす（インフレバイアス）。解決策として中央銀行独立性・ルール的金融政策（テイラー・ルール等）・インフレ・ターゲティングが提案された。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://doi.org/10.2307/1830193" style="color:var(--accent-warm);">https://doi.org/10.2307/1830193</a></p>
+
+</section>
+
+
+<section id="ch17">
+<h2 class="chapter"><span class="num">17.</span> 第17章 — イスラム金融・伝統金融（IS）<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Islamic & Traditional Finance</small></h2>
+<p>Sukuk・Murabaha・堂島米市場・票号。イスラム金融・伝統金融の中核概念を年代順かつ重要度順に展開する。</p>
+<h3>Riba Prohibition <small style="color:var(--text-muted);font-weight:400;">（リバー（利子）の禁止）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">622 ／ Quran / Prophet Muhammad (PBUH)</p>
+<p>クルアーン（コーラン）第 2 章 275-280 節・第 3 章 130 節・第 4 章 161 節等に規定されるイスラム法（シャリーア）の根本原則の一つ。リバーとは通常、金銭の貸借に伴う事前確定的な固定的付加分（利息）を指し、リスク共有を伴わない不正な増殖として禁じられる。ただし「リバー」の定義・適用範囲については時代と法学派（ハナフィー・マーリキー・シャーフィイー・ハンバリー）により解釈の幅がある。現代イスラム金融ではムラーバハ（コスト＋マークアップ）・ムシャーラカ（出資）等でリバーを回避しつつ取引を成立させる。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.aaoifi.com/standard/" style="color:var(--accent-warm);">https://www.aaoifi.com/standard/</a></p>
+<h3>Gharar Prohibition <small style="color:var(--text-muted);font-weight:400;">（ガラル（過度な不確実性）の禁止）</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">622 ／ Islamic jurisprudence (fiqh)</p>
+<p>イスラム法上の契約原則で、取引の対象・価格・数量・引渡し時期等が著しく不確実または曖昧な状態（ガラル・ファーヒシュ）を禁ずる。軽微な不確実性（ガラル・ヤシール）は許容される。従来の先物・オプション・スワップ等のデリバティブは現物資産の裏付けがなく投機性が高いとして原則禁止とされる。ただし為替ヘッジ需要には実物取引に基づくワアド（一方的約束）・バイ・サルム（事前決済の商品売買）等による代替手段が開発されている。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.ifsb.org/docs/IFSB-7.pdf" style="color:var(--accent-warm);">https://www.ifsb.org/docs/IFSB-7.pdf</a></p>
+<h3>Mudaraba <small style="color:var(--text-muted);font-weight:400;">（ムダーラバ（利益分配パートナーシップ））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">622 ／ Pre-Islamic Arab trade practice; formalized in Islamic jurisprudence</p>
+<p>資金提供者（ラッブ・アル・マール）と事業者（ムダーリブ）による利益分配型パートナーシップ。利益は事前合意した比率（例 70:30）で分配されるが、損失は資本提供者のみが負担する（ムダーリブは時間・労力の損失のみ）。イスラム銀行の預金（投資口座）と貸出の双方で活用され、銀行が depositor のムダーリブとして機能しつつ融資先に対しては資本家として機能する二層構造で応用される。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://aaoifi.com/standard/" style="color:var(--accent-warm);">https://aaoifi.com/standard/</a></p>
+<h3>Musharaka <small style="color:var(--text-muted);font-weight:400;">（ムシャーラカ（共同出資））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">622 ／ Islamic jurisprudence (classical fiqh)</p>
+<p>全ての参加者が資本を拠出し、利益・損失をともに出資比率に応じて分担する出資型パートナーシップ。ムスタウファ（通常のムシャーラカ）と段階的持分解消型（ムシャーラカ・ムタナーキサ、住宅金融等に使用）がある。利益分配比率は合意による（出資比率と必ずしも一致しない）が、損失は必ず出資比率に従う。リスク共有という点でイスラム金融の理想に最も近い形態とされるが、実務上は信用リスク・情報非対称性の問題から普及がムラーバハより低い。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://aaoifi.com/standard/" style="color:var(--accent-warm);">https://aaoifi.com/standard/</a></p>
+<h3>Ijara <small style="color:var(--text-muted);font-weight:400;">（イジャーラ（イスラムのリース））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">622 ／ Classical Islamic jurisprudence</p>
+<p>銀行（賃貸人）が資産（不動産・設備・航空機等）を購入し、顧客（賃借人）に合意した賃料で賃貸する取引。リバーを回避するため「賃料収入（usufruct の対価）」という形式を取る。「イジャーラ・ワ・イクティナー」はリース期間終了時に別途の購入オプションを組み合わせる変形形態（金融リースに相当）。スクーク（イスラム債）の最も普及した基礎構造として、マレーシア 2002 年の最初のソブリン・スクークでも採用された（イジャーラ・スクーク）。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://aaoifi.com/standard/" style="color:var(--accent-warm);">https://aaoifi.com/standard/</a></p>
+<h3>Zakat <small style="color:var(--text-muted);font-weight:400;">（ザカート（イスラムの喜捨））</small></h3>
+<p style="color:var(--text-muted);font-size:13px;font-family:var(--font);text-indent:0;">622 ／ Prophet Muhammad (PBUH) / Quran</p>
+<p>イスラム五行の第三義務であり、一定の財産要件（ニサーブ：銀 595g 相当以上）を満たすムスリムが年 1 回、対象財産の 2.5%（貯蓄・投資・ビジネス財産）を八種類の受給資格者（貧困者・負債者・旅人等）に拠出する義務的喜捨。現代のイスラム経済学者はザカートを「イスラム型再分配課税」として位置づける。世界全体のザカート年間拠出額は UNDP 推計で約 4,900 億ドル（2019 年）にのぼるとされ、イスラム圏の最大の福祉・再分配メカニズム。マレーシア・サウジアラビア・インドネシア等が国家機関によるザカート徴収・分配制度を整備。</p>
+<p style="font-size:12px;color:var(--text-muted);font-family:var(--font);text-indent:0;">出典: <a href="https://www.undp.org/content/dam/rbap/docs/Research%20&amp;%20Publications/democratic_governance/RBAP-DG-2019-Islamic-Finance-SDGs.pdf" style="color:var(--accent-warm);">https://www.undp.org/content/dam/rbap/docs/Research%20&amp;%20Publications/democrati</a></p>
+
+</section>
+
+
+<section id="ch18">
+<h2 class="chapter"><span class="num">18.</span> 第18章 — 8データ層 ① 金利<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Layer Observation — Rates</small></h2>
+<p>金利は金融市場の重力場である。中央銀行政策、期間構造、リスク・プレミアム、すべてが金利を基準点として配置される。</p>
+<table><thead><tr><th>データ層</th><th>主要ソース</th><th>ライセンス</th></tr></thead><tbody><tr><td>rates</td><td>FRED API</td><td style="font-size:11px;">Public Domain</td></tr><tr><td>rates</td><td>FOMC Statements RSS</td><td style="font-size:11px;">Public Domain</td></tr><tr><td>rates</td><td>Bank of Japan Statistical API</td><td style="font-size:11px;">Public</td></tr><tr><td>rates</td><td>ECB Statistical Data Warehouse</td><td style="font-size:11px;">CC BY 4.0</td></tr><tr><td>rates</td><td>ECB Daily Reference Exchange Rates</td><td style="font-size:11px;">Public</td></tr><tr><td>rates</td><td>US Treasury Yield Curve</td><td style="font-size:11px;">Public Domain</td></tr></tbody></table><p>FRED API、ECB Statistical Data Warehouse、日本銀行統計、BIS、Treasury が主要源。Effective Federal Funds Rate / 10年-2年スプレッド / IORB / SOFR / OIS を日次取得する。</p>
+</section>
+
+
+<section id="ch19">
+<h2 class="chapter"><span class="num">19.</span> 第19章 — 8データ層 ② 為替・株式・債券<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Layer Observation — FX / Equity / Bond</small></h2>
+<p>為替・株式・債券の3層は資産クラス横断の動的相関を構成する。</p>
+<table><thead><tr><th>データ層</th><th>主要ソース</th><th>ライセンス</th></tr></thead><tbody><tr><td>equity</td><td>Alpha Vantage</td><td style="font-size:11px;">Proprietary</td></tr><tr><td>equity</td><td>J-Quants (JPX)</td><td style="font-size:11px;">Proprietary</td></tr><tr><td>equity</td><td>Finnhub</td><td style="font-size:11px;">Proprietary</td></tr><tr><td>equity</td><td>Tiingo</td><td style="font-size:11px;">Proprietary</td></tr><tr><td>equity</td><td>Polygon.io</td><td style="font-size:11px;">Proprietary</td></tr><tr><td>equity</td><td>Quandl/Nasdaq Data Link</td><td style="font-size:11px;">Mixed</td></tr><tr><td>bond</td><td>FRED Treasury Series</td><td style="font-size:11px;">Public Domain</td></tr><tr><td>bond</td><td>US Treasury Historical Archives</td><td style="font-size:11px;">Public Domain</td></tr><tr><td>bond</td><td>ECB Yield Curves</td><td style="font-size:11px;">CC BY 4.0</td></tr></tbody></table><p>ECB Eurofxref、Stooq、Alpha Vantage、J-Quants、FRED Treasury が主要源。日次OHLCV、為替クロスレート、ソブリン利回り曲線を取得する。</p>
+</section>
+
+
+<section id="ch20">
+<h2 class="chapter"><span class="num">20.</span> 第20章 — 8データ層 ③ 商品・政策・地政学<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Layer Observation — Commodity / Policy / Geo</small></h2>
+<p>金融市場は実体経済と地政学にアンカーされている。Caldara-Iacoviello の GPR、Baker-Bloom-Davis の EPU、FOMC/ECB/BOJ の声明 RSS、EIA エネルギーデータが日次で観測軸を提供する。</p>
+<table><thead><tr><th>データ層</th><th>主要ソース</th><th>ライセンス</th></tr></thead><tbody><tr><td>commodity</td><td>FRED Commodity Prices</td><td style="font-size:11px;">Public Domain</td></tr><tr><td>commodity</td><td>EIA Petroleum API</td><td style="font-size:11px;">Public</td></tr><tr><td>commodity</td><td>EIA Natural Gas Weekly</td><td style="font-size:11px;">Public</td></tr><tr><td>commodity</td><td>LBMA Gold PM Prices</td><td style="font-size:11px;">Proprietary</td></tr><tr><td>commodity</td><td>IMF Primary Commodity Prices</td><td style="font-size:11px;">CC BY 4.0</td></tr><tr><td>commodity</td><td>USDA QuickStats API</td><td style="font-size:11px;">Public Domain</td></tr><tr><td>policy</td><td>FOMC Calendar &amp; Minutes</td><td style="font-size:11px;">Public Domain</td></tr><tr><td>policy</td><td>ECB Monetary Policy Decisions</td><td style="font-size:11px;">CC0</td></tr><tr><td>policy</td><td>BOJ Monetary Policy Meetings</td><td style="font-size:11px;">Public</td></tr><tr><td>policy</td><td>BOE Monetary Policy Summary</td><td style="font-size:11px;">Crown Copyright</td></tr><tr><td>policy</td><td>RBA Policy Statements</td><td style="font-size:11px;">Public</td></tr><tr><td>policy</td><td>RBNZ Official Cash Rate</td><td style="font-size:11px;">Public</td></tr><tr><td>geo</td><td>EPU Economic Policy Uncertainty</td><td style="font-size:11px;">CC BY 4.0</td></tr><tr><td>geo</td><td>GPR Geopolitical Risk Index</td><td style="font-size:11px;">Academic free</td></tr><tr><td>geo</td><td>ACLED Conflict Location &amp; Event Data</td><td style="font-size:11px;">Academic</td></tr><tr><td>geo</td><td>World Bank WGI Governance Indicators</td><td style="font-size:11px;">CC BY 4.0</td></tr><tr><td>geo</td><td>Freedom House Freedom in the World</td><td style="font-size:11px;">CC BY</td></tr></tbody></table>
+</section>
+
+
+<section id="ch21">
+<h2 class="chapter"><span class="num">21.</span> 第21章 — 市場マイクロストラクチャの観測<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Microstructure Observation</small></h2>
+<p>有料 HFT フィードを使わずに、日次 OHLCV から Roll spread (1984)、Amihud illiquidity (2002)、order flow imbalance の代理指標を計算する。</p>
+<p>これらは Kyle (1985) や Glosten-Milgrom (1985) の理論モデルと整合する経験的指標であり、流動性ストレスの早期警戒に用いる。</p>
+</section>
+
+
+<section id="ch22">
+<h2 class="chapter"><span class="num">22.</span> 第22章 — 10ルールベース・シグナル<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Rule-based Signals</small></h2>
+<p>シグナル抽出は AI ではなくルールベースで行う。AI 推論ハルシネーション排除のため、すべてのルールに学術文献の典拠を付与し、判定基準を統計と一次URLのみで構築する。</p>
+<table><thead><tr><th>シグナル種別</th><th>判定ルール</th><th>典拠</th></tr></thead><tbody><tr><td><b>YC_INVERSION</b></td><td>10Y-2Y &lt; 0</td><td style="font-size:11px;">Estrella-Mishkin 1996</td></tr><tr><td><b>YC_DEEP_INVERSION</b></td><td>10Y-2Y &lt; -50 bp</td><td style="font-size:11px;">NBER 8/8 recession indicator</td></tr><tr><td><b>YIELD_CURVE_NORMALIZE</b></td><td>逆転後6か月以内の正常化</td><td style="font-size:11px;">歴史的に景気後退直前</td></tr><tr><td><b>VOL_REGIME_SHIFT</b></td><td>実現ボラ &gt; 2× 90日 median</td><td style="font-size:11px;">Corsi 2009 HAR proxy</td></tr><tr><td><b>CARRY_CRASH</b></td><td>JPY 5日リターン &lt; -3σ</td><td style="font-size:11px;">Brunnermeier et al. 2008</td></tr><tr><td><b>CB_SURPRISE</b></td><td>政策金利 vs 事前期待 &gt; 25 bp</td><td style="font-size:11px;">Kuttner 2001</td></tr><tr><td><b>CREDIT_STRESS</b></td><td>HY スプレッド月間 +100 bp</td><td style="font-size:11px;">BIS Quarterly</td></tr><tr><td><b>USD_FUNDING_STRESS</b></td><td>TED スプレッド &gt; 50 bp</td><td style="font-size:11px;">Brunnermeier-Pedersen 2009</td></tr><tr><td><b>SAFE_HAVEN_FLIGHT</b></td><td>金+JPY+CHF up &amp; SPX down</td><td style="font-size:11px;">Risk-off regime</td></tr><tr><td><b>GPR_SPIKE</b></td><td>GPR daily &gt; 250</td><td style="font-size:11px;">Caldara-Iacoviello 2022 AER</td></tr></tbody></table>
+</section>
+
+
+<section id="ch23">
+<h2 class="chapter"><span class="num">23.</span> 第23章 — 35+ 既存DBとの連携<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Cross-DB Integration (35+)</small></h2>
+<p>FMI-DB は単独で完結せず、ミラツク/esse-sense エコシステムの既存 DB と双方向に接続する。EC-DB 経済学概念、MG 経営学、Innovation-DB イノベーション理論、GC-DB 源泉サイクル、SG 戦略、Math 数学概念、Phys 物理、Geopolitical-Risk、Macro-Economy、Signal-DB、Foresight-KB、Great-Figures、Philosophy、Anthropology、Traditional-Knowledge ほか、35+ DB と cross_db_refs を共有する。</p>
+<table><thead><tr><th>連携先DB</th><th>cross_ref 件数</th></tr></thead><tbody><tr><td>ec-db</td><td>138</td></tr><tr><td>math-db</td><td>114</td></tr><tr><td>macro-db</td><td>65</td></tr><tr><td>signal-db</td><td>34</td></tr><tr><td>policy-db</td><td>32</td></tr><tr><td>geo-db</td><td>27</td></tr><tr><td>gf-db</td><td>20</td></tr><tr><td>ss-db</td><td>19</td></tr><tr><td>gc-db</td><td>17</td></tr><tr><td>phys-db</td><td>16</td></tr><tr><td>ftt-db</td><td>15</td></tr><tr><td>tc-db</td><td>15</td></tr><tr><td>etd-db</td><td>14</td></tr><tr><td>innovation-db</td><td>14</td></tr><tr><td>kgh-db</td><td>13</td></tr><tr><td>fk-db</td><td>8</td></tr><tr><td>sg-db</td><td>7</td></tr><tr><td>cdh-db</td><td>5</td></tr></tbody></table>
+</section>
+
+
+<section id="ch24">
+<h2 class="chapter"><span class="num">24.</span> 第24章 — 品質基準と Gwet AC1 5件セット<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Quality Standards and Gwet AC1</small></h2>
+<p>FMI-DB は <code>quality-metrics-standard.md</code> ルールに従い、評価者間一致度を Cohen のκ単独ではなく、Po（生の一致率）、Gwet AC1、Cohen κ、有病率、サンプルサイズの5件セットで公表する。</p><p>主指標は Gwet AC1。有病率パラドックス耐性が学術文献（PMC 5712640, PLOS ONE 2019）で確認されているため、本エコシステム全DBの標準として運用する。</p>
+<table><thead><tr><th>指標</th><th>値</th><th>備考</th></tr></thead><tbody><tr><td>A1_source_url_present</td><td><b>{&quot;observed_agreement&quot;: 1.0, &quot;gwet_ac1&quot;: 1.0, &quot;cohens_kappa&quot;: 1.0, &quot;positive_prevalence&quot;: 1.0, &quot;sample_size&quot;: 555, &quot;eval_categories&quot;: 1, &quot;marginals&quot;: {&quot;YES&quot;: 1.0}, &quot;eval_design_notes&quot;: &quot;source_url 非NULL率&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">source_url 非NULL率</td></tr><tr><td>A2_verified</td><td><b>{&quot;observed_agreement&quot;: 1.0, &quot;gwet_ac1&quot;: 1.0, &quot;cohens_kappa&quot;: 1.0, &quot;positive_prevalence&quot;: 1.0, &quot;sample_size&quot;: 555, &quot;eval_categories&quot;: 1, &quot;marginals&quot;: {&quot;YES&quot;: 1.0}, &quot;eval_design_notes&quot;: &quot;verified 比率&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">verified 比率</td></tr><tr><td>A3_no_duplicate</td><td><b>{&quot;observed_agreement&quot;: 1.0, &quot;gwet_ac1&quot;: 1.0, &quot;cohens_kappa&quot;: 1.0, &quot;positive_prevalence&quot;: 1.0, &quot;sample_size&quot;: 555, &quot;eval_categories&quot;: 1, &quot;marginals&quot;: {&quot;YES&quot;: 1.0}, &quot;eval_design_notes&quot;: &quot;重複なし率&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">重複なし率</td></tr><tr><td>A8_non_western</td><td><b>{&quot;observed_agreement&quot;: 0.1189, &quot;gwet_ac1&quot;: -0.7376, &quot;cohens_kappa&quot;: 0.0, &quot;positive_prevalence&quot;: 0.5595, &quot;sample_size&quot;: 555, &quot;eval_categories&quot;: 2, &quot;marginals&quot;: {&quot;NO&quot;: 0.4405, &quot;YES&quot;: 0.5595}, &quot;eval_design_notes&quot;: &quot;non_western 比率&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Poor&quot;}</b></td><td style="font-size:11px;">non_western 比率</td></tr><tr><td>B1_nobel_coverage</td><td><b>{&quot;observed_agreement&quot;: 1.0, &quot;gwet_ac1&quot;: 1.0, &quot;cohens_kappa&quot;: 1.0, &quot;positive_prevalence&quot;: 1.0, &quot;sample_size&quot;: 93, &quot;eval_categories&quot;: 1, &quot;marginals&quot;: {&quot;YES&quot;: 1.0}, &quot;eval_design_notes&quot;: &quot;Nobel 93名カバー&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">Nobel 93名カバー</td></tr><tr><td>B2_wikipedia</td><td><b>{&quot;observed_agreement&quot;: 0.8111, &quot;gwet_ac1&quot;: 0.7721, &quot;cohens_kappa&quot;: 0.0, &quot;positive_prevalence&quot;: 0.9056, &quot;sample_size&quot;: 270, &quot;eval_categories&quot;: 2, &quot;marginals&quot;: {&quot;NO&quot;: 0.0944, &quot;YES&quot;: 0.9056}, &quot;eval_design_notes&quot;: &quot;Wikipedia 付与率&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Substantial&quot;}</b></td><td style="font-size:11px;">Wikipedia 付与率</td></tr><tr><td>E1_data_source_live</td><td><b>{&quot;observed_agreement&quot;: 1.0, &quot;gwet_ac1&quot;: 1.0, &quot;cohens_kappa&quot;: 1.0, &quot;positive_prevalence&quot;: 1.0, &quot;sample_size&quot;: 51, &quot;eval_categories&quot;: 1, &quot;marginals&quot;: {&quot;YES&quot;: 1.0}, &quot;eval_design_notes&quot;: &quot;data_source live&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">data_source live</td></tr><tr><td>G2_doi_crossref_sample10</td><td><b>{&quot;observed_agreement&quot;: 1.0, &quot;gwet_ac1&quot;: 1.0, &quot;cohens_kappa&quot;: 1.0, &quot;positive_prevalence&quot;: 1.0, &quot;sample_size&quot;: 10, &quot;eval_categories&quot;: 1, &quot;marginals&quot;: {&quot;YES&quot;: 1.0}, &quot;eval_design_notes&quot;: &quot;DOI 10件 Crossref&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">DOI 10件 Crossref</td></tr><tr><td>G2_url_reachable_sample30</td><td><b>{&quot;observed_agreement&quot;: 0.9333, &quot;gwet_ac1&quot;: 0.9287, &quot;cohens_kappa&quot;: 0.0, &quot;positive_prevalence&quot;: 0.9667, &quot;sample_size&quot;: 30, &quot;eval_categories&quot;: 2, &quot;marginals&quot;: {&quot;NO&quot;: 0.0333, &quot;YES&quot;: 0.9667}, &quot;eval_design_notes&quot;: &quot;URL 30件 到達率&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">URL 30件 到達率</td></tr><tr><td>G3_must_have</td><td><b>{&quot;observed_agreement&quot;: 1.0, &quot;gwet_ac1&quot;: 1.0, &quot;cohens_kappa&quot;: 1.0, &quot;positive_prevalence&quot;: 1.0, &quot;sample_size&quot;: 20, &quot;eval_categories&quot;: 1, &quot;marginals&quot;: {&quot;YES&quot;: 1.0}, &quot;eval_design_notes&quot;: &quot;必須理論20件カバー&quot;, &quot;eval_date&quot;: &quot;2026-05-19&quot;, &quot;interpretation&quot;: &quot;Excellent&quot;}</b></td><td style="font-size:11px;">必須理論20件カバー</td></tr><tr><td>phase2_concept_researcher_links</td><td><b>195</b></td><td style="font-size:11px;">concept_researchers table links</td></tr><tr><td>phase2_concepts_linked</td><td><b>71</b></td><td style="font-size:11px;">Distinct concepts with researcher links</td></tr><tr><td>phase2_nobel_coverage</td><td><b>96</b></td><td style="font-size:11px;">Nobel laureates 1969-2024 all 93 covered</td></tr><tr><td>phase2_non_western_rate</td><td><b>28.5</b></td><td style="font-size:11px;">Non-Western rate %</td></tr><tr><td>phase2_researchers_total</td><td><b>270</b></td><td style="font-size:11px;">Wave 1 Phase 2-people seeding complete</td></tr><tr><td>phase2_seeding_date</td><td><b>2026-05-19</b></td><td style="font-size:11px;">Seeding execution date</td></tr><tr><td>phase2_women_rate</td><td><b>11.1</b></td><td style="font-size:11px;">Women researchers rate %</td></tr></tbody></table>
+</section>
+
+
+<section id="ch25">
+<h2 class="chapter"><span class="num">25.</span> 第25章 — 将来展望と継続改善<br><small style="font-size:14px;color:var(--text-muted);font-weight:400;font-style:italic;">Future Directions</small></h2>
+<p>FMI-DB v1.0 は出発点である。次の発展軸が継続改善ループとして組み込まれる：</p>
+<ol style="font-family:var(--font);font-size:14px;line-height:1.95;">
+<li>概念層を 5,500 → 8,000+ へ拡張（Phase 11 反復で Wave 2-4 実施）</li>
+<li>multilingual rate 30%+ 達成（中国・アラビア・スペイン語概念の構造的組込）</li>
+<li>independent rater による真の IRR Kappa / Gwet AC1 測定</li>
+<li>concept_relations の系譜深度（depth ≥ 3）を全主要概念に</li>
+<li>publications テーブルへ OpenAlex / Semantic Scholar 連携で 1,500+ 引用文献</li>
+<li>Wave 2 ETL の launchd 永続稼働開始（FRED/EIA/Alpha Vantage 各 API key を Keychain 登録）</li>
+<li>Wave 3 シグナルの予測力検証（Tetlock-Brier score, ROC AUC）</li>
+<li>annual cron による知識更新の自動化</li>
+<li>Wave 5: AI-augmented anomaly detection（学術論文の最新追加分から新シグナル候補抽出）</li>
+</ol>
+<div class="callout"><div class="callout-label">FMI-DB の哲学</div>
+<p>金融市場の動向理解は、ハルシネーションへの徹底した抵抗と、学術知の継続的再投資によってのみ達成される。本書はその出発点と、今後の継続改善の指針を提示する。</p></div>
+</section>
+
+    <div class="footer">
+      <p>FMI-DB v1.0 (2026-05-19)<br>
+      GitHub: <a href="https://github.com/yuyanishimura0312/financial-markets-intelligence-db">yuyanishimura0312/financial-markets-intelligence-db</a> (private)<br>
+      License: Internal use within Miratuku/esse-sense ecosystem. Upstream source data follows provider licenses.<br>
+      Built with: SQLite 3.x / Python 3.11+ / launchd / macOS Keychain.</p>
+    </div>
+  </main>
+</div>
+<script>
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.dataset.theme = saved;
+</script>
+</body></html>

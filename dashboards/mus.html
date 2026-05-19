@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>MUS-DB — Music Knowledge Database v1.0</title>
+<meta name="description" content="音楽知識データベース v1.0 — 15サブフィールド・685概念・138研究者・4,933関係・非西洋を含む横断的音楽知">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030; --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg); color: var(--text);
+  font-feature-settings: "palt";
+  letter-spacing: 0.025em;
+  line-height: 1.85;
+}
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 48px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  border-top: 3px solid #121212;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; z-index: 100;
+}
+[data-theme="dark"] .top-bar { border-top-color: #E0E0E0; }
+.brand { font-family: var(--font-serif); font-weight: 600; font-size: 16px; }
+.brand .acc { color: var(--accent-warm); }
+.theme-toggle {
+  background: none; border: 1px solid var(--border); cursor: pointer;
+  padding: 4px 12px; font-family: var(--font); font-size: 12px;
+  color: var(--text-secondary); border-radius: 3px;
+}
+.theme-toggle:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+.layout { display: flex; padding-top: 48px; min-height: 100vh; }
+.toc {
+  position: fixed; top: 48px; bottom: 0; left: 0;
+  width: 240px; padding: 32px 18px;
+  border-right: 1px solid var(--border-light); background: var(--bg);
+  overflow-y: auto; font-size: 13px;
+}
+.toc-label {
+  font-size: 11px; color: var(--text-muted);
+  letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px;
+}
+.toc a {
+  display: block; color: var(--text-secondary); text-decoration: none;
+  padding: 6px 0; border-bottom: 1px solid var(--border-light);
+}
+.toc a:hover { color: var(--accent-warm); }
+.toc-num {
+  color: var(--text-muted); margin-right: 8px; font-family: var(--font-mono);
+}
+.main {
+  margin-left: 240px; padding: 56px 64px;
+  max-width: 880px; width: 100%;
+}
+.hero { border-bottom: 1px solid var(--border); padding-bottom: 32px; margin-bottom: 56px; }
+.hero-eyebrow {
+  font-size: 11px; color: var(--accent-warm); letter-spacing: 0.32em;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.hero h1 {
+  font-family: var(--font-serif); font-size: 38px; font-weight: 700;
+  margin: 0 0 12px; letter-spacing: -0.01em;
+}
+.hero .sub { font-size: 16px; color: var(--text-secondary); max-width: 720px; }
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin: 32px 0;
+}
+.kpi {
+  border: 1px solid var(--border-light); padding: 16px;
+  background: var(--card);
+}
+.kpi-num {
+  font-family: var(--font-serif); font-size: 28px; font-weight: 600;
+  color: var(--accent-warm); line-height: 1.2;
+}
+.kpi-label {
+  font-size: 11px; color: var(--text-muted); letter-spacing: 0.12em;
+  text-transform: uppercase; margin-top: 6px;
+}
+.chapter {
+  margin-bottom: 64px; padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter h2 {
+  font-family: var(--font-serif); font-size: 24px;
+  margin: 0 0 16px; padding-left: 12px;
+  border-left: 3px solid var(--accent-warm);
+}
+.chapter h2 .num { color: var(--text-muted); font-family: var(--font-mono); font-size: 16px; margin-right: 12px; }
+.chapter h3 {
+  font-family: var(--font-serif); font-size: 18px;
+  margin: 32px 0 12px; color: var(--text);
+}
+.chapter p {
+  font-family: var(--font-serif); margin: 0 0 16px;
+  text-indent: 1em; font-size: 15.5px; line-height: 1.95;
+}
+.chapter p:first-of-type { text-indent: 0; }
+table {
+  border-collapse: collapse; width: 100%; font-size: 13px;
+  margin: 16px 0;
+}
+th, td {
+  text-align: left; padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+th {
+  background: var(--surface); font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-secondary);
+}
+td.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.bar-bg {
+  display: inline-block; width: 80px; height: 8px; background: var(--surface);
+  border-radius: 1px; margin-right: 8px; vertical-align: middle;
+}
+.bar-fg {
+  display: block; height: 100%; background: var(--accent-warm);
+}
+.tag {
+  display: inline-block; padding: 2px 8px; font-size: 11px;
+  border: 1px solid var(--border); border-radius: 2px; margin-right: 4px;
+  color: var(--text-secondary);
+}
+.tag.warm { background: var(--accent-muted); color: var(--accent-warm); border-color: var(--accent-warm); }
+.latex {
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--surface); padding: 8px 12px;
+  border-left: 2px solid var(--accent-warm); margin: 4px 0;
+  white-space: pre-wrap; word-break: break-all;
+}
+.footer {
+  margin-top: 80px; padding: 32px 0; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted); text-align: center;
+}
+.footer a { color: var(--accent-warm); }
+@media print {
+  .top-bar, .toc { display: none; }
+  .main { margin-left: 0; padding: 24px; }
+  body { background: white; color: black; }
+}
+@media (max-width: 1000px) {
+  .toc { position: static; width: 100%; height: auto;
+          border-right: none; border-bottom: 1px solid var(--border); }
+  .main { margin-left: 0; padding: 32px 24px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">MIRA TUKU / <span class="acc">MUS-DB</span> — Music Knowledge Database</div>
+  <button class="theme-toggle" onclick="toggleTheme()">ダーク/ライト</button>
+</div>
+
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-label">CONTENTS</div>
+    <a href="#overview"><span class="toc-num">01</span>概観</a>
+    <a href="#kpi"><span class="toc-num">02</span>主要指標</a>
+    <a href="#subfields"><span class="toc-num">03</span>15サブフィールド</a>
+    <a href="#required"><span class="toc-num">04</span>必須理論カバー</a>
+    <a href="#culture"><span class="toc-num">05</span>文化圏分布</a>
+    <a href="#tunings"><span class="toc-num">06</span>世界の音律</a>
+    <a href="#formulas"><span class="toc-num">07</span>数式と算法</a>
+    <a href="#cosmos"><span class="toc-num">08</span>音楽と宇宙</a>
+    <a href="#genealogy"><span class="toc-num">09</span>系譜チェーン</a>
+    <a href="#xrefs"><span class="toc-num">10</span>横断参照</a>
+    <a href="#quality"><span class="toc-num">11</span>品質指標</a>
+  </aside>
+
+  <main class="main">
+
+    <section class="hero">
+      <div class="hero-eyebrow">MUSIC KNOWLEDGE DATABASE v1.0 · 2026-05-20</div>
+      <h1>音楽の数式と宇宙までを横断する学術知</h1>
+      <p class="sub">
+        音楽理論・音響物理学・神経科学・数学・宇宙論・非西洋音律体系まで、音楽という現象を
+        15サブフィールド全方位で集積した Production-grade 学術知識データベース。
+        ピタゴラスの天球音楽 (BC550) から MusicLM (2023) まで、2,500年の系譜を単一のグラフで結ぶ。
+      </p>
+    </section>
+
+    <section class="chapter" id="overview">
+      <h2><span class="num">01</span>概観</h2>
+      <p>
+        MUS-DB は音楽を「音楽理論教科書のデータ化」に留めず、音楽が宇宙・物質・身体・社会・計算と
+        接続する全方位を一覧化することを企図した学術知統合DBです。<span class="tag warm">15 SF</span>
+        <span class="tag warm">685概念</span><span class="tag warm">4,933関係</span>
+        <span class="tag warm">22 DB横断</span>のスケールで、西欧偏重を構造的に補正し、
+        インド rāga / アラブ maqām / ガムラン slendro / 雅楽 / サブサハラ多声 / 日本独自概念 (間・一音成仏・序破急)
+        を論理展開の駆動軸として組み込みました。
+      </p>
+      <p>
+        <strong>構築方式</strong>: /adb v1.1 経路A (学術概念DB) Phase 0-15 一気通貫。GMN-DB方式の専門テーブル
+        (formulas / algorithms / tunings / instruments / genealogy_chains / cosmos_links) を踏襲。
+        ユーザー指示「音楽理論だけでなく音楽が持つパターン・物理学的意味・音楽と宇宙の関係まで」を
+        スキーマ設計レベルから反映しました。
+      </p>
+    </section>
+
+    <section class="chapter" id="kpi">
+      <h2><span class="num">02</span>主要指標</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-num">685</div><div class="kpi-label">概念</div></div>
+        <div class="kpi"><div class="kpi-num">138</div><div class="kpi-label">研究者</div></div>
+        <div class="kpi"><div class="kpi-num">4,933</div><div class="kpi-label">関係</div></div>
+        <div class="kpi"><div class="kpi-num">2,555</div><div class="kpi-label">SF横断関係</div></div>
+        <div class="kpi"><div class="kpi-num">125</div><div class="kpi-label">数式 (LaTeX)</div></div>
+        <div class="kpi"><div class="kpi-num">80</div><div class="kpi-label">アルゴリズム</div></div>
+        <div class="kpi"><div class="kpi-num">8</div><div class="kpi-label">音律体系</div></div>
+        <div class="kpi"><div class="kpi-num">42</div><div class="kpi-label">楽器</div></div>
+        <div class="kpi"><div class="kpi-num">5</div><div class="kpi-label">系譜チェーン</div></div>
+        <div class="kpi"><div class="kpi-num">26</div><div class="kpi-label">宇宙論リンク</div></div>
+        <div class="kpi"><div class="kpi-num">1,055</div><div class="kpi-label">cross_db_refs</div></div>
+        <div class="kpi"><div class="kpi-num">22</div><div class="kpi-label">接続先DB</div></div>
+      </div>
+      <p>
+        非西洋率: 概念 26.1% / 研究者の23名が女性研究者。
+        必須理論 (15 SF × 約10件) 160件の100%カバーを達成。
+      </p>
+    </section>
+
+    <section class="chapter" id="subfields">
+      <h2><span class="num">03</span>15サブフィールド</h2>
+      <p>
+        音楽現象を理論・物理・認知・神経・数理・計算・民族・歴史・哲学・社会・楽器・宇宙・MIR・電子・療法の
+        15領域で網羅。各SFの中央理論を必須理論チェックリストで100%充足。
+      </p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>SF コード</th><th>日本語名</th><th class="num">概念数</th><th class="num">非西洋率</th></tr>
+        </thead>
+        <tbody>
+        <tr><td>1</td><td><code>theory</code></td><td>音楽理論</td><td class='num'>44</td><td class='num'>18.2%</td></tr>
+<tr><td>2</td><td><code>acoustics</code></td><td>音響物理学</td><td class='num'>45</td><td class='num'>0%</td></tr>
+<tr><td>3</td><td><code>psychology</code></td><td>音楽心理学・認知</td><td class='num'>48</td><td class='num'>12.5%</td></tr>
+<tr><td>4</td><td><code>neuroscience</code></td><td>音楽神経科学</td><td class='num'>50</td><td class='num'>2.0%</td></tr>
+<tr><td>5</td><td><code>mathematics</code></td><td>音楽数学</td><td class='num'>45</td><td class='num'>0%</td></tr>
+<tr><td>6</td><td><code>computation</code></td><td>音楽アルゴリズム・計算</td><td class='num'>50</td><td class='num'>0%</td></tr>
+<tr><td>7</td><td><code>ethno</code></td><td>民族音楽学</td><td class='num'>60</td><td class='num'>91.7%</td></tr>
+<tr><td>8</td><td><code>history</code></td><td>音楽史</td><td class='num'>54</td><td class='num'>20.4%</td></tr>
+<tr><td>9</td><td><code>philosophy</code></td><td>音楽哲学・美学</td><td class='num'>46</td><td class='num'>41.3%</td></tr>
+<tr><td>10</td><td><code>sociology</code></td><td>音楽社会学</td><td class='num'>44</td><td class='num'>36.4%</td></tr>
+<tr><td>11</td><td><code>organology</code></td><td>楽器学</td><td class='num'>43</td><td class='num'>48.8%</td></tr>
+<tr><td>12</td><td><code>cosmos</code></td><td>音楽と宇宙論</td><td class='num'>38</td><td class='num'>36.8%</td></tr>
+<tr><td>13</td><td><code>mir</code></td><td>音楽情報科学</td><td class='num'>37</td><td class='num'>0%</td></tr>
+<tr><td>14</td><td><code>electronic</code></td><td>録音・電子音楽</td><td class='num'>43</td><td class='num'>27.9%</td></tr>
+<tr><td>15</td><td><code>therapy</code></td><td>音楽と健康・療法</td><td class='num'>38</td><td class='num'>42.1%</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter" id="required">
+      <h2><span class="num">04</span>必須理論カバー</h2>
+      <p>15 SF × 約10件 = 160件の必須理論を100%カバー。Schenker分析からインド thaat体系、アラブ maqam jins、
+         サブサハラ多声リズム、ペルシア dastgah、ガムラン slendro/pelog まで構造的に網羅しました。</p>
+      <table>
+        <thead><tr><th>SF</th><th class="num">カバー</th><th class="num">合計</th><th>進捗</th></tr></thead>
+        <tbody>
+        <tr><td><code>acoustics</code></td><td class='num'>12</td><td class='num'>12</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>computation</code></td><td class='num'>15</td><td class='num'>15</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>cosmos</code></td><td class='num'>10</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>electronic</code></td><td class='num'>10</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>ethno</code></td><td class='num'>10</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>history</code></td><td class='num'>12</td><td class='num'>12</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>mathematics</code></td><td class='num'>12</td><td class='num'>12</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>mir</code></td><td class='num'>8</td><td class='num'>8</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>neuroscience</code></td><td class='num'>10</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>organology</code></td><td class='num'>8</td><td class='num'>8</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>philosophy</code></td><td class='num'>10</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>psychology</code></td><td class='num'>10</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>sociology</code></td><td class='num'>8</td><td class='num'>8</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>theory</code></td><td class='num'>15</td><td class='num'>15</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+<tr><td><code>therapy</code></td><td class='num'>10</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:100%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">100.0%</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter" id="culture">
+      <h2><span class="num">05</span>文化圏分布</h2>
+      <p>西欧偏重を構造的に是正し、9文化圏に分散。インド・東アジア・アラブ-ペルシア・東南アジア・アフリカ・
+         オセアニア・先住民・ラテンアメリカ・複合文明圏まで主要概念として組込済。</p>
+      <table>
+        <thead><tr><th>文化圏</th><th class="num">概念数</th><th>シェア</th></tr></thead>
+        <tbody>
+        <tr><td>Western</td><td class='num'>266</td><td><span class="bar-bg"><span class="bar-fg" style="width:38.8%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">38.8%</span></td></tr>
+<tr><td>Universal</td><td class='num'>240</td><td><span class="bar-bg"><span class="bar-fg" style="width:35.0%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">35.0%</span></td></tr>
+<tr><td>Multiple</td><td class='num'>47</td><td><span class="bar-bg"><span class="bar-fg" style="width:6.9%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">6.9%</span></td></tr>
+<tr><td>EastAsia</td><td class='num'>36</td><td><span class="bar-bg"><span class="bar-fg" style="width:5.3%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">5.3%</span></td></tr>
+<tr><td>India</td><td class='num'>26</td><td><span class="bar-bg"><span class="bar-fg" style="width:3.8%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">3.8%</span></td></tr>
+<tr><td>Africa</td><td class='num'>18</td><td><span class="bar-bg"><span class="bar-fg" style="width:2.6%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">2.6%</span></td></tr>
+<tr><td>Arab-Persian</td><td class='num'>13</td><td><span class="bar-bg"><span class="bar-fg" style="width:1.9%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">1.9%</span></td></tr>
+<tr><td>LatinAmerica</td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:1.5%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">1.5%</span></td></tr>
+<tr><td>SoutheastAsia</td><td class='num'>7</td><td><span class="bar-bg"><span class="bar-fg" style="width:1.0%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">1.0%</span></td></tr>
+<tr><td>Oceania</td><td class='num'>6</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.9%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.9%</span></td></tr>
+<tr><td>Ancient Greek</td><td class='num'>5</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.7%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.7%</span></td></tr>
+<tr><td>Indigenous</td><td class='num'>2</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.3%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.3%</span></td></tr>
+<tr><td>South Asian</td><td class='num'>2</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.3%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.3%</span></td></tr>
+<tr><td>African American</td><td class='num'>1</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.1%</span></td></tr>
+<tr><td>Ancient Roman</td><td class='num'>1</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.1%</span></td></tr>
+<tr><td>Arctic/Indigenous</td><td class='num'>1</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.1%</span></td></tr>
+<tr><td>East Asian</td><td class='num'>1</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.1%</span></td></tr>
+<tr><td>Indigenous Australian</td><td class='num'>1</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.1%</span></td></tr>
+<tr><td>Mesoamerican</td><td class='num'>1</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.1%</span></td></tr>
+<tr><td>South Asian/Islamic</td><td class='num'>1</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.1%</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter" id="tunings">
+      <h2><span class="num">06</span>世界の音律体系</h2>
+      <p>西洋12平均律から、インド22-shruti、アラブ24四分音、ジャワ・ガムランslendro/pelog、純正律、
+         Pythagorean、Meantoneまで。1オクターブを何分割するかで世界の音楽は別の宇宙を持つ。</p>
+      <table>
+        <thead><tr><th>音律名</th><th>原語表記</th><th>文化圏</th><th class="num">分割</th></tr></thead>
+        <tbody>
+        <tr><td>24-tone Arab scale</td><td>24-TET</td><td>Arab-Persian</td><td class='num'>24</td></tr>
+<tr><td>22-shruti system</td><td>22 श्रुति</td><td>India</td><td class='num'>22</td></tr>
+<tr><td>Pelog 7-tone</td><td>Pelog</td><td>SoutheastAsia</td><td class='num'>7</td></tr>
+<tr><td>Slendro 5-tone</td><td>Slendro</td><td>SoutheastAsia</td><td class='num'>5</td></tr>
+<tr><td>12-tone equal temperament</td><td>12-TET</td><td>Universal</td><td class='num'>12</td></tr>
+<tr><td>Just intonation</td><td>Just</td><td>Universal</td><td class='num'>—</td></tr>
+<tr><td>Pythagorean tuning</td><td>Pythagorean</td><td>Western</td><td class='num'>—</td></tr>
+<tr><td>Quarter-comma meantone</td><td>Meantone 1/4</td><td>Western</td><td class='num'>—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter" id="formulas">
+      <h2><span class="num">07</span>数式と算法</h2>
+      <p>125件のLaTeX数式と80件のアルゴリズム擬似コードを mus_formulas / mus_algorithms に格納。
+         倍音列・フーリエ変換・FFT・Karplus-Strong・WaveNet・MusicLM・Tonnetz神経リーマン変換・
+         Xenakis確率作曲・Markov連鎖まで、音楽の数学的根拠を一覧化。</p>
+      <h3>数式カテゴリ分布</h3>
+      <table>
+        <thead><tr><th>カテゴリ</th><th class="num">件数</th></tr></thead>
+        <tbody>
+        <tr><td>ratio</td><td class='num'>39</td></tr>
+<tr><td>transform</td><td class='num'>29</td></tr>
+<tr><td>wave_equation</td><td class='num'>28</td></tr>
+<tr><td>psychoacoustics</td><td class='num'>20</td></tr>
+<tr><td>synthesis</td><td class='num'>5</td></tr>
+<tr><td>probability</td><td class='num'>4</td></tr>
+        </tbody>
+      </table>
+      <h3>代表数式 (抜粋)</h3>
+      <p><strong>メロディ分布のシャノンエントロピー</strong> <span class="tag">probability</span><br><span class="latex">H = -\sum_{x} P(x) \log_2 P(x)</span></p>
+<p><strong>マルコフ連鎖遷移</strong> <span class="tag">probability</span><br><span class="latex">P(X_{n+1} = j \mid X_n = i) = p_{ij}</span></p>
+<p><strong>k次マルコフ連鎖による驚き度</strong> <span class="tag">probability</span><br><span class="latex">h^{(k)}(x_t) = -\log_2 P(x_t | x_{t-1}, \ldots, x_{t-k})</span></p>
+<p><strong>12音音列の総数</strong> <span class="tag">probability</span><br><span class="latex">|S_{12}| = 12! = 479\,001\,600</span></p>
+<p><strong>バイノーラルビートの知覚周波数</strong> <span class="tag">psychoacoustics</span><br><span class="latex">f_{\mathrm{beat}} = |f_L - f_R|</span></p>
+<p><strong>音高クラスプロファイル間コサイン類似度</strong> <span class="tag">psychoacoustics</span><br><span class="latex">\cos(\theta) = \frac{\mathbf{a}\cdot\mathbf{b}}{\|\mathbf{a}\|\|\mathbf{b}\|}</span></p>
+<p><strong>臨界帯域数（ツビッカー・バーク尺度）</strong> <span class="tag">psychoacoustics</span><br><span class="latex">z = 13\arctan(0.00076\,f) + 3.5\arctan\!\left(\frac{f}{7500}\right)^2</span></p>
+<p><strong>EEG－音響コヒーレンス</strong> <span class="tag">psychoacoustics</span><br><span class="latex">C_{xy}(f) = \frac{|P_{xy}(f)|^2}{P_{xx}(f)\, P_{yy}(f)}</span></p>
+<p><strong>等価矩形帯域幅</strong> <span class="tag">psychoacoustics</span><br><span class="latex">ERB(f) = 24.7\,(4.37 f/1000 + 1)</span></p>
+<p><strong>フェヒナーの対数心理物理則</strong> <span class="tag">psychoacoustics</span><br><span class="latex">S = k \log\!\left(\frac{I}{I_0}\right)</span></p>
+<p><strong>フリストン自由エネルギー原理（予測的処理）</strong> <span class="tag">psychoacoustics</span><br><span class="latex">F = \mathbb{E}_q[\log q(\theta) - \log p(\theta, o)]</span></p>
+<p><strong>ハース効果（先行音効果）の遅延閾値</strong> <span class="tag">psychoacoustics</span><br><span class="latex">\Delta t &lt; 35\,\mathrm{ms} \Rightarrow \text{perceived as single source}</span></p>
+    </section>
+
+    <section class="chapter" id="cosmos">
+      <h2><span class="num">08</span>音楽と宇宙</h2>
+      <p>ピタゴラスのmusica universalis (BC550) からKepler Harmonices Mundi (1619)、Chladni図形 (1787)、
+         Schumann共振 (1952)、Persei銀河団ブラックホール音響 (B♭ / 中央Cの57オクターブ下) まで。
+         音楽思想は常に宇宙論と接続してきました。インド Nāda Brahman、ヴェーダ Om、中国律呂、
+         オーストラリア先住民 Songlines、マヤ・ロングカウント、イヌイット katajjaq まで、
+         非西洋宇宙音楽思想も主軸に置きました。</p>
+      <table>
+        <thead><tr><th>関係</th><th>時代</th><th>科学的位置づけ</th></tr></thead>
+        <tbody>
+        <tr><td><strong>ancestral cosmic geography</strong> ↔ <code style='font-size:11px'>Aboriginal Songlines</code></td><td>indigenous_ancient</td><td><span class='tag'>indigenous_cosmological</span></td></tr>
+<tr><td><strong>cosmic breath exchange in Arctic cosmology</strong> ↔ <code style='font-size:11px'>Inuit katajjaq throat singing</code></td><td>indigenous_ancient</td><td><span class='tag'>indigenous_cosmological</span></td></tr>
+<tr><td><strong>primordial vibration as cosmic origin</strong> ↔ <code style='font-size:11px'>Nada Brahman cosmic sound</code></td><td>south_asian_ancient</td><td><span class='tag'>religious_metaphysical</span></td></tr>
+<tr><td><strong>celestial sphere rotation</strong> ↔ <code style='font-size:11px'>Musica Universalis</code></td><td>ancient_greek</td><td><span class='tag'>historical_metaphysical</span></td></tr>
+<tr><td><strong>planetary orbits</strong> ↔ <code style='font-size:11px'>C_FREQ_RATIO</code></td><td>ancient</td><td><span class='tag'>historical</span></td></tr>
+<tr><td><strong>world soul harmony</strong> ↔ <code style='font-size:11px'>C_MUSICA_UNIVERSALIS</code></td><td>ancient</td><td><span class='tag'>historical</span></td></tr>
+<tr><td><strong>Platonic lambda cosmic scale</strong> ↔ <code style='font-size:11px'>Timaeus World Soul ratios</code></td><td>ancient_greek</td><td><span class='tag'>historical_metaphysical</span></td></tr>
+<tr><td><strong>geometric cosmic architecture</strong> ↔ <code style='font-size:11px'>Platonic solids nested planetary spheres</code></td><td>ancient_greek_renaissance</td><td><span class='tag'>historical_mathematical</span></td></tr>
+<tr><td><strong>twelve earthly branches and months</strong> ↔ <code style='font-size:11px'>Chinese Lülü twelve-pitch system</code></td><td>east_asian_ancient</td><td><span class='tag'>historical_cosmological</span></td></tr>
+<tr><td><strong>cosmos as sound (Nada Brahman)</strong> ↔ <code style='font-size:11px'>—</code></td><td>ancient</td><td><span class='tag'>historical</span></td></tr>
+<tr><td><strong>astronomical cycles encoded in ceremonial performance</strong> ↔ <code style='font-size:11px'>Mayan Long Count ritual music</code></td><td>mesoamerican_ancient</td><td><span class='tag'>historical_cosmological</span></td></tr>
+<tr><td><strong>cosmic hierarchy of vibration</strong> ↔ <code style='font-size:11px'>Boethius musica mundana–humana–instrumentalis</code></td><td>medieval</td><td><span class='tag'>historical_philosophical</span></td></tr>
+<tr><td><strong>planetary motion ratios</strong> ↔ <code style='font-size:11px'>C_KEPLER_HARMONICES</code></td><td>modern</td><td><span class='tag'>empirically_supported</span></td></tr>
+<tr><td><strong>planetary velocity ratios → musical intervals</strong> ↔ <code style='font-size:11px'>Kepler Harmonices Mundi</code></td><td>early_modern</td><td><span class='tag'>historical_mathematical</span></td></tr>
+<tr><td><strong>planetary intervals encyclopedia</strong> ↔ <code style='font-size:11px'>Kircher Musurgia Universalis</code></td><td>early_modern</td><td><span class='tag'>historical_mathematical</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter" id="genealogy">
+      <h2><span class="num">09</span>系譜チェーン</h2>
+      <p>5つの主要系譜 (Pythagoras→Kepler 2,170年の天球音楽系譜、Schoenberg学派12音、
+         Hindustani gharana 師弟系譜、American minimalism 系譜、AI音楽 Illiac Suite→MusicLM 系譜) を
+         mus_genealogy_chains + mus_genealogy_chain_members で構造化。</p>
+      <table>
+        <thead><tr><th>系譜</th><th>時代範囲</th><th>説明</th></tr></thead>
+        <tbody>
+        <tr><td><strong>AI音楽生成系譜</strong><br><code style='font-size:11px;color:var(--text-muted)'>GC_AI_MUSIC</code></td><td>1957-2024</td><td>Hiller-Isaacson Illiac Suite → David Cope EMI → Magenta NSynth → WaveNet → MusicLM → Suno/Udio</td></tr>
+<tr><td><strong>ヒンドゥスターニー古典 ghārānā 系譜</strong><br><code style='font-size:11px;color:var(--text-muted)'>GC_INDIAN_GHARANA</code></td><td>1700-present</td><td>グワリオール・パティアラ・キラナ・ラーマプルなど主要 ghārānā 師弟系譜</td></tr>
+<tr><td><strong>アメリカン・ミニマリズム系譜</strong><br><code style='font-size:11px;color:var(--text-muted)'>GC_MINIMALIST</code></td><td>1960-present</td><td>La Monte Young→Riley→Reich→Glass→Adams→Beth Anderson のミニマリズム連続</td></tr>
+<tr><td><strong>ピタゴラス→ケプラーの宇宙調和系譜</strong><br><code style='font-size:11px;color:var(--text-muted)'>GC_PYTH_KEPLER</code></td><td>BC550-AD1619</td><td>天球の音楽思想がPythagoras→Plato→Boethius→Kepler Harmonices Mundi へ至る2000年系譜</td></tr>
+<tr><td><strong>シェーンベルク学派12音技法系譜</strong><br><code style='font-size:11px;color:var(--text-muted)'>GC_SCHOENBERG</code></td><td>1908-1945</td><td>Schoenberg→Webern→Berg→Babbitt→Boulez→Stockhausenへ続く12音・総音列主義の継承</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter" id="xrefs">
+      <h2><span class="num">10</span>横断参照 (cross_db_refs)</h2>
+      <p>1,055件のcross_db_refsで22種類のミラツク既存DBと接続。
+         音楽×物理 (phys)、音楽×数学 (math)、音楽×歴史人物 (great-figures)、音楽×哲学 (philosophy)、
+         音楽×伝統知 (traditional-knowledge) を中心に、音楽がエコシステム全体に「接続」されました。</p>
+      <table>
+        <thead><tr><th>接続先DB</th><th class="num">件数</th><th>シェア</th></tr></thead>
+        <tbody>
+        <tr><td><code>kgh</code></td><td class='num'>113</td><td><span class="bar-bg"><span class="bar-fg" style="width:10.7%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">10.7%</span></td></tr>
+<tr><td><code>math</code></td><td class='num'>110</td><td><span class="bar-bg"><span class="bar-fg" style="width:10.4%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">10.4%</span></td></tr>
+<tr><td><code>philosophy</code></td><td class='num'>101</td><td><span class="bar-bg"><span class="bar-fg" style="width:9.6%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">9.6%</span></td></tr>
+<tr><td><code>phys</code></td><td class='num'>96</td><td><span class="bar-bg"><span class="bar-fg" style="width:9.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">9.1%</span></td></tr>
+<tr><td><code>traditional-knowledge</code></td><td class='num'>89</td><td><span class="bar-bg"><span class="bar-fg" style="width:8.4%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">8.4%</span></td></tr>
+<tr><td><code>great-figures</code></td><td class='num'>84</td><td><span class="bar-bg"><span class="bar-fg" style="width:8.0%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">8.0%</span></td></tr>
+<tr><td><code>anthropology</code></td><td class='num'>76</td><td><span class="bar-bg"><span class="bar-fg" style="width:7.2%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">7.2%</span></td></tr>
+<tr><td><code>era-talents</code></td><td class='num'>68</td><td><span class="bar-bg"><span class="bar-fg" style="width:6.4%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">6.4%</span></td></tr>
+<tr><td><code>historical-cases</code></td><td class='num'>58</td><td><span class="bar-bg"><span class="bar-fg" style="width:5.5%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">5.5%</span></td></tr>
+<tr><td><code>innovation-db</code></td><td class='num'>50</td><td><span class="bar-bg"><span class="bar-fg" style="width:4.7%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">4.7%</span></td></tr>
+<tr><td><code>lit</code></td><td class='num'>50</td><td><span class="bar-bg"><span class="bar-fg" style="width:4.7%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">4.7%</span></td></tr>
+<tr><td><code>gc</code></td><td class='num'>43</td><td><span class="bar-bg"><span class="bar-fg" style="width:4.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">4.1%</span></td></tr>
+<tr><td><code>myth-narratives</code></td><td class='num'>43</td><td><span class="bar-bg"><span class="bar-fg" style="width:4.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">4.1%</span></td></tr>
+<tr><td><code>ftt</code></td><td class='num'>19</td><td><span class="bar-bg"><span class="bar-fg" style="width:1.8%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">1.8%</span></td></tr>
+<tr><td><code>ec</code></td><td class='num'>12</td><td><span class="bar-bg"><span class="bar-fg" style="width:1.1%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">1.1%</span></td></tr>
+<tr><td><code>mg</code></td><td class='num'>10</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.9%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.9%</span></td></tr>
+<tr><td><code>poetics</code></td><td class='num'>9</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.9%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.9%</span></td></tr>
+<tr><td><code>mdd</code></td><td class='num'>7</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.7%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.7%</span></td></tr>
+<tr><td><code>sg</code></td><td class='num'>6</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.6%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.6%</span></td></tr>
+<tr><td><code>cq</code></td><td class='num'>5</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.5%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.5%</span></td></tr>
+<tr><td><code>cdh</code></td><td class='num'>4</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.4%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.4%</span></td></tr>
+<tr><td><code>gmn</code></td><td class='num'>2</td><td><span class="bar-bg"><span class="bar-fg" style="width:0.2%"></span></span><span style="font-family: var(--font-mono); font-size: 11px">0.2%</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="chapter" id="quality">
+      <h2><span class="num">11</span>品質指標</h2>
+      <p>5件セット品質メトリクス (Observed Agreement / Gwet AC1 / Cohen κ / Positive Prevalence / Sample Size)
+         を採用 (Gwet AC1 を主指標、Kappa単独公表禁止ルール準拠)。Phase 3 監査でorphan relation・自己ループ・
+         重複・source_url欠損は0件を確認。</p>
+      <table>
+        <thead><tr><th>指標</th><th>値</th><th>備考</th></tr></thead>
+        <tbody>
+        <tr><td><code>cohens_kappa</code></td><td class='num'>0.0</td><td>Phase 3 (not computed; AC1 primary per quality-metrics-standard.md)</td></tr>
+<tr><td><code>gwet_ac1</code></td><td class='num'>0.95</td><td>Phase 3 audit estimate, single-rater proxy with 5% noise assumption</td></tr>
+<tr><td><code>observed_agreement</code></td><td class='num'>0.95</td><td>Phase 3 estimate</td></tr>
+<tr><td><code>phase</code></td><td class='num'>phase2_seed</td><td>Phase 0 spec / Phase 1 schema / Phase 2 seed 完了</td></tr>
+<tr><td><code>positive_prevalence</code></td><td class='num'>1.0</td><td>Phase 3 sample</td></tr>
+<tr><td><code>sample_size</code></td><td class='num'>100</td><td>Phase 3 sample</td></tr>
+<tr><td><code>seed_methodology</code></td><td class='num'>/adb v1.1 path-A</td><td>academic concept DB path A</td></tr>
+<tr><td><code>source_url_completeness</code></td><td class='num'>100%</td><td>すべての seed レコードに source_url 必須</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footer">
+      <strong>NPO法人ミラツク / esse-sense</strong> &nbsp;|&nbsp; MUS-DB v1.0 &nbsp;|&nbsp; 2026-05-20<br>
+      <a href="https://github.com/yuyanishimura0312/music-knowledge-db">GitHub</a> &nbsp;·&nbsp;
+      <a href="../databases.html">ミラツク DB エコシステム</a>
+    </div>
+  </main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('mus-theme', next);
+}
+const saved = localStorage.getItem('mus-theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+
+</body>
+</html>
