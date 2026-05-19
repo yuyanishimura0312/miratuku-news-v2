@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WCPS-DB Dashboard — Web Commerce Persuasion & Conversion Science DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-warm: #FF4030;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font);
+  font-size: 16px; line-height: 1.85;
+  font-feature-settings: "palt";
+}
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 48px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; z-index: 100;
+}
+.top-bar-brand { font-weight: 700; letter-spacing: 0.04em; }
+.top-bar-brand small { color: var(--text-muted); font-weight: 400; margin-left: 8px; }
+.theme-toggle {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text); padding: 4px 12px; cursor: pointer; border-radius: 4px;
+  font-family: var(--font); font-size: 14px;
+}
+.theme-toggle:hover { background: var(--card-hover); border-color: var(--accent-warm); }
+
+.layout { display: flex; padding-top: 48px; min-height: 100vh; }
+.toc-sidebar {
+  width: 240px; padding: 32px 20px;
+  border-right: 1px solid var(--border-light);
+  position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto;
+}
+.toc-label {
+  font-size: 11px; letter-spacing: 0.2em; color: var(--text-muted);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.toc-list { list-style: none; }
+.toc-list li { margin-bottom: 8px; }
+.toc-list a {
+  color: var(--text-secondary); text-decoration: none; font-size: 14px;
+  display: block; padding: 4px 0;
+}
+.toc-list a:hover { color: var(--accent-warm); }
+.toc-num {
+  color: var(--text-muted); font-family: var(--font-mono);
+  font-size: 12px; margin-right: 8px;
+}
+
+.main {
+  flex: 1; max-width: 880px; margin: 0 auto; padding: 48px 56px;
+}
+.hero {
+  margin-bottom: 64px; padding-bottom: 40px;
+  border-bottom: 1px solid var(--border-light);
+}
+.hero-eyebrow {
+  font-size: 11px; letter-spacing: 0.2em; color: var(--accent-warm);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.hero h1 {
+  font-family: var(--font-serif); font-size: 36px; font-weight: 600;
+  line-height: 1.4; margin-bottom: 12px;
+}
+.hero .subtitle {
+  font-size: 18px; color: var(--text-secondary); font-weight: 400;
+  margin-bottom: 24px;
+}
+.hero .meta { font-size: 13px; color: var(--text-muted); }
+
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px; margin-bottom: 48px;
+}
+.kpi {
+  background: var(--surface); border: 1px solid var(--border-light);
+  padding: 20px; border-radius: 4px;
+}
+.kpi-label { font-size: 11px; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+.kpi-value { font-family: var(--font-serif); font-size: 32px; font-weight: 600; color: var(--accent-warm); line-height: 1; }
+.kpi-unit { font-size: 14px; color: var(--text-secondary); font-weight: 400; margin-left: 4px; }
+
+.section {
+  margin-bottom: 64px; padding-bottom: 40px;
+  border-bottom: 1px solid var(--border-light);
+}
+.section h2 {
+  font-family: var(--font-serif); font-size: 24px; font-weight: 600;
+  margin-bottom: 20px; padding-left: 12px; border-left: 3px solid var(--accent-warm);
+}
+.section p { margin-bottom: 16px; text-indent: 1em; color: var(--text-secondary); }
+
+.sf-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px; margin-top: 24px;
+}
+.sf-card {
+  background: var(--card); border: 1px solid var(--border-light);
+  padding: 16px; border-radius: 4px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.sf-card:hover { border-color: var(--accent-warm); background: var(--card-hover); }
+.sf-id {
+  font-family: var(--font-mono); font-size: 11px; color: var(--accent-warm);
+  letter-spacing: 0.1em; margin-bottom: 4px;
+}
+.sf-name {
+  font-weight: 600; font-size: 15px; margin-bottom: 12px;
+  color: var(--text);
+}
+.sf-coverage { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+.sf-coverage strong { color: var(--accent-warm); font-weight: 600; }
+.sf-bar {
+  background: var(--border-light); height: 4px; border-radius: 2px;
+  margin-top: 6px; overflow: hidden;
+}
+.sf-bar-fill { height: 100%; transition: width 0.4s; }
+.sf-meta { font-size: 11px; color: var(--text-muted); }
+
+table {
+  width: 100%; border-collapse: collapse; margin-top: 16px;
+  font-size: 14px;
+}
+th, td {
+  text-align: left; padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+}
+th { font-weight: 600; color: var(--text); background: var(--surface); }
+td { color: var(--text-secondary); }
+td:first-child { color: var(--text); font-weight: 500; }
+.font-mono { font-family: var(--font-mono); }
+
+.ethics-banner {
+  background: var(--accent-muted); border-left: 3px solid var(--accent-warm);
+  padding: 16px 20px; margin: 24px 0; border-radius: 4px;
+}
+.ethics-banner h3 { font-size: 14px; color: var(--accent-warm); margin-bottom: 8px; letter-spacing: 0.05em; }
+.ethics-banner p { font-size: 13px; color: var(--text-secondary); text-indent: 0; }
+
+footer {
+  margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted); text-align: center;
+}
+
+@media (max-width: 1000px) {
+  .toc-sidebar { display: none; }
+  .main { padding: 32px 20px; }
+  .hero h1 { font-size: 28px; }
+}
+@media print {
+  .top-bar, .toc-sidebar, .theme-toggle { display: none; }
+  .main { padding: 0; max-width: 100%; }
+}
+</style>
+</head>
+<body data-theme="light">
+<div class="top-bar">
+  <div class="top-bar-brand">WCPS-DB <small>v1.0 Wave 1 MVP</small></div>
+  <button class="theme-toggle" onclick="toggleTheme()">☾ Dark</button>
+</div>
+
+<div class="layout">
+  <aside class="toc-sidebar">
+    <div class="toc-label">Contents — 全 7 章</div>
+    <ul class="toc-list">
+      <li><a href="#about"><span class="toc-num">01</span>概要</a></li>
+      <li><a href="#kpi"><span class="toc-num">02</span>主要指標</a></li>
+      <li><a href="#subfields"><span class="toc-num">03</span>13 サブフィールド</a></li>
+      <li><a href="#crossref"><span class="toc-num">04</span>Cross-DB 接続</a></li>
+      <li><a href="#culture"><span class="toc-num">05</span>文化バランス</a></li>
+      <li><a href="#ethics"><span class="toc-num">06</span>倫理境界</a></li>
+      <li><a href="#disclaimer"><span class="toc-num">07</span>免責</a></li>
+    </ul>
+  </aside>
+
+  <main class="main">
+    <section class="hero">
+      <div class="hero-eyebrow">ACADEMIC DATABASE / WAVE 1 MVP</div>
+      <h1>WCPS-DB</h1>
+      <div class="subtitle">Web Commerce Persuasion &amp; Conversion Science DB ― 売買行動の学術知見基盤</div>
+      <div class="meta">最終更新 2026-05-19 23:39　/　 NPO法人ミラツク × esse-sense　/　 13 サブフィールド × 必須理論 150 件 100% カバー</div>
+    </section>
+
+    <section class="section" id="about">
+      <h2>01　概要</h2>
+      <p>WCPS-DB は、Web 上の人間の売買行動を最大化するための学術知見（心理・行動・数理・アルゴリズム・実装）を世界最高品質で集積した学術概念データベースです。行動経済学・消費者行動論・神経マーケティング・コンバージョン最適化・レコメンダーシステムの 13 領域を横断統合し、ピアレビュー論文と公開技術文献を出典として、実装可能技法を学術理論で裏打ちします。</p>
+      <p>既存の WMD (Web Monetization DB) が収益化「技法カタログ」を扱うのに対し、WCPS-DB は学術論文起点の「心理・行動・数理メカニズム」基盤として差別化されます。両 DB は cross_db_refs で双方向接続されます。</p>
+    </section>
+
+    <section class="section" id="kpi">
+      <h2>02　主要指標</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Concepts</div><div class="kpi-value">272</div></div>
+        <div class="kpi"><div class="kpi-label">必須理論カバー</div><div class="kpi-value">152<span class="kpi-unit">/150</span></div></div>
+        <div class="kpi"><div class="kpi-label">verified</div><div class="kpi-value">57<span class="kpi-unit">%</span></div></div>
+        <div class="kpi"><div class="kpi-label">source_url</div><div class="kpi-value">100<span class="kpi-unit">%</span></div></div>
+        <div class="kpi"><div class="kpi-label">Cross-DB Refs</div><div class="kpi-value">712</div></div>
+        <div class="kpi"><div class="kpi-label">接続先 DB 数</div><div class="kpi-value">16</div></div>
+      </div>
+    </section>
+
+    <section class="section" id="subfields">
+      <h2>03　13 サブフィールド</h2>
+      <p>必須理論 150 件は Wave 1 で 100% カバー達成。Wave 3 で各 SF 350-700 concepts まで拡張し合計 5,500 concepts を目指します。</p>
+      <div class="sf-grid">
+        
+    <div class="sf-card">
+      <div class="sf-id">WCPS01</div>
+      <div class="sf-name">消費者意思決定論</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>12/12</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 450 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS02</div>
+      <div class="sf-name">行動経済学・ナッジ</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>15/15</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 600 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS03</div>
+      <div class="sf-name">説得・社会心理</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>12/12</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 400 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS04</div>
+      <div class="sf-name">価格心理学</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>12/12</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 400 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS05</div>
+      <div class="sf-name">UX 認知科学</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>12/12</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 400 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS06</div>
+      <div class="sf-name">コンバージョン最適化 (CRO)</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>12/12</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 400 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS07</div>
+      <div class="sf-name">A/B テスト・因果推論</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>12/12</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 500 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS08</div>
+      <div class="sf-name">レコメンダーシステム</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>15/15</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 700 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS09</div>
+      <div class="sf-name">デジタル広告効果</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>10/10</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 350 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS10</div>
+      <div class="sf-name">e コマース・購買経路</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>10/10</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 350 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS11</div>
+      <div class="sf-name">モバイル・通知・習慣設計</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>10/10</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 350 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS12</div>
+      <div class="sf-name">ダークパターン・倫理</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>10/10</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 350 concepts (Wave 3)</div>
+    </div>
+    
+    <div class="sf-card">
+      <div class="sf-id">WCPS13</div>
+      <div class="sf-name">神経マーケティング</div>
+      <div class="sf-coverage">
+        必須理論カバー <strong>10/10</strong> (100%)
+        <div class="sf-bar"><div class="sf-bar-fill" style="width:100.0%;background:#CC1400"></div></div>
+      </div>
+      <div class="sf-meta">target 350 concepts (Wave 3)</div>
+    </div>
+    
+      </div>
+    </section>
+
+    <section class="section" id="crossref">
+      <h2>04　Cross-DB 接続</h2>
+      <p>既存ミラツク／esse-sense DB エコシステム 16 DB と接続。WMD/EC/MG/SS/AN/INNOVATION/great-figures/GC/PHIL/MATH/CDH/FTT/AI-DEV/TECH-ACCELERATION/RG/POLICY/CULTURAL-INTELLIGENCE/LAB の 18 DB がターゲット。</p>
+      <table>
+        <thead><tr><th>External DB</th><th>Reference 件数</th></tr></thead>
+        <tbody><tr><td>mg</td><td>142</td></tr><tr><td>ec</td><td>99</td></tr><tr><td>ai-dev</td><td>73</td></tr><tr><td>ss</td><td>59</td></tr><tr><td>math</td><td>57</td></tr><tr><td>wmd</td><td>55</td></tr><tr><td>phil</td><td>40</td></tr><tr><td>great-figures</td><td>38</td></tr><tr><td>lab</td><td>38</td></tr><tr><td>ftt</td><td>30</td></tr><tr><td>gc</td><td>23</td></tr><tr><td>innovation-db</td><td>22</td></tr><tr><td>policy</td><td>17</td></tr><tr><td>rg</td><td>17</td></tr><tr><td>ai-acceleration</td><td>1</td></tr><tr><td>cdh</td><td>1</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="section" id="culture">
+      <h2>05　文化バランス</h2>
+      <p>Wave 1 では西洋古典理論を集中投入のため非西洋率が低いですが、Wave 2-3 で中国 EC (Alibaba/JD.com/TikTok 公開論文)、インド消費者研究、イスラム消費倫理、ラ米 BoP、アフリカ M-Pesa、日本 KSP-POS 等を組み込み、20% 以上を目標とします。</p>
+      <table>
+        <thead><tr><th>Culture Region</th><th>Concepts</th><th>比率</th></tr></thead>
+        <tbody><tr><td>african</td><td>2</td><td>0.7%</td></tr><tr><td>chinese</td><td>17</td><td>6.3%</td></tr><tr><td>indian</td><td>4</td><td>1.5%</td></tr><tr><td>japanese</td><td>3</td><td>1.1%</td></tr><tr><td>latin_american</td><td>1</td><td>0.4%</td></tr><tr><td>non_western</td><td>2</td><td>0.7%</td></tr><tr><td>western</td><td>243</td><td>89.3%</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="section" id="ethics">
+      <h2>06　倫理境界</h2>
+      <div class="ethics-banner">
+        <h3>SF12 ダークパターン・倫理 を必須サブフィールドとして組込</h3>
+        <p>「売買行動の最大化」を倫理規範（Brignull / Mathur 2019 / Gray 2018 / EU DSA Art.25 / GDPR / 景表法 / 特定商取引法）内に位置づけます。manipulative 技法には ethics_flag を必須付与し、Wave 3 で 100% カバーを達成します。</p>
+      </div>
+      <p>WCPS12 は WCPS01-11 の各概念に対する境界条件として機能します。例えば WCPS04 価格心理学の「Decoy Effect」自体は学術的に中立ですが、消費者にとって不合理な選択を強制する形で実装すれば Brignull の「Misdirection」分類に該当します。WCPS-DB は学術概念とその倫理境界を分離記述することで、設計者の判断材料を提供します。</p>
+    </section>
+
+    <section class="section" id="disclaimer">
+      <h2>07　免責</h2>
+      <p>本 DB は Web 上の売買行動誘導技法を学術知見として整理したものであり、特定の操作的・欺瞞的実装を推奨するものではありません。実装にあたっては EU DSA / GDPR / 景表法 / 特定商取引法 / 業界倫理規範を遵守し、消費者厚生を損なう手法を回避してください。引用した数値・効果は集団傾向であり、個人差・文脈差が大きいことを前提としています。</p>
+    </section>
+
+    <footer>
+      © 2026 NPO法人ミラツク × esse-sense　/　 WCPS-DB Wave 1 MVP　/　 GitHub: yuyanishimura0312/wcps-db (private)
+    </footer>
+  </main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.body.getAttribute('data-theme') || 'light';
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.body.setAttribute('data-theme', next);
+  localStorage.setItem('wcps-theme', next);
+  document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀ Light' : '☾ Dark';
+}
+(function() {
+  const saved = localStorage.getItem('wcps-theme');
+  if (saved) {
+    document.body.setAttribute('data-theme', saved);
+    document.querySelector('.theme-toggle').textContent = saved === 'dark' ? '☀ Light' : '☾ Dark';
+  }
+})();
+</script>
+</body>
+</html>
