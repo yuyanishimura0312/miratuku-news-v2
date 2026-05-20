@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="ja" data-theme="light"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AR-DB Firing Patterns Dashboard</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555;
+  --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --highlight: #CC1400; --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "SF Mono", "Fira Code", monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font-serif); line-height: 1.85; letter-spacing: 0.025em;
+  font-feature-settings: "palt"; }
+.top-bar { position: sticky; top: 0; z-index: 100; height: 48px;
+  background: var(--bg); border-top: 3px solid #121212;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center;
+  padding: 0 24px; gap: 16px; font-family: var(--font); }
+.top-bar a { color: var(--text); text-decoration: none; font-weight: 500; font-size: 14px; }
+.top-bar .brand { color: var(--accent-warm); font-weight: 600; letter-spacing: 0.1em; }
+.top-bar .right { margin-left: auto; display: flex; gap: 12px; }
+.top-bar button { background: none; border: 1px solid var(--border);
+  color: var(--text); padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  font-family: var(--font); font-size: 13px; }
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 32px;
+  max-width: 1280px; margin: 0 auto; padding: 24px; }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static !important; max-height: none !important; }
+}
+.sidebar { position: sticky; top: 72px; max-height: calc(100vh - 96px);
+  overflow-y: auto; font-family: var(--font); font-size: 13px; }
+.sidebar h3 { font-family: var(--font); font-size: 11px; letter-spacing: 0.15em;
+  color: var(--text-muted); text-transform: uppercase; margin: 16px 0 8px; }
+.sidebar ol { list-style: none; padding: 0; margin: 0 0 24px 0; }
+.sidebar li { padding: 4px 0; }
+.sidebar a { color: var(--text-secondary); text-decoration: none;
+  border-left: 2px solid transparent; padding-left: 8px; display: block; }
+.sidebar a:hover { color: var(--accent-warm); border-color: var(--accent-warm); }
+.sidebar .num { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px;
+  margin-right: 6px; }
+main { max-width: 900px; }
+main h1 { font-family: var(--font-serif); font-size: 36px; line-height: 1.3;
+  margin: 0 0 8px; color: var(--accent); letter-spacing: 0; }
+main h1 .accent { color: var(--accent-warm); }
+.lede { color: var(--text-secondary); font-size: 17px; margin: 0 0 32px;
+  line-height: 1.75; }
+.chapter-section { margin-bottom: 64px; padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-light); }
+.chapter-section:last-child { border-bottom: none; }
+.chapter-num { font-family: var(--font-mono); font-size: 12px;
+  color: var(--accent-warm); letter-spacing: 0.2em; margin: 0 0 8px; }
+h2 { font-family: var(--font-serif); font-size: 24px; line-height: 1.4;
+  margin: 0 0 20px; color: var(--accent); }
+h3 { font-family: var(--font-serif); font-size: 18px; line-height: 1.5;
+  margin: 32px 0 12px; color: var(--accent); }
+p { margin: 0 0 18px; text-indent: 1em; }
+p:first-of-type, p.lede, .stat p, .pattern-card p { text-indent: 0; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px; margin: 24px 0; }
+.kpi { padding: 16px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--card); }
+.kpi .label { font-family: var(--font); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.kpi .value { font-family: var(--font-serif); font-size: 28px; color: var(--accent-warm);
+  font-weight: 500; margin-top: 4px; }
+.kpi .sub { font-family: var(--font); font-size: 12px; color: var(--text-secondary);
+  margin-top: 4px; }
+.pattern-card { border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px; margin: 16px 0; background: var(--card); }
+.pattern-card .ptitle { font-family: var(--font-serif); font-size: 18px;
+  color: var(--accent-warm); font-weight: 500; margin-bottom: 8px; }
+.pattern-card .pmeta { font-family: var(--font); font-size: 12px;
+  color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 12px; }
+.pattern-card .pout { font-family: var(--font-serif); font-size: 14px;
+  line-height: 1.7; color: var(--text-secondary); }
+.pattern-card .pemergent { background: var(--accent-muted); padding: 12px;
+  border-radius: 4px; margin-top: 12px; font-size: 13px;
+  color: var(--text); border-left: 3px solid var(--accent-warm); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-family: var(--font); font-size: 10px; background: var(--accent-muted);
+  color: var(--accent-warm); margin-right: 4px; letter-spacing: 0.05em; }
+.tag.success { background: #2D7A30; color: #fff; }
+.tag.fail { background: var(--accent-warm); color: #fff; }
+.tag.neutral { background: var(--surface); color: var(--text-secondary); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0;
+  font-family: var(--font); font-size: 13px; }
+th { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--accent);
+  color: var(--text); font-weight: 500; letter-spacing: 0.05em; }
+td { padding: 6px 12px; border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary); }
+td.num { font-family: var(--font-mono); text-align: right; color: var(--accent-warm); }
+.timeline { font-family: var(--font); font-size: 13px;
+  border-left: 2px solid var(--border); padding-left: 16px; margin: 16px 0; }
+.timeline .event { margin-bottom: 16px; position: relative; }
+.timeline .event::before { content: '●'; position: absolute; left: -22px;
+  color: var(--accent-warm); font-size: 12px; }
+.timeline .time { color: var(--text-muted); font-family: var(--font-mono);
+  font-size: 11px; }
+.timeline .name { color: var(--accent); font-weight: 500; margin-left: 8px; }
+.template-card { display: grid; grid-template-columns: 200px 1fr;
+  gap: 16px; padding: 16px; border: 1px solid var(--border-light);
+  border-radius: 6px; margin: 12px 0; background: var(--card); }
+.template-card:hover { background: var(--card-hover); }
+.template-card .left { font-family: var(--font); font-size: 12px;
+  color: var(--text-muted); }
+.template-card .left .name { color: var(--accent-warm); font-size: 14px;
+  font-weight: 500; margin-bottom: 4px; }
+.template-card .right { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+.phenom-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px; margin: 16px 0; }
+.phenom-card { border: 1px solid var(--border-light); border-radius: 6px;
+  padding: 14px; background: var(--card); }
+.phenom-card .ptitle { font-family: var(--font-serif); font-size: 15px;
+  color: var(--accent); margin-bottom: 4px; font-weight: 500; }
+.phenom-card .pdesc { font-size: 13px; color: var(--text-secondary);
+  line-height: 1.7; margin-top: 6px; }
+.phenom-card .pmeta { font-family: var(--font); font-size: 11px;
+  color: var(--text-muted); }
+footer { font-family: var(--font); font-size: 12px; color: var(--text-muted);
+  text-align: center; padding: 32px; border-top: 1px solid var(--border-light); }
+@media print {
+  .sidebar, .top-bar { display: none; }
+  .layout { grid-template-columns: 1fr; }
+  main { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="brand">AR-DB · Firing Patterns</span>
+  <a href="#kpi">KPI</a>
+  <a href="#patterns">パターン</a>
+  <a href="#templates">テンプレ</a>
+  <a href="#phenomena">創発</a>
+  <a href="#timeline">タイムライン</a>
+  <a href="#coverage">カバレッジ</a>
+  <a href="#analysis">分析</a>
+  <div class="right">
+    <a href="ar-db.html">AR-DB</a>
+    <a href="mpp.html">MPP-DB</a>
+    <button id="theme-toggle">☾/☀</button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h3>目次</h3>
+    <ol>
+      <li><a href="#overview"><span class="num">01</span>概要と原理</a></li>
+      <li><a href="#kpi"><span class="num">02</span>KPI</a></li>
+      <li><a href="#patterns"><span class="num">03</span>観測パターン</a></li>
+      <li><a href="#templates"><span class="num">04</span>canonical テンプレ</a></li>
+      <li><a href="#phenomena"><span class="num">05</span>創発現象</a></li>
+      <li><a href="#timeline"><span class="num">06</span>タイムライン</a></li>
+      <li><a href="#coverage"><span class="num">07</span>MPP-DB カバレッジ</a></li>
+      <li><a href="#analysis"><span class="num">08</span>失敗分析</a></li>
+      <li><a href="#how"><span class="num">09</span>使い方</a></li>
+    </ol>
+  </aside>
+  <main>
+
+<section class="chapter-section" id="overview">
+  <p class="chapter-num">01 — OVERVIEW</p>
+  <h1>並列発火<span class="accent">パターン</span>の自己観察基盤</h1>
+  <p class="lede">複数の独立した発火点が並列に振動し、結合し、創発パターンを生む ── MPP-DB (Musical Patterns Pervasive Knowledge DB) の核心仮説を AR-DB の構造として直接表現したダッシュボード。エコシステムが自分自身の振動を観察・予測・最適化する基盤。</p>
+  <p>AR-DB の既存層 (agents × agent_relations × db_references) はノードとエッジの静的グラフでしたが、実際のオーケストレーションは「複数エージェントの並列発火 → 結合 → 創発出力」という時間的・動的構造です。本拡張は MPP-DB の 7 つの音楽的パターン (Kuramoto 同期 / Chromatophore wave / Theta-gamma 結合 / Firefly pulse-coupled / Lefebvre 二重リズム / 1/f 自己組織化臨界 / IIT Φ統合) を canonical テンプレ化し、各並列発火イベントをそれらの実例として記録します。</p>
+  <p>記録の永続化は二重化されています。`data/firing_patterns/observed_patterns.json` が正本で、ETL 再構築後も `auto_update.sh` step 1.5 で自動 seeding されます。`logs/firing/firing_log.jsonl` には全記録の append-only 監査トレールが残ります。新規イベントは `scripts/record_firing.py` で記録すると、両方に同時追記されます。</p>
+</section>
+
+<section class="chapter-section" id="kpi">
+  <p class="chapter-num">02 — KPI</p>
+  <h2>規模と健全性</h2>
+  <div class="kpi-grid">
+<div class="kpi"><div class="label">Observed Patterns</div><div class="value">2</div><div class="sub">観測された並列発火イベント</div></div>
+<div class="kpi"><div class="label">Canonical Templates</div><div class="value">7</div><div class="sub">MPP-DB 起源 7種</div></div>
+<div class="kpi"><div class="label">Participants</div><div class="value">26</div><div class="sub">発火に参加した要素数</div></div>
+<div class="kpi"><div class="label">Couplings</div><div class="value">5</div><div class="sub">二者間結合の記録</div></div>
+<div class="kpi"><div class="label">Phenomena</div><div class="value">4</div><div class="sub">創発現象の観察</div></div>
+<div class="kpi"><div class="label">MPP Links</div><div class="value">11</div><div class="sub">6/15 SF カバー</div></div>
+<div class="kpi"><div class="label">Failure Rate</div><div class="value">16.0%</div><div class="sub">参加要素のうち失敗した割合</div></div>
+</div>
+</section>
+
+<section class="chapter-section" id="patterns">
+  <p class="chapter-num">03 — OBSERVED PATTERNS</p>
+  <h2>観測されたパターン (2)</h2>
+  <p>記録された並列発火イベント。各イベントは canonical テンプレに紐付けられ、参加者・結合・創発を構造化データとして残します。これらは時間が経つほど蓄積し、エコシステム自身の振動パターンを学習する素材になります。</p>
+<div class="pattern-card">
+  <div class="ptitle">MPP-DB Wave 1 construction</div>
+  <div class="pmeta">
+    <span class="tag">global-mean-field</span>
+    <span class="tag">SF10</span>
+    <span class="tag">Kuramoto model</span>
+    <span class="tag neutral">N=19</span>
+    <span class="tag neutral">K=0.85</span>
+    <span class="tag neutral">part-sync ◐</span>
+    <span class="tag fail">fail 4/19</span>
+    <span class="tag neutral">couplings 5</span>
+    <span class="tag neutral">phenom 4</span>
+  </div>
+  <p class="pout">1,176 concepts / 224 researchers / 5,876 cross_db_refs / 非西洋率 35.6% / 15 SF 全カバー</p>
+</div>
+<div class="pattern-card">
+  <div class="ptitle">AR-DB v1.1 MPP Extension build</div>
+  <div class="pmeta">
+    <span class="tag">hierarchical</span>
+    <span class="tag">SF14</span>
+    <span class="tag">Integrated Information Theory (Tononi)</span>
+    <span class="tag neutral">N=6</span>
+    <span class="tag neutral">K=0.85</span>
+    <span class="tag neutral">part-sync ◐</span>
+    <span class="tag success">no fail</span>
+    <span class="tag neutral">couplings 0</span>
+    <span class="tag neutral">phenom 0</span>
+  </div>
+  <p class="pout">6 tables + 3 views + 7 templates + 1 observed pattern seeded</p>
+</div>
+</section>
+
+<section class="chapter-section" id="templates">
+  <p class="chapter-num">04 — CANONICAL TEMPLATES</p>
+  <h2>canonical テンプレ (MPP-DB 起源 7 種)</h2>
+  <p>再利用可能な並列発火パターンの canonical 形。それぞれが MPP-DB の特定 SF の概念に対応し、推奨参加数・結合強度・典型ユースケース・失敗モードを持ちます。新しい並列発火を設計する際の出発点。</p>
+<div class="template-card">
+  <div class="left">
+    <div class="name">Kuramoto-style parallel oscillators</div>
+    <div>SF10 / global-mean-field</div>
+    <div style="margin-top:8px">N 5-30</div>
+    <div>K ≈ 0.7</div>
+  </div>
+  <div class="right">
+    <div style="margin-bottom:8px"><strong style="color:var(--accent)">Kuramoto model</strong></div>
+    <div style="font-size:13px;line-height:1.6">蔵本由紀 1975 結合振動子モデルの並列実行アナロジー。N個の自然周波数の異なる発火点を均等結合し、結合強度K が臨界K_cを超えると同期へ相転移する。AR-DB上では『大規模並列エージェント起動で同じテーマを処理する』状況に該当。各エージェントは独自の所要時間(=自然周波数)を持ち、共通テーマ(=結合)によって出力時系列が共起する。</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">use: DB大規模並列seeding / 連載100話並列執筆 / 補論並列強化 / multi-domain research</div>
+    <div style="margin-top:4px;font-size:12px;color:var(--accent-warm)">⚠ K不足→同期失敗(出力多様性過剰), K過剰→均質化(独自性消失), 個別失敗(API limit/timeout)→部分同期</div>
+  </div>
+</div>
+<div class="template-card">
+  <div class="left">
+    <div class="name">Chromatophore wave parallel firing</div>
+    <div>SF01 / nearest-neighbor</div>
+    <div style="margin-top:8px">N 8-50</div>
+    <div>K ≈ 0.5</div>
+  </div>
+  <div class="right">
+    <div style="margin-bottom:8px"><strong style="color:var(--accent)">Octopus chromatophore wave</strong></div>
+    <div style="font-size:13px;line-height:1.6">頭足類体色波の AR-DB アナロジー。複数の発火点(色素胞=エージェント)が、近接結合のみで、進行波を生む。中央制御不要、隣接相互作用だけで全体パターンが現れる。AR-DB では『db-master が逐次起動するが、各エージェントが隣の出力を見て微調整する』状況。</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">use: 段階的DB構築 (Phase 0→1→2→…) / cascade research / chained validation</div>
+    <div style="margin-top:4px;font-size:12px;color:var(--accent-warm)">⚠ 中央制御なしのため全体ゴール逸脱可, 隣接結合切れで波途絶</div>
+  </div>
+</div>
+<div class="template-card">
+  <div class="left">
+    <div class="name">Theta-gamma cross-frequency coupling</div>
+    <div>SF04 / cross-frequency</div>
+    <div style="margin-top:8px">N 2-20</div>
+    <div>K ≈ 0.8</div>
+  </div>
+  <div class="right">
+    <div style="margin-bottom:8px"><strong style="color:var(--accent)">Theta-gamma coupling</strong></div>
+    <div style="font-size:13px;line-height:1.6">Buzsáki 神経振動の階層結合 AR-DB アナロジー。低速発火 (theta = メタオーケストレーター, 数分周期) の位相が、高速発火 (gamma = サブエージェント, 数十秒周期) の振幅を変調する。AR-DB では『meta が周期的に再評価し、その位相でサブエージェントを集中起動する』階層構造。</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">use: メタオーケストレーション (katachi-autonomy / db-master) / Wave段階展開 / Phase反復</div>
+    <div style="margin-top:4px;font-size:12px;color:var(--accent-warm)">⚠ theta-gamma位相ずれ→無効発火 / theta停止→gamma暴走</div>
+  </div>
+</div>
+<div class="template-card">
+  <div class="left">
+    <div class="name">Firefly pulse-coupled synchrony</div>
+    <div>SF10 / pulse-coupled</div>
+    <div style="margin-top:8px">N 3-15</div>
+    <div>K ≈ 0.6</div>
+  </div>
+  <div class="right">
+    <div style="margin-bottom:8px"><strong style="color:var(--accent)">Mirollo-Strogatz pulse-coupled</strong></div>
+    <div style="font-size:13px;line-height:1.6">Mirollo-Strogatz 1990 pulse-coupled oscillator の AR-DB アナロジー。各エージェントは独立に走るが、完了通知 (= pulse) で他の進行を加速させる。最終的に全員が同時完了に向かう。AR-DB では『background_task の完了通知で次のwaveを発火させる』fire-and-cascade。</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">use: 並列QA / 並列レビュー / parallel-report / 並列翻訳</div>
+    <div style="margin-top:4px;font-size:12px;color:var(--accent-warm)">⚠ 全員同時失敗で連鎖停止, 1体だけ突出して残り無効化</div>
+  </div>
+</div>
+<div class="template-card">
+  <div class="left">
+    <div class="name">Lefebvre dual-rhythm interpenetration</div>
+    <div>SF09 / cross-frequency</div>
+    <div style="margin-top:8px">N 2-10</div>
+    <div>K ≈ 0.4</div>
+  </div>
+  <div class="right">
+    <div style="margin-bottom:8px"><strong style="color:var(--accent)">Lefebvre Rhythmanalysis</strong></div>
+    <div style="font-size:13px;line-height:1.6">Lefebvre 1992『リズム分析』の AR-DB アナロジー。線形リズム(線形タスク完了の連鎖)と循環リズム(launchd cron の周期発火)が相互浸透して全体リズムを作る。AR-DB では『日次自動更新 (循環) と Wave 単位の DB 構築 (線形) が重なる』状況。両者の eurhythmia (整合) vs arrhythmia (不整合) を観測する。</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">use: miratuku-daily-pipeline (循環) × DB構築 (線形) / 連載定常運用 × 新連載立ち上げ</div>
+    <div style="margin-top:4px;font-size:12px;color:var(--accent-warm)">⚠ arrhythmia化 (循環と線形が干渉して両方遅延), 循環の停止で線形側のシグナル枯渇</div>
+  </div>
+</div>
+<div class="template-card">
+  <div class="left">
+    <div class="name">1/f self-organized criticality</div>
+    <div>SF07 / parallel</div>
+    <div style="margin-top:8px">N 20-500</div>
+    <div>K ≈ 0.1</div>
+  </div>
+  <div class="right">
+    <div style="margin-bottom:8px"><strong style="color:var(--accent)">1/f noise in music (Voss-Clarke)</strong></div>
+    <div style="font-size:13px;line-height:1.6">Voss-Clarke 1975 1/fノイズの AR-DB アナロジー。多数の独立発火点が独立に活動するが、出力全体のスペクトルは1/fになる(=自己組織化臨界)。AR-DB では『全エコシステムが意図的協調なしに個別に動いていても、全体としての知識生産は1/f的に成長する』状況。</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">use: AR-DB全体の常時稼働 / 全エコシステムの日次運用 / 自律エージェント群の長期観測</div>
+    <div style="margin-top:4px;font-size:12px;color:var(--accent-warm)">⚠ 個別最適化散逸 (協調なし→重複/欠落)</div>
+  </div>
+</div>
+<div class="template-card">
+  <div class="left">
+    <div class="name">IIT Φ-integration emergence</div>
+    <div>SF14 / hierarchical</div>
+    <div style="margin-top:8px">N 5-20</div>
+    <div>K ≈ 0.9</div>
+  </div>
+  <div class="right">
+    <div style="margin-bottom:8px"><strong style="color:var(--accent)">Integrated Information Theory (Tononi)</strong></div>
+    <div style="font-size:13px;line-height:1.6">Tononi IIT の AR-DB アナロジー。複数のエージェントが互いに非冗長・統合的に発火することで、個別の和を超える「全体としての知」が創発する。AR-DB では『異なる専門の研究者エージェントが並列に発火して相互参照付きで統合される』状況。partition すると失われる情報量=Φの対応物を測定可能。</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">use: ANSWER+ Premium 19役編成 / academic-oracle 7DB統合 / katachi-100 48体並列</div>
+    <div style="margin-top:4px;font-size:12px;color:var(--accent-warm)">⚠ Φ低下 (専門が重複, 冗長化), 統合層欠落 (出力が並列のまま統合されない)</div>
+  </div>
+</div>
+</section>
+
+<section class="chapter-section" id="phenomena">
+  <p class="chapter-num">05 — EMERGENT PHENOMENA</p>
+  <h2>創発した現象 (4)</h2>
+  <p>並列発火から立ち現れた「個別の和を超えた」観察。MPP-DB の概念を介して質的に言語化されます。</p>
+  <div class="phenom-grid">
+<div class="phenom-card">
+  <div class="ptitle">Meta-recursive instantiation</div>
+  <div class="pmeta">
+    MPP-DB Wave 1 construction · <span class="tag">SF14</span>
+    <span style="color:var(--accent-warm)">●●●●</span>
+  </div>
+  <div class="pdesc">MPP-DB Wave 1 構築そのものが MPP-DB SF10 Kuramoto 同期の AR-DB 実例。DB が自分自身を構築過程で実例化した。</div>
+  <div class="pmeta" style="margin-top:6px">analog: cosmic · Integrated Information Theory (Tononi)</div>
+</div>
+<div class="phenom-card">
+  <div class="ptitle">Cross-SF semantic coherence</div>
+  <div class="pmeta">
+    MPP-DB Wave 1 construction · <span class="tag">SF10</span>
+    <span style="color:var(--accent-warm)">●●●●</span>
+  </div>
+  <div class="pdesc">15 SF全てが &#x27;音楽的パターン&#x27; という抽象テーマで共起・整合した。個別 SF は独立分野だが、出力レベルで意味的一貫性が立ち現れた。</div>
+  <div class="pmeta" style="margin-top:6px">analog: neural · Kuramoto model</div>
+</div>
+<div class="phenom-card">
+  <div class="ptitle">Failover-driven robustness</div>
+  <div class="pmeta">
+    MPP-DB Wave 1 construction · <span class="tag">SF10</span>
+    <span style="color:var(--accent-warm)">●●●●</span>
+  </div>
+  <div class="pdesc">Claude API 月次上限到達 4体が同時失敗するも、codex 14 並列が完走。系全体の robustness が分散発火構造から生まれた。</div>
+  <div class="pmeta" style="margin-top:6px">analog: group · Mirollo-Strogatz pulse-coupled</div>
+</div>
+<div class="phenom-card">
+  <div class="ptitle">Non-Western anchoring</div>
+  <div class="pmeta">
+    MPP-DB Wave 1 construction · <span class="tag">SF09</span>
+    <span style="color:var(--accent-warm)">●●●</span>
+  </div>
+  <div class="pdesc">非西洋率 35.6% は単発エージェント単独では到達困難。15並列発火に &#x27;非西洋率30%以上&#x27; の共通指示を埋め込むことで集団的に達成。</div>
+  <div class="pmeta" style="margin-top:6px">analog: urban · Lefebvre Rhythmanalysis</div>
+</div>
+</div></section>
+
+<section class="chapter-section" id="timeline">
+  <p class="chapter-num">06 — TIMELINE</p>
+  <h2>発火タイムライン</h2>
+  <p>記録された並列発火を時系列で。これは蓄積するほど、エコシステムが自分自身のリズムを学ぶ素材になります。</p>
+  <div class="timeline">
+<div class="event">
+  <span class="time">2026-05-19T22:58:38+00:00</span>
+  <span class="name">AR-DB v1.1 MPP Extension build</span>
+  <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+    hierarchical · N=6 · ◐ part · fail=0
+  </div>
+  <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">
+    6 tables + 3 views + 7 templates + 1 observed pattern seeded
+  </div>
+</div>
+<div class="event">
+  <span class="time">2026-05-20T02:30:00</span>
+  <span class="name">MPP-DB Wave 1 construction</span>
+  <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+    global-mean-field · N=19 · ◐ part · fail=4
+  </div>
+  <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">
+    1,176 concepts / 224 researchers / 5,876 cross_db_refs / 非西洋率 35.6% / 15 SF 全カバー
+  </div>
+</div>
+</div></section>
+
+<section class="chapter-section" id="coverage">
+  <p class="chapter-num">07 — MPP-DB COVERAGE</p>
+  <h2>MPP-DB サブフィールドカバレッジ</h2>
+  <p>MPP-DB の 15 サブフィールドのうち、AR-DB のパターン記録 / テンプレで参照されているもの。蓄積が進むほど、エコシステムの振動が音楽的パターンの全領域でカバーされていきます。</p>
+  <table>
+    <thead><tr><th>MPP-DB SF</th><th class="num">観測パターン</th><th class="num">canonical テンプレ</th></tr></thead>
+    <tbody>
+<tr><td>SF01</td><td class='num'>0</td><td class='num'>1</td></tr>
+<tr><td>SF04</td><td class='num'>0</td><td class='num'>1</td></tr>
+<tr><td>SF07</td><td class='num'>0</td><td class='num'>1</td></tr>
+<tr><td>SF09</td><td class='num'>1</td><td class='num'>1</td></tr>
+<tr><td>SF10</td><td class='num'>1</td><td class='num'>2</td></tr>
+<tr><td>SF14</td><td class='num'>1</td><td class='num'>1</td></tr>
+</tbody></table>
+  <p style="margin-top:16px;font-size:13px;color:var(--text-muted)">
+    現在カバー: 6/15 SF。SF 別の発火事例が増えるほど、各音楽的パターン (Kuramoto / IIT / Lefebvre 等) の AR-DB 実例集が積み上がります。
+  </p>
+</section>
+
+<section class="chapter-section" id="analysis">
+  <p class="chapter-num">08 — FAILURE ANALYSIS</p>
+  <h2>失敗パターン分析</h2>
+  <p>記録された失敗は最適化の素材です。同じ失敗を繰り返さないため、AR-DB は失敗理由を可視化します。</p>
+<table><thead><tr><th>失敗理由</th><th class='num'>件数</th></tr></thead><tbody>
+<tr><td>Claude API monthly usage limit</td><td class='num'>4</td></tr>
+</tbody></table>
+</section>
+
+<section class="chapter-section" id="how">
+  <p class="chapter-num">09 — HOW TO USE</p>
+  <h2>使い方</h2>
+
+  <h3>新規発火イベント記録</h3>
+  <pre style="background:var(--surface);padding:12px;border-radius:6px;font-family:var(--font-mono);font-size:12px;line-height:1.5;overflow-x:auto">
+# 簡易引数モード
+python3 ~/projects/research/agent-registry-db/scripts/record_firing.py \
+  --name "並列QA 5体実行" \
+  --participants "qa-functional,qa-security,qa-ui,qa-content,qa-perf" \
+  --task "新規アプリ QA レビュー" \
+  --topology pulse-coupled \
+  --outcome "5観点 sync 完了 / 重大欠陥 0"
+
+# JSON 全部入りモード
+echo '{"pattern_name":"...","participants":[...]}' | python3 ... --stdin
+
+# ファイル指定
+python3 ... --from-file new_pattern.json</pre>
+
+  <h3>分析</h3>
+  <pre style="background:var(--surface);padding:12px;border-radius:6px;font-family:var(--font-mono);font-size:12px;line-height:1.5;overflow-x:auto">
+python3 scripts/analyze_patterns.py summary       # 総覧
+python3 scripts/analyze_patterns.py failures      # 失敗分析
+python3 scripts/analyze_patterns.py couplings     # 結合分析
+python3 scripts/analyze_patterns.py trends        # 時系列
+python3 scripts/analyze_patterns.py predict --task "並列QA 5体"
+python3 scripts/analyze_patterns.py optimize      # 改善提案</pre>
+
+  <h3>SQL 直接クエリ</h3>
+  <pre style="background:var(--surface);padding:12px;border-radius:6px;font-family:var(--font-mono);font-size:12px;line-height:1.5;overflow-x:auto">
+DB=~/projects/research/agent-registry-db/data/agent_registry.db
+sqlite3 $DB "SELECT * FROM v_firing_patterns_summary"
+sqlite3 $DB "SELECT * FROM v_pattern_templates_summary"
+sqlite3 $DB "SELECT * FROM v_mpp_pattern_coverage"
+sqlite3 $DB "SELECT * FROM emergent_phenomena WHERE pattern_id=1"</pre>
+
+  <h3>永続化アーキテクチャ</h3>
+  <ul style="font-size:13px;line-height:1.85">
+    <li><strong>data/firing_patterns/observed_patterns.json</strong> — 観測パターンの正本。ETL 再構築でも保持。</li>
+    <li><strong>data/firing_patterns/canonical_templates.json</strong> — canonical テンプレ 7 種の正本。</li>
+    <li><strong>schema/schema.sql</strong> — 拡張テーブル DDL 統合済 (ETL で自動再構築)。</li>
+    <li><strong>etl/auto_update.sh</strong> step 1.5 — extract.py 実行直後に seed_mpp_pattern_ext.py 自動実行。</li>
+    <li><strong>logs/firing/firing_log.jsonl</strong> — append-only 監査トレール (SHA-256 hash 付き)。</li>
+    <li><strong>git commit</strong> — 各 record_firing 実行で自動 commit (audit trail)。</li>
+  </ul>
+</section>
+
+<footer>
+  AR-DB MPP Pattern Extension v1.0 · 2026-05-20 14:14 · NPO法人ミラツク · esse-sense<br>
+  © 2026 — エコシステムの自己観察基盤
+</footer>
+
+  </main>
+</div>
+
+<script>
+const root = document.documentElement;
+const saved = localStorage.getItem('ardb-firing-theme') || 'light';
+root.setAttribute('data-theme', saved);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const cur = root.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('ardb-firing-theme', next);
+});
+</script>
+</body></html>
