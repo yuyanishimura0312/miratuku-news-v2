@@ -45,7 +45,7 @@ def main():
     print(f"Target: ftp://{HOST}{REMOTE_DIR}/")
 
     print("Connecting...")
-    ftp = FTP(HOST, timeout=60)
+    ftp = FTP(HOST, timeout=180)
     ftp.login(USER, get_password())
     ftp.set_pasv(True)
     print(f"Connected as {USER}")
