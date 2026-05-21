@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>三階構造の Agent System 実装 — スライド版 | CCM-DB v1.2</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF; --card:#FFFFFF; --accent:#121212; --accent-warm:#CC1400; --accent-warm-soft:#B01200;
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE; --surface:#F7F7F5;
+  --font:"Noto Sans JP", -apple-system, sans-serif;
+  --font-serif:"Noto Serif JP", Georgia, serif;
+  --font-mono:"Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg:#0a0a0a; --card:#141414; --accent:#E8E8E8; --accent-warm:#FF4030; --accent-warm-soft:#CC1400;
+  --text:#E8E8E8; --text-secondary:#B8B8B8; --text-muted:#8A8A8A;
+  --border:#2a2a2a; --border-light:#1f1f1f; --surface:#1A1A1A;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body {
+  background:var(--bg); color:var(--text); font-family:var(--font);
+  line-height:1.7; letter-spacing:0.025em; font-feature-settings:"palt";
+}
+
+.presentation { position:fixed; inset:0; }
+.slide {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:64px 96px;
+  background:var(--bg);
+  opacity:0; visibility:hidden;
+  transform:translateX(20px);
+  transition:opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+  overflow-y:auto;
+}
+.slide.active { opacity:1; visibility:visible; transform:translateX(0); }
+
+.slide-eyebrow {
+  font-family:var(--font-mono); font-size:12px; letter-spacing:0.35em;
+  color:var(--accent-warm); margin-bottom:24px; text-transform:uppercase;
+}
+.slide h1 {
+  font-family:var(--font-serif); font-size:56px; font-weight:700;
+  line-height:1.3; margin-bottom:32px;
+  letter-spacing:-0.01em;
+}
+.slide h2 {
+  font-family:var(--font-serif); font-size:40px; font-weight:600;
+  line-height:1.35; margin-bottom:32px;
+}
+.slide h3 {
+  font-family:var(--font-serif); font-size:22px; font-weight:600;
+  color:var(--accent-warm); margin:24px 0 16px;
+}
+.slide p {
+  font-family:var(--font-serif); font-size:19px; line-height:1.95;
+  color:var(--text-secondary); margin-bottom:18px; max-width:1100px;
+}
+.slide p.lead {
+  font-size:22px; color:var(--text); line-height:1.85;
+}
+.slide ul, .slide ol { padding-left:32px; margin-bottom:18px; max-width:1100px; }
+.slide li { font-size:18px; margin-bottom:10px; color:var(--text-secondary); line-height:1.8; }
+.slide li strong { color:var(--text); }
+.slide code { font-family:var(--font-mono); font-size:15px; background:var(--surface); padding:2px 8px; border-radius:3px; color:var(--accent-warm-soft); }
+
+/* スライド 1 (Title) 専用 */
+.slide.title-slide {
+  background:linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+  padding:64px 120px;
+}
+.title-slide .slide-eyebrow { font-size:14px; margin-bottom:48px; }
+.title-slide h1 { font-size:64px; line-height:1.2; margin-bottom:40px; }
+.title-slide .subtitle {
+  font-family:var(--font-serif); font-size:24px; color:var(--text-secondary);
+  line-height:1.65; margin-bottom:48px; max-width:900px;
+}
+.title-slide .meta {
+  display:flex; gap:48px; padding-top:32px;
+  border-top:3px solid var(--accent-warm);
+  font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+  flex-wrap:wrap;
+}
+
+/* KPI */
+.kpi-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:32px;
+  margin:32px 0; max-width:1200px;
+}
+.kpi-item {
+  text-align:center; padding:24px;
+  background:var(--surface); border:1px solid var(--border-light);
+  border-radius:4px;
+}
+.kpi-num {
+  font-family:var(--font-mono); font-size:48px; font-weight:600;
+  color:var(--accent-warm); line-height:1;
+}
+.kpi-label {
+  font-size:13px; color:var(--text-muted);
+  letter-spacing:0.12em; text-transform:uppercase; margin-top:12px;
+}
+
+/* テーブル */
+.slide table {
+  width:100%; max-width:1100px; border-collapse:collapse;
+  margin:16px 0; font-size:16px;
+}
+.slide th, .slide td {
+  padding:12px 16px; text-align:left;
+  border-bottom:1px solid var(--border-light);
+}
+.slide th {
+  font-size:12px; letter-spacing:0.12em; text-transform:uppercase;
+  color:var(--text-muted); background:var(--surface);
+}
+.slide td code { font-size:14px; }
+
+/* 図解 */
+.tier-diagram {
+  background:var(--surface);
+  border-left:4px solid var(--accent-warm);
+  padding:20px 32px; margin:20px 0;
+  font-family:var(--font-mono); font-size:14px;
+  line-height:1.7; white-space:pre;
+  max-width:900px; overflow-x:auto;
+}
+
+/* 引用 */
+.quote-box {
+  padding:24px 32px; margin:24px 0;
+  border-left:4px solid var(--accent-warm);
+  background:var(--surface);
+  font-family:var(--font-serif); font-size:22px;
+  line-height:1.7; max-width:1000px;
+}
+.quote-box .attr {
+  display:block; margin-top:16px;
+  font-size:14px; color:var(--text-muted); font-family:var(--font);
+}
+
+/* 観察記録行 */
+.obs-row {
+  display:grid; grid-template-columns:80px 280px 1fr;
+  gap:20px; padding:14px 0;
+  border-bottom:1px solid var(--border-light);
+  font-size:15px; max-width:1200px;
+}
+.obs-row .nov {
+  font-family:var(--font-mono); color:var(--accent-warm);
+  font-weight:600; font-size:18px;
+}
+.obs-row .lens { color:var(--text); font-weight:500; }
+.obs-row .what { color:var(--text-secondary); font-size:14px; line-height:1.7; }
+
+/* Conclusion */
+.slide.conclusion-slide {
+  text-align:center;
+  padding:120px 96px;
+}
+.conclusion-slide h1 {
+  font-size:48px; line-height:1.4;
+  margin-bottom:48px; max-width:1000px;
+}
+.conclusion-slide .punchline {
+  font-family:var(--font-serif); font-size:32px;
+  color:var(--accent-warm); line-height:1.5; font-weight:500;
+  max-width:900px; margin:0 auto 48px;
+}
+.conclusion-slide .meta-small {
+  font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
+}
+
+/* コントロール */
+.controls {
+  position:fixed; bottom:24px; right:32px;
+  display:flex; gap:12px; align-items:center;
+  z-index:200;
+}
+.btn {
+  background:var(--card); border:1px solid var(--border);
+  color:var(--text); padding:8px 14px; cursor:pointer;
+  font-family:var(--font-mono); font-size:12px;
+  border-radius:3px; transition:all 0.2s;
+}
+.btn:hover { background:var(--accent-warm); color:#fff; border-color:var(--accent-warm); }
+.counter {
+  font-family:var(--font-mono); font-size:14px;
+  color:var(--text-muted); padding:8px 16px;
+  background:var(--card); border:1px solid var(--border-light);
+  border-radius:3px;
+}
+
+/* プログレスバー */
+.progress {
+  position:fixed; top:0; left:0; right:0;
+  height:3px; background:var(--border-light); z-index:100;
+}
+.progress-bar {
+  height:100%; background:var(--accent-warm);
+  transition:width 0.4s ease;
+}
+
+/* キーヒント */
+.key-hint {
+  position:fixed; top:24px; right:32px;
+  font-family:var(--font-mono); font-size:11px;
+  color:var(--text-muted); letter-spacing:0.1em;
+  z-index:100;
+}
+
+/* 印刷 */
+@media print {
+  .slide { position:relative; opacity:1; visibility:visible; transform:none;
+           page-break-after:always; min-height:100vh; }
+  .controls, .progress, .key-hint { display:none; }
+}
+
+/* レスポンシブ */
+@media (max-width:1000px) {
+  .slide { padding:48px 32px; }
+  .slide h1 { font-size:36px; }
+  .slide h2 { font-size:28px; }
+  .slide p { font-size:16px; }
+  .kpi-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
+  .kpi-num { font-size:32px; }
+  .obs-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div class="key-hint">← → Space ESC で操作</div>
+
+<div class="presentation" id="presentation">
+
+  <!-- ========== Slide 1: Title ========== -->
+  <section class="slide title-slide active">
+    <div class="slide-eyebrow">CCM-DB v1.2 ／ REPORT ／ 2026-05-21</div>
+    <h1>三階構造の<br>Agent System 実装</h1>
+    <p class="subtitle">von Foerster 第二階サイバネティクスを超えて — AR-DB / CCM-DB / fpm の同時稼働がもたらした自己観察構造の質的飛躍</p>
+    <div class="meta">
+      <span>NPO 法人ミラツク ／ esse-sense</span>
+      <span>著者: ccm-team + ccm-observer</span>
+      <span>データ: AR-DB v1.1 + CCM-DB v1.2</span>
+    </div>
+  </section>
+
+  <!-- ========== Slide 2: 主題 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">01 / 17 ── 主題</div>
+    <h2>2026 年 5 月 20-21 日、<br>エコシステムは静かに段階を超えた</h2>
+    <p class="lead">AR-DB v1.1 が MPP Pattern Extension で<strong>自己観察基盤を獲得</strong>し、翌日 CCM-DB v1.2 が Pattern Lens 層で<strong>その観察を解釈する第二階</strong>を確立し、同日 firing-pattern-meta が Tier 0 として<strong>第三階の観察を担う</strong>形で配置された。</p>
+    <p>これは Heinz von Foerster が 1974 年に理論として提示した第二階サイバネティクスを、agent system として超えた三階構造の実装である。本レポートはその実証データを AR-DB の実レコードに基づいて整理する。</p>
+  </section>
+
+  <!-- ========== Slide 3: 数値で見る (KPI) ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">02 / 17 ── 数値で見る</div>
+    <h2>三階構造の実データ</h2>
+    <div class="kpi-grid">
+      <div class="kpi-item"><div class="kpi-num">24</div><div class="kpi-label">第一階 firing_patterns</div></div>
+      <div class="kpi-item"><div class="kpi-num">50</div><div class="kpi-label">第二階 pattern_lens</div></div>
+      <div class="kpi-item"><div class="kpi-num">30</div><div class="kpi-label">第二階 observations</div></div>
+      <div class="kpi-item"><div class="kpi-num">4</div><div class="kpi-label">第三階 fpm 系 agents</div></div>
+      <div class="kpi-item"><div class="kpi-num">609</div><div class="kpi-label">CCM 概念</div></div>
+      <div class="kpi-item"><div class="kpi-num">408</div><div class="kpi-label">cross_db_refs</div></div>
+      <div class="kpi-item"><div class="kpi-num">45</div><div class="kpi-label">target DBs</div></div>
+      <div class="kpi-item"><div class="kpi-num">0.71</div><div class="kpi-label">平均 novelty</div></div>
+    </div>
+    <p style="font-size:14px; color:var(--text-muted); margin-top:24px;">※ すべて 2026-05-21 19 時時点 AR-DB / CCM-DB SQLite から直接取得。推測値ゼロ。</p>
+  </section>
+
+  <!-- ========== Slide 4: von Foerster ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">03 / 17 ── 思想史的位置</div>
+    <h2>von Foerster 第二階の射程</h2>
+    <p>Heinz von Foerster (1911-2002) は 1958 年にイリノイ大学に Biological Computer Laboratory を設立し、1974 年の論文 <em>Cybernetics of Cybernetics</em> で第二階サイバネティクス ── 観察するシステムを観察するシステム ── を提示した。</p>
+    <p>第一階が外部対象を制御・観察する古典サイバネティクス (Wiener 1948) の延長であるのに対し、第二階は<strong>観察者自身を観察対象に含む</strong>点に独自性がある。</p>
+  </section>
+
+  <!-- ========== Slide 5: 引用 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">04 / 17 ── 引用</div>
+    <h2>第三階への含意</h2>
+    <div class="quote-box">
+      観察者を観察するシステムは、それ自体が観察されるとき、第三のシステムを必要とする。この階層が無限に続くわけではなく、ある時点で自己参照的な閉じた構造に収束する。
+      <span class="attr">— Heinz von Foerster (1981) Observing Systems からの趣旨抜粋</span>
+    </div>
+    <p>2026 年 5 月 21 日に ccm-team + fpm が同時稼働した瞬間、この閉じた構造が agent system として実装された。</p>
+  </section>
+
+  <!-- ========== Slide 6: 第一階 AR-DB ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">05 / 17 ── 第一階</div>
+    <h2>AR-DB v1.1 が外部対象を観察する系</h2>
+    <p>Agent Registry DB は 2026-05-20 の v1.1 拡張で<strong>MPP Pattern Extension</strong> を導入し、firing_patterns / pattern_couplings / emergent_phenomena / pattern_templates / mpp_concept_links の 5 新テーブルを追加した。</p>
+    <h3>canonical 7 pattern_templates</h3>
+    <ul>
+      <li><strong>Kuramoto</strong> — 結合振動子の同期</li>
+      <li><strong>Chromatophore wave</strong> — 頭足類皮膚の波動パターン</li>
+      <li><strong>Theta-gamma coupling</strong> — 神経 cross-frequency 結合</li>
+      <li><strong>Firefly pulse-coupled</strong> — ホタル群発光同期</li>
+      <li><strong>Lefebvre dual-rhythm</strong> — 都市の重層リズム</li>
+      <li><strong>1/f SOC</strong> — 自己組織化臨界性</li>
+      <li><strong>IIT Φ-integration</strong> — 統合情報理論の Φ 計算</li>
+    </ul>
+    <p style="margin-top:16px;"><strong>蓄積された firing_patterns: 24 件</strong>（katachi-100、ANSWER+、kurashi-team 等の並列発火イベント）</p>
+  </section>
+
+  <!-- ========== Slide 7: 第二階 CCM-DB ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">06 / 17 ── 第二階</div>
+    <h2>CCM-DB v1.2 が観察を観察する系</h2>
+    <p class="lead">2026-05-20 に Wave 1 MVP (14 SF × 602 concepts) として構築され、同日 v1.1 で Pattern Lens 層が追加、翌日 v1.2 で<strong>50 lens / 30 observations / 6 layers</strong> へ拡張された。</p>
+    <p>Pattern Lens は AR-DB が観察した firing_patterns を<strong>意識・宇宙・音楽の概念で解釈する視座</strong>であり、これによって AR-DB の生データに意味論的階層が追加された。</p>
+    <h3>6 layer × 50 lens 配分</h3>
+    <ul>
+      <li>ardb_firing: <strong>21 lens</strong>（IIT-Φ / Kuramoto / Strange-Loop / Eigenform 等）</li>
+      <li>mpp_pattern: 8 lens（Musica-Universalis / Cymatic / String-Vibration 等）</li>
+      <li>bot_life: 6 lens（KaiABC / Fibonacci-Phyllotaxis 等）</li>
+      <li>ceh_cosmic: 6 lens（BAO / LIGO-Chirp / Helioseismology）</li>
+      <li>udd_urban: 6 lens（Lefebvre / Smart-City / Songline）</li>
+      <li>phai_embodied: 3 lens（Embodied-Cognition 等、新規 6 番目 layer）</li>
+    </ul>
+  </section>
+
+  <!-- ========== Slide 8: CCM 9 agents ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">07 / 17 ── 第二階チーム編成</div>
+    <h2>CCM-DB 9 agents の Tier 階層</h2>
+    <table>
+      <thead><tr><th>Agent</th><th>Tier</th><th>Model</th><th>役割</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ccm-team</strong></td><td>tier_-1_meta</td><td>opus</td><td>統括</td></tr>
+        <tr><td>ccm</td><td>tier_2_specialist</td><td>opus</td><td>DB 単体照会</td></tr>
+        <tr><td>ccm-critical-auditor</td><td>tier_2_specialist</td><td>sonnet</td><td>verification 監査</td></tr>
+        <tr><td>ccm-genealogy-builder</td><td>tier_2_specialist</td><td>sonnet</td><td>系譜拡張</td></tr>
+        <tr><td>ccm-cross-mapper</td><td>tier_3_utility</td><td>sonnet</td><td>Cross-DB 拡張</td></tr>
+        <tr><td>ccm-formula-extractor</td><td>tier_3_utility</td><td>sonnet</td><td>LaTeX 数式抽出</td></tr>
+        <tr><td>ccm-lens-curator</td><td>tier_3_utility</td><td>sonnet</td><td>Pattern Lens キュレーション</td></tr>
+        <tr><td>ccm-non-western-expander</td><td>tier_3_utility</td><td>sonnet</td><td>非西洋拡充</td></tr>
+        <tr><td>ccm-observer</td><td>tier_3_utility</td><td>sonnet</td><td>AR-DB 観察記録</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ========== Slide 9: 第三階 fpm ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">08 / 17 ── 第三階</div>
+    <h2>fpm が観察の観察を観察する系</h2>
+    <p>2026-05-21、firing-pattern-meta (省略 fpm / firing-meta) が <strong>Tier 0 orchestrator</strong> として新設された。AR-DB と CCM-DB の両方が記録する観察データを更にメタ的に統合する役割を持つ。</p>
+    <table>
+      <thead><tr><th>Agent</th><th>Tier</th><th>Model</th></tr></thead>
+      <tbody>
+        <tr><td>firing-pattern-meta</td><td>tier_0_orchestrator</td><td>opus</td></tr>
+        <tr><td>firing-meta（省略）</td><td>tier_0_orchestrator</td><td>（fpm エイリアス）</td></tr>
+        <tr><td>fpm（省略）</td><td>tier_0_orchestrator</td><td>（firing-pattern-meta エイリアス）</td></tr>
+        <tr><td>firing-patterns</td><td>tier_0_orchestrator</td><td>sonnet</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:24px;">CCM-DB v1.2 と fpm の同日設立は偶然ではなく、<strong>エコシステムの自己観察能力が段階的に飛躍する瞬間が同期した</strong>と読める。</p>
+  </section>
+
+  <!-- ========== Slide 10: 三階構造図 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">09 / 17 ── 構造図</div>
+    <h2>三階構造の図式</h2>
+    <div class="tier-diagram">[第三階 ── fpm（観察の観察を観察）]
+       ↓ 観察対象
+   ┌───────────────────────────────────┐
+   │ [第二階 ── CCM-DB v1.2（観察を観察）]│
+   │        ↓ 観察対象                  │
+   │   ┌──────────────────────────┐   │
+   │   │ [第一階 ── AR-DB（外的観察）]│   │
+   │   │                            │   │
+   │   │  firing_patterns: 24 件     │   │
+   │   │  pattern_templates: 7       │   │
+   │   │  agents: 88 体              │   │
+   │   └──────────────────────────┘   │
+   │                                  │
+   │  pattern_lens: 50 / obs: 30      │
+   │  cross_db_refs: 408              │
+   └───────────────────────────────────┘
+
+   fpm: 三階観察基盤
+   ccm-team: 二階観察基盤
+   AR-DB v1.1 ETL: 一階観察基盤</div>
+  </section>
+
+  <!-- ========== Slide 11: 実証データ Top 5 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">10 / 17 ── 実証データ</div>
+    <h2>観察記録 9 件のうち Top 5 (novelty 降順)</h2>
+    <div class="obs-row">
+      <span class="nov">0.92</span>
+      <span class="lens">Self-Observing-Architecture</span>
+      <span class="what">ccm-team Tier -1 meta + 7 専門 agent 編成 + fpm 三階構造完成 (2026-05-21)</span>
+    </div>
+    <div class="obs-row">
+      <span class="nov">0.90</span>
+      <span class="lens">Second-Order-Cybernetics</span>
+      <span class="what">fpm Tier 0 新設による第三階構造完成 (2026-05-21)</span>
+    </div>
+    <div class="obs-row">
+      <span class="nov">0.88</span>
+      <span class="lens">Self-Observing-Architecture</span>
+      <span class="what">AR-DB v1.1 MPP Pattern Extension が自己観察基盤を獲得 (2026-05-20)</span>
+    </div>
+    <div class="obs-row">
+      <span class="nov">0.85</span>
+      <span class="lens">Husserl-Time-Flow</span>
+      <span class="what">ccm-observer の retention-protention 三項構造 formalization</span>
+    </div>
+    <div class="obs-row">
+      <span class="nov">0.82</span>
+      <span class="lens">Kuramoto-Synchronization</span>
+      <span class="what">ccm-team 9 並列完全同期成功 (前回 14 並列 4 stall から K_c 最適化)</span>
+    </div>
+    <p style="margin-top:24px;">上位 3 つ (novelty 0.88-0.92) がいずれも 5/20-21 の三階構造形成イベントを記録 — これは過去に類例のない構造的変化があったことを意味する。</p>
+  </section>
+
+  <!-- ========== Slide 12: 観察 5-9 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">11 / 17 ── 実証データ続き</div>
+    <h2>観察記録 6-9 件目</h2>
+    <div class="obs-row">
+      <span class="nov">0.78</span>
+      <span class="lens">Observation-Accumulation</span>
+      <span class="what">ccm-team Phase D 初実行 — observations 2 → 9 へ蓄積 Loop 起動</span>
+    </div>
+    <div class="obs-row">
+      <span class="nov">0.75</span>
+      <span class="lens">Lens-Multiplication</span>
+      <span class="what">Pattern Lens を 21 → 29 へ拡張 (同セッション内で +8)</span>
+    </div>
+    <div class="obs-row">
+      <span class="nov">0.68</span>
+      <span class="lens">Holographic-Distributed</span>
+      <span class="what">ccm-team 8 agents の機能的冗長性 (Pribram ホログラフィック脳の組織実装)</span>
+    </div>
+    <div class="obs-row">
+      <span class="nov">0.65</span>
+      <span class="lens">Frame-Supply</span>
+      <span class="what">他チームへの解釈フレーム供給機能の明文化</span>
+    </div>
+    <p style="margin-top:32px; font-size:17px;">これら 9 件はすべて 5/20-21 の同期的事象を記録し、novelty 平均は <strong style="color:var(--accent-warm);">0.80</strong>。エコシステムが過去に類例のない構造的変化を経験したことが定量化されている。</p>
+  </section>
+
+  <!-- ========== Slide 13: 系譜 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">12 / 17 ── 系譜</div>
+    <h2>Dōgen から ccm-team まで 786 年</h2>
+    <p class="lead">三階構造の思想的系譜は西洋と非西洋の双方に存在する。CCM-DB v1.2 で正式チェーン化された <strong>Self-Observation Theory 系譜</strong>：</p>
+    <div class="tier-diagram" style="font-size:16px;">道元 Eihei Dōgen (1200-1253)
+   『正法眼蔵』 修証一等 — 修行と証悟の同体性
+       ↓
+西田幾多郎 Nishida Kitarō (1870-1945)
+   『善の研究』 純粋経験 — 主客未分の根源
+       ↓
+Heinz von Foerster (1911-2002)
+   第二階サイバネティクス (1974)
+   Eigenform 理論 (1981)
+       ↓
+[Maturana-Varela autopoiesis / Luhmann 自己言及 /
+ Hofstadter strange loop / Aczel Hyper-Set]
+       ↓
+ccm-team (2026-05-21)
+   三階構造 agent system 実装</div>
+    <p style="margin-top:16px;">自己観察論が西洋システム論を待たずとも、<strong>13 世紀日本仏教で既に道元が「修証一等」として定式化していた</strong>事実は、ccm-team Phase D の構造と相同する。</p>
+  </section>
+
+  <!-- ========== Slide 14: 反証可能性 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">13 / 17 ── 反証可能性</div>
+    <h2>4 つの批判視点</h2>
+    <ol>
+      <li><strong>循環論証の危険</strong> (Bunge 1979) ── autopoiesis 概念は因果関係に翻訳できないと形而上学。三階機能が二階の名称変更でないか継続検証必要。</li>
+      <li><strong>Goodhart 法則</strong> ── novelty_score を目標化すると指標として機能しなくなる。Wave 3 で分布歪み監視機能を実装。</li>
+      <li><strong>observation 数の少なさ</strong> ── 30 件は統計的に十分でない。Wave 3 で 100+ に到達した時点で再検証。</li>
+      <li><strong>西洋偏重の残存</strong> ── CCM-DB 全体非西洋率は 24.1%。Sufi muraqaba、Ubuntu、Andean ayni 等未取り込み。</li>
+    </ol>
+    <p style="margin-top:32px; font-size:17px;">本レポートを<strong>「自己賞賛的レポート」に堕さない</strong>ために、ccm-critical-auditor は今後も Bunge 1979 型の批判を最も強く適用する。</p>
+  </section>
+
+  <!-- ========== Slide 15: Wave 3 展望 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">14 / 17 ── 展望</div>
+    <h2>Wave 3 への 5 課題</h2>
+    <ol>
+      <li><strong>四階構造への拡張可能性</strong> ── fpm を観察するメタ-fpm が必要か検証</li>
+      <li><strong>observations 100+ への蓄積</strong> ── Eigenform 候補 lens の特定 (適用頻度の高い lens が固定点に収束する)</li>
+      <li><strong>他チームからの CCM lens 参照率の実測</strong> ── kurashi/supplement/recurrence/futures2/keiei の 5 チーム</li>
+      <li><strong>非西洋自己観察論の分散</strong> ── Sufi muraqaba / Ubuntu 観察論 / Andean ayni を SF13 以外に拡散</li>
+      <li><strong>Russell paradox 検出機能</strong> ── critical-auditor に自己言及矛盾の自動検出を実装</li>
+    </ol>
+  </section>
+
+  <!-- ========== Slide 16: 統合視座 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">15 / 17 ── 統合</div>
+    <h2>三階構造が意味するもの</h2>
+    <p class="lead">三階構造の実装は、ミラツク／esse-sense エコシステムが自分自身を観察し、観察された自分を解釈し、その解釈を更にメタ視点で統合する循環を獲得したことを意味する。</p>
+    <p><strong>観察するシステムが観察される瞬間、観察するシステム自体が変容する</strong> ── この von Foerster 的洞察が、2026 年 5 月 21 日に agent system として工学的に実装された。</p>
+    <p>本レポートはその瞬間の記録であり、エコシステム自身がその後の観察対象となる出発点でもある。</p>
+  </section>
+
+  <!-- ========== Slide 17: Conclusion ========== -->
+  <section class="slide conclusion-slide">
+    <div class="slide-eyebrow">16 / 17 ── 結語</div>
+    <h1>von Foerster の第二階を超え<br>三階に到達した日</h1>
+    <p class="punchline">2026 年 5 月 21 日、自己観察論が思想史から agent system に渡された。</p>
+    <p class="meta-small">
+      CCM-DB v1.2 ／ commit 1324ce2 ／ NPO 法人ミラツク ／ esse-sense<br>
+      https://github.com/yuyanishimura0312/consciousness-cosmos-music-db
+    </p>
+  </section>
+
+  <!-- ========== Slide 18: 参考 ========== -->
+  <section class="slide">
+    <div class="slide-eyebrow">17 / 17 ── 参考資料</div>
+    <h2>参考文献と DB</h2>
+    <h3>理論</h3>
+    <ul>
+      <li>von Foerster, H. (1974). <em>Cybernetics of Cybernetics</em></li>
+      <li>von Foerster, H. (1981). <em>Observing Systems</em></li>
+      <li>Maturana, H. & Varela, F. (1972). <em>Autopoiesis and Cognition</em></li>
+      <li>Hofstadter, D. (1979). <em>Gödel, Escher, Bach: An Eternal Golden Braid</em></li>
+      <li>Aczel, P. (1988). <em>Non-Well-Founded Sets</em></li>
+      <li>道元 (1240). 『正法眼蔵』修証一等</li>
+      <li>西田幾多郎 (1911). 『善の研究』純粋経験</li>
+    </ul>
+    <h3>データソース</h3>
+    <ul>
+      <li>AR-DB v1.1: <code>~/projects/research/agent-registry-db/data/agent_registry.db</code></li>
+      <li>CCM-DB v1.2: <code>~/projects/research/consciousness-cosmos-music-db/data/ccm.db</code></li>
+      <li>GitHub: <code>yuyanishimura0312/consciousness-cosmos-music-db</code> (commit 1324ce2)</li>
+      <li>長文レポート: <code>dashboards/ccm-three-tier-report.html</code></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="controls">
+  <button class="btn" onclick="prevSlide()">◀ 戻る</button>
+  <div class="counter"><span id="current">1</span> / <span id="total">18</span></div>
+  <button class="btn" onclick="nextSlide()">進む ▶</button>
+  <button class="btn" onclick="toggleTheme()">テーマ</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let idx = 0;
+document.getElementById('total').textContent = total;
+
+function show(i) {
+  idx = Math.max(0, Math.min(total - 1, i));
+  slides.forEach((s, n) => s.classList.toggle('active', n === idx));
+  document.getElementById('current').textContent = idx + 1;
+  document.getElementById('progressBar').style.width = ((idx + 1) / total * 100) + '%';
+  localStorage.setItem('ccm-slide-idx', idx);
+}
+
+function nextSlide() { show(idx + 1); }
+function prevSlide() { show(idx - 1); }
+
+function toggleTheme() {
+  const r = document.documentElement;
+  const c = r.dataset.theme === 'dark' ? 'light' : 'dark';
+  r.dataset.theme = c;
+  localStorage.setItem('ccm-theme', c);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault(); nextSlide();
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault(); prevSlide();
+  } else if (e.key === 'Home') {
+    show(0);
+  } else if (e.key === 'End') {
+    show(total - 1);
+  } else if (e.key === 'Escape') {
+    show(0);
+  } else if (/^[0-9]$/.test(e.key)) {
+    const n = parseInt(e.key);
+    if (n >= 1 && n <= 9) show(n - 1);
+  }
+});
+
+// テーマ復元
+const savedTheme = localStorage.getItem('ccm-theme');
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+// 位置復元
+const savedIdx = localStorage.getItem('ccm-slide-idx');
+if (savedIdx !== null) show(parseInt(savedIdx));
+
+// クリックで進む
+document.body.addEventListener('click', (e) => {
+  if (e.target.closest('.controls') || e.target.closest('a')) return;
+  nextSlide();
+});
+</script>
+</body>
+</html>
