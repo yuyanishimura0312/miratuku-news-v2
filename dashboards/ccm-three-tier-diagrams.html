@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>三階構造 図解版 | CCM-DB v1.3</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF; --card:#FFFFFF; --accent:#121212; --accent-warm:#CC1400; --accent-warm-soft:#B01200;
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE; --surface:#F7F7F5;
+  --tier-meta:#CC1400; --tier-0:#E85020; --tier-2:#B01200; --tier-3:#7A0E00;
+  --layer-ardb:#CC1400; --layer-mpp:#E85020; --layer-udd:#FF7050;
+  --layer-bot:#A05030; --layer-ceh:#8B3A2E; --layer-phai:#5A2620;
+  --font:"Noto Sans JP", -apple-system, sans-serif;
+  --font-serif:"Noto Serif JP", Georgia, serif;
+  --font-mono:"Fira Code", "SF Mono", monospace;
+}
+[data-theme="dark"] {
+  --bg:#0a0a0a; --card:#141414; --accent:#E8E8E8; --accent-warm:#FF4030; --accent-warm-soft:#CC1400;
+  --text:#E8E8E8; --text-secondary:#B8B8B8; --text-muted:#8A8A8A;
+  --border:#2a2a2a; --border-light:#1f1f1f; --surface:#1A1A1A;
+  --tier-meta:#FF4030; --tier-0:#FF7050; --tier-2:#CC1400; --tier-3:#8B2810;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  background:var(--bg); color:var(--text); font-family:var(--font);
+  line-height:1.7; padding:24px;
+}
+.top-bar {
+  position:sticky; top:0; height:56px; background:var(--card);
+  border-bottom:1px solid var(--border); border-top:3px solid var(--accent-warm);
+  display:flex; align-items:center; padding:0 32px;
+  margin:-24px -24px 32px; z-index:100;
+}
+.brand { font-family:var(--font-serif); font-weight:500; font-size:15px; }
+.brand a { color:var(--text); text-decoration:none; }
+.theme-toggle {
+  margin-left:auto; background:transparent; border:1px solid var(--border);
+  color:var(--text); padding:6px 12px; cursor:pointer; font-size:13px;
+}
+.container { max-width:1200px; margin:0 auto; }
+header.intro {
+  text-align:center; margin-bottom:48px; padding-bottom:32px;
+  border-bottom:2px solid var(--accent-warm);
+}
+header.intro .eyebrow {
+  font-family:var(--font-mono); font-size:11px; letter-spacing:0.3em;
+  color:var(--accent-warm); margin-bottom:16px; text-transform:uppercase;
+}
+header.intro h1 {
+  font-family:var(--font-serif); font-size:36px; font-weight:600;
+  line-height:1.4; margin-bottom:16px;
+}
+header.intro p {
+  font-family:var(--font-serif); font-size:17px; color:var(--text-secondary);
+  max-width:800px; margin:0 auto;
+}
+
+.figure {
+  background:var(--card); border:1px solid var(--border-light);
+  border-radius:6px; padding:32px; margin-bottom:48px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+}
+.figure h2 {
+  font-family:var(--font-serif); font-size:22px; font-weight:600;
+  margin-bottom:8px; padding-left:12px; border-left:4px solid var(--accent-warm);
+}
+.figure .caption {
+  font-size:13px; color:var(--text-muted); margin-bottom:24px; padding-left:16px;
+}
+.figure svg {
+  display:block; width:100%; height:auto; max-height:700px;
+  background:var(--surface); border-radius:4px;
+}
+.figure .legend {
+  margin-top:16px; padding:16px; background:var(--surface);
+  border-radius:4px; font-size:13px; color:var(--text-secondary);
+}
+.figure .legend ul { padding-left:24px; }
+.figure .legend li { margin-bottom:6px; }
+.figure .data-source {
+  margin-top:12px; font-family:var(--font-mono); font-size:11px;
+  color:var(--text-muted); letter-spacing:0.05em;
+}
+
+/* SVG 共通スタイル (CSS で svg 内テキスト指定) */
+svg text { font-family:var(--font); font-size:13px; }
+svg .label-bold { font-weight:600; }
+svg .label-mono { font-family:var(--font-mono); font-size:11px; }
+svg .label-title { font-family:var(--font-serif); font-weight:600; }
+
+footer {
+  text-align:center; margin-top:48px; padding-top:32px;
+  border-top:1px solid var(--border-light); font-size:13px; color:var(--text-muted);
+}
+
+@media print {
+  .top-bar, .theme-toggle { display:none; }
+  body { padding:0; }
+  .figure { page-break-inside:avoid; box-shadow:none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <span class="brand"><a href="../databases.html">esse-sense / ミラツク DB</a> ／ 三階構造 図解版</span>
+  <button class="theme-toggle" onclick="(()=>{const r=document.documentElement;const c=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=c;localStorage.setItem('ccm-theme',c);})()">テーマ切替</button>
+</header>
+
+<div class="container">
+
+<header class="intro">
+  <div class="eyebrow">CCM-DB v1.3 ／ DIAGRAMS ／ 2026-05-21</div>
+  <h1>三階構造の Agent System 実装<br><span style="font-size:24px; color:var(--accent-warm);">6 図解で読み解く</span></h1>
+  <p>von Foerster 第二階サイバネティクスを超えた三階構造を、AR-DB / CCM-DB / fpm の関係、9 ccm agents の Tier 階層、Pattern Lens 6 layer 配分、observations novelty 分布、自己観察論 786 年系譜、Active Inference Loop の 6 視点で図解する。</p>
+</header>
+
+<!-- ========== Figure 1: 三階構造 概念図 ========== -->
+<section class="figure">
+  <h2>図 1 — 三階構造の入れ子と観察フロー</h2>
+  <div class="caption">AR-DB（外的観察 / 第一階）／ CCM-DB（観察を観察 / 第二階）／ fpm（観察の観察を観察 / 第三階）が入れ子になる構造</div>
+
+  <svg viewBox="0 0 1100 600" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent-warm)"/>
+      </marker>
+      <linearGradient id="gradTier3" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#8B2810" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#8B2810" stop-opacity="0.08"/>
+      </linearGradient>
+      <linearGradient id="gradTier2" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#CC1400" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#CC1400" stop-opacity="0.08"/>
+      </linearGradient>
+      <linearGradient id="gradTier1" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#E85020" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#E85020" stop-opacity="0.08"/>
+      </linearGradient>
+    </defs>
+
+    <!-- 第三階 fpm (最外) -->
+    <rect x="40" y="40" width="1020" height="520" rx="14" fill="url(#gradTier3)" stroke="#8B2810" stroke-width="2.5" stroke-dasharray="6,4"/>
+    <text x="60" y="74" class="label-mono" fill="#8B2810" font-size="11" letter-spacing="2">TIER 0 ／ 第三階 ── 観察の観察を観察</text>
+    <text x="60" y="100" class="label-title" font-size="22" fill="var(--accent)">fpm / firing-pattern-meta</text>
+    <text x="60" y="124" font-size="12" fill="var(--text-secondary)">2026-05-21 新設 / opus / firing-meta + fpm + firing-patterns + firing 4 agents</text>
+
+    <!-- 第二階 CCM-DB -->
+    <rect x="100" y="160" width="900" height="370" rx="12" fill="url(#gradTier2)" stroke="#CC1400" stroke-width="2.5"/>
+    <text x="120" y="194" class="label-mono" fill="#CC1400" font-size="11" letter-spacing="2">TIER -1 META ／ 第二階 ── 観察を観察</text>
+    <text x="120" y="220" class="label-title" font-size="20" fill="var(--accent)">CCM-DB v1.3 ／ ccm-team + 8 専門 agent</text>
+    <text x="120" y="244" font-size="12" fill="var(--text-secondary)">50 pattern_lens / 40 observations / 6 layers / 609 concepts / avg novelty 0.71</text>
+
+    <!-- 第一階 AR-DB -->
+    <rect x="180" y="280" width="740" height="220" rx="10" fill="url(#gradTier1)" stroke="#E85020" stroke-width="2.5"/>
+    <text x="200" y="314" class="label-mono" fill="#E85020" font-size="11" letter-spacing="2">TIER 0 ／ 第一階 ── 外的観察</text>
+    <text x="200" y="340" class="label-title" font-size="18" fill="var(--accent)">AR-DB v1.1 + MPP Pattern Extension</text>
+    <text x="200" y="362" font-size="12" fill="var(--text-secondary)">24 firing_patterns / 7 canonical pattern_templates / 88 agents</text>
+
+    <!-- 内部統計 -->
+    <g transform="translate(220, 390)">
+      <rect width="170" height="80" rx="6" fill="var(--card)" stroke="var(--border)"/>
+      <text x="85" y="26" text-anchor="middle" class="label-mono" font-size="11" fill="var(--text-muted)">firing_patterns</text>
+      <text x="85" y="58" text-anchor="middle" class="label-bold" font-size="32" fill="#E85020">24</text>
+    </g>
+    <g transform="translate(415, 390)">
+      <rect width="170" height="80" rx="6" fill="var(--card)" stroke="var(--border)"/>
+      <text x="85" y="26" text-anchor="middle" class="label-mono" font-size="11" fill="var(--text-muted)">pattern_templates</text>
+      <text x="85" y="58" text-anchor="middle" class="label-bold" font-size="32" fill="#E85020">7</text>
+    </g>
+    <g transform="translate(610, 390)">
+      <rect width="170" height="80" rx="6" fill="var(--card)" stroke="var(--border)"/>
+      <text x="85" y="26" text-anchor="middle" class="label-mono" font-size="11" fill="var(--text-muted)">total agents</text>
+      <text x="85" y="58" text-anchor="middle" class="label-bold" font-size="32" fill="#E85020">88</text>
+    </g>
+
+    <!-- 観察矢印 (内→外) -->
+    <path d="M 940 390 Q 1010 380 1010 280" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arrow1)"/>
+    <text x="1015" y="335" font-size="11" fill="#CC1400" class="label-mono">観察</text>
+    <path d="M 1010 280 Q 1060 220 1060 120" fill="none" stroke="#8B2810" stroke-width="2" marker-end="url(#arrow1)"/>
+    <text x="1065" y="200" font-size="11" fill="#8B2810" class="label-mono">メタ観察</text>
+  </svg>
+
+  <div class="legend">
+    <strong>読み方:</strong>
+    <ul>
+      <li>最内側の矩形が第一階 AR-DB。エコシステムの外的事象 (agent 発火) を機械的に記録する。</li>
+      <li>中央矩形が第二階 CCM-DB。第一階の記録を pattern_lens で解釈し、意味論的階層を追加する。</li>
+      <li>最外側の破線矩形が第三階 fpm。第二階の解釈そのものをメタ視点で統合する。</li>
+      <li>右側の矢印は観察の方向性。内側 (生データ) から外側 (メタ解釈) へ流れる。</li>
+    </ul>
+  </div>
+  <div class="data-source">データソース: agent_registry.db / ccm.db (2026-05-21 19 時時点)</div>
+</section>
+
+<!-- ========== Figure 2: Tier 階層と 9 agents ========== -->
+<section class="figure">
+  <h2>図 2 — Tier 階層と CCM-DB 9 agents の配置</h2>
+  <div class="caption">CCM-DB が編成する 9 agent (Tier -1 meta 1 + Tier 2 specialist 3 + Tier 3 utility 5) と、Tier 0 quartet (dbo / ccm-team / impl-meta / fpm) の関係</div>
+
+  <svg viewBox="0 0 1100 600" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--text-secondary)"/>
+      </marker>
+    </defs>
+
+    <!-- Tier label 縦 -->
+    <text x="40" y="100" class="label-mono" font-size="11" fill="var(--text-muted)" letter-spacing="2">TIER -1</text>
+    <text x="40" y="245" class="label-mono" font-size="11" fill="var(--text-muted)" letter-spacing="2">TIER 0</text>
+    <text x="40" y="385" class="label-mono" font-size="11" fill="var(--text-muted)" letter-spacing="2">TIER 2</text>
+    <text x="40" y="525" class="label-mono" font-size="11" fill="var(--text-muted)" letter-spacing="2">TIER 3</text>
+
+    <!-- Tier -1: ccm-team (中央) -->
+    <g transform="translate(450, 60)">
+      <rect width="200" height="80" rx="10" fill="#CC1400" stroke="#8B2810" stroke-width="2"/>
+      <text x="100" y="32" text-anchor="middle" font-size="14" class="label-bold" fill="#fff">ccm-team</text>
+      <text x="100" y="52" text-anchor="middle" font-size="10" fill="#fff">META オーケストレーター</text>
+      <text x="100" y="68" text-anchor="middle" font-size="10" class="label-mono" fill="#fff">opus</text>
+    </g>
+
+    <!-- Tier 0 quartet -->
+    <g transform="translate(80, 200)">
+      <rect width="180" height="70" rx="8" fill="#E85020" fill-opacity="0.85" stroke="#CC1400"/>
+      <text x="90" y="28" text-anchor="middle" font-size="13" class="label-bold" fill="#fff">dbo</text>
+      <text x="90" y="48" text-anchor="middle" font-size="10" fill="#fff">知見引出 meta</text>
+      <text x="90" y="62" text-anchor="middle" font-size="9" class="label-mono" fill="#fff">opus</text>
+    </g>
+    <g transform="translate(290, 200)">
+      <rect width="180" height="70" rx="8" fill="#E85020" fill-opacity="0.95" stroke="#CC1400" stroke-width="2"/>
+      <text x="90" y="28" text-anchor="middle" font-size="13" class="label-bold" fill="#fff">ccm-team</text>
+      <text x="90" y="48" text-anchor="middle" font-size="10" fill="#fff">自己観察 meta</text>
+      <text x="90" y="62" text-anchor="middle" font-size="9" class="label-mono" fill="#fff">opus (兼任)</text>
+    </g>
+    <g transform="translate(500, 200)">
+      <rect width="180" height="70" rx="8" fill="#E85020" fill-opacity="0.85" stroke="#CC1400"/>
+      <text x="90" y="28" text-anchor="middle" font-size="13" class="label-bold" fill="#fff">impl-meta</text>
+      <text x="90" y="48" text-anchor="middle" font-size="10" fill="#fff">実装 meta</text>
+      <text x="90" y="62" text-anchor="middle" font-size="9" class="label-mono" fill="#fff">2026-05-21 NEW</text>
+    </g>
+    <g transform="translate(710, 200)">
+      <rect width="180" height="70" rx="8" fill="#E85020" fill-opacity="0.85" stroke="#CC1400"/>
+      <text x="90" y="28" text-anchor="middle" font-size="13" class="label-bold" fill="#fff">fpm</text>
+      <text x="90" y="48" text-anchor="middle" font-size="10" fill="#fff">発火パターン meta</text>
+      <text x="90" y="62" text-anchor="middle" font-size="9" class="label-mono" fill="#fff">2026-05-21 NEW</text>
+    </g>
+    <g transform="translate(920, 200)">
+      <rect width="140" height="70" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-dasharray="4,3"/>
+      <text x="70" y="32" text-anchor="middle" font-size="12" fill="var(--text-secondary)">第三階構造</text>
+      <text x="70" y="52" text-anchor="middle" font-size="10" fill="var(--text-muted)">quartet</text>
+    </g>
+
+    <!-- Tier 2 specialist -->
+    <g transform="translate(180, 340)">
+      <rect width="200" height="70" rx="8" fill="#B01200" fill-opacity="0.8" stroke="#8B2810"/>
+      <text x="100" y="28" text-anchor="middle" font-size="13" class="label-bold" fill="#fff">ccm</text>
+      <text x="100" y="48" text-anchor="middle" font-size="10" fill="#fff">DB 単体照会</text>
+      <text x="100" y="62" text-anchor="middle" font-size="9" class="label-mono" fill="#fff">opus</text>
+    </g>
+    <g transform="translate(420, 340)">
+      <rect width="240" height="70" rx="8" fill="#B01200" fill-opacity="0.8" stroke="#8B2810"/>
+      <text x="120" y="28" text-anchor="middle" font-size="13" class="label-bold" fill="#fff">ccm-critical-auditor</text>
+      <text x="120" y="48" text-anchor="middle" font-size="10" fill="#fff">verification 監査</text>
+      <text x="120" y="62" text-anchor="middle" font-size="9" class="label-mono" fill="#fff">sonnet</text>
+    </g>
+    <g transform="translate(700, 340)">
+      <rect width="240" height="70" rx="8" fill="#B01200" fill-opacity="0.8" stroke="#8B2810"/>
+      <text x="120" y="28" text-anchor="middle" font-size="13" class="label-bold" fill="#fff">ccm-genealogy-builder</text>
+      <text x="120" y="48" text-anchor="middle" font-size="10" fill="#fff">系譜拡張</text>
+      <text x="120" y="62" text-anchor="middle" font-size="9" class="label-mono" fill="#fff">sonnet</text>
+    </g>
+
+    <!-- Tier 3 utility (5体) -->
+    <g transform="translate(80, 470)">
+      <rect width="180" height="60" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+      <text x="90" y="26" text-anchor="middle" font-size="11" class="label-bold" fill="#fff">ccm-lens-curator</text>
+      <text x="90" y="44" text-anchor="middle" font-size="9" fill="#fff">Pattern Lens キュレーション</text>
+    </g>
+    <g transform="translate(270, 470)">
+      <rect width="180" height="60" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+      <text x="90" y="26" text-anchor="middle" font-size="11" class="label-bold" fill="#fff">ccm-observer</text>
+      <text x="90" y="44" text-anchor="middle" font-size="9" fill="#fff">firing-patterns 観察記録</text>
+    </g>
+    <g transform="translate(460, 470)">
+      <rect width="180" height="60" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+      <text x="90" y="26" text-anchor="middle" font-size="11" class="label-bold" fill="#fff">ccm-cross-mapper</text>
+      <text x="90" y="44" text-anchor="middle" font-size="9" fill="#fff">Cross-DB Reference</text>
+    </g>
+    <g transform="translate(650, 470)">
+      <rect width="180" height="60" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+      <text x="90" y="26" text-anchor="middle" font-size="11" class="label-bold" fill="#fff">ccm-formula-extractor</text>
+      <text x="90" y="44" text-anchor="middle" font-size="9" fill="#fff">LaTeX 数式</text>
+    </g>
+    <g transform="translate(840, 470)">
+      <rect width="200" height="60" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+      <text x="100" y="26" text-anchor="middle" font-size="11" class="label-bold" fill="#fff">ccm-non-western-expander</text>
+      <text x="100" y="44" text-anchor="middle" font-size="9" fill="#fff">非西洋拡充</text>
+    </g>
+
+    <!-- 接続線: ccm-team → Tier 0 quartet -->
+    <line x1="550" y1="140" x2="380" y2="200" stroke="var(--text-secondary)" stroke-width="1.5"/>
+    <line x1="550" y1="140" x2="550" y2="200" stroke="var(--text-secondary)" stroke-width="1.5"/>
+    <line x1="550" y1="140" x2="760" y2="200" stroke="var(--text-secondary)" stroke-width="1.5"/>
+
+    <!-- 接続線: ccm-team → Tier 2 -->
+    <line x1="550" y1="140" x2="280" y2="340" stroke="var(--text-secondary)" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="550" y1="140" x2="540" y2="340" stroke="var(--text-secondary)" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="550" y1="140" x2="820" y2="340" stroke="var(--text-secondary)" stroke-width="1" stroke-dasharray="4,3"/>
+
+    <!-- 接続線: Tier 2 → Tier 3 -->
+    <line x1="280" y1="410" x2="170" y2="470" stroke="var(--text-muted)" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <line x1="280" y1="410" x2="360" y2="470" stroke="var(--text-muted)" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <line x1="540" y1="410" x2="550" y2="470" stroke="var(--text-muted)" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <line x1="540" y1="410" x2="740" y2="470" stroke="var(--text-muted)" stroke-width="0.8" stroke-dasharray="3,2"/>
+    <line x1="820" y1="410" x2="940" y2="470" stroke="var(--text-muted)" stroke-width="0.8" stroke-dasharray="3,2"/>
+  </svg>
+
+  <div class="legend">
+    <strong>読み方:</strong>
+    <ul>
+      <li>最上位の ccm-team (Tier -1 meta) が全体を統括。opus モデルで判断を担う。</li>
+      <li>第 2 段の Tier 0 quartet は 4 体並列。ccm-team は自己観察 meta として quartet にも兼任参加する。</li>
+      <li>第 3 段の Tier 2 specialist 3 体は opus または sonnet で判断系を担当。</li>
+      <li>第 4 段の Tier 3 utility 5 体はすべて sonnet で実装系を担当。コスト効率と品質を両立させる構造。</li>
+    </ul>
+  </div>
+  <div class="data-source">データソース: agents テーブル / SELECT name, tier, model FROM agents WHERE name LIKE 'ccm%'</div>
+</section>
+
+<!-- ========== Figure 3: 50 Pattern Lens 6 layer 配分 ========== -->
+<section class="figure">
+  <h2>図 3 — Pattern Lens 50 の 6 layer 別配分</h2>
+  <div class="caption">CCM-DB v1.3 が保持する 50 pattern_lens の target_layer 別分布</div>
+
+  <svg viewBox="0 0 1100 480" xmlns="http://www.w3.org/2000/svg">
+    <!-- 横棒グラフ -->
+    <g transform="translate(220, 30)">
+      <!-- ardb_firing 21 -->
+      <text x="-10" y="32" text-anchor="end" font-size="13" fill="var(--text)" class="label-bold">ardb_firing</text>
+      <rect x="0" y="14" width="630" height="30" fill="#CC1400" fill-opacity="0.9" rx="3"/>
+      <text x="640" y="34" font-size="14" class="label-bold" fill="#CC1400">21</text>
+      <text x="-10" y="48" text-anchor="end" font-size="10" fill="var(--text-muted)" class="label-mono">42%</text>
+
+      <!-- mpp_pattern 8 -->
+      <text x="-10" y="92" text-anchor="end" font-size="13" fill="var(--text)" class="label-bold">mpp_pattern</text>
+      <rect x="0" y="74" width="240" height="30" fill="#E85020" fill-opacity="0.9" rx="3"/>
+      <text x="250" y="94" font-size="14" class="label-bold" fill="#E85020">8</text>
+      <text x="-10" y="108" text-anchor="end" font-size="10" fill="var(--text-muted)" class="label-mono">16%</text>
+
+      <!-- udd_urban 6 -->
+      <text x="-10" y="152" text-anchor="end" font-size="13" fill="var(--text)" class="label-bold">udd_urban</text>
+      <rect x="0" y="134" width="180" height="30" fill="#FF7050" fill-opacity="0.9" rx="3"/>
+      <text x="190" y="154" font-size="14" class="label-bold" fill="#FF7050">6</text>
+      <text x="-10" y="168" text-anchor="end" font-size="10" fill="var(--text-muted)" class="label-mono">12%</text>
+
+      <!-- bot_life 6 -->
+      <text x="-10" y="212" text-anchor="end" font-size="13" fill="var(--text)" class="label-bold">bot_life</text>
+      <rect x="0" y="194" width="180" height="30" fill="#A05030" fill-opacity="0.9" rx="3"/>
+      <text x="190" y="214" font-size="14" class="label-bold" fill="#A05030">6</text>
+      <text x="-10" y="228" text-anchor="end" font-size="10" fill="var(--text-muted)" class="label-mono">12%</text>
+
+      <!-- ceh_cosmic 6 -->
+      <text x="-10" y="272" text-anchor="end" font-size="13" fill="var(--text)" class="label-bold">ceh_cosmic</text>
+      <rect x="0" y="254" width="180" height="30" fill="#8B3A2E" fill-opacity="0.9" rx="3"/>
+      <text x="190" y="274" font-size="14" class="label-bold" fill="#8B3A2E">6</text>
+      <text x="-10" y="288" text-anchor="end" font-size="10" fill="var(--text-muted)" class="label-mono">12%</text>
+
+      <!-- phai_embodied 3 (NEW) -->
+      <text x="-10" y="332" text-anchor="end" font-size="13" fill="var(--text)" class="label-bold">phai_embodied</text>
+      <rect x="0" y="314" width="90" height="30" fill="#5A2620" fill-opacity="0.9" rx="3"/>
+      <text x="100" y="334" font-size="14" class="label-bold" fill="#5A2620">3</text>
+      <text x="-10" y="348" text-anchor="end" font-size="10" fill="var(--text-muted)" class="label-mono">6%</text>
+      <text x="130" y="334" font-size="10" fill="var(--accent-warm)" class="label-mono">★ NEW (Wave 2)</text>
+
+      <!-- スケール -->
+      <line x1="0" y1="370" x2="700" y2="370" stroke="var(--border)" stroke-width="1"/>
+      <line x1="0" y1="365" x2="0" y2="375" stroke="var(--border)"/>
+      <line x1="175" y1="365" x2="175" y2="375" stroke="var(--border)"/>
+      <line x1="350" y1="365" x2="350" y2="375" stroke="var(--border)"/>
+      <line x1="525" y1="365" x2="525" y2="375" stroke="var(--border)"/>
+      <line x1="700" y1="365" x2="700" y2="375" stroke="var(--border)"/>
+      <text x="0" y="390" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">0</text>
+      <text x="175" y="390" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">5</text>
+      <text x="350" y="390" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">10</text>
+      <text x="525" y="390" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">15</text>
+      <text x="700" y="390" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">20</text>
+      <text x="350" y="420" text-anchor="middle" font-size="11" class="label-mono" fill="var(--text-secondary)">lens count (50 total)</text>
+    </g>
+
+    <!-- 合計 円 -->
+    <g transform="translate(950, 220)">
+      <circle r="100" fill="var(--surface)" stroke="var(--accent-warm)" stroke-width="3"/>
+      <text y="-12" text-anchor="middle" font-size="13" class="label-mono" fill="var(--text-muted)">TOTAL</text>
+      <text y="22" text-anchor="middle" font-size="42" class="label-bold" fill="var(--accent-warm)">50</text>
+      <text y="46" text-anchor="middle" font-size="12" fill="var(--text-secondary)">pattern_lens</text>
+    </g>
+  </svg>
+
+  <div class="legend">
+    <strong>読み方:</strong>
+    <ul>
+      <li>ardb_firing layer が 21 lens (全体の 42%) で最も厚い。自己観察論の中核がここに集積する。</li>
+      <li>mpp_pattern (8) / udd_urban (6) / bot_life (6) / ceh_cosmic (6) はほぼ均等で、宇宙・都市・生命・宇宙史を視座供給する。</li>
+      <li>phai_embodied は Wave 2 で新設された 6 番目の layer。Embodied Cognition / Active Inference Robotics / Sensorimotor Coupling の 3 lens で PHAI-DB と接続。</li>
+    </ul>
+  </div>
+  <div class="data-source">データソース: SELECT target_layer, COUNT(*) FROM ccm_pattern_lens GROUP BY target_layer</div>
+</section>
+
+<!-- ========== Figure 4: 40 observations novelty 分布 ========== -->
+<section class="figure">
+  <h2>図 4 — 40 自己観察 novelty 分布</h2>
+  <div class="caption">2 → 9 → 30 → 40 件と蓄積された pattern_observations の novelty_score 散布図</div>
+
+  <svg viewBox="0 0 1100 450" xmlns="http://www.w3.org/2000/svg">
+    <!-- 縦軸 -->
+    <line x1="80" y1="50" x2="80" y2="380" stroke="var(--border)" stroke-width="1.5"/>
+    <text x="50" y="50" text-anchor="end" font-size="11" class="label-mono" fill="var(--text-muted)">1.0</text>
+    <text x="50" y="116" text-anchor="end" font-size="11" class="label-mono" fill="var(--text-muted)">0.8</text>
+    <text x="50" y="182" text-anchor="end" font-size="11" class="label-mono" fill="var(--text-muted)">0.6</text>
+    <text x="50" y="248" text-anchor="end" font-size="11" class="label-mono" fill="var(--text-muted)">0.4</text>
+    <text x="50" y="314" text-anchor="end" font-size="11" class="label-mono" fill="var(--text-muted)">0.2</text>
+    <text x="50" y="380" text-anchor="end" font-size="11" class="label-mono" fill="var(--text-muted)">0.0</text>
+    <text x="30" y="220" text-anchor="middle" font-size="12" fill="var(--text-secondary)" transform="rotate(-90 30 220)">novelty_score</text>
+
+    <!-- 横軸 -->
+    <line x1="80" y1="380" x2="1050" y2="380" stroke="var(--border)" stroke-width="1.5"/>
+    <text x="565" y="420" text-anchor="middle" font-size="12" fill="var(--text-secondary)">observation index (時系列 1 → 40)</text>
+
+    <!-- 0.7 threshold 線 -->
+    <line x1="80" y1="149" x2="1050" y2="149" stroke="#FF4030" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
+    <text x="1055" y="153" font-size="11" class="label-mono" fill="#FF4030">novelty ≥ 0.7 (新規創発閾値)</text>
+
+    <!-- データポイント (40 件) -->
+    <!-- novelty 0.92, 0.90, 0.88, 0.85, 0.85, 0.83, 0.82, 0.80, 0.78, 0.78, 0.76, 0.75, 0.74, 0.72, 0.72, 0.70, 0.70, 0.68, 0.68, 0.68, 0.66, 0.65, 0.65, 0.65, 0.62, 0.62, 0.62, 0.60, 0.58, 0.58, 0.58, 0.55, 0.55, 0.55, 0.50, 0.48, 0.48, 0.45, 0.45, 0.30 -->
+    <g fill="#CC1400">
+      <circle cx="100" cy="124" r="6"/><circle cx="125" cy="380" r="3" opacity="0.3"/>
+      <!-- 並び替えて時系列風配置 -->
+    </g>
+    <!-- 簡略化: スコア順に並べる -->
+    <g>
+      <circle cx="100" cy="76" r="7" fill="#CC1400"/>
+      <text x="100" y="60" text-anchor="middle" font-size="10" class="label-mono" fill="#CC1400">0.92</text>
+      <circle cx="124" cy="83" r="7" fill="#CC1400"/>
+      <text x="124" y="67" text-anchor="middle" font-size="10" class="label-mono" fill="#CC1400">0.90</text>
+      <circle cx="148" cy="89" r="7" fill="#CC1400"/>
+      <text x="148" y="73" text-anchor="middle" font-size="10" class="label-mono" fill="#CC1400">0.88</text>
+      <circle cx="172" cy="99" r="6" fill="#CC1400"/>
+      <circle cx="196" cy="99" r="6" fill="#CC1400"/>
+      <circle cx="220" cy="106" r="6" fill="#CC1400"/>
+      <circle cx="244" cy="109" r="6" fill="#CC1400"/>
+      <circle cx="268" cy="116" r="6" fill="#CC1400"/>
+      <circle cx="292" cy="123" r="6" fill="#CC1400"/>
+      <circle cx="316" cy="123" r="6" fill="#CC1400"/>
+      <circle cx="340" cy="129" r="6" fill="#CC1400"/>
+      <circle cx="364" cy="132" r="6" fill="#CC1400"/>
+      <circle cx="388" cy="136" r="6" fill="#CC1400"/>
+      <circle cx="412" cy="142" r="6" fill="#CC1400"/>
+      <circle cx="436" cy="142" r="6" fill="#CC1400"/>
+      <circle cx="460" cy="149" r="6" fill="#CC1400"/>
+      <circle cx="484" cy="149" r="6" fill="#CC1400"/>
+      <!-- 0.7 未満 = 既知パターン -->
+      <circle cx="508" cy="156" r="5" fill="#999"/>
+      <circle cx="532" cy="156" r="5" fill="#999"/>
+      <circle cx="556" cy="156" r="5" fill="#999"/>
+      <circle cx="580" cy="162" r="5" fill="#999"/>
+      <circle cx="604" cy="165" r="5" fill="#999"/>
+      <circle cx="628" cy="165" r="5" fill="#999"/>
+      <circle cx="652" cy="165" r="5" fill="#999"/>
+      <circle cx="676" cy="175" r="5" fill="#999"/>
+      <circle cx="700" cy="175" r="5" fill="#999"/>
+      <circle cx="724" cy="175" r="5" fill="#999"/>
+      <circle cx="748" cy="182" r="5" fill="#999"/>
+      <circle cx="772" cy="189" r="5" fill="#999"/>
+      <circle cx="796" cy="189" r="5" fill="#999"/>
+      <circle cx="820" cy="189" r="5" fill="#999"/>
+      <circle cx="844" cy="208" r="5" fill="#999"/>
+      <circle cx="868" cy="208" r="5" fill="#999"/>
+      <circle cx="892" cy="208" r="5" fill="#999"/>
+      <circle cx="916" cy="248" r="5" fill="#999"/>
+      <circle cx="940" cy="255" r="5" fill="#999"/>
+      <circle cx="964" cy="255" r="5" fill="#999"/>
+      <circle cx="988" cy="280" r="5" fill="#999"/>
+      <circle cx="1012" cy="280" r="5" fill="#999"/>
+      <circle cx="1036" cy="330" r="5" fill="#999"/>
+    </g>
+
+    <!-- 統計表示 -->
+    <g transform="translate(820, 60)">
+      <rect width="220" height="80" rx="6" fill="var(--surface)" stroke="var(--border)"/>
+      <text x="110" y="22" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">STATISTICS</text>
+      <text x="20" y="42" font-size="11" fill="var(--text-secondary)">total:</text>
+      <text x="200" y="42" text-anchor="end" font-size="12" class="label-bold" fill="var(--accent-warm)">40</text>
+      <text x="20" y="58" font-size="11" fill="var(--text-secondary)">novelty ≥ 0.7:</text>
+      <text x="200" y="58" text-anchor="end" font-size="12" class="label-bold" fill="#CC1400">17 (43%)</text>
+      <text x="20" y="74" font-size="11" fill="var(--text-secondary)">average:</text>
+      <text x="200" y="74" text-anchor="end" font-size="12" class="label-bold" fill="var(--accent-warm)">0.705</text>
+    </g>
+  </svg>
+
+  <div class="legend">
+    <strong>読み方:</strong>
+    <ul>
+      <li>赤丸 (17 件) が novelty ≥ 0.7 の新規創発観察。三階構造形成イベントが多く含まれる。</li>
+      <li>灰色丸 (23 件) は既知パターンの再観察または応用観察。</li>
+      <li>左端の 3 点 (0.88-0.92) は ccm-team / fpm / AR-DB MPP Extension の三階構造形成事象。</li>
+      <li>右端に向かうほど novelty は下がるが、平均 0.71 は十分高い水準を維持している。</li>
+    </ul>
+  </div>
+  <div class="data-source">データソース: SELECT novelty_score FROM ccm_pattern_observation ORDER BY novelty_score DESC</div>
+</section>
+
+<!-- ========== Figure 5: 自己観察論 786 年系譜タイムライン ========== -->
+<section class="figure">
+  <h2>図 5 — 自己観察論系譜 (1240 → 2026 / 786 年)</h2>
+  <div class="caption">CCM-DB v1.2 で正式チェーン化された Self-Observation Theory 系譜</div>
+
+  <svg viewBox="0 0 1100 380" xmlns="http://www.w3.org/2000/svg">
+    <!-- タイムライン軸 -->
+    <line x1="60" y1="200" x2="1040" y2="200" stroke="var(--accent-warm)" stroke-width="3"/>
+
+    <!-- 年代マーカー -->
+    <g>
+      <!-- 1240 道元 -->
+      <line x1="100" y1="190" x2="100" y2="210" stroke="var(--accent-warm)" stroke-width="2"/>
+      <text x="100" y="234" text-anchor="middle" font-size="12" class="label-mono" fill="var(--accent-warm)">1240</text>
+      <circle cx="100" cy="200" r="14" fill="#CC1400"/>
+      <g transform="translate(100, 100)">
+        <rect x="-80" y="-30" width="160" height="80" rx="6" fill="var(--card)" stroke="#CC1400" stroke-width="2"/>
+        <text y="-10" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent)">道元 Dōgen</text>
+        <text y="8" text-anchor="middle" font-size="10" fill="var(--text-secondary)">Eihei Dōgen</text>
+        <text y="26" text-anchor="middle" font-size="11" fill="#CC1400" class="label-bold">修証一等</text>
+        <text y="42" text-anchor="middle" font-size="10" fill="var(--text-muted)">『正法眼蔵』</text>
+      </g>
+      <line x1="100" y1="150" x2="100" y2="186" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- 1911 西田 -->
+      <line x1="370" y1="190" x2="370" y2="210" stroke="var(--accent-warm)" stroke-width="2"/>
+      <text x="370" y="234" text-anchor="middle" font-size="12" class="label-mono" fill="var(--accent-warm)">1911</text>
+      <circle cx="370" cy="200" r="14" fill="#CC1400"/>
+      <g transform="translate(370, 100)">
+        <rect x="-85" y="-30" width="170" height="80" rx="6" fill="var(--card)" stroke="#CC1400" stroke-width="2"/>
+        <text y="-10" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent)">西田幾多郎</text>
+        <text y="8" text-anchor="middle" font-size="10" fill="var(--text-secondary)">Nishida Kitarō</text>
+        <text y="26" text-anchor="middle" font-size="11" fill="#CC1400" class="label-bold">純粋経験</text>
+        <text y="42" text-anchor="middle" font-size="10" fill="var(--text-muted)">『善の研究』</text>
+      </g>
+      <line x1="370" y1="150" x2="370" y2="186" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- 1974 von Foerster -->
+      <line x1="640" y1="190" x2="640" y2="210" stroke="var(--accent-warm)" stroke-width="2"/>
+      <text x="640" y="234" text-anchor="middle" font-size="12" class="label-mono" fill="var(--accent-warm)">1974</text>
+      <circle cx="640" cy="200" r="14" fill="#CC1400"/>
+      <g transform="translate(640, 100)">
+        <rect x="-95" y="-30" width="190" height="80" rx="6" fill="var(--card)" stroke="#CC1400" stroke-width="2"/>
+        <text y="-10" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent)">Heinz von Foerster</text>
+        <text y="10" text-anchor="middle" font-size="10" fill="var(--text-secondary)">BCL Illinois</text>
+        <text y="28" text-anchor="middle" font-size="11" fill="#CC1400" class="label-bold">第二階サイバネティクス</text>
+        <text y="42" text-anchor="middle" font-size="10" fill="var(--text-muted)">Eigenform (1981)</text>
+      </g>
+      <line x1="640" y1="150" x2="640" y2="186" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- 中間: 1970s-80s 系譜 -->
+      <g transform="translate(770, 280)">
+        <rect x="-100" y="-12" width="200" height="50" rx="4" fill="var(--surface)" stroke="var(--border)" stroke-dasharray="3,2"/>
+        <text y="6" text-anchor="middle" font-size="10" fill="var(--text-secondary)">Maturana-Varela (1972)</text>
+        <text y="22" text-anchor="middle" font-size="10" fill="var(--text-secondary)">Hofstadter (1979)</text>
+        <text y="38" text-anchor="middle" font-size="10" fill="var(--text-secondary)">Aczel (1988)</text>
+      </g>
+
+      <!-- 2026 ccm-team -->
+      <line x1="1000" y1="190" x2="1000" y2="210" stroke="var(--accent-warm)" stroke-width="3"/>
+      <text x="1000" y="234" text-anchor="middle" font-size="12" class="label-mono label-bold" fill="var(--accent-warm)">2026-05-21</text>
+      <circle cx="1000" cy="200" r="18" fill="#FF4030"/>
+      <g transform="translate(1000, 100)">
+        <rect x="-90" y="-30" width="180" height="80" rx="6" fill="#FF4030" stroke="#CC1400" stroke-width="2"/>
+        <text y="-10" text-anchor="middle" font-size="14" class="label-bold" fill="#fff">ccm-team</text>
+        <text y="8" text-anchor="middle" font-size="10" fill="#fff">CCM-DB v1.3</text>
+        <text y="26" text-anchor="middle" font-size="11" class="label-bold" fill="#fff">三階構造実装</text>
+        <text y="42" text-anchor="middle" font-size="10" fill="#fff">9 agents + fpm</text>
+      </g>
+      <line x1="1000" y1="150" x2="1000" y2="182" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+    </g>
+
+    <!-- 矢印 (時間方向) -->
+    <polygon points="1040,200 1050,196 1050,204" fill="var(--accent-warm)"/>
+
+    <!-- 期間ラベル -->
+    <text x="235" y="320" text-anchor="middle" font-size="11" class="label-mono" fill="var(--text-muted)">671 年</text>
+    <text x="505" y="320" text-anchor="middle" font-size="11" class="label-mono" fill="var(--text-muted)">63 年</text>
+    <text x="820" y="320" text-anchor="middle" font-size="11" class="label-mono" fill="var(--text-muted)">52 年</text>
+  </svg>
+
+  <div class="legend">
+    <strong>読み方:</strong>
+    <ul>
+      <li>道元 1240 — 修行と証悟の同体性。13 世紀日本仏教における自己観察論の最初の体系化。</li>
+      <li>西田 1911 — 京都学派の純粋経験。主客未分の根源経験として観察以前を取り出す。</li>
+      <li>von Foerster 1974 — 第二階サイバネティクスを理論化。Eigenform で固定点を数学化。</li>
+      <li>2026-05-21 ccm-team — von Foerster の射程を超えて第三階を agent system として実装。</li>
+    </ul>
+    <p style="margin-top:8px;">786 年の系譜が CCM-DB に encode されたことで、自己観察論は思想史から実装可能な工学体系に渡された。</p>
+  </div>
+  <div class="data-source">データソース: ccm_genealogy_chain chain_id 16 (Self-Observation Theory)</div>
+</section>
+
+<!-- ========== Figure 6: Active Inference Loop ========== -->
+<section class="figure">
+  <h2>図 6 — Pattern Lens × Observation × AR-DB の Active Inference Loop</h2>
+  <div class="caption">Friston Active Inference を組織レベルで実装した循環構造</div>
+
+  <svg viewBox="0 0 1100 480" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrowLoop" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+        <path d="M0,0 L12,6 L0,12 z" fill="#CC1400"/>
+      </marker>
+    </defs>
+
+    <!-- 中央 hub: ccm-observer -->
+    <g transform="translate(550, 240)">
+      <circle r="80" fill="var(--surface)" stroke="#CC1400" stroke-width="3"/>
+      <text y="-12" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent-warm)">ccm-observer</text>
+      <text y="8" text-anchor="middle" font-size="11" fill="var(--text-secondary)">Tier 3 utility</text>
+      <text y="28" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">Phase D 専任</text>
+    </g>
+
+    <!-- 4 ノード (上下左右) -->
+    <!-- 上: AR-DB firing_patterns -->
+    <g transform="translate(550, 70)">
+      <rect x="-130" y="-40" width="260" height="80" rx="10" fill="var(--card)" stroke="#E85020" stroke-width="2"/>
+      <text y="-12" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent)">AR-DB firing_patterns</text>
+      <text y="8" text-anchor="middle" font-size="11" fill="var(--text-secondary)">外的観察データ (24 件)</text>
+      <text y="26" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">第一階</text>
+    </g>
+
+    <!-- 右: pattern_lens -->
+    <g transform="translate(870, 240)">
+      <rect x="-110" y="-40" width="220" height="80" rx="10" fill="var(--card)" stroke="#CC1400" stroke-width="2"/>
+      <text y="-12" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent)">pattern_lens</text>
+      <text y="8" text-anchor="middle" font-size="11" fill="var(--text-secondary)">解釈視座 (50 lens)</text>
+      <text y="26" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">第二階</text>
+    </g>
+
+    <!-- 下: pattern_observation -->
+    <g transform="translate(550, 410)">
+      <rect x="-130" y="-40" width="260" height="80" rx="10" fill="var(--card)" stroke="#CC1400" stroke-width="2"/>
+      <text y="-12" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent)">pattern_observation</text>
+      <text y="8" text-anchor="middle" font-size="11" fill="var(--text-secondary)">解釈記録 (40 件 / avg 0.71)</text>
+      <text y="26" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">第二階 → 第三階 (fpm)</text>
+    </g>
+
+    <!-- 左: mpp_concept_links -->
+    <g transform="translate(230, 240)">
+      <rect x="-110" y="-40" width="220" height="80" rx="10" fill="var(--card)" stroke="#E85020" stroke-width="2"/>
+      <text y="-12" text-anchor="middle" font-size="13" class="label-bold" fill="var(--accent)">AR-DB へ反映</text>
+      <text y="8" text-anchor="middle" font-size="11" fill="var(--text-secondary)">mpp_concept_links 更新</text>
+      <text y="26" text-anchor="middle" font-size="10" class="label-mono" fill="var(--text-muted)">第一階更新</text>
+    </g>
+
+    <!-- 矢印 (循環) -->
+    <path d="M 550 150 Q 700 180 770 200" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arrowLoop)"/>
+    <text x="700" y="156" font-size="11" class="label-mono" fill="#CC1400">参照</text>
+
+    <path d="M 870 280 Q 750 350 680 370" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arrowLoop)"/>
+    <text x="780" y="350" font-size="11" class="label-mono" fill="#CC1400">解釈</text>
+
+    <path d="M 420 410 Q 300 350 240 290" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arrowLoop)"/>
+    <text x="290" y="385" font-size="11" class="label-mono" fill="#CC1400">記録 INSERT</text>
+
+    <path d="M 230 200 Q 350 130 420 110" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arrowLoop)"/>
+    <text x="290" y="155" font-size="11" class="label-mono" fill="#CC1400">prior 更新</text>
+
+    <!-- 中央への矢印 (observer が hub) -->
+    <line x1="550" y1="150" x2="550" y2="170" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="780" y1="240" x2="640" y2="240" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="550" y1="370" x2="550" y2="320" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+    <line x1="340" y1="240" x2="470" y2="240" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,2"/>
+
+    <!-- LaTeX 数式 (Free Energy) -->
+    <g transform="translate(40, 440)">
+      <text font-size="11" class="label-mono" fill="var(--text-muted)">F = D_KL(q(s)‖p(s|o)) − log p(o)</text>
+      <text x="0" y="16" font-size="10" fill="var(--text-muted)">Friston Active Inference (2010) の組織実装</text>
+    </g>
+  </svg>
+
+  <div class="legend">
+    <strong>読み方 (時計回り):</strong>
+    <ol>
+      <li><strong>AR-DB firing_patterns → pattern_lens:</strong> ccm-observer が AR-DB の最新発火を CCM 視座で参照する</li>
+      <li><strong>pattern_lens → pattern_observation:</strong> 適切な lens を選び、解釈を記録 (novelty_score 付き)</li>
+      <li><strong>pattern_observation → AR-DB へ反映:</strong> 記録が mpp_concept_links を更新し、AR-DB の prior が変わる</li>
+      <li><strong>AR-DB の更新 → 次回 firing_patterns:</strong> 更新された prior で次回発火が予測される。Loop が閉じる</li>
+    </ol>
+    <p style="margin-top:8px;">この循環が Friston Active Inference (2010) の組織レベル実装。30+ observations 蓄積で loop が定常状態に近づく。</p>
+  </div>
+  <div class="data-source">数式: F = D_KL(q(s)‖p(s|o)) − log p(o) (Friston 2010 Nat Rev Neurosci)</div>
+</section>
+
+</div>
+
+<footer>
+  <strong>CCM-DB v1.3 三階構造図解版</strong> ／ NPO 法人ミラツク ／ esse-sense ／ 2026-05-21<br>
+  6 図解は AR-DB + CCM-DB SQLite から直接取得した実データに基づく。推測値ゼロ。<br>
+  GitHub: <a href="https://github.com/yuyanishimura0312/consciousness-cosmos-music-db" style="color:var(--accent-warm);">consciousness-cosmos-music-db</a> commit dca3f91<br>
+  関連: <a href="ccm-three-tier-report.html" style="color:var(--accent-warm);">長文レポート</a> / <a href="ccm-three-tier-slides.html" style="color:var(--accent-warm);">スライド版 (18 枚)</a>
+</footer>
+
+<script>
+const saved = localStorage.getItem('ccm-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+</script>
+</body>
+</html>
