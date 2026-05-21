@@ -12,7 +12,7 @@ USER = "sd0177751@gmoserver.jp"
 LOCAL_DIR = Path("/Users/nishimura+/projects/apps/miratuku-news-v2/dashboards/ryoiki/phase-e/futures-series-v2")
 REMOTE_DIR = "/journal.emerging-future.org/futures-series-v2"
 
-UPLOAD_FILES = ["index.html", "sitemap.xml"] + [f"ep{n:03d}.html" for n in range(1, 101)]
+UPLOAD_FILES = ["index.html", "articles.html", "sitemap.xml"] + [f"ep{n:03d}.html" for n in range(1, 101)]
 
 
 def get_password() -> str:
