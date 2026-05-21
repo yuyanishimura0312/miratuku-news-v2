@@ -1,0 +1,2441 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SEO Execution Dashboard — 実行できる運用基盤</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&family=Fira+Code&display=swap" rel="stylesheet">
+<script>
+  MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE;
+  --code-bg: #F7F7F5; --code-text: #1A1A1A;
+  --font: "Noto Sans JP", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", Menlo, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030; --accent-warm-soft: #FF6050;
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --code-bg: #0A0A0A; --code-text: #E0E0E0;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; }
+.top-bar { position: sticky; top: 0; z-index: 100; height: 48px; padding: 0 24px;
+  background: var(--bg); border-top: 3px solid var(--accent); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; }
+.brand { font-weight: 700; letter-spacing: 0.05em; }
+.brand .warm { color: var(--accent-warm); }
+.actions button { background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 4px;
+  font-family: var(--font); color: var(--text); cursor: pointer; font-size: 13px; }
+.actions button:hover { background: var(--card-hover); }
+header.hero { max-width: 1200px; margin: 0 auto; padding: 56px 32px 32px; }
+header.hero h1 { font-family: var(--font-serif); font-size: 34px; line-height: 1.4; margin: 0 0 12px; }
+header.hero .lead { font-size: 16px; color: var(--text-secondary); max-width: 760px; }
+.stats { max-width: 1200px; margin: 0 auto; padding: 16px 32px 32px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.stat { border: 1px solid var(--border); padding: 16px; border-radius: 4px; background: var(--card); }
+.stat .num { font-size: 28px; font-weight: 700; color: var(--accent-warm); font-family: var(--font-mono); }
+.stat .lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+nav.tabs { max-width: 1200px; margin: 0 auto; padding: 0 32px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 0; }
+nav.tabs button { background: none; border: none; padding: 14px 20px; cursor: pointer;
+  font-family: var(--font); font-size: 14px; color: var(--text-secondary); border-bottom: 2px solid transparent; }
+nav.tabs button.active { color: var(--accent-warm); border-bottom-color: var(--accent-warm); font-weight: 500; }
+nav.tabs button:hover { color: var(--text); }
+main { max-width: 1200px; margin: 0 auto; padding: 32px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.filter-bar { margin-bottom: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.filter-bar input { flex: 1; min-width: 240px; padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: 4px; background: var(--bg); color: var(--text); font-family: var(--font); }
+.filter-bar select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--bg); color: var(--text); font-family: var(--font); }
+.card { border: 1px solid var(--border); border-left: 3px solid var(--accent-warm);
+  padding: 24px; margin-bottom: 16px; background: var(--card); border-radius: 0 4px 4px 0; }
+.card:hover { background: var(--card-hover); }
+.card h3 { margin: 0 0 8px; font-family: var(--font-serif); font-size: 18px; line-height: 1.4; }
+/* Playbook */
+.pb-head { display: flex; gap: 16px; align-items: center; margin-bottom: 8px; font-size: 12px; }
+.pb-id { font-family: var(--font-mono); background: var(--accent-warm); color: white;
+  padding: 2px 8px; border-radius: 3px; font-weight: 700; }
+.pb-hours, .pb-lift { color: var(--text-muted); font-family: var(--font-mono); }
+.pb-symptom { color: var(--accent-warm-soft); }
+.pb-row { margin: 8px 0; font-size: 14px; }
+.pb-row .lbl { display: inline-block; min-width: 120px; font-weight: 500; color: var(--text-muted);
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.pb-row .val { color: var(--text); }
+.pb-row .mono { font-family: var(--font-mono); font-size: 13px; color: var(--accent-warm-soft); }
+/* Algorithm */
+.algo-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin-bottom: 8px; }
+.algo-head h3 { margin: 0; flex: 1 1 auto; }
+.algo-ja { color: var(--text-secondary); font-size: 13px; }
+.algo-sf, .algo-cat, .algo-year { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+  background: var(--code-bg); padding: 2px 8px; border-radius: 3px; }
+.algo-desc { font-size: 14px; color: var(--text-secondary); margin: 8px 0; }
+.algo-complex { display: flex; gap: 24px; margin: 12px 0; font-size: 13px; }
+.algo-complex code { color: var(--accent-warm-soft); }
+.algo-pseudo { margin: 12px 0; }
+.algo-pseudo summary { cursor: pointer; font-weight: 500; color: var(--text-secondary); font-size: 13px; padding: 4px 0; }
+.algo-pseudo summary:hover { color: var(--accent-warm); }
+.io-block { margin: 8px 0; font-size: 13px; }
+.io-block ul { margin: 4px 0; padding-left: 20px; }
+.io-block code { font-family: var(--font-mono); color: var(--accent-warm-soft); font-size: 12px; }
+.io-block em { color: var(--text-muted); font-style: normal; font-family: var(--font-mono); font-size: 12px; }
+.algo-bench { font-size: 13px; color: var(--text-secondary); margin-top: 12px;
+  padding: 8px 12px; background: var(--code-bg); border-radius: 3px; }
+.algo-link { margin-top: 12px; font-size: 13px; }
+.algo-link a { color: var(--accent-warm); text-decoration: none; }
+.algo-link a:hover { text-decoration: underline; }
+/* SERP */
+.serp-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin-bottom: 8px; }
+.serp-head h3 { margin: 0; flex: 1 1 auto; }
+.serp-ja, .serp-cat, .serp-year { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+  background: var(--code-bg); padding: 2px 8px; border-radius: 3px; }
+.serp-desc { font-size: 14px; color: var(--text-secondary); margin: 8px 0; }
+.serp-row { margin: 8px 0; font-size: 13px; line-height: 1.7; }
+.serp-row strong { display: inline-block; min-width: 130px; font-weight: 500; color: var(--text-muted);
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.serp-row code { font-family: var(--font-mono); color: var(--accent-warm-soft); font-size: 12px; }
+.serp-row .src a { font-size: 11px; color: var(--text-muted); text-decoration: none; }
+.serp-link { margin-top: 12px; font-size: 13px; }
+.serp-link a { color: var(--accent-warm); text-decoration: none; }
+/* code */
+pre.code { background: var(--code-bg); color: var(--code-text); padding: 14px 16px; border-radius: 4px;
+  overflow-x: auto; font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+  margin: 8px 0; border-left: 3px solid var(--accent-warm-soft); white-space: pre-wrap; }
+pre.code code { font-family: inherit; }
+.latex { background: var(--code-bg); padding: 14px; margin: 8px 0; border-radius: 4px; overflow-x: auto; }
+footer { max-width: 1200px; margin: 48px auto; padding: 32px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted); text-align: center; }
+@media (max-width: 768px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  header.hero { padding: 32px 20px 16px; }
+  header.hero h1 { font-size: 26px; }
+  main { padding: 20px; }
+  .pb-row .lbl, .serp-row strong { min-width: auto; display: block; }
+}
+@media print {
+  .top-bar, nav.tabs, .filter-bar, .actions { display: none !important; }
+  .tab-panel { display: block !important; page-break-before: always; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">SEO <span class="warm">Execution</span> Dashboard</div>
+  <div class="actions">
+    <button onclick="toggleTheme()">☾ / ☀</button>
+  </div>
+</div>
+
+<header class="hero">
+  <h1>実行できる SEO 運用基盤</h1>
+  <p class="lead">SEO-DB v1.0 Phase 15 — 学術概念集 (972 concepts) を「症状 → アルゴリズム → UI / Schema → KPI」の運用フローへ変換した実装層。25 Playbook ・ 33 Algorithm 擬似コード ・ 30 SERP Feature テンプレを統合。</p>
+</header>
+
+<section class="stats">
+  <div class="stat"><div class="num">25</div><div class="lbl">Playbooks</div></div>
+  <div class="stat"><div class="num">33</div><div class="lbl">Algorithms</div></div>
+  <div class="stat"><div class="num">30</div><div class="lbl">SERP Features</div></div>
+  <div class="stat"><div class="num">972</div><div class="lbl">Total Concepts</div></div>
+  <div class="stat"><div class="num">+19%</div><div class="lbl">Avg Expected Lift</div></div>
+</section>
+
+<nav class="tabs">
+  <button class="active" data-tab="playbooks">📋 Playbooks (25)</button>
+  <button data-tab="algorithms">⚙️ Algorithms (33)</button>
+  <button data-tab="serp">🔍 SERP Features (30)</button>
+</nav>
+
+<main>
+  <div id="playbooks" class="tab-panel active">
+    <div class="filter-bar">
+      <input type="text" id="pb-search" placeholder="🔎 症状・アルゴリズム・KPI で絞り込み...">
+      <select id="pb-hours">
+        <option value="">全工数</option>
+        <option value="lt8">8h 未満</option>
+        <option value="lt40">40h 未満</option>
+        <option value="gte40">40h 以上</option>
+      </select>
+    </div>
+    
+<div class="card playbook" data-id="PB001" data-hours="4">
+  <div class="pb-head">
+    <span class="pb-id">PB001</span>
+    <span class="pb-hours">⏱ 4 h</span>
+    <span class="pb-lift">📈 +8.6%</span>
+  </div>
+  <h3 class="pb-symptom">Featured Snippet 0件、競合は10件以上獲得</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">h2 直下の段落構造が不在 / 質問形式のクエリに直接答えていない</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">BM25 + Featured Snippet Paragraph extraction (Google internal)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">h2 で質問 → 直下 &lt;p&gt; 40-60 字回答 → 詳細展開。Schema.org FAQPage or Article</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;h2&gt;○○とは&lt;/h2&gt;\n&lt;p&gt;○○とは、〜である。&lt;/p&gt;\n&lt;!-- 40-60字以内、最初の文に答えを置く --&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Featured Snippet 獲得数 / Position 0 impression / SERP CTR Δ</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Ahrefs SERP Features Report / SEMrush / Google Search Console</span></div>
+</div>
+
+<div class="card playbook" data-id="PB002" data-hours="8">
+  <div class="pb-head">
+    <span class="pb-id">PB002</span>
+    <span class="pb-hours">⏱ 8 h</span>
+    <span class="pb-lift">📈 +15.0%</span>
+  </div>
+  <h3 class="pb-symptom">LCP &gt; 4秒 (Mobile)、SERP ランキング下落</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Hero 画像非圧縮 / Render-blocking CSS / フォント読込遅延</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Critical CSS Extraction + LCP attribution (web-vitals JS)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Hero &lt;img&gt; に loading=&#x27;eager&#x27; fetchpriority=&#x27;high&#x27; / &lt;link rel=&#x27;preload&#x27; as=&#x27;image&#x27;&gt; / WebP/AVIF 配信 / Critical CSS inline / 非クリティカル CSS は async load</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;link rel=&quot;preload&quot; as=&quot;image&quot; href=&quot;/hero.webp&quot; fetchpriority=&quot;high&quot;&gt;\n&lt;img src=&quot;/hero.webp&quot; loading=&quot;eager&quot; fetchpriority=&quot;high&quot; alt=&quot;...&quot;&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">LCP p75 (mobile) / CrUX LCP good URLs % / PageSpeed Insights score</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">PageSpeed Insights / Lighthouse / WebPageTest / web-vitals JS</span></div>
+</div>
+
+<div class="card playbook" data-id="PB003" data-hours="6">
+  <div class="pb-head">
+    <span class="pb-id">PB003</span>
+    <span class="pb-hours">⏱ 6 h</span>
+    <span class="pb-lift">📈 +10.0%</span>
+  </div>
+  <h3 class="pb-symptom">CLS &gt; 0.25、ユーザー体感不良 + ランキング下落</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">画像/iframe の width/height 未指定 / 広告 reservation 不足 / 動的コンテンツ挿入</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Layout Shift attribution (PerformanceObserver layout-shift)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">&lt;img width height&gt; 必須 / aspect-ratio CSS / 広告枠は min-height 予約 / web font は font-display: optional</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;img src=&quot;...&quot; width=&quot;1200&quot; height=&quot;630&quot; alt=&quot;...&quot;&gt;\n&lt;style&gt;img { aspect-ratio: 16/9; } @font-face { font-display: optional; }&lt;/style&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">CLS p75 / CrUX CLS good URLs %</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">PageSpeed Insights / Chrome DevTools Performance</span></div>
+</div>
+
+<div class="card playbook" data-id="PB004" data-hours="12">
+  <div class="pb-head">
+    <span class="pb-id">PB004</span>
+    <span class="pb-hours">⏱ 12 h</span>
+    <span class="pb-lift">📈 +12.0%</span>
+  </div>
+  <h3 class="pb-symptom">INP &gt; 500ms、Mobile ユーザーが操作応答遅延を感じる</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">メイン thread 長時間タスク / 大きな JS bundle / イベントリスナー重い</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Long Task API + INP attribution</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">requestIdleCallback / setTimeout で break up / React 18 useTransition / Web Worker でオフロード</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>startTransition(() =&gt; { setState(largeUpdate); })\nrequestIdleCallback(() =&gt; { doNonUrgent(); })</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">INP p75 / CrUX INP good URLs % / Long Task count</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Chrome DevTools / web-vitals JS / React Profiler</span></div>
+</div>
+
+<div class="card playbook" data-id="PB005" data-hours="20">
+  <div class="pb-head">
+    <span class="pb-id">PB005</span>
+    <span class="pb-hours">⏱ 20 h</span>
+    <span class="pb-lift">📈 +25.0%</span>
+  </div>
+  <h3 class="pb-symptom">Knowledge Panel 未生成、ブランド検索 SERP に組織情報なし</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Wikidata Q-ID 不在 / Schema.org Organization 不完全 / sameAs 不足</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Knowledge Graph entity reconciliation (Wikidata-based)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Schema.org Organization + sameAs: [Wikipedia, Wikidata, LinkedIn, Crunchbase, SNS全件]</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>{&quot;@context&quot;:&quot;https://schema.org&quot;,&quot;@type&quot;:&quot;Organization&quot;,&quot;name&quot;:&quot;NPO法人ミラツク&quot;,&quot;url&quot;:&quot;https://emerging-future.org&quot;,&quot;sameAs&quot;:[&quot;https://www.wikidata.org/wiki/Q...&quot;,&quot;https://www.linkedin.com/company/...&quot;]}</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Knowledge Panel 表示 / Brand SERP CTR / Wikidata Q-ID 取得</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console / Knowledge Graph Search API / Wikidata Editor</span></div>
+</div>
+
+<div class="card playbook" data-id="PB006" data-hours="40">
+  <div class="pb-head">
+    <span class="pb-id">PB006</span>
+    <span class="pb-hours">⏱ 40 h</span>
+    <span class="pb-lift">📈 +44.0%</span>
+  </div>
+  <h3 class="pb-symptom">Local Pack に表示されない、競合は3-Pack に常時表示</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Google Business Profile 未完成 / NAP citation 不一致 / レビュー数不足</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Local Ranking (proximity × relevance × prominence) — Haversine + reviews</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">GBP 100% 完成 / NAP 統一 (Yelp/Tabelog/業界ディレクトリ全件) / 写真 50+ / レビュー応答率 100%</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>{&quot;@context&quot;:&quot;https://schema.org&quot;,&quot;@type&quot;:&quot;LocalBusiness&quot;,&quot;name&quot;:&quot;...&quot;,&quot;address&quot;:{...},&quot;geo&quot;:{&quot;@type&quot;:&quot;GeoCoordinates&quot;,&quot;latitude&quot;:35.6,&quot;longitude&quot;:139.7},&quot;openingHoursSpecification&quot;:[...],&quot;aggregateRating&quot;:{...}}</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Local Pack 表示 / GBP Insights Views / Direction clicks</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Business Profile / Moz Local / BrightLocal / Yelp</span></div>
+</div>
+
+<div class="card playbook" data-id="PB007" data-hours="24">
+  <div class="pb-head">
+    <span class="pb-id">PB007</span>
+    <span class="pb-hours">⏱ 24 h</span>
+    <span class="pb-lift">📈 +18.0%</span>
+  </div>
+  <h3 class="pb-symptom">Hybrid Search (BM25+Dense) で BM25 単独より精度低下</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">BM25 と Dense のスコア正規化が不適切 / RRF を使っていない</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Reciprocal Rank Fusion (RRF, k=60)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">BM25 top-100 + Dense top-100 → RRF 統合 → top-10 表示</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>function hybrid(q):\n  bm25_ranked = bm25.search(q, k=100)\n  dense_ranked = dense.search(q, k=100)\n  return RRF([bm25_ranked, dense_ranked], k=60)[:10]</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">MRR@10 / NDCG@10 / 既存 Search Analytics で対照群比較</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Elasticsearch + sentence-transformers / Vespa / Weaviate</span></div>
+</div>
+
+<div class="card playbook" data-id="PB008" data-hours="200">
+  <div class="pb-head">
+    <span class="pb-id">PB008</span>
+    <span class="pb-hours">⏱ 200 h</span>
+    <span class="pb-lift">📈 +30.0%</span>
+  </div>
+  <h3 class="pb-symptom">Helpful Content Update 後にトラフィック -40%</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Thin content / AI 自動生成 / Affiliate 過多 / E-E-A-T 不十分</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Site-level quality classifier (HCS algorithmic)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">著者情報 (Schema.org Person) / 引用元明示 / Last Updated / オリジナル調査 / 一次資料</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;!-- 各記事に Reviewed-by + Last Updated --&gt;\n&lt;p&gt;Reviewed by &lt;a href=&quot;/authors/dr-x&quot;&gt;Dr. X (MD, 東京大学)&lt;/a&gt; · Last Updated: 2026-05-21&lt;/p&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">HCS Recovery / Sitewide impressions / Affected URL count</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console / Sistrix Visibility / Ahrefs</span></div>
+</div>
+
+<div class="card playbook" data-id="PB009" data-hours="16">
+  <div class="pb-head">
+    <span class="pb-id">PB009</span>
+    <span class="pb-hours">⏱ 16 h</span>
+    <span class="pb-lift">📈 +12.0%</span>
+  </div>
+  <h3 class="pb-symptom">AI Overviews に引用されない、競合は引用されている</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Schema.org 不完全 / 簡潔な定義文不在 / 数値データ非構造化</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">AI Overviews source selection (Google internal, MUM-based)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">h2: 短い質問 / 直下 p: 40-60字定義 / 数値は &lt;table&gt; / Schema.org Article + Person + Organization @graph</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;section&gt;&lt;h2&gt;○○とは&lt;/h2&gt;&lt;p&gt;○○とは、〜である。&lt;/p&gt;&lt;table&gt;...&lt;/table&gt;&lt;/section&gt;\n&lt;script type=&quot;application/ld+json&quot;&gt;{...}&lt;/script&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">AI Overviews citations / Brand search CTR / SERP click-throughs</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">ChatGPT / Claude / Perplexity でクエリテスト / Authoritas SGE Tracker</span></div>
+</div>
+
+<div class="card playbook" data-id="PB010" data-hours="1">
+  <div class="pb-head">
+    <span class="pb-id">PB010</span>
+    <span class="pb-hours">⏱ 1 h</span>
+    <span class="pb-lift">📈 +0%</span>
+  </div>
+  <h3 class="pb-symptom">GPTBot/ClaudeBot 等の AI クローラに学習されたくない</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">robots.txt に AI クローラ別ブロック未設定</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">User-Agent based crawl directive</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">robots.txt に主要 AI クローラを Disallow 列挙</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code># robots.txt\nUser-agent: GPTBot\nDisallow: /\n\nUser-agent: ClaudeBot\nDisallow: /\n\nUser-agent: CCBot\nDisallow: /\n\nUser-agent: anthropic-ai\nDisallow: /\n\nUser-agent: Google-Extended\nDisallow: /</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">AI crawler hits in access log / Content reuse monitoring</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">GoAccess / Logz.io / Cloudflare Bot Management</span></div>
+</div>
+
+<div class="card playbook" data-id="PB011" data-hours="8">
+  <div class="pb-head">
+    <span class="pb-id">PB011</span>
+    <span class="pb-hours">⏱ 8 h</span>
+    <span class="pb-lift">📈 +13.2%</span>
+  </div>
+  <h3 class="pb-symptom">Product Rich Result が SERP に表示されない</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Product Schema 不完全 / Offer.price missing / aggregateRating 5件未満</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Structured Data Validation (Rich Results Test)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Product + Offer + AggregateRating + Review 全項目 / 画像 1200x630 / レビュー≥5件</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>{&quot;@type&quot;:&quot;Product&quot;,&quot;name&quot;:&quot;X&quot;,&quot;image&quot;:[&quot;...&quot;],&quot;description&quot;:&quot;...&quot;,&quot;offers&quot;:{&quot;@type&quot;:&quot;Offer&quot;,&quot;price&quot;:&quot;1000&quot;,&quot;priceCurrency&quot;:&quot;JPY&quot;,&quot;availability&quot;:&quot;https://schema.org/InStock&quot;},&quot;aggregateRating&quot;:{&quot;@type&quot;:&quot;AggregateRating&quot;,&quot;ratingValue&quot;:&quot;4.5&quot;,&quot;reviewCount&quot;:&quot;10&quot;}}</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Product Rich Results impressions / Merchant Center match / CTR Δ</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Rich Results Test / Google Merchant Center / Schema Markup Validator</span></div>
+</div>
+
+<div class="card playbook" data-id="PB012" data-hours="6">
+  <div class="pb-head">
+    <span class="pb-id">PB012</span>
+    <span class="pb-hours">⏱ 6 h</span>
+    <span class="pb-lift">📈 +8.0%</span>
+  </div>
+  <h3 class="pb-symptom">JSON-LD が複数 &lt;script&gt; に分散、Knowledge Graph 連携弱い</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Article / Organization / WebSite が別々の Schema ブロック</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Schema.org JSON-LD @graph Builder</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">1 つの &lt;script type=&#x27;application/ld+json&#x27;&gt; 内に @graph で全エンティティ集約</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>{&quot;@context&quot;:&quot;https://schema.org&quot;,&quot;@graph&quot;:[{&quot;@type&quot;:&quot;Organization&quot;,&quot;@id&quot;:&quot;#org&quot;,...},{&quot;@type&quot;:&quot;WebSite&quot;,&quot;@id&quot;:&quot;#site&quot;,&quot;publisher&quot;:{&quot;@id&quot;:&quot;#org&quot;}},{&quot;@type&quot;:&quot;Article&quot;,&quot;@id&quot;:&quot;#article&quot;,&quot;publisher&quot;:{&quot;@id&quot;:&quot;#org&quot;},...},{&quot;@type&quot;:&quot;BreadcrumbList&quot;,...}]}</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Rich Results coverage / Knowledge Panel candidates / GSC enhancement reports</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Schema.org / Google Rich Results Test / JSON-LD Playground</span></div>
+</div>
+
+<div class="card playbook" data-id="PB013" data-hours="16">
+  <div class="pb-head">
+    <span class="pb-id">PB013</span>
+    <span class="pb-hours">⏱ 16 h</span>
+    <span class="pb-lift">📈 +18.0%</span>
+  </div>
+  <h3 class="pb-symptom">Pogo-sticking 多発、Dwell Time 10秒未満</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">ファースト印象不良 / 答えが上方にない / 視覚的階層不在</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Reader Experience Signal (dwell time, pogo-sticking)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Above-the-fold に結論 / Drop cap / 段落間 30px / Reading time 表示 / sticky TOC</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;aside class=&quot;reading-meta&quot;&gt;&lt;time&gt;5分で読了&lt;/time&gt;&lt;/aside&gt;\n&lt;p class=&quot;lead&quot;&gt;この記事の結論は〜である。&lt;/p&gt;\n&lt;nav class=&quot;toc&quot; data-sticky&gt;...&lt;/nav&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Avg dwell time / Bounce rate / Scroll depth p50/p75</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Microsoft Clarity / Hotjar / Google Analytics GA4</span></div>
+</div>
+
+<div class="card playbook" data-id="PB014" data-hours="12">
+  <div class="pb-head">
+    <span class="pb-id">PB014</span>
+    <span class="pb-hours">⏱ 12 h</span>
+    <span class="pb-lift">📈 +20.0%</span>
+  </div>
+  <h3 class="pb-symptom">Image Pack に画像が出ない、Google Images からの流入ゼロ</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">alt 不在 / 画像 sitemap 未設定 / EXIF 削除 / Schema.org ImageObject 不在</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Image Pack ranking (visual + text + EXIF + license)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">alt 具体的 / image sitemap / Schema.org ImageObject + license + creator / 1200px 以上</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;img src=&quot;/hero.jpg&quot; alt=&quot;2026年春の桜並木 (東京都・千鳥ヶ淵)&quot; width=&quot;1200&quot; height=&quot;630&quot;&gt;\n&lt;!-- image-sitemap.xml --&gt;\n&lt;image:image&gt;&lt;image:loc&gt;https://example.com/hero.jpg&lt;/image:loc&gt;&lt;image:title&gt;...&lt;/image:title&gt;&lt;/image:image&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Google Images impressions / Image Pack appearances / Image search clicks</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console / Lighthouse / Bing Webmaster</span></div>
+</div>
+
+<div class="card playbook" data-id="PB015" data-hours="16">
+  <div class="pb-head">
+    <span class="pb-id">PB015</span>
+    <span class="pb-hours">⏱ 16 h</span>
+    <span class="pb-lift">📈 +15.0%</span>
+  </div>
+  <h3 class="pb-symptom">Video が SERP の動画カルーセルに出ない (Self-hosted)</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">VideoObject Schema 不在 / Video Sitemap 未設定 / Thumbnail 不適切</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Video Carousel ranking (VideoObject + transcript)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Schema.org VideoObject + thumbnailUrl 16:9 / Video Sitemap / Closed Captions / Transcript HTML</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>{&quot;@type&quot;:&quot;VideoObject&quot;,&quot;name&quot;:&quot;...&quot;,&quot;description&quot;:&quot;...&quot;,&quot;thumbnailUrl&quot;:&quot;https://.../thumb.jpg&quot;,&quot;uploadDate&quot;:&quot;2026-05-21&quot;,&quot;duration&quot;:&quot;PT5M30S&quot;,&quot;contentUrl&quot;:&quot;https://.../video.mp4&quot;,&quot;embedUrl&quot;:&quot;https://.../embed&quot;}</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Video Carousel impressions / Video clicks / Watch time</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console Video Indexing / YouTube Studio / VidIQ</span></div>
+</div>
+
+<div class="card playbook" data-id="PB016" data-hours="4">
+  <div class="pb-head">
+    <span class="pb-id">PB016</span>
+    <span class="pb-hours">⏱ 4 h</span>
+    <span class="pb-lift">📈 +5.0%</span>
+  </div>
+  <h3 class="pb-symptom">FAQ Schema 設定済みだが Rich Result 表示しない (2023年8月以降)</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">Google が一般サイトの FAQ Rich Result を廃止 (政府/医療のみ表示継続)</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">FAQ Rich Result deprecation (2023-08)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">FAQ Schema は維持 (PAA トリガーには有効) / コンテンツ自体は FAQ ページとして残す / Featured Snippet に転換</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;!-- FAQ Schema は残し、Featured Snippet 狙いに転換 --&gt;\n&lt;section&gt;&lt;h2&gt;よくある質問&lt;/h2&gt;\n&lt;details&gt;&lt;summary&gt;○○とは&lt;/summary&gt;&lt;p&gt;40-60字回答&lt;/p&gt;&lt;/details&gt;&lt;/section&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Featured Snippet 獲得 / PAA 露出 / FAQ ページ direct traffic</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console / Search Engine Land / SEMrush</span></div>
+</div>
+
+<div class="card playbook" data-id="PB017" data-hours="12">
+  <div class="pb-head">
+    <span class="pb-id">PB017</span>
+    <span class="pb-hours">⏱ 12 h</span>
+    <span class="pb-lift">📈 +15.0%</span>
+  </div>
+  <h3 class="pb-symptom">サイトリンク (Sitelinks) が SERP に出ない</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">サイト構造が不明確 / 主要内部リンク不在 / Breadcrumb 不在</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Sitelinks auto-generation (Google internal)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">明確な &lt;nav&gt; / 主要 6 ページに集中する内部リンク / BreadcrumbList Schema 全ページ</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;nav aria-label=&quot;Main&quot;&gt;&lt;a href=&quot;/&quot;&gt;Home&lt;/a&gt; &lt;a href=&quot;/about&quot;&gt;About&lt;/a&gt; &lt;a href=&quot;/services&quot;&gt;Services&lt;/a&gt; ...&lt;/nav&gt;\n&lt;script type=&quot;application/ld+json&quot;&gt;{&quot;@type&quot;:&quot;BreadcrumbList&quot;,&quot;itemListElement&quot;:[...]}&lt;/script&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Sitelinks 表示 / Brand SERP CTR / GSC sitelinks search box</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console / Sistrix</span></div>
+</div>
+
+<div class="card playbook" data-id="PB018" data-hours="80">
+  <div class="pb-head">
+    <span class="pb-id">PB018</span>
+    <span class="pb-hours">⏱ 80 h</span>
+    <span class="pb-lift">📈 +25.0%</span>
+  </div>
+  <h3 class="pb-symptom">Site Reputation Abuse (2024年3月 Update) で評価下落</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">第三者コンテンツ (クーポン/アフィリエイト) を主ドメインに掲載</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Site Reputation Abuse classifier (Google 2024-03)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">第三者コンテンツをサブドメイン分離 / noindex / robots.txt Disallow / 編集的監督明示</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;!-- 第三者コンテンツページに meta --&gt;\n&lt;meta name=&quot;robots&quot; content=&quot;noindex,nofollow&quot;&gt;\n&lt;!-- または別サブドメインに移動 --&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Affected URL count / Manual Action notice / Sitewide impressions</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console Manual Actions / Ahrefs / Sistrix</span></div>
+</div>
+
+<div class="card playbook" data-id="PB019" data-hours="40">
+  <div class="pb-head">
+    <span class="pb-id">PB019</span>
+    <span class="pb-hours">⏱ 40 h</span>
+    <span class="pb-lift">📈 +20.0%</span>
+  </div>
+  <h3 class="pb-symptom">ColBERT/Dense Retrieval を導入したいが index size が爆発</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">1 doc に 100+ token embeddings → corpus * dim 巨大</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">ColBERT Late Interaction + Product Quantization</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">ColBERTv2 + token embedding compression (PQ) / 各 doc を 100 token に切る / FAISS IVF+PQ</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>from colbert import Indexer\nindexer = Indexer(checkpoint=&#x27;colbertv2&#x27;, config=ColBERTConfig(nbits=2, kmeans_niters=4))\nindexer.index(name=&#x27;my-index&#x27;, collection=docs)</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Index size GB / MRR@10 / Throughput QPS</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">ColBERTv2 (Stanford) / FAISS / Vespa</span></div>
+</div>
+
+<div class="card playbook" data-id="PB020" data-hours="8">
+  <div class="pb-head">
+    <span class="pb-id">PB020</span>
+    <span class="pb-hours">⏱ 8 h</span>
+    <span class="pb-lift">📈 +90.0%</span>
+  </div>
+  <h3 class="pb-symptom">Spell correction が遅い、Lucene FuzzyQuery で latency &gt;100ms</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">BK-tree / Levenshtein automaton で文字列空間を線形探索</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">SymSpell (Wolf Garbe 2012)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">SymSpell index (delete-only) を build / Redis にキャッシュ / 編集距離2まで対応</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>from symspellpy import SymSpell\nsym = SymSpell(max_dictionary_edit_distance=2)\nsym.load_dictionary(&#x27;dict.txt&#x27;, term_index=0, count_index=1)\nresults = sym.lookup(&#x27;helo wrld&#x27;, verbosity=2, max_edit_distance=2)</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Suggest latency p95 / Suggestion accuracy / Throughput</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">SymSpell (GitHub: wolfgarbe/SymSpell) / Redis</span></div>
+</div>
+
+<div class="card playbook" data-id="PB021" data-hours="24">
+  <div class="pb-head">
+    <span class="pb-id">PB021</span>
+    <span class="pb-hours">⏱ 24 h</span>
+    <span class="pb-lift">📈 +30.0%</span>
+  </div>
+  <h3 class="pb-symptom">A/B テストが終わらない、サンプルが集まらない</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">固定 sample size の Frequentist A/B は CTR 差が小さいと長期化</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Thompson Sampling Multi-Armed Bandit</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Bandit allocator (Optimizely Bandit / VWO Bandit / 自作) で動的に勝者寄せ</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>import random\nalpha, beta = [1]*n_arms, [1]*n_arms\nfor t in range(n_rounds):\n  samples = [random.betavariate(alpha[a], beta[a]) for a in range(n_arms)]\n  chosen = samples.index(max(samples))\n  reward = pull(chosen)\n  if reward: alpha[chosen]+=1\n  else: beta[chosen]+=1</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Test convergence time / Regret / Winner confidence</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Optimizely / VWO / Statsig / Eppo / GrowthBook</span></div>
+</div>
+
+<div class="card playbook" data-id="PB022" data-hours="4">
+  <div class="pb-head">
+    <span class="pb-id">PB022</span>
+    <span class="pb-hours">⏱ 4 h</span>
+    <span class="pb-lift">📈 +0%</span>
+  </div>
+  <h3 class="pb-symptom">コンテンツ評価で評価者間の一致が κ=0.65 (Substantial 止まり)</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">高有病率 (90% verified) のため Cohen&#x27;s Kappa がパラドックスで過小評価</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Gwet&#x27;s AC1 (rule:quality-metrics-standard.md 主指標)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">5 指標セット必須: observed_agreement / gwet_ac1 / cohens_kappa / positive_prevalence / sample_size</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>python3 ~/projects/research/agent-registry-db/tools/gwet_ac1.py rater1.csv rater2.csv\n# Output: AC1=0.943 (Almost Perfect), κ=0.821 (Substantial)</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Gwet AC1 / Po / Cohen&#x27;s Kappa / Sample size</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">agent-registry-db/tools/gwet_ac1.py / sklearn cohen_kappa_score</span></div>
+</div>
+
+<div class="card playbook" data-id="PB023" data-hours="8">
+  <div class="pb-head">
+    <span class="pb-id">PB023</span>
+    <span class="pb-hours">⏱ 8 h</span>
+    <span class="pb-lift">📈 +15.0%</span>
+  </div>
+  <h3 class="pb-symptom">Negative SEO (低質バックリンク大量) で Penguin 検出される</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">競合からの spam バックリンク + Disavow 未実施</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">TrustRank propagation + Disavow tool</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Ahrefs Lost+New Backlinks 監視 / 月次で disavow.txt 更新 / GSC 経由送信</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code># disavow.txt\n# Spam links - 2026-05-21\ndomain:bad-domain-1.com\ndomain:bad-domain-2.cn\nhttps://specific-spam-page.com/specific-page</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Disavow URL count / Penguin classifier signals / GSC manual action</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console / Ahrefs / SEMrush</span></div>
+</div>
+
+<div class="card playbook" data-id="PB024" data-hours="40">
+  <div class="pb-head">
+    <span class="pb-id">PB024</span>
+    <span class="pb-hours">⏱ 40 h</span>
+    <span class="pb-lift">📈 +12.0%</span>
+  </div>
+  <h3 class="pb-symptom">Mobile-First Indexing で desktop と mobile の content 差で順位低下</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">mobile に hide した content が Google からは欠落と判定</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">Mobile-First Indexing (since 2018)</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">Responsive design / mobile に hide しない / アコーディオン展開可 / 全 content を mobile からアクセス可能</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;!-- ❌ display:none で content 隠さない --&gt;\n&lt;!-- ✅ アコーディオン (details) で展開可能に --&gt;\n&lt;details&gt;&lt;summary&gt;続きを読む&lt;/summary&gt;&lt;div&gt;...&lt;/div&gt;&lt;/details&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">Mobile indexing coverage / Mobile usability errors / Mobile vs desktop ranking gap</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console / Mobile-Friendly Test / Lighthouse Mobile</span></div>
+</div>
+
+<div class="card playbook" data-id="PB025" data-hours="16">
+  <div class="pb-head">
+    <span class="pb-id">PB025</span>
+    <span class="pb-hours">⏱ 16 h</span>
+    <span class="pb-lift">📈 +22.0%</span>
+  </div>
+  <h3 class="pb-symptom">国際 SEO で複数言語サイトが Google で混在表示</h3>
+  <div class="pb-row"><span class="lbl">診断</span><span class="val">hreflang 不在 / x-default 不在 / canonical 言語間不整合</span></div>
+  <div class="pb-row"><span class="lbl">アルゴリズム</span><span class="val mono">hreflang language/region matching</span></div>
+  <div class="pb-row"><span class="lbl">UI / Schema 戦略</span><span class="val">全 alternate 言語に hreflang + x-default / 双方向参照必須 / canonical は self-referencing</span></div>
+  <div class="pb-row"><span class="lbl">実装例</span></div>
+  <pre class="code lang-html"><code>&lt;link rel=&quot;alternate&quot; hreflang=&quot;ja&quot; href=&quot;https://example.com/ja/&quot;&gt;\n&lt;link rel=&quot;alternate&quot; hreflang=&quot;en&quot; href=&quot;https://example.com/en/&quot;&gt;\n&lt;link rel=&quot;alternate&quot; hreflang=&quot;x-default&quot; href=&quot;https://example.com/&quot;&gt;\n&lt;link rel=&quot;canonical&quot; href=&quot;https://example.com/ja/&quot;&gt;</code></pre>
+  <div class="pb-row"><span class="lbl">KPI</span><span class="val">International Targeting Report / hreflang errors / Per-country impressions</span></div>
+  <div class="pb-row"><span class="lbl">推奨ツール</span><span class="val">Google Search Console International Targeting / Sistrix / hreflang Tags Testing Tool</span></div>
+</div>
+
+  </div>
+
+  <div id="algorithms" class="tab-panel">
+    <div class="filter-bar">
+      <input type="text" id="algo-search" placeholder="🔎 アルゴリズム名・概念で絞り込み...">
+      <select id="algo-sf">
+        <option value="">全 SF</option>
+        <option value="content_eeat">content_eeat (1)</option><option value="crawling_indexing">crawling_indexing (2)</option><option value="evaluation_clickmodels">evaluation_clickmodels (7)</option><option value="generative_ai_search">generative_ai_search (1)</option><option value="ir_foundations">ir_foundations (2)</option><option value="learning_to_rank">learning_to_rank (3)</option><option value="link_analysis">link_analysis (2)</option><option value="local_vertical_multimodal">local_vertical_multimodal (2)</option><option value="neural_ir">neural_ir (5)</option><option value="query_understanding">query_understanding (5)</option><option value="technical_seo">technical_seo (2)</option><option value="web_spam">web_spam (1)</option>
+      </select>
+    </div>
+    
+<div class="card algorithm" data-sf="content_eeat" data-cat="indexing">
+  <div class="algo-head">
+    <h3>Schema.org JSON-LD @graph Builder</h3>
+    <span class="algo-ja">Schema.org @graph 構築</span>
+    <span class="algo-sf">content_eeat</span>
+    <span class="algo-cat">indexing</span>
+    <span class="algo-year">2014</span>
+  </div>
+  <p class="algo-desc">JSON-LD 1.1 @graph で複数エンティティ (Organization + WebSite + Article + BreadcrumbList) を1ブロックに集約。Knowledge Graph 候補化の鍵。</p>
+  
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|nodes|)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|nodes|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function build_schema_graph(page_meta):
+  graph = {
+    &quot;@context&quot;: &quot;https://schema.org&quot;,
+    &quot;@graph&quot;: [
+      {
+        &quot;@type&quot;: &quot;Organization&quot;,
+        &quot;@id&quot;: page_meta.org_url + &quot;#org&quot;,
+        &quot;name&quot;: page_meta.org_name,
+        &quot;url&quot;: page_meta.org_url,
+        &quot;logo&quot;: page_meta.logo_url,
+        &quot;sameAs&quot;: page_meta.sameAs_list  # wikipedia, linkedin, etc
+      },
+      {
+        &quot;@type&quot;: &quot;WebSite&quot;,
+        &quot;@id&quot;: page_meta.site_url + &quot;#site&quot;,
+        &quot;url&quot;: page_meta.site_url,
+        &quot;name&quot;: page_meta.site_name,
+        &quot;publisher&quot;: {&quot;@id&quot;: page_meta.org_url + &quot;#org&quot;}
+      },
+      {
+        &quot;@type&quot;: &quot;Article&quot;,
+        &quot;@id&quot;: page_meta.url + &quot;#article&quot;,
+        &quot;headline&quot;: page_meta.title,
+        &quot;datePublished&quot;: page_meta.published,
+        &quot;dateModified&quot;: page_meta.modified,
+        &quot;author&quot;: {&quot;@type&quot;: &quot;Person&quot;, &quot;name&quot;: page_meta.author},
+        &quot;publisher&quot;: {&quot;@id&quot;: page_meta.org_url + &quot;#org&quot;},
+        &quot;mainEntityOfPage&quot;: page_meta.url
+      },
+      {
+        &quot;@type&quot;: &quot;BreadcrumbList&quot;,
+        &quot;itemListElement&quot;: [
+          {&quot;@type&quot;: &quot;ListItem&quot;, &quot;position&quot;: i+1, &quot;name&quot;: b.name, &quot;item&quot;: b.url}
+          for i, b in enumerate(page_meta.breadcrumbs)
+        ]
+      }
+    ]
+  }
+  return json.dumps(graph, ensure_ascii=False, indent=2)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>page_meta</code> : <em>PageMetadata</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>jsonld</code> : <em>str</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Google Rich Results Test — Google Rich Results compliance
+  </div>
+  <div class="algo-link">
+    <a href="https://json-ld.org/" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="crawling_indexing" data-cat="crawling">
+  <div class="algo-head">
+    <h3>Mercator Crawl Frontier</h3>
+    <span class="algo-ja">Mercator クロールフロンティア</span>
+    <span class="algo-sf">crawling_indexing</span>
+    <span class="algo-cat">crawling</span>
+    <span class="algo-year">1999</span>
+  </div>
+  <p class="algo-desc">Heydon-Najork (1999) の分散クローラ。Googlebot / Bingbot / Apache Nutch の祖。Priority queue + politeness + duplicate detection。</p>
+  
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|pages| * fetch_latency)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|frontier| + |visited|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function Mercator_crawl(seed_urls, max_pages):
+  frontier = PriorityQueue()
+  for url in seed_urls:
+    frontier.push(url, priority=compute_priority(url))
+  visited = set()
+  while not frontier.empty() and len(visited) &lt; max_pages:
+    url = frontier.pop()
+    if url in visited or not robots_allow(url): continue
+    visited.add(url)
+    page = fetch(url)
+    for link in extract_links(page):
+      if link not in visited:
+        frontier.push(link, priority=compute_priority(link))
+  return visited</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>seeds</code> : <em>List[URL]</em> — </li><li><code>robots_cache</code> : <em>Cache</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>crawled_pages</code> : <em>List[Page]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Mercator (Compaq SRC) — Foundational distributed crawler
+  </div>
+  <div class="algo-link">
+    <a href="https://www.researchgate.net/publication/220354906" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="crawling_indexing" data-cat="indexing">
+  <div class="algo-head">
+    <h3>Sitemap XML Generation</h3>
+    <span class="algo-ja">Sitemap XML 生成</span>
+    <span class="algo-sf">crawling_indexing</span>
+    <span class="algo-cat">indexing</span>
+    <span class="algo-year">2008</span>
+  </div>
+  <p class="algo-desc">sitemaps.org 0.9 protocol 準拠の生成。50K URL / 50MB 上限超は sitemap_index.xml で分割。</p>
+  
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|urls|)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|urls|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function generate_sitemap(urls, lastmod_map, output_path):
+  with open(output_path, &#x27;w&#x27;) as f:
+    f.write(&#x27;&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;\n&#x27;)
+    f.write(&#x27;&lt;urlset xmlns=&quot;http://www.sitemaps.org/schemas/sitemap/0.9&quot;&gt;\n&#x27;)
+    for url in urls:
+      if not is_indexable(url): continue
+      f.write(&#x27;  &lt;url&gt;\n&#x27;)
+      f.write(f&#x27;    &lt;loc&gt;{xml_escape(url)}&lt;/loc&gt;\n&#x27;)
+      f.write(f&#x27;    &lt;lastmod&gt;{lastmod_map[url]}&lt;/lastmod&gt;\n&#x27;)
+      f.write(f&#x27;    &lt;changefreq&gt;{infer_changefreq(url)}&lt;/changefreq&gt;\n&#x27;)
+      f.write(f&#x27;    &lt;priority&gt;{compute_priority(url):.1f}&lt;/priority&gt;\n&#x27;)
+      f.write(&#x27;  &lt;/url&gt;\n&#x27;)
+    f.write(&#x27;&lt;/urlset&gt;\n&#x27;)
+  # If &gt; 50K URLs, split into multiple sitemaps + sitemap_index.xml</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>urls</code> : <em>List[URL]</em> — </li><li><code>lastmod</code> : <em>Dict[URL, datetime]</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>sitemap_path</code> : <em>Path</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> sitemaps.org 0.9 — Universal protocol (Google/Bing/Yandex/Baidu)
+  </div>
+  <div class="algo-link">
+    <a href="https://www.sitemaps.org/protocol.html" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="evaluation_clickmodels" data-cat="evaluation">
+  <div class="algo-head">
+    <h3>Cascade Click Model</h3>
+    <span class="algo-ja">カスケードクリックモデル</span>
+    <span class="algo-sf">evaluation_clickmodels</span>
+    <span class="algo-cat">evaluation</span>
+    <span class="algo-year">2008</span>
+  </div>
+  <p class="algo-desc">Craswell et al. (2008) の cascade hypothesis。ユーザーは上から順に scan し、クリックしたら離脱。Position bias 推定の祖。</p>
+  <div class="latex">$$P(C_i=1 | R_{1..i}) = R_i \prod_{j&lt;i} (1 - R_j)$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(k) per query</code></span>
+    <span><strong>空間計算量</strong> <code>O(k)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function cascade_likelihood(positions, clicks, relevance):
+  # User scans top-down, clicks if attractive, then stops
+  log_lik = 0
+  for i in range(len(positions)):
+    if clicks[i] == 1:
+      log_lik += log(relevance[i])
+      break  # user stops after click
+    else:
+      log_lik += log(1 - relevance[i])
+  return log_lik</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>click_sequence</code> : <em>List[0|1]</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>log_likelihood</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> WSDM 2008 — Foundational click model
+  </div>
+  <div class="algo-link">
+    <a href="https://dl.acm.org/doi/10.1145/1341531.1341545" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="evaluation_clickmodels" data-cat="evaluation">
+  <div class="algo-head">
+    <h3>Cohen&#x27;s Kappa</h3>
+    <span class="algo-ja">Cohen&#x27;s κ</span>
+    <span class="algo-sf">evaluation_clickmodels</span>
+    <span class="algo-cat">evaluation</span>
+    <span class="algo-year">1960</span>
+  </div>
+  <p class="algo-desc">Cohen (1960) の評価者間一致係数。注意: 有病率パラドックスに弱い。本エコシステムでは Gwet AC1 を主指標、Kappa を参考値とする。</p>
+  <div class="latex">$$\kappa = \frac{P_o - P_e}{1 - P_e}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(n)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|C|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function cohens_kappa(rater1, rater2):
+  n = len(rater1)
+  categories = set(rater1) | set(rater2)
+  Po = sum(1 for a, b in zip(rater1, rater2) if a == b) / n
+  Pe = 0
+  for c in categories:
+    p1 = rater1.count(c) / n
+    p2 = rater2.count(c) / n
+    Pe += p1 * p2
+  return (Po - Pe) / (1 - Pe) if Pe != 1 else 1</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>rater1</code> : <em>List</em> — </li><li><code>rater2</code> : <em>List</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>kappa</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Standard for IRR — Landis-Koch 1977 interpretation table
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Cohen%27s_kappa" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="evaluation_clickmodels" data-cat="evaluation">
+  <div class="algo-head">
+    <h3>Gwet&#x27;s AC1</h3>
+    <span class="algo-ja">Gwet AC1</span>
+    <span class="algo-sf">evaluation_clickmodels</span>
+    <span class="algo-cat">evaluation</span>
+    <span class="algo-year">2008</span>
+  </div>
+  <p class="algo-desc">Gwet (2008) の Kappa 代替。有病率パラドックスに頑健。本エコシステム全 DB の主品質指標。</p>
+  <div class="latex">$$\mathrm{AC1} = \frac{P_o - P_{e,\gamma}}{1 - P_{e,\gamma}}, \quad P_{e,\gamma} = \frac{1}{K-1}\sum_{c=1}^{K} p_c (1 - p_c)$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(n + K)</code></span>
+    <span><strong>空間計算量</strong> <code>O(K)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function gwet_ac1(rater1, rater2):
+  n = len(rater1)
+  categories = sorted(set(rater1) | set(rater2))
+  K = len(categories)
+  Po = sum(1 for a, b in zip(rater1, rater2) if a == b) / n
+  marginals = {c: (rater1.count(c) + rater2.count(c)) / (2*n) for c in categories}
+  Pe_gamma = sum(p * (1-p) for p in marginals.values()) / (K - 1)
+  return (Po - Pe_gamma) / (1 - Pe_gamma)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>rater1</code> : <em>List</em> — </li><li><code>rater2</code> : <em>List</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>ac1</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> SEO-DB Phase 13 pilot: 0.943 — 本エコシステム推奨主指標 (rule:quality-metrics-standard.md)
+  </div>
+  <div class="algo-link">
+    <a href="https://onlinelibrary.wiley.com/doi/10.1348/000711006X126600" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="evaluation_clickmodels" data-cat="learning">
+  <div class="algo-head">
+    <h3>Inverse Propensity Score (IPS) for LTR</h3>
+    <span class="algo-ja">IPS unbiased LTR</span>
+    <span class="algo-sf">evaluation_clickmodels</span>
+    <span class="algo-cat">learning</span>
+    <span class="algo-year">2017</span>
+  </div>
+  <p class="algo-desc">Joachims et al. (2017) の inverse propensity scoring による counterfactual LTR。位置バイアスを補正。</p>
+  <div class="latex">$$\hat{\Delta}(f) = \frac{1}{|Q|}\sum_q \frac{1}{p(o=1|i,q)} \cdot \mathbb{I}[\mathrm{click}_q]$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|Q| * k)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|Q|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function IPS_LTR_loss(clicks, positions, propensities, scores):
+  # propensity p_i = probability user examined position i
+  loss = 0
+  for i in range(len(clicks)):
+    if clicks[i] == 1:
+      # Weight click by 1/propensity to debias
+      weight = 1 / propensities[positions[i]]
+      loss += weight * pairwise_loss(scores[i], scores[non_clicked])
+  return loss</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>click_logs</code> : <em>DataFrame</em> — </li><li><code>propensities</code> : <em>Dict[position, float]</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>unbiased_estimator</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Yahoo+propensity estimated — Standard in unbiased LTR
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/1608.04561" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="evaluation_clickmodels" data-cat="evaluation">
+  <div class="algo-head">
+    <h3>Mean Reciprocal Rank (MRR)</h3>
+    <span class="algo-ja">MRR</span>
+    <span class="algo-sf">evaluation_clickmodels</span>
+    <span class="algo-cat">evaluation</span>
+    <span class="algo-year">1999</span>
+  </div>
+  <p class="algo-desc">最初の関連文書の逆順位の平均。MS MARCO / TREC QA で標準。</p>
+  <div class="latex">$$\mathrm{MRR} = \frac{1}{|Q|} \sum_{q=1}^{|Q|} \frac{1}{\mathrm{rank}_q}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|Q| * k)</code></span>
+    <span><strong>空間計算量</strong> <code>O(1)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function MRR(rankings, relevant_ids):
+  total = 0
+  for query_idx in range(len(rankings)):
+    for rank, doc_id in enumerate(rankings[query_idx], start=1):
+      if doc_id in relevant_ids[query_idx]:
+        total += 1 / rank
+        break  # first relevant
+  return total / len(rankings)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>rankings</code> : <em>List[List[int]]</em> — </li><li><code>relevant</code> : <em>List[Set[int]]</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>mrr</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> MS MARCO MRR@10 — MS MARCO official metric
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Mean_reciprocal_rank" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="evaluation_clickmodels" data-cat="learning">
+  <div class="algo-head">
+    <h3>Multi-Armed Bandit (Thompson Sampling)</h3>
+    <span class="algo-ja">Thompson Sampling MAB</span>
+    <span class="algo-sf">evaluation_clickmodels</span>
+    <span class="algo-cat">learning</span>
+    <span class="algo-year">1933</span>
+  </div>
+  <p class="algo-desc">Thompson (1933) のベイズ MAB。固定 A/B テストより少ないサンプルで勝者特定可能。SERP feature A/B、UI A/B、Snippet A/B で標準。</p>
+  <div class="latex">$$a_t \sim \arg\max_a \theta_a, \quad \theta_a \sim \mathrm{Beta}(\alpha_a, \beta_a)$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|arms|) per round</code></span>
+    <span><strong>空間計算量</strong> <code>O(|arms|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function thompson_sampling(arms, n_rounds):
+  # Each arm has Beta(alpha, beta) belief over success rate
+  alpha = [1] * len(arms)
+  beta  = [1] * len(arms)
+  history = []
+  for t in range(n_rounds):
+    # Sample success rate from each arm&#x27;s posterior
+    samples = [random.betavariate(alpha[a], beta[a]) for a in range(len(arms))]
+    # Pull arm with highest sample
+    chosen = argmax(samples)
+    reward = arms[chosen].pull()  # 0 or 1
+    # Update posterior
+    if reward == 1: alpha[chosen] += 1
+    else: beta[chosen] += 1
+    history.append((chosen, reward))
+  return history</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>arms</code> : <em>List[Arm]</em> — </li><li><code>n_rounds</code> : <em>int</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>trajectory</code> : <em>List[(arm, reward)]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Mortal MAB benchmarks — Bayesian regret bounded
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Thompson_sampling" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="evaluation_clickmodels" data-cat="evaluation">
+  <div class="algo-head">
+    <h3>NDCG@k</h3>
+    <span class="algo-ja">NDCG@k</span>
+    <span class="algo-sf">evaluation_clickmodels</span>
+    <span class="algo-cat">evaluation</span>
+    <span class="algo-year">2002</span>
+  </div>
+  <p class="algo-desc">Järvelin-Kekäläinen (2002) の Normalized DCG。多段階関連性ラベルで上位の順位の効果を強調。</p>
+  <div class="latex">$$\mathrm{NDCG@k} = \frac{1}{\mathrm{IDCG}@k} \sum_{i=1}^{k} \frac{2^{\mathrm{rel}_i} - 1}{\log_2(i+1)}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(k log k)</code></span>
+    <span><strong>空間計算量</strong> <code>O(k)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function NDCG(ranking, relevance, k):
+  DCG = sum(
+    (2^relevance[ranking[i]] - 1) / log2(i + 2)
+    for i in range(k)
+  )
+  ideal_ranking = sorted(range(len(relevance)), key=lambda i: -relevance[i])
+  IDCG = sum(
+    (2^relevance[ideal_ranking[i]] - 1) / log2(i + 2)
+    for i in range(k)
+  )
+  return DCG / IDCG if IDCG &gt; 0 else 0</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>ranking</code> : <em>List[int]</em> — </li><li><code>relevance</code> : <em>List[int]</em> — </li><li><code>k</code> : <em>int</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>ndcg</code> : <em>float</em> — 0..1, higher is better</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> TREC ad-hoc, MS MARCO — Standard metric for graded relevance
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Discounted_cumulative_gain" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="generative_ai_search" data-cat="learning">
+  <div class="algo-head">
+    <h3>Self-Consistency Decoding</h3>
+    <span class="algo-ja">Self-Consistency 推論</span>
+    <span class="algo-sf">generative_ai_search</span>
+    <span class="algo-cat">learning</span>
+    <span class="algo-year">2022</span>
+  </div>
+  <p class="algo-desc">Wang et al. (2022) ICLR の CoT サンプリング + majority vote。GenAI 検索の回答信頼性向上の標準。</p>
+  <div class="latex">$$\hat{y} = \arg\max_y \sum_{i=1}^{n} \mathbb{I}[y_i = y]$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(n * generate_latency)</code></span>
+    <span><strong>空間計算量</strong> <code>O(n)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function self_consistency_answer(query, llm, n_samples=20):
+  # Generate multiple Chain-of-Thought paths
+  samples = []
+  for i in range(n_samples):
+    prompt = &quot;Let&#x27;s think step by step.\n&quot; + query
+    cot = llm.generate(prompt, temperature=0.7)
+    answer = extract_final_answer(cot)
+    samples.append(answer)
+  # Majority vote (or weighted vote by length / log prob)
+  return mode(samples)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li><li><code>llm</code> : <em>LLM</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>answer</code> : <em>str</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> GSM8K, MATH — +17% absolute on GSM8K vs single CoT
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/2203.11171" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="ir_foundations" data-cat="ranking">
+  <div class="algo-head">
+    <h3>BM25</h3>
+    <span class="algo-ja">BM25 (Okapi BM25)</span>
+    <span class="algo-sf">ir_foundations</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">1994</span>
+  </div>
+  <p class="algo-desc">Probabilistic relevance framework に基づく古典スコア関数。Lucene/Elasticsearch/Solr の事実上の標準。k1=1.2, b=0.75 が最も広く使用。</p>
+  <div class="latex">$$\mathrm{BM25}(q,d) = \sum_{t \in q} \mathrm{IDF}(t) \cdot \frac{f(t,d)\cdot(k_1+1)}{f(t,d) + k_1\cdot\bigl(1 - b + b\cdot \frac{|d|}{\overline{|d|}}\bigr)}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|q| * avg_postings)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|V|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function BM25(query, doc, corpus):
+  k1 = 1.2  # term frequency saturation
+  b  = 0.75 # length normalization
+  avgdl = mean([len(d) for d in corpus])
+  score = 0
+  for term in query:
+    f = count(term, doc)
+    if f == 0: continue
+    idf = log((N - n_t + 0.5) / (n_t + 0.5) + 1)
+    norm = 1 - b + b * (len(doc) / avgdl)
+    score += idf * (f * (k1 + 1)) / (f + k1 * norm)
+  return score</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>List[str]</em> — tokenized query terms</li><li><code>doc</code> : <em>Document</em> — candidate document with term freqs and length</li><li><code>corpus_stats</code> : <em>Dict</em> — N (total docs), n_t (docs containing t), avgdl</li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>score</code> : <em>float</em> — BM25 relevance score (higher = more relevant)</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> MS MARCO Passage Ranking — MRR@10 ≈ 0.187 on MS MARCO passage (baseline)
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Okapi_BM25" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="ir_foundations" data-cat="ranking">
+  <div class="algo-head">
+    <h3>TF-IDF</h3>
+    <span class="algo-ja">TF-IDF</span>
+    <span class="algo-sf">ir_foundations</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">1972</span>
+  </div>
+  <p class="algo-desc">Term Frequency × Inverse Document Frequency の古典。BM25 の前駆。VSM の中核。</p>
+  <div class="latex">$$\mathrm{tfidf}(t,d,D) = \mathrm{tf}(t,d) \cdot \log \frac{|D|}{1 + |\{d&#x27; \in D : t \in d&#x27;\}|}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|q| * |doc|)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|V|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function TF_IDF(query, doc, corpus):
+  score = 0
+  for term in query:
+    tf  = count(term, doc) / len(doc)
+    idf = log(N / (1 + n_t))  # smoothed
+    score += tf * idf
+  return score</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>List[str]</em> — query terms</li><li><code>doc</code> : <em>Document</em> — candidate doc</li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>score</code> : <em>float</em> — TF-IDF score</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> TREC ad-hoc — Historical baseline
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Tf%E2%80%93idf" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="learning_to_rank" data-cat="learning">
+  <div class="algo-head">
+    <h3>LambdaMART</h3>
+    <span class="algo-ja">LambdaMART</span>
+    <span class="algo-sf">learning_to_rank</span>
+    <span class="algo-cat">learning</span>
+    <span class="algo-year">2010</span>
+  </div>
+  <p class="algo-desc">Burges (2010) の MART + LambdaRank 統合。Yahoo LTR Challenge 2010 で優勝。多くの商用検索 LTR の標準ベースライン。</p>
+  <div class="latex">$$\lambda_i = \sum_{j: (i,j)\in I} \frac{-\sigma}{1 + e^{\sigma(s_i - s_j)}} \cdot |\Delta \mathrm{NDCG}_{ij}|$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(T * N * F)  T=trees, N=docs, F=features</code></span>
+    <span><strong>空間計算量</strong> <code>O(T * tree_size)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function LambdaMART(queries, max_trees=500, lr=0.1):
+  # MART = Multiple Additive Regression Trees
+  F = constant_model(0)
+  for t in 1..max_trees:
+    lambdas, weights = compute_lambdas(F, queries)
+    # lambda_i = sum_j (delta_NDCG_ij) * sigma(s_j - s_i)
+    tree = fit_regression_tree(features, target=lambdas, weights=weights)
+    F = F + lr * tree
+  return F</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>training_queries</code> : <em>List[Query]</em> — queries with graded relevance labels</li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>ensemble_model</code> : <em>TreeEnsemble</em> — additive regression tree ensemble</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Yahoo LTR Set 1: ERR=0.466 — Yahoo LTR Challenge 2010 winner
+  </div>
+  <div class="algo-link">
+    <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="learning_to_rank" data-cat="ranking">
+  <div class="algo-head">
+    <h3>RRF (Reciprocal Rank Fusion)</h3>
+    <span class="algo-ja">RRF</span>
+    <span class="algo-sf">learning_to_rank</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">2009</span>
+  </div>
+  <p class="algo-desc">Cormack-Clarke-Büttcher (2009) SIGIR の rank fusion。Sparse + Dense ハイブリッド検索の事実上の標準融合手法。</p>
+  <div class="latex">$$\mathrm{RRF}(d) = \sum_{r \in R} \frac{1}{k + r(d)}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|R| * |docs|)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|docs|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function RRF(ranking_lists, k=60):
+  # k=60 is empirically optimal (Cormack 2009)
+  scores = defaultdict(float)
+  for ranking in ranking_lists:
+    for rank, doc_id in enumerate(ranking, start=1):
+      scores[doc_id] += 1 / (k + rank)
+  return sorted(scores.items(), key=lambda x: -x[1])</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>ranking_lists</code> : <em>List[List[doc_id]]</em> — </li><li><code>k</code> : <em>int</em> — default 60</li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>fused_ranking</code> : <em>List[(doc_id, score)]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> TREC 9-11 — Hybrid Search 業界標準
+  </div>
+  <div class="algo-link">
+    <a href="https://dl.acm.org/doi/10.1145/1571941.1572114" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="learning_to_rank" data-cat="learning">
+  <div class="algo-head">
+    <h3>RankNet</h3>
+    <span class="algo-ja">RankNet</span>
+    <span class="algo-sf">learning_to_rank</span>
+    <span class="algo-cat">learning</span>
+    <span class="algo-year">2005</span>
+  </div>
+  <p class="algo-desc">Burges et al. (2005) Microsoft の neural pairwise LTR。LambdaRank/LambdaMART の前駆。Bing のランキングシステムで2010年代に運用。</p>
+  <div class="latex">$$\mathcal{L}(s_i, s_j) = -\bar{P}_{ij} \log(P_{ij}) - (1-\bar{P}_{ij}) \log(1-P_{ij}), \quad P_{ij} = \sigma(s_i - s_j)$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(P) per epoch, P = #pairs</code></span>
+    <span><strong>空間計算量</strong> <code>O(model_params)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function RankNet_loss(s_i, s_j, y_ij):
+  # y_ij = 1 if i preferred over j, 0 otherwise
+  P_ij = 1 / (1 + exp(-(s_i - s_j)))  # logistic
+  loss = -y_ij * log(P_ij) - (1 - y_ij) * log(1 - P_ij)
+  return loss
+
+# Training: backprop through neural network producing s_i = f(x_i)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>pair (x_i, x_j, y_ij)</code> : <em>Tuple</em> — feature vectors + preference label</li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>loss</code> : <em>float</em> — pairwise cross-entropy</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> LETOR 4.0 — Bing 初期 LTR の中核
+  </div>
+  <div class="algo-link">
+    <a href="https://www.microsoft.com/en-us/research/publication/learning-to-rank-using-gradient-descent/" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="link_analysis" data-cat="ranking">
+  <div class="algo-head">
+    <h3>HITS (Hyperlink-Induced Topic Search)</h3>
+    <span class="algo-ja">HITS</span>
+    <span class="algo-sf">link_analysis</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">1999</span>
+  </div>
+  <p class="algo-desc">Kleinberg (1999) のハブ-権威分離アルゴリズム。クエリ依存の topical subgraph に適用。Eigenvector centrality の応用。</p>
+  <div class="latex">$$a^{(k+1)}_v = \sum_{u \in \mathrm{In}(v)} h^{(k)}_u, \quad h^{(k+1)}_v = \sum_{u \in \mathrm{Out}(v)} a^{(k)}_u$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(k * (|V| + |E|))</code></span>
+    <span><strong>空間計算量</strong> <code>O(|V|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function HITS(graph, max_iter=100):
+  h = {v: 1 for v in graph.nodes}  # hub scores
+  a = {v: 1 for v in graph.nodes}  # authority scores
+  for iter in range(max_iter):
+    for v in graph.nodes:
+      a[v] = sum(h[u] for u in graph.in_edges(v))
+    for v in graph.nodes:
+      h[v] = sum(a[u] for u in graph.out_edges(v))
+    normalize(a); normalize(h)
+  return h, a</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>graph</code> : <em>DirectedGraph</em> — topical subgraph</li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>hubs</code> : <em>Dict[node, float]</em> — hub scores</li><li><code>authorities</code> : <em>Dict[node, float]</em> — authority scores</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> WT10g — Used in Teoma → Ask.com
+  </div>
+  <div class="algo-link">
+    <a href="https://www.cs.cornell.edu/home/kleinber/auth.pdf" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="link_analysis" data-cat="ranking">
+  <div class="algo-head">
+    <h3>PageRank Power Iteration</h3>
+    <span class="algo-ja">PageRank 反復計算</span>
+    <span class="algo-sf">link_analysis</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">1998</span>
+  </div>
+  <p class="algo-desc">Brin-Page (1998) の Google 初期アルゴリズム。Power iteration による反復計算。d=0.85 が標準。Stochastic matrix の主固有ベクトル計算と等価。</p>
+  <div class="latex">$$PR(v) = \frac{1-d}{N} + d \cdot \sum_{u \in \mathrm{In}(v)} \frac{PR(u)}{|\mathrm{Out}(u)|}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(k * (|V| + |E|))  k=iterations</code></span>
+    <span><strong>空間計算量</strong> <code>O(|V| + |E|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function PageRank(graph, d=0.85, max_iter=100, eps=1e-8):
+  N = |graph.nodes|
+  PR = {v: 1/N for v in graph.nodes}
+  for iter in range(max_iter):
+    PR_new = {v: (1-d)/N for v in graph.nodes}
+    for v in graph.nodes:
+      for u in graph.in_edges(v):
+        PR_new[v] += d * PR[u] / |graph.out_edges(u)|
+    if max(|PR_new[v] - PR[v]|) &lt; eps: break
+    PR = PR_new
+  return PR</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>graph</code> : <em>DirectedGraph</em> — web link graph</li><li><code>d</code> : <em>float</em> — damping factor (typically 0.85)</li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>PR</code> : <em>Dict[node, float]</em> — PageRank values</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Stanford WebGraph — Converges in ~50 iterations for d=0.85
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/PageRank" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="local_vertical_multimodal" data-cat="ranking">
+  <div class="algo-head">
+    <h3>Beta-Binomial Bayesian Product Rating</h3>
+    <span class="algo-ja">Beta-Binomial ベイズ商品評価</span>
+    <span class="algo-sf">local_vertical_multimodal</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">2009</span>
+  </div>
+  <p class="algo-desc">Miller (2009) のレビュー smoothing 手法。1件★5 が 100件★4.9 を上回らないようベイズ事前で smoothing。Local SEO の AggregateRating 評価で活用。</p>
+  <div class="latex">$$\hat{p}_{\mathrm{LB}} = \frac{\alpha_0 + k}{\alpha_0 + \beta_0 + n} - z_{0.95} \sqrt{\frac{(\alpha_0+k)(\beta_0+n-k)}{(\alpha_0+\beta_0+n)^2 (\alpha_0+\beta_0+n+1)}}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(1)</code></span>
+    <span><strong>空間計算量</strong> <code>O(1)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function bayesian_rating(positive, total, alpha_prior=10, beta_prior=10):
+  # Wilson / Beta-Binomial smoothing for sparse reviews
+  # Avoids: &#x27;1 review with 5 stars&#x27; beating &#x27;100 reviews with 4.9 stars&#x27;
+  alpha_post = alpha_prior + positive
+  beta_post  = beta_prior + (total - positive)
+  mean = alpha_post / (alpha_post + beta_post)
+  # Lower confidence bound (95%)
+  z = 1.96
+  variance = alpha_post * beta_post / ((alpha_post+beta_post)^2 * (alpha_post+beta_post+1))
+  lower_bound = mean - z * sqrt(variance)
+  return lower_bound</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>positive_reviews</code> : <em>int</em> — </li><li><code>total_reviews</code> : <em>int</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>score</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Evan Miller benchmark — Reddit / Amazon style sorting
+  </div>
+  <div class="algo-link">
+    <a href="https://www.evanmiller.org/how-not-to-sort-by-average-rating.html" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="local_vertical_multimodal" data-cat="ranking">
+  <div class="algo-head">
+    <h3>Haversine Distance for Local Ranking</h3>
+    <span class="algo-ja">ハバーサイン距離 (ローカルランキング)</span>
+    <span class="algo-sf">local_vertical_multimodal</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">1801</span>
+  </div>
+  <p class="algo-desc">球面三角法による地点間距離。Google Local Pack / Yelp / 食べログのローカルランキングで proximity decay として使用。</p>
+  <div class="latex">$$d = 2R \arcsin\sqrt{\sin^2\bigl(\frac{\Delta\phi}{2}\bigr) + \cos\phi_1 \cos\phi_2 \sin^2\bigl(\frac{\Delta\lambda}{2}\bigr)}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(1) per pair</code></span>
+    <span><strong>空間計算量</strong> <code>O(1)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function haversine(lat1, lon1, lat2, lon2):
+  R = 6371  # Earth radius in km
+  phi1, phi2 = radians(lat1), radians(lat2)
+  dphi = radians(lat2 - lat1)
+  dlambda = radians(lon2 - lon1)
+  a = sin(dphi/2)^2 + cos(phi1)*cos(phi2)*sin(dlambda/2)^2
+  c = 2 * atan2(sqrt(a), sqrt(1-a))
+  return R * c  # km
+
+function local_score(query, business, user_loc):
+  rel = text_relevance(query, business.profile)
+  dist = haversine(user_loc.lat, user_loc.lon, business.lat, business.lon)
+  prox = exp(-dist / 5.0)  # decay over 5km
+  rating = business.rating / 5.0
+  return rel * prox * (0.6 + 0.4 * rating)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>lat/lon pairs</code> : <em>(float, float)</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>distance_km</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Google Maps API uses similar — Standard for Geographic distance
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Haversine_formula" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="neural_ir" data-cat="ranking">
+  <div class="algo-head">
+    <h3>BERT for Passage Ranking (monoBERT)</h3>
+    <span class="algo-ja">monoBERT 通過ランキング</span>
+    <span class="algo-sf">neural_ir</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">2019</span>
+  </div>
+  <p class="algo-desc">Nogueira-Cho (2019) の BERT pointwise reranker。MS MARCO で当時の SoTA。Cross-encoder の代表。</p>
+  <div class="latex">$$s(q,d) = \mathbf{w}^\top \mathrm{BERT}_{\mathrm{[CLS]}}([\mathrm{CLS}], q, [\mathrm{SEP}], d, [\mathrm{SEP}])$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(L^2 * D) per (query, doc) pair  L=512, D=hidden</code></span>
+    <span><strong>空間計算量</strong> <code>O(model_params ~ 110M for BERT-base)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function monoBERT_score(query, passage, model):
+  input = &quot;[CLS] &quot; + query + &quot; [SEP] &quot; + passage + &quot; [SEP]&quot;
+  tokens = tokenize(input, max_len=512)
+  output = model.forward(tokens)
+  cls_vec = output.last_hidden_state[0]  # CLS token
+  score = linear(cls_vec)  # single scalar
+  return score</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li><li><code>passage</code> : <em>str</em> — </li><li><code>model</code> : <em>BertModel</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>score</code> : <em>float</em> — relevance score</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> MS MARCO Passage Ranking — MRR@10 = 0.365 on MS MARCO
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/1901.04085" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="neural_ir" data-cat="retrieval">
+  <div class="algo-head">
+    <h3>ColBERT Late Interaction</h3>
+    <span class="algo-ja">ColBERT</span>
+    <span class="algo-sf">neural_ir</span>
+    <span class="algo-cat">retrieval</span>
+    <span class="algo-year">2020</span>
+  </div>
+  <p class="algo-desc">Khattab-Zaharia (2020) Stanford の late-interaction モデル。各クエリトークンが各文書トークンと dot-product、MaxPool で集約。</p>
+  <div class="latex">$$s_{\mathrm{ColBERT}}(q, d) = \sum_{i=1}^{|q|} \max_{j=1..|d|} \mathbf{q}_i^\top \mathbf{d}_j$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|q| * |d| * dim) per pair</code></span>
+    <span><strong>空間計算量</strong> <code>O(|d| * dim) per doc in index</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function ColBERT_score(query, doc, model):
+  q_tokens = model.encode_query(query)   # shape [|q|, dim]
+  d_tokens = model.encode_doc(doc)        # shape [|d|, dim]
+  # MaxSim: each query token finds its best match in doc
+  score = 0
+  for q_vec in q_tokens:
+    max_sim = max(dot(q_vec, d_vec) for d_vec in d_tokens)
+    score += max_sim
+  return score</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li><li><code>doc</code> : <em>str</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>score</code> : <em>float</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> MS MARCO + TREC DL — MRR@10 = 0.36 on MS MARCO (v1)
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/2004.12832" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="neural_ir" data-cat="retrieval">
+  <div class="algo-head">
+    <h3>DPR (Dense Passage Retrieval)</h3>
+    <span class="algo-ja">DPR</span>
+    <span class="algo-sf">neural_ir</span>
+    <span class="algo-cat">retrieval</span>
+    <span class="algo-year">2020</span>
+  </div>
+  <p class="algo-desc">Karpukhin et al. (2020) Facebook AI の bi-encoder. BM25 を上回る最初の純粋 dense retrieval。</p>
+  <div class="latex">$$\mathcal{L} = -\log \frac{e^{\mathrm{sim}(q, d^+)}}{e^{\mathrm{sim}(q, d^+)} + \sum_{j=1}^{n} e^{\mathrm{sim}(q, d^-_j)}}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>Train O(B * (T_q + T_d)), Infer O(1) per query (ANN)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|corpus| * dim) for index (~30GB for Wikipedia)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function DPR_encode_train(positive_pairs, hard_negs):
+  for (q, d_pos, [d_neg_1..d_neg_n]) in batch:
+    h_q = bert_q.encode(q)
+    h_d_pos = bert_d.encode(d_pos)
+    h_d_negs = [bert_d.encode(d) for d in d_neg_*]
+    # In-batch negatives + explicit hard negatives
+    logits = [dot(h_q, h_d_pos)] + [dot(h_q, h) for h in h_d_negs]
+    loss = -log(softmax(logits)[0])  # positive at index 0
+  return bert_q, bert_d
+
+function DPR_retrieve(query, faiss_index):
+  h_q = bert_q.encode(query)
+  scores, indices = faiss_index.search(h_q, k=100)
+  return [(corpus[i], scores[i]) for i in indices]</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li><li><code>passage_index</code> : <em>FAISS index</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>top_k</code> : <em>List[(passage, score)]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Natural Questions Open — Top-100 retrieval: 79.4% on NQ-open
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/2004.04906" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="neural_ir" data-cat="retrieval">
+  <div class="algo-head">
+    <h3>RAG (Retrieval-Augmented Generation)</h3>
+    <span class="algo-ja">RAG</span>
+    <span class="algo-sf">neural_ir</span>
+    <span class="algo-cat">retrieval</span>
+    <span class="algo-year">2020</span>
+  </div>
+  <p class="algo-desc">Lewis et al. (2020) Facebook AI のオリジナル RAG。Perplexity / ChatGPT browsing / Bing Copilot の基盤。</p>
+  <div class="latex">$$p(y|x) = \sum_{z \in \mathrm{top-k}} p_\eta(z|x) \cdot p_\theta(y|x, z)$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(retrieve + generate)</code></span>
+    <span><strong>空間計算量</strong> <code>O(corpus_index + LLM)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function RAG_answer(query, retriever, generator):
+  # 1. Retrieve top-k relevant passages
+  passages = retriever.search(query, k=5)
+  # 2. Concatenate as context
+  context = &quot;\n\n&quot;.join([p.text for p in passages])
+  prompt = f&quot;&quot;&quot;
+  Context:
+  {context}
+
+  Question: {query}
+  Answer (cite sources):
+  &quot;&quot;&quot;
+  # 3. Generate grounded answer
+  answer = generator.generate(prompt)
+  return answer, passages  # citations</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li><li><code>retriever</code> : <em>Retriever</em> — </li><li><code>generator</code> : <em>LLM</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>answer</code> : <em>str</em> — </li><li><code>citations</code> : <em>List[Source]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Natural Questions, HotpotQA — Standard for grounded LLM systems
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="neural_ir" data-cat="retrieval">
+  <div class="algo-head">
+    <h3>SPLADE Sparse Expansion</h3>
+    <span class="algo-ja">SPLADE</span>
+    <span class="algo-sf">neural_ir</span>
+    <span class="algo-cat">retrieval</span>
+    <span class="algo-year">2021</span>
+  </div>
+  <p class="algo-desc">Formal et al. (2021) Naver Labs Europe の sparse + neural ハイブリッド。BM25 と inverted index で運用可能ながら BERT 並み精度。</p>
+  <div class="latex">$$w_j = \log\bigl(1 + \mathrm{ReLU}\bigl(\max_{i \in \mathrm{tokens}} \mathbf{W}_j \mathbf{h}_i\bigr)\bigr)$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(L * |V|) encode + sparse-dot retrieval</code></span>
+    <span><strong>空間計算量</strong> <code>Sparse (~100-200 active dims)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function SPLADE_encode(text, model):
+  # MLM head predicts term importance over entire vocabulary
+  logits = model.forward(text)  # [seq_len, |V|]
+  # Aggregate over tokens with log-saturation
+  rep = log(1 + ReLU(max_pool(logits, dim=0)))  # [|V|]
+  return rep  # sparse vector
+
+function SPLADE_score(query, doc, model):
+  q_rep = SPLADE_encode(query, model)
+  d_rep = SPLADE_encode(doc, model)
+  return dot(q_rep, d_rep)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>text</code> : <em>str</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>sparse_vec</code> : <em>Dict[term_id, weight]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> MS MARCO + BEIR — MRR@10 = 0.380 on MS MARCO
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/2107.05720" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="query_understanding" data-cat="retrieval">
+  <div class="algo-head">
+    <h3>HyDE (Hypothetical Document Embeddings)</h3>
+    <span class="algo-ja">HyDE</span>
+    <span class="algo-sf">query_understanding</span>
+    <span class="algo-cat">retrieval</span>
+    <span class="algo-year">2023</span>
+  </div>
+  <p class="algo-desc">Gao et al. (2023) のゼロショット dense retrieval。LLM で仮説文書を生成し、それを query proxy として埋め込む。</p>
+  <div class="latex">$$\hat{d} = \mathrm{LLM}(q), \quad \mathrm{retrieve}(q) = \mathrm{ANN}(\mathrm{enc}(\hat{d}))$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(LLM_latency + ANN_search)</code></span>
+    <span><strong>空間計算量</strong> <code>O(corpus * dim)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function HyDE_retrieve(query, llm, retriever):
+  # 1. Generate hypothetical answer document
+  prompt = &quot;Write a passage that answers: &quot; + query
+  hypo_doc = llm.generate(prompt, max_tokens=200)
+  # 2. Embed the hypothetical doc (not the query)
+  h_hypo = encoder.encode(hypo_doc)
+  # 3. Retrieve real docs nearest to hypothetical embedding
+  return retriever.search(h_hypo, k=10)</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li><li><code>llm</code> : <em>LLM</em> — </li><li><code>retriever</code> : <em>DenseRetriever</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>docs</code> : <em>List[Document]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> BEIR zero-shot — Beats DPR zero-shot on BEIR
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/2212.10496" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="query_understanding" data-cat="query_processing">
+  <div class="algo-head">
+    <h3>Levenshtein Edit Distance</h3>
+    <span class="algo-ja">Levenshtein 編集距離</span>
+    <span class="algo-sf">query_understanding</span>
+    <span class="algo-cat">query_processing</span>
+    <span class="algo-year">1965</span>
+  </div>
+  <p class="algo-desc">Levenshtein (1965) 動的計画法による文字列編集距離。Spell correction / Fuzzy search の基礎。</p>
+  <div class="latex">$$D(i,j) = \min\begin{cases} D(i-1,j) + 1 \\ D(i,j-1) + 1 \\ D(i-1,j-1) + [s_i \neq t_j] \end{cases}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(m * n)</code></span>
+    <span><strong>空間計算量</strong> <code>O(min(m,n)) with row optimization</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function edit_distance(s1, s2):
+  m, n = len(s1), len(s2)
+  D = [[0]*(n+1) for _ in range(m+1)]
+  for i in range(m+1): D[i][0] = i
+  for j in range(n+1): D[0][j] = j
+  for i in 1..m:
+    for j in 1..n:
+      cost = 0 if s1[i-1] == s2[j-1] else 1
+      D[i][j] = min(
+        D[i-1][j] + 1,      # deletion
+        D[i][j-1] + 1,      # insertion
+        D[i-1][j-1] + cost  # substitution
+      )
+  return D[m][n]</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>s1</code> : <em>str</em> — </li><li><code>s2</code> : <em>str</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>distance</code> : <em>int</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Spell correction benchmarks — Used in Lucene FuzzyQuery
+  </div>
+  <div class="algo-link">
+    <a href="https://en.wikipedia.org/wiki/Levenshtein_distance" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="query_understanding" data-cat="query_processing">
+  <div class="algo-head">
+    <h3>Query Intent Classification (BERT)</h3>
+    <span class="algo-ja">クエリ意図分類 (BERT)</span>
+    <span class="algo-sf">query_understanding</span>
+    <span class="algo-cat">query_processing</span>
+    <span class="algo-year">2019</span>
+  </div>
+  <p class="algo-desc">Broder (2002) の navigational/informational/transactional の3分類を BERT で実装。RAG / Featured Snippet / Shopping trigger の前段。</p>
+  <div class="latex">$$P(c | q) = \mathrm{softmax}(\mathbf{W} \cdot \mathrm{BERT}_{\mathrm{[CLS]}}(q))_c$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(L^2 * D) per query</code></span>
+    <span><strong>空間計算量</strong> <code>O(model_params)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function classify_intent(query, model):
+  tokens = tokenize(&quot;[CLS] &quot; + query + &quot; [SEP]&quot;)
+  output = model.forward(tokens)
+  cls = output.last_hidden_state[0]
+  logits = classifier_head(cls)  # [n_classes]
+  return softmax(logits).argmax()
+  # Classes: navigational / informational / transactional / commercial</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>intent</code> : <em>str</em> — one of: navigational/informational/transactional/commercial</li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Internal click logs — F1 = 0.92 on commercial intent labels
+  </div>
+  <div class="algo-link">
+    <a href="https://arxiv.org/abs/1907.05647" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="query_understanding" data-cat="query_processing">
+  <div class="algo-head">
+    <h3>Query Suggestion via Clickthrough</h3>
+    <span class="algo-ja">クリックスルー由来 Query Suggestion</span>
+    <span class="algo-sf">query_understanding</span>
+    <span class="algo-cat">query_processing</span>
+    <span class="algo-year">2008</span>
+  </div>
+  <p class="algo-desc">ユーザーの連続クエリパターンから suggestion graph を構築。Google/Bing の autosuggest の基本。</p>
+  <div class="latex">$$P(q&#x27; | q) = \frac{\#\{(q, q&#x27;) \in \mathrm{co-sessions}\}}{\#\{q \in \mathrm{sessions}\}}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|sessions|) build, O(deg(q)) query</code></span>
+    <span><strong>空間計算量</strong> <code>O(|edges|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function build_suggestion_graph(click_logs):
+  G = WeightedGraph()
+  for session in group_by_session(click_logs):
+    queries = [event.query for event in session]
+    for q1, q2 in consecutive_pairs(queries):
+      G.add_edge(q1, q2, weight += 1)
+  return G
+
+function suggest(query, G, top_k=10):
+  candidates = G.neighbors(query, sort_by=weight, desc=True)
+  return candidates[:top_k]</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>click_log</code> : <em>List[Event]</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>suggestions</code> : <em>List[str]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> AOL query log — Standard production approach
+  </div>
+  <div class="algo-link">
+    <a href="https://dl.acm.org/doi/10.1145/1390334.1390488" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="query_understanding" data-cat="query_processing">
+  <div class="algo-head">
+    <h3>Symmetric Spelling Correction (SymSpell)</h3>
+    <span class="algo-ja">SymSpell スペル補正</span>
+    <span class="algo-sf">query_understanding</span>
+    <span class="algo-cat">query_processing</span>
+    <span class="algo-year">2012</span>
+  </div>
+  <p class="algo-desc">Garbe (2012) の Delete-only Symmetric Spelling Correction。Lucene FuzzyQuery より3桁高速。検索 typo 補正の業界標準。</p>
+  
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(1) per lookup (vs O(|V|*|q|) for naive)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|V| * |q|^max_edit)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function build_symspell_index(dictionary, max_edit=2):
+  index = defaultdict(set)
+  for word in dictionary:
+    for delete_word in generate_deletes(word, max_edit):
+      index[delete_word].add(word)
+  return index
+
+function symspell_correct(query, index, max_edit=2):
+  candidates = set()
+  for delete_query in generate_deletes(query, max_edit):
+    candidates |= index.get(delete_query, set())
+  return sorted(candidates, key=lambda c: edit_distance(query, c))[:5]</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>query</code> : <em>str</em> — </li><li><code>dictionary</code> : <em>Set[str]</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>suggestions</code> : <em>List[str]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> Wolf Garbe SymSpell Benchmark — 1000x faster than BK-tree
+  </div>
+  <div class="algo-link">
+    <a href="https://github.com/wolfgarbe/SymSpell" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="technical_seo" data-cat="evaluation">
+  <div class="algo-head">
+    <h3>Core Web Vitals (LCP/CLS/INP)</h3>
+    <span class="algo-ja">Core Web Vitals 計測</span>
+    <span class="algo-sf">technical_seo</span>
+    <span class="algo-cat">evaluation</span>
+    <span class="algo-year">2020</span>
+  </div>
+  <p class="algo-desc">Google 2020年5月発表。LCP &lt;2.5s / CLS &lt;0.1 / INP &lt;200ms (2024年3月 FID→INP 置換) でランキング要因。web-vitals JS で計測。</p>
+  
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(events)</code></span>
+    <span><strong>空間計算量</strong> <code>O(events)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function measure_CWV(page):
+  # LCP: time until largest contentful paint
+  lcp_observer = PerformanceObserver(type=&#x27;largest-contentful-paint&#x27;)
+  lcp = lcp_observer.startTime  # ms
+
+  # CLS: cumulative layout shift (unitless)
+  cls = 0
+  cls_observer = PerformanceObserver(type=&#x27;layout-shift&#x27;, callback=(entries) =&gt; {
+    for (entry of entries) {
+      if (!entry.hadRecentInput) cls += entry.value
+    }
+  })
+
+  # INP: interaction to next paint (ms, p95 across all interactions)
+  interactions = []
+  inp_observer = PerformanceObserver(type=&#x27;event&#x27;, callback=(entries) =&gt; {
+    for (entry of entries) interactions.push(entry.duration)
+  })
+  inp = percentile(interactions, 95)
+
+  return {
+    &#x27;LCP&#x27;: lcp,                              # good &lt;2500ms, poor &gt;4000ms
+    &#x27;CLS&#x27;: cls,                              # good &lt;0.1,    poor &gt;0.25
+    &#x27;INP&#x27;: inp,                              # good &lt;200ms,  poor &gt;500ms
+  }</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>page_load_events</code> : <em>PerformanceObserver</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>metrics</code> : <em>Dict[LCP|CLS|INP, float]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> CrUX BigQuery dataset — 75th percentile thresholds (mobile)
+  </div>
+  <div class="algo-link">
+    <a href="https://web.dev/articles/vitals" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="technical_seo" data-cat="indexing">
+  <div class="algo-head">
+    <h3>Critical CSS Extraction</h3>
+    <span class="algo-ja">Critical CSS 抽出</span>
+    <span class="algo-sf">technical_seo</span>
+    <span class="algo-cat">indexing</span>
+    <span class="algo-year">2014</span>
+  </div>
+  <p class="algo-desc">Above-the-fold rendering を高速化するため初期 CSS を inline 化、残りを async load。LCP 改善の標準手法。</p>
+  
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(|nodes| * |rules|)</code></span>
+    <span><strong>空間計算量</strong> <code>O(|css|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function extract_critical_css(html, full_css, viewport={1280, 800}):
+  # 1. Render page in headless browser
+  page = render(html, full_css, viewport)
+  # 2. Identify above-the-fold DOM nodes
+  visible_nodes = page.query_selector_all_visible_in_viewport()
+  # 3. Match CSS rules that apply to visible nodes
+  used_selectors = set()
+  for rule in parse(full_css).rules:
+    if any(node.matches(rule.selector) for node in visible_nodes):
+      used_selectors.add(rule)
+  # 4. Emit minimal CSS
+  critical = &#x27;&#x27;.join(rule.text for rule in used_selectors)
+  return critical, full_css  # inline critical, defer rest</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>html</code> : <em>str</em> — </li><li><code>css</code> : <em>str</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>critical_css</code> : <em>str</em> — </li><li><code>deferred_css</code> : <em>str</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> PageSpeed Insights — Tools: critical / penthouse
+  </div>
+  <div class="algo-link">
+    <a href="https://web.dev/articles/extract-critical-css" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+<div class="card algorithm" data-sf="web_spam" data-cat="ranking">
+  <div class="algo-head">
+    <h3>TrustRank Algorithm</h3>
+    <span class="algo-ja">TrustRank</span>
+    <span class="algo-sf">web_spam</span>
+    <span class="algo-cat">ranking</span>
+    <span class="algo-year">2004</span>
+  </div>
+  <p class="algo-desc">Gyöngyi-Garcia-Molina-Pedersen (2004) VLDB の信頼伝播ベース PageRank。Spam サイトを統計的に検出。</p>
+  <div class="latex">$$\mathbf{t}^{(k+1)} = (1-d) \cdot \mathbf{s} + d \cdot \mathbf{M}^\top \mathbf{t}^{(k)}$$</div>
+  <div class="algo-complex">
+    <span><strong>時間計算量</strong> <code>O(k * (|V| + |E|))</code></span>
+    <span><strong>空間計算量</strong> <code>O(|V| + |E|)</code></span>
+  </div>
+  <details class="algo-pseudo">
+    <summary>擬似コード</summary>
+    <pre class="code lang-python"><code>function TrustRank(graph, seed_trusted, d=0.85, max_iter=100):
+  N = |graph.nodes|
+  # Initialize: trust = uniform over trusted seeds, 0 elsewhere
+  trust = {v: 1/|seed_trusted| if v in seed_trusted else 0 for v in graph.nodes}
+  for iter in range(max_iter):
+    trust_new = {v: 0 for v in graph.nodes}
+    for v in graph.nodes:
+      if v in seed_trusted:
+        trust_new[v] = (1-d) * (1/|seed_trusted|)
+      for u in graph.in_edges(v):
+        trust_new[v] += d * trust[u] / |graph.out_edges(u)|
+    trust = trust_new
+  return trust  # high = trusted, low = candidate spam</code></pre>
+  </details>
+  <div class="io-block"><strong>入力</strong><ul><li><code>graph</code> : <em>DirectedGraph</em> — </li><li><code>trusted_seeds</code> : <em>Set[node]</em> — </li></ul></div><div class="io-block"><strong>出力</strong><ul><li><code>trust_scores</code> : <em>Dict[node, float]</em> — </li></ul></div>
+  <div class="algo-bench">
+    <strong>ベンチマーク</strong> .gov + Yahoo Slurp — Combating Web Spam VLDB 2004
+  </div>
+  <div class="algo-link">
+    <a href="https://dl.acm.org/doi/10.5555/1316689.1316740" target="_blank" rel="noopener">📄 参考実装 / 論文</a>
+  </div>
+</div>
+
+  </div>
+
+  <div id="serp" class="tab-panel">
+    <div class="filter-bar">
+      <input type="text" id="serp-search" placeholder="🔎 SERP feature 名で絞り込み...">
+      <select id="serp-cat">
+        <option value="">全カテゴリ</option>
+        <option value="organic">organic</option>
+        <option value="local">local</option>
+        <option value="knowledge">knowledge</option>
+        <option value="ai">ai</option>
+        <option value="shopping">shopping</option>
+        <option value="media">media</option>
+        <option value="navigational">navigational</option>
+      </select>
+    </div>
+    
+<div class="card serp" data-cat="ai">
+  <div class="serp-head">
+    <h3>AI Overviews (旧 SGE)</h3>
+    <span class="serp-ja">AI Overviews (旧 SGE)</span>
+    <span class="serp-cat">ai</span>
+    <span class="serp-year">2024</span>
+  </div>
+  <p class="serp-desc">Google が2024年5月一般公開した AI 回答。SGE (Search Generative Experience) の後継。CTR を大幅減少させる懸念で議論中。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>All E-E-A-T signals + structured data</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 情報クエリ + Helpful content + Schema.org + 多様な出典</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> -25% to -45% (Authoritas 2024) <span class="src"><a href="https://www.authoritas.com/blog/google-sge-ctr-impact-study/" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> AI Overview に引用される条件: Schema.org 完備 / E-E-A-T 強い / 数値・データを構造化 / 簡潔な定義</div>
+  <div class="serp-link">
+    <a href="https://blog.google/products/search/generative-ai-google-search-may-2024/" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="knowledge">
+  <div class="serp-head">
+    <h3>Knowledge Panel</h3>
+    <span class="serp-ja">ナレッジパネル</span>
+    <span class="serp-cat">knowledge</span>
+    <span class="serp-year">2012</span>
+  </div>
+  <p class="serp-desc">SERP 右側 / モバイル上部のエンティティ情報パネル。ブランド検索 / 人物検索の主要シグナル。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Organization, Person, Place, Event + sameAs</code></div>
+  <div class="serp-row"><strong>発火条件</strong> Knowledge Graph 内のエンティティ + Wikipedia/Wikidata 候補化</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Brand traffic +20-30%, click leak to KG -10% <span class="src"><a href="https://moz.com/blog/knowledge-panel" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> Wikipedia notability achieve / Wikidata Q-ID 確保 / Organization sameAs に SNS / LinkedIn / Crunchbase 全て</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/knowledge-panel" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="local">
+  <div class="serp-head">
+    <h3>Local Pack 3-Pack</h3>
+    <span class="serp-ja">ローカルパック</span>
+    <span class="serp-cat">local</span>
+    <span class="serp-year">2015</span>
+  </div>
+  <p class="serp-desc">Google Maps + 上位 3 件のローカル事業者カード。&#x27;restaurant near me&#x27; &#x27;plumber Tokyo&#x27; 等で発火。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>LocalBusiness + address + geo + openingHoursSpecification + AggregateRating</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 位置依存クエリ + Google Business Profile + NAP 一貫性 + レビュー≥10件</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +44% top result (Moz Local 2020) <span class="src"><a href="https://moz.com/learn/seo/local-search-ranking-factors" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> GBP 完成度 100% / Citation 全主要ディレクトリ統一 / 写真 50+ / レビュー応答率 100%</div>
+  <div class="serp-link">
+    <a href="https://support.google.com/business/answer/9542767" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="local">
+  <div class="serp-head">
+    <h3>Things to Do Carousel</h3>
+    <span class="serp-ja">観光スポットカルーセル</span>
+    <span class="serp-cat">local</span>
+    <span class="serp-year">2023</span>
+  </div>
+  <p class="serp-desc">観光地クエリで発火するカルーセル。Tripadvisor / じゃらん / Google Travel と統合。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>TouristAttraction + Place + AggregateRating</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 観光地クエリ + TouristAttraction Schema</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Travel vertical +30% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/local-business" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> Tripadvisor / じゃらん / るるぶ で運用 / Place + address 完全 / openingHours</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/tourist-attraction" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Book Carousel</h3>
+    <span class="serp-ja">書籍カルーセル</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2020</span>
+  </div>
+  <p class="serp-desc">書籍クエリで発火するカルーセル。Amazon / Google Books が主要参加者。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Book + Action(ReadAction) + bookEdition</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 書籍クエリ + Schema.org Book + 購入リンク</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Book search +20% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/book" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> ISBN 必須 / Amazon/楽天Books/honto のリンク / ReadAction でオンライン読書サービス</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/book" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Image License (Licensable Badge)</h3>
+    <span class="serp-ja">画像ライセンス</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2020</span>
+  </div>
+  <p class="serp-desc">Google Images の Licensable バッジ。ライセンス取得ページへのリンクを表示。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>ImageObject + license + acquireLicensePage</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 画像 + Schema.org ImageObject.license + 取得ページ URL</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Licensable images +12% click <span class="src"><a href="https://developers.google.com/search/blog/2020/08/image-license-metadata" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> license は CC URL / acquireLicensePage に EC ページを指定 / Getty/Shutterstock で標準</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/image-license-metadata" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Image Pack</h3>
+    <span class="serp-ja">画像パック</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2007</span>
+  </div>
+  <p class="serp-desc">SERP 内の画像カルーセル。レシピ / インテリア / ファッション / 旅行で頻出。Google Images SEO の主戦場。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>ImageObject, license, creator</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 視覚的クエリ + 高品質画像 (&gt;1200px) + alt + image:* sitemap</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Image search +15% to +25% (visual verticals) <span class="src"><a href="https://developers.google.com/search/docs/appearance/google-images" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> 1200x630px 以上 / alt text 具体的に / EXIF GPS / Schema.org ImageObject + license / Image Sitemap</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/google-images" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Movie Carousel</h3>
+    <span class="serp-ja">映画カルーセル</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2018</span>
+  </div>
+  <p class="serp-desc">映画クエリで発火するカルーセル。IMDb / Filmarks / 映画.com 等が主要。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Movie + director + actor + aggregateRating</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 映画クエリ + Schema.org Movie + 上映情報</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Entertainment +25% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/movie" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> datePublished + duration / director, actor は Person 完全形 / IMDb と Filmarks が支配的</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/movie" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Recipe Rich Result</h3>
+    <span class="serp-ja">レシピリッチリザルト</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2010</span>
+  </div>
+  <p class="serp-desc">SERP に表示されるレシピカード。料理動画 + 評価 + 調理時間 + 栄養を集約。クックパッド / DELISH KITCHEN 等で運用。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Recipe + recipeIngredient + recipeInstructions + nutrition + AggregateRating</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 料理レシピ + Schema.org Recipe + 完全な材料リスト + 段階的手順</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +44% (Schema-marked recipes) <span class="src"><a href="https://developers.google.com/search/blog/2017/05/easier-recipe-rich-results-for-developers" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> totalTime ISO 8601 / nutrition object / recipeYield 必須 / video 連動で動画 carousel も発火</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/recipe" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Speakable (Audio)</h3>
+    <span class="serp-ja">Speakable (音声)</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2018</span>
+  </div>
+  <p class="serp-desc">Google Assistant の News briefing で読み上げる範囲を明示する Schema。News 記事限定。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>SpeakableSpecification + cssSelector|xpath</code></div>
+  <div class="serp-row"><strong>発火条件</strong> News content + speakable Schema + Google Assistant podcast brief</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Voice search +smart speaker brief <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/speakable" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> ニュース記事のみ / 20-30 秒で読める量 / cssSelector で読み上げ範囲を明示</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/speakable" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Video Carousel</h3>
+    <span class="serp-ja">動画カルーセル</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2018</span>
+  </div>
+  <p class="serp-desc">SERP 内の動画カルーセル。how-to / レビュー / エンタメで頻出。YouTube が80%以上を占有。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>VideoObject + Video Sitemap + Clip + key moments</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 動画クエリ + Schema.org VideoObject + thumbnailUrl + duration</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Video traffic +30% for YouTube-hosted <span class="src"><a href="https://backlinko.com/youtube-ranking-factors" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> thumbnailUrl 16:9 / duration ISO 8601 / Video Sitemap / key moments で chapter / YouTube が圧倒的に優位</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/video" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="media">
+  <div class="serp-head">
+    <h3>Video Key Moments</h3>
+    <span class="serp-ja">動画キーモーメント</span>
+    <span class="serp-cat">media</span>
+    <span class="serp-year">2019</span>
+  </div>
+  <p class="serp-desc">動画内の章 (key moments) を SERP に表示。YouTube の chapter 機能で自動生成。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>VideoObject + Clip[] + startOffset + endOffset</code></div>
+  <div class="serp-row"><strong>発火条件</strong> How-to/教育動画 + Clip Schema + 章マーカー</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Video click +15-20% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/video" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> Clip name + startOffset (秒) + url で動画内ジャンプ / YouTube は自動的に対応</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/video" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="navigational">
+  <div class="serp-head">
+    <h3>Breadcrumb Trail</h3>
+    <span class="serp-ja">パンくずリスト (SERP)</span>
+    <span class="serp-cat">navigational</span>
+    <span class="serp-year">2009</span>
+  </div>
+  <p class="serp-desc">SERP の URL 行を pagination から breadcrumb に置き換え。階層情報を視覚化。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>BreadcrumbList + ListItem (position, name, item)</code></div>
+  <div class="serp-row"><strong>発火条件</strong> BreadcrumbList Schema.org + 階層的 URL 構造</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> URL 表示改善 +5-10% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/breadcrumb" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> position は 1-indexed / 最後の item は省略可 / 視覚的 breadcrumb と Schema 一致</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/breadcrumb" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="navigational">
+  <div class="serp-head">
+    <h3>Job Posting Box</h3>
+    <span class="serp-ja">求人ボックス</span>
+    <span class="serp-cat">navigational</span>
+    <span class="serp-year">2017</span>
+  </div>
+  <p class="serp-desc">Google for Jobs に表示される求人カード。日本では2019年から本格展開。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>JobPosting + title + hiringOrganization + jobLocation + baseSalary</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 求人ページ + Schema.org JobPosting + 必須プロパティ完備</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Job traffic +50%+ in supported countries <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/job-posting" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> baseSalary 範囲 + 通貨明示 / employmentType (FULL_TIME 等) / datePosted ISO 8601 / Indeed/LinkedIn と並ぶ</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/job-posting" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="navigational">
+  <div class="serp-head">
+    <h3>Sitelinks</h3>
+    <span class="serp-ja">サイトリンク</span>
+    <span class="serp-cat">navigational</span>
+    <span class="serp-year">2005</span>
+  </div>
+  <p class="serp-desc">SERP 下に表示されるサイトの下位ページリンク (最大6つ)。ブランドクエリで発火。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>SiteNavigationElement, BreadcrumbList</code></div>
+  <div class="serp-row"><strong>発火条件</strong> ブランドクエリ + 明確なナビゲーション構造 + 内部リンク</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Brand CTR +25% (Bing study) <span class="src"><a href="https://moz.com/learn/seo/sitelinks" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> h1 + nav 明確 / 主要 6 ページに集中 / breadcrumb Schema 必須</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/sitelinks" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="navigational">
+  <div class="serp-head">
+    <h3>Sitelinks Search Box</h3>
+    <span class="serp-ja">サイトリンクサーチボックス</span>
+    <span class="serp-cat">navigational</span>
+    <span class="serp-year">2014</span>
+  </div>
+  <p class="serp-desc">ブランドクエリの SERP 上部に表示される検索ボックス。直接サイト内検索へ遷移。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>WebSite + potentialAction(SearchAction)</code></div>
+  <div class="serp-row"><strong>発火条件</strong> WebSite Schema + potentialAction で内部検索 URL 定義</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Brand searches direct to internal +15% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/sitelinks-searchbox" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> potentialAction の target を urlTemplate で / query-input &#x27;required name=search_term_string&#x27;</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/sitelinks-searchbox" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Carousel (Generic)</h3>
+    <span class="serp-ja">カルーセル (汎用)</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2018</span>
+  </div>
+  <p class="serp-desc">リストクエリで発火する横スクロールカルーセル。Recipe / Movie / Course / Restaurant で標準化。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>ItemList + ListItem</code></div>
+  <div class="serp-row"><strong>発火条件</strong> リスト型クエリ + ItemList Schema.org + 関連アイテム</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Visual prominence +10-20% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/carousel" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> ItemList + numberOfItems + ItemListElement / カルーセル種別: Recipe/Movie/Course/Restaurant</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/carousel" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Course Carousel</h3>
+    <span class="serp-ja">コースカルーセル</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2019</span>
+  </div>
+  <p class="serp-desc">教育コースクエリで発火するカルーセル。Coursera / edX / Udemy が支配。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Course + provider + offers + hasCourseInstance</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 教育クエリ + Schema.org Course + 提供者明示</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Education vertical +25% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/course" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> provider はフルネーム + URL / Coursera/edX/Udemy で標準 / 日本: schoo/Udemy 主流</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/course" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Discussions and Forums</h3>
+    <span class="serp-ja">ディスカッション &amp; フォーラム</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2023</span>
+  </div>
+  <p class="serp-desc">Google が2023年11月発表。Reddit / Quora 等の議論コンテンツが SERP に専用 box で表示。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>DiscussionForumPosting + Comment</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 意見/体験クエリ + Reddit/Quora/Stack Exchange/業界フォーラム</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Forum traffic +30% post-launch <span class="src"><a href="https://developers.google.com/search/blog/2023/11/forums-comment-rich-results" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> DiscussionForumPosting Schema / Comment + interactionStatistic / &#x27;reddit&#x27; 等の修飾語含むクエリで強く発火</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/discussion-forum" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Event Rich Result</h3>
+    <span class="serp-ja">イベントリッチリザルト</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2019</span>
+  </div>
+  <p class="serp-desc">SERP 上部のイベントカルーセル。コンサート / 会議 / セミナー / 展示会で発火。Peatix / Connpass で運用。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Event + startDate + endDate + location + offers</code></div>
+  <div class="serp-row"><strong>発火条件</strong> イベントクエリ + Schema.org Event + 開催日 + 場所</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Event traffic +20-30% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/event" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> startDate ISO 8601 + timezone / location は Place 完全形 / eventStatus (オンライン/中止) 明示</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/event" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>FAQ Snippet (旧)</h3>
+    <span class="serp-ja">FAQ スニペット</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2019</span>
+  </div>
+  <p class="serp-desc">2019-2023年に表示されていた FAQ 抜粋。2023年8月で一般サイトは廃止、政府/健康/医療のみ表示継続。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>FAQPage + Question + acceptedAnswer</code></div>
+  <div class="serp-row"><strong>発火条件</strong> FAQ ページ + Schema.org FAQPage + 質問 5-10 件</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +10% in launch era, dropped 2023 <span class="src"><a href="https://developers.google.com/search/blog/2023/08/howto-faq-changes" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> 2023年8月で一般サイトは表示停止、政府/医療のみ。FAQ コンテンツ自体は維持価値あり</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/faqpage" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Featured Snippet (List)</h3>
+    <span class="serp-ja">強調スニペット (リスト型)</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2014</span>
+  </div>
+  <p class="serp-desc">&#x27;how to&#x27; / &#x27;steps to&#x27; クエリで発火する番号付きリスト型 snippet。料理レシピ / DIY / プログラミングで多発。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>HowTo (ol), ItemList (ul)</code></div>
+  <div class="serp-row"><strong>発火条件</strong> ol/ul/h2 で構成された手順またはリスト + 各項目 40字以内</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +11% on average vs paragraph snippet <span class="src"><a href="https://ahrefs.com/blog/featured-snippets-study/" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> h2 でステップ名 + 説明1-2文 / &lt;ol&gt;/&lt;ul&gt; の直前に summary 文 / 5-8項目が optimal</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/featured-snippets" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Featured Snippet (Paragraph)</h3>
+    <span class="serp-ja">強調スニペット (パラグラフ型)</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2014</span>
+  </div>
+  <p class="serp-desc">SERP の position zero に表示される回答抜粋。CTR を 8-30% 向上させる業界主要ターゲット。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Article, FAQPage, HowTo</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 明確な質問形式のクエリ + 40-60語の簡潔な回答 + h2/h3 直下のリード段落</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +8.6% on top-3 average (Ahrefs 2020 study, 2M SERPs) <span class="src"><a href="https://ahrefs.com/blog/featured-snippets-study/" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> 答えを最初の50字に置く / 段落タグ &lt;p&gt; を h2 直下に / &#x27;Aとは&#x27; &#x27;Aの方法&#x27; &#x27;比較&#x27; クエリで発火率高</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/featured-snippets" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Featured Snippet (Table)</h3>
+    <span class="serp-ja">強調スニペット (テーブル型)</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2015</span>
+  </div>
+  <p class="serp-desc">比較クエリで発火するテーブル型 snippet。&#x27;X vs Y&#x27; &#x27;Best ... price&#x27; で頻出。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Table, Dataset</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 比較 / 価格 / スペッククエリ + HTML &lt;table&gt; + caption + thead</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +12% to +25% (table-heavy verticals) <span class="src"><a href="https://moz.com/blog/featured-snippets" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> &lt;thead&gt; 必須 / caption で要約 / 5x5 以下のサイズが optimal / 比較対象を明確に</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/featured-snippets" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>How-To Snippet (旧)</h3>
+    <span class="serp-ja">ハウツースニペット</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2019</span>
+  </div>
+  <p class="serp-desc">2019-2023年に表示されていた手順 snippet。FAQ と同時に2023年8月廃止。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>HowTo + HowToStep + HowToTip</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 手順ガイド + HowTo Schema</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +10% in launch era, dropped 2023 <span class="src"><a href="https://developers.google.com/search/blog/2023/08/howto-faq-changes" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> 2023年8月で表示停止。コンテンツ自体は List Featured Snippet で活用可</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/how-to" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>People Also Ask (PAA)</h3>
+    <span class="serp-ja">People Also Ask</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2015</span>
+  </div>
+  <p class="serp-desc">SERP に表示される手風琴形式の関連質問。クリックで追加質問が動的に展開。情報クエリで広く発火。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>FAQPage, Question</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 情報クエリ + 関連質問の dynamic expansion + accordion UI</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +3-5% click-through to source <span class="src"><a href="https://www.searchenginejournal.com/people-also-ask-seo/" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> FAQPage Schema 必須 / 質問は 5-15 単語 / 回答は 40-60 単語 / 第二階層クエリも狙う</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/faqpage" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Q&amp;A Page Snippet</h3>
+    <span class="serp-ja">Q&amp;A ページスニペット</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2017</span>
+  </div>
+  <p class="serp-desc">Stack Overflow / Quora 用の Q&amp;A snippet。FAQPage と異なり投稿ベース。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>QAPage + Question + acceptedAnswer + suggestedAnswer</code></div>
+  <div class="serp-row"><strong>発火条件</strong> Q&amp;A サイト + Schema.org QAPage + acceptedAnswer 必須</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> Stack Overflow / Quora で標準 <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/qapage" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> QAPage は単一質問専用 / FAQPage と区別 / acceptedAnswer が必須 / suggestedAnswer 0-N 件</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/qapage" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="organic">
+  <div class="serp-head">
+    <h3>Top Stories Carousel</h3>
+    <span class="serp-ja">トップストーリーズ</span>
+    <span class="serp-cat">organic</span>
+    <span class="serp-year">2018</span>
+  </div>
+  <p class="serp-desc">ニュース速報クエリで発火するカルーセル。Yahoo!ニュース / 朝日新聞 / 日経 等の主要メディアが優位。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>NewsArticle + dateline + speakable + News Sitemap</code></div>
+  <div class="serp-row"><strong>発火条件</strong> ニュース性 + 信頼ある報道機関 + Core Web Vitals 達成 + Mobile-friendly</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> News traffic +40% <span class="src"><a href="https://developers.google.com/search/docs/appearance/topstories" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> News Sitemap + Schema.org NewsArticle / 2021年6月から AMP 非必須化</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/topstories" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="shopping">
+  <div class="serp-head">
+    <h3>Product Rich Result</h3>
+    <span class="serp-ja">商品リッチリザルト</span>
+    <span class="serp-cat">shopping</span>
+    <span class="serp-year">2017</span>
+  </div>
+  <p class="serp-desc">SERP に表示される商品カード (価格 / 在庫 / 評価)。Google Merchant Center 統合で機能拡張。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>Product + Offer + AggregateRating + Review + brand</code></div>
+  <div class="serp-row"><strong>発火条件</strong> 商品ページ + price + availability + Schema.org Product + 画像 + レビュー</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> +13.2% (SISTRIX 2020) <span class="src"><a href="https://www.sistrix.com/google-product-rich-results/" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> Offer.priceCurrency 必須 / availability InStock|OutOfStock / image 1200x630px+ / レビュー≥5件で AggregateRating</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/product" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+<div class="card serp" data-cat="shopping">
+  <div class="serp-head">
+    <h3>Software App Result</h3>
+    <span class="serp-ja">ソフトウェアアプリ結果</span>
+    <span class="serp-cat">shopping</span>
+    <span class="serp-year">2014</span>
+  </div>
+  <p class="serp-desc">アプリ名検索で表示される App Store / Play Store ボタン付き結果。</p>
+  <div class="serp-row"><strong>発火 Schema</strong> <code>SoftwareApplication + applicationCategory + offers</code></div>
+  <div class="serp-row"><strong>発火条件</strong> アプリ名クエリ + Schema.org SoftwareApplication + ストアリンク</div>
+  <div class="serp-row"><strong>CTR インパクト</strong> App-name traffic +35% <span class="src"><a href="https://developers.google.com/search/docs/appearance/structured-data/software-app" target="_blank" rel="noopener">[出典]</a></span></div>
+  <div class="serp-row"><strong>最適化ヒント</strong> App Store + Play Store 両方 / aggregateRating / offers で in-app 課金</div>
+  <div class="serp-link">
+    <a href="https://developers.google.com/search/docs/appearance/structured-data/software-app" target="_blank" rel="noopener">📘 公式ドキュメント</a>
+  </div>
+</div>
+
+  </div>
+</main>
+
+<footer>
+  SEO-DB v1.0 Phase 15 — Execution Layer ・ Production progress 17.7% (972 / 5,500 concepts)<br>
+  IRR Gwet AC1 = 0.943 (Almost Perfect) ・ 19 cross-DB refs ・ source_url 100% / verified 100%<br>
+  NPO法人ミラツク × esse-sense ・ ConceptNet の対称位置に学術知のインフラを置く ・ 2026-05-21 更新
+</footer>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  localStorage.setItem('seo-exec-theme', cur === 'dark' ? 'light' : 'dark');
+}
+const saved = localStorage.getItem('seo-exec-theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  document.documentElement.setAttribute('data-theme', 'dark');
+
+// Tabs
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Playbook filter
+function filterPlaybooks() {
+  const q = document.getElementById('pb-search').value.toLowerCase();
+  const hf = document.getElementById('pb-hours').value;
+  document.querySelectorAll('#playbooks .playbook').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    const hours = parseInt(card.dataset.hours);
+    let show = !q || text.includes(q);
+    if (show && hf === 'lt8') show = hours < 8;
+    if (show && hf === 'lt40') show = hours < 40;
+    if (show && hf === 'gte40') show = hours >= 40;
+    card.style.display = show ? '' : 'none';
+  });
+}
+document.getElementById('pb-search').addEventListener('input', filterPlaybooks);
+document.getElementById('pb-hours').addEventListener('change', filterPlaybooks);
+
+// Algorithm filter
+function filterAlgorithms() {
+  const q = document.getElementById('algo-search').value.toLowerCase();
+  const sf = document.getElementById('algo-sf').value;
+  document.querySelectorAll('#algorithms .algorithm').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    let show = !q || text.includes(q);
+    if (show && sf) show = card.dataset.sf === sf;
+    card.style.display = show ? '' : 'none';
+  });
+}
+document.getElementById('algo-search').addEventListener('input', filterAlgorithms);
+document.getElementById('algo-sf').addEventListener('change', filterAlgorithms);
+
+// SERP filter
+function filterSerp() {
+  const q = document.getElementById('serp-search').value.toLowerCase();
+  const cat = document.getElementById('serp-cat').value;
+  document.querySelectorAll('#serp .serp').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    let show = !q || text.includes(q);
+    if (show && cat) show = card.dataset.cat === cat;
+    card.style.display = show ? '' : 'none';
+  });
+}
+document.getElementById('serp-search').addEventListener('input', filterSerp);
+document.getElementById('serp-cat').addEventListener('change', filterSerp);
+</script>
+</body>
+</html>
