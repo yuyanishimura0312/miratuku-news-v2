@@ -1,612 +1,1300 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="dark">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>三階構造の Agent System 実装 — スライド版 | CCM-DB v1.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCM-DB v1.3 三階構造の Agent System 実装 — 18 枚解説スライド</title>
+<meta name="description" content="von Foerster 第二階サイバネティクスを超えた三階構造を、AR-DB / CCM-DB / fpm の関係、9 ccm agents、Pattern Lens 50、自己観察 40 件、786 年系譜、Active Inference Loop の 6 図解で読み解く A4 横 18 枚スライド。">
+<meta property="og:title" content="CCM-DB v1.3 三階構造 — 18 枚解説スライド">
+<meta property="og:description" content="6 図解 / 18 枚 / A4 横 / 印刷対応 / キーボードナビ。自己観察論の 786 年系譜と Active Inference の組織実装。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/ccm-three-tier-slides.html">
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@300;400;500;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* ===========================================================
+   CCM-DB v1.3 — 三階構造の Agent System 実装 / 18 枚スライド
+   赤白CI (#CC1400) / 白基調 / A4横 297×210mm / 印刷対応
+   設計指針: html-slide-standards.md Part 1 + Part 2 完全準拠
+   =========================================================== */
+
+@page { size: A4 landscape; margin: 0; }
+
 :root {
-  --bg:#FFFFFF; --card:#FFFFFF; --accent:#121212; --accent-warm:#CC1400; --accent-warm-soft:#B01200;
-  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
-  --border:#D9D9D9; --border-light:#EEEEEE; --surface:#F7F7F5;
-  --font:"Noto Sans JP", -apple-system, sans-serif;
-  --font-serif:"Noto Serif JP", Georgia, serif;
-  --font-mono:"Fira Code", "SF Mono", monospace;
+  --bg: #FFFFFF;
+  --paper: #FFFFFF;
+  --surface: #FAFAF7;
+  --surface-warm: #F7F4EE;
+  --surface-deep: #F2EEE6;
+  --ink: #0E0E0E;
+  --ink-soft: #3A3A3A;
+  --ink-mute: #707070;
+  --ink-faint: #A8A8A8;
+  --rule: #DEDEDE;
+  --rule-light: #ECECEC;
+  --accent: #CC1400;
+  --accent-deep: #9A0F00;
+  --accent-soft: #E84030;
+  --accent-mute: #F8E5E2;
+  --accent-line: rgba(204, 20, 0, 0.20);
+  --font-display: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-serif:   "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-italic:  "Cormorant Garamond", "Noto Serif JP", Georgia, serif;
+  --font-sans:    "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-mono:    "Fira Code", "SF Mono", Menlo, monospace;
 }
-[data-theme="dark"] {
-  --bg:#0a0a0a; --card:#141414; --accent:#E8E8E8; --accent-warm:#FF4030; --accent-warm-soft:#CC1400;
-  --text:#E8E8E8; --text-secondary:#B8B8B8; --text-muted:#8A8A8A;
-  --border:#2a2a2a; --border-light:#1f1f1f; --surface:#1A1A1A;
-}
-* { box-sizing:border-box; margin:0; padding:0; }
-html, body { width:100%; height:100%; overflow:hidden; }
+
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html { background: #1A1410; }
 body {
-  background:var(--bg); color:var(--text); font-family:var(--font);
-  line-height:1.7; letter-spacing:0.025em; font-feature-settings:"palt";
+  margin: 0; padding: 0;
+  background: #1A1410;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  font-feature-settings: "palt", "kern";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+.deck { padding: 32px 0 80px; }
 
-.presentation { position:fixed; inset:0; }
 .slide {
-  position:absolute; inset:0;
-  display:flex; flex-direction:column; justify-content:center;
-  padding:64px 96px;
-  background:var(--bg);
-  opacity:0; visibility:hidden;
-  transform:translateX(20px);
-  transition:opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
-  overflow-y:auto;
-}
-.slide.active { opacity:1; visibility:visible; transform:translateX(0); }
-
-.slide-eyebrow {
-  font-family:var(--font-mono); font-size:12px; letter-spacing:0.35em;
-  color:var(--accent-warm); margin-bottom:24px; text-transform:uppercase;
-}
-.slide h1 {
-  font-family:var(--font-serif); font-size:56px; font-weight:700;
-  line-height:1.3; margin-bottom:32px;
-  letter-spacing:-0.01em;
-}
-.slide h2 {
-  font-family:var(--font-serif); font-size:40px; font-weight:600;
-  line-height:1.35; margin-bottom:32px;
-}
-.slide h3 {
-  font-family:var(--font-serif); font-size:22px; font-weight:600;
-  color:var(--accent-warm); margin:24px 0 16px;
-}
-.slide p {
-  font-family:var(--font-serif); font-size:19px; line-height:1.95;
-  color:var(--text-secondary); margin-bottom:18px; max-width:1100px;
-}
-.slide p.lead {
-  font-size:22px; color:var(--text); line-height:1.85;
-}
-.slide ul, .slide ol { padding-left:32px; margin-bottom:18px; max-width:1100px; }
-.slide li { font-size:18px; margin-bottom:10px; color:var(--text-secondary); line-height:1.8; }
-.slide li strong { color:var(--text); }
-.slide code { font-family:var(--font-mono); font-size:15px; background:var(--surface); padding:2px 8px; border-radius:3px; color:var(--accent-warm-soft); }
-
-/* スライド 1 (Title) 専用 */
-.slide.title-slide {
-  background:linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
-  padding:64px 120px;
-}
-.title-slide .slide-eyebrow { font-size:14px; margin-bottom:48px; }
-.title-slide h1 { font-size:64px; line-height:1.2; margin-bottom:40px; }
-.title-slide .subtitle {
-  font-family:var(--font-serif); font-size:24px; color:var(--text-secondary);
-  line-height:1.65; margin-bottom:48px; max-width:900px;
-}
-.title-slide .meta {
-  display:flex; gap:48px; padding-top:32px;
-  border-top:3px solid var(--accent-warm);
-  font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
-  flex-wrap:wrap;
+  width: 297mm; height: 210mm;
+  max-width: 297mm;
+  margin: 0 auto 24px;
+  background: var(--paper); color: var(--ink);
+  position: relative;
+  padding: 16mm 22mm 12mm 22mm;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 7mm;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  overflow: hidden;
+  font-family: var(--font-serif);
 }
 
-/* KPI */
-.kpi-grid {
-  display:grid; grid-template-columns:repeat(4,1fr); gap:32px;
-  margin:32px 0; max-width:1200px;
+.slide-head {
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: 24px; align-items: center;
+  font-family: var(--font-sans);
 }
-.kpi-item {
-  text-align:center; padding:24px;
-  background:var(--surface); border:1px solid var(--border-light);
-  border-radius:4px;
-}
-.kpi-num {
-  font-family:var(--font-mono); font-size:48px; font-weight:600;
-  color:var(--accent-warm); line-height:1;
-}
-.kpi-label {
-  font-size:13px; color:var(--text-muted);
-  letter-spacing:0.12em; text-transform:uppercase; margin-top:12px;
-}
+.brand-mark { display: flex; align-items: center; gap: 10px; font-size: 10.5px; font-weight: 500; letter-spacing: 0.22em; color: var(--ink); text-transform: uppercase; }
+.brand-mark::before { content: ""; display: inline-block; width: 18px; height: 18px; background: var(--accent); }
+.slide-tag { font-family: var(--font-mono); font-size: 9.5px; font-weight: 500; letter-spacing: 0.22em; color: var(--ink-mute); text-transform: uppercase; text-align: center; }
+.slide-num { font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.18em; color: var(--accent); }
 
-/* テーブル */
-.slide table {
-  width:100%; max-width:1100px; border-collapse:collapse;
-  margin:16px 0; font-size:16px;
-}
-.slide th, .slide td {
-  padding:12px 16px; text-align:left;
-  border-bottom:1px solid var(--border-light);
-}
-.slide th {
-  font-size:12px; letter-spacing:0.12em; text-transform:uppercase;
-  color:var(--text-muted); background:var(--surface);
-}
-.slide td code { font-size:14px; }
+.title-block { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
+.eyebrow { font-family: var(--font-sans); font-size: 10.5px; font-weight: 500; letter-spacing: 0.3em; color: var(--ink-mute); text-transform: uppercase; }
+.title { font-family: var(--font-serif); font-weight: 700; font-size: 26px; line-height: 1.42; letter-spacing: 0.005em; color: var(--ink); margin: 0; }
+.title.large { font-size: 32px; line-height: 1.32; }
+.title-en { font-family: var(--font-italic); font-style: italic; font-weight: 500; font-size: 15px; color: var(--accent); letter-spacing: 0.02em; }
+.accent-stroke { width: 36px; height: 2px; background: var(--accent); margin-top: 2px; }
 
-/* 図解 */
-.tier-diagram {
-  background:var(--surface);
-  border-left:4px solid var(--accent-warm);
-  padding:20px 32px; margin:20px 0;
-  font-family:var(--font-mono); font-size:14px;
-  line-height:1.7; white-space:pre;
-  max-width:900px; overflow-x:auto;
-}
+.body { display: grid; gap: 22px; align-items: start; min-height: 0; overflow: hidden; }
+.body.cols-2 { grid-template-columns: 1fr 1fr; }
+.body.cols-2-wide { grid-template-columns: 1.15fr 1fr; }
+.body.cols-2-narrow { grid-template-columns: 1fr 1.2fr; }
+.body.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.body.single { grid-template-columns: 1fr; }
+.col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
-/* 引用 */
-.quote-box {
-  padding:24px 32px; margin:24px 0;
-  border-left:4px solid var(--accent-warm);
-  background:var(--surface);
-  font-family:var(--font-serif); font-size:22px;
-  line-height:1.7; max-width:1000px;
-}
-.quote-box .attr {
-  display:block; margin-top:16px;
-  font-size:14px; color:var(--text-muted); font-family:var(--font);
-}
+p { font-family: var(--font-serif); font-size: 13.5px; line-height: 1.95; letter-spacing: 0.025em; margin: 0; color: var(--ink); }
+p.lead { font-size: 15px; line-height: 1.9; font-weight: 400; }
+p.small { font-size: 12px; line-height: 1.85; }
+ul, ol { font-family: var(--font-serif); font-size: 12.5px; line-height: 1.85; margin: 0; padding-left: 18px; letter-spacing: 0.02em; }
+ul li, ol li { margin-bottom: 4px; }
+strong, .hl { color: var(--accent); font-weight: 700; }
+em { font-family: var(--font-italic); font-style: italic; color: var(--ink); }
+.ink-mute { color: var(--ink-mute); }
 
-/* 観察記録行 */
-.obs-row {
-  display:grid; grid-template-columns:80px 280px 1fr;
-  gap:20px; padding:14px 0;
-  border-bottom:1px solid var(--border-light);
-  font-size:15px; max-width:1200px;
-}
-.obs-row .nov {
-  font-family:var(--font-mono); color:var(--accent-warm);
-  font-weight:600; font-size:18px;
-}
-.obs-row .lens { color:var(--text); font-weight:500; }
-.obs-row .what { color:var(--text-secondary); font-size:14px; line-height:1.7; }
+.subhead { font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin: 0 0 6px 0; }
 
-/* Conclusion */
-.slide.conclusion-slide {
-  text-align:center;
-  padding:120px 96px;
-}
-.conclusion-slide h1 {
-  font-size:48px; line-height:1.4;
-  margin-bottom:48px; max-width:1000px;
-}
-.conclusion-slide .punchline {
-  font-family:var(--font-serif); font-size:32px;
-  color:var(--accent-warm); line-height:1.5; font-weight:500;
-  max-width:900px; margin:0 auto 48px;
-}
-.conclusion-slide .meta-small {
-  font-family:var(--font-mono); font-size:13px; color:var(--text-muted);
-}
+.note { padding: 14px 18px; background: var(--surface-warm); border-left: 2px solid var(--accent); }
+.note h4 { font-family: var(--font-sans); font-size: 9.5px; font-weight: 600; letter-spacing: 0.22em; color: var(--accent); margin: 0 0 6px 0; text-transform: uppercase; }
+.note p, .note ul { font-size: 12px; line-height: 1.75; }
 
-/* コントロール */
-.controls {
-  position:fixed; bottom:24px; right:32px;
-  display:flex; gap:12px; align-items:center;
-  z-index:200;
-}
-.btn {
-  background:var(--card); border:1px solid var(--border);
-  color:var(--text); padding:8px 14px; cursor:pointer;
-  font-family:var(--font-mono); font-size:12px;
-  border-radius:3px; transition:all 0.2s;
-}
-.btn:hover { background:var(--accent-warm); color:#fff; border-color:var(--accent-warm); }
-.counter {
-  font-family:var(--font-mono); font-size:14px;
-  color:var(--text-muted); padding:8px 16px;
-  background:var(--card); border:1px solid var(--border-light);
-  border-radius:3px;
-}
+.card-grid { display: grid; gap: 12px; }
+.card-grid.g2 { grid-template-columns: 1fr 1fr; }
+.card-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.card-grid.g4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.card { padding: 14px 16px; border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; background: #FFFFFF; }
+.card h5 { font-family: var(--font-sans); font-size: 10px; font-weight: 600; letter-spacing: 0.2em; color: var(--accent); margin: 0; text-transform: uppercase; }
+.card .card-title { font-family: var(--font-serif); font-size: 14px; font-weight: 700; line-height: 1.5; color: var(--ink); margin: 0; }
+.card p { font-size: 11.5px; line-height: 1.7; }
 
-/* プログレスバー */
-.progress {
-  position:fixed; top:0; left:0; right:0;
-  height:3px; background:var(--border-light); z-index:100;
-}
-.progress-bar {
-  height:100%; background:var(--accent-warm);
-  transition:width 0.4s ease;
-}
+.fact { padding: 14px 4px; border-top: 1px solid var(--accent); display: flex; flex-direction: column; gap: 6px; }
+.fact .fact-label { font-family: var(--font-sans); font-size: 9px; font-weight: 600; letter-spacing: 0.22em; color: var(--ink-mute); text-transform: uppercase; }
+.fact .fact-num { font-family: var(--font-serif); font-weight: 700; font-size: 36px; line-height: 1; color: var(--accent); letter-spacing: -0.01em; }
+.fact .fact-num .unit { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--ink-soft); margin-left: 3px; }
+.fact .fact-desc { font-family: var(--font-sans); font-size: 10.5px; line-height: 1.65; color: var(--ink-mute); }
 
-/* キーヒント */
-.key-hint {
-  position:fixed; top:24px; right:32px;
-  font-family:var(--font-mono); font-size:11px;
-  color:var(--text-muted); letter-spacing:0.1em;
-  z-index:100;
-}
+.quote-block { background: #0E0E0E; color: #FFFFFF; padding: 18px 22px; font-family: var(--font-serif); font-style: italic; font-size: 13.5px; line-height: 1.9; position: relative; }
+.quote-block::before { content: '"'; font-family: var(--font-italic); font-style: italic; font-weight: 600; font-size: 56px; color: var(--accent); position: absolute; top: 8px; left: 14px; line-height: 1; }
+.quote-block-text { padding-left: 36px; }
+.quote-block cite { display: block; font-family: var(--font-sans); font-style: normal; font-size: 9.5px; letter-spacing: 0.22em; color: var(--accent); margin-top: 12px; text-transform: uppercase; }
 
-/* 印刷 */
+.fig-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fig-inline { width: 100%; height: auto; display: block; }
+.fig-cap { font-family: var(--font-sans); font-size: 9.5px; line-height: 1.55; color: var(--ink-soft); letter-spacing: 0.02em; padding-top: 4px; border-top: 0.5px solid var(--rule-light); }
+.fig-cap strong { color: var(--accent); }
+
+.footer { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; padding-top: 8px; border-top: 0.5px solid var(--rule); font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.18em; color: var(--ink-mute); text-transform: uppercase; }
+.footer-center { text-align: center; }
+
+.slide.cover { padding: 22mm 22mm 16mm 22mm; grid-template-rows: auto 1fr auto; }
+.cover-bar { display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; align-items: center; padding-bottom: 14px; border-bottom: 0.5px solid var(--rule); font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.22em; color: var(--ink-mute); text-transform: uppercase; }
+.cover-bar .cover-mark { display: flex; align-items: center; gap: 10px; color: var(--ink); }
+.cover-bar .cover-mark::before { content: ""; display: inline-block; width: 20px; height: 20px; background: var(--accent); }
+.cover-title-block { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 16mm 0 0; }
+.cover-eyebrow { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.42em; color: var(--accent); text-transform: uppercase; }
+.cover-title { font-family: var(--font-display); font-weight: 700; font-size: 60px; line-height: 1.18; letter-spacing: 0.005em; color: var(--ink); margin: 0; }
+.cover-en { font-family: var(--font-italic); font-style: italic; font-weight: 500; font-size: 22px; color: var(--accent); letter-spacing: 0.015em; margin-top: -4px; }
+.cover-lead { font-family: var(--font-serif); font-size: 15px; line-height: 1.85; color: var(--ink); max-width: 720px; margin-top: 6px; }
+.cover-meta { display: flex; gap: 28px; margin-top: 14px; font-family: var(--font-sans); font-size: 10px; font-weight: 500; letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; flex-wrap: wrap; }
+.cover-meta-item { display: flex; align-items: center; gap: 8px; }
+.cover-meta-item::before { content: ""; display: inline-block; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; }
+
+.slide.part-opener { padding: 0; display: grid; grid-template-rows: 1fr; }
+.part-opener-body { display: grid; grid-template-columns: 0.85fr 1.4fr; align-items: stretch; height: 100%; }
+.part-opener-left { background: var(--accent); color: #FFFFFF; padding: 26mm 18mm 18mm 22mm; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; }
+.part-opener-right { background: var(--paper); padding: 28mm 22mm 18mm 22mm; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+.part-opener-num { font-family: var(--font-italic); font-style: italic; font-weight: 500; font-size: 100px; line-height: 0.95; color: #FFFFFF; letter-spacing: -0.01em; }
+.part-opener-label { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.42em; color: rgba(255,255,255,0.85); text-transform: uppercase; }
+.part-opener-title { font-family: var(--font-display); font-weight: 700; font-size: 38px; line-height: 1.32; color: var(--ink); margin: 0; }
+.part-opener-en { font-family: var(--font-italic); font-style: italic; font-weight: 500; font-size: 17px; color: var(--accent); }
+.part-opener-rule { width: 48px; height: 2px; background: var(--accent); margin: 4px 0 4px 0; }
+.part-opener-desc { font-family: var(--font-serif); font-size: 14px; line-height: 1.9; color: var(--ink); max-width: 520px; }
+
+svg.fig { width: 100%; height: auto; display: block; }
+.fig-box { padding: 14px 16px; background: var(--surface); border: 1px solid var(--rule-light); }
+
+.kv-list { font-family: var(--font-sans); font-size: 11px; }
+.kv-list div { display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--rule-light); }
+.kv-list .k { color: var(--accent); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; font-size: 9.5px; padding-top: 1px; }
+.kv-list .v { color: var(--ink); line-height: 1.6; }
+
 @media print {
-  .slide { position:relative; opacity:1; visibility:visible; transform:none;
-           page-break-after:always; min-height:100vh; }
-  .controls, .progress, .key-hint { display:none; }
+  html, body { background: #FFFFFF; }
+  .deck { padding: 0; }
+  .slide { margin: 0; box-shadow: none; page-break-after: always; page-break-inside: avoid; width: 297mm; height: 210mm; }
+  .slide:last-child { page-break-after: auto; }
+  .navbar { display: none; }
 }
 
-/* レスポンシブ */
-@media (max-width:1000px) {
-  .slide { padding:48px 32px; }
-  .slide h1 { font-size:36px; }
-  .slide h2 { font-size:28px; }
-  .slide p { font-size:16px; }
-  .kpi-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
-  .kpi-num { font-size:32px; }
-  .obs-row { grid-template-columns:1fr; }
+/* NAVIGATOR */
+.navbar {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #FFFFFF;
+  padding: 8px 12px;
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.12em; z-index: 1000;
+  display: flex; gap: 6px; align-items: center;
+  text-transform: uppercase;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
+.navbar a { color: var(--accent); text-decoration: none; }
+.navbar .sep { color: rgba(255,255,255,0.3); margin: 0 2px; }
+.nav-btn {
+  background: transparent; color: #FFFFFF;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 6px 10px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.1em; transition: all 0.15s;
+  min-width: 32px; min-height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.nav-btn:hover { background: var(--accent); border-color: var(--accent); }
+.nav-btn:active { transform: scale(0.95); }
+.nav-counter { padding: 0 8px; min-width: 64px; text-align: center; font-weight: 500; cursor: pointer; }
+.nav-help { font-size: 9px; opacity: 0.7; letter-spacing: 0.15em; padding-left: 4px; }
+@media (max-width: 700px) {
+  .navbar { padding: 6px 8px; gap: 4px; bottom: 8px; }
+  .nav-btn { padding: 5px 8px; min-width: 28px; min-height: 28px; font-size: 10px; }
+  .nav-help { display: none; }
+  .nav-counter { padding: 0 4px; min-width: 52px; font-size: 10px; }
+}
+
+/* PRESENTATION MODE */
+body.presentation { background: #0E0E0E; overflow: hidden; touch-action: pan-y; }
+body.presentation .deck { padding: 0; }
+body.presentation .slide {
+  display: none;
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh;
+  margin: 0; box-shadow: none; padding: 4vw 5vw 3vw;
+}
+body.presentation .slide.active { display: grid; }
+body.presentation .slide.part-opener { padding: 0; }
+body.presentation .navbar { background: rgba(255,255,255,0.96); color: var(--ink); }
+body.presentation .navbar .nav-btn { color: var(--ink); border-color: rgba(0,0,0,0.2); }
+body.presentation .navbar .nav-btn:hover { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+body.presentation .navbar .sep { color: rgba(0,0,0,0.2); }
+body.presentation .navbar .nav-help { color: var(--ink-mute); }
 </style>
 </head>
 <body>
 
-<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
-<div class="key-hint">← → Space ESC で操作</div>
+<div class="deck">
 
-<div class="presentation" id="presentation">
-
-  <!-- ========== Slide 1: Title ========== -->
-  <section class="slide title-slide active">
-    <div class="slide-eyebrow">CCM-DB v1.2 ／ REPORT ／ 2026-05-21</div>
-    <h1>三階構造の<br>Agent System 実装</h1>
-    <p class="subtitle">von Foerster 第二階サイバネティクスを超えて — AR-DB / CCM-DB / fpm の同時稼働がもたらした自己観察構造の質的飛躍</p>
-    <div class="meta">
-      <span>NPO 法人ミラツク ／ esse-sense</span>
-      <span>著者: ccm-team + ccm-observer</span>
-      <span>データ: AR-DB v1.1 + CCM-DB v1.2</span>
+<!-- ============ 01 COVER ============ -->
+<section class="slide cover" id="s01">
+  <div class="cover-bar">
+    <div class="cover-mark">MIRA TUKU · ESSE-SENSE</div>
+    <div>CCM-DB v1.3 · THREE-TIER AGENT SYSTEM</div>
+    <div style="text-align:right;">2026.05.21 · v1.0</div>
+  </div>
+  <div class="cover-title-block">
+    <div class="cover-eyebrow">A DIAGRAM EXPLAINER FROM NPO法人ミラツク</div>
+    <h1 class="cover-title">三階構造の<br>Agent System 実装</h1>
+    <div class="cover-en">Beyond Second-Order Cybernetics — A Self-Observing Knowledge Architecture</div>
+    <p class="cover-lead">von Foerster 第二階サイバネティクスを超えた<strong>三階構造</strong>を、AR-DB / CCM-DB / fpm の関係、9 ccm agents の Tier 階層、Pattern Lens 50、自己観察 40 件、自己観察論 <strong>786 年系譜</strong>、Active Inference Loop の 6 図解で読み解く。18 枚 / 約 15 分。</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">18 SLIDES</div>
+      <div class="cover-meta-item">6 FIGURES</div>
+      <div class="cover-meta-item">A4 LANDSCAPE / PRINTABLE</div>
+      <div class="cover-meta-item">KEYBOARD &amp; TOUCH</div>
     </div>
-  </section>
+  </div>
+  <div class="footer">
+    <div>NPO法人ミラツク</div>
+    <div class="footer-center">CCM-DB v1.3 · THREE-TIER · EXPLAINER</div>
+    <div>01 / 18</div>
+  </div>
+</section>
 
-  <!-- ========== Slide 2: 主題 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">01 / 17 ── 主題</div>
-    <h2>2026 年 5 月 20-21 日、<br>エコシステムは静かに段階を超えた</h2>
-    <p class="lead">AR-DB v1.1 が MPP Pattern Extension で<strong>自己観察基盤を獲得</strong>し、翌日 CCM-DB v1.2 が Pattern Lens 層で<strong>その観察を解釈する第二階</strong>を確立し、同日 firing-pattern-meta が Tier 0 として<strong>第三階の観察を担う</strong>形で配置された。</p>
-    <p>これは Heinz von Foerster が 1974 年に理論として提示した第二階サイバネティクスを、agent system として超えた三階構造の実装である。本レポートはその実証データを AR-DB の実レコードに基づいて整理する。</p>
-  </section>
-
-  <!-- ========== Slide 3: 数値で見る (KPI) ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">02 / 17 ── 数値で見る</div>
-    <h2>三階構造の実データ</h2>
-    <div class="kpi-grid">
-      <div class="kpi-item"><div class="kpi-num">24</div><div class="kpi-label">第一階 firing_patterns</div></div>
-      <div class="kpi-item"><div class="kpi-num">50</div><div class="kpi-label">第二階 pattern_lens</div></div>
-      <div class="kpi-item"><div class="kpi-num">30</div><div class="kpi-label">第二階 observations</div></div>
-      <div class="kpi-item"><div class="kpi-num">4</div><div class="kpi-label">第三階 fpm 系 agents</div></div>
-      <div class="kpi-item"><div class="kpi-num">609</div><div class="kpi-label">CCM 概念</div></div>
-      <div class="kpi-item"><div class="kpi-num">408</div><div class="kpi-label">cross_db_refs</div></div>
-      <div class="kpi-item"><div class="kpi-num">45</div><div class="kpi-label">target DBs</div></div>
-      <div class="kpi-item"><div class="kpi-num">0.71</div><div class="kpi-label">平均 novelty</div></div>
+<!-- ============ 02 OVERVIEW ============ -->
+<section class="slide" id="s02">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">OVERVIEW — 18 枚で何を伝えるか</div>
+    <div class="slide-num">02 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">SECTION 0 · MAP</div>
+    <h2 class="title">15 分で何を伝えるか — 4 つのまとまり</h2>
+    <div class="title-en">A four-part map of this deck</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body single">
+    <div class="fig-box">
+      <svg class="fig" viewBox="0 0 1100 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#CC1400"/>
+          </marker>
+        </defs>
+        <g font-family="Noto Sans JP, sans-serif">
+          <g><rect x="20" y="60" width="240" height="100" fill="#F8E5E2" stroke="#CC1400" stroke-width="1.2"/>
+            <text x="140" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#CC1400">PART I · 構造</text>
+            <text x="140" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#0E0E0E">三階構造とは</text>
+            <text x="140" y="138" text-anchor="middle" font-size="10" fill="#707070">概念図 / 役割分担</text>
+          </g>
+          <g><rect x="280" y="60" width="240" height="100" fill="#FAFAF7" stroke="#CC1400" stroke-width="1.2"/>
+            <text x="400" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#CC1400">PART II · 実装</text>
+            <text x="400" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#0E0E0E">9 agents の編成</text>
+            <text x="400" y="138" text-anchor="middle" font-size="10" fill="#707070">Tier -1 / 0 / 2 / 3</text>
+          </g>
+          <g><rect x="540" y="60" width="240" height="100" fill="#FAFAF7" stroke="#CC1400" stroke-width="1.2"/>
+            <text x="660" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#CC1400">PART III · データ</text>
+            <text x="660" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#0E0E0E">Lens × Observation</text>
+            <text x="660" y="138" text-anchor="middle" font-size="10" fill="#707070">50 lens / 40 obs</text>
+          </g>
+          <g><rect x="800" y="60" width="240" height="100" fill="#F8E5E2" stroke="#CC1400" stroke-width="1.2"/>
+            <text x="920" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#CC1400">PART IV · 理論</text>
+            <text x="920" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="#0E0E0E">系譜 786 年 / Loop</text>
+            <text x="920" y="138" text-anchor="middle" font-size="10" fill="#707070">道元 → ccm-team</text>
+          </g>
+          <line x1="260" y1="110" x2="280" y2="110" stroke="#CC1400" stroke-width="1.5" marker-end="url(#ar2)"/>
+          <line x1="520" y1="110" x2="540" y2="110" stroke="#CC1400" stroke-width="1.5" marker-end="url(#ar2)"/>
+          <line x1="780" y1="110" x2="800" y2="110" stroke="#CC1400" stroke-width="1.5" marker-end="url(#ar2)"/>
+          <text x="530" y="200" text-anchor="middle" font-size="10" fill="#707070">構造を見る → 実装を見る → データを見る → 理論で位置づける</text>
+        </g>
+      </svg>
     </div>
-    <p style="font-size:14px; color:var(--text-muted); margin-top:24px;">※ すべて 2026-05-21 19 時時点 AR-DB / CCM-DB SQLite から直接取得。推測値ゼロ。</p>
-  </section>
-
-  <!-- ========== Slide 4: von Foerster ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">03 / 17 ── 思想史的位置</div>
-    <h2>von Foerster 第二階の射程</h2>
-    <p>Heinz von Foerster (1911-2002) は 1958 年にイリノイ大学に Biological Computer Laboratory を設立し、1974 年の論文 <em>Cybernetics of Cybernetics</em> で第二階サイバネティクス ── 観察するシステムを観察するシステム ── を提示した。</p>
-    <p>第一階が外部対象を制御・観察する古典サイバネティクス (Wiener 1948) の延長であるのに対し、第二階は<strong>観察者自身を観察対象に含む</strong>点に独自性がある。</p>
-  </section>
-
-  <!-- ========== Slide 5: 引用 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">04 / 17 ── 引用</div>
-    <h2>第三階への含意</h2>
-    <div class="quote-box">
-      観察者を観察するシステムは、それ自体が観察されるとき、第三のシステムを必要とする。この階層が無限に続くわけではなく、ある時点で自己参照的な閉じた構造に収束する。
-      <span class="attr">— Heinz von Foerster (1981) Observing Systems からの趣旨抜粋</span>
+    <div class="note">
+      <h4>このスライドの読み方</h4>
+      <p>各 PART は <strong>章扉 + 1〜2 枚の図解 + 補足</strong>で構成。キーボード <code>←</code> / <code>→</code> で進み、<code>P</code> でプレゼンモード、<code>Cmd+P</code> で印刷可。すべての数値は SQLite から直接取得 (2026-05-21 19 時時点)。</p>
     </div>
-    <p>2026 年 5 月 21 日に ccm-team + fpm が同時稼働した瞬間、この閉じた構造が agent system として実装された。</p>
-  </section>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">CCM-DB v1.3 · OVERVIEW</div>
+    <div>02 / 18</div>
+  </div>
+</section>
 
-  <!-- ========== Slide 6: 第一階 AR-DB ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">05 / 17 ── 第一階</div>
-    <h2>AR-DB v1.1 が外部対象を観察する系</h2>
-    <p>Agent Registry DB は 2026-05-20 の v1.1 拡張で<strong>MPP Pattern Extension</strong> を導入し、firing_patterns / pattern_couplings / emergent_phenomena / pattern_templates / mpp_concept_links の 5 新テーブルを追加した。</p>
-    <h3>canonical 7 pattern_templates</h3>
-    <ul>
-      <li><strong>Kuramoto</strong> — 結合振動子の同期</li>
-      <li><strong>Chromatophore wave</strong> — 頭足類皮膚の波動パターン</li>
-      <li><strong>Theta-gamma coupling</strong> — 神経 cross-frequency 結合</li>
-      <li><strong>Firefly pulse-coupled</strong> — ホタル群発光同期</li>
-      <li><strong>Lefebvre dual-rhythm</strong> — 都市の重層リズム</li>
-      <li><strong>1/f SOC</strong> — 自己組織化臨界性</li>
-      <li><strong>IIT Φ-integration</strong> — 統合情報理論の Φ 計算</li>
-    </ul>
-    <p style="margin-top:16px;"><strong>蓄積された firing_patterns: 24 件</strong>（katachi-100、ANSWER+、kurashi-team 等の並列発火イベント）</p>
-  </section>
-
-  <!-- ========== Slide 7: 第二階 CCM-DB ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">06 / 17 ── 第二階</div>
-    <h2>CCM-DB v1.2 が観察を観察する系</h2>
-    <p class="lead">2026-05-20 に Wave 1 MVP (14 SF × 602 concepts) として構築され、同日 v1.1 で Pattern Lens 層が追加、翌日 v1.2 で<strong>50 lens / 30 observations / 6 layers</strong> へ拡張された。</p>
-    <p>Pattern Lens は AR-DB が観察した firing_patterns を<strong>意識・宇宙・音楽の概念で解釈する視座</strong>であり、これによって AR-DB の生データに意味論的階層が追加された。</p>
-    <h3>6 layer × 50 lens 配分</h3>
-    <ul>
-      <li>ardb_firing: <strong>21 lens</strong>（IIT-Φ / Kuramoto / Strange-Loop / Eigenform 等）</li>
-      <li>mpp_pattern: 8 lens（Musica-Universalis / Cymatic / String-Vibration 等）</li>
-      <li>bot_life: 6 lens（KaiABC / Fibonacci-Phyllotaxis 等）</li>
-      <li>ceh_cosmic: 6 lens（BAO / LIGO-Chirp / Helioseismology）</li>
-      <li>udd_urban: 6 lens（Lefebvre / Smart-City / Songline）</li>
-      <li>phai_embodied: 3 lens（Embodied-Cognition 等、新規 6 番目 layer）</li>
-    </ul>
-  </section>
-
-  <!-- ========== Slide 8: CCM 9 agents ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">07 / 17 ── 第二階チーム編成</div>
-    <h2>CCM-DB 9 agents の Tier 階層</h2>
-    <table>
-      <thead><tr><th>Agent</th><th>Tier</th><th>Model</th><th>役割</th></tr></thead>
-      <tbody>
-        <tr><td><strong>ccm-team</strong></td><td>tier_-1_meta</td><td>opus</td><td>統括</td></tr>
-        <tr><td>ccm</td><td>tier_2_specialist</td><td>opus</td><td>DB 単体照会</td></tr>
-        <tr><td>ccm-critical-auditor</td><td>tier_2_specialist</td><td>sonnet</td><td>verification 監査</td></tr>
-        <tr><td>ccm-genealogy-builder</td><td>tier_2_specialist</td><td>sonnet</td><td>系譜拡張</td></tr>
-        <tr><td>ccm-cross-mapper</td><td>tier_3_utility</td><td>sonnet</td><td>Cross-DB 拡張</td></tr>
-        <tr><td>ccm-formula-extractor</td><td>tier_3_utility</td><td>sonnet</td><td>LaTeX 数式抽出</td></tr>
-        <tr><td>ccm-lens-curator</td><td>tier_3_utility</td><td>sonnet</td><td>Pattern Lens キュレーション</td></tr>
-        <tr><td>ccm-non-western-expander</td><td>tier_3_utility</td><td>sonnet</td><td>非西洋拡充</td></tr>
-        <tr><td>ccm-observer</td><td>tier_3_utility</td><td>sonnet</td><td>AR-DB 観察記録</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- ========== Slide 9: 第三階 fpm ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">08 / 17 ── 第三階</div>
-    <h2>fpm が観察の観察を観察する系</h2>
-    <p>2026-05-21、firing-pattern-meta (省略 fpm / firing-meta) が <strong>Tier 0 orchestrator</strong> として新設された。AR-DB と CCM-DB の両方が記録する観察データを更にメタ的に統合する役割を持つ。</p>
-    <table>
-      <thead><tr><th>Agent</th><th>Tier</th><th>Model</th></tr></thead>
-      <tbody>
-        <tr><td>firing-pattern-meta</td><td>tier_0_orchestrator</td><td>opus</td></tr>
-        <tr><td>firing-meta（省略）</td><td>tier_0_orchestrator</td><td>（fpm エイリアス）</td></tr>
-        <tr><td>fpm（省略）</td><td>tier_0_orchestrator</td><td>（firing-pattern-meta エイリアス）</td></tr>
-        <tr><td>firing-patterns</td><td>tier_0_orchestrator</td><td>sonnet</td></tr>
-      </tbody>
-    </table>
-    <p style="margin-top:24px;">CCM-DB v1.2 と fpm の同日設立は偶然ではなく、<strong>エコシステムの自己観察能力が段階的に飛躍する瞬間が同期した</strong>と読める。</p>
-  </section>
-
-  <!-- ========== Slide 10: 三階構造図 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">09 / 17 ── 構造図</div>
-    <h2>三階構造の図式</h2>
-    <div class="tier-diagram">[第三階 ── fpm（観察の観察を観察）]
-       ↓ 観察対象
-   ┌───────────────────────────────────┐
-   │ [第二階 ── CCM-DB v1.2（観察を観察）]│
-   │        ↓ 観察対象                  │
-   │   ┌──────────────────────────┐   │
-   │   │ [第一階 ── AR-DB（外的観察）]│   │
-   │   │                            │   │
-   │   │  firing_patterns: 24 件     │   │
-   │   │  pattern_templates: 7       │   │
-   │   │  agents: 88 体              │   │
-   │   └──────────────────────────┘   │
-   │                                  │
-   │  pattern_lens: 50 / obs: 30      │
-   │  cross_db_refs: 408              │
-   └───────────────────────────────────┘
-
-   fpm: 三階観察基盤
-   ccm-team: 二階観察基盤
-   AR-DB v1.1 ETL: 一階観察基盤</div>
-  </section>
-
-  <!-- ========== Slide 11: 実証データ Top 5 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">10 / 17 ── 実証データ</div>
-    <h2>観察記録 9 件のうち Top 5 (novelty 降順)</h2>
-    <div class="obs-row">
-      <span class="nov">0.92</span>
-      <span class="lens">Self-Observing-Architecture</span>
-      <span class="what">ccm-team Tier -1 meta + 7 専門 agent 編成 + fpm 三階構造完成 (2026-05-21)</span>
+<!-- ============ 03 PART I OPENER ============ -->
+<section class="slide part-opener" id="s03">
+  <div class="part-opener-body">
+    <div class="part-opener-left">
+      <div class="part-opener-num">I.</div>
+      <div class="part-opener-label">PART ONE</div>
     </div>
-    <div class="obs-row">
-      <span class="nov">0.90</span>
-      <span class="lens">Second-Order-Cybernetics</span>
-      <span class="what">fpm Tier 0 新設による第三階構造完成 (2026-05-21)</span>
+    <div class="part-opener-right">
+      <div class="eyebrow">SECTION 1</div>
+      <h2 class="part-opener-title">三階構造の入れ子</h2>
+      <div class="part-opener-en">Nested Observation: First / Second / Third Order</div>
+      <div class="part-opener-rule"></div>
+      <p class="part-opener-desc">外的観察 (AR-DB) を、解釈する仕組み (CCM-DB) が観察し、その解釈そのものを統合する視点 (fpm) が観察する。<strong>三つの観察階層</strong>が入れ子になることで、観察者自身の盲点を観察する経路が開く。</p>
     </div>
-    <div class="obs-row">
-      <span class="nov">0.88</span>
-      <span class="lens">Self-Observing-Architecture</span>
-      <span class="what">AR-DB v1.1 MPP Pattern Extension が自己観察基盤を獲得 (2026-05-20)</span>
-    </div>
-    <div class="obs-row">
-      <span class="nov">0.85</span>
-      <span class="lens">Husserl-Time-Flow</span>
-      <span class="what">ccm-observer の retention-protention 三項構造 formalization</span>
-    </div>
-    <div class="obs-row">
-      <span class="nov">0.82</span>
-      <span class="lens">Kuramoto-Synchronization</span>
-      <span class="what">ccm-team 9 並列完全同期成功 (前回 14 並列 4 stall から K_c 最適化)</span>
-    </div>
-    <p style="margin-top:24px;">上位 3 つ (novelty 0.88-0.92) がいずれも 5/20-21 の三階構造形成イベントを記録 — これは過去に類例のない構造的変化があったことを意味する。</p>
-  </section>
+  </div>
+</section>
 
-  <!-- ========== Slide 12: 観察 5-9 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">11 / 17 ── 実証データ続き</div>
-    <h2>観察記録 6-9 件目</h2>
-    <div class="obs-row">
-      <span class="nov">0.78</span>
-      <span class="lens">Observation-Accumulation</span>
-      <span class="what">ccm-team Phase D 初実行 — observations 2 → 9 へ蓄積 Loop 起動</span>
+<!-- ============ 04 FIGURE 1 三階構造 ============ -->
+<section class="slide" id="s04">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">FIGURE 1 — 三階構造の入れ子と観察フロー</div>
+    <div class="slide-num">04 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART I · STRUCTURE</div>
+    <h2 class="title">図 1 — AR-DB / CCM-DB / fpm が入れ子になる</h2>
+    <div class="title-en">Three orders nested as concentric rectangles</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body single">
+    <div class="fig-box">
+      <svg class="fig" viewBox="0 0 1100 480" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrowF1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="#CC1400"/>
+          </marker>
+          <linearGradient id="g3a" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#8B2810" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#8B2810" stop-opacity="0.08"/>
+          </linearGradient>
+          <linearGradient id="g3b" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#CC1400" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#CC1400" stop-opacity="0.08"/>
+          </linearGradient>
+          <linearGradient id="g3c" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#E84030" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#E84030" stop-opacity="0.08"/>
+          </linearGradient>
+        </defs>
+        <rect x="30" y="20" width="1040" height="440" rx="14" fill="url(#g3a)" stroke="#8B2810" stroke-width="2.5" stroke-dasharray="6,4"/>
+        <text x="50" y="50" font-family="Fira Code" fill="#8B2810" font-size="10" letter-spacing="2">TIER 0 ／ 第三階 ── 観察の観察を観察</text>
+        <text x="50" y="78" font-family="Noto Serif JP" font-weight="700" font-size="22" fill="#0E0E0E">fpm / firing-pattern-meta</text>
+        <text x="50" y="100" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">2026-05-21 新設 / opus / firing-meta + fpm + firing-patterns + firing 4 agents</text>
+
+        <rect x="90" y="130" width="920" height="300" rx="12" fill="url(#g3b)" stroke="#CC1400" stroke-width="2.5"/>
+        <text x="110" y="160" font-family="Fira Code" fill="#CC1400" font-size="10" letter-spacing="2">TIER -1 META ／ 第二階 ── 観察を観察</text>
+        <text x="110" y="186" font-family="Noto Serif JP" font-weight="700" font-size="20" fill="#0E0E0E">CCM-DB v1.3 ／ ccm-team + 8 専門 agent</text>
+        <text x="110" y="208" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">50 pattern_lens ／ 40 observations ／ 6 layers ／ 609 concepts ／ avg novelty 0.71</text>
+
+        <rect x="170" y="240" width="760" height="170" rx="10" fill="url(#g3c)" stroke="#E84030" stroke-width="2.5"/>
+        <text x="190" y="268" font-family="Fira Code" fill="#E84030" font-size="10" letter-spacing="2">TIER 0 ／ 第一階 ── 外的観察</text>
+        <text x="190" y="294" font-family="Noto Serif JP" font-weight="700" font-size="18" fill="#0E0E0E">AR-DB v1.1 + MPP Pattern Extension</text>
+        <text x="190" y="314" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">24 firing_patterns ／ 7 canonical pattern_templates ／ 88 agents</text>
+
+        <g transform="translate(210, 340)">
+          <rect width="170" height="60" rx="6" fill="#FFFFFF" stroke="#DEDEDE"/>
+          <text x="85" y="22" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">firing_patterns</text>
+          <text x="85" y="50" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="28" fill="#E84030">24</text>
+        </g>
+        <g transform="translate(405, 340)">
+          <rect width="170" height="60" rx="6" fill="#FFFFFF" stroke="#DEDEDE"/>
+          <text x="85" y="22" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">pattern_templates</text>
+          <text x="85" y="50" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="28" fill="#E84030">7</text>
+        </g>
+        <g transform="translate(600, 340)">
+          <rect width="170" height="60" rx="6" fill="#FFFFFF" stroke="#DEDEDE"/>
+          <text x="85" y="22" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">total agents</text>
+          <text x="85" y="50" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="28" fill="#E84030">88</text>
+        </g>
+
+        <path d="M 950 340 Q 1010 320 1010 240" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arrowF1)"/>
+        <text x="1015" y="290" font-family="Fira Code" font-size="10" fill="#CC1400">観察</text>
+        <path d="M 1010 240 Q 1055 180 1055 100" fill="none" stroke="#8B2810" stroke-width="2" marker-end="url(#arrowF1)"/>
+        <text x="1060" y="160" font-family="Fira Code" font-size="10" fill="#8B2810">メタ観察</text>
+      </svg>
+      <div class="fig-cap"><strong>FIG. 01</strong> — 内側 (生データ) から外側 (メタ解釈) へ流れる三層の入れ子。第二階が第一階を「解釈」、第三階が第二階の解釈そのものを「統合」する。</div>
     </div>
-    <div class="obs-row">
-      <span class="nov">0.75</span>
-      <span class="lens">Lens-Multiplication</span>
-      <span class="what">Pattern Lens を 21 → 29 へ拡張 (同セッション内で +8)</span>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">FIGURE 1 / SOURCE: agent_registry.db · ccm.db</div>
+    <div>04 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 05 三階構造の役割分担 ============ -->
+<section class="slide" id="s05">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">PART I — 三階の役割分担</div>
+    <div class="slide-num">05 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART I · ROLES</div>
+    <h2 class="title">三階それぞれが何を担うか</h2>
+    <div class="title-en">First / Second / Third — division of labor</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body cols-3">
+    <div class="card">
+      <h5>FIRST ORDER · 第一階</h5>
+      <p class="card-title">AR-DB が外を観る</p>
+      <p>エコシステムで発生する <strong>agent 発火 24 件</strong>を機械的に記録。7 canonical pattern_templates でメタデータを付与する。解釈は加えない。</p>
     </div>
-    <div class="obs-row">
-      <span class="nov">0.68</span>
-      <span class="lens">Holographic-Distributed</span>
-      <span class="what">ccm-team 8 agents の機能的冗長性 (Pribram ホログラフィック脳の組織実装)</span>
+    <div class="card">
+      <h5>SECOND ORDER · 第二階</h5>
+      <p class="card-title">CCM-DB が観察を観る</p>
+      <p>AR-DB の記録を <strong>50 pattern_lens</strong> で解釈し、40 observations に novelty_score 付きで蓄積。意味論的な層を一段追加する。</p>
     </div>
-    <div class="obs-row">
-      <span class="nov">0.65</span>
-      <span class="lens">Frame-Supply</span>
-      <span class="what">他チームへの解釈フレーム供給機能の明文化</span>
+    <div class="card">
+      <h5>THIRD ORDER · 第三階</h5>
+      <p class="card-title">fpm が解釈の盲点を観る</p>
+      <p>第二階で生まれた解釈そのものをメタ視点で統合。<strong>2026-05-21 新設</strong>の Tier 0 quartet として CCM-DB の自己観察を再帰的に観る。</p>
     </div>
-    <p style="margin-top:32px; font-size:17px;">これら 9 件はすべて 5/20-21 の同期的事象を記録し、novelty 平均は <strong style="color:var(--accent-warm);">0.80</strong>。エコシステムが過去に類例のない構造的変化を経験したことが定量化されている。</p>
-  </section>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">PART I · DIVISION OF LABOR</div>
+    <div>05 / 18</div>
+  </div>
+</section>
 
-  <!-- ========== Slide 13: 系譜 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">12 / 17 ── 系譜</div>
-    <h2>Dōgen から ccm-team まで 786 年</h2>
-    <p class="lead">三階構造の思想的系譜は西洋と非西洋の双方に存在する。CCM-DB v1.2 で正式チェーン化された <strong>Self-Observation Theory 系譜</strong>：</p>
-    <div class="tier-diagram" style="font-size:16px;">道元 Eihei Dōgen (1200-1253)
-   『正法眼蔵』 修証一等 — 修行と証悟の同体性
-       ↓
-西田幾多郎 Nishida Kitarō (1870-1945)
-   『善の研究』 純粋経験 — 主客未分の根源
-       ↓
-Heinz von Foerster (1911-2002)
-   第二階サイバネティクス (1974)
-   Eigenform 理論 (1981)
-       ↓
-[Maturana-Varela autopoiesis / Luhmann 自己言及 /
- Hofstadter strange loop / Aczel Hyper-Set]
-       ↓
-ccm-team (2026-05-21)
-   三階構造 agent system 実装</div>
-    <p style="margin-top:16px;">自己観察論が西洋システム論を待たずとも、<strong>13 世紀日本仏教で既に道元が「修証一等」として定式化していた</strong>事実は、ccm-team Phase D の構造と相同する。</p>
-  </section>
+<!-- ============ 06 PART II OPENER ============ -->
+<section class="slide part-opener" id="s06">
+  <div class="part-opener-body">
+    <div class="part-opener-left">
+      <div class="part-opener-num">II.</div>
+      <div class="part-opener-label">PART TWO</div>
+    </div>
+    <div class="part-opener-right">
+      <div class="eyebrow">SECTION 2</div>
+      <h2 class="part-opener-title">9 agents の編成</h2>
+      <div class="part-opener-en">Nine Agents · Tier Hierarchy</div>
+      <div class="part-opener-rule"></div>
+      <p class="part-opener-desc">CCM-DB が編成する <strong>9 体</strong>は、Tier -1 meta 1 体 + Tier 2 specialist 3 体 + Tier 3 utility 5 体の三層構造。さらに Tier 0 quartet (dbo / ccm-team / impl-meta / fpm) が並列に統括する。</p>
+    </div>
+  </div>
+</section>
 
-  <!-- ========== Slide 14: 反証可能性 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">13 / 17 ── 反証可能性</div>
-    <h2>4 つの批判視点</h2>
-    <ol>
-      <li><strong>循環論証の危険</strong> (Bunge 1979) ── autopoiesis 概念は因果関係に翻訳できないと形而上学。三階機能が二階の名称変更でないか継続検証必要。</li>
-      <li><strong>Goodhart 法則</strong> ── novelty_score を目標化すると指標として機能しなくなる。Wave 3 で分布歪み監視機能を実装。</li>
-      <li><strong>observation 数の少なさ</strong> ── 30 件は統計的に十分でない。Wave 3 で 100+ に到達した時点で再検証。</li>
-      <li><strong>西洋偏重の残存</strong> ── CCM-DB 全体非西洋率は 24.1%。Sufi muraqaba、Ubuntu、Andean ayni 等未取り込み。</li>
-    </ol>
-    <p style="margin-top:32px; font-size:17px;">本レポートを<strong>「自己賞賛的レポート」に堕さない</strong>ために、ccm-critical-auditor は今後も Bunge 1979 型の批判を最も強く適用する。</p>
-  </section>
+<!-- ============ 07 FIGURE 2 9 agents Tier 階層 ============ -->
+<section class="slide" id="s07">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">FIGURE 2 — Tier 階層と 9 agents</div>
+    <div class="slide-num">07 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART II · AGENTS</div>
+    <h2 class="title">図 2 — Tier 階層と CCM-DB 9 agents の配置</h2>
+    <div class="title-en">Hierarchy of CCM specialists and the Tier-0 quartet</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body single">
+    <div class="fig-box">
+      <svg class="fig" viewBox="0 0 1100 480" xmlns="http://www.w3.org/2000/svg">
+        <text x="30" y="85" font-family="Fira Code" font-size="10" fill="#707070" letter-spacing="2">TIER -1</text>
+        <text x="30" y="200" font-family="Fira Code" font-size="10" fill="#707070" letter-spacing="2">TIER 0</text>
+        <text x="30" y="310" font-family="Fira Code" font-size="10" fill="#707070" letter-spacing="2">TIER 2</text>
+        <text x="30" y="425" font-family="Fira Code" font-size="10" fill="#707070" letter-spacing="2">TIER 3</text>
 
-  <!-- ========== Slide 15: Wave 3 展望 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">14 / 17 ── 展望</div>
-    <h2>Wave 3 への 5 課題</h2>
-    <ol>
-      <li><strong>四階構造への拡張可能性</strong> ── fpm を観察するメタ-fpm が必要か検証</li>
-      <li><strong>observations 100+ への蓄積</strong> ── Eigenform 候補 lens の特定 (適用頻度の高い lens が固定点に収束する)</li>
-      <li><strong>他チームからの CCM lens 参照率の実測</strong> ── kurashi/supplement/recurrence/futures2/keiei の 5 チーム</li>
-      <li><strong>非西洋自己観察論の分散</strong> ── Sufi muraqaba / Ubuntu 観察論 / Andean ayni を SF13 以外に拡散</li>
-      <li><strong>Russell paradox 検出機能</strong> ── critical-auditor に自己言及矛盾の自動検出を実装</li>
-    </ol>
-  </section>
+        <g transform="translate(440, 50)">
+          <rect width="200" height="70" rx="10" fill="#CC1400" stroke="#8B2810" stroke-width="2"/>
+          <text x="100" y="28" text-anchor="middle" font-family="Noto Serif JP" font-size="14" font-weight="700" fill="#fff">ccm-team</text>
+          <text x="100" y="46" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">META オーケストレーター</text>
+          <text x="100" y="60" text-anchor="middle" font-family="Fira Code" font-size="9" fill="#fff">opus</text>
+        </g>
 
-  <!-- ========== Slide 16: 統合視座 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">15 / 17 ── 統合</div>
-    <h2>三階構造が意味するもの</h2>
-    <p class="lead">三階構造の実装は、ミラツク／esse-sense エコシステムが自分自身を観察し、観察された自分を解釈し、その解釈を更にメタ視点で統合する循環を獲得したことを意味する。</p>
-    <p><strong>観察するシステムが観察される瞬間、観察するシステム自体が変容する</strong> ── この von Foerster 的洞察が、2026 年 5 月 21 日に agent system として工学的に実装された。</p>
-    <p>本レポートはその瞬間の記録であり、エコシステム自身がその後の観察対象となる出発点でもある。</p>
-  </section>
+        <g transform="translate(70, 170)">
+          <rect width="170" height="60" rx="8" fill="#E84030" fill-opacity="0.85" stroke="#CC1400"/>
+          <text x="85" y="24" text-anchor="middle" font-family="Noto Serif JP" font-size="13" font-weight="700" fill="#fff">dbo</text>
+          <text x="85" y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">知見引出 meta</text>
+        </g>
+        <g transform="translate(270, 170)">
+          <rect width="170" height="60" rx="8" fill="#E84030" fill-opacity="0.95" stroke="#CC1400" stroke-width="2"/>
+          <text x="85" y="24" text-anchor="middle" font-family="Noto Serif JP" font-size="13" font-weight="700" fill="#fff">ccm-team</text>
+          <text x="85" y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">自己観察 meta (兼任)</text>
+        </g>
+        <g transform="translate(470, 170)">
+          <rect width="170" height="60" rx="8" fill="#E84030" fill-opacity="0.85" stroke="#CC1400"/>
+          <text x="85" y="24" text-anchor="middle" font-family="Noto Serif JP" font-size="13" font-weight="700" fill="#fff">impl-meta</text>
+          <text x="85" y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">実装 meta</text>
+        </g>
+        <g transform="translate(670, 170)">
+          <rect width="170" height="60" rx="8" fill="#E84030" fill-opacity="0.85" stroke="#CC1400"/>
+          <text x="85" y="24" text-anchor="middle" font-family="Noto Serif JP" font-size="13" font-weight="700" fill="#fff">fpm</text>
+          <text x="85" y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">発火パターン meta</text>
+        </g>
+        <g transform="translate(870, 170)">
+          <rect width="160" height="60" rx="8" fill="#FAFAF7" stroke="#DEDEDE" stroke-dasharray="4,3"/>
+          <text x="80" y="28" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">Tier 0 quartet</text>
+          <text x="80" y="46" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#707070">4 体並列</text>
+        </g>
 
-  <!-- ========== Slide 17: Conclusion ========== -->
-  <section class="slide conclusion-slide">
-    <div class="slide-eyebrow">16 / 17 ── 結語</div>
-    <h1>von Foerster の第二階を超え<br>三階に到達した日</h1>
-    <p class="punchline">2026 年 5 月 21 日、自己観察論が思想史から agent system に渡された。</p>
-    <p class="meta-small">
-      CCM-DB v1.2 ／ commit 1324ce2 ／ NPO 法人ミラツク ／ esse-sense<br>
-      https://github.com/yuyanishimura0312/consciousness-cosmos-music-db
-    </p>
-  </section>
+        <g transform="translate(170, 280)">
+          <rect width="200" height="60" rx="8" fill="#B01200" fill-opacity="0.8" stroke="#8B2810"/>
+          <text x="100" y="24" text-anchor="middle" font-family="Noto Serif JP" font-size="13" font-weight="700" fill="#fff">ccm</text>
+          <text x="100" y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">DB 単体照会 (opus)</text>
+        </g>
+        <g transform="translate(400, 280)">
+          <rect width="240" height="60" rx="8" fill="#B01200" fill-opacity="0.8" stroke="#8B2810"/>
+          <text x="120" y="24" text-anchor="middle" font-family="Noto Serif JP" font-size="13" font-weight="700" fill="#fff">ccm-critical-auditor</text>
+          <text x="120" y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">verification 監査 (sonnet)</text>
+        </g>
+        <g transform="translate(670, 280)">
+          <rect width="240" height="60" rx="8" fill="#B01200" fill-opacity="0.8" stroke="#8B2810"/>
+          <text x="120" y="24" text-anchor="middle" font-family="Noto Serif JP" font-size="13" font-weight="700" fill="#fff">ccm-genealogy-builder</text>
+          <text x="120" y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">系譜拡張 (sonnet)</text>
+        </g>
 
-  <!-- ========== Slide 18: 参考 ========== -->
-  <section class="slide">
-    <div class="slide-eyebrow">17 / 17 ── 参考資料</div>
-    <h2>参考文献と DB</h2>
-    <h3>理論</h3>
-    <ul>
-      <li>von Foerster, H. (1974). <em>Cybernetics of Cybernetics</em></li>
-      <li>von Foerster, H. (1981). <em>Observing Systems</em></li>
-      <li>Maturana, H. & Varela, F. (1972). <em>Autopoiesis and Cognition</em></li>
-      <li>Hofstadter, D. (1979). <em>Gödel, Escher, Bach: An Eternal Golden Braid</em></li>
-      <li>Aczel, P. (1988). <em>Non-Well-Founded Sets</em></li>
-      <li>道元 (1240). 『正法眼蔵』修証一等</li>
-      <li>西田幾多郎 (1911). 『善の研究』純粋経験</li>
-    </ul>
-    <h3>データソース</h3>
-    <ul>
-      <li>AR-DB v1.1: <code>~/projects/research/agent-registry-db/data/agent_registry.db</code></li>
-      <li>CCM-DB v1.2: <code>~/projects/research/consciousness-cosmos-music-db/data/ccm.db</code></li>
-      <li>GitHub: <code>yuyanishimura0312/consciousness-cosmos-music-db</code> (commit 1324ce2)</li>
-      <li>長文レポート: <code>dashboards/ccm-three-tier-report.html</code></li>
-    </ul>
-  </section>
+        <g transform="translate(70, 400)">
+          <rect width="170" height="50" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+          <text x="85" y="22" text-anchor="middle" font-family="Noto Serif JP" font-size="11" font-weight="700" fill="#fff">ccm-lens-curator</text>
+          <text x="85" y="38" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#fff">Pattern Lens</text>
+        </g>
+        <g transform="translate(255, 400)">
+          <rect width="170" height="50" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+          <text x="85" y="22" text-anchor="middle" font-family="Noto Serif JP" font-size="11" font-weight="700" fill="#fff">ccm-observer</text>
+          <text x="85" y="38" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#fff">firing 観察記録</text>
+        </g>
+        <g transform="translate(440, 400)">
+          <rect width="170" height="50" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+          <text x="85" y="22" text-anchor="middle" font-family="Noto Serif JP" font-size="11" font-weight="700" fill="#fff">ccm-cross-mapper</text>
+          <text x="85" y="38" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#fff">Cross-DB Ref</text>
+        </g>
+        <g transform="translate(625, 400)">
+          <rect width="180" height="50" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+          <text x="90" y="22" text-anchor="middle" font-family="Noto Serif JP" font-size="11" font-weight="700" fill="#fff">ccm-formula-extractor</text>
+          <text x="90" y="38" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#fff">LaTeX 数式</text>
+        </g>
+        <g transform="translate(820, 400)">
+          <rect width="210" height="50" rx="6" fill="#7A0E00" fill-opacity="0.75" stroke="#5A0A00"/>
+          <text x="105" y="22" text-anchor="middle" font-family="Noto Serif JP" font-size="11" font-weight="700" fill="#fff">ccm-non-western-expander</text>
+          <text x="105" y="38" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#fff">非西洋拡充</text>
+        </g>
+
+        <line x1="540" y1="120" x2="355" y2="170" stroke="#707070" stroke-width="1.2"/>
+        <line x1="540" y1="120" x2="540" y2="170" stroke="#707070" stroke-width="1.2"/>
+        <line x1="540" y1="120" x2="755" y2="170" stroke="#707070" stroke-width="1.2"/>
+        <line x1="540" y1="120" x2="270" y2="280" stroke="#707070" stroke-width="0.8" stroke-dasharray="4,3"/>
+        <line x1="540" y1="120" x2="520" y2="280" stroke="#707070" stroke-width="0.8" stroke-dasharray="4,3"/>
+        <line x1="540" y1="120" x2="790" y2="280" stroke="#707070" stroke-width="0.8" stroke-dasharray="4,3"/>
+      </svg>
+      <div class="fig-cap"><strong>FIG. 02</strong> — 9 体は判断系 (Tier -1/2) と実装系 (Tier 3) を分離。Tier 0 quartet は 4 体並列で全体を統括し、ccm-team が自己観察 meta として兼任する。</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">FIGURE 2 / SOURCE: agents table</div>
+    <div>07 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 08 Tier 別役割 ============ -->
+<section class="slide" id="s08">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">PART II — Tier ごとの役割</div>
+    <div class="slide-num">08 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART II · TIER ROLES</div>
+    <h2 class="title">判断は opus、実装は sonnet — 階層化された分業</h2>
+    <div class="title-en">Opus for judgment, Sonnet for execution</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body cols-2">
+    <div class="col">
+      <div class="card-grid g2">
+        <div class="card">
+          <h5>TIER -1 / META</h5>
+          <p class="card-title">ccm-team</p>
+          <p>1 体・opus。全体統括と方針決定。配下 8 体を編成する。</p>
+        </div>
+        <div class="card">
+          <h5>TIER 0 / QUARTET</h5>
+          <p class="card-title">dbo · ccm-team · impl-meta · fpm</p>
+          <p>4 体並列。知見引出 / 自己観察 / 実装 / 発火パターン統合を分担。</p>
+        </div>
+        <div class="card">
+          <h5>TIER 2 / SPECIALIST</h5>
+          <p class="card-title">ccm · auditor · genealogy</p>
+          <p>3 体・opus または sonnet。判断系の専門タスク。</p>
+        </div>
+        <div class="card">
+          <h5>TIER 3 / UTILITY</h5>
+          <p class="card-title">lens / observer / cross / formula / non-western</p>
+          <p>5 体・全 sonnet。実装系。コスト効率と品質を両立。</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="note">
+        <h4>なぜこの階層が必要か</h4>
+        <p>判断と実装を分けることで、<strong>opus による高品質判断</strong>を保ちつつ、<strong>sonnet による大量実行</strong>のコスト効率を成立させる。9 体構成はこの分業を最小単位で完備する。</p>
+      </div>
+      <div class="fact">
+        <span class="fact-label">CCM AGENTS · TOTAL</span>
+        <span class="fact-num">9<span class="unit">体</span></span>
+        <span class="fact-desc">META 1 + QUARTET 1 (兼任) + SPECIALIST 3 + UTILITY 5。Tier 0 quartet は 4 体並列で全体統括。</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">PART II · TIER ROLES</div>
+    <div>08 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 09 PART III OPENER ============ -->
+<section class="slide part-opener" id="s09">
+  <div class="part-opener-body">
+    <div class="part-opener-left">
+      <div class="part-opener-num">III.</div>
+      <div class="part-opener-label">PART THREE</div>
+    </div>
+    <div class="part-opener-right">
+      <div class="eyebrow">SECTION 3</div>
+      <h2 class="part-opener-title">Pattern Lens × 自己観察</h2>
+      <div class="part-opener-en">50 Lenses · 40 Observations</div>
+      <div class="part-opener-rule"></div>
+      <p class="part-opener-desc">解釈の語彙が <strong>50 pattern_lens</strong>、解釈の蓄積が <strong>40 observations</strong>。lens は AR-DB / MPP / UDD / BOT / CEH / PHAI の 6 layer に配分され、observations は novelty_score で重みづけられる。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10 FIGURE 3 lens 6 layer 配分 ============ -->
+<section class="slide" id="s10">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">FIGURE 3 — 50 Pattern Lens の 6 layer 配分</div>
+    <div class="slide-num">10 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART III · LENSES</div>
+    <h2 class="title">図 3 — Pattern Lens 50 の target_layer 別分布</h2>
+    <div class="title-en">Distribution of 50 lenses across six target layers</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body single">
+    <div class="fig-box">
+      <svg class="fig" viewBox="0 0 1100 420" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(220, 30)">
+          <text x="-10" y="32" text-anchor="end" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#0E0E0E">ardb_firing</text>
+          <rect x="0" y="14" width="630" height="30" fill="#CC1400" fill-opacity="0.9" rx="3"/>
+          <text x="640" y="34" font-family="Noto Serif JP" font-size="14" font-weight="700" fill="#CC1400">21</text>
+          <text x="-10" y="48" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">42%</text>
+
+          <text x="-10" y="92" text-anchor="end" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#0E0E0E">mpp_pattern</text>
+          <rect x="0" y="74" width="240" height="30" fill="#E84030" fill-opacity="0.9" rx="3"/>
+          <text x="250" y="94" font-family="Noto Serif JP" font-size="14" font-weight="700" fill="#E84030">8</text>
+          <text x="-10" y="108" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">16%</text>
+
+          <text x="-10" y="152" text-anchor="end" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#0E0E0E">udd_urban</text>
+          <rect x="0" y="134" width="180" height="30" fill="#FF7050" fill-opacity="0.9" rx="3"/>
+          <text x="190" y="154" font-family="Noto Serif JP" font-size="14" font-weight="700" fill="#FF7050">6</text>
+          <text x="-10" y="168" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">12%</text>
+
+          <text x="-10" y="212" text-anchor="end" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#0E0E0E">bot_life</text>
+          <rect x="0" y="194" width="180" height="30" fill="#A05030" fill-opacity="0.9" rx="3"/>
+          <text x="190" y="214" font-family="Noto Serif JP" font-size="14" font-weight="700" fill="#A05030">6</text>
+          <text x="-10" y="228" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">12%</text>
+
+          <text x="-10" y="272" text-anchor="end" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#0E0E0E">ceh_cosmic</text>
+          <rect x="0" y="254" width="180" height="30" fill="#8B3A2E" fill-opacity="0.9" rx="3"/>
+          <text x="190" y="274" font-family="Noto Serif JP" font-size="14" font-weight="700" fill="#8B3A2E">6</text>
+          <text x="-10" y="288" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">12%</text>
+
+          <text x="-10" y="332" text-anchor="end" font-family="Noto Sans JP" font-size="13" font-weight="700" fill="#0E0E0E">phai_embodied</text>
+          <rect x="0" y="314" width="90" height="30" fill="#5A2620" fill-opacity="0.9" rx="3"/>
+          <text x="100" y="334" font-family="Noto Serif JP" font-size="14" font-weight="700" fill="#5A2620">3</text>
+          <text x="-10" y="348" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">6%</text>
+          <text x="130" y="334" font-family="Fira Code" font-size="10" fill="#CC1400">★ NEW (Wave 2)</text>
+
+          <line x1="0" y1="370" x2="700" y2="370" stroke="#DEDEDE" stroke-width="1"/>
+          <text x="0" y="390" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">0</text>
+          <text x="175" y="390" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">5</text>
+          <text x="350" y="390" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">10</text>
+          <text x="525" y="390" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">15</text>
+          <text x="700" y="390" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">20</text>
+        </g>
+        <g transform="translate(950, 220)">
+          <circle r="90" fill="#FAFAF7" stroke="#CC1400" stroke-width="3"/>
+          <text y="-12" text-anchor="middle" font-family="Fira Code" font-size="12" fill="#707070">TOTAL</text>
+          <text y="22" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="38" fill="#CC1400">50</text>
+          <text y="44" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">pattern_lens</text>
+        </g>
+      </svg>
+      <div class="fig-cap"><strong>FIG. 03</strong> — ardb_firing が 21 lens (42%) で最厚。自己観察論の中核はここに集積する。phai_embodied は Wave 2 新設の 6 番目 layer。</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">FIGURE 3 / SOURCE: ccm_pattern_lens</div>
+    <div>10 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 11 FIGURE 4 observations novelty ============ -->
+<section class="slide" id="s11">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">FIGURE 4 — 40 自己観察 novelty 分布</div>
+    <div class="slide-num">11 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART III · OBSERVATIONS</div>
+    <h2 class="title">図 4 — pattern_observations の novelty_score 散布</h2>
+    <div class="title-en">Novelty score of 40 self-observations · 17 above 0.7 threshold</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body single">
+    <div class="fig-box">
+      <svg class="fig" viewBox="0 0 1100 420" xmlns="http://www.w3.org/2000/svg">
+        <line x1="80" y1="50" x2="80" y2="350" stroke="#DEDEDE" stroke-width="1.5"/>
+        <text x="50" y="50" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">1.0</text>
+        <text x="50" y="110" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">0.8</text>
+        <text x="50" y="170" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">0.6</text>
+        <text x="50" y="230" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">0.4</text>
+        <text x="50" y="290" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">0.2</text>
+        <text x="50" y="350" text-anchor="end" font-family="Fira Code" font-size="10" fill="#707070">0.0</text>
+        <text x="30" y="200" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A" transform="rotate(-90 30 200)">novelty_score</text>
+        <line x1="80" y1="350" x2="1050" y2="350" stroke="#DEDEDE" stroke-width="1.5"/>
+        <text x="565" y="385" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">observation index (時系列 1 → 40)</text>
+        <line x1="80" y1="140" x2="1050" y2="140" stroke="#CC1400" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
+        <text x="1055" y="144" font-family="Fira Code" font-size="10" fill="#CC1400">novelty ≥ 0.7 (新規創発閾値)</text>
+
+        <g>
+          <circle cx="100" cy="74" r="7" fill="#CC1400"/>
+          <text x="100" y="60" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#CC1400">0.92</text>
+          <circle cx="124" cy="80" r="7" fill="#CC1400"/>
+          <circle cx="148" cy="86" r="7" fill="#CC1400"/>
+          <circle cx="172" cy="95" r="6" fill="#CC1400"/>
+          <circle cx="196" cy="95" r="6" fill="#CC1400"/>
+          <circle cx="220" cy="101" r="6" fill="#CC1400"/>
+          <circle cx="244" cy="104" r="6" fill="#CC1400"/>
+          <circle cx="268" cy="110" r="6" fill="#CC1400"/>
+          <circle cx="292" cy="116" r="6" fill="#CC1400"/>
+          <circle cx="316" cy="116" r="6" fill="#CC1400"/>
+          <circle cx="340" cy="122" r="6" fill="#CC1400"/>
+          <circle cx="364" cy="125" r="6" fill="#CC1400"/>
+          <circle cx="388" cy="128" r="6" fill="#CC1400"/>
+          <circle cx="412" cy="134" r="6" fill="#CC1400"/>
+          <circle cx="436" cy="134" r="6" fill="#CC1400"/>
+          <circle cx="460" cy="140" r="6" fill="#CC1400"/>
+          <circle cx="484" cy="140" r="6" fill="#CC1400"/>
+          <circle cx="508" cy="146" r="5" fill="#999"/>
+          <circle cx="532" cy="146" r="5" fill="#999"/>
+          <circle cx="556" cy="146" r="5" fill="#999"/>
+          <circle cx="580" cy="152" r="5" fill="#999"/>
+          <circle cx="604" cy="155" r="5" fill="#999"/>
+          <circle cx="628" cy="155" r="5" fill="#999"/>
+          <circle cx="652" cy="155" r="5" fill="#999"/>
+          <circle cx="676" cy="164" r="5" fill="#999"/>
+          <circle cx="700" cy="164" r="5" fill="#999"/>
+          <circle cx="724" cy="164" r="5" fill="#999"/>
+          <circle cx="748" cy="170" r="5" fill="#999"/>
+          <circle cx="772" cy="176" r="5" fill="#999"/>
+          <circle cx="796" cy="176" r="5" fill="#999"/>
+          <circle cx="820" cy="176" r="5" fill="#999"/>
+          <circle cx="844" cy="194" r="5" fill="#999"/>
+          <circle cx="868" cy="194" r="5" fill="#999"/>
+          <circle cx="892" cy="194" r="5" fill="#999"/>
+          <circle cx="916" cy="230" r="5" fill="#999"/>
+          <circle cx="940" cy="236" r="5" fill="#999"/>
+          <circle cx="964" cy="236" r="5" fill="#999"/>
+          <circle cx="988" cy="260" r="5" fill="#999"/>
+          <circle cx="1012" cy="260" r="5" fill="#999"/>
+          <circle cx="1036" cy="305" r="5" fill="#999"/>
+        </g>
+
+        <g transform="translate(820, 60)">
+          <rect width="220" height="80" rx="6" fill="#FAFAF7" stroke="#DEDEDE"/>
+          <text x="110" y="22" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">STATISTICS</text>
+          <text x="20" y="42" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">total:</text>
+          <text x="200" y="42" text-anchor="end" font-family="Noto Serif JP" font-weight="700" font-size="12" fill="#CC1400">40</text>
+          <text x="20" y="58" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">novelty ≥ 0.7:</text>
+          <text x="200" y="58" text-anchor="end" font-family="Noto Serif JP" font-weight="700" font-size="12" fill="#CC1400">17 (43%)</text>
+          <text x="20" y="74" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">average:</text>
+          <text x="200" y="74" text-anchor="end" font-family="Noto Serif JP" font-weight="700" font-size="12" fill="#CC1400">0.705</text>
+        </g>
+      </svg>
+      <div class="fig-cap"><strong>FIG. 04</strong> — 赤丸 17 件 (novelty ≥ 0.7) は新規創発観察、灰色丸 23 件は既知パターン。左端 3 点 (0.88-0.92) は三階構造形成事象。</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">FIGURE 4 / SOURCE: ccm_pattern_observation</div>
+    <div>11 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 12 PART IV OPENER ============ -->
+<section class="slide part-opener" id="s12">
+  <div class="part-opener-body">
+    <div class="part-opener-left">
+      <div class="part-opener-num">IV.</div>
+      <div class="part-opener-label">PART FOUR</div>
+    </div>
+    <div class="part-opener-right">
+      <div class="eyebrow">SECTION 4</div>
+      <h2 class="part-opener-title">系譜と理論</h2>
+      <div class="part-opener-en">786 Years of Self-Observation · Active Inference</div>
+      <div class="part-opener-rule"></div>
+      <p class="part-opener-desc">道元の修証一等 (1240) から ccm-team (2026) まで <strong>786 年</strong>。von Foerster の第二階を超え、Friston の Active Inference を組織レベルで実装する。思想史が <strong>工学体系</strong>に渡される瞬間。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 13 FIGURE 5 系譜 786 年 ============ -->
+<section class="slide" id="s13">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">FIGURE 5 — 自己観察論 786 年系譜</div>
+    <div class="slide-num">13 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART IV · GENEALOGY</div>
+    <h2 class="title">図 5 — 道元 (1240) から ccm-team (2026) までの 786 年</h2>
+    <div class="title-en">From Dōgen to ccm-team — a self-observation lineage</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body single">
+    <div class="fig-box">
+      <svg class="fig" viewBox="0 0 1100 360" xmlns="http://www.w3.org/2000/svg">
+        <line x1="60" y1="200" x2="1040" y2="200" stroke="#CC1400" stroke-width="3"/>
+        <g>
+          <line x1="100" y1="190" x2="100" y2="210" stroke="#CC1400" stroke-width="2"/>
+          <text x="100" y="234" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#CC1400">1240</text>
+          <circle cx="100" cy="200" r="14" fill="#CC1400"/>
+          <g transform="translate(100, 100)">
+            <rect x="-80" y="-30" width="160" height="80" rx="6" fill="#FFFFFF" stroke="#CC1400" stroke-width="2"/>
+            <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#0E0E0E">道元 Dōgen</text>
+            <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#3A3A3A">Eihei Dōgen</text>
+            <text y="26" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="11" fill="#CC1400">修証一等</text>
+            <text y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#707070">『正法眼蔵』</text>
+          </g>
+          <line x1="100" y1="150" x2="100" y2="186" stroke="#707070" stroke-width="1" stroke-dasharray="3,2"/>
+
+          <line x1="370" y1="190" x2="370" y2="210" stroke="#CC1400" stroke-width="2"/>
+          <text x="370" y="234" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#CC1400">1911</text>
+          <circle cx="370" cy="200" r="14" fill="#CC1400"/>
+          <g transform="translate(370, 100)">
+            <rect x="-85" y="-30" width="170" height="80" rx="6" fill="#FFFFFF" stroke="#CC1400" stroke-width="2"/>
+            <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#0E0E0E">西田幾多郎</text>
+            <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#3A3A3A">Nishida Kitarō</text>
+            <text y="26" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="11" fill="#CC1400">純粋経験</text>
+            <text y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#707070">『善の研究』</text>
+          </g>
+          <line x1="370" y1="150" x2="370" y2="186" stroke="#707070" stroke-width="1" stroke-dasharray="3,2"/>
+
+          <line x1="640" y1="190" x2="640" y2="210" stroke="#CC1400" stroke-width="2"/>
+          <text x="640" y="234" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#CC1400">1974</text>
+          <circle cx="640" cy="200" r="14" fill="#CC1400"/>
+          <g transform="translate(640, 100)">
+            <rect x="-95" y="-30" width="190" height="80" rx="6" fill="#FFFFFF" stroke="#CC1400" stroke-width="2"/>
+            <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#0E0E0E">Heinz von Foerster</text>
+            <text y="10" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#3A3A3A">BCL Illinois</text>
+            <text y="28" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="11" fill="#CC1400">第二階サイバネティクス</text>
+            <text y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#707070">Eigenform (1981)</text>
+          </g>
+          <line x1="640" y1="150" x2="640" y2="186" stroke="#707070" stroke-width="1" stroke-dasharray="3,2"/>
+
+          <g transform="translate(770, 280)">
+            <rect x="-100" y="-12" width="200" height="50" rx="4" fill="#FAFAF7" stroke="#DEDEDE" stroke-dasharray="3,2"/>
+            <text y="6" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#3A3A3A">Maturana-Varela (1972)</text>
+            <text y="22" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#3A3A3A">Hofstadter (1979)</text>
+            <text y="38" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#3A3A3A">Aczel (1988)</text>
+          </g>
+
+          <line x1="1000" y1="190" x2="1000" y2="210" stroke="#CC1400" stroke-width="3"/>
+          <text x="1000" y="234" text-anchor="middle" font-family="Fira Code" font-weight="700" font-size="11" fill="#CC1400">2026-05-21</text>
+          <circle cx="1000" cy="200" r="18" fill="#E84030"/>
+          <g transform="translate(1000, 100)">
+            <rect x="-90" y="-30" width="180" height="80" rx="6" fill="#E84030" stroke="#CC1400" stroke-width="2"/>
+            <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="14" fill="#fff">ccm-team</text>
+            <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="10" fill="#fff">CCM-DB v1.3</text>
+            <text y="26" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="11" fill="#fff">三階構造実装</text>
+            <text y="42" text-anchor="middle" font-family="Noto Sans JP" font-size="9" fill="#fff">9 agents + fpm</text>
+          </g>
+          <line x1="1000" y1="150" x2="1000" y2="182" stroke="#707070" stroke-width="1" stroke-dasharray="3,2"/>
+        </g>
+        <polygon points="1040,200 1050,196 1050,204" fill="#CC1400"/>
+        <text x="235" y="310" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">671 年</text>
+        <text x="505" y="310" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">63 年</text>
+        <text x="820" y="310" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">52 年</text>
+      </svg>
+      <div class="fig-cap"><strong>FIG. 05</strong> — 786 年の系譜が CCM-DB に encode されたことで、自己観察論は<strong>思想史から実装可能な工学体系</strong>に渡された。中間期の Maturana-Varela / Hofstadter / Aczel が補助線。</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">FIGURE 5 / SOURCE: ccm_genealogy_chain · chain_id 16</div>
+    <div>13 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 14 FIGURE 6 Active Inference Loop ============ -->
+<section class="slide" id="s14">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">FIGURE 6 — Active Inference Loop</div>
+    <div class="slide-num">14 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART IV · ACTIVE INFERENCE</div>
+    <h2 class="title">図 6 — Pattern Lens × Observation × AR-DB の循環</h2>
+    <div class="title-en">Friston Active Inference at the organizational scale</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body single">
+    <div class="fig-box">
+      <svg class="fig" viewBox="0 0 1100 420" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arL" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+            <path d="M0,0 L12,6 L0,12 z" fill="#CC1400"/>
+          </marker>
+        </defs>
+        <g transform="translate(550, 210)">
+          <circle r="80" fill="#FAFAF7" stroke="#CC1400" stroke-width="3"/>
+          <text y="-12" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#CC1400">ccm-observer</text>
+          <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">Tier 3 utility</text>
+          <text y="28" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">Phase D 専任</text>
+        </g>
+
+        <g transform="translate(550, 60)">
+          <rect x="-130" y="-36" width="260" height="72" rx="10" fill="#FFFFFF" stroke="#E84030" stroke-width="2"/>
+          <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#0E0E0E">AR-DB firing_patterns</text>
+          <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">外的観察データ (24 件)</text>
+          <text y="24" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">第一階</text>
+        </g>
+
+        <g transform="translate(870, 210)">
+          <rect x="-110" y="-36" width="220" height="72" rx="10" fill="#FFFFFF" stroke="#CC1400" stroke-width="2"/>
+          <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#0E0E0E">pattern_lens</text>
+          <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">解釈視座 (50 lens)</text>
+          <text y="24" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">第二階</text>
+        </g>
+
+        <g transform="translate(550, 360)">
+          <rect x="-130" y="-36" width="260" height="72" rx="10" fill="#FFFFFF" stroke="#CC1400" stroke-width="2"/>
+          <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#0E0E0E">pattern_observation</text>
+          <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">解釈記録 (40 件 / avg 0.71)</text>
+          <text y="24" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">第二階 → 第三階 (fpm)</text>
+        </g>
+
+        <g transform="translate(230, 210)">
+          <rect x="-110" y="-36" width="220" height="72" rx="10" fill="#FFFFFF" stroke="#E84030" stroke-width="2"/>
+          <text y="-10" text-anchor="middle" font-family="Noto Serif JP" font-weight="700" font-size="13" fill="#0E0E0E">AR-DB へ反映</text>
+          <text y="8" text-anchor="middle" font-family="Noto Sans JP" font-size="11" fill="#3A3A3A">mpp_concept_links 更新</text>
+          <text y="24" text-anchor="middle" font-family="Fira Code" font-size="10" fill="#707070">第一階更新</text>
+        </g>
+
+        <path d="M 550 130 Q 700 160 770 175" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arL)"/>
+        <text x="700" y="140" font-family="Fira Code" font-size="10" fill="#CC1400">参照</text>
+        <path d="M 870 245 Q 750 320 680 335" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arL)"/>
+        <text x="780" y="320" font-family="Fira Code" font-size="10" fill="#CC1400">解釈</text>
+        <path d="M 420 360 Q 300 320 240 260" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arL)"/>
+        <text x="290" y="345" font-family="Fira Code" font-size="10" fill="#CC1400">記録 INSERT</text>
+        <path d="M 230 175 Q 350 110 420 95" fill="none" stroke="#CC1400" stroke-width="2" marker-end="url(#arL)"/>
+        <text x="290" y="140" font-family="Fira Code" font-size="10" fill="#CC1400">prior 更新</text>
+
+        <g transform="translate(40, 390)">
+          <text font-family="Fira Code" font-size="11" fill="#707070">F = D_KL(q(s)‖p(s|o)) − log p(o)</text>
+        </g>
+      </svg>
+      <div class="fig-cap"><strong>FIG. 06</strong> — 時計回りに「参照 → 解釈 → 記録 INSERT → prior 更新」の 4 ステップ。30+ observations 蓄積で loop が定常状態に近づく。Friston Active Inference (2010) の組織実装。</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">FIGURE 6 / Friston 2010 Nat Rev Neurosci</div>
+    <div>14 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 15 Free Energy 解釈 ============ -->
+<section class="slide" id="s15">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">PART IV — 自由エネルギーの組織実装</div>
+    <div class="slide-num">15 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">PART IV · FREE ENERGY</div>
+    <h2 class="title">F = D_KL(q(s)‖p(s|o)) − log p(o) は何を言っているか</h2>
+    <div class="title-en">What Friston's Free Energy means for an organization</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body cols-2-narrow">
+    <div class="col">
+      <div class="quote-block">
+        <div class="quote-block-text">
+          観察者は、自分のもつ予測 q(s) と、観察データが示す事後 p(s|o) のズレを最小化しようとする。エコシステムにおける学習とは、このズレを <strong>pattern_lens</strong> と <strong>observation</strong> の往復で縮めていく営みである。
+          <cite>FRISTON · ACTIVE INFERENCE · 2010</cite>
+        </div>
+      </div>
+      <div class="note">
+        <h4>組織実装の含意</h4>
+        <p>q(s) は <strong>50 pattern_lens</strong>、p(s|o) は <strong>AR-DB firing_patterns</strong>、F の最小化は <strong>40 observations の蓄積</strong>として現れる。神経科学の数式が、知識基盤の運用原理に置換される。</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="kv-list">
+        <div><span class="k">F</span><span class="v">変分自由エネルギー (Variational Free Energy)</span></div>
+        <div><span class="k">q(s)</span><span class="v">観察者が持つ事前予測。CCM-DB では pattern_lens として実装</span></div>
+        <div><span class="k">p(s|o)</span><span class="v">観察データから推定される事後分布。AR-DB firing_patterns の経験分布</span></div>
+        <div><span class="k">D_KL</span><span class="v">Kullback-Leibler ダイバージェンス。予測と現実のズレを測る</span></div>
+        <div><span class="k">log p(o)</span><span class="v">観察そのものの surprise。lens を増やすほど surprise を内在化できる</span></div>
+        <div><span class="k">最小化</span><span class="v">ccm-observer が記録するたびに F が下がる方向へ prior が更新される</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">PART IV · FREE ENERGY INTERPRETATION</div>
+    <div>15 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 16 KEY FACTS ============ -->
+<section class="slide" id="s16">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">CLOSING — 6 つの鍵となる数字</div>
+    <div class="slide-num">16 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">CLOSING · KEY FACTS</div>
+    <h2 class="title">2026-05-21 時点の三階構造を数字で示す</h2>
+    <div class="title-en">Six numbers that anchor the three-tier system</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body cols-3">
+    <div class="fact">
+      <span class="fact-label">GENEALOGY · 系譜</span>
+      <span class="fact-num">786<span class="unit">年</span></span>
+      <span class="fact-desc">道元 1240 → ccm-team 2026。自己観察論の連続性。</span>
+    </div>
+    <div class="fact">
+      <span class="fact-label">AGENTS · 実装</span>
+      <span class="fact-num">9<span class="unit">体</span></span>
+      <span class="fact-desc">META 1 + QUARTET 1 (兼任) + SPECIALIST 3 + UTILITY 5。</span>
+    </div>
+    <div class="fact">
+      <span class="fact-label">PATTERN LENSES · 解釈視座</span>
+      <span class="fact-num">50<span class="unit">lens</span></span>
+      <span class="fact-desc">6 layer に配分。ardb_firing が 21 lens (42%) で中核。</span>
+    </div>
+    <div class="fact">
+      <span class="fact-label">OBSERVATIONS · 自己観察</span>
+      <span class="fact-num">40<span class="unit">件</span></span>
+      <span class="fact-desc">17 件 (43%) が novelty ≥ 0.7。新規創発閾値を超える。</span>
+    </div>
+    <div class="fact">
+      <span class="fact-label">AVERAGE NOVELTY</span>
+      <span class="fact-num">0.71</span>
+      <span class="fact-desc">高水準を維持。観察が再帰的に質を保つ実証。</span>
+    </div>
+    <div class="fact">
+      <span class="fact-label">FIRING PATTERNS</span>
+      <span class="fact-num">24<span class="unit">件</span></span>
+      <span class="fact-desc">7 canonical templates × 88 agents が生む観察可能事象。</span>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">CLOSING · KEY FACTS</div>
+    <div>16 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 17 OPEN QUESTIONS ============ -->
+<section class="slide" id="s17">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">CLOSING — 開かれた問い</div>
+    <div class="slide-num">17 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">CLOSING · OPEN QUESTIONS</div>
+    <h2 class="title">次に何が開かれるか — 三階構造の先</h2>
+    <div class="title-en">What opens next — beyond the third order</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body cols-3">
+    <div class="card">
+      <h5>QUESTION 01 · 第四階</h5>
+      <p class="card-title">第三階を観る視点はどこから来るか</p>
+      <p>fpm が観察対象となる時、新たな観察者が必要になる。人間の判断は<strong>外側の観察者</strong>として残り続けるのか、それとも階層は無限に閉じるのか。</p>
+    </div>
+    <div class="card">
+      <h5>QUESTION 02 · 安定状態</h5>
+      <p class="card-title">novelty 0.71 はどう変化するか</p>
+      <p>観察を蓄積するほど novelty は下がる予測がある一方、新 lens 追加で上がる経路もある。<strong>定常状態</strong>はどこで現れるか。</p>
+    </div>
+    <div class="card">
+      <h5>QUESTION 03 · 工学化</h5>
+      <p class="card-title">786 年の系譜は再生産されるか</p>
+      <p>道元・西田の自己観察論が CCM-DB に encode されたことは、思想史の<strong>工学化</strong>を意味する。これが他の領域 (倫理 / 美学) でも起こりうるか。</p>
+    </div>
+  </div>
+  <div class="footer">
+    <div>MIRA TUKU</div>
+    <div class="footer-center">CLOSING · OPEN QUESTIONS</div>
+    <div>17 / 18</div>
+  </div>
+</section>
+
+<!-- ============ 18 CREDITS ============ -->
+<section class="slide" id="s18">
+  <div class="slide-head">
+    <div class="brand-mark">MIRA TUKU</div>
+    <div class="slide-tag">CREDITS — 関連リンク</div>
+    <div class="slide-num">18 / 18</div>
+  </div>
+  <div class="title-block">
+    <div class="eyebrow">CREDITS · LINKS</div>
+    <h2 class="title">本スライドの出典と関連ドキュメント</h2>
+    <div class="title-en">Sources, related materials, and how to cite</div>
+    <div class="accent-stroke"></div>
+  </div>
+  <div class="body cols-2-narrow">
+    <div class="col">
+      <p class="lead">本スライドの 6 図解はすべて AR-DB + CCM-DB SQLite から直接取得した実データに基づく。<strong>推測値ゼロ</strong>。図解の元になった図解版・長文版は以下から参照可能。</p>
+      <div class="kv-list">
+        <div><span class="k">図解版</span><span class="v"><a href="ccm-three-tier-diagrams.html" style="color:#CC1400;">ccm-three-tier-diagrams.html</a> — 6 図解 + 解説</span></div>
+        <div><span class="k">長文</span><span class="v"><a href="ccm-three-tier-report.html" style="color:#CC1400;">ccm-three-tier-report.html</a> — 詳細レポート</span></div>
+        <div><span class="k">GitHub</span><span class="v"><a href="https://github.com/yuyanishimura0312/consciousness-cosmos-music-db" style="color:#CC1400;">consciousness-cosmos-music-db</a> · commit dca3f91</span></div>
+        <div><span class="k">DB</span><span class="v">~/projects/research/consciousness-cosmos-music-db/data/ccm.db</span></div>
+        <div><span class="k">取得時点</span><span class="v">2026-05-21 19:00 JST</span></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="note">
+        <h4>引用形式</h4>
+        <p>「NPO法人ミラツク (2026). 三階構造の Agent System 実装 — CCM-DB v1.3. ミラツク DB エコシステム.」</p>
+      </div>
+      <div class="note">
+        <h4>キー操作</h4>
+        <p>← / → でページ送り、<strong>P</strong> でプレゼンモード、<strong>F</strong> でフルスクリーン、<strong>Cmd+P</strong> で印刷 (A4 横)。タッチではスワイプで前後移動。</p>
+      </div>
+      <div class="quote-block">
+        <div class="quote-block-text">
+          786 年の系譜が CCM-DB に encode されたことで、自己観察論は思想史から実装可能な工学体系に渡された。
+          <cite>CCM-DB v1.3 · 2026-05-21</cite>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>NPO法人ミラツク · ESSE-SENSE</div>
+    <div class="footer-center">CCM-DB v1.3 · THREE-TIER · END</div>
+    <div>18 / 18</div>
+  </div>
+</section>
 
 </div>
 
-<div class="controls">
-  <button class="btn" onclick="prevSlide()">◀ 戻る</button>
-  <div class="counter"><span id="current">1</span> / <span id="total">18</span></div>
-  <button class="btn" onclick="nextSlide()">進む ▶</button>
-  <button class="btn" onclick="toggleTheme()">テーマ</button>
+<div class="navbar" role="toolbar" aria-label="スライド操作">
+  <a class="nav-btn" href="../databases.html" title="DB一覧へ戻る" aria-label="DB一覧">⌂</a>
+  <span class="sep">·</span>
+  <button class="nav-btn" onclick="prevSlide()" aria-label="前へ" title="← / ↑ / PgUp / k / h">◀</button>
+  <span class="nav-counter" id="navCounter"><span id="navCur">1</span> / <span id="navTot">18</span></span>
+  <button class="nav-btn" onclick="nextSlide()" aria-label="次へ" title="→ / ↓ / Space / PgDn / j / l">▶</button>
+  <span class="sep">·</span>
+  <button class="nav-btn" onclick="toggleMode()" aria-label="プレゼンモード切替" title="P: プレゼン切替">◫</button>
+  <button class="nav-btn" onclick="toggleFullscreen()" aria-label="フルスクリーン" title="F: 全画面">⛶</button>
+  <button class="nav-btn" onclick="window.print()" aria-label="印刷" title="Cmd+P / Ctrl+P">⎙</button>
+  <span class="nav-help">← → SPACE · P · F · ⌘P</span>
 </div>
 
 <script>
-const slides = document.querySelectorAll('.slide');
-const total = slides.length;
-let idx = 0;
-document.getElementById('total').textContent = total;
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  let current = 0; let presentation = false;
+  const $cur = document.getElementById('navCur');
+  const $tot = document.getElementById('navTot');
+  if ($tot) $tot.textContent = slides.length;
 
-function show(i) {
-  idx = Math.max(0, Math.min(total - 1, i));
-  slides.forEach((s, n) => s.classList.toggle('active', n === idx));
-  document.getElementById('current').textContent = idx + 1;
-  document.getElementById('progressBar').style.width = ((idx + 1) / total * 100) + '%';
-  localStorage.setItem('ccm-slide-idx', idx);
-}
+  function pad(n) { return String(n).padStart(2, '0'); }
 
-function nextSlide() { show(idx + 1); }
-function prevSlide() { show(idx - 1); }
-
-function toggleTheme() {
-  const r = document.documentElement;
-  const c = r.dataset.theme === 'dark' ? 'light' : 'dark';
-  r.dataset.theme = c;
-  localStorage.setItem('ccm-theme', c);
-}
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
-    e.preventDefault(); nextSlide();
-  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-    e.preventDefault(); prevSlide();
-  } else if (e.key === 'Home') {
-    show(0);
-  } else if (e.key === 'End') {
-    show(total - 1);
-  } else if (e.key === 'Escape') {
-    show(0);
-  } else if (/^[0-9]$/.test(e.key)) {
-    const n = parseInt(e.key);
-    if (n >= 1 && n <= 9) show(n - 1);
+  function update() {
+    if (presentation) {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    } else {
+      const target = slides[current];
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if ($cur) $cur.textContent = current + 1;
+    try { history.replaceState(null, '', '#s' + pad(current + 1)); } catch (e) {}
   }
-});
+  function go(n) { current = Math.max(0, Math.min(slides.length - 1, n)); update(); }
+  window.prevSlide = () => go(current - 1);
+  window.nextSlide = () => go(current + 1);
+  window.toggleMode = function() {
+    presentation = !presentation;
+    document.body.classList.toggle('presentation', presentation);
+    update();
+  };
+  window.toggleFullscreen = function() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
 
-// テーマ復元
-const savedTheme = localStorage.getItem('ccm-theme');
-if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': case 'j': case 'l':
+        e.preventDefault(); nextSlide(); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'k': case 'h':
+        e.preventDefault(); prevSlide(); break;
+      case 'Home': e.preventDefault(); go(0); break;
+      case 'End': e.preventDefault(); go(slides.length - 1); break;
+      case 'f': case 'F': e.preventDefault(); toggleFullscreen(); break;
+      case 'p': case 'P': e.preventDefault(); toggleMode(); break;
+      case 'Escape':
+        if (presentation) { presentation = false; document.body.classList.remove('presentation'); update(); }
+        break;
+    }
+  });
 
-// 位置復元
-const savedIdx = localStorage.getItem('ccm-slide-idx');
-if (savedIdx !== null) show(parseInt(savedIdx));
+  let touchX = null, touchY = null, touchT = 0;
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    touchX = e.touches[0].clientX;
+    touchY = e.touches[0].clientY;
+    touchT = Date.now();
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    const dy = e.changedTouches[0].clientY - touchY;
+    const dt = Date.now() - touchT;
+    if (dt < 600 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      if (dx < 0) nextSlide(); else prevSlide();
+    }
+    touchX = null;
+  }, { passive: true });
 
-// クリックで進む
-document.body.addEventListener('click', (e) => {
-  if (e.target.closest('.controls') || e.target.closest('a')) return;
-  nextSlide();
-});
+  const m = (location.hash || '').match(/^#s(\d+)$/);
+  if (m) current = Math.max(0, Math.min(slides.length - 1, parseInt(m[1], 10) - 1));
+
+  const $counter = document.getElementById('navCounter');
+  if ($counter) {
+    $counter.title = 'クリックでスライド番号入力';
+    $counter.addEventListener('click', () => {
+      const n = prompt('スライド番号 (1-' + slides.length + ')', current + 1);
+      if (n !== null && n !== '') go(parseInt(n, 10) - 1);
+    });
+  }
+
+  update();
+})();
 </script>
+
 </body>
 </html>
