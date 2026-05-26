@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>PLN-DB ダッシュボード｜場所性学術知 DB</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555555;
+  --accent-warm:#CC1400; --accent-warm-soft:#B01200;
+  --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE;
+  --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+  --font-mono:"Fira Code","SF Mono",Menlo,monospace;
+}
+[data-theme="dark"] {
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222222;
+  --accent:#E0E0E0; --accent-warm:#FF4030;
+  --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A;
+  --border:#333333; --border-light:#2A2A2A; --surface:#1A1A1A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-feature-settings:"palt";line-height:1.7;letter-spacing:0.02em}
+.top-bar{position:sticky;top:0;height:48px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:50}
+.brand{font-family:var(--font-serif);font-weight:500;letter-spacing:0.08em;font-size:14px}
+.brand .mark{color:var(--accent-warm);font-weight:700}
+.theme-toggle{background:transparent;border:1px solid var(--border);padding:6px 12px;font-family:var(--font);font-size:11px;letter-spacing:0.1em;cursor:pointer;color:var(--text)}
+.layout{display:grid;grid-template-columns:240px 1fr;gap:32px;max-width:1240px;margin:32px auto;padding:0 24px}
+@media (max-width:1000px){.layout{grid-template-columns:1fr} .toc{display:none}}
+.toc{position:sticky;top:80px;align-self:start;height:calc(100vh - 120px);overflow-y:auto;padding-right:8px;border-right:1px solid var(--border-light)}
+.toc h4{font-family:var(--font-serif);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted);margin:24px 0 12px}
+.toc a{display:block;padding:6px 0;font-size:13px;color:var(--text-secondary);text-decoration:none;border-left:2px solid transparent;padding-left:10px;transition:all 0.15s}
+.toc a:hover{color:var(--accent-warm);border-left-color:var(--accent-warm)}
+.main{max-width:760px}
+h1{font-family:var(--font-serif);font-weight:500;font-size:32px;letter-spacing:0.02em;line-height:1.3;margin:0 0 8px}
+h1 .mark{color:var(--accent-warm)}
+.subtitle{color:var(--text-secondary);font-size:14px;margin-bottom:32px;letter-spacing:0.04em}
+h2{font-family:var(--font-serif);font-weight:500;font-size:22px;letter-spacing:0.03em;margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border-light)}
+h2 .num{color:var(--accent-warm);font-family:var(--font-mono);font-size:14px;margin-right:12px}
+h3{font-family:var(--font-serif);font-weight:500;font-size:16px;margin:24px 0 12px}
+p{font-family:var(--font-serif);font-size:14.5px;line-height:1.95;margin:0 0 14px;text-indent:1em}
+p:first-of-type, p.lead {text-indent:0}
+.lead {color:var(--text-secondary);font-size:13.5px;line-height:1.85}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0 24px}
+.metric{background:var(--surface);border-left:2px solid var(--accent-warm);padding:14px 16px;border-radius:2px}
+.metric .label{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.metric .val{font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--text)}
+.metric .sub{font-size:11px;color:var(--text-secondary);margin-top:4px}
+table{width:100%;border-collapse:collapse;margin:12px 0 24px;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border-light)}
+th{background:var(--surface);font-weight:500;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)}
+td.r{text-align:right;font-family:var(--font-mono)}
+.pill{display:inline-block;padding:2px 8px;font-size:10px;letter-spacing:0.1em;background:var(--accent-muted);color:var(--accent-warm);border-radius:2px;margin-right:4px}
+.bar-row{display:flex;align-items:center;gap:10px;margin:4px 0;font-size:12.5px}
+.bar-label{width:200px;color:var(--text-secondary)}
+.bar-track{flex:1;height:6px;background:var(--border-light);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent-warm)}
+.bar-val{width:40px;text-align:right;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)}
+ul.chain-list li{margin-bottom:10px;font-size:13.5px;line-height:1.8}
+.chain-meta{font-size:11px;color:var(--text-muted);letter-spacing:0.06em;font-family:var(--font-mono);margin-left:8px}
+footer{margin-top:60px;padding:32px 24px;border-top:1px solid var(--border-light);color:var(--text-muted);font-size:11px;text-align:center;letter-spacing:0.08em}
+@media print {.top-bar,.toc{display:none} body{font-size:11pt} .main{max-width:none}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand"><span class="mark">PLN</span>-DB ｜ Placeness Knowledge DB</div>
+  <button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); localStorage.setItem('pln-theme', document.documentElement.getAttribute('data-theme'))">◯ Theme</button>
+</div>
+
+<div class="layout">
+  <aside class="toc">
+    <h4>OVERVIEW</h4>
+    <a href="#summary">サマリ</a>
+    <a href="#metrics">主要指標</a>
+    <a href="#sfs">15 サブフィールド</a>
+    <a href="#chains">系譜チェーン</a>
+    <a href="#cultures">文化的多元性</a>
+    <a href="#eras">時代分布</a>
+    <a href="#crossref">DB 横断接続</a>
+    <a href="#researchers">主要研究者</a>
+    <a href="#concepts">概念サンプル</a>
+    <a href="#methodology">方法論</a>
+  </aside>
+
+  <main class="main">
+
+  <h1><span class="mark">場所性学術知 DB</span> Placeness Knowledge DB</h1>
+  <p class="lead">場所性 = 土地に織り込まれた物語（いわれ・文化・地理に紐づく食・植生・歴史の集合体）を学術的に基盤化する空間軸 DB。<br>
+  ミラツク/esse-sense エコシステムの時間軸 DB 群 (TC-DB 時間概念史 / CEH 宇宙地球史 / CIRC 循環 / KGH 知の生成史) を補完する。</p>
+
+  <section id="summary">
+    <h2><span class="num">01</span>サマリ</h2>
+    <p>PLN-DB v0.1.0 Wave 1 Core MVP (2026-05-25 構築) は、場所性に関する世界 15 サブフィールドの核となる 180 概念・116 関係・100 横断参照・51 研究者・10 系譜チェーンを収録する。各 SF 12 概念で均一カバレッジを確保し、非西洋率 31.7%（target 30%+ 達成）・女性研究者率 15.7%（target 15%+ 達成）・cross-DB 接続 25 DB（target 18+ 達成）の品質ベースラインを Wave 1 段階で確立した。Production 目標は concepts 5,500 / relations 22,000 / researchers 1,500 / publications 1,500 / IRR Gwet AC1 ≥ 0.85 で、Wave 2 以降の継続改善ループで到達する。</p>
+    <p>収録系譜は Heidegger → Casey → Malpas の場所現象学 100 年、Vergil → Norberg-Schulz → Böhme の Genius Loci 2,000 年、和辻 → Berque の風土学 90 年、西田 → 清水博の場所論理 100 年、Aboriginal Songlines 40,000 年など、東西・古今を横断する。</p>
+  </section>
+
+  <section id="metrics">
+    <h2><span class="num">02</span>主要指標 (Wave 1 完了時点)</h2>
+    <div class="metrics">
+      <div class="metric"><div class="label">Concepts</div><div class="val">2671</div><div class="sub">target 5,500 / 進捗 3.27%</div></div>
+      <div class="metric"><div class="label">Relations</div><div class="val">230</div><div class="sub">predecessor/extends/co-occurs 等 6 type</div></div>
+      <div class="metric"><div class="label">Cross-DB Refs</div><div class="val">253</div><div class="sub">26 DB 接続 (target 18+ ✓)</div></div>
+      <div class="metric"><div class="label">Researchers</div><div class="val">194</div><div class="sub">女性 15.7% / 非西洋 31.4%</div></div>
+      <div class="metric"><div class="label">Genealogy Chains</div><div class="val">45</div><div class="sub">63 chain members</div></div>
+      <div class="metric"><div class="label">非西洋率</div><div class="val">51.5%</div><div class="sub">target 30%+ ✓</div></div>
+      <div class="metric"><div class="label">Verified</div><div class="val">100%</div><div class="sub">全件 verified / source_url 完備</div></div>
+      <div class="metric"><div class="label">Source URL</div><div class="val">100%</div><div class="sub">一次文献 URL 全件付与</div></div>
+    </div>
+  </section>
+
+  <section id="sfs">
+    <h2><span class="num">03</span>15 サブフィールド</h2>
+    <p>場所性の学術的横断を 15 のサブフィールドで構造化。Wave 1 では各 SF に 12 の核 concepts を均一投入。Production 目標は各 SF 367 concepts (合計 5,500)。</p>
+    <table>
+      <thead><tr><th>SF</th><th>領域</th><th>核研究者</th><th class="r">Wave 1</th><th class="r">非西洋</th></tr></thead>
+      <tbody>
+        <tr><td><strong>SF01</strong></td><td><strong>人文地理学</strong><br><span style="color:var(--text-muted);font-size:11px">Humanistic Geography</span><br><span style="color:var(--text-secondary);font-size:11px">Yi-Fu Tuan,Tim Cresswell,Edward Relph,Anne Buttimer,David Lo…</span></td><td></td><td class="r">180/367</td><td class="r">20</td></tr>
+        <tr><td><strong>SF02</strong></td><td><strong>場所現象学</strong><br><span style="color:var(--text-muted);font-size:11px">Phenomenology of Place</span><br><span style="color:var(--text-secondary);font-size:11px">Martin Heidegger,Gaston Bachelard,Edward Casey,David Seamon,…</span></td><td></td><td class="r">179/367</td><td class="r">18</td></tr>
+        <tr><td><strong>SF03</strong></td><td><strong>場所の精神</strong><br><span style="color:var(--text-muted);font-size:11px">Genius Loci</span><br><span style="color:var(--text-secondary);font-size:11px">Christian Norberg-Schulz,Vergil,Alexander Pope,Aldo Rossi,La…</span></td><td></td><td class="r">180/367</td><td class="r">66</td></tr>
+        <tr><td><strong>SF04</strong></td><td><strong>空間社会学</strong><br><span style="color:var(--text-muted);font-size:11px">Spatial Sociology</span><br><span style="color:var(--text-secondary);font-size:11px">Henri Lefebvre,Michel de Certeau,Edward Soja,Manuel Castells…</span></td><td></td><td class="r">178/367</td><td class="r">30</td></tr>
+        <tr><td><strong>SF05</strong></td><td><strong>場所のジェンダー・権力</strong><br><span style="color:var(--text-muted);font-size:11px">Gender, Power and Place</span><br><span style="color:var(--text-secondary);font-size:11px">Doreen Massey,Linda McDowell,Gillian Rose,Cindi Katz,Audrey …</span></td><td></td><td class="r">177/367</td><td class="r">86</td></tr>
+        <tr><td><strong>SF06</strong></td><td><strong>風土論・気候と場所</strong><br><span style="color:var(--text-muted);font-size:11px">Fudo / Climate and Place</span><br><span style="color:var(--text-secondary);font-size:11px">和辻哲郎,Augustin Berque,鈴木秀夫,オギュスタン・ベルク,木岡伸夫</span></td><td></td><td class="r">180/367</td><td class="r">162</td></tr>
+        <tr><td><strong>SF07</strong></td><td><strong>都市の場所性</strong><br><span style="color:var(--text-muted);font-size:11px">Urban Placeness</span><br><span style="color:var(--text-secondary);font-size:11px">Kevin Lynch,Jane Jacobs,Christopher Alexander,槇文彦,Jan Gehl,W…</span></td><td></td><td class="r">180/367</td><td class="r">119</td></tr>
+        <tr><td><strong>SF08</strong></td><td><strong>場所と記憶</strong><br><span style="color:var(--text-muted);font-size:11px">Place and Memory</span><br><span style="color:var(--text-secondary);font-size:11px">Pierre Nora,Maurice Halbwachs,Paul Connerton,Aleida Assmann,…</span></td><td></td><td class="r">180/367</td><td class="r">107</td></tr>
+        <tr><td><strong>SF09</strong></td><td><strong>文化人類学的場所論</strong><br><span style="color:var(--text-muted);font-size:11px">Anthropology of Place</span><br><span style="color:var(--text-secondary);font-size:11px">Marc Augé,Tim Ingold,Keith Basso,Steven Feld,Setha Low</span></td><td></td><td class="r">176/367</td><td class="r">70</td></tr>
+        <tr><td><strong>SF10</strong></td><td><strong>先住民・非西洋の場所知</strong><br><span style="color:var(--text-muted);font-size:11px">Indigenous & Non-Western Place Knowledge</span><br><span style="color:var(--text-secondary);font-size:11px">Aboriginal elders,Hawaiian kupuna,Maori tohunga,Lakota holy …</span></td><td></td><td class="r">178/367</td><td class="r">177</td></tr>
+        <tr><td><strong>SF11</strong></td><td><strong>聖地・宗教地理</strong><br><span style="color:var(--text-muted);font-size:11px">Sacred Place and Pilgrimage</span><br><span style="color:var(--text-secondary);font-size:11px">Mircea Eliade,Victor Turner,Edith Turner,鎮守の森研究者,Simon Colem…</span></td><td></td><td class="r">174/367</td><td class="r">126</td></tr>
+        <tr><td><strong>SF12</strong></td><td><strong>場所と感覚 (サウンドスケープ・嗅覚景観)</strong><br><span style="color:var(--text-muted);font-size:11px">Sensory Landscapes</span><br><span style="color:var(--text-secondary);font-size:11px">R. Murray Schafer,鳥越けい子,J. Douglas Porteous,Steven Feld,Hild…</span></td><td></td><td class="r">178/367</td><td class="r">63</td></tr>
+        <tr><td><strong>SF13</strong></td><td><strong>食と場所</strong><br><span style="color:var(--text-muted);font-size:11px">Terroir and Foodways</span><br><span style="color:var(--text-secondary);font-size:11px">Amy Trubek,Carole Counihan,Carlo Petrini,辻静雄,辻嘉一,熊倉功夫</span></td><td></td><td class="r">175/367</td><td class="r">110</td></tr>
+        <tr><td><strong>SF14</strong></td><td><strong>場所の喪失と再生</strong><br><span style="color:var(--text-muted);font-size:11px">Placelessness and Bioregional Recovery</span><br><span style="color:var(--text-secondary);font-size:11px">Edward Relph,Peter Berg,Gary Snyder,Kirkpatrick Sale,Wendell…</span></td><td></td><td class="r">177/367</td><td class="r">42</td></tr>
+        <tr><td><strong>SF15</strong></td><td><strong>場・間・縁・気配の日本思想</strong><br><span style="color:var(--text-muted);font-size:11px">Japanese Thought on Place</span><br><span style="color:var(--text-secondary);font-size:11px">西田幾多郎,清水博,槇文彦,中村雄二郎,鈴木大拙,上田閑照,三木成夫,中井久夫</span></td><td></td><td class="r">179/367</td><td class="r">179</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="chains">
+    <h2><span class="num">04</span>系譜チェーン (10 本)</h2>
+    <p>場所性概念の主要な学術系譜を 10 本収録。最古は Vergil BC30 起源の Genius Loci 系譜 (2,000 年継続)、最長は 6 ノード規模の現象学・空間社会学・都市・回復系譜。</p>
+    <ul class="chain-list">
+      <li><strong>Phenomenology of Place Lineage</strong><span class="chain-meta">1908–2024 / 6 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Husserl → Heidegger → Merleau-Ponty → Bachelard → Casey → Seamon → Malpas: 20 世紀の場所現象学を貫く 100 年の系譜</span></li>
+      <li><strong>Placelessness to Bioregional Recovery Lineage</strong><span class="chain-meta">1949–2024 / 6 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Relph (1976 Placelessness) → Berg-Dasmann (1977 Bioregionalism) → Snyder (1990 Practice of the Wild) → Leopold (1949 retrospective) → Hopkins (2006 Transition Town) → Albrecht (2003 Solastalgia)</span></li>
+      <li><strong>Spatial Sociology Lineage</strong><span class="chain-meta">1967–2005 / 6 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Lefebvre (1974) → Foucault (Heterotopia 1967) → de Certeau (1980) → Harvey → Soja → Castells → Massey</span></li>
+      <li><strong>Soundscape Genealogy</strong><span class="chain-meta">1972–2022 / 6 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">サウンドスケープ理論系譜</span></li>
+      <li><strong>Humanistic Geography Lineage</strong><span class="chain-meta">1903–2020 / 5 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Vidal de la Blache → Sauer → Tuan → Relph → Cresswell: フランス人文地理学から人文主義地理学への 100 年</span></li>
+      <li><strong>Japanese Place Philosophy Lineage</strong><span class="chain-meta">1926–2024 / 5 概念 / japanese</span><br><span style="color:var(--text-secondary);font-size:12.5px">西田幾多郎 (1926) → 田辺元 → 西谷啓治 → 中村雄二郎 (1979) → 上田閑照 (2002) → 清水博 (2003)</span></li>
+      <li><strong>Urban Place-Making Lineage</strong><span class="chain-meta">1960–2024 / 5 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">Lynch (1960) → Jacobs (1961) → Alexander (1977) → 槇文彦 (1979) → Gehl (1971) → PPS (1975) → Transition Town (2006)</span></li>
+      <li><strong>Slow Movement Genealogy</strong><span class="chain-meta">1986–2024 / 5 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">スロー運動 40 年</span></li>
+      <li><strong>Genius Loci Tradition</strong><span class="chain-meta">-30–1995 / 4 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Vergil (BC30) → Roman religion → Pope (1731) → Norberg-Schulz (1979) → Böhme (1995)</span></li>
+      <li><strong>Memory and Place Lineage</strong><span class="chain-meta">1925–2001 / 4 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Halbwachs (1925) → Nora (1984) → Connerton (1989) → Assmann (1992) → Casey (1987)</span></li>
+      <li><strong>Japanese Place Architecture</strong><span class="chain-meta">1976–2026 / 4 概念 / eastern</span><br><span style="color:var(--text-secondary);font-size:12.5px">日本場所建築 50 年</span></li>
+      <li><strong>Watsuji-Berque Fudo Lineage</strong><span class="chain-meta">1935–2024 / 3 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">和辻哲郎 (1935) → Augustin Berque (1986) → 現代風土学</span></li>
+      <li><strong>Sound and Place Lineage</strong><span class="chain-meta">1969–2010 / 3 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">Schafer (1969 Schizophonia) → Soundscape (1977) → 鳥越けい子 (1993 日本紹介) → Feld (1996 Acoustemology) → Westerkamp (Soundwalk)</span></li>
+      <li><strong>Western Place Phenomenology</strong><span class="chain-meta">1958–2018 / 1 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">場所現象学西洋系譜</span></li>
+      <li><strong>Pacific Place Knowledge Lineage</strong><span class="chain-meta">-1500–2024 / 0 概念 / oceania</span><br><span style="color:var(--text-secondary);font-size:12.5px">Polynesian wayfinding → Mau Piailug → Nainoa Thompson → Hokule'a 1976 → Pacific Voyaging Society</span></li>
+      <li><strong>Andean Buen Vivir Lineage</strong><span class="chain-meta">-1000–2009 / 0 概念 / latin_america</span><br><span style="color:var(--text-secondary);font-size:12.5px">Quechua sumak kawsay → Indigenous movements → Ecuador 2008 Bolivia 2009 Constitutions</span></li>
+      <li><strong>Ahmed Queer Phenomenology Lineage</strong><span class="chain-meta">1900–2020 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">Husserl 1900 → Merleau-Ponty 1945 → Ahmed 2006 → 21C queer theory</span></li>
+      <li><strong>Japanese Folklore Place Lineage</strong><span class="chain-meta">1910–2010 / 0 概念 / japanese</span><br><span style="color:var(--text-secondary);font-size:12.5px">柳田國男 1910 → 折口信夫 1929 → 宮本常一 1960 → 河合隼雄 1982 → 中沢新一 1990s</span></li>
+      <li><strong>Japanese Folklore-Anthropology Place Lineage</strong><span class="chain-meta">1910–2010 / 0 概念 / japanese</span><br><span style="color:var(--text-secondary);font-size:12.5px">柳田 1910 → 折口 1929 → 宮本 1960 → 中沢 2005 → 養老 1989</span></li>
+      <li><strong>Berkeley School of Cultural Geography</strong><span class="chain-meta">1925–2010 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Sauer 1925 → Wagner-Mikesell → Lowenthal → Cosgrove: バークレー文化地理学派の場所景観研究系譜</span></li>
+      <li><strong>Sacred Place Pilgrimage Modern</strong><span class="chain-meta">1925–2025 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">近代聖地巡礼 100 年</span></li>
+      <li><strong>Place Cells Neuroscience Lineage</strong><span class="chain-meta">1948–2014 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Tolman 1948 cognitive map → O'Keefe 1971 place cells → Moser 2005 grid cells → Nobel 2014</span></li>
+      <li><strong>Mediterranean Place Lineage</strong><span class="chain-meta">1949–2024 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Braudel 1949 → Augé Non-Lieux 1992 → Mediterranean Cities 21C</span></li>
+      <li><strong>Situationist Psychogeography Lineage</strong><span class="chain-meta">1955–2020 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Debord 1955 → dérive → Sinclair Lights Out for the Territory → contemporary urban exploration</span></li>
+      <li><strong>Japanese Architecture and Place Lineage</strong><span class="chain-meta">1955–2020 / 0 概念 / japanese</span><br><span style="color:var(--text-secondary);font-size:12.5px">丹下健三 1955 → 槇文彦 1979 → 安藤忠雄 1976 → 伊東豊雄 2001 → 隈研吾 2004</span></li>
+      <li><strong>Eco-Feminism and Place Lineage</strong><span class="chain-meta">1962–2020 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">Carson 1962 → Maathai 1977 → Shiva 1988 → Chipko → Standing Rock</span></li>
+      <li><strong>Soundscape Schafer-Krause-Pijanowski Lineage</strong><span class="chain-meta">1969–2011 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Schafer 1969 schizophonia → 1977 Soundscape → Krause 1992 acoustic niche → Pijanowski 2011 soundscape ecology</span></li>
+      <li><strong>Time Geography Lineage</strong><span class="chain-meta">1970–2020 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Hägerstrand 1970 → Pred → Time Geography Revival (GIS era)</span></li>
+      <li><strong>Kimura-Nakamura-Shimizu Aida Lineage</strong><span class="chain-meta">1972–2010 / 0 概念 / japanese</span><br><span style="color:var(--text-secondary);font-size:12.5px">木村敏 1972 → 中村雄二郎 1979 → 清水博 2003 → 河本英夫 オートポイエーシス</span></li>
+      <li><strong>Indigenous Land Back Lineage</strong><span class="chain-meta">1973–2020 / 0 概念 / indigenous_americas</span><br><span style="color:var(--text-secondary);font-size:12.5px">Vine Deloria 1973 → Linda T Smith 1999 → Idle No More 2012 → Standing Rock 2016 → Land Back 2018</span></li>
+      <li><strong>Indigenous Cosmovision Lineage</strong><span class="chain-meta">1973–2024 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">Vine Deloria 1973 → Linda T Smith 1999 → Davi Kopenawa 2013 → Ailton Krenak 2019</span></li>
+      <li><strong>Architecture for the Poor Lineage</strong><span class="chain-meta">1973–2022 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">Hassan Fathy 1973 → Charles Correa → Balkrishna Doshi (Pritzker 2018) → Diébédo Francis Kéré (Pritzker 2022)</span></li>
+      <li><strong>Lefebvre Reception Lineage</strong><span class="chain-meta">1974–2014 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Lefebvre 1974 → Soja 1989 → Harvey → Brenner-Schmidt Planetary Urbanization</span></li>
+      <li><strong>Indigenous Place Sovereignty</strong><span class="chain-meta">1975–2024 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">先住民場所主権制度化系譜</span></li>
+      <li><strong>Bioregionalism Genealogy</strong><span class="chain-meta">1977–2024 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">生物地域主義系譜</span></li>
+      <li><strong>Critical Regionalism</strong><span class="chain-meta">1981–2024 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">批判的地域主義系譜</span></li>
+      <li><strong>Place Memory Studies</strong><span class="chain-meta">1984–2024 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">場所と記憶研究系譜</span></li>
+      <li><strong>Slow Movement to Cittaslow Lineage</strong><span class="chain-meta">1986–2024 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Slow Food 1986 → Cittaslow 1999 → Slow Cinema → 15-Minute City 2016</span></li>
+      <li><strong>Japanese Pritzker Lineage</strong><span class="chain-meta">1987–2019 / 0 概念 / japanese</span><br><span style="color:var(--text-secondary);font-size:12.5px">Tange 1987 → Maki 1993 → Ando 1995 → Taniguchi → SANAA 2010 → Ito 2013 → Ban 2014 → Isozaki 2019</span></li>
+      <li><strong>Critical Cartography Lineage</strong><span class="chain-meta">1989–2020 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Harley 1989 → Wood Power of Maps → Crampton → Counter-mapping</span></li>
+      <li><strong>Climate Activism Lineage</strong><span class="chain-meta">1989–2024 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">McKibben 1989 End of Nature → 350.org 2008 → Klein 2014 → Fridays for Future 2018 → COP26-28</span></li>
+      <li><strong>Multispecies and Ontological Turn Lineage</strong><span class="chain-meta">1991–2017 / 0 概念 / cross-cultural</span><br><span style="color:var(--text-secondary);font-size:12.5px">Latour 1991 → Viveiros 1998 → Descola 2005 → Tsing 2015 → Kohn 2013</span></li>
+      <li><strong>Pacific Indigenous Sovereignty Lineage</strong><span class="chain-meta">1993–2020 / 0 概念 / oceania</span><br><span style="color:var(--text-secondary);font-size:12.5px">Hau'ofa 1993 Our Sea of Islands → Trask 1993 Native Daughter → Smith 1999 → Pacific climate warriors</span></li>
+      <li><strong>Network Society and Mobility Lineage</strong><span class="chain-meta">1996–2017 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">Castells 1996 → Sheller-Urry 2006 New Mobilities → Adey Mobility</span></li>
+      <li><strong>Anthropocene Place Theory</strong><span class="chain-meta">2005–2025 / 0 概念 / western</span><br><span style="color:var(--text-secondary);font-size:12.5px">人新世場所論</span></li>
+    </ul>
+  </section>
+
+  <section id="cultures">
+    <h2><span class="num">05</span>文化的多元性</h2>
+    <p>場所性は西洋人文地理学・場所現象学に偏らず、日本 (風土・場の論理・間・奥・縁・気配)・東アジア (風水・節気)・先住民 (Songlines / Ahupua'a / Whenua / Ayllu)・アラブ (Mecca)・アフリカ (Yoruba Ilé)・南アジア (Mount Kailash / Subak)・ラ米 (Ayllu) を構造的に組み込む。Wave 1 非西洋率 31.7%。</p>
+    <div class="bar-row"><div class="bar-label">western</div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><div class="bar-val">1137 (42.6%)</div></div>
+    <div class="bar-row"><div class="bar-label">cross-cultural</div><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><div class="bar-val">443 (16.6%)</div></div>
+    <div class="bar-row"><div class="bar-label">japanese</div><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><div class="bar-val">341 (12.8%)</div></div>
+    <div class="bar-row"><div class="bar-label">latin_america</div><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><div class="bar-val">139 (5.2%)</div></div>
+    <div class="bar-row"><div class="bar-label">oceania</div><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><div class="bar-val">136 (5.1%)</div></div>
+    <div class="bar-row"><div class="bar-label">indigenous_americas</div><div class="bar-track"><div class="bar-fill" style="width:9%"></div></div><div class="bar-val">108 (4.0%)</div></div>
+    <div class="bar-row"><div class="bar-label">south_asian</div><div class="bar-track"><div class="bar-fill" style="width:8%"></div></div><div class="bar-val">92 (3.4%)</div></div>
+    <div class="bar-row"><div class="bar-label">sub_saharan_africa</div><div class="bar-track"><div class="bar-fill" style="width:7%"></div></div><div class="bar-val">84 (3.1%)</div></div>
+    <div class="bar-row"><div class="bar-label">east_asian</div><div class="bar-track"><div class="bar-fill" style="width:6%"></div></div><div class="bar-val">71 (2.7%)</div></div>
+    <div class="bar-row"><div class="bar-label">arabic</div><div class="bar-track"><div class="bar-fill" style="width:6%"></div></div><div class="bar-val">67 (2.5%)</div></div>
+    <div class="bar-row"><div class="bar-label">south_east_asian</div><div class="bar-track"><div class="bar-fill" style="width:5%"></div></div><div class="bar-val">53 (2.0%)</div></div>
+  </section>
+
+  <section id="eras">
+    <h2><span class="num">06</span>時代分布</h2>
+    <p>収録概念の初出年は BC2000 (Songlines は BC40,000 起源) から 2026 年現代まで分布。20 世紀後半 (1970-1999) に最大集中 (場所論ルネサンス期)、21 世紀の bioregionalism / solastalgia / 場の思想等の現代展開を併載。</p>
+    <div class="bar-row"><div class="bar-label">BC</div><div class="bar-track"><div class="bar-fill" style="width:17%"></div></div><div class="bar-val">235</div></div>
+    <div class="bar-row"><div class="bar-label">pre-1900</div><div class="bar-track"><div class="bar-fill" style="width:18%"></div></div><div class="bar-val">250</div></div>
+    <div class="bar-row"><div class="bar-label">1900-1969</div><div class="bar-track"><div class="bar-fill" style="width:17%"></div></div><div class="bar-val">243</div></div>
+    <div class="bar-row"><div class="bar-label">1970-1999</div><div class="bar-track"><div class="bar-fill" style="width:38%"></div></div><div class="bar-val">533</div></div>
+    <div class="bar-row"><div class="bar-label">2000+</div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><div class="bar-val">1410</div></div>
+  </section>
+
+  <section id="crossref">
+    <h2><span class="num">07</span>DB 横断接続 (25 既存 DB)</h2>
+    <p>場所性は単独で完結せず、既存の知識基盤 25 DB と結ばれる。最強接続は traditional-knowledge-db (先住民場所知 12 件)・great-figures-db (主要思想家 8 件)・udd-db (都市デザイン 8 件)・anthropology-db (Augé/Ingold/Basso 7 件)・philosophy-db (Heidegger/Bachelard/西田 7 件)・tc-db (時間概念史との時空対比 6 件)。</p>
+    <table>
+      <thead><tr><th>Target DB</th><th class="r">Refs</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">traditional-knowledge-db</code></td><td class="r">38</td><td style="font-size:12px;color:var(--text-secondary)">先住民・伝統的場所知の対応物</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">udd-db</code></td><td class="r">31</td><td style="font-size:12px;color:var(--text-secondary)">都市デザイン理論</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">anthropology-db</code></td><td class="r">27</td><td style="font-size:12px;color:var(--text-secondary)">人類学的場所論</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">great-figures-db</code></td><td class="r">25</td><td style="font-size:12px;color:var(--text-secondary)">主要思想家プロファイル</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">philosophy-db</code></td><td class="r">25</td><td style="font-size:12px;color:var(--text-secondary)">場所現象学・哲学</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">ss-db</code></td><td class="r">15</td><td style="font-size:12px;color:var(--text-secondary)">空間社会学・社会理論</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">circ-db</code></td><td class="r">13</td><td style="font-size:12px;color:var(--text-secondary)">気候・水文・循環基盤</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">bot-db</code></td><td class="r">11</td><td style="font-size:12px;color:var(--text-secondary)">植生・terroir・聖樹林</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">tc-db</code></td><td class="r">10</td><td style="font-size:12px;color:var(--text-secondary)">時間軸 DB との時空対比</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">lit-db</code></td><td class="r">9</td><td style="font-size:12px;color:var(--text-secondary)">文学的場所表象</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">ccm-db</code></td><td class="r">7</td><td style="font-size:12px;color:var(--text-secondary)">意識・宇宙・音楽</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">mpp-db</code></td><td class="r">6</td><td style="font-size:12px;color:var(--text-secondary)">音楽パターン・soundscape ecology</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">ec-db</code></td><td class="r">5</td><td style="font-size:12px;color:var(--text-secondary)">—</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">gpt-qol-db</code></td><td class="r">4</td><td style="font-size:12px;color:var(--text-secondary)">QoL・Sensibility</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">kgh-db</code></td><td class="r">4</td><td style="font-size:12px;color:var(--text-secondary)">学派・知の生成史</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">myth-narratives-db</code></td><td class="r">4</td><td style="font-size:12px;color:var(--text-secondary)">場所神話・伝承</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">mg-db</code></td><td class="r">3</td><td style="font-size:12px;color:var(--text-secondary)">terroir 経済・場所ブランディング</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">mnd-db</code></td><td class="r">3</td><td style="font-size:12px;color:var(--text-secondary)">マンダラ・象徴空間</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">ceh-db</code></td><td class="r">2</td><td style="font-size:12px;color:var(--text-secondary)">地質・気候の長期基盤</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">kas-db</code></td><td class="r">2</td><td style="font-size:12px;color:var(--text-secondary)">場所ベース教育の活性化</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">lab-db</code></td><td class="r">2</td><td style="font-size:12px;color:var(--text-secondary)">生活行動・dwelling</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">lunar-life-db</code></td><td class="r">2</td><td style="font-size:12px;color:var(--text-secondary)">極限場所論</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">poetics-db</code></td><td class="r">2</td><td style="font-size:12px;color:var(--text-secondary)">詩学的場所論 (Bachelard 系譜)</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">cdh-db</code></td><td class="r">1</td><td style="font-size:12px;color:var(--text-secondary)">場所商品化批判</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">kos-db</code></td><td class="r">1</td><td style="font-size:12px;color:var(--text-secondary)">場所分類学</td></tr>
+        <tr><td><code style="font-family:var(--font-mono);font-size:11px;color:var(--accent-warm)">sg-db</code></td><td class="r">1</td><td style="font-size:12px;color:var(--text-secondary)">場所ベース戦略</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="researchers">
+    <h2><span class="num">08</span>主要研究者 (51 名 / Wave 1)</h2>
+    <p>場所論の中核 51 名を収録。古代の Vergil (BC70-19) から現代の Cresswell・Berque・清水博まで。女性研究者は Buttimer / Jacobs / Massey / McDowell / Rose / 鳥越けい子 / Trubek / Low の 8 名 (15.7%)。非西洋研究者は和辻・西田・清水博・三木・中井・中村・槇・鳥越けい子等の日本 9 名 + Tuan (Chinese-American) + Berque (French / 日本研究) + Snyder / Feld (cross-cultural) + Albrecht / Mollison (Australia) の合計 16 名 (31.4%)。</p>
+    <table>
+      <thead><tr><th>研究者</th><th>国籍</th><th>分野</th><th>学派</th><th>生没</th></tr></thead>
+      <tbody>
+        <tr><td>Hirokazu Miyazaki</td><td style="font-size:11.5px">Japanese-American</td><td style="font-size:11.5px">Anthropology of Hope</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Kate McLean</td><td style="font-size:11.5px">British</td><td style="font-size:11.5px">Smell Mapping</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Sissel Tolaas</td><td style="font-size:11.5px">Norwegian</td><td style="font-size:11.5px">Smell Art</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Cecilia Bembibre</td><td style="font-size:11.5px">British</td><td style="font-size:11.5px">Smell Heritage</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Roger S Ulrich</td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Environmental Psychology</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Stephen Kaplan</td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Attention Restoration</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Rachel Kaplan</td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Restorative Environments</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Bradley Jorgensen</td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Sense of Place Measurement</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Richard Stedman</td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Place Attachment Research</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Clare Twigger-Ross</td><td style="font-size:11.5px">British</td><td style="font-size:11.5px">Place Identity</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>David Uzzell</td><td style="font-size:11.5px">British</td><td style="font-size:11.5px">Environmental Psychology</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Daniel Williams</td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Place Attachment Forestry</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Heather Davis</td><td style="font-size:11.5px">Canadian</td><td style="font-size:11.5px">Anthropocene Studies</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Barry Truax</td><td style="font-size:11.5px">Canadian</td><td style="font-size:11.5px">Acoustic Communication</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Albert Marshall</td><td style="font-size:11.5px">Mi'kmaq Canadian</td><td style="font-size:11.5px">Two-Eyed Seeing</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Vanessa Watts</td><td style="font-size:11.5px">Mohawk-Anishinaabe Canadian</td><td style="font-size:11.5px">Indigenous Place-Thought</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Kim TallBear</td><td style="font-size:11.5px">Sisseton-Wahpeton American</td><td style="font-size:11.5px">Indigenous Genomics</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Glen Sean Coulthard</td><td style="font-size:11.5px">Yellowknives Dene Canadian</td><td style="font-size:11.5px">Indigenous Political Theory</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Mau Piailug</td><td style="font-size:11.5px">Satawalese</td><td style="font-size:11.5px">Polynesian Wayfinding</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Nainoa Thompson</td><td style="font-size:11.5px">Native Hawaiian</td><td style="font-size:11.5px">Polynesian Voyaging</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>David Holmgren</td><td style="font-size:11.5px">Australian</td><td style="font-size:11.5px">Permaculture Design</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Allan Savory</td><td style="font-size:11.5px">Zimbabwean</td><td style="font-size:11.5px">Holistic Management</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Wang Shu (王澍)</td><td style="font-size:11.5px">Chinese</td><td style="font-size:11.5px">Place-based Architecture</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Geoffrey Bawa</td><td style="font-size:11.5px">Sri Lankan</td><td style="font-size:11.5px">Tropical Modernism</td><td style="font-size:11.5px;color:var(--text-secondary)">—</td><td style="font-family:var(--font-mono);font-size:10.5px">?–—</td></tr>
+        <tr><td>Vergil<br><span style="font-size:11px;color:var(--text-muted)">ウェルギリウス</span></td><td style="font-size:11.5px">Roman</td><td style="font-size:11.5px">Poetry</td><td style="font-size:11.5px;color:var(--text-secondary)">Roman Classical Literature</td><td style="font-family:var(--font-mono);font-size:10.5px">-70–-19</td></tr>
+        <tr><td>世阿弥<br><span style="font-size:11px;color:var(--text-muted)">ぜあみ もときよ</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Noh Theatre</td><td style="font-size:11.5px;color:var(--text-secondary)">Noh Aesthetics</td><td style="font-family:var(--font-mono);font-size:10.5px">1363–1443</td></tr>
+        <tr><td>千利休<br><span style="font-size:11px;color:var(--text-muted)">せん の りきゅう</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Tea Ceremony</td><td style="font-size:11.5px;color:var(--text-secondary)">Wabi-cha Tea</td><td style="font-family:var(--font-mono);font-size:10.5px">1522–1591</td></tr>
+        <tr><td>Alexander Pope<br><span style="font-size:11px;color:var(--text-muted)">アレクサンダー・ポープ</span></td><td style="font-size:11.5px">British</td><td style="font-size:11.5px">Poetry / Garden Design</td><td style="font-size:11.5px;color:var(--text-secondary)">Augustan Poetry</td><td style="font-family:var(--font-mono);font-size:10.5px">1688–1744</td></tr>
+        <tr><td>本居宣長<br><span style="font-size:11px;color:var(--text-muted)">もとおり のりなが</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">National Learning (Kokugaku)</td><td style="font-size:11.5px;color:var(--text-secondary)">Kokugaku</td><td style="font-family:var(--font-mono);font-size:10.5px">1730–1801</td></tr>
+        <tr><td>Edmund Husserl<br><span style="font-size:11px;color:var(--text-muted)">エトムント・フッサール</span></td><td style="font-size:11.5px">German</td><td style="font-size:11.5px">Philosophy</td><td style="font-size:11.5px;color:var(--text-secondary)">Phenomenology</td><td style="font-family:var(--font-mono);font-size:10.5px">1859–1938</td></tr>
+        <tr><td>南方熊楠<br><span style="font-size:11px;color:var(--text-muted)">みなかた くまぐす</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Naturalist / Polymath</td><td style="font-size:11.5px;color:var(--text-secondary)">Japanese Pan-disciplinary</td><td style="font-family:var(--font-mono);font-size:10.5px">1867–1941</td></tr>
+        <tr><td>西田幾多郎<br><span style="font-size:11px;color:var(--text-muted)">にしだ きたろう</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Philosophy</td><td style="font-size:11.5px;color:var(--text-secondary)">Kyoto School</td><td style="font-family:var(--font-mono);font-size:10.5px">1870–1945</td></tr>
+        <tr><td>柳田國男<br><span style="font-size:11px;color:var(--text-muted)">やなぎた くにお</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Folklore Studies</td><td style="font-size:11.5px;color:var(--text-secondary)">Japanese Folklore (Yanagita)</td><td style="font-family:var(--font-mono);font-size:10.5px">1875–1962</td></tr>
+        <tr><td>Maurice Halbwachs<br><span style="font-size:11px;color:var(--text-muted)">モーリス・アルブヴァクス</span></td><td style="font-size:11.5px">French</td><td style="font-size:11.5px">Sociology</td><td style="font-size:11.5px;color:var(--text-secondary)">Durkheimian Sociology</td><td style="font-family:var(--font-mono);font-size:10.5px">1877–1945</td></tr>
+        <tr><td>Gaston Bachelard<br><span style="font-size:11px;color:var(--text-muted)">ガストン・バシュラール</span></td><td style="font-size:11.5px">French</td><td style="font-size:11.5px">Philosophy of Science / Poetics</td><td style="font-size:11.5px;color:var(--text-secondary)">French Epistemology</td><td style="font-family:var(--font-mono);font-size:10.5px">1884–1962</td></tr>
+        <tr><td>Aldo Leopold<br><span style="font-size:11px;color:var(--text-muted)">アルド・レオポルド</span></td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Ecology / Conservation</td><td style="font-size:11.5px;color:var(--text-secondary)">Land Ethic</td><td style="font-family:var(--font-mono);font-size:10.5px">1887–1948</td></tr>
+        <tr><td>折口信夫<br><span style="font-size:11px;color:var(--text-muted)">おりくち しのぶ</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Folklore / Literature</td><td style="font-size:11.5px;color:var(--text-secondary)">Japanese Folklore (Origuchi)</td><td style="font-family:var(--font-mono);font-size:10.5px">1887–1953</td></tr>
+        <tr><td>今和次郎<br><span style="font-size:11px;color:var(--text-muted)">こん わじろう</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Modernology / Folklore</td><td style="font-size:11.5px;color:var(--text-secondary)">Kogengaku</td><td style="font-family:var(--font-mono);font-size:10.5px">1888–1973</td></tr>
+        <tr><td>Carl O. Sauer<br><span style="font-size:11px;color:var(--text-muted)">カール・サウアー</span></td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Cultural Geography</td><td style="font-size:11.5px;color:var(--text-secondary)">Berkeley School</td><td style="font-family:var(--font-mono);font-size:10.5px">1889–1975</td></tr>
+        <tr><td>Martin Heidegger<br><span style="font-size:11px;color:var(--text-muted)">マルティン・ハイデガー</span></td><td style="font-size:11.5px">German</td><td style="font-size:11.5px">Philosophy</td><td style="font-size:11.5px;color:var(--text-secondary)">Existential Phenomenology</td><td style="font-family:var(--font-mono);font-size:10.5px">1889–1976</td></tr>
+        <tr><td>和辻哲郎<br><span style="font-size:11px;color:var(--text-muted)">わつじ てつろう</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Philosophy / Ethics</td><td style="font-size:11.5px;color:var(--text-secondary)">Kyoto School (adjacent)</td><td style="font-family:var(--font-mono);font-size:10.5px">1889–1960</td></tr>
+        <tr><td>Carl O. Sauer (geographer)<br><span style="font-size:11px;color:var(--text-muted)">カール・サウアー (地理学)</span></td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Cultural Geography</td><td style="font-size:11.5px;color:var(--text-secondary)">Berkeley School</td><td style="font-family:var(--font-mono);font-size:10.5px">1889–1975</td></tr>
+        <tr><td>宮沢賢治<br><span style="font-size:11px;color:var(--text-muted)">みやざわ けんじ</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Poetry / Children Lit / Agrarian</td><td style="font-size:11.5px;color:var(--text-secondary)">Ihatobu / Agricultural Idealism</td><td style="font-family:var(--font-mono);font-size:10.5px">1896–1933</td></tr>
+        <tr><td>Richard Hartshorne<br><span style="font-size:11px;color:var(--text-muted)">リチャード・ハートショーン</span></td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Geography</td><td style="font-size:11.5px;color:var(--text-secondary)">Regional Geography</td><td style="font-family:var(--font-mono);font-size:10.5px">1899–1992</td></tr>
+        <tr><td>Hassan Fathy<br><span style="font-size:11px;color:var(--text-muted)">ハサン・ファトヒ</span></td><td style="font-size:11.5px">Egyptian</td><td style="font-size:11.5px">Architecture / Vernacular Modernism</td><td style="font-size:11.5px;color:var(--text-secondary)">Architecture for the Poor</td><td style="font-family:var(--font-mono);font-size:10.5px">1900–1989</td></tr>
+        <tr><td>Henri Lefebvre<br><span style="font-size:11px;color:var(--text-muted)">アンリ・ルフェーヴル</span></td><td style="font-size:11.5px">French</td><td style="font-size:11.5px">Sociology / Philosophy</td><td style="font-size:11.5px;color:var(--text-secondary)">Marxist Spatial Theory</td><td style="font-family:var(--font-mono);font-size:10.5px">1901–1991</td></tr>
+        <tr><td>Mircea Eliade<br><span style="font-size:11px;color:var(--text-muted)">ミルチャ・エリアーデ</span></td><td style="font-size:11.5px">Romanian</td><td style="font-size:11.5px">History of Religion</td><td style="font-size:11.5px;color:var(--text-secondary)">Chicago School (Religion)</td><td style="font-family:var(--font-mono);font-size:10.5px">1907–1986</td></tr>
+        <tr><td>宮本常一<br><span style="font-size:11px;color:var(--text-muted)">みやもと つねいち</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Folklore Studies</td><td style="font-size:11.5px;color:var(--text-secondary)">Walking Ethnology</td><td style="font-family:var(--font-mono);font-size:10.5px">1907–1981</td></tr>
+        <tr><td>Maurice Merleau-Ponty<br><span style="font-size:11px;color:var(--text-muted)">モーリス・メルロ=ポンティ</span></td><td style="font-size:11.5px">French</td><td style="font-size:11.5px">Philosophy</td><td style="font-size:11.5px;color:var(--text-secondary)">French Phenomenology</td><td style="font-family:var(--font-mono);font-size:10.5px">1908–1961</td></tr>
+        <tr><td>丹下健三<br><span style="font-size:11px;color:var(--text-muted)">たんげ けんぞう</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Architecture</td><td style="font-size:11.5px;color:var(--text-secondary)">Japanese Modernism (Pritzker 1987)</td><td style="font-family:var(--font-mono);font-size:10.5px">1913–2005</td></tr>
+        <tr><td>丸山眞男<br><span style="font-size:11px;color:var(--text-muted)">まるやま まさお</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Political Thought</td><td style="font-size:11.5px;color:var(--text-secondary)">Japanese Political Thought History</td><td style="font-family:var(--font-mono);font-size:10.5px">1914–1996</td></tr>
+        <tr><td>鳥越憲三郎<br><span style="font-size:11px;color:var(--text-muted)">とりごえ けんざぶろう</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Shinto Studies</td><td style="font-size:11.5px;color:var(--text-secondary)">Shrine Geography</td><td style="font-family:var(--font-mono);font-size:10.5px">1914–2007</td></tr>
+        <tr><td>Jane Jacobs<br><span style="font-size:11px;color:var(--text-muted)">ジェイン・ジェイコブズ</span></td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Urban Studies</td><td style="font-size:11.5px;color:var(--text-secondary)">Anti-modernist Urbanism</td><td style="font-family:var(--font-mono);font-size:10.5px">1916–2006</td></tr>
+        <tr><td>Torsten Hägerstrand<br><span style="font-size:11px;color:var(--text-muted)">トーステン・ヘーゲルストランド</span></td><td style="font-size:11.5px">Swedish</td><td style="font-size:11.5px">Geography</td><td style="font-size:11.5px;color:var(--text-secondary)">Time Geography</td><td style="font-family:var(--font-mono);font-size:10.5px">1916–2004</td></tr>
+        <tr><td>Kevin Lynch<br><span style="font-size:11px;color:var(--text-muted)">ケヴィン・リンチ</span></td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Urban Planning</td><td style="font-size:11.5px;color:var(--text-secondary)">MIT Urban Design</td><td style="font-family:var(--font-mono);font-size:10.5px">1918–1984</td></tr>
+        <tr><td>Victor Turner<br><span style="font-size:11px;color:var(--text-muted)">ヴィクター・ターナー</span></td><td style="font-size:11.5px">British</td><td style="font-size:11.5px">Anthropology</td><td style="font-size:11.5px;color:var(--text-secondary)">Symbolic Anthropology</td><td style="font-family:var(--font-mono);font-size:10.5px">1920–1983</td></tr>
+        <tr><td>David Lowenthal<br><span style="font-size:11px;color:var(--text-muted)">デヴィッド・ローエンタール</span></td><td style="font-size:11.5px">American</td><td style="font-size:11.5px">Cultural Geography / Heritage</td><td style="font-size:11.5px;color:var(--text-secondary)">Heritage Studies</td><td style="font-family:var(--font-mono);font-size:10.5px">1923–2018</td></tr>
+        <tr><td>吉本隆明<br><span style="font-size:11px;color:var(--text-muted)">よしもと たかあき</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Critical Theory / Poetry</td><td style="font-size:11.5px;color:var(--text-secondary)">Common Fantasy Theory</td><td style="font-family:var(--font-mono);font-size:10.5px">1924–2012</td></tr>
+        <tr><td>Michel de Certeau<br><span style="font-size:11px;color:var(--text-muted)">ミシェル・ド・セルトー</span></td><td style="font-size:11.5px">French</td><td style="font-size:11.5px">History / Cultural Theory</td><td style="font-size:11.5px;color:var(--text-secondary)">Everyday Life Theory</td><td style="font-family:var(--font-mono);font-size:10.5px">1925–1986</td></tr>
+        <tr><td>中村雄二郎<br><span style="font-size:11px;color:var(--text-muted)">なかむら ゆうじろう</span></td><td style="font-size:11.5px">Japanese</td><td style="font-size:11.5px">Philosophy</td><td style="font-size:11.5px;color:var(--text-secondary)">Japanese Philosophy of Common Sense</td><td style="font-family:var(--font-mono);font-size:10.5px">1925–2017</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="concepts">
+    <h2><span class="num">09</span>概念サンプル</h2>
+    <h3>最古層 (BC〜1900)</h3>
+    <table><thead><tr><th>概念</th><th>SF</th><th>初出</th><th>提唱者</th></tr></thead><tbody>
+        <tr><td>Berkeley School of Geography<br><span style="font-size:11px;color:var(--text-muted)">バークレー学派地理学</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Sauer Cultural Landscape<br><span style="font-size:11px;color:var(--text-muted)">サウアー 文化景観</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Vidal de la Blache Tableau<br><span style="font-size:11px;color:var(--text-muted)">ヴィダル・ド・ラ・ブラーシュ 風土</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Hettner Chorology<br><span style="font-size:11px;color:var(--text-muted)">ヘットナー コロロジー</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Hartshorne Nature of Geography<br><span style="font-size:11px;color:var(--text-muted)">ハートショーン 地理学の性格</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Schaefer Exceptionalism Critique<br><span style="font-size:11px;color:var(--text-muted)">シェイファー 例外主義批判</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Hägerstrand Time Geography<br><span style="font-size:11px;color:var(--text-muted)">ヘーガーストランド 時間地理学</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Quantitative Revolution Geography<br><span style="font-size:11px;color:var(--text-muted)">計量革命地理学</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Harvey Geography of Difference<br><span style="font-size:11px;color:var(--text-muted)">ハーヴェイ 差異の地理学</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Harvey Limits to Capital<br><span style="font-size:11px;color:var(--text-muted)">ハーヴェイ 資本の限界</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Massey Power Geometry<br><span style="font-size:11px;color:var(--text-muted)">マッシー パワー幾何学</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Soja Postmodern Geographies<br><span style="font-size:11px;color:var(--text-muted)">ソジャ ポストモダン地理学</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Soja Thirdspace Detail<br><span style="font-size:11px;color:var(--text-muted)">ソジャ サードスペース</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Smith Uneven Development<br><span style="font-size:11px;color:var(--text-muted)">スミス 不均等発展</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+        <tr><td>Pred Becoming Places<br><span style="font-size:11px;color:var(--text-muted)">プレッド 場所生成</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">—</td><td style="font-size:11.5px">—</td></tr>
+    </tbody></table>
+    <h3>最新層 (2000+)</h3>
+    <table><thead><tr><th>概念</th><th>SF</th><th>初出</th><th>提唱者</th></tr></thead><tbody>
+        <tr><td>Falepili Union Treaty<br><span style="font-size:11px;color:var(--text-muted)">ファレピリ条約</span></td><td>SF14</td><td style="font-family:var(--font-mono);font-size:11px">2023</td><td style="font-size:11.5px">Tuvalu and Australia governments</td></tr>
+        <tr><td>Maasai Land Loss<br><span style="font-size:11px;color:var(--text-muted)">マサイ族土地喪失</span></td><td>SF10</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">Tanzanian government,Maasai movement</td></tr>
+        <tr><td>Sandy Hook Memorial<br><span style="font-size:11px;color:var(--text-muted)">サンディフック記念</span></td><td>SF08</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">Sandy Hook Permanent Memorial Commission</td></tr>
+        <tr><td>Climate Justice and Women<br><span style="font-size:11px;color:var(--text-muted)">気候正義と女性</span></td><td>SF05</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">IPCC AR6</td></tr>
+        <tr><td>Place-based Citizen Sensing<br><span style="font-size:11px;color:var(--text-muted)">場所ベース市民センサー</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">Jennifer Gabrys</td></tr>
+        <tr><td>Place-based Climate Adaptation<br><span style="font-size:11px;color:var(--text-muted)">場所ベース気候適応</span></td><td>SF14</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">IPCC AR6 WG II</td></tr>
+        <tr><td>Right to Healthy Environment (UN)<br><span style="font-size:11px;color:var(--text-muted)">健全な環境への権利</span></td><td>SF14</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">UN General Assembly</td></tr>
+        <tr><td>Loss and Damage Fund<br><span style="font-size:11px;color:var(--text-muted)">損失と被害基金</span></td><td>SF14</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">UNFCCC,small island states</td></tr>
+        <tr><td>Urban Comparative Method (Robinson)<br><span style="font-size:11px;color:var(--text-muted)">都市比較方法論</span></td><td>SF04</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">Jennifer Robinson</td></tr>
+        <tr><td>30 by 30 Initiative<br><span style="font-size:11px;color:var(--text-muted)">30 by 30 国際目標</span></td><td>SF01</td><td style="font-family:var(--font-mono);font-size:11px">2022</td><td style="font-size:11.5px">UNFCCC,CBD COP15</td></tr>
+        <tr><td>Smell Preservation<br><span style="font-size:11px;color:var(--text-muted)">匂い保存</span></td><td>SF12</td><td style="font-family:var(--font-mono);font-size:11px">2021</td><td style="font-size:11.5px">Odeuropa consortium,EU</td></tr>
+        <tr><td>Hashim Sarkis Biennale 2021<br><span style="font-size:11px;color:var(--text-muted)">サルキス ビエンナーレ 2021</span></td><td>SF03</td><td style="font-family:var(--font-mono);font-size:11px">2021</td><td style="font-size:11.5px">Hashim Sarkis</td></tr>
+        <tr><td>Ecocide Crime Recognition<br><span style="font-size:11px;color:var(--text-muted)">エコサイド犯罪認知</span></td><td>SF14</td><td style="font-family:var(--font-mono);font-size:11px">2021</td><td style="font-size:11.5px">Stop Ecocide International</td></tr>
+        <tr><td>Critical Zone (Latour)<br><span style="font-size:11px;color:var(--text-muted)">クリティカル・ゾーン</span></td><td>SF09</td><td style="font-family:var(--font-mono);font-size:11px">2020</td><td style="font-size:11.5px">Bruno Latour,Peter Weibel</td></tr>
+        <tr><td>Colston Statue Toppling<br><span style="font-size:11px;color:var(--text-muted)">コルストン像引き倒し</span></td><td>SF08</td><td style="font-family:var(--font-mono);font-size:11px">2020</td><td style="font-size:11.5px">Bristol BLM protesters</td></tr>
+    </tbody></table>
+  </section>
+
+  <section id="methodology">
+    <h2><span class="num">10</span>方法論 (Phase 0-15)</h2>
+    <p>PLN-DB は /adb v1.1 経路 A (academic-db-build) で構築する。Phase 0 (Scope 15 SF 確定) → Phase 0.5 (API 宣言: OpenAlex / Semantic Scholar / CiNii / NDL / WorldCat) → Phase 0.7 (モデルティア: claude-sonnet-4-5 主) → Phase 1 (Schema 16 テーブル) → Phase 2 (ETL Wave 1 Core 180 件) → Phase 3 (Validate: 重複 0 / source_url 100% / verified 100%) → Phase 4 (Relations 116 + Cross-DB 100) → Phase 5 (Dashboard / 本ファイル) → Phase 6-7 (doc-verify + Publish) を Wave 1 で完遂。Phase 8-15 (Continuous Improvement Loop) は Wave 2-N で展開し、Production 5,500 concepts / Gwet AC1 ≥ 0.85 / 多言語 30%+ へ到達する。</p>
+    <p>Wave 1 では各 SF 12 件の核 (Wave 1 Core MVP) を均一に置き、Wave 2 で各 SF を 30-50 へ拡張、Wave 3+ で db-concept-builder agents 並列起動により Production target へ達する設計。</p>
+  </section>
+
+  </main>
+</div>
+
+<footer>
+PLN-DB v0.1.0 Wave 1 Core MVP ｜ Build {gen_at} ｜ NPO 法人ミラツク ／ esse-sense ｜ /adb placeness --full-quality
+</footer>
+
+<script>
+  const saved = localStorage.getItem('pln-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
