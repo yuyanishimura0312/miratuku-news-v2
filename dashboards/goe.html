@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOE-DB — Good Organization Excellence Knowledge DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@300;400;500;600;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", Menlo, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --surface: #1A1A1A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.85;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+}
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  height: 48px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-light);
+  border-top: 3px solid #121212;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+}
+.top-bar .brand {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+}
+.top-bar .brand .accent { color: var(--accent-warm); }
+.theme-toggle {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text); padding: 4px 12px;
+  font-family: var(--font-mono); font-size: 11px;
+  cursor: pointer; letter-spacing: 0.12em;
+}
+.theme-toggle:hover { background: var(--accent-warm); color: #FFFFFF; border-color: var(--accent-warm); }
+.layout {
+  display: grid; grid-template-columns: 240px 1fr;
+  max-width: 1240px; margin: 0 auto;
+  min-height: calc(100vh - 48px);
+}
+.toc-sidebar {
+  position: sticky; top: 48px;
+  padding: 32px 16px 32px 24px;
+  border-right: 1px solid var(--border-light);
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+.toc-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.toc-sidebar ol { list-style: none; padding: 0; }
+.toc-sidebar li { margin: 6px 0; }
+.toc-sidebar a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  display: block;
+  padding: 4px 0;
+  border-left: 2px solid transparent;
+  padding-left: 8px;
+}
+.toc-sidebar a:hover {
+  color: var(--accent-warm);
+  border-left-color: var(--accent-warm);
+}
+.toc-num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-right: 8px;
+}
+main {
+  padding: 64px 48px;
+  max-width: 800px;
+}
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border-light); }
+  main { padding: 32px 24px; }
+}
+h1 {
+  font-family: var(--font-serif); font-weight: 700;
+  font-size: 32px; line-height: 1.32;
+  margin-bottom: 16px; letter-spacing: 0.02em;
+}
+h2 {
+  font-family: var(--font-serif); font-weight: 700;
+  font-size: 22px; line-height: 1.42;
+  margin: 56px 0 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-light);
+}
+h3 {
+  font-family: var(--font-serif); font-weight: 600;
+  font-size: 18px; margin: 32px 0 12px;
+  color: var(--accent-warm);
+}
+p { margin-bottom: 16px; text-indent: 1em; font-family: var(--font-serif); font-size: 15px; }
+p:first-of-type { text-indent: 0; }
+.lead {
+  font-size: 16px;
+  color: var(--text-secondary);
+  border-left: 2px solid var(--accent-warm);
+  padding-left: 16px;
+  margin: 24px 0 40px;
+  text-indent: 0;
+}
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px; margin: 24px 0;
+}
+.stat-card {
+  padding: 18px 16px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+}
+.stat-num {
+  font-family: var(--font-mono);
+  font-size: 28px; font-weight: 600;
+  color: var(--accent-warm);
+  display: block;
+  line-height: 1.1;
+}
+.stat-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  display: block;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 32px;
+  font-size: 13px;
+  font-family: var(--font);
+}
+th, td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+th {
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.bar {
+  display: inline-block;
+  height: 8px;
+  background: var(--accent-warm);
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--accent-muted);
+  color: var(--accent-warm);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  border-radius: 2px;
+}
+.tag.nw {
+  background: rgba(204,20,0,0.10);
+  color: var(--accent-warm-soft);
+}
+.tag.crit {
+  background: rgba(0,0,0,0.05);
+  color: var(--text-secondary);
+}
+.footer {
+  margin-top: 80px;
+  padding: 32px 0;
+  border-top: 1px solid var(--border-light);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.gate-row { font-family: var(--font); padding: 8px 0; border-bottom: 1px dashed var(--border-light); }
+.gate-pass { color: #008000; font-weight: 600; }
+.gate-warn { color: #B07000; font-weight: 600; }
+.gate-fail { color: var(--accent-warm); font-weight: 600; }
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  main { padding: 16px; }
+  body { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">GOE-DB <span class="accent">|</span> Good Organization Excellence Knowledge DB</div>
+  <button class="theme-toggle" onclick="toggleTheme()">DARK/LIGHT</button>
+</div>
+<div class="layout">
+<aside class="toc-sidebar">
+  <div class="toc-label">FULL DASHBOARD</div>
+  <ol>
+    <li><a href="#overview"><span class="toc-num">01</span>概要</a></li>
+    <li><a href="#stats"><span class="toc-num">02</span>主要指標</a></li>
+    <li><a href="#sf-coverage"><span class="toc-num">03</span>15 サブフィールド</a></li>
+    <li><a href="#culture-map"><span class="toc-num">04</span>文化圏分布</a></li>
+    <li><a href="#relations"><span class="toc-num">05</span>関係性</a></li>
+    <li><a href="#crossdb"><span class="toc-num">06</span>Cross-DB 統合</a></li>
+    <li><a href="#measurement"><span class="toc-num">07</span>測定方法</a></li>
+    <li><a href="#critical-views"><span class="toc-num">08</span>批判視点</a></li>
+    <li><a href="#cultural-mapping"><span class="toc-num">09</span>文化的翻訳</a></li>
+    <li><a href="#quality"><span class="toc-num">10</span>品質ゲート</a></li>
+    <li><a href="#roadmap"><span class="toc-num">11</span>Production への道</a></li>
+  </ol>
+</aside>
+
+<main>
+<h1 id="overview">Good Organization Excellence Knowledge DB (GOE-DB)</h1>
+<div class="lead">
+「良い企業・良い組織」言説の学術的類型化のための知識基盤。15 サブフィールド × 4 軸網羅
+(概念データ / 批判収集 / 実証ロジック+数式 / 測定方法) で構築。NPO 法人ミラツク
+中立性原則のもと、西洋・非西洋を対等に扱う。Wave 1 完了 (2026-05-26 17:44 UTC)。
+</div>
+
+<h2 id="stats">主要指標 (Wave 1)</h2>
+<div class="stats-grid">
+  <div class="stat-card"><span class="stat-num">1784</span><span class="stat-label">CONCEPTS</span></div>
+  <div class="stat-card"><span class="stat-num">15</span><span class="stat-label">SUBFIELDS</span></div>
+  <div class="stat-card"><span class="stat-num">360</span><span class="stat-label">RELATIONS</span></div>
+  <div class="stat-card"><span class="stat-num">185</span><span class="stat-label">CROSS-DB REFS</span></div>
+  <div class="stat-card"><span class="stat-num">26</span><span class="stat-label">TARGET DBS</span></div>
+  <div class="stat-card"><span class="stat-num">75</span><span class="stat-label">MEASUREMENT INSTRUMENTS</span></div>
+  <div class="stat-card"><span class="stat-num">79</span><span class="stat-label">CRITIQUES</span></div>
+  <div class="stat-card"><span class="stat-num">16</span><span class="stat-label">CULTURAL MAPPINGS</span></div>
+  <div class="stat-card"><span class="stat-num">22.0%</span><span class="stat-label">NON-WESTERN</span></div>
+</div>
+
+<p>
+GOE-DB は他の学術概念 DB と異なる <strong>4 軸網羅原則</strong> を持つ。第 1 軸は 15 SF
+の概念データ収集。第 2 軸は批判収集で、SF14 を独立 SF として 92 概念を集積するだけでなく、
+各 concept に <code>critical_view</code> 列を持たせ critiques relation で接続する。第 3
+軸は実証ロジック・数式・アルゴリズムで、各 concept に <code>mathematical_formulation</code>
+(LaTeX) 列を備える (Wave 2 以降で充填)。第 4 軸は測定方法で、SF15 を独立 SF として 75
+インデックスを集積し、measurement_instruments テーブルで構造化する。
+</p>
+
+<h2 id="sf-coverage">15 サブフィールド カバレッジ</h2>
+<table>
+<thead><tr><th>SF</th><th>名称</th><th>Wave 1</th><th>Production</th><th>達成率</th><th>進捗</th></tr></thead>
+<tbody>
+<tr><td><strong>SF01</strong></td><td>Excellence Frameworks</td><td style="font-family:var(--font-mono)">62</td><td style="font-family:var(--font-mono)">400</td><td style="font-family:var(--font-mono)">15.5%</td><td><span class="bar" style="width:31px"></span></td></tr>
+<tr><td><strong>SF02</strong></td><td>High-Performance Work Systems (HPWS)</td><td style="font-family:var(--font-mono)">62</td><td style="font-family:var(--font-mono)">400</td><td style="font-family:var(--font-mono)">15.5%</td><td><span class="bar" style="width:31px"></span></td></tr>
+<tr><td><strong>SF03</strong></td><td>Organizational Culture</td><td style="font-family:var(--font-mono)">63</td><td style="font-family:var(--font-mono)">400</td><td style="font-family:var(--font-mono)">15.8%</td><td><span class="bar" style="width:31px"></span></td></tr>
+<tr><td><strong>SF04</strong></td><td>Engagement & Wellbeing</td><td style="font-family:var(--font-mono)">60</td><td style="font-family:var(--font-mono)">400</td><td style="font-family:var(--font-mono)">15.0%</td><td><span class="bar" style="width:30px"></span></td></tr>
+<tr><td><strong>SF05</strong></td><td>Psychological Safety</td><td style="font-family:var(--font-mono)">48</td><td style="font-family:var(--font-mono)">350</td><td style="font-family:var(--font-mono)">13.7%</td><td><span class="bar" style="width:27px"></span></td></tr>
+<tr><td><strong>SF06</strong></td><td>Learning Organization</td><td style="font-family:var(--font-mono)">59</td><td style="font-family:var(--font-mono)">400</td><td style="font-family:var(--font-mono)">14.8%</td><td><span class="bar" style="width:29px"></span></td></tr>
+<tr><td><strong>SF07</strong></td><td>Servant & Authentic Leadership</td><td style="font-family:var(--font-mono)">60</td><td style="font-family:var(--font-mono)">400</td><td style="font-family:var(--font-mono)">15.0%</td><td><span class="bar" style="width:30px"></span></td></tr>
+<tr><td><strong>SF08</strong></td><td>Stakeholder & Purpose</td><td style="font-family:var(--font-mono)">60</td><td style="font-family:var(--font-mono)">400</td><td style="font-family:var(--font-mono)">15.0%</td><td><span class="bar" style="width:30px"></span></td></tr>
+<tr><td><strong>SF09</strong></td><td>Teal & Evolutionary</td><td style="font-family:var(--font-mono)">50</td><td style="font-family:var(--font-mono)">350</td><td style="font-family:var(--font-mono)">14.3%</td><td><span class="bar" style="width:28px"></span></td></tr>
+<tr><td><strong>SF10</strong></td><td>Non-Western Management (★)</td><td style="font-family:var(--font-mono)">112</td><td style="font-family:var(--font-mono)">1000</td><td style="font-family:var(--font-mono)">11.2%</td><td><span class="bar" style="width:22px"></span></td></tr>
+<tr><td><strong>SF11</strong></td><td>DEI & Inclusion</td><td style="font-family:var(--font-mono)">50</td><td style="font-family:var(--font-mono)">350</td><td style="font-family:var(--font-mono)">14.3%</td><td><span class="bar" style="width:28px"></span></td></tr>
+<tr><td><strong>SF12</strong></td><td>Trust & Social Capital</td><td style="font-family:var(--font-mono)">49</td><td style="font-family:var(--font-mono)">350</td><td style="font-family:var(--font-mono)">14.0%</td><td><span class="bar" style="width:28px"></span></td></tr>
+<tr><td><strong>SF13</strong></td><td>Meaning at Work</td><td style="font-family:var(--font-mono)">49</td><td style="font-family:var(--font-mono)">350</td><td style="font-family:var(--font-mono)">14.0%</td><td><span class="bar" style="width:28px"></span></td></tr>
+<tr><td><strong>SF14</strong></td><td>Critical Views (★)</td><td style="font-family:var(--font-mono)">92</td><td style="font-family:var(--font-mono)">600</td><td style="font-family:var(--font-mono)">15.3%</td><td><span class="bar" style="width:30px"></span></td></tr>
+<tr><td><strong>SF15</strong></td><td>Measurement & Indices (★)</td><td style="font-family:var(--font-mono)">75</td><td style="font-family:var(--font-mono)">600</td><td style="font-family:var(--font-mono)">12.5%</td><td><span class="bar" style="width:25px"></span></td></tr>
+</tbody></table>
+
+<p>
+SF10 (非西洋経営) は中核駆動軸として 112 概念を投入、Production 目標 1,000+ に向けて
+Wave 2 以降で 800+ 件を追加する。SF14 (批判) と SF15 (測定) は独立 SF として、
+Wave 1 で既に Production 目標の 12-15% を達成している。
+</p>
+
+<h2 id="culture-map">文化圏分布</h2>
+<table><thead><tr><th>文化圏</th><th>概念数</th><th>比率</th><th>進捗</th></tr></thead><tbody>
+<tr><td>western</td><td style="font-family:var(--font-mono)">1391</td><td style="font-family:var(--font-mono)">78.0%</td><td><span class="bar" style="width:389px"></span></td></tr>
+<tr><td>japanese</td><td style="font-family:var(--font-mono)">158</td><td style="font-family:var(--font-mono)">8.9%</td><td><span class="bar" style="width:44px"></span></td></tr>
+<tr><td>east_asian</td><td style="font-family:var(--font-mono)">99</td><td style="font-family:var(--font-mono)">5.5%</td><td><span class="bar" style="width:27px"></span></td></tr>
+<tr><td>south_asian</td><td style="font-family:var(--font-mono)">54</td><td style="font-family:var(--font-mono)">3.0%</td><td><span class="bar" style="width:15px"></span></td></tr>
+<tr><td>african</td><td style="font-family:var(--font-mono)">28</td><td style="font-family:var(--font-mono)">1.6%</td><td><span class="bar" style="width:7px"></span></td></tr>
+<tr><td>arabic</td><td style="font-family:var(--font-mono)">23</td><td style="font-family:var(--font-mono)">1.3%</td><td><span class="bar" style="width:6px"></span></td></tr>
+<tr><td>latin_american</td><td style="font-family:var(--font-mono)">22</td><td style="font-family:var(--font-mono)">1.2%</td><td><span class="bar" style="width:6px"></span></td></tr>
+<tr><td>indigenous</td><td style="font-family:var(--font-mono)">8</td><td style="font-family:var(--font-mono)">0.4%</td><td><span class="bar" style="width:2px"></span></td></tr>
+<tr><td>Europe</td><td style="font-family:var(--font-mono)">1</td><td style="font-family:var(--font-mono)">0.1%</td><td><span class="bar" style="width:0px"></span></td></tr>
+</tbody></table>
+
+<p>
+非西洋 (japanese / east_asian / south_asian / arabic / african / latin_american /
+indigenous) の構造的組込により、Wave 1 で非西洋率 22.0% を達成。
+Production target は 30%+。Wave 2 以降で SF10 拡張と SF14/SF15 の非西洋批判・測定追加で
+30% 到達を目指す。
+</p>
+
+<h2 id="relations">内部関係性</h2>
+<table><thead><tr><th>関係タイプ</th><th>件数</th></tr></thead><tbody>
+<tr><td>predecessor</td><td style="font-family:var(--font-mono)">94</td></tr>
+<tr><td>successor</td><td style="font-family:var(--font-mono)">84</td></tr>
+<tr><td>critiques</td><td style="font-family:var(--font-mono)">77</td></tr>
+<tr><td>measures</td><td style="font-family:var(--font-mono)">55</td></tr>
+<tr><td>translates_from</td><td style="font-family:var(--font-mono)">29</td></tr>
+<tr><td>extends</td><td style="font-family:var(--font-mono)">8</td></tr>
+<tr><td>influences</td><td style="font-family:var(--font-mono)">5</td></tr>
+<tr><td>operationalizes</td><td style="font-family:var(--font-mono)">5</td></tr>
+<tr><td>contradicts</td><td style="font-family:var(--font-mono)">3</td></tr>
+</tbody></table>
+
+<p>
+relations テーブルは concept 間の 360 の関係を保持。<strong>critiques</strong>
+が 34 件と最多で、これは GOE-DB が 'critique を構造化する DB' であることを反映する。
+<strong>measures</strong> 20 件は SF15 のインデックスが SF01-13 の概念を測定する関係。
+<strong>translates_from</strong> 4 件は西洋概念が非西洋概念から派生・翻訳された関係
+(Lean ← TPS / Servant Leadership ← Ubuntu / Daoism 等)。
+</p>
+
+<h2 id="crossdb">Cross-DB 統合 (26 target DBs)</h2>
+<table><thead><tr><th>Target DB</th><th>件数</th></tr></thead><tbody>
+<tr><td><code>great-figures</code></td><td style="font-family:var(--font-mono)">36</td></tr>
+<tr><td><code>mg</code></td><td style="font-family:var(--font-mono)">28</td></tr>
+<tr><td><code>philosophy</code></td><td style="font-family:var(--font-mono)">20</td></tr>
+<tr><td><code>ss</code></td><td style="font-family:var(--font-mono)">15</td></tr>
+<tr><td><code>ide</code></td><td style="font-family:var(--font-mono)">9</td></tr>
+<tr><td><code>tlj</code></td><td style="font-family:var(--font-mono)">8</td></tr>
+<tr><td><code>gc</code></td><td style="font-family:var(--font-mono)">6</td></tr>
+<tr><td><code>lab</code></td><td style="font-family:var(--font-mono)">6</td></tr>
+<tr><td><code>cfmi</code></td><td style="font-family:var(--font-mono)">5</td></tr>
+<tr><td><code>ec</code></td><td style="font-family:var(--font-mono)">5</td></tr>
+<tr><td><code>kas</code></td><td style="font-family:var(--font-mono)">5</td></tr>
+<tr><td><code>math</code></td><td style="font-family:var(--font-mono)">5</td></tr>
+<tr><td><code>anthropology</code></td><td style="font-family:var(--font-mono)">4</td></tr>
+<tr><td><code>cq</code></td><td style="font-family:var(--font-mono)">4</td></tr>
+<tr><td><code>innovation-db</code></td><td style="font-family:var(--font-mono)">4</td></tr>
+<tr><td><code>kos</code></td><td style="font-family:var(--font-mono)">4</td></tr>
+<tr><td><code>em</code></td><td style="font-family:var(--font-mono)">3</td></tr>
+<tr><td><code>sc</code></td><td style="font-family:var(--font-mono)">3</td></tr>
+<tr><td><code>si-framework</code></td><td style="font-family:var(--font-mono)">3</td></tr>
+<tr><td><code>tc</code></td><td style="font-family:var(--font-mono)">3</td></tr>
+<tr><td><code>cdh</code></td><td style="font-family:var(--font-mono)">2</td></tr>
+<tr><td><code>kgh</code></td><td style="font-family:var(--font-mono)">2</td></tr>
+<tr><td><code>wcps</code></td><td style="font-family:var(--font-mono)">2</td></tr>
+<tr><td><code>aag</code></td><td style="font-family:var(--font-mono)">1</td></tr>
+<tr><td><code>dsci</code></td><td style="font-family:var(--font-mono)">1</td></tr>
+<tr><td><code>wmd</code></td><td style="font-family:var(--font-mono)">1</td></tr>
+</tbody></table>
+
+<p>
+mg (経営学) / tlj (判断力) / gc (源泉サイクル) / cfmi (経営統合) が主要連携先。
+philosophy (哲学) は非西洋経営の起源 (Daoism / Confucianism / Ubuntu / Tawhid)
+への接続点。great-figures (人物) は日本 / 中国の経営者の系譜接続。
+</p>
+
+<h2 id="measurement">測定方法 (SF15)</h2>
+<p>
+{total_minstr} の測定インデックスを measurement_instruments テーブルで構造化。
+代表的なもの:
+</p>
+<ul style="margin-left:24px; font-family:var(--font); font-size:13px;">
+  <li>GPTW Trust Index (60-item) / Fortune 100 Best Companies</li>
+  <li>Gallup Q12 / UWES-9 / UWES-17 (engagement)</li>
+  <li>MBI-22 / MBI-GS / MBI-HSS / OLBI / CBI (burnout)</li>
+  <li>Edmondson PSI 7-item / ZENTech サーベイ (心理的安全性)</li>
+  <li>OCAI 24-item / Denison 60-item / OCP 54-item / Hofstede VSM 2013 (文化)</li>
+  <li>MLQ / ALQ / SLBS-7 / Sendjaya SLBS / van Dierendonck SLS (リーダーシップ)</li>
+  <li>MSCI ESG / Sustainalytics / FTSE Russell / S&amp;P CSA / DJSI / B Corp Impact (ESG)</li>
+  <li>健康経営銘柄 / ホワイト500 / なでしこ銘柄 / DX 銘柄 (日本)</li>
+</ul>
+
+<h2 id="critical-views">批判視点 ({total_critiques} critiques)</h2>
+<p>
+SF14 独立 SF で 92 件、各 concept への inline critical_view 79 件、合計 critical
+coverage 18% を達成 (target 10%+)。NPO 中立性原則のもと、ポジティブ言説とネガティブ批判を
+対等に提示する。最近 (年代降順) の批判視点:
+</p>
+<table><thead><tr><th>批判概念</th><th>対象</th><th>提唱年</th><th>文化圏</th></tr></thead><tbody>
+<tr><td>McKinsey Diversity Wins Reports</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2020</td><td>USA</td></tr>
+<tr><td>Business Roundtable Purpose 2019</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2019</td><td>USA</td></tr>
+<tr><td>Holacracy</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2015</td><td>USA</td></tr>
+<tr><td>Made in China 2025 Strategy</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2015</td><td>China</td></tr>
+<tr><td>Teal Organizations (Laloux)</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2014</td><td>Belgium-USA</td></tr>
+<tr><td>Conscious Capitalism Model</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2013</td><td>USA</td></tr>
+<tr><td>Conscious Capitalism</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2013</td><td>USA</td></tr>
+<tr><td>Decentralized Autonomous Organization (DAO)</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2013</td><td>Russia-Canada</td></tr>
+<tr><td>Valve Software Flat Org</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2012</td><td>USA</td></tr>
+<tr><td>Spotify Squad Model</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2012</td><td>Sweden</td></tr>
+<tr><td>Jugaad Innovation</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2012</td><td>India-USA</td></tr>
+<tr><td>Stretch Goal</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2011</td><td>USA</td></tr>
+<tr><td>Creating Shared Value (CSV)</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2011</td><td>USA</td></tr>
+<tr><td>HR Analytics</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2010</td><td>USA</td></tr>
+<tr><td>Wellness Programs (Corporate Wellness)</td><td><span class="tag crit">moderate</span></td><td style="font-family:var(--font-mono)">2010</td><td>USA</td></tr>
+</tbody></table>
+
+<h2 id="cultural-mapping">文化的翻訳 (16 mappings)</h2>
+<p>
+西洋⇄非西洋の概念対応を cultural_mappings テーブルで明示。代表的な発見:
+</p>
+<ul style="margin-left:24px; font-family:var(--font-serif); font-size:14px;">
+  <li><strong>Stakeholder Theory (Freeman 1984)</strong> ⇄ <strong>三方よし</strong> (近江商人 17 世紀):
+      Sanpo-Yoshi が 250+ 年早く同等の多 stakeholder 哲学を確立。</li>
+  <li><strong>Conscious Capitalism (2013)</strong> ⇄ <strong>論語と算盤</strong> (渋沢栄一 1916):
+      97 年早い倫理と資本主義の統合体系化。</li>
+  <li><strong>B Corporation (2006)</strong> ⇄ <strong>Tata Group Trust Model</strong> (1932):
+      74 年早い stakeholder-primacy 法人形態。</li>
+  <li><strong>Lean Enterprise (1990)</strong> ⇄ <strong>Toyota Production System</strong> (1978):
+      Lean は TPS の派生的体系化。</li>
+  <li><strong>Servant Leadership (1970)</strong> ⇄ <strong>Ubuntu Management / Daoist Wu Wei</strong>:
+      共通の "service-first" 哲学を異文化が独立に発展。</li>
+  <li><strong>Doughnut Economics (2017)</strong> ⇄ <strong>Buen Vivir (Sumak Kawsay)</strong>:
+      Raworth が Indigenous Andean を inspiration として明示。</li>
+</ul>
+
+<h2 id="quality">品質ゲート (Wave 1)</h2>
+<div class="gate-row"><span class="gate-pass">[PASS]</span> Snapshot consistency: 0 duplicates</div>
+<div class="gate-row"><span class="gate-pass">[PASS]</span> Hallucination (source_url 100%): 100.0%</div>
+<div class="gate-row"><span class="gate-warn">[WARN]</span> Coverage gap (each SF >= 15%): SF14/SF15 達成、SF01-13 は Wave 2 持ち越し</div>
+<div class="gate-row"><span class="gate-warn">[WARN]</span> Cross-team duplicates: 35 件 (SF14/SF15 が SF01-13 概念を critique/measurement 視点で再投入 — 意図的設計)</div>
+<div class="gate-row"><span class="gate-pass">[PASS]</span> Critical view (10%+): inline 8.3% + SF14 → 18.0%</div>
+<div class="gate-row"><span class="gate-warn">[WARN]</span> Non-Western (25%+): 22.0% (Wave 2 で SF10 拡張により達成見込み)</div>
+<div class="gate-row"><span class="gate-pass">[PASS]</span> Verified (80%+): 100.0%</div>
+<div class="gate-row"><span class="gate-pass">[PASS]</span> Multilingual (30%+): name_ja 100.0%</div>
+<div class="gate-row"><span class="gate-pass">[PASS]</span> Cross-DB refs (18+ target DBs): 26 DBs</div>
+<div class="gate-row"><span class="gate-pass">[PASS]</span> Measurement instruments (50+): 75</div>
+
+<h2 id="roadmap">Production への道</h2>
+<p>
+Wave 1 で 1784 concepts (Production target 5,500 の 17.3%)。Wave 2-7 で
+段階的に拡張する計画:
+</p>
+<table><thead><tr><th>Wave</th><th>主要拡張</th><th>累計目標</th></tr></thead><tbody>
+<tr><td>Wave 1 (現在)</td><td>15 SF 初期投入 + 4 軸網羅基盤</td><td>951 concepts</td></tr>
+<tr><td>Wave 2</td><td>SF10 非西洋 +200 + 多言語化 (zh/ko/es/ar/hi)</td><td>1,500+ concepts</td></tr>
+<tr><td>Wave 3</td><td>SF01-09 各 +50 + LaTeX mathematical_formulation 充填</td><td>2,200+ concepts</td></tr>
+<tr><td>Wave 4</td><td>SF11-13 各 +50 + executive_cases 100+ 件</td><td>2,800+ concepts</td></tr>
+<tr><td>Wave 5</td><td>SF14 批判 +200 + critical_views テーブル拡充</td><td>3,500+ concepts</td></tr>
+<tr><td>Wave 6</td><td>SF15 +200 + algorithms/proofs/numerical_examples 充填</td><td>4,200+ concepts</td></tr>
+<tr><td>Wave 7</td><td>genealogy_chains 30+ + IRR Gwet AC1 測定 + Phase 7 類型化準備</td><td>5,500+ concepts</td></tr>
+</tbody></table>
+
+<p>
+Phase 7+ で 15 SF × 学派 × 文明圏 × 測定可能性 × 批判耐性 の多次元クラスタリングで
+「成果型 / 文化型 / 学習型 / 関係型 / 倫理型 / 進化型 / 在来型 / 批判応答型」等の
+8 類型を抽出する。
+</p>
+
+<div class="footer">
+  GOE-DB v0.1.0 / Wave 1 / 2026-05-26 17:44 UTC / NPO 法人ミラツク &amp; esse-sense<br>
+  Schema: 17 tables / DB path: <code>~/projects/research/organization-excellence-db/data/goe.db</code><br>
+  GitHub: yuyanishimura0312/organization-excellence-db (private)
+</div>
+
+</main>
+</div>
+<script>
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('goe-theme', t);
+}
+(function() {
+  const saved = localStorage.getItem('goe-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+</body>
+</html>
