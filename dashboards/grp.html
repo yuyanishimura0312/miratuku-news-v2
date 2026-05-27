@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRP-DB Dashboard ― Global Research Press DB | ミラツク</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@300;400;500;600;700;900&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", Menlo, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A;
+  --highlight: #FF4030; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-serif); background: var(--bg); color: var(--text);
+  font-size: 15px; line-height: 1.9; letter-spacing: 0.025em;
+  font-feature-settings: "palt"; -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+.top-bar {
+  position: sticky; top: 0; left: 0; right: 0; height: 48px; z-index: 100;
+  background: var(--bg); border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; font-family: var(--font);
+}
+.brand { font-weight: 700; font-size: 14px; letter-spacing: 0.05em; }
+.brand .red { color: var(--accent-warm); }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text);
+  padding: 4px 10px; font-family: var(--font-mono); font-size: 11px;
+  cursor: pointer; border-radius: 2px; }
+.theme-toggle:hover { background: var(--accent-muted); }
+.layout { display: grid; grid-template-columns: 240px 1fr; gap: 0;
+  max-width: 1180px; margin: 0 auto; }
+.toc-sidebar { position: sticky; top: 64px; align-self: start;
+  padding: 32px 16px 32px 24px; font-family: var(--font);
+  font-size: 12px; letter-spacing: 0.05em; max-height: calc(100vh - 64px);
+  overflow-y: auto; border-right: 1px solid var(--border-light); }
+.toc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 16px; font-weight: 600; }
+.toc-list { list-style: none; }
+.toc-list li { margin-bottom: 8px; }
+.toc-list a { color: var(--text-secondary); text-decoration: none;
+  display: block; padding: 4px 0; transition: color 0.15s; }
+.toc-list a:hover { color: var(--accent-warm); }
+.toc-list .ch { font-family: var(--font-mono); color: var(--text-muted); margin-right: 8px; }
+main { padding: 48px 56px 96px; max-width: 760px; }
+.hero { margin-bottom: 64px; padding-bottom: 32px; border-bottom: 2px solid var(--accent); }
+.eyebrow { font-family: var(--font); font-size: 11px; letter-spacing: 0.22em;
+  color: var(--accent-warm); text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
+.title { font-size: 32px; font-weight: 700; line-height: 1.32; margin-bottom: 8px;
+  letter-spacing: 0.02em; }
+.title-en { font-family: Georgia, serif; font-style: italic; color: var(--text-secondary);
+  font-size: 15px; margin-bottom: 24px; }
+.lead { font-size: 14px; line-height: 1.95; color: var(--text-secondary); max-width: 620px;
+  padding-left: 16px; border-left: 2px solid var(--accent-warm); }
+.kv-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--border-light); margin: 32px 0 0; border: 1px solid var(--border-light); }
+.kv { background: var(--card); padding: 16px 14px; }
+.kv-num { font-family: var(--font-serif); font-size: 22px; font-weight: 700;
+  color: var(--accent-warm); line-height: 1.1; }
+.kv-label { font-family: var(--font); font-size: 10px; letter-spacing: 0.12em;
+  color: var(--text-muted); text-transform: uppercase; margin-top: 6px; }
+.chapter { margin-bottom: 64px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light); scroll-margin-top: 64px; }
+.chapter-num { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+  color: var(--accent-warm); margin-bottom: 8px; }
+.chapter-title { font-size: 22px; font-weight: 700; line-height: 1.42; margin-bottom: 20px; }
+.chapter p { margin-bottom: 18px; text-indent: 1em; }
+.chapter p:first-of-type { text-indent: 0; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; font-family: var(--font);
+  font-size: 13px; }
+th, td { border: 1px solid var(--border-light); padding: 8px 12px; text-align: left; }
+th { background: var(--surface); font-weight: 600; font-size: 11px;
+  letter-spacing: 0.05em; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.tag { display: inline-block; background: var(--accent-muted); color: var(--accent-warm);
+  padding: 2px 10px; border-radius: 2px; font-family: var(--font); font-size: 11px;
+  font-weight: 500; margin-right: 6px; margin-bottom: 4px; }
+.note { background: var(--surface); border-left: 3px solid var(--accent-warm);
+  padding: 14px 18px; margin: 18px 0; font-size: 13px; line-height: 1.85; }
+.note strong { color: var(--accent-warm); }
+.bar-chart { margin: 16px 0; }
+.bar-row { display: grid; grid-template-columns: 80px 1fr 60px; gap: 12px;
+  align-items: center; margin-bottom: 6px; font-family: var(--font); font-size: 12px; }
+.bar-label { color: var(--text-secondary); font-weight: 500; }
+.bar-track { background: var(--border-light); height: 14px; position: relative; border-radius: 2px; overflow: hidden; }
+.bar-fill { background: var(--accent-warm); height: 100%; transition: width 0.4s; }
+.bar-num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  color: var(--text-muted); font-size: 11px; }
+footer { margin-top: 80px; padding: 24px 0; border-top: 1px solid var(--border-light);
+  text-align: center; font-family: var(--font); font-size: 11px; color: var(--text-muted); }
+footer a { color: var(--accent-warm); text-decoration: none; }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { position: static; padding: 16px 24px; border-right: none;
+    border-bottom: 1px solid var(--border-light); }
+  main { padding: 32px 24px 64px; }
+  .kv-bar { grid-template-columns: repeat(2, 1fr); }
+}
+@media print { .top-bar, .toc-sidebar, .theme-toggle { display: none; }
+  .layout { grid-template-columns: 1fr; }
+  main { padding: 0; max-width: none; } }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">GRP-DB / <span class="red">Global Research Press DB</span></div>
+  <button class="theme-toggle" onclick="toggleTheme()">☾ DARK</button>
+</div>
+
+<div class="layout">
+
+<aside class="toc-sidebar">
+  <div class="toc-label">CHAPTERS</div>
+  <ul class="toc-list">
+    <li><a href="#overview"><span class="ch">01</span>概要</a></li>
+    <li><a href="#scale"><span class="ch">02</span>全体規模</a></li>
+    <li><a href="#tier1"><span class="ch">03</span>Tier 1 機関</a></li>
+    <li><a href="#prs"><span class="ch">04</span>press releases</a></li>
+    <li><a href="#signals"><span class="ch">05</span>signals 抽出</a></li>
+    <li><a href="#fih"><span class="ch">06</span>FIH 統合</a></li>
+    <li><a href="#aggregators"><span class="ch">07</span>aggregators</a></li>
+    <li><a href="#phases"><span class="ch">08</span>Phase 進行</a></li>
+    <li><a href="#refs"><span class="ch">09</span>cross-DB 参照</a></li>
+  </ul>
+  <div class="toc-label" style="margin-top:24px">META</div>
+  <ul class="toc-list">
+    <li>更新: 2026-05-27</li>
+    <li>commits: 5 (private)</li>
+    <li>DB: 231 MB</li>
+  </ul>
+</aside>
+
+<main>
+
+<section class="hero">
+  <div class="eyebrow">GLOBAL RESEARCH PRESS DB / GRP-DB / v0.1.0</div>
+  <h1 class="title">世界中の研究機関プレスリリースを<br>部局単位で完全収集する基盤</h1>
+  <div class="title-en">A foundation for end-to-end collection of research press releases worldwide, at the department level.</div>
+  <div class="lead">
+    ROR (Research Organization Registry / CC0) を主キーに、世界 123,338 機関を一括投入し、
+    Tier 1 9 国の主要 926 機関に対し 90 日〜365 日の press release バックフィルを実行。
+    18 国にまたがる press_releases 40,166 件を収集し、FIH (Frontier Intelligence Hub) の
+    16 番目の source として統合した。Phase 0 から Phase 7 まで 1 セッションで圧縮実行。
+  </div>
+
+  <div class="kv-bar">
+    <div class="kv"><div class="kv-num">123,338</div><div class="kv-label">Institutions (ROR)</div></div>
+    <div class="kv"><div class="kv-num">926</div><div class="kv-label">Tier 1 (18 国)</div></div>
+    <div class="kv"><div class="kv-num">40,166</div><div class="kv-label">Press Releases</div></div>
+    <div class="kv"><div class="kv-num">1,112</div><div class="kv-label">Press Sources</div></div>
+  </div>
+</section>
+
+<section class="chapter" id="overview">
+  <div class="chapter-num">CH 01 / OVERVIEW</div>
+  <h2 class="chapter-title">プロジェクトの目的と位置づけ</h2>
+  <p>
+    Global Research Press DB (GRP-DB) は、世界中の大学・研究機関が日々発信する
+    プレスリリースを部局単位で完全収集することを目指す大規模実データ DB。
+    最終目標は世界 30,000 機関 / 部局 100,000 級 / PR 累計 5,000,000 件。
+    NPO 法人ミラツク / esse-sense の ANSWER+ レポート生成、ng (Narrative Generator) による
+    記事化、連載エコシステム (kurashi / keiei / recurrence) のリサーチ素材、
+    市民出版 (RITE) の参照層を貫通する素材基盤として位置づけられる。
+  </p>
+  <p>
+    起点は既存の university-pr (UPR) DB であり、その 836 件の日本大学 PR を発展形として
+    取り込んだ。Phase 0 で機関マスター設計、Phase 1 で Tier 1 9 国 (US / CN / GB / DE /
+    JP / FR / KR / CA / AU) の 926 主要機関の seed と 90 日バックフィル、
+    Phase 2 で日次パイプライン自動化、Phase 3 で NER 抽出、Phase 4 で foresight シグナル抽出、
+    Phase 6 で FIH 統合、Phase 7 で 1 年バックフィル拡張を実行した。
+  </p>
+</section>
+
+<section class="chapter" id="scale">
+  <div class="chapter-num">CH 02 / SCALE</div>
+  <h2 class="chapter-title">DB 全体規模</h2>
+  <table>
+    <tr><th>テーブル</th><th class="num">件数</th><th>備考</th></tr>
+    <tr><td>institutions</td><td class="num">123,338</td><td>ROR v2.7 active 機関 (世界全体)</td></tr>
+    <tr><td>institutions T1</td><td class="num">926</td><td>Tier 1 主要機関 (18 国)</td></tr>
+    <tr><td>press_releases</td><td class="num">40,166</td><td>Phase 1+7 / 90 日 + 365 日</td></tr>
+    <tr><td>press_sources</td><td class="num">1,112</td><td>RSS 233 / sitemap 460 / html_scrape 419</td></tr>
+    <tr><td>aggregators</td><td class="num">5</td><td>EurekAlert / AlphaGalileo / idw / u-presscenter / Phys.org</td></tr>
+    <tr><td>institution_aggregator_map</td><td class="num">815</td><td>機関 ↔ aggregator 被覆関係</td></tr>
+    <tr><td>institutional_quality</td><td class="num">926</td><td>各 T1 機関の品質スコア</td></tr>
+    <tr><td>faculties</td><td class="num">84+</td><td>Wikidata sub-org seed 進行中</td></tr>
+    <tr><td>departments</td><td class="num">128+</td><td>同上</td></tr>
+    <tr><td>cross_db_refs</td><td class="num">11</td><td>11 関連 DB 接続マップ</td></tr>
+    <tr><td>collection_log</td><td class="num">1,999+</td><td>収集ログ</td></tr>
+  </table>
+</section>
+
+<section class="chapter" id="tier1">
+  <div class="chapter-num">CH 03 / TIER 1</div>
+  <h2 class="chapter-title">Tier 1 機関の国別分布</h2>
+  <p>codex 9 並列リサーチ (各国 50-200 機関) で 931 機関を確定し、ROR ID マッチで 926 機関を
+    size_tier='T1' に昇格させた (99.5% マッチ率)。18 国にまたがる。</p>
+  <div class="bar-chart">
+    <div class="bar-row"><span class="bar-label">US</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-num">200</span></div>
+    <div class="bar-row"><span class="bar-label">CN</span><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><span class="bar-num">150</span></div>
+    <div class="bar-row"><span class="bar-label">DE</span><div class="bar-track"><div class="bar-fill" style="width:52%"></div></div><span class="bar-num">104</span></div>
+    <div class="bar-row"><span class="bar-label">GB</span><div class="bar-track"><div class="bar-fill" style="width:51%"></div></div><span class="bar-num">102</span></div>
+    <div class="bar-row"><span class="bar-label">JP</span><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="bar-num">100</span></div>
+    <div class="bar-row"><span class="bar-label">IN</span><div class="bar-track"><div class="bar-fill" style="width:50%"></div></div><span class="bar-num">100</span></div>
+    <div class="bar-row"><span class="bar-label">FR</span><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><span class="bar-num">78</span></div>
+    <div class="bar-row"><span class="bar-label">KR</span><div class="bar-track"><div class="bar-fill" style="width:25%"></div></div><span class="bar-num">50</span></div>
+    <div class="bar-row"><span class="bar-label">EU 散在</span><div class="bar-track"><div class="bar-fill" style="width:21%"></div></div><span class="bar-num">42</span></div>
+  </div>
+</section>
+
+<section class="chapter" id="prs">
+  <div class="chapter-num">CH 04 / PRESS RELEASES</div>
+  <h2 class="chapter-title">press_releases 国別分布</h2>
+  <p>Phase 1 (90 日 cutoff) と Phase 7 (1 年 cutoff) の合算で 40,166 件投入。615 機関が PR を保有。
+    US が最多 (15,310 / 140 機関) で、平均 109 件 / 機関。EU 圏は CH/BE 等で機関数少なくとも高効率取得。</p>
+  <div class="bar-chart">
+    <div class="bar-row"><span class="bar-label">US</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="bar-num">15,310</span></div>
+    <div class="bar-row"><span class="bar-label">GB</span><div class="bar-track"><div class="bar-fill" style="width:64%"></div></div><span class="bar-num">9,744</span></div>
+    <div class="bar-row"><span class="bar-label">JP</span><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><span class="bar-num">5,966</span></div>
+    <div class="bar-row"><span class="bar-label">DE</span><div class="bar-track"><div class="bar-fill" style="width:23%"></div></div><span class="bar-num">3,461</span></div>
+    <div class="bar-row"><span class="bar-label">IN</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><span class="bar-num">1,818</span></div>
+    <div class="bar-row"><span class="bar-label">CN</span><div class="bar-track"><div class="bar-fill" style="width:8%"></div></div><span class="bar-num">1,269</span></div>
+    <div class="bar-row"><span class="bar-label">FR</span><div class="bar-track"><div class="bar-fill" style="width:7%"></div></div><span class="bar-num">1,115</span></div>
+    <div class="bar-row"><span class="bar-label">KR</span><div class="bar-track"><div class="bar-fill" style="width:3%"></div></div><span class="bar-num">496</span></div>
+    <div class="bar-row"><span class="bar-label">BE</span><div class="bar-track"><div class="bar-fill" style="width:3%"></div></div><span class="bar-num">489</span></div>
+  </div>
+
+  <h3 style="margin-top:24px;font-size:14px;font-family:var(--font);letter-spacing:0.05em">トップ topic tags (NER 抽出 / 2,029 件)</h3>
+  <div style="margin:12px 0">
+    <span class="tag">education 660</span>
+    <span class="tag">society 473</span>
+    <span class="tag">ai 314</span>
+    <span class="tag">energy 133</span>
+    <span class="tag">medicine 130</span>
+    <span class="tag">quantum 94</span>
+    <span class="tag">climate 93</span>
+    <span class="tag">neuroscience 87</span>
+    <span class="tag">policy 73</span>
+    <span class="tag">space 72</span>
+    <span class="tag">robotics 57</span>
+    <span class="tag">sustainability 51</span>
+    <span class="tag">semiconductor 32</span>
+    <span class="tag">economics 32</span>
+    <span class="tag">materials 28</span>
+  </div>
+</section>
+
+<section class="chapter" id="signals">
+  <div class="chapter-num">CH 05 / SIGNALS</div>
+  <h2 class="chapter-title">foresight シグナル抽出</h2>
+  <p>Phase 4 で全 press_releases に signal_type と novelty_score を判定した。
+    SURGE が 1,498 件と最多で、内訳は society 50 機関 / ai 48 機関 / education 66 機関 /
+    medicine 23 機関 / space 20 機関 の 5 つの topic が直近 30 日で 20+ 機関から発信。
+    CROSSOVER (異分野ペア) は 18 件、SANGAKU_LINK (企業共同研究) は 35 件検出。</p>
+  <table>
+    <tr><th>signal_type</th><th class="num">件数</th><th class="num">avg novelty</th><th>意味</th></tr>
+    <tr><td>SURGE</td><td class="num">1,498</td><td class="num">0.700</td><td>同一 topic が 30 日で 20+ 機関から</td></tr>
+    <tr><td>SANGAKU_LINK</td><td class="num">35</td><td class="num">0.400</td><td>企業との共同研究</td></tr>
+    <tr><td>CROSSOVER</td><td class="num">18</td><td class="num">0.600</td><td>異分野ペア (ai+medicine 等)</td></tr>
+    <tr><td>EMERGENCE</td><td class="num">0</td><td class="num">—</td><td>急激な立ち上がり (要 365 日データ)</td></tr>
+    <tr><td>(none)</td><td class="num">38,615</td><td class="num">0.101</td><td>通常 PR</td></tr>
+  </table>
+  <div class="note"><strong>反証可能性条件 #5</strong>: signal_extract novelty が pestle-news と 90%+ overlap すれば独自性なし。Phase 6 で FIH 統合済のため次セッションで比較分析可能。</div>
+</section>
+
+<section class="chapter" id="fih">
+  <div class="chapter-num">CH 06 / FIH</div>
+  <h2 class="chapter-title">FIH (Frontier Intelligence Hub) 統合</h2>
+  <p>Phase 6 で FIH の cross_source_index に source_db='grp' で 40,166 件を bulk INSERT。
+    grp は FIH の <strong>第 3 位の source_db</strong> (pestle 69,959 / ci 68,215 に次ぐ)。
+    ANSWER+ frontier-provider 経由で参照可能となり、レポート生成の素材として grp PR が
+    即座に利用可能。FIH 全体は 224,968 → 273,509 件 (+48,541) に拡大した。</p>
+  <table>
+    <tr><th>順位</th><th>source_db</th><th class="num">件数</th></tr>
+    <tr><td>1</td><td>pestle</td><td class="num">69,959</td></tr>
+    <tr><td>2</td><td>ci</td><td class="num">68,215</td></tr>
+    <tr><td><strong>3</strong></td><td><strong>grp</strong></td><td class="num"><strong>40,166</strong></td></tr>
+    <tr><td>4</td><td>foresight</td><td class="num">26,777</td></tr>
+    <tr><td>5</td><td>academic</td><td class="num">23,506</td></tr>
+    <tr><td>6</td><td>investment_signal</td><td class="num">16,642</td></tr>
+    <tr><td>7</td><td>sangaku_v2</td><td class="num">11,357</td></tr>
+    <tr><td>8</td><td>signal</td><td class="num">7,497</td></tr>
+  </table>
+</section>
+
+<section class="chapter" id="aggregators">
+  <div class="chapter-num">CH 07 / AGGREGATORS</div>
+  <h2 class="chapter-title">aggregators 5 社</h2>
+  <table>
+    <tr><th>aggregator</th><th>地域</th><th class="num">機関 (mapped)</th><th>ライセンス</th></tr>
+    <tr><td>EurekAlert</td><td>US/CA/AU/GB 中心</td><td class="num">302</td><td>AAAS Terms (非商用 OK)</td></tr>
+    <tr><td>AlphaGalileo</td><td>EU 全域</td><td class="num">326</td><td>登録制 (報道機関 free)</td></tr>
+    <tr><td>idw-online</td><td>DE/AT/CH</td><td class="num">114</td><td>機関会員制 / API 申請</td></tr>
+    <tr><td>u-presscenter</td><td>JP</td><td class="num">73</td><td>WordPress REST API</td></tr>
+    <tr><td>Phys.org</td><td>国際</td><td class="num">—</td><td>RSS 公開 / 商用制限</td></tr>
+  </table>
+</section>
+
+<section class="chapter" id="phases">
+  <div class="chapter-num">CH 08 / PHASES</div>
+  <h2 class="chapter-title">Phase 進行状況</h2>
+  <table>
+    <tr><th>Phase</th><th>状態</th><th>主要結果</th></tr>
+    <tr><td>0 機関マスター設計</td><td>✅</td><td>institutions 123,338 seed / UPR retro fit 374</td></tr>
+    <tr><td>1 Day 1-7 (Tier 1 確定)</td><td>✅</td><td>codex 9 国 931 / T1 昇格 926 / sources 1,112</td></tr>
+    <tr><td>1 Day 8-14 (Wikidata sub-org)</td><td>⏳</td><td>faculties 84+ / departments 128+ (進行中)</td></tr>
+    <tr><td>1 Day 15-25 (90 日 backfill)</td><td>✅</td><td>17,996 件 / 6.7 分 / sources 53.8% で取得</td></tr>
+    <tr><td>2 daily pipeline 統合</td><td>✅</td><td>step 08 / 翌朝 05:30 から自動稼働</td></tr>
+    <tr><td>3 NER (researchers / topics)</td><td>✅</td><td>2,613 PR に topic / researcher / partner 抽出</td></tr>
+    <tr><td>4 foresight signals</td><td>✅</td><td>SURGE 1,498 / CROSSOVER 18 / SANGAKU 35</td></tr>
+    <tr><td>5 ng-meta 接続</td><td>⏸</td><td>次セッション (RITE 素材供給)</td></tr>
+    <tr><td>6 FIH 統合</td><td>✅</td><td>40,166 件 / source_db 3 位</td></tr>
+    <tr><td>7 1 年 backfill</td><td>✅</td><td>21,724 件追加 / 94.4% sources 完了</td></tr>
+  </table>
+  <div class="note">本セッション (2026-05-27) で Phase 0 から Phase 7 まで 1 日で圧縮完了。
+    残作業は Wikidata 残り 781 機関 (進行中) + Phase 5 ng-meta 接続のみ。</div>
+</section>
+
+<section class="chapter" id="refs">
+  <div class="chapter-num">CH 09 / CROSS-DB REFS</div>
+  <h2 class="chapter-title">関連 DB の 11 接続</h2>
+  <p>GRP-DB は 11 の関連 DB と cross_db_refs を持つ。FIH 経由でさらに広範な接続が拡張される。</p>
+  <table>
+    <tr><th>target DB</th><th>接続キー</th><th>ref_type</th></tr>
+    <tr><td>university-pr (UPR)</td><td>self (発展形)</td><td>self_extends</td></tr>
+    <tr><td>academic-knowledge-db</td><td>topic_tags → concept_id</td><td>tags_concept</td></tr>
+    <tr><td>academic-landscape-db</td><td>fos_codes → discipline</td><td>dept_in_discipline</td></tr>
+    <tr><td>sangaku-matcher</td><td>partner_orgs → company_id</td><td>sangaku_pair</td></tr>
+    <tr><td>sangaku-pr (SGPR)</td><td>url_hash 重複</td><td>duplicate_or_pair</td></tr>
+    <tr><td>experts-db</td><td>researcher_names</td><td>researcher_lookup</td></tr>
+    <tr><td>university-startups</td><td>partner_orgs → SU</td><td>startup_origin</td></tr>
+    <tr><td>DGDB</td><td>dept_id → thesis</td><td>thesis_from_dept</td></tr>
+    <tr><td>CFG</td><td>funding_sources</td><td>funding_source</td></tr>
+    <tr><td>investment-signal-radar</td><td>signal_type</td><td>invest_signal</td></tr>
+    <tr><td>FIH</td><td>fih_id='grp::press_releases::id'</td><td>integration_prepared</td></tr>
+  </table>
+</section>
+
+<footer>
+  <div>GRP-DB Dashboard ・ Global Research Press DB ・ 2026-05-27</div>
+  <div style="margin-top:8px">
+    GitHub: <a href="https://github.com/yuyanishimura0312/global-research-press-db">yuyanishimura0312/global-research-press-db</a> (private) ・
+    DB: <code>~/projects/research/global-research-press-db/data/grp.db</code> (231 MB)
+  </div>
+  <div style="margin-top:6px">© 2026 NPO 法人ミラツク / esse-sense</div>
+</footer>
+
+</main>
+</div>
+
+<script>
+(function(){
+  const stored = localStorage.getItem('grp-theme');
+  if (stored) document.documentElement.setAttribute('data-theme', stored);
+})();
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('grp-theme', next);
+  document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀ LIGHT' : '☾ DARK';
+}
+</script>
+</body>
+</html>
