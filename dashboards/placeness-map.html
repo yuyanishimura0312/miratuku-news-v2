@@ -95,6 +95,31 @@ body{font-family:var(--font);color:var(--ink);background:var(--bg);font-feature-
 .prof .ricbar{height:3px;background:var(--border2);border-radius:2px;margin-top:7px;overflow:hidden}
 .prof .ricbar i{display:block;height:100%;background:var(--accent)}
 
+/* ===== DETAIL PANEL ===== */
+.detail{padding:0 0 24px}
+.dback{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink2);cursor:pointer;padding:11px 16px;border-bottom:1px solid var(--border2);position:sticky;top:0;background:#fff;z-index:5}
+.dback:hover{color:var(--accent)}
+.dhead{padding:14px 16px 10px}
+.dhead .dnm{font-family:var(--serif);font-weight:700;font-size:18px;line-height:1.4}
+.dhead .dloc{font-size:11px;color:var(--ink3);font-family:var(--mono);margin-top:3px}
+.dhead .daxis{display:inline-block;margin-top:7px;font-size:10.5px;padding:3px 10px;border-radius:12px;color:#fff;font-weight:500}
+.dgeo{margin:0 16px 14px;background:var(--surface);border-radius:8px;padding:11px 13px;display:grid;grid-template-columns:1fr 1fr;gap:7px 14px}
+.dgeo .g{font-size:11px}.dgeo .g .k{color:var(--ink3);font-size:9.5px;letter-spacing:.04em;display:block}
+.dgeo .g .v{color:var(--ink);font-weight:500}
+.dsec{margin:0 16px 16px}
+.dsec h3{font-family:var(--serif);font-size:13px;font-weight:700;margin-bottom:7px;padding-bottom:5px;border-bottom:2px solid var(--accent);display:inline-block}
+.dsec .iwaretxt{font-family:var(--serif);font-size:12.5px;line-height:1.85;color:var(--ink);text-align:justify}
+.dlist{list-style:none}
+.dlist li{font-size:12px;padding:5px 0;border-bottom:1px solid var(--border2);line-height:1.55;color:var(--ink2)}
+.dlist li:last-child{border-bottom:none}
+.dlist li b{color:var(--ink);font-weight:500;font-family:var(--serif)}
+.dlist li .cat{font-size:9.5px;color:var(--ink3);background:var(--surface);border-radius:8px;padding:1px 6px;margin-left:5px}
+.dlist li .gi{font-size:9.5px;color:#fff;background:var(--accent);border-radius:8px;padding:1px 6px;margin-left:5px}
+.dlist li a{font-size:10px;color:var(--ink3);text-decoration:none;margin-left:6px}
+.dlist li a:hover{color:var(--accent);text-decoration:underline}
+.dnote{margin:0 16px;font-size:11px;color:var(--ink3);font-family:var(--serif);line-height:1.7;background:var(--surface);border-radius:8px;padding:11px 13px}
+.dsrc{margin:14px 16px 0;font-size:10px;color:var(--ink3)}
+
 /* ===== POPUP ===== */
 .leaflet-popup-content-wrapper{border-radius:3px;border-top:3px solid var(--accent);box-shadow:var(--shadow)}
 .leaflet-popup-content{margin:12px 15px;font-family:var(--font);font-size:12px;line-height:1.65;min-width:200px}
@@ -228,16 +253,74 @@ function buildMarkers(){
     const r=Math.max(3,Math.min(10,3.2+(p[4]/13)));
     const m=L.circleMarker([p[0],p[1]],{radius:r,color:AXC[p[5]],weight:1,fillColor:AXC[p[5]],fillOpacity:.78});
     m.bindPopup(popupHTML(p));
+    m.on('click',()=>showDetail(p[10]));
     cluster.addLayer(m);
   }
   if(view==='mark')map.addLayer(cluster);
 }
 function popupHTML(p){
   const badges=[];if(p[7])badges.push('いわれ');if(p[9])badges.push('鎮守の森');if(p[8])badges.push('次元'+p[8]);
-  return `<div class="pnm">${p[2]}</div><div class="pmeta">${p[3]} ｜ 標高${p[6]}m</div>`
+  const has=detail[p[10]];
+  return `<div class="pnm">${p[2]}</div><div class="pmeta">${p[3]} ｜ 標高${p[6]}m ｜ ${p[11]||''}</div>`
     +`richness <b style="color:var(--accent)">${p[4]}</b> ・ ${AXN[p[5]]}`
-    +(badges.length?`<div class="pi">${badges.join(' / ')}</div>`:'');
+    +(badges.length?`<div class="pi">${badges.join(' / ')}</div>`:'')
+    +`<div class="pi" style="color:var(--accent);cursor:pointer" onclick="showDetail(${p[10]})">→ ${has?'内容を見る':'地理プロファイルを見る'}</div>`;
 }
+
+// ---- 詳細パネル (地図→内容アクセス) ----
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showDetail(id){
+  const p=pointById[id]; if(!p)return;
+  const d=detail[id]||{};
+  const host=document.getElementById('profiles');
+  document.querySelector('.side-head').style.display='none';
+  let h='<div class="detail">';
+  h+='<div class="dback" onclick="backToList()">‹ 一覧へ戻る</div>';
+  h+=`<div class="dhead"><div class="dnm">${esc(p[2])}</div>`
+    +`<div class="dloc">${esc(p[3])} ｜ richness ${p[4]}</div>`
+    +`<span class="daxis" style="background:${AXC[p[5]]}">${AXN[p[5]]}軸</span></div>`;
+  // 地理/風土 (全点)
+  h+='<div class="dgeo">'
+    +`<div class="g"><span class="k">標高</span><span class="v">${p[6]} m</span></div>`
+    +`<div class="g"><span class="k">地形</span><span class="v">${esc(p[11])||'-'}</span></div>`
+    +`<div class="g"><span class="k">気候区</span><span class="v">${esc(p[12])||'-'}</span></div>`
+    +`<div class="g"><span class="k">海岸距離</span><span class="v">${p[14]!=null?p[14]+' km':'-'}</span></div>`
+    +`<div class="g"><span class="k">流域</span><span class="v">${esc(p[13])||'-'}</span></div>`
+    +`<div class="g"><span class="k">鎮守の森</span><span class="v">${p[9]?'あり':'-'}</span></div>`
+    +'</div>';
+  // いわれ
+  if(d.iware){h+=`<div class="dsec"><h3>いわれ・由緒</h3><div class="iwaretxt">${esc(d.iware)}</div></div>`;}
+  if(d.founding){h+=`<div class="dsec"><h3>起源伝承</h3><div class="iwaretxt">${esc(d.founding)}</div></div>`;}
+  if(d.topo_origin){h+=`<div class="dsec"><h3>地名の由来</h3><div class="iwaretxt">${esc(d.topo_origin)}</div></div>`;}
+  // 食
+  if(d.foods){h+='<div class="dsec"><h3>地理に紐づく食</h3><ul class="dlist">'
+    +d.foods.map(f=>`<li><b>${esc(f.n)}</b>${f.c?`<span class="cat">${esc(f.c)}</span>`:''}${f.u?`<a href="${f.u}" target="_blank" rel="noopener">出典</a>`:''}</li>`).join('')
+    +'</ul></div>';}
+  // 文化
+  if(d.cults){h+='<div class="dsec"><h3>文化（無形民俗）</h3><ul class="dlist">'
+    +d.cults.map(c=>`<li><b>${esc(c.n)}</b>${c.c?`<span class="cat">${esc(c.c)}</span>`:''}${c.d?`<br>${esc(c.d)}`:''}${c.u?`<a href="${c.u}" target="_blank" rel="noopener">出典</a>`:''}</li>`).join('')
+    +'</ul></div>';}
+  // 感覚
+  if(d.senss){h+='<div class="dsec"><h3>感覚景観（音）</h3><ul class="dlist">'
+    +d.senss.map(s=>`<li>${esc(s.d)}${s.u?`<a href="${s.u}" target="_blank" rel="noopener">出典</a>`:''}</li>`).join('')
+    +'</ul></div>';}
+  // 植生
+  if(d.vegs){h+='<div class="dsec"><h3>植生（巨樹・御神木）</h3><ul class="dlist">'
+    +d.vegs.map(v=>`<li><b>${esc(v.n)}</b>${v.sacred?'<span class="gi">御神木</span>':''}${v.u?`<a href="${v.u}" target="_blank" rel="noopener">出典</a>`:''}</li>`).join('')
+    +'</ul></div>';}
+  // 歴史
+  if(d.hist){h+='<div class="dsec"><h3>歴史の地層</h3><ul class="dlist">'
+    +d.hist.map(x=>`<li>${esc(x.n||x.e)}${x.u?`<a href="${x.u}" target="_blank" rel="noopener">出典</a>`:''}</li>`).join('')
+    +'</ul></div>';}
+  if(!d.iware&&!d.foods&&!d.cults&&!d.senss&&!d.vegs&&!d.hist){
+    h+='<div class="dnote">この地点は<b>地理・風土の場所性</b>（標高・地形・気候・流域・海岸距離）を保持しています。いわれ・食・文化等の物語層は未収録です（出典のある情報のみ掲載する方針）。</div>';
+  }
+  h+='</div>';
+  host.innerHTML=h; host.scrollTop=0;
+  map.flyTo([p[0],p[1]],14,{duration:.8});
+  if(window.innerWidth<=860)document.getElementById('side').classList.add('open');
+}
+function backToList(){document.querySelector('.side-head').style.display='';renderProfiles(profs);}
 function setView(v){
   view=v;
   document.getElementById('vHeat').classList.toggle('on',v==='heat');
@@ -260,11 +343,15 @@ function renderLegend(){
   }
 }
 
-// ---- load points ----
+// ---- load points + detail ----
+let detail={}, pointById={};
 fetch('data/placeness_points.json').then(r=>r.json()).then(d=>{
-  allPts=d;buildHeat();renderLegend();
+  allPts=d;
+  for(const p of d) pointById[p[10]]=p;
+  buildHeat();renderLegend();
   document.getElementById('loading').classList.add('hide');
 }).catch(e=>{document.getElementById('loadcnt').textContent='読込エラー: '+e;});
+fetch('data/placeness_detail.json').then(r=>r.json()).then(d=>{detail=d;});
 
 // ---- stats ----
 let stat=null;
@@ -283,6 +370,7 @@ let profs=[];
 fetch('data/placeness_profiles.json').then(r=>r.json()).then(d=>{profs=d;renderProfiles(profs);});
 function renderProfiles(list){
   const host=document.getElementById('profiles');
+  const sh=document.querySelector('.side-head'); if(sh)sh.style.display='';
   document.getElementById('profcount').textContent='TOP '+list.length;
   host.innerHTML=list.map((p,i)=>{
     const b=[];
@@ -301,19 +389,7 @@ function renderProfiles(list){
     </div>`;
   }).join('');
   host.querySelectorAll('.prof').forEach(el=>{
-    el.onclick=()=>{
-      const p=profs[+el.dataset.i];
-      document.querySelectorAll('.prof.open').forEach(o=>{if(o!==el)o.classList.remove('open')});
-      el.classList.toggle('open');
-      map.flyTo([p.lat,p.lon],14,{duration:.8});
-      const pop=L.popup({offset:[0,-4]}).setLatLng([p.lat,p.lon])
-        .setContent(`<div class="pnm">${p.nm}</div><div class="pmeta">${p.pref||''} ${p.mu||''} ｜ richness ${p.rich}</div>`
-          +(p.foods&&p.foods.length?`<div class="pi"><b>食</b> ${p.foods.slice(0,6).join('、')}</div>`:'')
-          +(p.cults&&p.cults.length?`<div class="pi"><b>文化</b> ${p.cults.slice(0,4).join('、')}</div>`:'')
-          +(p.iware?`<div class="pi">${p.iware.slice(0,110)}…</div>`:''));
-      setTimeout(()=>pop.openOn(map),420);
-      if(window.innerWidth<=860)document.getElementById('side').classList.remove('open');
-    };
+    el.onclick=()=>{ const p=profs[+el.dataset.i]; showDetail(p.id); };
   });
 }
 
@@ -325,13 +401,11 @@ document.getElementById('search').addEventListener('input',e=>{
   const hit=profs.filter(p=>(p.nm||'').includes(q)||(p.mu||'').includes(q)||(p.pref||'').includes(q));
   if(hit.length){renderProfiles(hit);}
   else{
-    // 全28,801から検索 → 最初の一致へ
+    // 全28,801から検索 → 最初の一致を詳細表示
     const m=allPts.find(p=>(p[2]||'').includes(q)||(p[3]||'').includes(q));
-    document.getElementById('profiles').innerHTML=m
-      ?`<div class="prof open"><div class="nm">${m[2]}</div><div class="meta">${m[3]} ｜ richness ${m[4]} ｜ 標高${m[6]}m</div><div class="iware" style="max-height:none">地図で位置を表示しました。</div></div>`
-      :'<div class="prof"><div class="meta">該当なし</div></div>';
-    if(m){map.flyTo([m[0],m[1]],14,{duration:.8});
-      setTimeout(()=>L.popup().setLatLng([m[0],m[1]]).setContent(popupHTML(m)).openOn(map),420);}
+    if(m){showDetail(m[10]);}
+    else{document.querySelector('.side-head').style.display='';
+      document.getElementById('profiles').innerHTML='<div class="prof"><div class="meta">該当なし</div></div>';}
   }
 });
 
