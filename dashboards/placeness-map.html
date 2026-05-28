@@ -296,6 +296,18 @@ function showDetail(id){
     h+=sub('地名の由来',mp.toponym)+sub('歴史',mp.hist)+sub('地理・地形・気候',mp.geo)+sub('産業・名産',mp.ind)+sub('文化・祭事',mp.cult);
     if(mp.u)h+=`<div class="dsrc">市区町村地誌 出典: <a href="${mp.u}" target="_blank" rel="noopener" style="color:var(--ink3)">${esc(mp.pref||'')}${esc(p[3])} (Wikipedia)</a></div>`;
   }
+  // 古代文献（風土記）— 該当県の神社が継承
+  const pref=mp?mp.pref:null;
+  const lits=pref?litByPref[pref]:null;
+  if(lits&&lits.length){
+    h+='<div class="dsec" style="border-top:1px solid var(--border2);padding-top:12px"><h3 style="border-color:var(--ink)">古代文献（風土記）に見る土地</h3></div>';
+    if(p[15])h+='<div class="dsrc" style="margin:-4px 16px 8px;color:var(--accent);font-weight:500">★ 式内社 — 風土記・延喜式に記された古社圏</div>';
+    lits.slice(0,8).forEach(L=>{
+      h+=`<div class="dsec"><h3>${esc(L.w)}・${esc(L.sec)} <span style="font-weight:400;font-size:10px;color:var(--ink3)">${esc(L.era||'')}</span></h3>`
+        +`<div class="iwaretxt">${esc(L.c)}</div>`
+        +(L.u?`<div class="dsrc"><a href="${L.u}" target="_blank" rel="noopener" style="color:var(--ink3)">出典 ${esc(L.w)} (Wikipedia)</a></div>`:'')+'</div>';
+    });
+  }
   // いわれ (地点固有)
   if(d.iware){h+=`<div class="dsec"><h3>この地点のいわれ・由緒</h3><div class="iwaretxt">${esc(d.iware)}</div></div>`;}
   if(d.founding){h+=`<div class="dsec"><h3>起源伝承</h3><div class="iwaretxt">${esc(d.founding)}</div></div>`;}
@@ -362,6 +374,8 @@ fetch('data/placeness_points.json').then(r=>r.json()).then(d=>{
 fetch('data/placeness_detail.json').then(r=>r.json()).then(d=>{detail=d;});
 let muniPl={};
 fetch('data/placeness_municipality.json').then(r=>r.json()).then(d=>{muniPl=d;}).catch(()=>{});
+let litByPref={};
+fetch('data/placeness_literature.json').then(r=>r.json()).then(d=>{litByPref=d;}).catch(()=>{});
 
 // ---- stats ----
 let stat=null;
