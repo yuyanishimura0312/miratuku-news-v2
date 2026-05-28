@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ITM-DB v0.7 Dashboard</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#FFFFFF; --ink:#121212; --ink-soft:#555; --ink-mute:#6B6B6B;
+  --accent:#CC1400; --accent-soft:#B01200; --rule:#D9D9D9; --rule-light:#EEE; --surface:#F7F7F5;
+  --font:"Noto Sans JP",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP",Georgia,serif;
+  --font-mono:"Fira Code",Menlo,monospace; }
+* { box-sizing:border-box; }
+body { margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:var(--font);
+  line-height:1.7; letter-spacing:0.025em; }
+.top-bar { position:sticky; top:0; background:var(--bg); border-top:3px solid #121212;
+  border-bottom:1px solid var(--rule); padding:12px 32px; z-index:100;
+  display:flex; justify-content:space-between; align-items:center; }
+.brand { font-family:var(--font-serif); font-weight:700; font-size:18px; }
+.brand .accent { color:var(--accent); }
+.meta { font-family:var(--font-mono); font-size:11px; color:var(--ink-mute); }
+main { max-width:1100px; margin:0 auto; padding:48px 32px; }
+h1 { font-family:var(--font-serif); font-size:34px; font-weight:700; margin:0 0 8px; line-height:1.3; }
+.subtitle { color:var(--ink-mute); font-size:14px; margin-bottom:48px; }
+h2 { font-family:var(--font-serif); font-size:22px; font-weight:700; margin:56px 0 16px;
+  padding-bottom:8px; border-bottom:2px solid var(--accent); }
+.summary-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin:24px 0; }
+.summary-card { border:1px solid var(--rule); padding:18px; border-top:3px solid var(--accent); }
+.summary-num { font-family:var(--font-serif); font-size:28px; font-weight:700; color:var(--accent); }
+.summary-label { font-size:11px; color:var(--ink-mute); letter-spacing:0.18em; text-transform:uppercase; margin-top:6px; }
+table { width:100%; border-collapse:collapse; margin:16px 0 32px; font-size:13px; }
+th, td { padding:8px 12px; text-align:left; border-bottom:1px solid var(--rule-light); }
+th { background:var(--surface); font-weight:600; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); }
+td.num { font-family:var(--font-mono); text-align:right; font-variant-numeric:tabular-nums; }
+td.grade-B { color:var(--accent); font-weight:600; }
+td.grade-F { color:var(--accent-soft); font-weight:600; }
+.note { background:var(--surface); border-left:3px solid var(--accent); padding:14px 18px;
+  margin:14px 0; font-size:13px; line-height:1.8; }
+.delta-up { color:#1E7B1E; font-weight:600; }
+.delta-down { color:var(--accent-soft); font-weight:600; }
+footer { margin-top:80px; padding:32px 0; border-top:1px solid var(--rule); color:var(--ink-mute); font-size:12px; }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">ITM-DB <span class="accent">v0.7</span> Dashboard</div>
+  <div class="meta">Updated 2026-05-27 08:01 JST · 14 domains · 3289 classifications · 2994 Pioneers</div>
+</div>
+<main>
+  <h1>投資タイミングずれ検証 v0.7</h1>
+  <div class="subtitle">Phase 7 完成版 — Pioneer 56 / yfinance 軌道 / 業界 pitfall 自己更新 / lapsed 3 subtype 分類</div>
+
+  <div class="summary-row">
+    <div class="summary-card"><div class="summary-num">14</div><div class="summary-label">Domains</div></div>
+    <div class="summary-card"><div class="summary-num">3289</div><div class="summary-label">Classifications</div></div>
+    <div class="summary-card"><div class="summary-num">2994</div><div class="summary-label">Foreign Pioneers</div></div>
+    <div class="summary-card"><div class="summary-num">592</div><div class="summary-label">Grade A+B</div></div>
+    <div class="summary-card"><div class="summary-num">4.33</div><div class="summary-label">avg years delay</div></div>
+  </div>
+
+  <h2>1. ドメイン別 timing 分布 + Pioneer 数</h2>
+  <table>
+    <thead><tr><th>Domain</th><th>T_obj</th><th>n</th><th>Pioneer</th><th>Early</th><th>Standard</th><th>Late</th><th>FLate</th><th>avg 年</th><th>海外 Pioneer</th></tr></thead>
+    <tbody>
+<tr><td><strong>GEN_AI</strong> 生成AI</td><td class="num">2022-11-30</td><td class="num">128</td><td class="num">1</td><td class="num">2</td><td class="num">91</td><td class="num">34</td><td class="num">0</td><td class="num">1.57</td><td class="num">140</td></tr>
+<tr><td><strong>EV</strong> 電気自動車</td><td class="num">2017-07-05</td><td class="num">438</td><td class="num">173</td><td class="num">15</td><td class="num">71</td><td class="num">7</td><td class="num">172</td><td class="num">2.52</td><td class="num">290</td></tr>
+<tr><td><strong>QUANTUM</strong> 量子計算</td><td class="num">2019-10-23</td><td class="num">29</td><td class="num">6</td><td class="num">1</td><td class="num">1</td><td class="num">18</td><td class="num">3</td><td class="num">3.14</td><td class="num">156</td></tr>
+<tr><td><strong>CLOUD</strong> クラウドコンピューティング</td><td class="num">2011-03-02</td><td class="num">297</td><td class="num">6</td><td class="num">5</td><td class="num">13</td><td class="num">69</td><td class="num">204</td><td class="num">7.14</td><td class="num">405</td></tr>
+<tr><td><strong>METAVERSE</strong> メタバース</td><td class="num">2021-10-28</td><td class="num">97</td><td class="num">17</td><td class="num">4</td><td class="num">5</td><td class="num">71</td><td class="num">0</td><td class="num">1.48</td><td class="num">84</td></tr>
+<tr><td><strong>WEB3</strong> Web3 / ブロックチェーン</td><td class="num">2017-04-01</td><td class="num">56</td><td class="num">4</td><td class="num">7</td><td class="num">13</td><td class="num">5</td><td class="num">27</td><td class="num">4.02</td><td class="num">128</td></tr>
+<tr><td><strong>SEMICON</strong> 半導体微細化</td><td class="num">2017-04-01</td><td class="num">407</td><td class="num">203</td><td class="num">25</td><td class="num">44</td><td class="num">30</td><td class="num">105</td><td class="num">1.87</td><td class="num">450</td></tr>
+<tr><td><strong>RENEWABLE</strong> 再生可能エネルギー</td><td class="num">2012-07-01</td><td class="num">556</td><td class="num">3</td><td class="num">1</td><td class="num">15</td><td class="num">213</td><td class="num">324</td><td class="num">7.38</td><td class="num">445</td></tr>
+<tr><td><strong>BIOTECH</strong> バイオ・ヘルスケア</td><td class="num">2014-11-25</td><td class="num">441</td><td class="num">21</td><td class="num">37</td><td class="num">135</td><td class="num">87</td><td class="num">161</td><td class="num">4.31</td><td class="num">320</td></tr>
+<tr><td><strong>ROBOTICS</strong> ロボティクス</td><td class="num">2015-02-10</td><td class="num">470</td><td class="num">31</td><td class="num">23</td><td class="num">108</td><td class="num">147</td><td class="num">161</td><td class="num">4.2</td><td class="num">111</td></tr>
+<tr><td><strong>CYBERSEC</strong> サイバーセキュリティ</td><td class="num">2017-05-12</td><td class="num">105</td><td class="num">29</td><td class="num">10</td><td class="num">19</td><td class="num">9</td><td class="num">38</td><td class="num">2.84</td><td class="num">96</td></tr>
+<tr><td><strong>SAAS</strong> SaaS / クラウド業務</td><td class="num">2014-04-01</td><td class="num">81</td><td class="num">0</td><td class="num">1</td><td class="num">2</td><td class="num">37</td><td class="num">41</td><td class="num">6.19</td><td class="num">236</td></tr>
+<tr><td><strong>DRONE</strong> ドローン / UAV</td><td class="num">2015-12-10</td><td class="num">119</td><td class="num">0</td><td class="num">0</td><td class="num">20</td><td class="num">36</td><td class="num">63</td><td class="num">5.61</td><td class="num">64</td></tr>
+<tr><td><strong>SPACE</strong> 宇宙ビジネス</td><td class="num">2018-11-15</td><td class="num">65</td><td class="num">22</td><td class="num">3</td><td class="num">8</td><td class="num">2</td><td class="num">30</td><td class="num">2.14</td><td class="num">69</td></tr>
+  </tbody></table>
+
+  <h2>2. 機会損失プロキシ補正 (旧式 vs yfinance 年次)</h2>
+  <div class="note">
+    Phase 6C で yfinance 年次データから entry+5y の真の株価成長率を再計算。
+    Phase 2D の旧式は entry 直後の異常成長期を含んでいたため、多くで <strong>過大評価</strong> だったことが判明。
+  </div>
+  <table>
+    <thead><tr><th>Pioneer</th><th>Domain</th><th>Entry → +5y</th><th>旧式 +5y%</th><th>新式 (株価) +5y%</th><th>差分 pt</th></tr></thead>
+    <tbody>
+<tr><td>NVIDIA</td><td>GEN_AI</td><td>2007→2012</td><td class="num">16567</td><td class="num">-64</td><td class="num delta-down">-16631</td></tr>
+<tr><td>Tesla</td><td>EV</td><td>2010→2015</td><td class="num">3429</td><td class="num">801</td><td class="num delta-down">-2628</td></tr>
+<tr><td>Amazon AWS</td><td>CLOUD</td><td>2006→2011</td><td class="num">1785</td><td class="num">339</td><td class="num delta-down">-1446</td></tr>
+<tr><td>Vestas Wind Systems</td><td>RENEWABLE</td><td>2012→2017</td><td class="num">0</td><td class="num">1308</td><td class="num delta-up">+1308</td></tr>
+<tr><td>Rocket Lab</td><td>SPACE</td><td>2021→2026</td><td class="num">0</td><td class="num">1068</td><td class="num delta-up">+1068</td></tr>
+<tr><td>Planet Labs</td><td>SPACE</td><td>2021→2026</td><td class="num">0</td><td class="num">724</td><td class="num delta-up">+724</td></tr>
+<tr><td>Palantir</td><td>GEN_AI</td><td>2020→2025</td><td class="num">0</td><td class="num">655</td><td class="num delta-up">+655</td></tr>
+<tr><td>CrowdStrike</td><td>CYBERSEC</td><td>2019→2024</td><td class="num">0</td><td class="num">586</td><td class="num delta-up">+586</td></tr>
+<tr><td>Kratos Defense</td><td>DRONE</td><td>2015→2020</td><td class="num">0</td><td class="num">569</td><td class="num delta-up">+569</td></tr>
+<tr><td>Teradyne (Universal Robots)</td><td>ROBOTICS</td><td>2015→2020</td><td class="num">0</td><td class="num">504</td><td class="num delta-up">+504</td></tr>
+<tr><td>Zscaler</td><td>CYBERSEC</td><td>2018→2023</td><td class="num">0</td><td class="num">465</td><td class="num delta-up">+465</td></tr>
+<tr><td>HubSpot</td><td>SAAS</td><td>2014→2019</td><td class="num">0</td><td class="num">372</td><td class="num delta-up">+372</td></tr>
+<tr><td>ServiceNow</td><td>SAAS</td><td>2012→2017</td><td class="num">0</td><td class="num">334</td><td class="num delta-up">+334</td></tr>
+<tr><td>ContemporaryAmperexTech (CATL)</td><td>EV</td><td>2018→2023</td><td class="num">0</td><td class="num">305</td><td class="num delta-up">+305</td></tr>
+<tr><td>IonQ</td><td>QUANTUM</td><td>2021→2026</td><td class="num">0</td><td class="num">281</td><td class="num delta-up">+281</td></tr>
+  </tbody></table>
+
+  <h2>3. lapsed 3 subtype 分類</h2>
+  <div class="note">
+    Phase 6B で「SGPR で T_C 言及あり / rd_text なし」の lapsed 160 件を時系列起点で再分類。
+    <strong>真の撤退は 8% のみ</strong>、72.5% は最近すぎて未反映。
+  </div>
+  <table>
+    <thead><tr><th>subtype</th><th>定義</th><th>件数</th><th>割合</th></tr></thead>
+    <tbody>
+<tr><td><strong>recent_pending</strong></td><td>2023 以降参入 / 2024 rd_text に未反映</td><td class="num">116</td><td class="num">72.5%</td></tr>
+<tr><td><strong>transition</strong></td><td>2020-2022 参入 / 反映漏れ or 表現変化</td><td class="num">31</td><td class="num">19.4%</td></tr>
+<tr><td><strong>likely_withdrawal</strong></td><td>2020 未満 / 真の撤退可能性</td><td class="num">13</td><td class="num">8.1%</td></tr>
+  </tbody></table>
+
+  <h2>4. 業界別 健全度 (v0.7 自動更新)</h2>
+  <table>
+    <thead><tr><th>業界</th><th>n</th><th>avg 年</th><th>高 Grade %</th><th>A</th><th>B</th><th>C</th><th>D</th><th>F</th></tr></thead>
+    <tbody>
+<tr><td>化学</td><td class="num">381</td><td class="num">4.12</td><td class="num">27.03%</td><td class="num">12</td><td class="num">91</td><td class="num">78</td><td class="num">76</td><td class="num">124</td></tr>
+<tr><td>輸送用機器</td><td class="num">194</td><td class="num">3.98</td><td class="num">26.29%</td><td class="num">9</td><td class="num">42</td><td class="num">34</td><td class="num">35</td><td class="num">74</td></tr>
+<tr><td>電気機器</td><td class="num">541</td><td class="num">3.63</td><td class="num">24.21%</td><td class="num">16</td><td class="num">115</td><td class="num">169</td><td class="num">111</td><td class="num">130</td></tr>
+<tr><td>非鉄金属</td><td class="num">67</td><td class="num">4.37</td><td class="num">23.88%</td><td class="num">5</td><td class="num">11</td><td class="num">17</td><td class="num">17</td><td class="num">17</td></tr>
+<tr><td>繊維製品</td><td class="num">39</td><td class="num">3.65</td><td class="num">23.08%</td><td class="num">0</td><td class="num">9</td><td class="num">10</td><td class="num">15</td><td class="num">5</td></tr>
+<tr><td>石油・石炭製品</td><td class="num">26</td><td class="num">4.44</td><td class="num">23.08%</td><td class="num">2</td><td class="num">4</td><td class="num">7</td><td class="num">7</td><td class="num">6</td></tr>
+<tr><td>ガラス・土石製品</td><td class="num">68</td><td class="num">5.72</td><td class="num">22.06%</td><td class="num">0</td><td class="num">15</td><td class="num">8</td><td class="num">15</td><td class="num">30</td></tr>
+<tr><td>その他製品</td><td class="num">60</td><td class="num">3.97</td><td class="num">21.67%</td><td class="num">3</td><td class="num">10</td><td class="num">17</td><td class="num">16</td><td class="num">14</td></tr>
+<tr><td>精密機器</td><td class="num">85</td><td class="num">4.33</td><td class="num">21.18%</td><td class="num">1</td><td class="num">17</td><td class="num">21</td><td class="num">13</td><td class="num">33</td></tr>
+<tr><td>空運業</td><td class="num">5</td><td class="num">6.16</td><td class="num">20.0%</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num">1</td><td class="num">3</td></tr>
+<tr><td>ゴム製品</td><td class="num">39</td><td class="num">4.83</td><td class="num">17.95%</td><td class="num">0</td><td class="num">7</td><td class="num">8</td><td class="num">10</td><td class="num">14</td></tr>
+<tr><td>機械</td><td class="num">359</td><td class="num">3.93</td><td class="num">16.71%</td><td class="num">9</td><td class="num">51</td><td class="num">117</td><td class="num">75</td><td class="num">107</td></tr>
+  </tbody></table>
+
+  <h2>5. Grade A+B 企業 (希少な良判断)</h2>
+  <table>
+    <thead><tr><th>Domain</th><th>Company</th><th>Industry</th><th>Grade</th><th>Score</th><th>Gap (日)</th></tr></thead>
+    <tbody>
+<tr><td>QUANTUM</td><td>富士通株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.919</td><td class="num">-849</td></tr>
+<tr><td>BIOTECH</td><td>コニカミノルタ株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.904</td><td class="num">-285</td></tr>
+<tr><td>EV</td><td>住友化学株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.888</td><td class="num">-559</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社野村総合研究所</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.885</td><td class="num">-283</td></tr>
+<tr><td>METAVERSE</td><td>ソニーグループ株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.884</td><td class="num">-1959</td></tr>
+<tr><td>QUANTUM</td><td>ＢＩＰＲＯＧＹ株式会社</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.884</td><td class="num">-118</td></tr>
+<tr><td>SEMICON</td><td>株式会社リコー</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.883</td><td class="num">-100</td></tr>
+<tr><td>EV</td><td>東京エレクトロンデバイス株式会社</td><td>卸売業</td><td class="grade-A">A</td><td class="num">0.881</td><td class="num">-384</td></tr>
+<tr><td>SEMICON</td><td>住友化学株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.88</td><td class="num">-284</td></tr>
+<tr><td>EV</td><td>豊田合成株式会社</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.88</td><td class="num">-383</td></tr>
+<tr><td>SEMICON</td><td>東京エレクトロンデバイス株式会社</td><td>卸売業</td><td class="grade-A">A</td><td class="num">0.879</td><td class="num">-289</td></tr>
+<tr><td>METAVERSE</td><td>ＢＩＰＲＯＧＹ株式会社</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.879</td><td class="num">-854</td></tr>
+<tr><td>EV</td><td>アルプスアルパイン株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.875</td><td class="num">-377</td></tr>
+<tr><td>SEMICON</td><td>株式会社ＭＯＲＥＳＣＯ</td><td>石油・石炭製品</td><td class="grade-A">A</td><td class="num">0.875</td><td class="num">-309</td></tr>
+<tr><td>SEMICON</td><td>ニデック株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.875</td><td class="num">-103</td></tr>
+<tr><td>SEMICON</td><td>ローツェ株式会社</td><td>機械</td><td class="grade-A">A</td><td class="num">0.874</td><td class="num">-305</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社テクノマセマティカル</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.873</td><td class="num">-282</td></tr>
+<tr><td>EV</td><td>ヤマハ株式会社</td><td>その他製品</td><td class="grade-A">A</td><td class="num">0.872</td><td class="num">-377</td></tr>
+<tr><td>METAVERSE</td><td>株式会社デジタルガレージ</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.872</td><td class="num">-1592</td></tr>
+<tr><td>EV</td><td>株式会社テクノマセマティカル</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.872</td><td class="num">-377</td></tr>
+<tr><td>EV</td><td>ＴＨＫ株式会社</td><td>機械</td><td class="grade-A">A</td><td class="num">0.872</td><td class="num">-1015</td></tr>
+<tr><td>EV</td><td>オムロン株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.87</td><td class="num">-376</td></tr>
+<tr><td>EV</td><td>株式会社ＩＨＩ</td><td>機械</td><td class="grade-A">A</td><td class="num">0.87</td><td class="num">-1011</td></tr>
+<tr><td>SEMICON</td><td>荒川化学工業株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.869</td><td class="num">-288</td></tr>
+<tr><td>EV</td><td>ＫＯＡ株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.868</td><td class="num">-377</td></tr>
+<tr><td>EV</td><td>株式会社日本触媒</td><td>化学</td><td class="grade-A">A</td><td class="num">0.868</td><td class="num">-559</td></tr>
+<tr><td>EV</td><td>三櫻工業株式会社</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.867</td><td class="num">-378</td></tr>
+<tr><td>SEMICON</td><td>ＡＲＥホールディングス株式会社</td><td>非鉄金属</td><td class="grade-A">A</td><td class="num">0.867</td><td class="num">-290</td></tr>
+<tr><td>EV</td><td>住友電気工業株式会社</td><td>非鉄金属</td><td class="grade-A">A</td><td class="num">0.867</td><td class="num">-376</td></tr>
+<tr><td>SEMICON</td><td>株式会社　神戸製鋼所</td><td>鉄鋼</td><td class="grade-A">A</td><td class="num">0.867</td><td class="num">-283</td></tr>
+<tr><td>QUANTUM</td><td>株式会社フィックスターズ</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.867</td><td class="num">-314</td></tr>
+<tr><td>SEMICON</td><td>株式会社小松製作所</td><td>機械</td><td class="grade-A">A</td><td class="num">0.867</td><td class="num">-284</td></tr>
+<tr><td>SEMICON</td><td>富士通株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.866</td><td class="num">-96</td></tr>
+<tr><td>EV</td><td>ＳＷＣＣ株式会社</td><td>非鉄金属</td><td class="grade-A">A</td><td class="num">0.866</td><td class="num">-376</td></tr>
+<tr><td>METAVERSE</td><td>大日本印刷株式会社</td><td>その他製品</td><td class="grade-A">A</td><td class="num">0.866</td><td class="num">-854</td></tr>
+<tr><td>SEMICON</td><td>株式会社ダイセル</td><td>化学</td><td class="grade-A">A</td><td class="num">0.865</td><td class="num">-285</td></tr>
+<tr><td>EV</td><td>株式会社今仙電機製作所</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.865</td><td class="num">-378</td></tr>
+<tr><td>EV</td><td>日本精工株式会社</td><td>機械</td><td class="grade-A">A</td><td class="num">0.865</td><td class="num">-1011</td></tr>
+<tr><td>EV</td><td>トヨタ自動車株式会社</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.865</td><td class="num">-376</td></tr>
+<tr><td>EV</td><td>曙ブレーキ工業株式会社</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.865</td><td class="num">-380</td></tr>
+<tr><td>SEMICON</td><td>イビデン株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.864</td><td class="num">-106</td></tr>
+<tr><td>BIOTECH</td><td>株式会社カプコン</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.863</td><td class="num">-650</td></tr>
+<tr><td>SEMICON</td><td>ＴＨＫ株式会社</td><td>機械</td><td class="grade-A">A</td><td class="num">0.863</td><td class="num">-285</td></tr>
+<tr><td>SEMICON</td><td>ヤマハ株式会社</td><td>その他製品</td><td class="grade-A">A</td><td class="num">0.863</td><td class="num">-282</td></tr>
+<tr><td>EV</td><td>三井化学株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.863</td><td class="num">-556</td></tr>
+<tr><td>SEMICON</td><td>日本高純度化学株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.862</td><td class="num">-288</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社ディジタルメディアプロフェッショナル</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.862</td><td class="num">-284</td></tr>
+<tr><td>EV</td><td>ＣＫＤ株式会社</td><td>機械</td><td class="grade-A">A</td><td class="num">0.861</td><td class="num">-1012</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社ゼンリン</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.861</td><td class="num">-285</td></tr>
+<tr><td>EV</td><td>ヒロセ電機株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.86</td><td class="num">-378</td></tr>
+<tr><td>SEMICON</td><td>イーグル工業株式会社</td><td>機械</td><td class="grade-A">A</td><td class="num">0.859</td><td class="num">-282</td></tr>
+<tr><td>SEMICON</td><td>東京エレクトロン株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.859</td><td class="num">-106</td></tr>
+<tr><td>SEMICON</td><td>日本酸素ホールディングス株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.859</td><td class="num">-281</td></tr>
+<tr><td>BIOTECH</td><td>横河電機株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.859</td><td class="num">-282</td></tr>
+<tr><td>SEMICON</td><td>ＨＯＹＡ株式会社</td><td>精密機器</td><td class="grade-A">A</td><td class="num">0.858</td><td class="num">-285</td></tr>
+<tr><td>SEMICON</td><td>富士電機株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.858</td><td class="num">-99</td></tr>
+<tr><td>SEMICON</td><td>住友ベークライト株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.858</td><td class="num">-283</td></tr>
+<tr><td>SEMICON</td><td>オムロン株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.858</td><td class="num">-99</td></tr>
+<tr><td>SEMICON</td><td>ステラケミファ株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.857</td><td class="num">-288</td></tr>
+<tr><td>EV</td><td>ニッポン高度紙工業株式会社</td><td>パルプ・紙</td><td class="grade-A">A</td><td class="num">0.857</td><td class="num">-377</td></tr>
+<tr><td>METAVERSE</td><td>アンリツ株式会社</td><td>電気機器</td><td class="grade-A">A</td><td class="num">0.857</td><td class="num">-855</td></tr>
+<tr><td>SEMICON</td><td>デンカ株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.857</td><td class="num">-283</td></tr>
+<tr><td>METAVERSE</td><td>株式会社カカクコム</td><td>サービス業</td><td class="grade-A">A</td><td class="num">0.856</td><td class="num">-1590</td></tr>
+<tr><td>EV</td><td>株式会社豊田自動織機</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.856</td><td class="num">-390</td></tr>
+<tr><td>EV</td><td>ＮＯＫ株式会社</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.856</td><td class="num">-376</td></tr>
+<tr><td>RENEWABLE</td><td>ＢＩＰＲＯＧＹ株式会社</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.855</td><td class="num">-641</td></tr>
+<tr><td>SEMICON</td><td>住友電気工業株式会社</td><td>非鉄金属</td><td class="grade-A">A</td><td class="num">0.855</td><td class="num">-281</td></tr>
+<tr><td>ROBOTICS</td><td>セコム株式会社</td><td>サービス業</td><td class="grade-A">A</td><td class="num">0.854</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>本田技研工業株式会社</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.854</td><td class="num">-377</td></tr>
+<tr><td>SEMICON</td><td>ＳＷＣＣ株式会社</td><td>非鉄金属</td><td class="grade-A">A</td><td class="num">0.854</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>サンデン株式会社</td><td>機械</td><td class="grade-A">A</td><td class="num">0.854</td><td class="num">-1013</td></tr>
+<tr><td>SEMICON</td><td>株式会社ジーダット</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.853</td><td class="num">-1294</td></tr>
+<tr><td>EV</td><td>サンコール株式会社</td><td>金属製品</td><td class="grade-A">A</td><td class="num">0.853</td><td class="num">-376</td></tr>
+<tr><td>ROBOTICS</td><td>アイサンテクノロジー株式会社</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.853</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>大和ハウス工業株式会社</td><td>建設業</td><td class="grade-A">A</td><td class="num">0.852</td><td class="num">-372</td></tr>
+<tr><td>SEMICON</td><td>三井化学株式会社</td><td>化学</td><td class="grade-A">A</td><td class="num">0.852</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>日野自動車株式会社</td><td>輸送用機器</td><td class="grade-A">A</td><td class="num">0.852</td><td class="num">-376</td></tr>
+<tr><td>ROBOTICS</td><td>ＡＬＳＯＫ株式会社</td><td>サービス業</td><td class="grade-A">A</td><td class="num">0.852</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>出光興産株式会社</td><td>石油・石炭製品</td><td class="grade-A">A</td><td class="num">0.851</td><td class="num">-372</td></tr>
+<tr><td>METAVERSE</td><td>日鉄ソリューションズ株式会社</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.85</td><td class="num">-857</td></tr>
+<tr><td>METAVERSE</td><td>シリコンスタジオ株式会社</td><td>情報・通信業</td><td class="grade-A">A</td><td class="num">0.85</td><td class="num">-1704</td></tr>
+<tr><td>SEMICON</td><td>日東電工株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.85</td><td class="num">-281</td></tr>
+<tr><td>BIOTECH</td><td>シスメックス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.85</td><td class="num">-281</td></tr>
+<tr><td>SEMICON</td><td>大成ラミックグループ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.85</td><td class="num">-283</td></tr>
+<tr><td>EV</td><td>マクセル株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.849</td><td class="num">-372</td></tr>
+<tr><td>SEMICON</td><td>株式会社バルカー</td><td>化学</td><td class="grade-B">B</td><td class="num">0.848</td><td class="num">-284</td></tr>
+<tr><td>ROBOTICS</td><td>東急建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.848</td><td class="num">-643</td></tr>
+<tr><td>SEMICON</td><td>リンテック株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.847</td><td class="num">-283</td></tr>
+<tr><td>WEB3</td><td>ＫＤＤＩ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.847</td><td class="num">-282</td></tr>
+<tr><td>EV</td><td>ＥＮＥＯＳホールディングス株式会社</td><td>石油・石炭製品</td><td class="grade-B">B</td><td class="num">0.847</td><td class="num">-372</td></tr>
+<tr><td>CLOUD</td><td>日揮ホールディングス株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.846</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社三菱総合研究所</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.846</td><td class="num">-103</td></tr>
+<tr><td>EV</td><td>株式会社フジクラ</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.846</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>古河電気工業株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.846</td><td class="num">-373</td></tr>
+<tr><td>SEMICON</td><td>日東工器株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.845</td><td class="num">-285</td></tr>
+<tr><td>EV</td><td>ＮＴＮ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.845</td><td class="num">-1008</td></tr>
+<tr><td>SEMICON</td><td>セーレン株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.845</td><td class="num">-283</td></tr>
+<tr><td>SEMICON</td><td>株式会社ＡＤＥＫＡ</td><td>化学</td><td class="grade-B">B</td><td class="num">0.845</td><td class="num">-281</td></tr>
+<tr><td>METAVERSE</td><td>武田薬品工業株式会社</td><td>医薬品</td><td class="grade-B">B</td><td class="num">0.844</td><td class="num">-854</td></tr>
+<tr><td>EV</td><td>日産自動車株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.844</td><td class="num">-376</td></tr>
+<tr><td>EV</td><td>住友重機械工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.844</td><td class="num">-1006</td></tr>
+<tr><td>EV</td><td>株式会社ジェイテクト</td><td>機械</td><td class="grade-B">B</td><td class="num">0.844</td><td class="num">-1007</td></tr>
+<tr><td>SEMICON</td><td>ニッタ株式会社</td><td>ゴム製品</td><td class="grade-B">B</td><td class="num">0.843</td><td class="num">-281</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社クラフティア</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.843</td><td class="num">-641</td></tr>
+<tr><td>EV</td><td>三菱自動車工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.843</td><td class="num">-376</td></tr>
+<tr><td>WEB3</td><td>富士通株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.843</td><td class="num">-278</td></tr>
+<tr><td>EV</td><td>理研ビタミン株式会社</td><td>食料品</td><td class="grade-B">B</td><td class="num">0.843</td><td class="num">-376</td></tr>
+<tr><td>EV</td><td>日揮ホールディングス株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.842</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>武蔵精密工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.842</td><td class="num">-376</td></tr>
+<tr><td>EV</td><td>武田薬品工業株式会社</td><td>医薬品</td><td class="grade-B">B</td><td class="num">0.842</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>株式会社Ａ＆Ｄホロンホールディングス</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.841</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>ダイキョーニシカワ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.841</td><td class="num">-556</td></tr>
+<tr><td>EV</td><td>シンフォニアテクノロジー株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.841</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>ＤＯＷＡホールディングス株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.841</td><td class="num">-281</td></tr>
+<tr><td>SEMICON</td><td>京セラ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.839</td><td class="num">-96</td></tr>
+<tr><td>EV</td><td>積水化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.839</td><td class="num">-552</td></tr>
+<tr><td>EV</td><td>株式会社クレハ</td><td>化学</td><td class="grade-B">B</td><td class="num">0.838</td><td class="num">-556</td></tr>
+<tr><td>SEMICON</td><td>サンケン電気株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.838</td><td class="num">-99</td></tr>
+<tr><td>ROBOTICS</td><td>鹿島建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.838</td><td class="num">-641</td></tr>
+<tr><td>EV</td><td>株式会社ユニバンス</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.837</td><td class="num">-373</td></tr>
+<tr><td>EV</td><td>第一工業製薬株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.837</td><td class="num">-556</td></tr>
+<tr><td>EV</td><td>東亜道路工業株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.837</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>株式会社荏原製作所</td><td>機械</td><td class="grade-B">B</td><td class="num">0.837</td><td class="num">-278</td></tr>
+<tr><td>CLOUD</td><td>株式会社テクノ菱和</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.837</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>株式会社フジミインコーポレーテッド</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.836</td><td class="num">-283</td></tr>
+<tr><td>BIOTECH</td><td>株式会社日本トリム</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.835</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>藤倉コンポジット株式会社</td><td>ゴム製品</td><td class="grade-B">B</td><td class="num">0.835</td><td class="num">-371</td></tr>
+<tr><td>WEB3</td><td>株式会社野村総合研究所</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.834</td><td class="num">-283</td></tr>
+<tr><td>EV</td><td>住友金属鉱山株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.834</td><td class="num">-373</td></tr>
+<tr><td>SEMICON</td><td>芝浦メカトロニクス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.833</td><td class="num">-100</td></tr>
+<tr><td>EV</td><td>株式会社京写</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.832</td><td class="num">-373</td></tr>
+<tr><td>SEMICON</td><td>太陽ホールディングス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.832</td><td class="num">-281</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社デンソー</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.831</td><td class="num">-325</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社関電工</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.831</td><td class="num">-641</td></tr>
+<tr><td>SEMICON</td><td>エア・ウォーター株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.831</td><td class="num">-277</td></tr>
+<tr><td>EV</td><td>ユニチカ株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.83</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>株式会社ダイフク</td><td>機械</td><td class="grade-B">B</td><td class="num">0.83</td><td class="num">-278</td></tr>
+<tr><td>CYBERSEC</td><td>ＫＤＤＩ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.83</td><td class="num">-323</td></tr>
+<tr><td>SEMICON</td><td>イノテック株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.828</td><td class="num">-99</td></tr>
+<tr><td>SEMICON</td><td>株式会社ＰＩＬＬＡＲ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.828</td><td class="num">-281</td></tr>
+<tr><td>EV</td><td>株式会社明電舎</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.828</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>デクセリアルズ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.827</td><td class="num">-281</td></tr>
+<tr><td>SEMICON</td><td>大日本印刷株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.827</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社デンソー</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.827</td><td class="num">81</td></tr>
+<tr><td>EV</td><td>ニチコン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.826</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>平河ヒューテック株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.826</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>出光興産株式会社</td><td>石油・石炭製品</td><td class="grade-B">B</td><td class="num">0.826</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>株式会社安川電機</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.826</td><td class="num">-106</td></tr>
+<tr><td>SEMICON</td><td>古河電気工業株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.826</td><td class="num">-278</td></tr>
+<tr><td>METAVERSE</td><td>アジア航測株式会社</td><td>空運業</td><td class="grade-B">B</td><td class="num">0.826</td><td class="num">-679</td></tr>
+<tr><td>SEMICON</td><td>日産化学株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.825</td><td class="num">-277</td></tr>
+<tr><td>EV</td><td>三菱マテリアル株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.825</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>株式会社　日本エム・ディ・エム</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.824</td><td class="num">-373</td></tr>
+<tr><td>EV</td><td>株式会社ティラド</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-372</td></tr>
+<tr><td>SEMICON</td><td>株式会社東京精密</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-281</td></tr>
+<tr><td>QUANTUM</td><td>株式会社野村総合研究所</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-483</td></tr>
+<tr><td>SEMICON</td><td>味の素株式会社</td><td>食料品</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>株式会社トクヤマ</td><td>化学</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-278</td></tr>
+<tr><td>EV</td><td>株式会社　ジーエス・ユアサ　コーポレーション</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>ミネベアミツミ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>株式会社ミクニ</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.823</td><td class="num">-372</td></tr>
+<tr><td>SEMICON</td><td>株式会社ディスコ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.822</td><td class="num">-281</td></tr>
+<tr><td>CYBERSEC</td><td>ＮＣＳ＆Ａ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.822</td><td class="num">-325</td></tr>
+<tr><td>EV</td><td>株式会社ユビキタスＡＩ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.822</td><td class="num">-380</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社ユビキタスＡＩ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.822</td><td class="num">-326</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社ユビキタスＡＩ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.822</td><td class="num">-285</td></tr>
+<tr><td>EV</td><td>株式会社ＵＡＣＪ</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.821</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>日東工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.821</td><td class="num">-370</td></tr>
+<tr><td>BIOTECH</td><td>住友化学株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.821</td><td class="num">81</td></tr>
+<tr><td>SEMICON</td><td>群栄化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.82</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>マクセル株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.82</td><td class="num">-95</td></tr>
+<tr><td>EV</td><td>日本ケミコン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.82</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>株式会社ユビキタスＡＩ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.819</td><td class="num">-1290</td></tr>
+<tr><td>SEMICON</td><td>トーカロ株式会社</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.819</td><td class="num">-278</td></tr>
+<tr><td>CYBERSEC</td><td>東京エレクトロンデバイス株式会社</td><td>卸売業</td><td class="grade-B">B</td><td class="num">0.818</td><td class="num">-330</td></tr>
+<tr><td>SEMICON</td><td>日本電子材料株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.818</td><td class="num">-99</td></tr>
+<tr><td>SEMICON</td><td>三菱瓦斯化学株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.818</td><td class="num">-277</td></tr>
+<tr><td>EV</td><td>株式会社リコー</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.817</td><td class="num">-13</td></tr>
+<tr><td>SEMICON</td><td>東京応化工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.817</td><td class="num">-277</td></tr>
+<tr><td>SPACE</td><td>イーグル工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.817</td><td class="num">-875</td></tr>
+<tr><td>CLOUD</td><td>戸田建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.817</td><td class="num">-275</td></tr>
+<tr><td>BIOTECH</td><td>富士通株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.817</td><td class="num">-278</td></tr>
+<tr><td>EV</td><td>株式会社　神戸製鋼所</td><td>鉄鋼</td><td class="grade-B">B</td><td class="num">0.817</td><td class="num">-378</td></tr>
+<tr><td>EV</td><td>福井コンピュータホールディングス株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.816</td><td class="num">-380</td></tr>
+<tr><td>EV</td><td>いすゞ自動車株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.816</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>東レ株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.816</td><td class="num">-277</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社建設技術研究所</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.816</td><td class="num">-5</td></tr>
+<tr><td>SEMICON</td><td>ＥＮＥＯＳホールディングス株式会社</td><td>石油・石炭製品</td><td class="grade-B">B</td><td class="num">0.816</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>東洋合成工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.815</td><td class="num">-278</td></tr>
+<tr><td>SEMICON</td><td>旭化成株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.815</td><td class="num">-277</td></tr>
+<tr><td>CLOUD</td><td>トランス・コスモス株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.815</td><td class="num">-475</td></tr>
+<tr><td>GEN_AI</td><td>株式会社ジェイテックコーポレーション</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.815</td><td class="num">-1160</td></tr>
+<tr><td>SEMICON</td><td>エスペック株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.815</td><td class="num">-96</td></tr>
+<tr><td>BIOTECH</td><td>ＺＡＣＲＯＳ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.814</td><td class="num">77</td></tr>
+<tr><td>EV</td><td>スズキ株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.814</td><td class="num">-370</td></tr>
+<tr><td>SEMICON</td><td>豊田合成株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.814</td><td class="num">-1932</td></tr>
+<tr><td>ROBOTICS</td><td>ＴＩＳ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.814</td><td class="num">-278</td></tr>
+<tr><td>SEMICON</td><td>岡本硝子株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.813</td><td class="num">-277</td></tr>
+<tr><td>EV</td><td>ヤマハ発動機株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.813</td><td class="num">-103</td></tr>
+<tr><td>EV</td><td>株式会社デンソー</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.812</td><td class="num">-15</td></tr>
+<tr><td>EV</td><td>ＪＢＣＣホールディングス株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.812</td><td class="num">-383</td></tr>
+<tr><td>SPACE</td><td>三菱重工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.812</td><td class="num">-875</td></tr>
+<tr><td>EV</td><td>日本シイエムケイ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.812</td><td class="num">-371</td></tr>
+<tr><td>WEB3</td><td>日鉄ソリューションズ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.811</td><td class="num">-282</td></tr>
+<tr><td>CYBERSEC</td><td>アルプスアルパイン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.81</td><td class="num">-323</td></tr>
+<tr><td>SEMICON</td><td>株式会社ダイヘン</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.81</td><td class="num">-95</td></tr>
+<tr><td>SEMICON</td><td>ダイトーケミックス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.81</td><td class="num">-278</td></tr>
+<tr><td>SEMICON</td><td>株式会社安永</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-1922</td></tr>
+<tr><td>EV</td><td>住友ゴム工業株式会社</td><td>ゴム製品</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-97</td></tr>
+<tr><td>EV</td><td>株式会社ＳＵＢＡＲＵ</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-371</td></tr>
+<tr><td>ROBOTICS</td><td>川崎重工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">84</td></tr>
+<tr><td>METAVERSE</td><td>株式会社ＩＨＩ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-861</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社セック</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>株式会社安川電機</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-19</td></tr>
+<tr><td>CYBERSEC</td><td>セントラル警備保障株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-350</td></tr>
+<tr><td>SPACE</td><td>世紀東急工業株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-875</td></tr>
+<tr><td>SEMICON</td><td>ＴＯＰＰＡＮホールディングス株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.809</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>ＴＤＫ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.808</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>扶桑化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.808</td><td class="num">-278</td></tr>
+<tr><td>ROBOTICS</td><td>ＢＩＰＲＯＧＹ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.808</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>株式会社ＪＶＣケンウッド</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.808</td><td class="num">-12</td></tr>
+<tr><td>EV</td><td>株式会社クラレ</td><td>化学</td><td class="grade-B">B</td><td class="num">0.807</td><td class="num">-283</td></tr>
+<tr><td>EV</td><td>株式会社パイオラックス</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.807</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>西部電機株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.806</td><td class="num">-1006</td></tr>
+<tr><td>SEMICON</td><td>高周波熱錬株式会社</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.806</td><td class="num">-277</td></tr>
+<tr><td>SPACE</td><td>川崎重工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.806</td><td class="num">-874</td></tr>
+<tr><td>CYBERSEC</td><td>パナソニックホールディングス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.806</td><td class="num">-319</td></tr>
+<tr><td>WEB3</td><td>ＴＩＳ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.806</td><td class="num">88</td></tr>
+<tr><td>EV</td><td>旭精機工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.806</td><td class="num">-1006</td></tr>
+<tr><td>SEMICON</td><td>ＳＭＣ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.805</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>ダイダン株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.805</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>株式会社レゾナック・ホールディングス</td><td>化学</td><td class="grade-B">B</td><td class="num">0.805</td><td class="num">-251</td></tr>
+<tr><td>EV</td><td>菊水ホールディングス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.805</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>住友ベークライト株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.805</td><td class="num">-558</td></tr>
+<tr><td>BIOTECH</td><td>株式会社ダイセル</td><td>化学</td><td class="grade-B">B</td><td class="num">0.804</td><td class="num">80</td></tr>
+<tr><td>CYBERSEC</td><td>大日本印刷株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.803</td><td class="num">-317</td></tr>
+<tr><td>SEMICON</td><td>倉敷紡績株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.803</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>石原産業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.803</td><td class="num">-550</td></tr>
+<tr><td>SEMICON</td><td>三菱電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.803</td><td class="num">-94</td></tr>
+<tr><td>METAVERSE</td><td>久光製薬株式会社</td><td>医薬品</td><td class="grade-B">B</td><td class="num">0.802</td><td class="num">-1980</td></tr>
+<tr><td>SEMICON</td><td>株式会社ソフト９９コーポレーション</td><td>化学</td><td class="grade-B">B</td><td class="num">0.802</td><td class="num">-277</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社テクノマセマティカル</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.802</td><td class="num">-323</td></tr>
+<tr><td>SPACE</td><td>株式会社ＩＨＩ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-874</td></tr>
+<tr><td>CYBERSEC</td><td>三菱重工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-323</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社オプティム</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-275</td></tr>
+<tr><td>EV</td><td>ニデック株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-16</td></tr>
+<tr><td>SPACE</td><td>ニッタ株式会社</td><td>ゴム製品</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-874</td></tr>
+<tr><td>SEMICON</td><td>日東紡績株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>山一電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-95</td></tr>
+<tr><td>CYBERSEC</td><td>日本特殊塗料株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.801</td><td class="num">-323</td></tr>
+<tr><td>EV</td><td>ステラケミファ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.8</td><td class="num">-563</td></tr>
+<tr><td>SEMICON</td><td>株式会社テクノマセマティカル</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.8</td><td class="num">-1287</td></tr>
+<tr><td>BIOTECH</td><td>日本酸素ホールディングス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.8</td><td class="num">84</td></tr>
+<tr><td>METAVERSE</td><td>エーザイ株式会社</td><td>医薬品</td><td class="grade-B">B</td><td class="num">0.8</td><td class="num">-1590</td></tr>
+<tr><td>SEMICON</td><td>オンコセラピー・サイエンス株式会社</td><td>医薬品</td><td class="grade-B">B</td><td class="num">0.799</td><td class="num">-284</td></tr>
+<tr><td>SEMICON</td><td>ソマール株式会社</td><td>卸売業</td><td class="grade-B">B</td><td class="num">0.799</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>住友重機械工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.799</td><td class="num">-276</td></tr>
+<tr><td>SPACE</td><td>日本アビオニクス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.798</td><td class="num">-874</td></tr>
+<tr><td>BIOTECH</td><td>住友ベークライト株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.798</td><td class="num">82</td></tr>
+<tr><td>SEMICON</td><td>松田産業株式会社</td><td>卸売業</td><td class="grade-B">B</td><td class="num">0.798</td><td class="num">-277</td></tr>
+<tr><td>ROBOTICS</td><td>曙ブレーキ工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.798</td><td class="num">80</td></tr>
+<tr><td>SEMICON</td><td>ユニチカ株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.798</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>日揮ホールディングス株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.797</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>東亜ディーケーケー株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.797</td><td class="num">-95</td></tr>
+<tr><td>SPACE</td><td>沖電気工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.797</td><td class="num">-874</td></tr>
+<tr><td>QUANTUM</td><td>日本電気株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.796</td><td class="num">-121</td></tr>
+<tr><td>METAVERSE</td><td>株式会社淺沼組</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.796</td><td class="num">-1218</td></tr>
+<tr><td>SEMICON</td><td>株式会社三社電機製作所</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.796</td><td class="num">-95</td></tr>
+<tr><td>SEMICON</td><td>シンフォニアテクノロジー株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.796</td><td class="num">-94</td></tr>
+<tr><td>SEMICON</td><td>ＫＯＡ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.795</td><td class="num">-100</td></tr>
+<tr><td>SEMICON</td><td>三菱マテリアル株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.795</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>トヨタ自動車株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.795</td><td class="num">84</td></tr>
+<tr><td>BIOTECH</td><td>株式会社エンプラス</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.795</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>三菱電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.795</td><td class="num">-6</td></tr>
+<tr><td>EV</td><td>富士電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-8</td></tr>
+<tr><td>CYBERSEC</td><td>三菱電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-317</td></tr>
+<tr><td>SEMICON</td><td>藤倉コンポジット株式会社</td><td>ゴム製品</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>清水建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>理研計器株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-277</td></tr>
+<tr><td>ROBOTICS</td><td>五洋建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-646</td></tr>
+<tr><td>SEMICON</td><td>株式会社朝日工業社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>北陸電気工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.794</td><td class="num">-94</td></tr>
+<tr><td>WEB3</td><td>株式会社デジタルガレージ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.793</td><td class="num">79</td></tr>
+<tr><td>METAVERSE</td><td>ヤマハ株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.793</td><td class="num">-856</td></tr>
+<tr><td>METAVERSE</td><td>フォスター電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.793</td><td class="num">-1023</td></tr>
+<tr><td>SEMICON</td><td>株式会社朝日ラバー</td><td>ゴム製品</td><td class="grade-B">B</td><td class="num">0.793</td><td class="num">-284</td></tr>
+<tr><td>EV</td><td>アンリツ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.793</td><td class="num">-7</td></tr>
+<tr><td>SEMICON</td><td>日本特殊陶業株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.793</td><td class="num">-276</td></tr>
+<tr><td>CYBERSEC</td><td>セコム株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.793</td><td class="num">-322</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社三菱総合研究所</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.792</td><td class="num">-144</td></tr>
+<tr><td>EV</td><td>パナソニックホールディングス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.792</td><td class="num">-5</td></tr>
+<tr><td>ROBOTICS</td><td>サイバーステップ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.792</td><td class="num">-213</td></tr>
+<tr><td>EV</td><td>株式会社東光高岳</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.792</td><td class="num">-9</td></tr>
+<tr><td>SEMICON</td><td>ＴＯＷＡ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.792</td><td class="num">-277</td></tr>
+<tr><td>EV</td><td>フューチャー株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.792</td><td class="num">-98</td></tr>
+<tr><td>EV</td><td>株式会社ハイレックスコーポレーション</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.791</td><td class="num">-156</td></tr>
+<tr><td>SEMICON</td><td>日本ゼオン株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.79</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>フォスター電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.79</td><td class="num">-100</td></tr>
+<tr><td>SEMICON</td><td>東北特殊鋼株式会社</td><td>鉄鋼</td><td class="grade-B">B</td><td class="num">0.79</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>大日精化工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.789</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>日本アビオニクス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.789</td><td class="num">-12</td></tr>
+<tr><td>SEMICON</td><td>日本発條株式会社</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.789</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>ＣＫＤ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.788</td><td class="num">-282</td></tr>
+<tr><td>EV</td><td>株式会社ダイフク</td><td>機械</td><td class="grade-B">B</td><td class="num">0.788</td><td class="num">-644</td></tr>
+<tr><td>EV</td><td>フタバ産業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.788</td><td class="num">-16</td></tr>
+<tr><td>ROBOTICS</td><td>ＮＯＫ株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.788</td><td class="num">84</td></tr>
+<tr><td>ROBOTICS</td><td>本田技研工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.788</td><td class="num">83</td></tr>
+<tr><td>METAVERSE</td><td>サンケン電気株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.787</td><td class="num">-860</td></tr>
+<tr><td>SEMICON</td><td>信越ポリマー株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.787</td><td class="num">-277</td></tr>
+<tr><td>BIOTECH</td><td>第一稀元素化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.787</td><td class="num">84</td></tr>
+<tr><td>SEMICON</td><td>セイコーエプソン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.787</td><td class="num">-94</td></tr>
+<tr><td>EV</td><td>高砂熱学工業株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.786</td><td class="num">-372</td></tr>
+<tr><td>EV</td><td>株式会社ソフトフロントホールディングス</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.786</td><td class="num">-373</td></tr>
+<tr><td>SEMICON</td><td>セントラル硝子株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.786</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>ミクロン精密株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.786</td><td class="num">-857</td></tr>
+<tr><td>SEMICON</td><td>日本製鉄株式会社</td><td>鉄鋼</td><td class="grade-B">B</td><td class="num">0.785</td><td class="num">-281</td></tr>
+<tr><td>ROBOTICS</td><td>ベステラ株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.785</td><td class="num">-339</td></tr>
+<tr><td>EV</td><td>山洋電気株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.785</td><td class="num">-21</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社ソフトフロントホールディングス</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.784</td><td class="num">-319</td></tr>
+<tr><td>EV</td><td>サンケン電気株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.784</td><td class="num">-12</td></tr>
+<tr><td>SEMICON</td><td>日本精工株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.783</td><td class="num">-281</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社ＤＴＳ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.783</td><td class="num">-281</td></tr>
+<tr><td>CLOUD</td><td>高砂熱学工業株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.783</td><td class="num">-277</td></tr>
+<tr><td>EV</td><td>株式会社小野測器</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.783</td><td class="num">-110</td></tr>
+<tr><td>EV</td><td>イーグル工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.783</td><td class="num">-643</td></tr>
+<tr><td>EV</td><td>旭有機材株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.782</td><td class="num">-553</td></tr>
+<tr><td>ROBOTICS</td><td>カヤバ株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.782</td><td class="num">84</td></tr>
+<tr><td>SEMICON</td><td>古河機械金属株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.782</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>ラサ工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.781</td><td class="num">-276</td></tr>
+<tr><td>CYBERSEC</td><td>オリンパス株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.781</td><td class="num">-318</td></tr>
+<tr><td>EV</td><td>株式会社指月電機製作所</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.781</td><td class="num">-9</td></tr>
+<tr><td>EV</td><td>スミダコーポレーション株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.781</td><td class="num">-100</td></tr>
+<tr><td>SEMICON</td><td>東ソー株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.781</td><td class="num">-276</td></tr>
+<tr><td>BIOTECH</td><td>三菱ケミカルグループ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.78</td><td class="num">84</td></tr>
+<tr><td>SEMICON</td><td>ニチコン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.78</td><td class="num">-94</td></tr>
+<tr><td>SEMICON</td><td>ダイキン工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.779</td><td class="num">-276</td></tr>
+<tr><td>BIOTECH</td><td>日本電波工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.779</td><td class="num">-281</td></tr>
+<tr><td>SPACE</td><td>北陸電気工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.778</td><td class="num">-869</td></tr>
+<tr><td>EV</td><td>王子ホールディングス株式会社</td><td>パルプ・紙</td><td class="grade-B">B</td><td class="num">0.778</td><td class="num">-6</td></tr>
+<tr><td>CYBERSEC</td><td>ＡＬＳＯＫ株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.777</td><td class="num">-322</td></tr>
+<tr><td>EV</td><td>株式会社関電工</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.777</td><td class="num">-8</td></tr>
+<tr><td>BIOTECH</td><td>ハリマ化成グループ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.777</td><td class="num">87</td></tr>
+<tr><td>SEMICON</td><td>株式会社図研</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.777</td><td class="num">-94</td></tr>
+<tr><td>ROBOTICS</td><td>日産自動車株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.776</td><td class="num">84</td></tr>
+<tr><td>EV</td><td>日本発條株式会社</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.776</td><td class="num">-6</td></tr>
+<tr><td>SEMICON</td><td>株式会社オリジン</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.776</td><td class="num">-94</td></tr>
+<tr><td>SEMICON</td><td>竹田ｉＰホールディングス株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.776</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>株式会社タクマ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.776</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>株式会社タカギセイコー</td><td>化学</td><td class="grade-B">B</td><td class="num">0.775</td><td class="num">-553</td></tr>
+<tr><td>SEMICON</td><td>株式会社岡本工作機械製作所</td><td>機械</td><td class="grade-B">B</td><td class="num">0.775</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>富士フイルムホールディングス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.775</td><td class="num">-275</td></tr>
+<tr><td>WEB3</td><td>株式会社カカクコム</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.775</td><td class="num">81</td></tr>
+<tr><td>SEMICON</td><td>住友大阪セメント株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.775</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>武蔵精密工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.775</td><td class="num">84</td></tr>
+<tr><td>EV</td><td>イリソ電子工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.774</td><td class="num">-376</td></tr>
+<tr><td>EV</td><td>ＡＳＴＩ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.774</td><td class="num">-9</td></tr>
+<tr><td>EV</td><td>太陽ホールディングス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.774</td><td class="num">-193</td></tr>
+<tr><td>SPACE</td><td>株式会社コア</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.773</td><td class="num">-874</td></tr>
+<tr><td>ROBOTICS</td><td>大成建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.773</td><td class="num">-275</td></tr>
+<tr><td>EV</td><td>東レ株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.773</td><td class="num">-372</td></tr>
+<tr><td>BIOTECH</td><td>マクセル株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.773</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>関東電化工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.773</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>ルネサスエレクトロニクス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.773</td><td class="num">-94</td></tr>
+<tr><td>BIOTECH</td><td>リケンテクノス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.773</td><td class="num">84</td></tr>
+<tr><td>SEMICON</td><td>石原ケミカル株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.772</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>株式会社ニコン</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.772</td><td class="num">-276</td></tr>
+<tr><td>SPACE</td><td>株式会社カネミツ</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.772</td><td class="num">-874</td></tr>
+<tr><td>SEMICON</td><td>サンコール株式会社</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.772</td><td class="num">-281</td></tr>
+<tr><td>BIOTECH</td><td>エア・ウォーター株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.771</td><td class="num">88</td></tr>
+<tr><td>EV</td><td>新日本理化株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.771</td><td class="num">-186</td></tr>
+<tr><td>BIOTECH</td><td>ＢＩＰＲＯＧＹ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.77</td><td class="num">-641</td></tr>
+<tr><td>SEMICON</td><td>上村工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.77</td><td class="num">-276</td></tr>
+<tr><td>CYBERSEC</td><td>ルネサスエレクトロニクス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.77</td><td class="num">-317</td></tr>
+<tr><td>SEMICON</td><td>株式会社ヨコオ</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.769</td><td class="num">-94</td></tr>
+<tr><td>SPACE</td><td>日油株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.769</td><td class="num">-869</td></tr>
+<tr><td>EV</td><td>タイガースポリマー株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.769</td><td class="num">-187</td></tr>
+<tr><td>EV</td><td>ＧＭＢ株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.768</td><td class="num">-373</td></tr>
+<tr><td>SEMICON</td><td>旭ダイヤモンド工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.768</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>株式会社栗本鐵工所</td><td>鉄鋼</td><td class="grade-B">B</td><td class="num">0.768</td><td class="num">-5</td></tr>
+<tr><td>BIOTECH</td><td>日本化薬株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.768</td><td class="num">88</td></tr>
+<tr><td>EV</td><td>株式会社タムラ製作所</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.767</td><td class="num">-7</td></tr>
+<tr><td>BIOTECH</td><td>保土谷化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.767</td><td class="num">87</td></tr>
+<tr><td>SEMICON</td><td>ＮＧＫ株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.767</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>株式会社　島津製作所</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.767</td><td class="num">-5</td></tr>
+<tr><td>SEMICON</td><td>ノリタケ株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.766</td><td class="num">-276</td></tr>
+<tr><td>EV</td><td>ナブテスコ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.766</td><td class="num">-369</td></tr>
+<tr><td>EV</td><td>アイダエンジニアリング株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.766</td><td class="num">-278</td></tr>
+<tr><td>BIOTECH</td><td>日産化学株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.766</td><td class="num">88</td></tr>
+<tr><td>SEMICON</td><td>ニチアス株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.766</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>株式会社アドバンテスト</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.766</td><td class="num">-94</td></tr>
+<tr><td>SEMICON</td><td>株式会社ＳＣＲＥＥＮホールディングス</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.765</td><td class="num">-94</td></tr>
+<tr><td>CYBERSEC</td><td>キユーピー株式会社</td><td>食料品</td><td class="grade-B">B</td><td class="num">0.765</td><td class="num">-73</td></tr>
+<tr><td>SEMICON</td><td>株式会社エンプラス</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.764</td><td class="num">-94</td></tr>
+<tr><td>SEMICON</td><td>長野計器株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.764</td><td class="num">-275</td></tr>
+<tr><td>SPACE</td><td>ミネベアミツミ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.764</td><td class="num">-869</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社内田洋行</td><td>卸売業</td><td class="grade-B">B</td><td class="num">0.764</td><td class="num">-207</td></tr>
+<tr><td>SEMICON</td><td>冨士ダイス株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.764</td><td class="num">-281</td></tr>
+<tr><td>BIOTECH</td><td>株式会社マンダム</td><td>化学</td><td class="grade-B">B</td><td class="num">0.764</td><td class="num">87</td></tr>
+<tr><td>QUANTUM</td><td>シグマ光機株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.763</td><td class="num">-55</td></tr>
+<tr><td>RENEWABLE</td><td>豊田合成株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.763</td><td class="num">269</td></tr>
+<tr><td>CLOUD</td><td>東亜道路工業株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.763</td><td class="num">-276</td></tr>
+<tr><td>BIOTECH</td><td>株式会社堀場製作所</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.762</td><td class="num">-5</td></tr>
+<tr><td>EV</td><td>富士通株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.762</td><td class="num">-9</td></tr>
+<tr><td>SPACE</td><td>株式会社　ジーエス・ユアサ　コーポレーション</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.761</td><td class="num">-869</td></tr>
+<tr><td>EV</td><td>鹿島建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.761</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>株式会社アテクト</td><td>化学</td><td class="grade-B">B</td><td class="num">0.76</td><td class="num">-281</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社大本組</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.76</td><td class="num">-275</td></tr>
+<tr><td>CYBERSEC</td><td>サクサ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.76</td><td class="num">-317</td></tr>
+<tr><td>BIOTECH</td><td>東洋紡株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.76</td><td class="num">88</td></tr>
+<tr><td>SEMICON</td><td>ウシオ電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.76</td><td class="num">-94</td></tr>
+<tr><td>EV</td><td>株式会社イクヨ</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.76</td><td class="num">-372</td></tr>
+<tr><td>EV</td><td>任天堂株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.76</td><td class="num">-5</td></tr>
+<tr><td>EV</td><td>北陸電力株式会社</td><td>電気・ガス業</td><td class="grade-B">B</td><td class="num">0.759</td><td class="num">-372</td></tr>
+<tr><td>SEMICON</td><td>ローム株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.759</td><td class="num">-94</td></tr>
+<tr><td>CLOUD</td><td>富士フイルムホールディングス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.758</td><td class="num">90</td></tr>
+<tr><td>BIOTECH</td><td>三菱瓦斯化学株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.758</td><td class="num">88</td></tr>
+<tr><td>BIOTECH</td><td>積水化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.757</td><td class="num">88</td></tr>
+<tr><td>EV</td><td>ルネサスエレクトロニクス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.757</td><td class="num">-371</td></tr>
+<tr><td>BIOTECH</td><td>東洋合成工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.757</td><td class="num">87</td></tr>
+<tr><td>SPACE</td><td>シチズン時計株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.757</td><td class="num">-869</td></tr>
+<tr><td>CYBERSEC</td><td>キヤノン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.757</td><td class="num">-43</td></tr>
+<tr><td>BIOTECH</td><td>旭化成株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.756</td><td class="num">88</td></tr>
+<tr><td>SEMICON</td><td>株式会社フェローテック</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.756</td><td class="num">-94</td></tr>
+<tr><td>BIOTECH</td><td>ＪＩＧ－ＳＡＷ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.756</td><td class="num">-367</td></tr>
+<tr><td>EV</td><td>キユーピー株式会社</td><td>食料品</td><td class="grade-B">B</td><td class="num">0.755</td><td class="num">-127</td></tr>
+<tr><td>SEMICON</td><td>株式会社テセック</td><td>機械</td><td class="grade-B">B</td><td class="num">0.755</td><td class="num">-276</td></tr>
+<tr><td>METAVERSE</td><td>株式会社ヴィッツ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.755</td><td class="num">139</td></tr>
+<tr><td>CYBERSEC</td><td>雪印メグミルク株式会社</td><td>食料品</td><td class="grade-B">B</td><td class="num">0.754</td><td class="num">-317</td></tr>
+<tr><td>SEMICON</td><td>新電元工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.753</td><td class="num">-93</td></tr>
+<tr><td>EV</td><td>ＵＢＥ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.753</td><td class="num">-551</td></tr>
+<tr><td>ROBOTICS</td><td>いすゞ自動車株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.753</td><td class="num">89</td></tr>
+<tr><td>GEN_AI</td><td>株式会社フィックスターズ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.753</td><td class="num">267</td></tr>
+<tr><td>RENEWABLE</td><td>川崎重工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.753</td><td class="num">276</td></tr>
+<tr><td>BIOTECH</td><td>株式会社テクノメディカ</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.752</td><td class="num">-225</td></tr>
+<tr><td>EV</td><td>株式会社やまびこ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.752</td><td class="num">-1005</td></tr>
+<tr><td>EV</td><td>株式会社ブロードバンドタワー</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.751</td><td class="num">-285</td></tr>
+<tr><td>SEMICON</td><td>株式会社エノモト</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.751</td><td class="num">-94</td></tr>
+<tr><td>ROBOTICS</td><td>日本国土開発株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.751</td><td class="num">-578</td></tr>
+<tr><td>SEMICON</td><td>ワイエイシイホールディングス株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.75</td><td class="num">-276</td></tr>
+<tr><td>GEN_AI</td><td>株式会社イノベーション</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.75</td><td class="num">211</td></tr>
+<tr><td>SEMICON</td><td>日本化薬株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.749</td><td class="num">-277</td></tr>
+<tr><td>SEMICON</td><td>シグマ光機株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.749</td><td class="num">-214</td></tr>
+<tr><td>SEMICON</td><td>応用地質株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.749</td><td class="num">-4</td></tr>
+<tr><td>SEMICON</td><td>日本精線株式会社</td><td>鉄鋼</td><td class="grade-B">B</td><td class="num">0.748</td><td class="num">-275</td></tr>
+<tr><td>EV</td><td>株式会社トーエネック</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.748</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>株式会社　アルバック</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.747</td><td class="num">-2</td></tr>
+<tr><td>EV</td><td>テイカ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.747</td><td class="num">-550</td></tr>
+<tr><td>BIOTECH</td><td>株式会社リプロセル</td><td>化学</td><td class="grade-B">B</td><td class="num">0.747</td><td class="num">87</td></tr>
+<tr><td>EV</td><td>大豊工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.747</td><td class="num">-292</td></tr>
+<tr><td>SEMICON</td><td>澁谷工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.747</td><td class="num">-184</td></tr>
+<tr><td>EV</td><td>日本化学産業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.747</td><td class="num">-550</td></tr>
+<tr><td>EV</td><td>株式会社ヨコオ</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.746</td><td class="num">-371</td></tr>
+<tr><td>SPACE</td><td>株式会社ウェザーニューズ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.746</td><td class="num">-812</td></tr>
+<tr><td>EV</td><td>星和電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.746</td><td class="num">-371</td></tr>
+<tr><td>SEMICON</td><td>富士紡ホールディングス株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.745</td><td class="num">-275</td></tr>
+<tr><td>SEMICON</td><td>協立電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.745</td><td class="num">-2</td></tr>
+<tr><td>EV</td><td>株式会社堀場製作所</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.745</td><td class="num">-100</td></tr>
+<tr><td>SEMICON</td><td>株式会社ソノコム</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.745</td><td class="num">-276</td></tr>
+<tr><td>SEMICON</td><td>任天堂株式会社</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.745</td><td class="num">-275</td></tr>
+<tr><td>SEMICON</td><td>信越化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.745</td><td class="num">-275</td></tr>
+<tr><td>EV</td><td>九州電力株式会社</td><td>電気・ガス業</td><td class="grade-B">B</td><td class="num">0.744</td><td class="num">-371</td></tr>
+<tr><td>EV</td><td>ＮＣＳ＆Ａ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.743</td><td class="num">-13</td></tr>
+<tr><td>BIOTECH</td><td>株式会社デジタルガレージ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.743</td><td class="num">-286</td></tr>
+<tr><td>SPACE</td><td>ＺＡＣＲＯＳ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.743</td><td class="num">-513</td></tr>
+<tr><td>BIOTECH</td><td>株式会社三菱総合研究所</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.742</td><td class="num">-468</td></tr>
+<tr><td>EV</td><td>日東電工株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.742</td><td class="num">-199</td></tr>
+<tr><td>EV</td><td>株式会社小田原エンジニアリング</td><td>機械</td><td class="grade-B">B</td><td class="num">0.74</td><td class="num">-368</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社ソリトンシステムズ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.74</td><td class="num">-49</td></tr>
+<tr><td>SEMICON</td><td>東京計器株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.74</td><td class="num">-275</td></tr>
+<tr><td>SEMICON</td><td>レーザーテック株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.74</td><td class="num">-2</td></tr>
+<tr><td>RENEWABLE</td><td>トヨタ自動車株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.739</td><td class="num">276</td></tr>
+<tr><td>EV</td><td>名古屋電機工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.739</td><td class="num">-371</td></tr>
+<tr><td>SPACE</td><td>五洋建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.738</td><td class="num">-506</td></tr>
+<tr><td>RENEWABLE</td><td>本田技研工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.738</td><td class="num">275</td></tr>
+<tr><td>RENEWABLE</td><td>ＮＯＫ株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.738</td><td class="num">276</td></tr>
+<tr><td>EV</td><td>帝人株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.738</td><td class="num">-13</td></tr>
+<tr><td>SEMICON</td><td>株式会社マルマエ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.738</td><td class="num">-124</td></tr>
+<tr><td>RENEWABLE</td><td>Ａｂａｌａｎｃｅ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.738</td><td class="num">-184</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社今仙電機製作所</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.737</td><td class="num">82</td></tr>
+<tr><td>CYBERSEC</td><td>株式会社イトーキ</td><td>その他製品</td><td class="grade-B">B</td><td class="num">0.737</td><td class="num">-44</td></tr>
+<tr><td>SEMICON</td><td>株式会社ＪＣＵ</td><td>化学</td><td class="grade-B">B</td><td class="num">0.737</td><td class="num">-275</td></tr>
+<tr><td>EV</td><td>株式会社不二越</td><td>機械</td><td class="grade-B">B</td><td class="num">0.737</td><td class="num">-767</td></tr>
+<tr><td>CYBERSEC</td><td>ザインエレクトロニクス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.737</td><td class="num">-49</td></tr>
+<tr><td>SEMICON</td><td>ＴＯＴＯ株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.736</td><td class="num">-275</td></tr>
+<tr><td>SEMICON</td><td>ダイジェット工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.736</td><td class="num">-277</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社安川電機</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.736</td><td class="num">493</td></tr>
+<tr><td>EV</td><td>横浜ゴム株式会社</td><td>ゴム製品</td><td class="grade-B">B</td><td class="num">0.736</td><td class="num">-97</td></tr>
+<tr><td>BIOTECH</td><td>大日精化工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.735</td><td class="num">89</td></tr>
+<tr><td>CYBERSEC</td><td>セグエグループ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.735</td><td class="num">-43</td></tr>
+<tr><td>SPACE</td><td>古野電気株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.735</td><td class="num">-539</td></tr>
+<tr><td>CYBERSEC</td><td>フューチャー株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.734</td><td class="num">-44</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社リコー</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.734</td><td class="num">499</td></tr>
+<tr><td>EV</td><td>サッポロホールディングス株式会社</td><td>食料品</td><td class="grade-B">B</td><td class="num">0.734</td><td class="num">-96</td></tr>
+<tr><td>ROBOTICS</td><td>ＪＭＡＣＳ株式会社</td><td>非鉄金属</td><td class="grade-B">B</td><td class="num">0.734</td><td class="num">472</td></tr>
+<tr><td>EV</td><td>日本電気硝子株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.733</td><td class="num">-96</td></tr>
+<tr><td>CLOUD</td><td>スター精密株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.733</td><td class="num">361</td></tr>
+<tr><td>SEMICON</td><td>サムコ　株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.732</td><td class="num">-162</td></tr>
+<tr><td>BIOTECH</td><td>ＵＢＥ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.732</td><td class="num">89</td></tr>
+<tr><td>QUANTUM</td><td>株式会社三菱総合研究所</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.732</td><td class="num">56</td></tr>
+<tr><td>EV</td><td>東海カーボン株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.731</td><td class="num">-98</td></tr>
+<tr><td>ROBOTICS</td><td>高砂熱学工業株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.731</td><td class="num">-278</td></tr>
+<tr><td>SEMICON</td><td>株式会社　高田工業所</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.731</td><td class="num">-246</td></tr>
+<tr><td>SEMICON</td><td>立川ブラインド工業株式会社</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.731</td><td class="num">-2</td></tr>
+<tr><td>EV</td><td>株式会社島精機製作所</td><td>機械</td><td class="grade-B">B</td><td class="num">0.73</td><td class="num">-277</td></tr>
+<tr><td>ROBOTICS</td><td>積水ハウス株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.73</td><td class="num">-338</td></tr>
+<tr><td>BIOTECH</td><td>日本ペイントホールディングス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.73</td><td class="num">89</td></tr>
+<tr><td>SEMICON</td><td>日本カーボン株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.729</td><td class="num">-3</td></tr>
+<tr><td>SAAS</td><td>イー・ガーディアン株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.729</td><td class="num">118</td></tr>
+<tr><td>SEMICON</td><td>日本電気硝子株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.729</td><td class="num">-1</td></tr>
+<tr><td>SPACE</td><td>キヤノン電子株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.729</td><td class="num">-231</td></tr>
+<tr><td>SEMICON</td><td>東海カーボン株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.729</td><td class="num">-3</td></tr>
+<tr><td>SEMICON</td><td>東洋炭素株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.728</td><td class="num">-1</td></tr>
+<tr><td>SEMICON</td><td>株式会社タカトリ</td><td>機械</td><td class="grade-B">B</td><td class="num">0.728</td><td class="num">-96</td></tr>
+<tr><td>BIOTECH</td><td>ラサ工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.728</td><td class="num">89</td></tr>
+<tr><td>CLOUD</td><td>イー・ガーディアン株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.727</td><td class="num">118</td></tr>
+<tr><td>SEMICON</td><td>ザ・パック株式会社</td><td>パルプ・紙</td><td class="grade-B">B</td><td class="num">0.727</td><td class="num">-2</td></tr>
+<tr><td>RENEWABLE</td><td>日産自動車株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.727</td><td class="num">276</td></tr>
+<tr><td>SEMICON</td><td>日本フイルコン株式会社</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.727</td><td class="num">-37</td></tr>
+<tr><td>SEMICON</td><td>ＡＧＣ株式会社</td><td>ガラス・土石製品</td><td class="grade-B">B</td><td class="num">0.726</td><td class="num">-2</td></tr>
+<tr><td>ROBOTICS</td><td>ニデック株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.726</td><td class="num">496</td></tr>
+<tr><td>BIOTECH</td><td>東ソー株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.726</td><td class="num">89</td></tr>
+<tr><td>SEMICON</td><td>大阪有機化学工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.726</td><td class="num">-36</td></tr>
+<tr><td>EV</td><td>ＨＯＹＡ株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.726</td><td class="num">-26</td></tr>
+<tr><td>EV</td><td>ハリマ化成グループ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.725</td><td class="num">-189</td></tr>
+<tr><td>EV</td><td>株式会社カプコン</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.725</td><td class="num">-23</td></tr>
+<tr><td>DRONE</td><td>株式会社ユビキタスＡＩ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.725</td><td class="num">193</td></tr>
+<tr><td>EV</td><td>豊和工業株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.725</td><td class="num">-277</td></tr>
+<tr><td>BIOTECH</td><td>富士フイルムホールディングス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.724</td><td class="num">90</td></tr>
+<tr><td>SPACE</td><td>株式会社Ａ＆Ｄホロンホールディングス</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.724</td><td class="num">-141</td></tr>
+<tr><td>BIOTECH</td><td>大日本塗料株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.724</td><td class="num">89</td></tr>
+<tr><td>EV</td><td>日鉄ソリューションズ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.724</td><td class="num">-9</td></tr>
+<tr><td>EV</td><td>キリンホールディングス株式会社</td><td>食料品</td><td class="grade-B">B</td><td class="num">0.724</td><td class="num">-97</td></tr>
+<tr><td>EV</td><td>新日本電工株式会社</td><td>鉄鋼</td><td class="grade-B">B</td><td class="num">0.722</td><td class="num">-97</td></tr>
+<tr><td>BIOTECH</td><td>株式会社ＳＣＲＥＥＮホールディングス</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.722</td><td class="num">-276</td></tr>
+<tr><td>BIOTECH</td><td>日本曹達株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.721</td><td class="num">89</td></tr>
+<tr><td>RENEWABLE</td><td>河西工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.72</td><td class="num">276</td></tr>
+<tr><td>ROBOTICS</td><td>トピー工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.72</td><td class="num">83</td></tr>
+<tr><td>BIOTECH</td><td>株式会社ジェイエスピー</td><td>化学</td><td class="grade-B">B</td><td class="num">0.719</td><td class="num">89</td></tr>
+<tr><td>ROBOTICS</td><td>シャープ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.719</td><td class="num">499</td></tr>
+<tr><td>BIOTECH</td><td>株式会社カネカ</td><td>化学</td><td class="grade-B">B</td><td class="num">0.719</td><td class="num">89</td></tr>
+<tr><td>ROBOTICS</td><td>アルプスアルパイン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.718</td><td class="num">499</td></tr>
+<tr><td>ROBOTICS</td><td>オムロン株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.718</td><td class="num">500</td></tr>
+<tr><td>BIOTECH</td><td>タカラバイオ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.717</td><td class="num">89</td></tr>
+<tr><td>EV</td><td>株式会社菊池製作所</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.717</td><td class="num">22</td></tr>
+<tr><td>ROBOTICS</td><td>日本航空電子工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.716</td><td class="num">498</td></tr>
+<tr><td>SEMICON</td><td>株式会社ＳＵＭＣＯ</td><td>金属製品</td><td class="grade-B">B</td><td class="num">0.715</td><td class="num">-3</td></tr>
+<tr><td>WEB3</td><td>株式会社ＤＴＳ</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.715</td><td class="num">83</td></tr>
+<tr><td>SPACE</td><td>ニプロ株式会社</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.715</td><td class="num">-505</td></tr>
+<tr><td>ROBOTICS</td><td>ＴＨＫ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.714</td><td class="num">496</td></tr>
+<tr><td>RENEWABLE</td><td>株式会社サニックスホールディングス</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.714</td><td class="num">89</td></tr>
+<tr><td>GEN_AI</td><td>ａｎｄ　ｆａｃｔｏｒｙ株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.713</td><td class="num">152</td></tr>
+<tr><td>DRONE</td><td>セコム株式会社</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.713</td><td class="num">197</td></tr>
+<tr><td>SEMICON</td><td>ヤマハ発動機株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.713</td><td class="num">-1285</td></tr>
+<tr><td>SEMICON</td><td>タツモ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.713</td><td class="num">-2</td></tr>
+<tr><td>BIOTECH</td><td>株式会社コーセーホールディングス</td><td>化学</td><td class="grade-B">B</td><td class="num">0.712</td><td class="num">89</td></tr>
+<tr><td>EV</td><td>株式会社ＳＣＲＥＥＮホールディングス</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.712</td><td class="num">-7</td></tr>
+<tr><td>SEMICON</td><td>株式会社東光高岳</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.711</td><td class="num">-94</td></tr>
+<tr><td>BIOTECH</td><td>株式会社フェローテック</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.711</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>ＫＯＡ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.71</td><td class="num">499</td></tr>
+<tr><td>BIOTECH</td><td>豊田合成株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.71</td><td class="num">570</td></tr>
+<tr><td>DRONE</td><td>沖電気工業株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.709</td><td class="num">197</td></tr>
+<tr><td>WEB3</td><td>株式会社ニコン</td><td>精密機器</td><td class="grade-B">B</td><td class="num">0.709</td><td class="num">89</td></tr>
+<tr><td>ROBOTICS</td><td>パナソニックホールディングス株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.709</td><td class="num">503</td></tr>
+<tr><td>BIOTECH</td><td>ジオマテック株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.709</td><td class="num">-276</td></tr>
+<tr><td>CLOUD</td><td>ダイダン株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.709</td><td class="num">89</td></tr>
+<tr><td>BIOTECH</td><td>コスモエネルギーホールディングス株式会社</td><td>石油・石炭製品</td><td class="grade-B">B</td><td class="num">0.708</td><td class="num">574</td></tr>
+<tr><td>DRONE</td><td>株式会社クラフティア</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.708</td><td class="num">202</td></tr>
+<tr><td>ROBOTICS</td><td>日本精工株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.708</td><td class="num">500</td></tr>
+<tr><td>SEMICON</td><td>ダイトロン株式会社</td><td>卸売業</td><td class="grade-B">B</td><td class="num">0.708</td><td class="num">-1</td></tr>
+<tr><td>GEN_AI</td><td>株式会社ＡＶｉＣ</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.707</td><td class="num">140</td></tr>
+<tr><td>BIOTECH</td><td>ローツェ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.707</td><td class="num">553</td></tr>
+<tr><td>EV</td><td>高砂香料工業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.707</td><td class="num">-187</td></tr>
+<tr><td>CYBERSEC</td><td>富士通株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.707</td><td class="num">45</td></tr>
+<tr><td>RENEWABLE</td><td>株式会社シーイーシー</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.706</td><td class="num">-347</td></tr>
+<tr><td>BIOTECH</td><td>日本デコラックス株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.706</td><td class="num">89</td></tr>
+<tr><td>BIOTECH</td><td>帝人株式会社</td><td>繊維製品</td><td class="grade-B">B</td><td class="num">0.705</td><td class="num">575</td></tr>
+<tr><td>ROBOTICS</td><td>西松建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.705</td><td class="num">-275</td></tr>
+<tr><td>ROBOTICS</td><td>フォスター電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.705</td><td class="num">499</td></tr>
+<tr><td>DRONE</td><td>鹿島建設株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.705</td><td class="num">202</td></tr>
+<tr><td>METAVERSE</td><td>株式会社メタリアル</td><td>サービス業</td><td class="grade-B">B</td><td class="num">0.705</td><td class="num">168</td></tr>
+<tr><td>CYBERSEC</td><td>コニカミノルタ株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.704</td><td class="num">40</td></tr>
+<tr><td>ROBOTICS</td><td>東亜建設工業株式会社</td><td>建設業</td><td class="grade-B">B</td><td class="num">0.704</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>株式会社リンガーハット</td><td>小売業</td><td class="grade-B">B</td><td class="num">0.704</td><td class="num">470</td></tr>
+<tr><td>ROBOTICS</td><td>河西工業株式会社</td><td>輸送用機器</td><td class="grade-B">B</td><td class="num">0.703</td><td class="num">84</td></tr>
+<tr><td>WEB3</td><td>小野薬品工業株式会社</td><td>医薬品</td><td class="grade-B">B</td><td class="num">0.703</td><td class="num">90</td></tr>
+<tr><td>SEMICON</td><td>ＵＢＥ株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.703</td><td class="num">-276</td></tr>
+<tr><td>ROBOTICS</td><td>ヒロセ電機株式会社</td><td>電気機器</td><td class="grade-B">B</td><td class="num">0.703</td><td class="num">498</td></tr>
+<tr><td>EV</td><td>アマノ株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.703</td><td class="num">-641</td></tr>
+<tr><td>BIOTECH</td><td>石原産業株式会社</td><td>化学</td><td class="grade-B">B</td><td class="num">0.702</td><td class="num">90</td></tr>
+<tr><td>CYBERSEC</td><td>アイダエンジニアリング株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.702</td><td class="num">38</td></tr>
+<tr><td>SEMICON</td><td>ソフトバンクグループ株式会社</td><td>情報・通信業</td><td class="grade-B">B</td><td class="num">0.701</td><td class="num">-924</td></tr>
+<tr><td>ROBOTICS</td><td>平田機工株式会社</td><td>機械</td><td class="grade-B">B</td><td class="num">0.701</td><td class="num">500</td></tr>
+  </tbody></table>
+
+  <h2>6. embedding 検索によるカバレッジ拡張</h2>
+  <table>
+    <thead><tr><th>Domain</th><th>checked</th><th>真陽性</th><th>sense miss %</th></tr></thead>
+    <tbody>
+<tr><td>GEN_AI</td><td class="num">225</td><td class="num">73</td><td class="num">32.4%</td></tr>
+<tr><td>EV</td><td class="num">26</td><td class="num">26</td><td class="num">100.0%</td></tr>
+<tr><td>QUANTUM</td><td class="num">4</td><td class="num">4</td><td class="num">100.0%</td></tr>
+<tr><td>CLOUD</td><td class="num">24</td><td class="num">24</td><td class="num">100.0%</td></tr>
+<tr><td>METAVERSE</td><td class="num">13</td><td class="num">13</td><td class="num">100.0%</td></tr>
+<tr><td>WEB3</td><td class="num">2</td><td class="num">2</td><td class="num">100.0%</td></tr>
+<tr><td>SEMICON</td><td class="num">3</td><td class="num">3</td><td class="num">100.0%</td></tr>
+<tr><td>RENEWABLE</td><td class="num">20</td><td class="num">20</td><td class="num">100.0%</td></tr>
+<tr><td>BIOTECH</td><td class="num">58</td><td class="num">58</td><td class="num">100.0%</td></tr>
+<tr><td>ROBOTICS</td><td class="num">8</td><td class="num">8</td><td class="num">100.0%</td></tr>
+<tr><td>CYBERSEC</td><td class="num">15</td><td class="num">15</td><td class="num">100.0%</td></tr>
+<tr><td>SAAS</td><td class="num">97</td><td class="num">97</td><td class="num">100.0%</td></tr>
+<tr><td>DRONE</td><td class="num">1</td><td class="num">1</td><td class="num">100.0%</td></tr>
+<tr><td>SPACE</td><td class="num">4</td><td class="num">4</td><td class="num">100.0%</td></tr>
+  </tbody></table>
+
+  <h2>7. v0.7 の進化</h2>
+  <div class="note">
+    <strong>Phase 1-7 の質的進化軌跡</strong>:<br>
+    v0.1 - v0.4: 「観測可能な事実の集積」 (10 → 14 ドメイン)<br>
+    v0.5: 「測る方法を疑う」 (整合性チェック + embedding Pilot)<br>
+    v0.6: 「測り方を補正する」 (Pioneer 年次データで機会損失大幅補正)<br>
+    <strong>v0.7: 「測り続ける仕組みを持つ」</strong> (Pioneer 56 / pitfall 自己更新 / trend 追跡)
+  </div>
+
+  <footer>
+    © 2026 NPO法人ミラツク ／ esse-sense — ITM-DB v0.7 (Phase 7 完成版)<br>
+    GitHub: <span style="font-family:var(--font-mono);">yuyanishimura0312/investment-timing-misalignment-db</span> (private)<br>
+    Phases 1-7 全 8 commits / 14 domains / 247 classifications / 56 pioneers / 285+ yearly rows
+  </footer>
+</main>
+</body>
+</html>

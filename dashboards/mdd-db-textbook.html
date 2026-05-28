@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>Marketplace Design — Webマーケットプレイス設計学の教科書 / MDD-DB</title>
+<meta name="description" content="Webマーケットプレイス設計学の横串学術教科書。オークション理論・メカニズムデザイン・マッチング理論・両面市場・推薦・GSP・行動経済学を統合する13章構成。340概念・Nobel 15名・18 DB cross_ref・IRR Gwet AC1=0.98。">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF; --card: #FFFFFF; --card-hover: #F7F7F5;
+  --accent: #121212; --accent-soft: #555555; --accent-warm: #CC1400; --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212; --text-secondary: #555555; --text-muted: #6B6B6B;
+  --border: #D9D9D9; --border-light: #EEEEEE; --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", monospace;
+  --font-italic: "Cormorant Garamond", Georgia, serif;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --highlight: #FF4030; --surface: #1A1A1A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.95;letter-spacing:0.025em;font-feature-settings:"palt"}
+.top-bar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.top-bar .brand{font-family:var(--font-serif);font-weight:700;color:var(--accent-warm);font-size:15px}
+.top-bar .theme-toggle{background:none;border:1px solid var(--border);color:var(--text);padding:4px 10px;cursor:pointer;font-size:13px;border-radius:2px}
+.layout{display:grid;grid-template-columns:280px 1fr;max-width:1240px;margin:0 auto;padding-top:48px}
+.toc{position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;padding:32px 18px;border-right:1px solid var(--border-light);font-size:13px}
+.toc h3{font-family:var(--font-serif);color:var(--accent-warm);font-size:12px;letter-spacing:0.15em;margin-bottom:16px;text-transform:uppercase}
+.toc ul{list-style:none}
+.toc li{margin-bottom:6px}
+.toc a{color:var(--text-secondary);text-decoration:none;display:block;padding:4px 8px;border-radius:2px;line-height:1.5}
+.toc a:hover{color:var(--accent-warm);background:var(--accent-muted)}
+.toc .ch-num{font-family:var(--font-mono);color:var(--text-muted);margin-right:8px;font-size:11px;display:inline-block;min-width:24px}
+main{padding:48px 60px;max-width:780px;font-family:var(--font-serif)}
+.cover{margin-bottom:80px;padding-bottom:48px;border-bottom:2px solid var(--accent-warm)}
+.cover .eyebrow{font-family:var(--font);letter-spacing:0.32em;font-size:11px;color:var(--accent-warm);text-transform:uppercase;margin-bottom:24px}
+.cover h1{font-family:var(--font-serif);font-size:38px;font-weight:700;line-height:1.45;color:var(--text);letter-spacing:0.04em;margin-bottom:14px}
+.cover .subtitle{font-family:var(--font-serif);font-size:18px;color:var(--text-secondary);margin-bottom:22px;font-weight:400}
+.cover .en{font-family:var(--font-italic);font-style:italic;font-size:20px;color:var(--accent-warm);margin-bottom:30px;letter-spacing:0.01em}
+.cover .meta{font-family:var(--font);font-size:13px;color:var(--text-secondary);display:flex;gap:18px;flex-wrap:wrap}
+.cover .meta span{padding-right:18px;border-right:1px solid var(--border-light)}
+.cover .meta span:last-child{border-right:none}
+h2{font-family:var(--font-serif);font-size:24px;font-weight:700;margin:48px 0 20px;color:var(--text);letter-spacing:0.04em;padding-bottom:10px;border-bottom:1px solid var(--border-light)}
+h2 .ch-num{font-family:var(--font-mono);color:var(--accent-warm);font-size:18px;margin-right:14px;font-weight:400}
+h3{font-size:17px;font-weight:700;margin:28px 0 12px;color:var(--text)}
+section.chapter{margin-bottom:80px}
+p{margin-bottom:20px;text-indent:1em;font-size:15.5px;line-height:1.95}
+p:first-of-type,p.lead,p.no-indent{text-indent:0}
+p.lead{font-size:17px;color:var(--text);background:var(--surface);padding:20px 28px;border-left:3px solid var(--accent-warm);margin:24px 0 32px;line-height:1.85}
+table{width:100%;border-collapse:collapse;font-family:var(--font);font-size:13px;margin:24px 0;border:1px solid var(--border-light)}
+th{background:var(--surface);text-align:left;padding:10px 14px;border-bottom:2px solid var(--border);font-weight:500;color:var(--text-secondary);font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase}
+td{padding:10px 14px;border-bottom:1px solid var(--border-light);vertical-align:top}
+td.n{font-family:var(--font-mono);text-align:right}
+td.warm{color:var(--accent-warm);font-weight:500}
+ul,ol{margin:16px 0 24px 0;padding-left:0;list-style-position:inside}
+ul li,ol li{margin-bottom:8px;font-family:var(--font);font-size:14.5px;line-height:1.85}
+code{font-family:var(--font-mono);background:var(--accent-muted);padding:2px 7px;border-radius:2px;font-size:13px;color:var(--accent-warm)}
+.formula{background:var(--surface);padding:18px 24px;border-left:3px solid var(--accent-warm);font-family:var(--font-mono);font-size:13.5px;margin:18px 0;line-height:1.85;overflow-x:auto}
+.box-cite{background:var(--surface);padding:16px 20px;border:1px solid var(--border-light);border-left:3px solid var(--accent-warm);margin:20px 0;font-family:var(--font);font-size:13px;line-height:1.75}
+.box-cite strong{color:var(--accent-warm)}
+blockquote{font-family:var(--font-serif);font-style:italic;font-size:16px;color:var(--text-secondary);border-left:3px solid var(--accent-warm);padding:14px 24px;margin:24px 0;background:var(--surface)}
+.tag{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11px;font-family:var(--font);background:var(--accent-muted);color:var(--accent-warm);margin-right:6px;letter-spacing:0.03em}
+@media (max-width:1000px){.layout{grid-template-columns:1fr}.toc{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border-light)}main{padding:32px 24px}}
+@media print{.top-bar,.toc{display:none}main{padding:0;max-width:none}body{font-size:11pt}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <span class="brand">MIRA TUKU — Marketplace Design Knowledge DB Textbook</span>
+  <button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');localStorage.setItem('mdd-tb',document.documentElement.getAttribute('data-theme'))">テーマ切替</button>
+</div>
+<div class="layout">
+  <aside class="toc">
+    <h3>目次</h3>
+    <ul>
+      <li><a href="#intro"><span class="ch-num">序</span>マーケットプレイスの学術</a></li>
+      <li><a href="#ch01"><span class="ch-num">01</span>オークション理論</a></li>
+      <li><a href="#ch02"><span class="ch-num">02</span>メカニズムデザイン</a></li>
+      <li><a href="#ch03"><span class="ch-num">03</span>マッチング理論</a></li>
+      <li><a href="#ch04"><span class="ch-num">04</span>両面市場・プラットフォーム</a></li>
+      <li><a href="#ch05"><span class="ch-num">05</span>ネットワーク経済学</a></li>
+      <li><a href="#ch06"><span class="ch-num">06</span>アルゴリズム価格設定</a></li>
+      <li><a href="#ch07"><span class="ch-num">07</span>検索・ランキング</a></li>
+      <li><a href="#ch08"><span class="ch-num">08</span>推薦システム</a></li>
+      <li><a href="#ch09"><span class="ch-num">09</span>情報非対称性・信頼</a></li>
+      <li><a href="#ch10"><span class="ch-num">10</span>市場マイクロストラクチャ</a></li>
+      <li><a href="#ch11"><span class="ch-num">11</span>広告オークション・GSP</a></li>
+      <li><a href="#ch12"><span class="ch-num">12</span>不正検出</a></li>
+      <li><a href="#ch13"><span class="ch-num">13</span>行動経済学</a></li>
+      <li><a href="#conclusion"><span class="ch-num">終</span>マーケットプレイスの未来</a></li>
+      <li><a href="#methodology"><span class="ch-num">付</span>方法論と監査</a></li>
+    </ul>
+  </aside>
+  <main>
+
+    <section class="cover">
+      <div class="eyebrow">MARKETPLACE DESIGN KNOWLEDGE DATABASE — TEXTBOOK</div>
+      <h1>Webマーケットプレイス設計学</h1>
+      <div class="subtitle">十三の学術領域でWeb市場の設計判断を裏打ちする</div>
+      <div class="en">A Concise Academic Atlas of Web Marketplace Design</div>
+      <div class="meta">
+        <span>v0.4.0-wave4 / 2026-05-20</span>
+        <span>340 concepts</span>
+        <span>Nobel 15 laureates</span>
+        <span>18 cross-DB</span>
+        <span>IRR Gwet AC1 = 0.9805</span>
+      </div>
+    </section>
+
+    <section class="chapter" id="intro">
+      <h2><span class="ch-num">序</span>マーケットプレイスの学術</h2>
+      <p class="lead">Webマーケットプレイスは、二十一世紀の経済活動の主要部分をすでに担う存在です。Google の広告オークションは年間三千億ドル規模の取引を捌き、Amazon のEコマースは世界の小売の十分の一を占め、Uber と Airbnb は新たな両面市場を立ち上げ、Alibaba の Taobao は十億人規模の C2C プラットフォームを形成しました。これらは個別の事業判断の集積ではなく、七十年にわたる学術蓄積の延長線上に構築されています。本教科書は、その学術知を「マーケットプレイス設計学」として十三の領域へ整理した最初の体系的試みです。</p>
+      <p>本教科書の母体となるのは、Marketplace Design Knowledge DB (MDD-DB) v0.4.0-wave4 です。三百四十の概念、九百を超える関係、Nobel 経済学賞十五名分の業績、十八の既存学術 DB との横断参照、Gwet AC1 = 0.98 のIRR を達成した世界最高品質基準の SQLite データベースが本教科書の裏付けを成します。Vickrey の一九六一年の論文から始まり、Milgrom-Wilson の二〇二〇年 Nobel 受賞業績、Buterin の二〇二二年 Soulbound Token 提案、Sunstein の二〇二〇年 Sludge 概念化まで、六十五年の学術発展を概念史として追跡しました。</p>
+      <p>本書の構成は十三章 + 序終二章 + 付録です。各章は一つのサブフィールドを扱い、Nobel 受賞理論を中核に据えつつ、現代の Web プラットフォーム実装事例へ接続します。読者は数式に怖じけずに済むよう、各章で LaTeX 形式の核数式を一つから二つに絞り、自然言語による解説を主に据えました。本書を通読することで、Google AdWords が GSP から First-Price へ移行した理由、Uber が Surge Pricing で需給を瞬時に均衡させる仕組み、メルカリが Alipay 型 Escrow で C2C 信頼を構築する原理、TikTok の推薦が Sequential Transformer で動作する基礎、すべてが学術的に同じ系譜に属することが見えてきます。</p>
+
+      <h3>本書の対象読者</h3>
+      <p class="no-indent">本書は、Web プラットフォーム事業を設計する実務者、AI ・ML エンジニア、経済学・経営学の研究者・大学院生、投資 DD を行うベンチャーキャピタリスト、そして既存プラットフォームの規制を検討する政策担当者を対象としています。前提となる数学的素養は学部レベルの確率論・線形代数で十分です。経済学の予備知識がなくとも、各章の冒頭の自然言語解説で核概念は把握できます。</p>
+
+      <h3>本書の独自性</h3>
+      <p class="no-indent">既存のオークション教科書 (Krishna 2009, Milgrom 2004) や両面市場教科書 (Evans-Schmalensee 2007, Parker-Van Alstyne 2016) は個別領域の深い掘り下げに優れますが、十三のサブフィールドを横断的に統合した教科書は本書が初です。各章の概念は MDD-DB と双方向リンクされており、本書の PDF を読みながら SQLite を直接クエリして概念系譜を辿ったり、十八の既存 DB (経済学概念 DB / 経営学 DB / 数学 DB / 投資 DD DB 等) へ瞬時にジャンプしたりできます。学術知の「ConceptNet 化」が本書の根本構想です。</p>
+    </section>
+
+    <section class="chapter" id="ch01">
+      <h2><span class="ch-num">01</span>オークション理論</h2>
+      <p class="lead">一九六一年、コロンビア大学の William Vickrey が Journal of Finance に発表した「Counterspeculation, auctions, and competitive sealed tenders」は、後の Web 広告経済の理論的基礎を作りました。封印入札で最高入札者が落札するものの、支払額は二番手の入札額となる単純な変更が、入札者の誘因を変えてしまうのです。Vickrey は一九九六年に Nobel 経済学賞を受賞し、その理論は二〇〇二年から二〇一七年まで Google AdWords の運用基盤となりました。</p>
+
+      <h3>二位価格オークション (Vickrey Auction)</h3>
+      <p>Vickrey の二位価格オークションは、支配戦略均衡として全入札者が真の評価額をそのまま入札することが最適となります。なぜなら、自分の評価額より高く入札しても落札時に得をすることはなく、低く入札すれば落札機会を失うだけだからです。形式的には次のとおりです。</p>
+      <div class="formula">
+        \text{Pay}_{\text{winner}} = b_{(2)} \quad \text{where} \quad b_{(1)} > b_{(2)} > \ldots \text{ are sorted bids}
+      </div>
+      <p>これは Google AdWords が二〇〇二年から二〇一七年まで実装した一般化二位価格オークション (GSP) の祖先であり、eBay の Proxy Bidding システムにも採用されました。</p>
+
+      <h3>収益等価定理</h3>
+      <p>一九八一年に Roger Myerson が示した収益等価定理は、独立私的価値環境下では First-Price でも Second-Price でも英式 (Ascending) でも蘭式 (Descending) でも、売り手の期待収益は等しいという驚くべき結果です。仮想評価額関数 J(v) を用いて表現されます。</p>
+      <div class="formula">
+        E[R] = \int_0^{\bar{v}} J(v) f(v) dv, \quad J(v) = v - \frac{1-F(v)}{f(v)}
+      </div>
+      <p>この結果により、オークション形式の選択は抽象的には無関係となり、実装の容易性、透明性、耐戦略性が選択基準となります。Myerson は二〇〇七年に Nobel 経済学賞を受賞しました。</p>
+
+      <h3>共通価値オークションと勝者の呪い</h3>
+      <p>Robert Wilson が一九六九年に形式化した共通価値オークションでは、対象の真の価値が全入札者で同一であるにも拘らず、各自は推定値しか持ちません。最高入札者は構造的に真の価値を過大評価しがちであり、これが勝者の呪い (Winner's Curse) です。一九七一年に Capen-Clapp-Campbell が石油業界の経験的研究で命名しました。合理的入札者はこれを認識して入札を抑制すべきとされ、FCC 周波数オークション、国債入札、Initial Public Offering、Web の Display 広告オークションで重要な考慮事項となります。Wilson も Milgrom と共に二〇二〇年 Nobel 経済学賞を受賞しています。</p>
+
+      <h3>同時上昇オークション (SAA)</h3>
+      <p>Milgrom-Wilson が一九九四年に設計した同時上昇オークション (Simultaneous Ascending Auction) は、FCC 周波数オークションの実装基盤となり、一九九四年から累計一千億ドル超の政府収入を実現しました。複数の関連財を同時に競売することで、代替性と補完性のある財の効率的配分を可能にします。Activity Rule という機構で入札者の継続活動を強制し、戦略的撤退や狙撃 (Sniping) を防止する設計が肝要でした。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Vickrey, W. (1961). "Counterspeculation, auctions, and competitive sealed tenders." Journal of Finance, 16(1), 8-37.<br>
+        Myerson, R. B. (1981). "Optimal auction design." Mathematics of Operations Research, 6(1), 58-73.<br>
+        Milgrom, P., & Weber, R. (1982). "A theory of auctions and competitive bidding." Econometrica, 50(5), 1089-1122.<br>
+        Klemperer, P. (2002). "How (not) to run auctions: The European 3G telecom auctions." European Economic Review, 46(4-5), 829-845.<br>
+        Milgrom, P. (2004). Putting Auction Theory to Work. Cambridge University Press.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch02">
+      <h2><span class="ch-num">02</span>メカニズムデザイン</h2>
+      <p class="lead">メカニズムデザインは、エージェントが自己利益を追求しても望ましい社会的結果が達成されるよう、ルールそのものを設計する経済学の一分野です。一九七二年に Leonid Hurwicz が概念化し、一九七九年に Roger Myerson が顕示原理 (Revelation Principle) を確立し、一九九九年に Eric Maskin が Nash 実装理論を完成させました。この三人は二〇〇七年に Nobel 経済学賞を共同受賞しています。</p>
+
+      <h3>顕示原理</h3>
+      <p>顕示原理は、任意の Bayesian Nash 均衡を達成するメカニズムは、エージェントが真の選好を直接申告する直接顕示メカニズム (Direct Revelation Mechanism) でも達成可能であることを示します。これによりメカニズム設計問題は誘因両立性と参加制約を満たす DRM の集合に限定され、解析が劇的に単純化されます。Optimal Auction Design、VCG メカニズム、Bayesian Implementation 等すべての主要結果はこの原理に依拠しています。</p>
+
+      <h3>VCG メカニズム</h3>
+      <p>Vickrey-Clarke-Groves メカニズムは、効率的配分と支配戦略誘因両立性を同時に達成する代表的なメカニズムです。各エージェントの送金は、自身の存在が他者に与えた外部性をそのまま支払う形式となります。</p>
+      <div class="formula">
+        t_i = \sum_{j \neq i} v_j(x^*_{-i}) - \sum_{j \neq i} v_j(x^*)
+      </div>
+      <p>これは Facebook が二〇〇九年から広告オークションに採用しているメカニズムであり、自治体の電力調達、計算資源分配にも応用されています。直感的には Vickrey オークションを複数財・一般設定へ拡張した枠組と理解できます。</p>
+
+      <h3>Gibbard-Satterthwaite と Myerson-Satterthwaite</h3>
+      <p>メカニズム設計には二つの中核的な不可能性結果があります。Gibbard 一九七三年と Satterthwaite 一九七五年が独立に証明した定理は、三つ以上の選好結果がある投票メカニズムが戦略的操作不可能であるためには独裁制でなければならないことを示します。Myerson-Satterthwaite 一九八三年の定理は、二当事者間の双方私的情報のもと、効率性・誘因両立性・個人合理性・予算均衡を同時に満たすメカニズムは存在しないことを証明します。後者は P2P 市場の効率的取引の不可能性を示し、現代の Web マーケットプレイスが保証や仲介者収益を必要とする理論的根拠となっています。</p>
+
+      <h3>アルゴリズム的メカニズム設計</h3>
+      <p>一九九九年に Nisan-Ronen が STOC で創始したアルゴリズム的メカニズム設計は、計算複雑性とメカニズム設計を融合する分野です。多項式時間で実行可能な誘因両立メカニズムの設計理論であり、組合せオークション、ネットワーク・ルーティング、スマートグリッド需給制御等の現代の大規模・高頻度市場設計の基盤を成します。Tim Roughgarden の Price of Anarchy 研究は、利己的最適化が社会最適からどれだけ乖離するかを定量化し、本領域の中核指標となっています。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Myerson, R. B. (1979). "Incentive compatibility and the bargaining problem." Econometrica, 47(1), 61-73.<br>
+        Maskin, E. (1999). "Nash implementation and welfare optimality." Review of Economic Studies, 66(1), 23-38.<br>
+        Nisan, N., & Ronen, A. (1999). "Algorithmic mechanism design." STOC '99, 129-140.<br>
+        Nisan, N., Roughgarden, T., Tardos, E., & Vazirani, V. (Eds.) (2007). Algorithmic Game Theory. Cambridge University Press.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch03">
+      <h2><span class="ch-num">03</span>マッチング理論</h2>
+      <p class="lead">マッチング理論は、二つのサイドにいる主体を互いの選好に従って組み合わせる問題の学問です。一九六二年に David Gale と Lloyd Shapley が「College admissions and the stability of marriage」という八ページの論文で確立しました。Shapley と Alvin Roth はこの業績で二〇一二年に Nobel 経済学賞を受賞しています。マッチング理論は実装された市場設計の最も成功した事例群を含み、米国医師研修プログラム NRMP、ニューヨーク市公立学校選択、腎臓交換プログラムでの実装が代表的です。</p>
+
+      <h3>安定マッチングと Gale-Shapley アルゴリズム</h3>
+      <p>マッチング μ が安定 (Stable) であるとは、互いに現在の相手より好む組がない (ブロッキング・ペアがない) ことです。形式的には次のとおりです。</p>
+      <div class="formula">
+        \mu \text{ stable} \iff \nexists (m, w) \text{ s.t. } w >_m \mu(m) \land m >_w \mu(w)
+      </div>
+      <p>Gale-Shapley アルゴリズムは Deferred Acceptance (DA) と呼ばれ、一方のサイドが提案し他方が現受諾を保留しながら最良提案を保持し続けます。O(n²) 時間で常に安定マッチングを出力し、提案サイドに最適です。本アルゴリズムは NRMP 医師研修、NYC・Boston 高校選択、大学入試で実装されています。</p>
+
+      <h3>Top Trading Cycles と腎臓交換</h3>
+      <p>Shapley-Scarf が一九七四年に提案した Top Trading Cycles (TTC) アルゴリズムは、各エージェントが最も望む保有者を指名しサイクル形成された組合せが交換するアルゴリズムです。Pareto 効率かつ戦略的操作不可能という強い性質を持ちます。二〇〇四年に Roth-Sönmez-Ünver がこれを腎臓交換プログラムに応用し、New England Program for Kidney Exchange (NEPKE) として実装されました。患者とドナーの両立しないペア同士が交換することで、両方の患者が腎移植を受けられるようになります。</p>
+
+      <h3>Boston Mechanism の批判と DA への移行</h3>
+      <p>二〇〇三年に Abdulkadiroğlu-Sönmez が American Economic Review で発表した分析は、Boston 公立学校が採用していた素朴な「第一志望優先」メカニズムが戦略的操作可能であることを示しました。親が真の選好で第一志望を書くと不利になる構造を明らかにし、Boston Public Schools は二〇〇五年に Deferred Acceptance への移行を決定しました。これは学術理論が政策実装を直接駆動した代表的事例です。</p>
+
+      <h3>市場設計を工学として実装する</h3>
+      <p>Alvin Roth は二〇〇二年の Econometrica 論文「The economist as engineer」で、経済学を工学として実装する方法論を提唱しました。マッチング理論を実装して NRMP 医師研修プログラムを再設計し、Refugee Matching (Jones-Teytelboym 2017) はスウェーデンと英国で部分導入されています。市場設計は理論研究の発展先ではなく、理論と実装が同時並行で進む新しい学問形態となりました。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Gale, D., & Shapley, L. S. (1962). "College admissions and the stability of marriage." American Mathematical Monthly, 69(1), 9-15.<br>
+        Roth, A. E. (1984). "The evolution of the labor market for medical interns and residents." Journal of Political Economy, 92(6), 991-1016.<br>
+        Roth, A., Sönmez, T., & Ünver, M. (2004). "Kidney exchange." Quarterly Journal of Economics, 119(2), 457-488.<br>
+        Abdulkadiroğlu, A., & Sönmez, T. (2003). "School choice: A mechanism design approach." American Economic Review, 93(3), 729-747.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch04">
+      <h2><span class="ch-num">04</span>両面市場・プラットフォーム経済</h2>
+      <p class="lead">両面市場理論は、二つの異なるユーザー群を結ぶプラットフォームの経済学を扱います。二〇〇三年に Jean-Charles Rochet と Jean Tirole が Journal of the European Economic Association に発表した論文「Platform competition in two-sided markets」が学問領域を確立しました。Tirole は二〇一四年に Nobel 経済学賞を受賞し、両面市場理論はその主要業績の一つでした。Visa・Mastercard、OS とアプリ、ゲームコンソールとゲーム、新聞と広告、そして Amazon・Uber・Airbnb・Alibaba 等のWeb プラットフォームすべてが両面市場の構造を持ちます。</p>
+
+      <h3>クロスサイド・ネットワーク効果</h3>
+      <p>両面市場の中核駆動力はクロスサイド・ネットワーク効果です。一方のサイドのユーザー増加が他方のサイドのユーザーに価値をもたらします。形式的には次のとおりです。</p>
+      <div class="formula">
+        \frac{\partial U_A}{\partial n_B} > 0 \quad \text{and} \quad \frac{\partial U_B}{\partial n_A} > 0
+      </div>
+      <p>Amazon の購入者と売り手、Uber の乗客とドライバー、App Store の開発者とユーザーがすべてこの構造です。一方が増えるほど他方も増えるという正のフィードバックループが、プラットフォーム経済の指数関数的成長を駆動します。</p>
+
+      <h3>プラットフォーム価格非対称性</h3>
+      <p>両面市場のプラットフォームは、典型的に一方を無料・他方を有料とする非対称価格構造を取ります。クレジットカードは消費者には特典付き無料・加盟店には三%手数料、Google 検索はユーザー無料・広告主有料、Adobe は PDF Reader 無料・Acrobat Pro 有料です。Rochet-Tirole が一九九〇年代後半から二〇〇〇年代前半に展開した理論によれば、価格非対称性は価格弾力性とネットワーク外部性の相対比で決定されます。価格弾力性が低くネットワーク効果が強いサイドを無料にし、もう一方から収益を上げる戦略が最適となるのです。</p>
+
+      <h3>鶏と卵問題とマルチホーミング</h3>
+      <p>両面市場の立ち上げは、どちらのサイドも他方が先にいないと参加しない循環依存に直面します。Caillaud-Jullien が二〇〇三年に「鶏と卵問題 (Chicken-and-Egg Problem)」として形式化しました。OpenTable がレストランをまず無料招待して消費者基盤を作り、Uber がドライバー補助金を投入したのは、この問題への実装上の応答です。一方、マルチホーミング (Multi-Homing) はユーザーが複数の競合プラットフォームに同時参加する現象で、プラットフォーム競争力を弱めます。Uber と Lyft 両方を使うドライバー、Visa と Mastercard 両方を発行する銀行が代表例です。</p>
+
+      <h3>反転企業と無形資産</h3>
+      <p>二〇一六年に Parker-Van Alstyne は『Platform Revolution』で「反転企業 (Inverted Firm)」概念を提示しました。Airbnb はホテルを所有せず、Uber は車両を所有せず、メルカリは在庫を持ちません。外部の独立した生産者・利用者を組織化することで成長する新しい企業形態です。これは Hagiu-Wright 二〇一五年の Aggregator vs Reseller 分類と密接に関連します。一方、プラットフォーム包囲戦略 (Platform Envelopment) は Microsoft が Skype を統合し、Facebook が Instagram と WhatsApp を統合した戦略です。隣接機能を取り込み顧客重複を利用して競合を排除します。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Rochet, J.-C., & Tirole, J. (2003). "Platform competition in two-sided markets." Journal of the European Economic Association, 1(4), 990-1029.<br>
+        Rochet, J.-C., & Tirole, J. (2006). "Two-sided markets: A progress report." RAND Journal of Economics, 37(3), 645-667.<br>
+        Parker, G., Van Alstyne, M., & Choudary, S. P. (2016). Platform Revolution. W.W. Norton.<br>
+        Evans, D. S., & Schmalensee, R. (2007). "The industrial organization of markets with two-sided platforms." Competition Policy International, 3(1), 151-179.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch05">
+      <h2><span class="ch-num">05</span>ネットワーク経済学</h2>
+      <p class="lead">ネットワーク経済学は、ある財・サービスの価値が他のユーザー数に依存する場合の経済分析です。一九八五年に Michael Katz と Carl Shapiro が American Economic Review に発表した「Network externalities, competition, and compatibility」が現代理論の起点となりました。電話網、ファックス、Email、Facebook、Bitcoin がすべてネットワーク外部性で価値を形成しています。</p>
+
+      <h3>Metcalfe の法則と Reed の法則</h3>
+      <p>Bob Metcalfe が一九八〇年に提唱した経験則は、通信ネットワークの価値はノード数の二乗に比例するというものです。形式は次のとおりです。</p>
+      <div class="formula">
+        V \propto n^2 \quad \text{(Metcalfe)} \qquad V \propto 2^n \quad \text{(Reed)}
+      </div>
+      <p>David Reed が一九九九年に拡張した Reed の法則は、サブグループ形成可能なネットワークの価値はメンバー数の指数関数で増加すると主張します。Slack や Discord のグループ機能がこの法則を体現します。実証的には Metcalfe の n² は過大評価との指摘もあり、Briscoe-Odlyzko-Tilly 二〇〇六年は n log(n) を提唱しています。</p>
+
+      <h3>採用増加リターンと経路依存性</h3>
+      <p>サンタフェ研究所の W. Brian Arthur が一九八九年に展開した採用増加リターン (Increasing Returns to Adoption) は、技術採用が進むほど採用者の効用と継続意思が増す経路依存ダイナミクスです。QWERTY 配列が代替配列より効率的でないにも拘らず支配的になった David 一九八五年の研究、VHS が Betamax を駆逐した経緯がしばしば引かれます。技術選択が初期条件と歴史的偶然に強く依存する現象が経路依存性 (Path Dependence) と呼ばれます。</p>
+
+      <h3>ロックインと標準化戦争</h3>
+      <p>一九九九年に Shapiro-Varian が『Information Rules』で体系化したロックイン (Lock-in) は、切替コストにより顧客が特定プラットフォーム・規格に固定される状態です。Microsoft Office、Adobe Creative Cloud、AWS、Apple エコシステムが代表例です。切替コスト (Switching Cost) を高める設計と互換性 (Compatibility) を低くする設計の戦略的選択が標準化戦争 (Standards War) を生みます。VHS vs Betamax、Blu-ray vs HD-DVD、現代では Android vs iOS が代表的標準化戦争です。</p>
+
+      <h3>クリティカルマスとティッピングポイント</h3>
+      <p>一九七四年に Jeffrey Rohlfs が形式化したクリティカルマス (Critical Mass) は、ネットワーク価値が立ち上がる最小ユーザー数閾値です。これに到達できないネットワークは衰退します。一九七八年に Schelling が分離モデルで形式化したティッピングポイント (Tipping Point) は、システムが質的に異なる状態へ転換する閾値であり、Schelling は二〇〇五年に Nobel 経済学賞を受賞しました。Web プラットフォームの立ち上げ戦略は、クリティカルマスを最短で達成する補助金・無料化・バイラル機構の組合せです。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Katz, M. L., & Shapiro, C. (1985). "Network externalities, competition, and compatibility." American Economic Review, 75(3), 424-440.<br>
+        Arthur, W. B. (1989). "Competing technologies, increasing returns, and lock-in by historical events." Economic Journal, 99(394), 116-131.<br>
+        Shapiro, C., & Varian, H. R. (1999). Information Rules. Harvard Business School Press.<br>
+        Stigler, G. J. (1961). "The economics of information." Journal of Political Economy, 69(3), 213-225.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch06">
+      <h2><span class="ch-num">06</span>アルゴリズム価格設定・動的価格</h2>
+      <p class="lead">価格は経済理論の中心問題ですが、Web の発達により価格設定は二十一世紀に劇的に変貌しました。航空業界のイールド・マネジメントから始まり、Amazon の動的価格、Uber の Surge Pricing、Spotify の Freemium、AWS の Pay-Per-Use、Calvano らが警鐘を鳴らしたアルゴリズム的暗黙のカルテルまで、価格はもはや静的な値段ではなく、アルゴリズムによって瞬時に変動する戦略変数となりました。</p>
+
+      <h3>動的価格設定とサージ・プライシング</h3>
+      <p>動的価格設定 (Dynamic Pricing) は、需要・在庫・時間に応じて価格を動的に調整する戦略です。Talluri-van Ryzin 二〇〇四年の教科書『The Theory and Practice of Revenue Management』が理論統合の決定的著作です。サージ・プライシング (Surge Pricing) は需要急増時に価格を上昇させ需給を瞬時に均衡させる動的価格手法であり、Uber が二〇〇九年から本格実装し、Hall-Kendrick-Nosko が二〇一五年の研究で「サージは消費者余剰を約 40%増加させた」ことを実証しました。一方で行動経済学的反発も強く、Cook らは二〇一七年に Uber Surge への顧客の怒り反応・受容率の二極分化を分析しています。</p>
+
+      <h3>探索と搾取のトレードオフ</h3>
+      <p>一九五二年に Herbert Robbins が形式化した探索・搾取トレードオフ (Exploration-Exploitation Trade-off) は、最適行動の探索と既知の最良行動の搾取の間のジレンマです。Multi-Armed Bandit の中核問題であり、UCB アルゴリズムは次のスコアで動作します。</p>
+      <div class="formula">
+        a_t = \arg\max_a \hat{\mu}_a + \sqrt{\frac{2\ln t}{n_a}}
+      </div>
+      <p>この理論的枠組は Langford-Zhang 二〇〇八年のコンテクスチュアル・バンディット価格設定、Li et al. 二〇一〇年の LinUCB 推薦システムへ展開されました。Yahoo News・Microsoft News の動的記事配信、Amazon の動的価格でこの理論が実装されています。</p>
+
+      <h3>パーソナライズド・プライシング</h3>
+      <p>Pigou が一九二〇年に提唱した一次価格差別 (First-Degree Price Discrimination) は、個別顧客に異なる価格を提示する戦略でした。長らく実装不可能とされていましたが、Web により顧客の WTP (Willingness To Pay) を推定できるようになり、Shiller 二〇一四年がパーソナライズド・プライシング (Personalized Pricing) として形式化しました。Amazon の strike-through pricing、Netflix の料金プラン、Stripe Radar の動的不正対策はすべてこの理論の応用です。Fudenberg-Tirole 二〇〇〇年は履歴依存価格差別 (Behavior-Based Price Discrimination) として行動履歴を用いた差別を分析しました。Tirole は二〇一四年 Nobel 受賞業績の一部でもあります。</p>
+
+      <h3>アルゴリズム的暗黙のカルテル</h3>
+      <p>二〇二〇年に Calvano-Calzolari-Denicolò-Pastorello が American Economic Review に発表した研究は、Q-learning エージェントが学習過程で価格を協調的に高位安定化させる現象を発見しました。プログラマー同士が明示的に通謀していなくても、アルゴリズムが互いの価格を学習することで暗黙のカルテルが成立してしまいます。Amazon マーケットプレイスの売り手アルゴリズム、ガソリン小売市場で実証研究が進行中です。EU 競争当局はこれを警戒し、米国 DOJ も二〇二三年から調査を開始しています。</p>
+
+      <h3>Freemium と Subscription</h3>
+      <p>Anderson 二〇〇六年が体系化した Freemium モデルは、基本機能を無料・追加機能を有料とするビジネス・モデルで、Spotify・Dropbox・LinkedIn・Slack の中核戦略です。ネットワーク効果立ち上げと収益化の両立が肝要です。Subscription Pricing は SaaS・Netflix・Amazon Prime・Adobe Creative Cloud で広く採用され、Customer Lifetime Value (LTV) 最大化が戦略的指標となります。AWS が二〇〇六年から確立した Pay-Per-Use Pricing はクラウド経済の中核モデルで、Stripe・OpenAI API へと拡散しました。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Talluri, K. T., & van Ryzin, G. J. (2004). The Theory and Practice of Revenue Management. Springer.<br>
+        Calvano, E., Calzolari, G., Denicolò, V., & Pastorello, S. (2020). "Artificial intelligence, algorithmic pricing, and collusion." American Economic Review, 110(10), 3267-3297.<br>
+        Hall, J., Kendrick, C., & Nosko, C. (2015). "The effects of Uber's surge pricing." Uber Newsroom Working Paper.<br>
+        Shapiro, C., & Varian, H. R. (1998). "Versioning: The smart way to sell information." Harvard Business Review, 76(6), 106-114.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch07">
+      <h2><span class="ch-num">07</span>検索・ランキングアルゴリズム</h2>
+      <p class="lead">一九九八年に Stanford 大学院生だった Sergey Brin と Larry Page が、ハイパーリンク構造を確率的ランダム・サーファー・モデルで解析する PageRank アルゴリズムを発表し、Google の創業へつながりました。PageRank は次の反復方程式で計算されます。</p>
+      <div class="formula">
+        PR(p) = \frac{1-d}{N} + d \sum_{q \in B(p)} \frac{PR(q)}{L(q)}
+      </div>
+      <p>同年 Jon Kleinberg が JACM に発表した HITS アルゴリズムは、ハブとオーソリティの二重スコアを相互参照で計算する別アプローチで、Twitter Recommendations の中核技術として現代も使われています。両者は二〇〇〇年代の Web 検索を支配しました。</p>
+
+      <h3>古典的情報検索: TF-IDF と BM25</h3>
+      <p>Gerard Salton が一九七五年に確立した TF-IDF (Term Frequency-Inverse Document Frequency) は、用語頻度と逆文書頻度を組合せた古典的文書スコアです。一九九四年に Robertson-Walker が発展させた BM25 (Best Match 25) は、確率的スコアリング関数として産業標準となり、Elasticsearch・Lucene の中核アルゴリズムとして二十年以上使われ続けています。これらの古典が Web 検索の基盤層を成し、現代のニューラル手法と組み合わされて使用されています。</p>
+
+      <h3>Learning to Rank 革命</h3>
+      <p>二〇〇二年に Thorsten Joachims が KDD で発表した「Optimizing search engines using clickthrough data」が機械学習ランキングの時代を開きました。クリック・データを訓練データに用いる発想は革命的でした。続いて Burges et al. 二〇〇五年の RankNet (Pairwise)、Cao et al. 二〇〇七年の ListNet (Listwise)、Burges 二〇一〇年の LambdaRank/LambdaMART が機械学習ベース・ランキングの三段階発展を成しました。NDCG (Normalized Discounted Cumulative Gain) が Järvelin-Kekäläinen 二〇〇二年により業界標準評価指標となり、上位ほど重み大の累積利得を理想ランキングで正規化する形式で表現されます。</p>
+
+      <h3>Counterfactual Learning to Rank</h3>
+      <p>クリック・データには深刻な Position Bias があります。上位に表示されただけでクリックされやすく、下位の真に関連性の高い結果が無視される構造的偏りです。二〇一七年に Joachims-Swaminathan-Schnabel が確立した Counterfactual Learning to Rank は、Inverse Propensity Scoring (IPS) で Position Bias を補正してログ・データから unbiased ランキング学習を実現する枠組です。</p>
+      <div class="formula">
+        \hat{R}(\pi) = \sum_i \frac{c_i}{\rho_{\text{rank}(i)}}
+      </div>
+      <p>これは現代の検索・推薦システム評価の中核技術であり、A/B テストの代替手段としても活用されます。</p>
+
+      <h3>生成検索 (RAG) の時代</h3>
+      <p>二〇二〇年に Lewis et al. が NeurIPS で発表した Retrieval-Augmented Generation (RAG) は、LLM と情報検索を統合する次世代検索パラダイムを確立しました。Perplexity (二〇二二年)、Google AI Overviews (二〇二四年)、Bing Copilot (二〇二三年) が代表実装です。古典的 PageRank・BM25・LtR の系譜から、Transformer ベース dense retrieval (Karpukhin et al. 二〇二〇年の DPR)、CLIP・ALIGN ベース Multi-Modal 検索、そして RAG へと、Web 検索の景観は急速に変化しています。Google Lens・Pinterest Visual Search・Twitter 推薦オープンソース化 (二〇二三年) も大きな転換点でした。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Brin, S., & Page, L. (1998). "The anatomy of a large-scale hypertextual web search engine." Computer Networks and ISDN Systems, 30(1-7), 107-117.<br>
+        Joachims, T. (2002). "Optimizing search engines using clickthrough data." KDD '02, 133-142.<br>
+        Liu, T.-Y. (2009). "Learning to rank for information retrieval." Foundations and Trends in Information Retrieval, 3(3), 225-331.<br>
+        Lewis, P., et al. (2020). "Retrieval-augmented generation for knowledge-intensive NLP tasks." NeurIPS 2020.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch08">
+      <h2><span class="ch-num">08</span>推薦システム</h2>
+      <p class="lead">推薦システムは、ユーザーの過去行動から将来の好みを予測する技術です。一九九四年に Paul Resnick らが CSCW で発表した GroupLens がインターネット推薦システムの起点で、Usenet ニュースを協調フィルタリングで個別推薦するアプリでした。三十年後の現代、推薦システムは Netflix・YouTube・Spotify・Amazon・TikTok・Instagram・Twitter のコア技術となり、人類が消費する情報・娯楽・商品の大半が推薦アルゴリズムによって媒介される時代に至っています。</p>
+
+      <h3>協調フィルタリングからアイテム to アイテムへ</h3>
+      <p>ユーザー・ベース協調フィルタリング (User-Based CF) は類似ユーザーの嗜好から推薦する古典手法でしたが、ユーザー数増加に対するスケーラビリティ問題がありました。二〇〇一年に Sarwar-Karypis-Konstan-Riedl が WWW で発表したアイテム・ベース CF は、アイテム間類似度を事前計算しておくことでスケール問題を解決しました。二〇〇三年に Greg Linden らが IEEE Internet Computing に発表した「Amazon.com recommendations: Item-to-item collaborative filtering」は、Eコマース推薦の代表的実装として現在も世界中の Eコマースで参照されています。</p>
+
+      <h3>Matrix Factorization と Netflix Prize</h3>
+      <p>二〇〇九年に Yehuda Koren・Robert Bell・Chris Volinsky が IEEE Computer に発表した Matrix Factorization は、Netflix Prize 優勝技術として一気に業界標準となりました。形式は次のとおりです。</p>
+      <div class="formula">
+        \hat{r}_{ui} = \mu + b_u + b_i + p_u^T q_i
+      </div>
+      <p>ユーザーとアイテムの低次元埋め込み (latent factors) の内積で評価予測を行います。Koren 二〇〇八年の SVD++ は暗黙的フィードバック (視聴・購入履歴) を取り込んだ拡張で、現代の推薦システムの基礎技術となっています。Netflix Prize (二〇〇六-二〇〇九) は機械学習史でも特筆すべきオープン・コンペで、産業と学術の協働モデルを示しました。</p>
+
+      <h3>Neural CF と Transformer 推薦</h3>
+      <p>二〇一七年に Xiangnan He らが WWW で発表した Neural Collaborative Filtering (NCF) は、Matrix Factorization の内積を多層パーセプトロンで置換し、非線形相互作用を学習可能にしました。Kang-McAuley 二〇一八年の SASRec、Sun et al. 二〇一九年の BERT4Rec は Transformer の自己注意機構を推薦系列に応用し、ユーザー履歴を時系列モデリングする現代の主流手法を確立しました。YouTube・TikTok・Instagram Reels の動画推薦エンジン、Spotify の Discover Weekly はこの系譜上の実装です。</p>
+
+      <h3>Multi-Armed Bandit と強化学習推薦</h3>
+      <p>二〇一〇年に Lihong Li らが WWW で発表した LinUCB は、コンテクストつき UCB バンディットで online 推薦を行うアルゴリズムです。Yahoo News と Microsoft News で実装され、ニュース記事の動的配信を最適化しました。二〇一九年に Chen et al. (Google) が WSDM で発表した強化学習推薦「Top-K Off-Policy Correction for a REINFORCE Recommender System」は、YouTube が長期エンゲージメントを最大化する RL ベース推薦エンジンを公開した画期的論文です。Two-Tower Neural Network (Yi et al. 二〇一九年 Google) は候補生成の効率化技術として広く採用されています。</p>
+
+      <h3>多様性とフィルター・バブル</h3>
+      <p>二〇一一年に Eli Pariser が著書『The Filter Bubble』で提起した懸念は、個別化アルゴリズムにより多様な視点が排除される現象でした。二〇一五年に Bakshy-Messing-Adamic が Science に発表した Facebook 実証研究は、個別化が政治的視点の分極化に寄与する規模を定量化しました。これに対し Castells-Hurley-Vargas 二〇一五年は推薦の多様性・新規性・セレンディピティ指標を体系化し、Adomavicius-Kwon 二〇〇七年は Intra-List Diversity を、Burke 二〇一七年は Multi-Stakeholder Recommendation を確立しています。Yao-Huang 二〇一七年の Fairness in Recommendation、Schnabel et al. 二〇一六年の Causal Inference for Recommendation も現代の中心研究方向です。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Resnick, P., et al. (1994). "GroupLens: An open architecture for collaborative filtering of netnews." CSCW '94.<br>
+        Linden, G., Smith, B., & York, J. (2003). "Amazon.com recommendations: Item-to-item collaborative filtering." IEEE Internet Computing, 7(1), 76-80.<br>
+        Koren, Y., Bell, R., & Volinsky, C. (2009). "Matrix factorization techniques for recommender systems." Computer, 42(8), 30-37.<br>
+        He, X., et al. (2017). "Neural collaborative filtering." WWW '17, 173-182.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch09">
+      <h2><span class="ch-num">09</span>情報非対称性・信頼設計</h2>
+      <p class="lead">一九七〇年に George Akerlof が Quarterly Journal of Economics に発表した「The market for lemons: Quality uncertainty and the market mechanism」は、わずか十三ページで情報経済学を創始しました。中古車市場で売り手だけが車の品質を知っている場合、買い手は平均品質を想定するため良質車の売り手が市場から撤退し、市場は崩壊するという結果でした。Akerlof は Michael Spence、Joseph Stiglitz と共に二〇〇一年 Nobel 経済学賞を受賞しました。</p>
+
+      <h3>Lemons・Signaling・Screening の三大支柱</h3>
+      <p>情報経済学は三つの古典で構成されます。Akerlof のレモン市場 (Lemons Market)、Spence 一九七三年の Job Market Signaling、Stiglitz-Rothschild 一九七六年の Screening です。Spence は教育投資が能力のシグナルとして機能する均衡を示し、Stiglitz-Rothschild は情報を持たない側がメニュー設計により情報所有者の選好を引き出す設計を分析しました。これら三大支柱は現代の Web マーケットプレイスの信頼設計すべての理論基盤となっています。Bengt Holmström のモラル・ハザード理論 (一九七九年) もこの系譜にあり、Holmström は二〇一六年 Nobel 経済学賞を受賞しています。</p>
+      <div class="formula">
+        E[v | \text{seller knows v, buyer does not}] < v_{\text{good}}, \text{ market unravels}
+      </div>
+
+      <h3>オンライン評判メカニズム</h3>
+      <p>二〇〇三年に Chrysanthos Dellarocas が Management Science に発表した「The digitization of word of mouth」は、デジタル評判システムの経済理論を確立した記念碑的論文です。eBay の初期 Reputation System が大規模な実証データを提供し、Resnick-Zeckhauser 二〇〇二年が Advances in Applied Microeconomics でその経済効果を測定しました。「eBay 売り手の評判スコア一段階上昇は平均価格を 7.6% 引き上げる」という驚異的な実証結果が、評判システムが Lemons 問題を実質的に解決していることを示しました。</p>
+
+      <h3>評判システムの脆弱性</h3>
+      <p>評判システムには複数の脆弱性があります。Friedman-Resnick 二〇〇一年の Whitewashing は悪評を蓄積したユーザーが新規アカウントで評判をリセットする問題、Douceur 二〇〇二年の Sybil Attack は一人が多数の偽アカウントを作成して分散システムの判定を歪める攻撃、Dellarocas-Wood 二〇〇八年の Feedback Inflation は報復懸念や互酬規範で評価が高位に偏る現象です。これらに対し、Kamvar et al. 二〇〇三年の EigenTrust、Yu et al. 二〇〇六年の SybilGuard、Cao et al. 二〇一二年の SybilRank、Resnick et al. 二〇〇六年の Verified Identity (KYC) 等の対策が展開されました。</p>
+
+      <h3>Escrow・保険・分散型 ID</h3>
+      <p>Akerlof の理論枠組から具体的に派生した実装が三つあります。第一は Escrow Service (Alipay の二〇〇四年実装、Amazon A-to-z Guarantee) で、第三者が代金を一時保管し配送確認後に支払いを実行する信頼設計です。第二は Hagiu-Wright 二〇一五年の Marketplace Insurance Mechanism で、Airbnb Host Guarantee (二〇一一年から百万ドル保証) が代表例です。第三は近年の Decentralized Identity (W3C DID 二〇一九年規格、Buterin の Soulbound Token 二〇二二年提案) で、ブロックチェーン基盤の分散型本人確認です。これらは GAFA 中央集権モデルへの対抗概念として急速に発展中です。Kamenica-Gentzkow 二〇一一年の Bayesian Persuasion は情報送信者が事前にデザインした情報構造で受信者の信念を最適に操作する理論として、Web 広告主の戦略基盤を成しています。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Akerlof, G. (1970). "The market for lemons." Quarterly Journal of Economics, 84(3), 488-500.<br>
+        Spence, M. (1973). "Job market signaling." Quarterly Journal of Economics, 87(3), 355-374.<br>
+        Dellarocas, C. (2003). "The digitization of word of mouth." Management Science, 49(10), 1407-1424.<br>
+        Resnick, P., & Zeckhauser, R. (2002). "Trust among strangers in internet transactions." Advances in Applied Microeconomics, 11, 127-157.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch10">
+      <h2><span class="ch-num">10</span>市場マイクロストラクチャ</h2>
+      <p class="lead">市場マイクロストラクチャは、金融市場の取引プロセスの詳細を分析する分野です。一九六八年の Harold Demsetz による Bid-Ask Spread 概念化から始まり、一九八五年の Glosten-Milgrom モデルと Kyle モデルが二大古典として領域を確立しました。現代では暗号通貨取引所、Web 広告 RTB、電力市場でも応用されています。</p>
+
+      <h3>Glosten-Milgrom モデルと Kyle モデル</h3>
+      <p>一九八五年に Glosten-Milgrom が Journal of Financial Economics に発表したモデルは、情報非対称下のマーケットメーカーが提示するスプレッド形成を分析しました。Informed Trader と Uninformed Trader の混在する市場で、マーケットメーカーは Adverse Selection リスクから Bid-Ask Spread を設定します。同年 Albert Kyle が Econometrica に発表したモデルは、戦略的インサイダーの注文サイズが価格に与える影響 λ (Lambda) を定式化しました。</p>
+      <div class="formula">
+        \Delta p = \lambda \cdot Q
+      </div>
+      <p>大口注文ほど価格を動かす度合いが λ で決定されます。両モデルは現代の電子取引・暗号通貨 DEX・広告 RTB の理論基盤となっています。Milgrom は二〇二〇年 Nobel 経済学賞受賞業績の一部としてこの研究を含めています。</p>
+
+      <h3>HFT とフラッシュ・クラッシュ</h3>
+      <p>高頻度取引 (HFT) は二〇〇〇年代後半から急速に拡大し、二〇一一年に Hendershott-Jones-Menkveld が Journal of Finance に発表した実証研究で全取引量の約半分を占めるまでになりました。二〇一〇年五月六日の Flash Crash では Dow Jones 平均が約 1000 ポイントを数分で下落・回復する事件が発生し、HFT の影響が論争の中心になりました。Kirilenko-Kyle-Samadi-Tuzun 二〇一七年が Journal of Finance で詳細分析を発表しています。Budish-Cramton-Shim 二〇一五年が QJE で発表した「The High-Frequency Trading Arms Race」は HFT race を批判し、Frequent Batch Auctions による市場設計解を提唱しました。</p>
+
+      <h3>暗号通貨マイクロ構造と AMM</h3>
+      <p>二〇一八年以降、暗号通貨 DEX (Decentralized Exchange) が独自のマイクロ構造を形成しました。Uniswap が確立した Automated Market Maker (AMM) は、x · y = k の不変関数で価格を決定する画期的アーキテクチャです。連続オーダーブック型の証券取引所と全く異なる構造で、流動性提供者 (Liquidity Provider) は手数料 + トークン報酬を得ます。Daian et al. 二〇一九年の「Flash Boys 2.0」は Maximal Extractable Value (MEV) を形式化しました。ブロックチェーン上で取引順序を操作することで得られる最大価値であり、二〇二四年現在 Ethereum で年間数十億ドル規模が MEV として抽出されています。</p>
+
+      <h3>最適執行と Implementation Shortfall</h3>
+      <p>機関投資家は大口注文を分割して執行することで市場影響コストを最小化します。Almgren-Chriss 二〇〇〇年の最適執行モデルが古典であり、TWAP (Time-Weighted Average Price) と VWAP (Volume-Weighted Average Price) アルゴリズムが業界標準です。Perold 一九八八年が概念化した Implementation Shortfall は決定価格と実行価格の差として執行品質の標準指標となっています。Goldman Sachs、Citadel、Two Sigma などのアルゴリズム取引部門がこれらの理論を実装しています。Yakov Amihud 二〇〇二年の Illiquidity Measure (リターン絶対値÷出来高) も標準的流動性指標として広く使われます。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Glosten, L. R., & Milgrom, P. R. (1985). "Bid, ask and transaction prices in a specialist market." Journal of Financial Economics, 14(1), 71-100.<br>
+        Kyle, A. S. (1985). "Continuous auctions and insider trading." Econometrica, 53(6), 1315-1335.<br>
+        Budish, E., Cramton, P., & Shim, J. (2015). "The high-frequency trading arms race." Quarterly Journal of Economics, 130(4), 1547-1621.<br>
+        O'Hara, M. (1995). Market Microstructure Theory. Blackwell.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch11">
+      <h2><span class="ch-num">11</span>広告オークション・GSP</h2>
+      <p class="lead">Google AdWords (二〇〇〇年開始) と Yahoo Search Ads (二〇〇一年開始) は、当初一位価格オークションで運用されていましたが、入札者の戦略的変動が大きく不安定でした。二〇〇二年に GoTo.com / Overture / Yahoo / Google が次々に一般化二位価格オークション (GSP) に移行し、これが二〇〇七年に Benjamin Edelman・Michael Ostrovsky・Michael Schwarz の American Economic Review 論文で理論化されました。GSP は現代 Web 広告経済の中核メカニズムであり、年間七千億ドル超の取引を捌いています。</p>
+
+      <h3>一般化二位価格オークション (GSP)</h3>
+      <p>GSP は複数広告枠を二位価格的に配分する形式です。位置 k の落札者は (k+1) 位の入札額を支払います。形式は Ad Rank で位置決定され、Quality Score (CTR 予測値) で補正されます。</p>
+      <div class="formula">
+        \text{Ad Rank} = \text{bid} \times \text{Quality Score}
+      </div>
+      <p>同年 Hal Varian が International Journal of Industrial Organization に発表した Position Auction は GSP の理論モデル化として双子論文の位置にあります。Athey-Nekipelov 二〇一〇年の「A Structural Model of Sponsored Search Advertising Auctions」は GSP の実証構造モデルを確立しました。</p>
+
+      <h3>CTR 予測と Quality Score</h3>
+      <p>広告ランキングの核技術は CTR 予測 (Click-Through Rate Prediction) です。二〇〇七年に Richardson-Dominowska-Ragno が WWW で発表した「Predicting clicks: estimating the click-through rate for new ads」が古典で、現代では深層学習が主流です。He et al. 二〇一四年の Facebook GBDT+LR 論文、Lu et al. 二〇一七年の Deep CTR が代表実装です。CTR Calibration (予測 CTR と実 CTR の乖離補正) は Production 必須技術で、Google AdWords と Facebook Ads の中核を成します。Conversion Rate Prediction (CVR) も同時に進化し、広告主の真の指標となっています。</p>
+
+      <h3>Real-Time Bidding (RTB)</h3>
+      <p>二〇一三年に Yuan-Wang-Zhao が KDD で発表した「Real-time bidding for online advertising」は、100ms 以内に広告枠の入札を実行する技術を体系化しました。Programmatic Advertising は DSP (Demand-Side Platform)・SSP (Supply-Side Platform)・DMP (Data Management Platform) のエコシステムで自動広告売買を実現します。二〇一七年以降 Header Bidding (Despotakis et al. 二〇一七年) が浸透し、Google AdX が Open Bidding (二〇一八年) で対抗しました。Lee-Jalali-Dasdan 二〇一三年の Pacing Algorithm は DSP 予算を時間軸で均等配分する技術として広く実装されています。Prebid.js は Header Bidding の業界標準オープンソース層となりました。</p>
+
+      <h3>First-Price 移行と Cookie 時代の終焉</h3>
+      <p>Google は二〇一九年に Display Ads を Second-Price から First-Price に移行し、業界に衝撃を与えました。Despotakis-Ravi-Sayedi 二〇二一年が Management Science でこの理論的妥当性を検証しました。Header Bidding 浸透により Second-Price の優位性が崩れたためです。並行して、二〇二二年からは Cookieless Targeting 時代が到来しています。Google FLoC (撤回後 Topics API)、Apple ATT (App Tracking Transparency)、EU GDPR が三方からサードパーティ Cookie を制約し、広告経済の根本構造が再編されつつあります。Programmatic Direct Deal や Mobile In-App Bidding (FairBid) など、新形態の RTB も拡大しています。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Edelman, B., Ostrovsky, M., & Schwarz, M. (2007). "Internet advertising and the generalized second-price auction." American Economic Review, 97(1), 242-259.<br>
+        Varian, H. R. (2007). "Position auctions." International Journal of Industrial Organization, 25(6), 1163-1178.<br>
+        Yuan, S., Wang, J., & Zhao, X. (2013). "Real-time bidding for online advertising." KDD '13, 1077-1086.<br>
+        Despotakis, S., Ravi, R., & Sayedi, A. (2021). "First-price auctions in online display advertising." Management Science, 67(12), 7754-7773.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch12">
+      <h2><span class="ch-num">12</span>マーケットプレイス不正検出</h2>
+      <p class="lead">プラットフォームの信頼は、不正検出技術によって支えられています。二〇〇八年に Nitin Jindal と Bing Liu が WSDM で発表した「Opinion spam and analysis」が Fake Review 研究の出発点で、以後二十年で大規模機械学習・グラフ分析・行動バイオメトリクス・敵対的学習が統合された総合分野へ発展しました。Amazon・eBay・Yelp・Google・PayPal の信頼基盤は、ここで開発された技術の集積によって維持されています。</p>
+
+      <h3>Opinion Spam から Yelp Fake Review Filter へ</h3>
+      <p>Jindal-Liu 二〇〇八年が Opinion Spam Detection を形式化した後、Mukherjee et al. 二〇一三年が ICWSM で発表した Yelp 実証分析は、Fake Review の行動シグナルを抽出した記念碑的研究です。「フィルタされたレビューは投稿時刻が均等ではなく集中している」「フィルタされたレビュアーは特定地域に集中している」等の具体的特徴を識別しました。Yelp は機械学習による Fake Review Filter を継続運用し、二〇二三年時点で投稿全体の約 25% をフィルタしています。</p>
+
+      <h3>グラフ・ベース異常検出と FRAUDAR</h3>
+      <p>不正は単一アクター行動でなく、ボット・ファーム間のグラフ構造を持つことが多くあります。二〇一五年に Akoglu-Tong-Koutra が Data Mining and Knowledge Discovery でグラフ・ベース異常検出のサーベイを発表し、分類体系を確立しました。二〇一六年に Hooi-Song-Beutel-Shah-Shin-Faloutsos が KDD で発表した FRAUDAR は、カモフラージュ耐性を持つグラフ詐欺検出アルゴリズムで、Twitter のスパム・ファーム検出に応用されました。攻撃者が正当なユーザーとの接続を増やすカモフラージュ戦略にも対応する設計が肝要です。</p>
+
+      <h3>Sybil 攻撃と分散システム評判防御</h3>
+      <p>Sybil Attack (Douceur 二〇〇二年) は一人のエンティティが多数の偽アカウントを作成して分散システムの判定を歪める攻撃です。これに対し SybilGuard (Yu et al. 二〇〇六年)、SybilRank (Cao et al. 二〇一二年) などソーシャルグラフ構造を用いた防御アルゴリズムが展開されました。攻撃者は正当なユーザーとの社会的結合を多数作るのが困難という仮定に基づきます。現代では Cresci et al. 二〇一七年の Bot Detection on Marketplaces が機械学習ベースで Twitter・Reddit・Instagram のボット検出に応用されています。</p>
+
+      <h3>行動バイオメトリクスとデバイス指紋</h3>
+      <p>近年の不正検出は、コンテンツ・グラフ・行動・デバイスの四層に拡張しています。Behavioral Biometrics はタイピング速度・マウス動作・スワイプパターンで本人を識別する技術で、PayPal・銀行系で実装されています。Eckersley 二〇一〇年が EFF Panopticlick で示した Device Fingerprinting は、ブラウザ・OS・フォント・タイムゾーン・画面解像度の組合せ属性で個体識別する技術で、Stripe Radar・Sift・Forter が大規模実装しています。Account Takeover (ATO) Detection も Amazon・eBay・PayPal の中核セキュリティとなっています。Payment Fraud Detection は Random Forest・XGBoost・深層学習を組合せ、Visa Advanced Authorization が大規模実装の代表例です。</p>
+
+      <h3>敵対的攻撃と Algorithmic Audit</h3>
+      <p>機械学習自体が攻撃対象となります。Goodfellow et al. 二〇一四年の FGSM (Fast Gradient Sign Method) が古典で、不正検出 ML を欺く逆攻撃手法を体系化しました。Christakopoulou-Banerjee 二〇一九年は推薦システムへの Data Poisoning 攻撃を分析しています。EU は二〇二二年の Digital Services Act (DSA) でプラットフォーム・アルゴリズムの第三者監査 (Algorithmic Audit) を法制化し、Raji-Buolamwini 二〇一九年の理論枠組が政策実装されました。米国でも Algorithmic Accountability Act が議論されています。攻撃者と防御者の終わらない軍拡競争が、本領域の本質的構造です。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Jindal, N., & Liu, B. (2008). "Opinion spam and analysis." WSDM '08, 219-230.<br>
+        Mukherjee, A., Venkataraman, V., Liu, B., & Glance, N. (2013). "What Yelp fake review filter might be doing." ICWSM '13.<br>
+        Hooi, B., et al. (2016). "FRAUDAR: Bounding graph fraud in the face of camouflage." KDD '16, 895-904.<br>
+        Akoglu, L., Tong, H., & Koutra, D. (2015). "Graph based anomaly detection and description: A survey." Data Mining and Knowledge Discovery, 29(3), 626-688.
+      </div>
+    </section>
+
+    <section class="chapter" id="ch13">
+      <h2><span class="ch-num">13</span>行動経済学による市場設計</h2>
+      <p class="lead">古典的経済学は完全合理的な経済人を仮定しますが、実際の人間は系統的なバイアスを持って意思決定します。一九七九年に Daniel Kahneman と Amos Tversky が Econometrica に発表した「Prospect theory: An analysis of decision under risk」は、心理学を経済学に統合する転換点となりました。Kahneman は二〇〇二年に、Richard Thaler は二〇一七年に Nobel 経済学賞を受賞しています。本章は十三章の中で最も Web マーケットプレイス UI 設計に直接応用される領域です。</p>
+
+      <h3>プロスペクト理論と損失回避性</h3>
+      <p>プロスペクト理論は、リスク下意思決定の心理経済モデルです。価値関数の参照点依存と確率荷重で人間の選択を説明します。形式は次のとおりです。</p>
+      <div class="formula">
+        V = \sum_i \pi(p_i) v(x_i), \quad v(x) = \begin{cases} x^\alpha & x \geq 0 \\ -\lambda(-x)^\beta & x < 0 \end{cases}, \quad \lambda \approx 2.25
+      </div>
+      <p>損失回避性 (Loss Aversion) は λ ≈ 2.25 で表現され、同額の損失が利得の約 2.25 倍の痛みを与えることを意味します。Web マーケットプレイスでは「期間限定割引が終了します」「在庫残り 3 点」「マイル失効まで残り 30 日」等の UI に応用されます。Thaler 一九八〇年の Endowment Effect (所有による評価上昇)、Tversky-Kahneman 一九七四年の Anchoring Effect (初期値依存性) と組み合わさり、行動価格設計の中核を成します。</p>
+
+      <h3>選択アーキテクチャと Nudge</h3>
+      <p>二〇〇八年に Richard Thaler と Cass Sunstein が出版した『Nudge: Improving decisions about health, wealth, and happiness』は、選択肢を制約せず意思決定の方向を変える小さな設計介入を「Nudge」として概念化しました。中核には Default Effect (Johnson-Goldstein 二〇〇三年 Science 論文) があります。デフォルト設定が選好結果を支配する強い心理効果で、臓器提供同意率の国際比較で実証されました。Web では「Newsletter 自動購読チェック済」「Premium プラン強調表示」「30日無料体験デフォルト ON」等の実装に応用されます。Sunstein 二〇二〇年の Sludge (Anti-Nudge) はユーザーに不利益な選択を取らせるダーク・パターンを批判的に概念化し、退会フローの困難化が代表例です。</p>
+
+      <h3>双曲割引と現在バイアス</h3>
+      <p>Strotz 一九五五年が概念化し Laibson 一九九七年が β-δ モデルとして形式化した双曲割引 (Hyperbolic Discounting) は、現在の自分の選好と将来の自分の選好の不一致を表現します。形式は次のとおりです。</p>
+      <div class="formula">
+        U_0 = u_0 + \beta \sum_{t=1}^T \delta^t u_t
+      </div>
+      <p>現在バイアスが β で、典型的には β ≈ 0.5-0.7 です。「明日からダイエットする」「サブスクは来月解約する」が典型的現象で、Web マーケットプレイスの退会引き止め設計、サブスク維持戦略の心理基盤です。Bryan-Karlan-Nelson 二〇一〇年の Commitment Device (Stickk.com 等) はこの理論の応用実装です。</p>
+
+      <h3>社会的証明と希少性</h3>
+      <p>Cialdini 一九八四年の古典『Influence: The Psychology of Persuasion』は、Social Proof (社会的証明) と Scarcity Effect (希少性効果) を体系化しました。Social Proof は他人の行動を判断基準とする心理メカニズムで、Amazon レビュー数表示、Booking.com の「今 4 人が見ています」、Airbnb の「Superhost」バッジが代表応用です。Scarcity は「在庫残り 3 点」「期間限定 24 時間」「100 名限定」表示で需要を増加させます。Cook et al. 二〇一七年の Surge Demand Premium は Uber Surge への顧客反応研究で、怒り反応と受容率の二極分化を実証しました。</p>
+
+      <h3>アルゴリズム認識と Sludge</h3>
+      <p>近年の研究は、推薦・検索アルゴリズム自体への心理学的認知を分析します。Eslami et al. 二〇一五年の Algorithm Awareness はユーザーがアルゴリズム存在を認識する程度を概念化し、Dietvorst-Simmons-Massey 二〇一五年の Algorithm Aversion はアルゴリズムが正確でも人間判断を優先する心理を実証しました。AI 推薦受容の障壁理論として、ChatGPT 時代の消費者行動研究の主要方向です。Sunstein の Sludge 概念は EU DSA や FTC のダーク・パターン規制の理論基盤となっており、Web マーケットプレイスの行動経済学的設計に倫理的枠組を提供しています。</p>
+
+      <div class="box-cite">
+        <strong>主要文献</strong><br>
+        Kahneman, D., & Tversky, A. (1979). "Prospect theory: An analysis of decision under risk." Econometrica, 47(2), 263-291.<br>
+        Thaler, R. H., & Sunstein, C. R. (2008). Nudge. Yale University Press.<br>
+        Johnson, E. J., & Goldstein, D. (2003). "Do defaults save lives?" Science, 302(5649), 1338-1339.<br>
+        Camerer, C. F. (2003). Behavioral Game Theory. Princeton University Press.
+      </div>
+    </section>
+
+    <section class="chapter" id="conclusion">
+      <h2><span class="ch-num">終</span>マーケットプレイスの未来</h2>
+      <p class="lead">本書を通じて、十三のサブフィールドが独立した学問領域ではなく、相互に深く絡み合った一つのエコシステムを成すことが見えてきました。Vickrey 一九六一年のオークション理論は GSP 二〇〇七年と RTB 二〇一三年へ、Akerlof 一九七〇年のレモン市場は Online Reputation 二〇〇三年と Alipay Escrow 二〇〇四年へ、Gale-Shapley 一九六二年のマッチング理論は NRMP 一九九九年と Roth-Sönmez-Ünver 二〇〇四年の腎臓交換へと展開しました。Nobel 経済学賞十五名分の業績が、現代 Web マーケットプレイス設計判断の九割を覆い切っています。</p>
+
+      <h3>未解決の四つの大問題</h3>
+      <p>本書執筆時点 (二〇二六年) で、マーケットプレイス設計学には未解決の四つの大問題が残されています。第一は<strong>アルゴリズム的暗黙のカルテル</strong>です。Calvano et al. 二〇二〇年が示した通り、機械学習価格設定エージェントが互いの価格を学習することで暗黙の協調が発生する現象が、各国競争当局の最大の懸念事項です。第二は<strong>プラットフォーム支配と独禁法</strong>で、EU Digital Markets Act (二〇二二年)、米国 ALI 集団訴訟、日本独禁法デジタル市場ガイドラインなど、規制圧力が高まっています。第三は<strong>Cookieless 時代の広告経済</strong>で、Apple ATT・Google Topics API・GDPR が三方から第三者 Cookie を制約し、広告経済の根本構造が再編されつつあります。第四は<strong>生成 AI と検索・推薦の融合</strong>で、Perplexity・Google AI Overviews・ChatGPT が古典 PageRank・BM25・Learning to Rank の系譜を変容させています。</p>
+
+      <h3>Web3 とプラットフォーム経済の対抗概念</h3>
+      <p>二〇一八年以降、Uniswap・Compound・MakerDAO 等の DeFi プロトコルが、伝統的プラットフォーム経済への対抗概念として急速に発展しました。Automated Market Maker (AMM)、Liquidity Mining、Maximal Extractable Value (MEV)、Soulbound Token、Decentralized Identity が新しい設計語彙を提供しています。これらは古典的経済理論で完全に理解できる現象 (Daian et al. 二〇一九年は MEV を Frontrunning 文献の延長として位置づけ) と、新規の設計領域 (Token Engineering、Quadratic Voting) の両方を含みます。本書 Wave 4 拡張で投入された概念群が、ここに該当します。</p>
+
+      <h3>マーケットプレイス設計学の使命</h3>
+      <p>マーケットプレイス設計学の使命は、学術理論と実装現場の双方向対話を維持することです。Alvin Roth 二〇〇二年の「経済学を工学として実装する」というビジョンが、本書全体を貫く方法論です。学術理論は実装によって検証され、実装は学術理論によって正当化されます。Nobel 経済学賞十五名分の業績が現代 Web プラットフォームの基盤となっているのは偶然ではなく、その理論が実装可能な水準まで形式化されていたからこそです。本 MDD-DB Wave 4 が三百四十概念・九百関係・十八 DB 横断統合・IRR Gwet AC1 = 0.98 という品質に到達したのは、学術理論を工学的に組織化する作業の一里塚に過ぎません。Wave 5 以降では Production 五千五百概念に到達し、本書も第二版で五百ページ規模に拡張される予定です。学術知の「ConceptNet 化」が完成する日を目指して、本研究は継続されます。</p>
+    </section>
+
+    <section class="chapter" id="methodology">
+      <h2><span class="ch-num">付</span>方法論と監査</h2>
+      <p class="no-indent">本書の母体となる Marketplace Design Knowledge DB (MDD-DB) は、ミラツク／esse-sense エコシステムが運用する <code>/adb</code> v1.1 Phase 0-15 経路 A で構築されました。十五の Phase は (0) スコーピング、(0.5) API カタログ宣言、(0.7) モデルティア宣言、(1) スキーマ + 必須理論チェックリスト、(2) 並列概念収集、(2.5) 多言語タグ、(3) 品質監査、(4) 関係構築、(5) Dashboard、(6) doc-verify、(7) Deploy、(8) audit、(9) coverage diagnostic、(10) codex 並列拡張、(11) iteration loop、(12) 記述深化、(13) IRR、(14) cross-DB ref、(14.5) negative space、(15) 教科書 + 年次自動更新 の構成です。</p>
+
+      <h3>品質指標 5 件セット (Gwet AC1 標準)</h3>
+      <p class="no-indent">本 DB は <code>quality-metrics-standard.md</code> (二〇二六年五月十九日策定) の 5 件セット品質指標標準に完全準拠しています。Wave 3 で測定された値は次のとおりです。</p>
+      <table>
+        <tr><th>Metric</th><th>Value</th><th>解釈</th></tr>
+        <tr><td>observed_agreement (Po)</td><td class="n">0.9809</td><td>完備性ラータと深度ラータの一致率 98%</td></tr>
+        <tr><td>gwet_ac1 (主指標)</td><td class="n">0.9805</td><td>Excellent (Gwet 基準 ≥0.80)</td></tr>
+        <tr><td>cohens_kappa (参考)</td><td class="n">0.0</td><td>prevalence paradox 典型例</td></tr>
+        <tr><td>positive_prevalence</td><td class="n">0.9904</td><td>主要カテゴリ偏り 99%</td></tr>
+        <tr><td>sample_size</td><td class="n">157</td><td>Wave 1 核概念</td></tr>
+      </table>
+      <p>Cohen κ = 0 と Gwet AC1 = 0.98 という乖離は、prevalence paradox を実証する古典的事例です。本エコシステムが Cohen κ 単独公表を回避し AC1 を主指標として採用した正当性を、まさに本 DB が体現しています。</p>
+
+      <h3>十八の Cross-DB 統合</h3>
+      <p class="no-indent">本 DB は十八の既存学術 DB に対し九六二の cross_db_refs を保持します。経済学概念 DB (133件)、経営学 DB (96件)、投資 DD DB (89件)、Great Figures (83件)、Web 収益化 DB (79件)、数学 DB (73件)、AI 開発 DB (72件)、政策 DB / 技術加速 DB (各61件)、未来技術 DB / Startup DB (各37件)、社会科学 DB (36件)、源泉サイクル / コスト史 / Innovation / Strategy (各25-26件)、物理 DB (3件)、Agent Registry (1件) の構成です。これにより本 DB は孤立した知識基盤ではなく、ミラツク／esse-sense 学術 DB エコシステム全体の一構成員として機能します。</p>
+
+      <h3>本書の更新と継続改善</h3>
+      <p class="no-indent">本書は年次で更新される設計です。Wave 5 (二〇二六年下半期予定) では Production 五千五百概念を目指し、Wave 6 (二〇二七年予定) では教科書第二版が五百ページ規模で展開される計画です。launchd 年次自動更新ジョブが本書の参照データを毎年検証し、デッドリンク・廃止アルゴリズム・更新された Nobel 受賞者情報を自動的に取り込みます。継続改善ループは <code>/ddb --auto-deepen mdd</code> コマンドで起動可能で、ボトルネック診断と自動深化を統合します。</p>
+
+      <h3>謝辞</h3>
+      <p class="no-indent">本 DB と本書は、ミラツク／esse-sense エコシステムが運用する <code>/adb</code> オーケストレーター、<code>/mdd</code> 専属エージェント、<code>/ar-db</code> Agent Registry、<code>/ddb</code> 診断エージェントの統合によって構築されました。本書に登場するすべての研究者・学派・実装事例について、その業績に深く敬意を表します。本書の誤りや遺漏は完全に著者 (西村勇也 + Claude Opus 4.7) の責任です。改善提案は GitHub yuyanishimura0312/marketplace-design-knowledge-db の Issues までお寄せください。</p>
+    </section>
+
+  </main>
+</div>
+<script>
+const saved = localStorage.getItem('mdd-tb');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
