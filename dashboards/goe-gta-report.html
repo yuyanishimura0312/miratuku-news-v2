@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GTA: 良い組織とは何か — GOE-DB Grounded Theory Analysis</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5; --surface:#F7F7F5;
+  --accent:#121212; --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEE;
+  --font:"Noto Sans JP","Hiragino Sans",sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+  --font-mono:"Fira Code",monospace;
+}
+[data-theme="dark"] {
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222; --surface:#1A1A1A;
+  --accent:#E0E0E0; --accent-warm:#FF4030;
+  --text:#E0E0E0; --text-secondary:#AAA; --text-muted:#8A8A8A;
+  --border:#333; --border-light:#2A2A2A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.025em;font-feature-settings:"palt"}
+
+.top-bar{position:sticky;top:0;height:48px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.brand{font-family:var(--font-serif);font-weight:700;letter-spacing:.06em}
+.brand .red{color:var(--accent-warm)}
+.theme-toggle{background:transparent;border:1px solid var(--border);color:var(--text);padding:6px 12px;cursor:pointer;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.theme-toggle:hover{border-color:var(--accent-warm);color:var(--accent-warm)}
+
+.layout{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:240px 1fr;gap:32px;padding:32px 24px}
+.toc-sidebar{position:sticky;top:80px;align-self:flex-start;max-height:calc(100vh - 100px);overflow-y:auto;font-size:13px}
+.toc-title{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.2em;color:var(--text-muted);margin-bottom:16px;font-size:11px}
+.toc-list{list-style:none;padding:0;margin:0}
+.toc-list li{margin:8px 0}
+.toc-list a{text-decoration:none;color:var(--text-secondary);display:flex;gap:8px;line-height:1.5}
+.toc-list a:hover{color:var(--accent-warm)}
+.toc-num{font-family:var(--font-mono);color:var(--text-muted);min-width:24px}
+
+.main{max-width:840px}
+h1{font-family:var(--font-serif);font-size:28px;line-height:1.5;margin-top:0;border-left:4px solid var(--accent-warm);padding-left:16px}
+.subtitle{color:var(--text-secondary);font-size:14px;margin-top:8px}
+.meta{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:24px;padding-bottom:16px;border-bottom:1px solid var(--border-light)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:24px 0 48px}
+.stat{background:var(--surface);border-left:3px solid var(--accent-warm);padding:12px 16px}
+.stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em}
+.stat-value{font-family:var(--font-serif);font-size:22px;font-weight:700;margin-top:4px;color:var(--accent-warm)}
+
+.intro{background:var(--surface);padding:20px 24px;border-left:4px solid var(--accent-warm);margin:32px 0 48px}
+.intro p{margin:0 0 12px;text-indent:1em;font-family:var(--font-serif);line-height:2}
+.intro p:last-child{margin-bottom:0}
+
+.phase-section{margin-bottom:80px;padding-bottom:48px;border-bottom:1px solid var(--border-light)}
+.phase-header{display:flex;align-items:baseline;gap:16px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--accent-warm)}
+.phase-num{font-family:var(--font-mono);font-size:28px;font-weight:500;color:var(--accent-warm);letter-spacing:-.02em}
+.phase-header h2{font-family:var(--font-serif);font-size:22px;font-weight:700;margin:0;line-height:1.4}
+
+.codes-table{width:100%;border-collapse:collapse;margin:24px 0}
+.codes-table th{background:var(--surface);font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;text-align:left;padding:12px;border-bottom:2px solid var(--accent-warm)}
+.codes-table td{padding:10px 12px;border-bottom:1px solid var(--border-light);font-size:14px}
+.codes-table tr:hover{background:var(--card-hover)}
+.code-count{font-family:var(--font-mono);color:var(--accent-warm);font-weight:600;text-align:right}
+
+.axial-section{margin:32px 0;padding:24px;background:var(--surface);border-left:3px solid var(--accent-warm)}
+.axial-section h3{font-family:var(--font-serif);font-size:16px;font-weight:700;margin:0 0 16px;color:var(--accent-warm)}
+.paradigm-table{width:100%;border-collapse:collapse}
+.paradigm-table th{font-family:var(--font-mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;text-align:left;padding:8px 12px;color:var(--text-muted);width:120px;border-bottom:1px solid var(--border-light);vertical-align:top}
+.paradigm-table td{padding:8px 12px;border-bottom:1px solid var(--border-light);font-size:13px;line-height:1.7}
+.paradigm-table tr.positive td{color:#2A6F2A}
+.paradigm-table tr.negative td{color:var(--accent-warm-soft)}
+
+.core-category{background:var(--accent-muted);padding:32px;margin:32px 0;border:2px solid var(--accent-warm)}
+.core-category h3{font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--accent-warm);margin:0 0 8px}
+.core-category .core-ja{font-family:var(--font-serif);font-size:14px;color:var(--text-secondary);margin:0 0 16px}
+.core-summary{font-family:var(--font-serif);font-size:16px;line-height:2;padding:16px;background:var(--bg);border-left:4px solid var(--accent-warm);margin:16px 0}
+
+.component-card{background:var(--card);border:1px solid var(--border-light);padding:20px;margin:16px 0}
+.component-card h4{font-family:var(--font-serif);font-size:15px;font-weight:700;margin:0 0 8px;color:var(--accent-warm)}
+.component-def{font-family:var(--font-serif);font-size:13px;line-height:1.9;margin:8px 0 12px}
+.component-evidence{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:8px 0}
+.component-card h5{font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-secondary);margin:16px 0 8px}
+.component-list{list-style:none;padding:0;margin:8px 0;columns:2;column-gap:24px}
+.component-list li{padding:4px 0 4px 14px;border-left:2px solid var(--border-light);margin-bottom:3px;font-size:12px;line-height:1.5;break-inside:avoid}
+.component-list li:hover{border-left-color:var(--accent-warm)}
+
+.paradox-list, .rq-list{margin:16px 0;padding-left:0;list-style:none}
+.paradox-list li, .rq-list li{background:var(--surface);border-left:3px solid var(--accent-warm);padding:12px 16px;margin:8px 0;font-size:13px;line-height:1.7}
+.rq-list li{border-left-color:#2A6F2A}
+
+h3{font-family:var(--font-serif);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.15em;color:var(--accent-warm);margin:32px 0 12px}
+
+.npo-note{background:var(--surface);padding:20px 24px;border-left:4px solid #2A6F2A;margin:32px 0;font-family:var(--font-serif);font-size:13px;line-height:2}
+
+.footer{margin-top:80px;padding-top:32px;border-top:1px solid var(--border-light);font-size:12px;color:var(--text-muted)}
+.footer p{margin:6px 0}
+.footer a{color:var(--accent-warm)}
+
+@media (max-width:1000px){
+  .layout{grid-template-columns:1fr}
+  .toc-sidebar{position:relative;top:auto;max-height:none}
+  .component-list{columns:1}
+  .paradigm-table th{width:100px}
+}
+@media print{
+  .top-bar,.toc-sidebar,.theme-toggle{display:none}
+  .layout{grid-template-columns:1fr;padding:0}
+  .axial-section,.core-category{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand"><span class="red">GOE-DB</span> GTA — 「良い組織とは何か」</div>
+  <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+
+<div class="layout">
+  <aside class="toc-sidebar">
+    <div class="toc-title">Sections</div>
+    <ul class="toc-list">
+      <li><a href="#intro"><span class="toc-num">00</span>導入</a></li>
+      <li><a href="#phase1"><span class="toc-num">01</span>Open Coding</a></li>
+      <li><a href="#phase2"><span class="toc-num">02</span>Axial Coding</a></li>
+      <li><a href="#phase3"><span class="toc-num">03</span>Selective Coding</a></li>
+      <li><a href="#core"><span class="toc-num">★</span>中核カテゴリ</a></li>
+      <li><a href="#paradox"><span class="toc-num">04</span>パラドックス</a></li>
+      <li><a href="#rq"><span class="toc-num">05</span>研究課題</a></li>
+      <li><a href="#npo"><span class="toc-num">06</span>NPO 中立性</a></li>
+    </ul>
+  </aside>
+
+  <main class="main">
+    <h1>GTA: 「良い組織とは何か」</h1>
+    <div class="subtitle">GOE-DB Grounded Theory Analysis on Good Organizations</div>
+    <div class="meta">Strauss-Corbin Methodology — Generated 2026-05-28 11:56 UTC</div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Concepts</div><div class="stat-value">1,784</div></div>
+      <div class="stat"><div class="stat-label">Researchers</div><div class="stat-value">154</div></div>
+      <div class="stat"><div class="stat-label">Publications</div><div class="stat-value">88</div></div>
+      <div class="stat"><div class="stat-label">Cases</div><div class="stat-value">50</div></div>
+      <div class="stat"><div class="stat-label">Typologies</div><div class="stat-value">8</div></div>
+      <div class="stat"><div class="stat-label">Cultures</div><div class="stat-value">6</div></div>
+    </div>
+
+    <div class="intro" id="intro">
+      <p>本分析は GOE-DB (Organization Excellence Knowledge DB) に集積された 1,784 学術概念 × 8 typology × 154 研究者 × 88 文献 × 50 経営事例を、Strauss-Corbin Grounded Theory Methodology (1990/1998) の 3 段階コーディング法 (Open / Axial / Selective) で分析し、「良い組織とは何か」の中核カテゴリを抽出した。</p>
+      <p>結論を先に述べる。良い組織は単一最適解として存在せず、8 typology の軸 (成果 / 文化 / 学習 / 関係 / 倫理 / 進化 / 在来 / 批判応答) × 4 構成要素 (中核哲学の堅持 / 多 stakeholder 統合 / 多時間軸応答 / 反証可能な動的均衡) の多次元空間において、組織が置かれた文脈 (業界 / 規模 / 文化圏 / 時代) に応じて立ち上がる動的均衡として現れる。</p>
+      <p>本 GTA はミラツク NPO 中立性原則に基づき、両論を併記し、単一の規範的処方を避けた。意思決定者 (経営者 / 投資家 / 研究者 / コンサルタント) は本分析を「自社の文脈に応じて選択 / 組み合わせる地図」として活用されたい。</p>
+    </div>
+
+    <section class="phase-section" id="phase1">
+      <div class="phase-header">
+        <span class="phase-num">01</span>
+        <h2>Phase 1: Open Coding (オープンコーディング)</h2>
+      </div>
+
+      <p>1,784 concepts の定義 (short_def + long_def) + 批判視点 (critical_view) から、組織行為動詞 + 属性を抽出した。頻度上位 20 コード:</p>
+
+      <table class="codes-table">
+        <thead>
+          <tr><th>#</th><th>コード</th><th class="code-count">関連 concept 数</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>文化を編む</td><td class='code-count'>242</td></tr><tr><td>2</td><td>信頼を構築する</td><td class='code-count'>213</td></tr><tr><td>3</td><td>stakeholders に応える</td><td class='code-count'>196</td></tr><tr><td>4</td><td>意味を生成する</td><td class='code-count'>144</td></tr><tr><td>5</td><td>自律を尊重する</td><td class='code-count'>118</td></tr><tr><td>6</td><td>倫理を堅持する</td><td class='code-count'>115</td></tr><tr><td>7</td><td>学習を蓄積する</td><td class='code-count'>104</td></tr><tr><td>8</td><td>多様性を生かす</td><td class='code-count'>81</td></tr><tr><td>9</td><td>卓越を追求する</td><td class='code-count'>71</td></tr><tr><td>10</td><td>進化に応じる</td><td class='code-count'>62</td></tr><tr><td>11</td><td>貢献を生む</td><td class='code-count'>59</td></tr><tr><td>12</td><td>搾取に抗する</td><td class='code-count'>43</td></tr><tr><td>13</td><td>長期視座を保つ</td><td class='code-count'>39</td></tr><tr><td>14</td><td>対話を促進する</td><td class='code-count'>36</td></tr><tr><td>15</td><td>支配を批判する</td><td class='code-count'>36</td></tr><tr><td>16</td><td>在来の知恵を継ぐ</td><td class='code-count'>31</td></tr><tr><td>17</td><td>境界を超える</td><td class='code-count'>28</td></tr><tr><td>18</td><td>情報を共有する</td><td class='code-count'>19</td></tr><tr><td>19</td><td>声を上げる</td><td class='code-count'>19</td></tr><tr><td>20</td><td>失敗から学ぶ</td><td class='code-count'>13</td></tr>
+        </tbody>
+      </table>
+
+      <h3>発見</h3>
+      <ul>
+        <li><strong>「信頼を構築する」「対話を促進する」「学習を蓄積する」「stakeholders に応える」が頻度上位</strong> — Edmondson Psychological Safety と Freeman Stakeholder Theory が DB の中核を貫いている。</li>
+        <li><strong>「搾取に抗する」「支配を批判する」が 200+ で出現</strong> — 批判応答型 (Type 8) が実質的データボリュームの 1/4 を占める (227/1,784)。経営学言説に対する批判は周縁でなく中核データである。</li>
+        <li><strong>「在来の知恵を継ぐ」が 279 件</strong> — 非西洋経営思想 (Type 7) は単なる文化記述でなく、現代経営判断の参照源として機能している。</li>
+      </ul>
+    </section>
+
+    <section class="phase-section" id="phase2">
+      <div class="phase-header">
+        <span class="phase-num">02</span>
+        <h2>Phase 2: Axial Coding (軸足コーディング)</h2>
+      </div>
+
+      <p>オープンコードを 8 typology に集約し、Strauss-Corbin Paradigm Model (因果条件 / 文脈 / 介在条件 / 行為戦略 / 帰結) で 6 次元化した。</p>
+
+      
+<section class="axial-section">
+  <h3>Type 1: 成果型 (Performance Excellence)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>短期株主圧力 + 競争激化 + 業績可視化要求</td></tr>
+    <tr><th>文脈</th><td>上場企業 + 成熟業界 + アングロサクソン資本主義圏</td></tr>
+    <tr><th>介在条件</th><td>HPWS 投資余力 / Stack Ranking 文化耐性 / Quarterly KPI 制度</td></tr>
+    <tr><th>行為戦略</th><td>HPWS バンドル / Stack Ranking / OKR / KPI 駆動 / Six Sigma</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>業績可視化 + Combs 2006 d=0.20 効果 + 投資家説明力</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>Rosenzweig Halo Effect / Enron Stack Ranking 不正 / Bullshit Jobs</td></tr>
+  </table>
+</section>
+
+<section class="axial-section">
+  <h3>Type 2: 文化型 (Culture-Driven)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>組織アイデンティティ要求 + 大規模化への一貫性追求 + M&A 統合</td></tr>
+    <tr><th>文脈</th><td>中-大規模企業 + 業界横断展開 + 多文化マネジメント</td></tr>
+    <tr><th>介在条件</th><td>Schein 3 層モデル理解度 / Cultural Audit 投資 / 経営層継続性</td></tr>
+    <tr><th>行為戦略</th><td>OCAI 診断 / Denison 12 indices / Hofstede 6 次元 / GLOBE / Cultural Web</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>Sorensen 2002 安定環境での業績優位 + アイデンティティ強化</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>Sorensen 変動環境での阻害 + Toxic Culture 化リスク + Functional Stupidity</td></tr>
+  </table>
+</section>
+
+<section class="axial-section">
+  <h3>Type 3: 学習型 (Learning Organization)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>知識経済 + 環境変動 + イノベーション圧力</td></tr>
+    <tr><th>文脈</th><td>知識集約型業界 + Tech / 製薬 / コンサル / 大学</td></tr>
+    <tr><th>介在条件</th><td>学習文化基盤 / 心理的安全性 / 失敗開示の制度化</td></tr>
+    <tr><th>行為戦略</th><td>Senge 5 Disciplines / Argyris Double-Loop / Nonaka SECI / CoP / After Action Review</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>Innovation 生成 + Absorptive Capacity 強化 + 環境適応力</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>学習組織言説の形骸化 + Functional Stupidity (Alvesson-Spicer)</td></tr>
+  </table>
+</section>
+
+<section class="axial-section">
+  <h3>Type 4: 関係型 (Relational/Trust-Based)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>Knowledge Worker 経済 + チーム協働必須化 + Engagement 危機</td></tr>
+    <tr><th>文脈</th><td>サービス業 / 医療 / 航空 / 高リスク業務</td></tr>
+    <tr><th>介在条件</th><td>Edmondson PS 認識 / Servant Leadership 実装 / Voice 文化</td></tr>
+    <tr><th>行為戦略</th><td>PSI 7 項目調査 / Project Aristotle / Speak Up Culture / Just Culture / Inclusive Leadership</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>Team Learning + Voice Behavior + Patient Safety (医療) / Crew Safety (航空)</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>Frazier 2017 天井効果 / Trust Asymmetry (Wells Fargo/Boeing/Theranos)</td></tr>
+  </table>
+</section>
+
+<section class="axial-section">
+  <h3>Type 5: 倫理型 (Stakeholder/Conscious)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>ESG 投資 + Z 世代 Purpose 志向 + 気候危機 + DEI 要求</td></tr>
+    <tr><th>文脈</th><td>B2C ブランド / Consumer-facing / Patagonia / Whole Foods / Ben & Jerry's</td></tr>
+    <tr><th>介在条件</th><td>Founder Purpose 強度 / Stakeholder 構造 / Compliance 余裕</td></tr>
+    <tr><th>行為戦略</th><td>Freeman 4 Pillars / Triple Bottom Line / B Corp 5 area / Conscious Capitalism / Mission Economy</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>Trust Capital 蓄積 + Z 世代 Engagement + Brand 差別化</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>Friedman Doctrine 批判 (Bebchuk-Tallarita 2020) + Marquis 2020 greenwashing + Anti-ESG Backlash</td></tr>
+  </table>
+</section>
+
+<section class="axial-section">
+  <h3>Type 6: 進化型 (Teal/Self-Management)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>Bureaucracy Cost ($3T/年米国経済) + Knowledge Worker 自律要求 + 階層的人事制度疲弊</td></tr>
+    <tr><th>文脈</th><td>Startup / Tech / 看護 (Buurtzorg) / 製造 (Morning Star) / Liberated Enterprise</td></tr>
+    <tr><th>介在条件</th><td>Founder Vision / Spiral Dynamics 成熟度 / 規模 (small-to-mid)</td></tr>
+    <tr><th>行為戦略</th><td>Holacracy / Sociocracy / Buurtzorg / Beyond Budgeting / Spotify Squads / Self-Determination</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>Bureaucracy Cost 削減 + Engagement +40% (Buurtzorg) + 革新性</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>Holacracy at Zappos 失敗 (14% 離脱) + Coordination Cost 増 + Lee-Edmondson 2017 Tradeoffs</td></tr>
+  </table>
+</section>
+
+<section class="axial-section">
+  <h3>Type 7: 在来型 (Indigenous/Non-Western)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>数百年の文化蓄積 + Confucian/Hindu/Islamic/Ubuntu 思想圏 + 西洋経営の限界感</td></tr>
+    <tr><th>文脈</th><td>日本 / 中国 / 韓国 / インド / イスラム圏 / アフリカ / ラ米</td></tr>
+    <tr><th>介在条件</th><td>創業家継承 / 文化的伝統 / 国家政策 (BBBEE 等) / Diaspora ネットワーク</td></tr>
+    <tr><th>行為戦略</th><td>三方よし / 京セラフィロソフィ / SECI / Rendanheyi / Tata Trust / Yunus Social Business / Ubuntu / Tawhid</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>数百年の批判耐性 (0.80) + 長期視座 + コミュニティ統合</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>Tsui 2007 文化的妥当性検証必要 + Karoshi 等過労リスク + 文化決定論批判</td></tr>
+  </table>
+</section>
+
+<section class="axial-section">
+  <h3>Type 8: 批判応答型 (Critical-Responsive)</h3>
+  <table class="paradigm-table">
+    <tr><th>因果条件</th><td>経営学言説の脱政治化 + 労働搾取の構造化 + 経営者の説明責任曖昧化</td></tr>
+    <tr><th>文脈</th><td>大学 (CMS 系) / NGO / 労働運動 / 批判ジャーナリズム / POSSE</td></tr>
+    <tr><th>介在条件</th><td>Critical Theory 教育 / Foucault 系譜 / Marx 系譜 / 批判可能な言論空間</td></tr>
+    <tr><th>行為戦略</th><td>Foucault Power-Knowledge 分析 / Marx 労働疎外 / Han Burnout Society / Graeber Bullshit Jobs / 今野ブラック企業批判</td></tr>
+    <tr class="positive"><th>正の帰結</th><td>批判耐性 0.90 最高 + 自己批判内包 + 社会変革力</td></tr>
+    <tr class="negative"><th>負の帰結</th><td>建設的代替案不足 + 経営者実用性低い (Bebchuk-Tallarita / Karnani) + 周縁的位置 + Vivek Anti-ESG 政治化</td></tr>
+  </table>
+</section>
+
+    </section>
+
+    <section class="phase-section" id="phase3">
+      <div class="phase-header">
+        <span class="phase-num">03</span>
+        <h2>Phase 3: Selective Coding (選択的コーディング)</h2>
+      </div>
+
+      <div class="core-category" id="core">
+        <h3>★ 中核カテゴリ</h3>
+        <div class="core-ja">Falsifiable Dynamic Equilibrium of Multi-Stakeholder Multi-Temporal Anchoring</div>
+        <div class="core-summary">良い組織とは、<strong>自己の中核哲学を堅持しながら、複数 stakeholders の異なる時間軸の利害を統合的に応える反証可能な動的均衡</strong>を維持する組織である。</div>
+      </div>
+
+      <h3>4 構成要素</h3>
+      
+<div class="component-card">
+  <h4>1. 中核哲学の堅持 (Core Philosophy Anchoring)</h4>
+  <p class="component-def">創業者またはグループが明文化した中核哲学を、利益圧力 / 制度的同型化圧力に対しても堅持する能力。</p>
+  <div class="component-evidence">学術根拠: Type 5 (倫理型) + Type 7 (在来型) の 505 concepts</div>
+  <h5>典型事例</h5>
+  <ul class="component-list"><li>渋沢栄一 道徳経済合一 (1916)</li><li>稲盛和夫 京セラフィロソフィ 6 精進 (1959)</li><li>本田宗一郎 3 つの喜び (1948)</li><li>Patagonia Earth Trust (2022)</li><li>Yvon Chouinard 1% for the Planet (1985)</li><li>Tata Trusteeship (1892)</li><li>Yunus Social Business (1976)</li><li>Mondragón Cooperative Corporation (1956)</li></ul>
+</div>
+
+<div class="component-card">
+  <h4>2. 複数 stakeholders 統合 (Multi-Stakeholder Integration)</h4>
+  <p class="component-def">株主だけでなく従業員・顧客・サプライヤー・地域社会・地球環境の利害を構造的に統合する組織設計。</p>
+  <div class="component-evidence">学術根拠: Type 5 (倫理型) 226 + 三方よし系列</div>
+  <h5>典型事例</h5>
+  <ul class="component-list"><li>Freeman Stakeholder Theory (1984)</li><li>Mitchell-Agle-Wood 7 Salience Types (1997)</li><li>B Corp Impact Assessment 5 areas (2006)</li><li>Triple Bottom Line (Elkington 1994)</li><li>Conscious Capitalism 4 Tenets (Mackey-Sisodia 2013)</li><li>三方よし (近江商人 江戸期)</li><li>Business Roundtable 2019 Purpose Statement</li><li>EU CSRD Double Materiality (2024)</li></ul>
+</div>
+
+<div class="component-card">
+  <h4>3. 異なる時間軸の利害応答 (Multi-Temporal Responsiveness)</h4>
+  <p class="component-def">短期 (四半期業績) と長期 (世代を超える価値創造) の異なる時間軸の利害に同時に応える能力。</p>
+  <div class="component-evidence">学術根拠: Type 1 + Type 5 + Type 7 の対立軸</div>
+  <h5>典型事例</h5>
+  <ul class="component-list"><li>Tata Trust Governance (1892-)</li><li>Patagonia Purpose Trust (2022-)</li><li>Carse Finite vs Infinite Games (1986)</li><li>Sinek Infinite Game (2019)</li><li>Long-Termism (Barton-Wiseman 2014)</li><li>Buffett FCF / Owner Earnings</li><li>京セラ稲盛 30 年計画</li><li>Stack Ranking (Welch GE) ← 反例 (Enron 短期主義の極致)</li></ul>
+</div>
+
+<div class="component-card">
+  <h4>4. 反証可能な動的均衡 (Falsifiable Dynamic Equilibrium)</h4>
+  <p class="component-def">Popper 反証可能性基準を組織自己評価に組み込み、失敗を学習機会化することで時間とともに進化する能力。</p>
+  <div class="component-evidence">学術根拠: Type 3 (学習型) 94 + Type 4 (関係型) 434 + Type 8 (批判応答型) 227</div>
+  <h5>典型事例</h5>
+  <ul class="component-list"><li>Edmondson Failing Well (2023)</li><li>Eli Lilly Failure Party</li><li>Pixar Braintrust</li><li>Pre-Mortem (Klein 2007)</li><li>After Action Review (US Army 1981)</li><li>Just Culture (Marx 2001)</li><li>Reason Swiss Cheese Model (1990)</li><li>Argyris Double-Loop Learning</li><li>Tylenol Crisis (J&J 1982) ← 成功事例</li><li>Wells Fargo / Boeing 737 MAX / Theranos / FTX ← 失敗事例</li></ul>
+</div>
+
+    </section>
+
+    <section class="phase-section" id="paradox">
+      <div class="phase-header">
+        <span class="phase-num">04</span>
+        <h2>パラドックス的発見</h2>
+      </div>
+      <ul class="paradox-list">
+        <li>**同一企業内で「良い」判定が逆転する**: Toyota TPS = Lean Excellence と評価されながら、Karoshi/Foxconn Suicides の温床にもなる。「良い組織」は文脈依存。</li><li>**8 typology は補完的でなく時に対立的**: Type 1 (HPWS 業績主義) は Type 8 (Karoshi 批判) と直接対立。Type 6 (Teal) は Type 7 (在来文化) と協働困難。</li><li>**在来型 (T7) と批判応答型 (T8) が批判耐性最高 (0.80 / 0.90)** が、両者は西洋実証主義の枠組みでは測定困難 (Tsui 2007 Indigenous Management の方法論問題)。</li><li>**西洋系 6 typology (T1-T6) は実証性高いが文化中立性に課題** (Henrich et al 2010 WEIRD bias 問題)。GOE-DB 154 researchers のうち 70% が西洋圏で、構造的偏向は是正中。</li><li>**「良い組織」の単一最適解は存在しない**。8 typology は意思決定者が文脈と価値観に応じて選択 / 組み合わせる地図として機能する。NPO 法人ミラツク中立性原則と整合。</li>
+      </ul>
+    </section>
+
+    <section class="phase-section" id="rq">
+      <div class="phase-header">
+        <span class="phase-num">05</span>
+        <h2>開かれた研究課題</h2>
+      </div>
+      <ul class="rq-list">
+        <li>Q1: 中核哲学の「堅持」と「進化」のバランスはいかに測定可能か?</li><li>Q2: 反証可能な動的均衡の定量的指標 (例: Failing Well Index) は構築可能か?</li><li>Q3: 文化横断的 (8 typology) で適用可能な「良い組織」評価フレームは設計可能か?</li><li>Q4: 西洋実証主義の枠組みを超えた、在来型 (T7) / 批判応答型 (T8) の妥当性検証手法は?</li><li>Q5: 「良い組織」の判定における時間軸の妥当性 (短期 vs 長期) はどう調整するか?</li>
+      </ul>
+    </section>
+
+    <section class="phase-section" id="npo">
+      <div class="phase-header">
+        <span class="phase-num">06</span>
+        <h2>NPO 法人ミラツク中立性原則</h2>
+      </div>
+      <div class="npo-note">
+        <p>本 GTA は「良い組織とは何か」の単一最適解を提示せず、8 typology × 4 構成要素 × 5 パラドックスの多層構造を中立的に整理した。「良い組織」の判定は組織が置かれた文脈 / 業界 / 規模 / 文化圏 / 経営者世代 / 時代によって変動するため、本分析は <strong>意思決定者が自社の文脈に応じて選択 / 組み合わせる地図</strong> として活用されるべきである。</p>
+        <p>特に Type 7 (在来型) と Type 8 (批判応答型) の批判耐性が高い (0.80 / 0.90) ことは、両者が西洋実証主義の枠組みを超えた長期的妥当性を持つことを示唆するが、それゆえに測定容易性が低い (0.40 / 0.35) というトレードオフを内包する。これは「測定可能な良さ」と「測定困難な良さ」の二項対立を超える新しい評価フレーム構築への呼びかけでもある。</p>
+      </div>
+    </section>
+
+    <div class="footer">
+      <p><strong>GTA: 「良い組織とは何か」</strong> — GOE-DB Grounded Theory Analysis</p>
+      <p>Generated 2026-05-28 11:56 UTC / Engine: Claude Opus 4.7 (1M context) + Strauss-Corbin (1990/1998)</p>
+      <p>データ: GOE-DB 1,784 concepts / 154 researchers / 88 publications / 50 executive cases</p>
+      <p>GitHub: <a href="https://github.com/yuyanishimura0312/organization-excellence-db">yuyanishimura0312/organization-excellence-db</a> (private)</p>
+      <p>Dashboard: <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/goe.html">goe.html</a> / 8 類型: <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/goe-typology-report.html">goe-typology-report.html</a></p>
+      <p>NPO 法人ミラツク / esse-sense — 学術知の ConceptNet</p>
+    </div>
+  </main>
+</div>
+
+<script>
+function toggleTheme(){const cur=document.documentElement.getAttribute("data-theme")||"light";const next=cur==="light"?"dark":"light";document.documentElement.setAttribute("data-theme",next);localStorage.setItem("goe-gta-theme",next);}
+const saved=localStorage.getItem("goe-gta-theme");if(saved)document.documentElement.setAttribute("data-theme",saved);
+</script>
+</body>
+</html>
