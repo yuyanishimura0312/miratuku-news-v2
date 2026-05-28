@@ -288,8 +288,16 @@ function showDetail(id){
     +`<div class="g"><span class="k">流域</span><span class="v">${esc(p[13])||'-'}</span></div>`
     +`<div class="g"><span class="k">鎮守の森</span><span class="v">${p[9]?'あり':'-'}</span></div>`
     +'</div>';
-  // いわれ
-  if(d.iware){h+=`<div class="dsec"><h3>いわれ・由緒</h3><div class="iwaretxt">${esc(d.iware)}</div></div>`;}
+  // この土地（市区町村）の場所性 — 全点が継承
+  const mp=muniPl[p[3]];
+  if(mp){
+    const sub=(label,val)=>val?`<div class="dsec"><h3>${label}</h3><div class="iwaretxt">${esc(val)}</div></div>`:'';
+    h+='<div class="dsec" style="border-top:1px solid var(--border2);padding-top:12px"><h3 style="border-color:var(--ink)">この土地（'+esc(p[3])+'）の場所性</h3></div>';
+    h+=sub('地名の由来',mp.toponym)+sub('歴史',mp.hist)+sub('地理・地形・気候',mp.geo)+sub('産業・名産',mp.ind)+sub('文化・祭事',mp.cult);
+    if(mp.u)h+=`<div class="dsrc">市区町村地誌 出典: <a href="${mp.u}" target="_blank" rel="noopener" style="color:var(--ink3)">${esc(mp.pref||'')}${esc(p[3])} (Wikipedia)</a></div>`;
+  }
+  // いわれ (地点固有)
+  if(d.iware){h+=`<div class="dsec"><h3>この地点のいわれ・由緒</h3><div class="iwaretxt">${esc(d.iware)}</div></div>`;}
   if(d.founding){h+=`<div class="dsec"><h3>起源伝承</h3><div class="iwaretxt">${esc(d.founding)}</div></div>`;}
   if(d.topo_origin){h+=`<div class="dsec"><h3>地名の由来</h3><div class="iwaretxt">${esc(d.topo_origin)}</div></div>`;}
   // 食
@@ -312,7 +320,7 @@ function showDetail(id){
   if(d.hist){h+='<div class="dsec"><h3>歴史の地層</h3><ul class="dlist">'
     +d.hist.map(x=>`<li>${esc(x.n||x.e)}${x.u?`<a href="${x.u}" target="_blank" rel="noopener">出典</a>`:''}</li>`).join('')
     +'</ul></div>';}
-  if(!d.iware&&!d.foods&&!d.cults&&!d.senss&&!d.vegs&&!d.hist){
+  if(!d.iware&&!d.foods&&!d.cults&&!d.senss&&!d.vegs&&!d.hist&&!mp){
     h+='<div class="dnote">この地点は<b>地理・風土の場所性</b>（標高・地形・気候・流域・海岸距離）を保持しています。いわれ・食・文化等の物語層は未収録です（出典のある情報のみ掲載する方針）。</div>';
   }
   h+='</div>';
@@ -352,6 +360,8 @@ fetch('data/placeness_points.json').then(r=>r.json()).then(d=>{
   document.getElementById('loading').classList.add('hide');
 }).catch(e=>{document.getElementById('loadcnt').textContent='読込エラー: '+e;});
 fetch('data/placeness_detail.json').then(r=>r.json()).then(d=>{detail=d;});
+let muniPl={};
+fetch('data/placeness_municipality.json').then(r=>r.json()).then(d=>{muniPl=d;}).catch(()=>{});
 
 // ---- stats ----
 let stat=null;
