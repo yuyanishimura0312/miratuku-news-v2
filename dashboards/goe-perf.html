@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOE-PERF — 8 typology 企業成績比較 DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFFFF;--card:#FFFFFF;--surface:#F7F7F5;--accent:#121212;--accent-warm:#CC1400;
+--accent-warm-soft:#B01200;--accent-muted:rgba(204,20,0,0.06);
+--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;
+--font:"Noto Sans JP","Hiragino Sans",sans-serif;--font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+--font-mono:"Fira Code",monospace}
+[data-theme="dark"]{--bg:#121212;--card:#1A1A1A;--surface:#1A1A1A;--accent:#E0E0E0;
+--accent-warm:#FF4030;--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#8A8A8A;
+--border:#333;--border-light:#2A2A2A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.025em;font-feature-settings:"palt"}
+.top-bar{position:sticky;top:0;height:48px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.brand{font-family:var(--font-serif);font-weight:700;letter-spacing:.06em}
+.brand .red{color:var(--accent-warm)}
+.theme-toggle{background:transparent;border:1px solid var(--border);color:var(--text);padding:6px 12px;cursor:pointer;font-family:var(--font-mono);font-size:11px}
+.layout{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:240px 1fr;gap:32px;padding:32px 24px}
+.toc-sidebar{position:sticky;top:80px;align-self:flex-start;max-height:calc(100vh - 100px);overflow-y:auto;font-size:13px}
+.toc-title{font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px}
+.toc-list{list-style:none;padding:0;margin:0}
+.toc-list li{margin:6px 0}
+.toc-list a{text-decoration:none;color:var(--text-secondary);display:flex;gap:8px;line-height:1.4}
+.toc-list a:hover{color:var(--accent-warm)}
+.main{max-width:1000px}
+h1{font-family:var(--font-serif);font-size:26px;margin-top:0;border-left:4px solid var(--accent-warm);padding-left:16px;line-height:1.5}
+.subtitle{color:var(--text-secondary);font-size:14px;margin-top:8px}
+.meta{font-family:var(--font-mono);font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:16px;padding-bottom:16px;border-bottom:1px solid var(--border-light)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:24px 0 48px}
+.stat{background:var(--surface);border-left:3px solid var(--accent-warm);padding:12px 16px}
+.stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em}
+.stat-value{font-family:var(--font-serif);font-size:22px;font-weight:700;margin-top:4px;color:var(--accent-warm)}
+.intro{background:var(--surface);padding:20px 24px;border-left:4px solid var(--accent-warm);margin:32px 0 48px;font-family:var(--font-serif);line-height:2}
+.intro p{margin:0 0 12px;text-indent:1em}
+.intro p:last-child{margin-bottom:0}
+.typo-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:32px 0}
+.typo-card{background:var(--card);border:1px solid var(--border-light);border-left:3px solid var(--accent-warm);padding:14px 16px}
+.typo-name{font-family:var(--font-serif);font-weight:600;font-size:13px;color:var(--accent-warm);margin-bottom:10px;line-height:1.4}
+.typo-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.typo-stats > div{display:flex;justify-content:space-between;font-size:11px}
+.typo-stats .label{color:var(--text-muted);font-family:var(--font-mono);letter-spacing:.05em}
+.typo-stats .val{font-family:var(--font-mono);font-weight:600;color:var(--text)}
+.typo-section{margin:48px 0;padding-bottom:32px;border-bottom:1px solid var(--border-light)}
+.typo-section h3{font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--accent-warm);border-bottom:2px solid var(--accent-warm);padding-bottom:8px}
+.company-table,.sig-table{width:100%;border-collapse:collapse;font-size:12px;line-height:1.6;margin:16px 0}
+.company-table th,.sig-table th{background:var(--surface);font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:left;padding:10px 8px;border-bottom:2px solid var(--accent-warm)}
+.company-table td,.sig-table td{padding:8px 8px;border-bottom:1px solid var(--border-light)}
+.company-table tr:hover,.sig-table tr:hover{background:var(--surface)}
+.ticker{font-family:var(--font-mono);font-weight:600;color:var(--accent-warm)}
+.right{text-align:right;font-family:var(--font-mono)}
+.small{font-size:11px;color:var(--text-secondary)}
+.phil{max-width:200px;line-height:1.4}
+.neg{color:var(--accent-warm-soft)}
+.p-sig{font-weight:600;color:var(--accent-warm)}
+.no-data{background:var(--surface);padding:16px 20px;border-left:3px solid #2A6F2A;font-size:13px;font-family:var(--font-serif);line-height:2}
+.npo-note{background:var(--surface);padding:20px 24px;border-left:4px solid #2A6F2A;margin:32px 0;font-family:var(--font-serif);font-size:13px;line-height:2}
+.footer{margin-top:64px;padding-top:32px;border-top:1px solid var(--border-light);font-size:12px;color:var(--text-muted)}
+.footer p{margin:6px 0}
+.footer a{color:var(--accent-warm)}
+@media (max-width:1000px){.layout{grid-template-columns:1fr}.toc-sidebar{position:relative;top:auto;max-height:none}}
+@media print{.top-bar,.toc-sidebar,.theme-toggle{display:none}.layout{grid-template-columns:1fr;padding:0}}
+</style></head>
+<body>
+<div class="top-bar">
+  <div class="brand"><span class="red">GOE-PERF</span> 8 typology 企業成績比較 DB</div>
+  <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+<div class="layout">
+  <aside class="toc-sidebar">
+    <div class="toc-title">Sections</div>
+    <ul class="toc-list">
+      <li><a href="#intro">00 導入</a></li>
+      <li><a href="#summary">01 Typology Summary</a></li>
+      <li><a href="#sig">02 統計的優劣比較</a></li>
+      <li><a href="#T1_Performance">T1 成果型</a></li>
+      <li><a href="#T2_Culture">T2 文化型</a></li>
+      <li><a href="#T3_Learning">T3 学習型</a></li>
+      <li><a href="#T4_Relational">T4 関係型</a></li>
+      <li><a href="#T5_Ethical">T5 倫理型</a></li>
+      <li><a href="#T6_Evolutionary">T6 進化型</a></li>
+      <li><a href="#T7_Indigenous">T7 在来型</a></li>
+      <li><a href="#T8_Critical">T8 批判応答型</a></li>
+      <li><a href="#npo">★ NPO 中立性</a></li>
+    </ul>
+  </aside>
+  <main class="main">
+    <h1>GOE-PERF: 8 typology 企業成績比較 DB</h1>
+    <div class="subtitle">GOE-DB の 8 類型に該当する 160 社の長期財務成果を yfinance + EDGAR/EDINET で測定し、typology 間の優劣を統計的に検討する経験的検証層</div>
+    <div class="meta">Generated 2026-05-28 13:15 UTC / Engine: yfinance + Python 3 / GOE-DB v0.1 Wave 1 連動</div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Companies</div><div class="stat-value">160</div></div>
+      <div class="stat"><div class="stat-label">With Price Data</div><div class="stat-value">123</div></div>
+      <div class="stat"><div class="stat-label">Price Rows</div><div class="stat-value">746,539</div></div>
+      <div class="stat"><div class="stat-label">Fin Year-Rows</div><div class="stat-value">600</div></div>
+      <div class="stat"><div class="stat-label">Date Range</div><div class="stat-value" style="font-size:12px">1995-01-02 → 2026-05-28</div></div>
+      <div class="stat"><div class="stat-label">Typologies</div><div class="stat-value">8</div></div>
+    </div>
+
+    <div class="intro" id="intro">
+      <p>本 DB は GOE-DB (Good Organization Excellence Knowledge DB) の 8 typology モデル (成果型 / 文化型 / 学習型 / 関係型 / 倫理型 / 進化型 / 在来型 / 批判応答型) を経験的に検証するために構築された企業財務成績データベースである。各 typology に該当する企業を 20 社ずつ計 160 社選定し、yfinance / EDGAR / EDINET 等から長期株価 + 年次財務データを取得して、典型的な長期成果指標 (CAGR / Sharpe ratio / Max Drawdown / ROE) を比較した。</p>
+      <p>注意点として、本検証は selection bias を完全には排除できない。各 typology の代表企業選定は GOE-DB の学術根拠と executive_cases に基づくが、典型企業の事後選定は survivorship bias を伴う。Fama-French 5因子調整後の超過リターン (alpha) で typology 間の優劣を判定する追加分析が、より頑健な結論を提示する次のステップとなる。</p>
+      <p>NPO 法人ミラツク中立性原則に基づき、本 DB は 8 typology の単一最適解を主張せず、「typology 間で財務成果に統計有意な差が見られない場合は、組織モデル間の経済的優劣は文脈依存的」という反証可能性条件を内蔵する。</p>
+    </div>
+
+    <section id="summary">
+      <h2 style="font-family:var(--font-serif);font-size:20px;border-bottom:2px solid var(--accent-warm);padding-bottom:8px">01 Typology Summary (8 類型 × 平均成績)</h2>
+      <div class="typo-summary">
+<div class='typo-card'>
+  <div class='typo-name'>T1 成果型 (Performance Excellence)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>+15.93%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+19.06%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.536</span></div>
+  </div>
+</div>
+
+<div class='typo-card'>
+  <div class='typo-name'>T2 文化型 (Culture-Driven)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>+3.06%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+10.03%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.447</span></div>
+  </div>
+</div>
+
+<div class='typo-card'>
+  <div class='typo-name'>T3 学習型 (Learning Organization)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>+11.64%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+17.69%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.458</span></div>
+  </div>
+</div>
+
+<div class='typo-card'>
+  <div class='typo-name'>T4 関係型 (Relational/Trust-Based)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>+7.74%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+15.47%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.557</span></div>
+  </div>
+</div>
+
+<div class='typo-card'>
+  <div class='typo-name'>T5 倫理型 (Stakeholder/Conscious)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>+1.91%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+9.50%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.365</span></div>
+  </div>
+</div>
+
+<div class='typo-card'>
+  <div class='typo-name'>T6 進化型 (Teal/Self-Management)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>-13.35%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+5.02%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.324</span></div>
+  </div>
+</div>
+
+<div class='typo-card'>
+  <div class='typo-name'>T7 在来型 (Indigenous/Non-Western)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>+11.57%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+14.76%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.336</span></div>
+  </div>
+</div>
+
+<div class='typo-card'>
+  <div class='typo-name'>T8 批判応答型 (Critical-Responsive)</div>
+  <div class='typo-stats'>
+    <div><span class='label'>N</span><span class='val'>20</span></div>
+    <div><span class='label'>CAGR 5y</span><span class='val'>-0.95%</span></div>
+    <div><span class='label'>CAGR 10y</span><span class='val'>+1.84%</span></div>
+    <div><span class='label'>Sharpe</span><span class='val'>0.339</span></div>
+  </div>
+</div>
+</div>
+    </section>
+
+    <section id="sig" style="margin-top:48px">
+      <h2 style="font-family:var(--font-serif);font-size:20px;border-bottom:2px solid var(--accent-warm);padding-bottom:8px">02 統計的優劣比較 (Welch's t-test / p &lt; 0.05)</h2>
+      <table class='sig-table'><thead><tr><th>Metric</th><th>Typology A</th><th>Typology B</th><th class='right'>Mean A</th><th class='right'>Mean B</th><th class='right'>p-value</th><th class='right'>Effect</th></tr></thead><tbody><tr><td>cagr_5y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+15.93%</td><td class='right'>-13.35%</td><td class='right p-sig'>0.0000</td><td class='right'>+2.14</td></tr><tr><td>cagr_20y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T8_Critical (n=14)</td><td class='right'>+14.83%</td><td class='right'>+2.20%</td><td class='right p-sig'>0.0000</td><td class='right'>+1.43</td></tr><tr><td>cagr_20y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+14.83%</td><td class='right'>+2.71%</td><td class='right p-sig'>0.0000</td><td class='right'>+1.61</td></tr><tr><td>cagr_20y</td><td class='small'>T4_Relational (n=16)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+13.85%</td><td class='right'>+2.71%</td><td class='right p-sig'>0.0000</td><td class='right'>+1.79</td></tr><tr><td>cagr_20y</td><td class='small'>T4_Relational (n=16)</td><td class='small'>T8_Critical (n=14)</td><td class='right'>+13.85%</td><td class='right'>+2.20%</td><td class='right p-sig'>0.0000</td><td class='right'>+1.50</td></tr><tr><td>annual_vol</td><td class='small'>T2_Culture (n=19)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>0.331</td><td class='right'>0.538</td><td class='right p-sig'>0.0001</td><td class='right'>-1.62</td></tr><tr><td>cagr_10y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T8_Critical (n=14)</td><td class='right'>+19.06%</td><td class='right'>+1.84%</td><td class='right p-sig'>0.0001</td><td class='right'>+1.37</td></tr><tr><td>total_return</td><td class='small'>T4_Relational (n=16)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+4959.40%</td><td class='right'>+155.47%</td><td class='right p-sig'>0.0002</td><td class='right'>+1.33</td></tr><tr><td>annual_vol</td><td class='small'>T4_Relational (n=16)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>0.357</td><td class='right'>0.538</td><td class='right p-sig'>0.0003</td><td class='right'>-1.70</td></tr><tr><td>sharpe_ratio</td><td class='small'>T4_Relational (n=16)</td><td class='small'>T7_Indigenous (n=16)</td><td class='right'>0.557</td><td class='right'>0.336</td><td class='right p-sig'>0.0004</td><td class='right'>+1.26</td></tr><tr><td>sharpe_ratio</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T7_Indigenous (n=16)</td><td class='right'>0.536</td><td class='right'>0.336</td><td class='right p-sig'>0.0005</td><td class='right'>+1.15</td></tr><tr><td>cagr_5y</td><td class='small'>T6_Evolutionary (n=7)</td><td class='small'>T7_Indigenous (n=16)</td><td class='right'>-13.35%</td><td class='right'>+11.57%</td><td class='right p-sig'>0.0006</td><td class='right'>-1.56</td></tr><tr><td>cagr_5y</td><td class='small'>T3_Learning (n=19)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+11.64%</td><td class='right'>-13.35%</td><td class='right p-sig'>0.0009</td><td class='right'>+1.39</td></tr><tr><td>total_return</td><td class='small'>T2_Culture (n=19)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+4574.12%</td><td class='right'>+155.47%</td><td class='right p-sig'>0.0010</td><td class='right'>+1.07</td></tr><tr><td>max_drawdown</td><td class='small'>T2_Culture (n=19)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>-65.10%</td><td class='right'>-82.96%</td><td class='right p-sig'>0.0014</td><td class='right'>+1.27</td></tr><tr><td>cagr_5y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T2_Culture (n=19)</td><td class='right'>+15.93%</td><td class='right'>+3.06%</td><td class='right p-sig'>0.0014</td><td class='right'>+1.02</td></tr><tr><td>cagr_10y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T2_Culture (n=19)</td><td class='right'>+19.06%</td><td class='right'>+10.03%</td><td class='right p-sig'>0.0014</td><td class='right'>+1.02</td></tr><tr><td>max_drawdown</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T2_Culture (n=19)</td><td class='right'>-79.17%</td><td class='right'>-65.10%</td><td class='right p-sig'>0.0015</td><td class='right'>-1.02</td></tr><tr><td>total_return</td><td class='small'>T5_Ethical (n=12)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+1716.18%</td><td class='right'>+155.47%</td><td class='right p-sig'>0.0016</td><td class='right'>+1.30</td></tr><tr><td>annual_vol</td><td class='small'>T5_Ethical (n=12)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>0.360</td><td class='right'>0.538</td><td class='right p-sig'>0.0019</td><td class='right'>-1.45</td></tr><tr><td>cagr_5y</td><td class='small'>T4_Relational (n=16)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+7.74%</td><td class='right'>-13.35%</td><td class='right p-sig'>0.0021</td><td class='right'>+1.43</td></tr><tr><td>max_drawdown</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T4_Relational (n=16)</td><td class='right'>-79.17%</td><td class='right'>-68.54%</td><td class='right p-sig'>0.0022</td><td class='right'>-1.03</td></tr><tr><td>annual_vol</td><td class='small'>T6_Evolutionary (n=7)</td><td class='small'>T7_Indigenous (n=16)</td><td class='right'>0.538</td><td class='right'>0.388</td><td class='right p-sig'>0.0022</td><td class='right'>+1.45</td></tr><tr><td>cagr_10y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+19.06%</td><td class='right'>+5.02%</td><td class='right p-sig'>0.0022</td><td class='right'>+1.36</td></tr><tr><td>max_drawdown</td><td class='small'>T2_Culture (n=19)</td><td class='small'>T7_Indigenous (n=16)</td><td class='right'>-65.10%</td><td class='right'>-79.65%</td><td class='right p-sig'>0.0026</td><td class='right'>+1.01</td></tr><tr><td>cagr_5y</td><td class='small'>T1_Performance (n=20)</td><td class='small'>T8_Critical (n=14)</td><td class='right'>+15.93%</td><td class='right'>-0.95%</td><td class='right p-sig'>0.0027</td><td class='right'>+1.09</td></tr><tr><td>cagr_20y</td><td class='small'>T2_Culture (n=19)</td><td class='small'>T8_Critical (n=14)</td><td class='right'>+9.76%</td><td class='right'>+2.20%</td><td class='right p-sig'>0.0029</td><td class='right'>+1.09</td></tr><tr><td>max_drawdown</td><td class='small'>T4_Relational (n=16)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>-68.54%</td><td class='right'>-82.96%</td><td class='right p-sig'>0.0030</td><td class='right'>+1.34</td></tr><tr><td>cagr_20y</td><td class='small'>T2_Culture (n=19)</td><td class='small'>T6_Evolutionary (n=7)</td><td class='right'>+9.76%</td><td class='right'>+2.71%</td><td class='right p-sig'>0.0032</td><td class='right'>+1.37</td></tr><tr><td>cagr_20y</td><td class='small'>T3_Learning (n=19)</td><td class='small'>T8_Critical (n=14)</td><td class='right'>+11.03%</td><td class='right'>+2.20%</td><td class='right p-sig'>0.0032</td><td class='right'>+1.04</td></tr></tbody></table>
+    </section>
+
+    
+<section class='typo-section' id='T1_Performance'>
+  <h3>T1 成果型 (Performance Excellence)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>TSLA</td>
+<td>Tesla</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Musk 80hr week + production hell</td>
+<td class='right'>+15.93%</td>
+<td class='right'>+40.33%</td>
+<td class='right'>0.859</td>
+<td class='right neg'>-73.63%</td>
+<td class='right small'>15.9y</td>
+</tr><tr>
+<td class='ticker'>DELL</td>
+<td>Dell Technologies</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Direct model + lean ops</td>
+<td class='right'>+46.03%</td>
+<td class='right'>+39.45%</td>
+<td class='right'>0.955</td>
+<td class='right neg'>-59.59%</td>
+<td class='right small'>9.8y</td>
+</tr><tr>
+<td class='ticker'>AAPL</td>
+<td>Apple</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Jobs perfectionism + functional org</td>
+<td class='right'>+20.55%</td>
+<td class='right'>+29.83%</td>
+<td class='right'>0.688</td>
+<td class='right neg'>-81.80%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>MS</td>
+<td>Morgan Stanley</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Tournament + bonus pool</td>
+<td class='right'>+21.27%</td>
+<td class='right'>+25.53%</td>
+<td class='right'>0.442</td>
+<td class='right neg'>-88.12%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>MSFT</td>
+<td>Microsoft</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Ballmer Stack → Nadella Growth Mindset</td>
+<td class='right'>+11.52%</td>
+<td class='right'>+24.46%</td>
+<td class='right'>0.610</td>
+<td class='right neg'>-69.39%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>NFLX</td>
+<td>Netflix</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Hastings Keeper Test + No Rules Rules</td>
+<td class='right'>+11.63%</td>
+<td class='right'>+23.80%</td>
+<td class='right'>0.734</td>
+<td class='right neg'>-81.99%</td>
+<td class='right small'>24.0y</td>
+</tr><tr>
+<td class='ticker'>GS</td>
+<td>Goldman Sachs</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Up-or-Out tournament</td>
+<td class='right'>+24.79%</td>
+<td class='right'>+22.55%</td>
+<td class='right'>0.420</td>
+<td class='right neg'>-78.84%</td>
+<td class='right small'>27.1y</td>
+</tr><tr>
+<td class='ticker'>AMZN</td>
+<td>Amazon</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Bezos Leadership Principles 14 + PIP</td>
+<td class='right'>+10.98%</td>
+<td class='right'>+22.54%</td>
+<td class='right'>0.722</td>
+<td class='right neg'>-94.40%</td>
+<td class='right small'>29.0y</td>
+</tr><tr>
+<td class='ticker'>JPM</td>
+<td>JPMorgan Chase</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Dimon Operating Committee discipline</td>
+<td class='right'>+15.62%</td>
+<td class='right'>+19.56%</td>
+<td class='right'>0.470</td>
+<td class='right neg'>-74.02%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>CSCO</td>
+<td>Cisco Systems</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Chambers KPI rigor</td>
+<td class='right'>+21.14%</td>
+<td class='right'>+18.80%</td>
+<td class='right'>0.511</td>
+<td class='right neg'>-89.26%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>ORCL</td>
+<td>Oracle</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Ellison performance culture</td>
+<td class='right'>+20.94%</td>
+<td class='right'>+18.66%</td>
+<td class='right'>0.508</td>
+<td class='right neg'>-84.19%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>META</td>
+<td>Meta Platforms</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Sandberg perf management + Year of Efficiency</td>
+<td class='right'>+13.98%</td>
+<td class='right'>+18.29%</td>
+<td class='right'>0.643</td>
+<td class='right neg'>-76.74%</td>
+<td class='right small'>14.0y</td>
+</tr><tr>
+<td class='ticker'>INTC</td>
+<td>Intel</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Grove OKR + High Output Management</td>
+<td class='right'>+18.18%</td>
+<td class='right'>+16.97%</td>
+<td class='right'>0.456</td>
+<td class='right neg'>-82.25%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>BLK</td>
+<td>BlackRock</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Aladdin metrics-driven</td>
+<td class='right'>+6.60%</td>
+<td class='right'>+14.15%</td>
+<td class='right'>0.636</td>
+<td class='right neg'>-60.36%</td>
+<td class='right small'>26.7y</td>
+</tr><tr>
+<td class='ticker'>HPQ</td>
+<td>HP</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Stack ranking legacy</td>
+<td class='right'>-1.01%</td>
+<td class='right'>+10.47%</td>
+<td class='right'>0.326</td>
+<td class='right neg'>-82.90%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>GE</td>
+<td>General Electric</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Welch Stack Ranking</td>
+<td class='right'>+35.34%</td>
+<td class='right'>+9.47%</td>
+<td class='right'>0.357</td>
+<td class='right neg'>-85.53%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>F</td>
+<td>Ford Motor</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>GE-style HPWS adoption</td>
+<td class='right'>+7.56%</td>
+<td class='right'>+7.18%</td>
+<td class='right'>0.264</td>
+<td class='right neg'>-95.49%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>WFC</td>
+<td>Wells Fargo</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>8-account cross-sell quota → 2016 fraud</td>
+<td class='right'>+12.92%</td>
+<td class='right'>+7.05%</td>
+<td class='right'>0.409</td>
+<td class='right neg'>-79.01%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>BA</td>
+<td>Boeing</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Stack ranking + 737 MAX 2019</td>
+<td class='right'>-2.20%</td>
+<td class='right'>+6.64%</td>
+<td class='right'>0.356</td>
+<td class='right neg'>-77.92%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>UBER</td>
+<td>Uber</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Kalanick toxic perf culture (pre-2017)</td>
+<td class='right'>+6.88%</td>
+<td class='right'>+5.46%</td>
+<td class='right'>0.349</td>
+<td class='right neg'>-68.05%</td>
+<td class='right small'>7.0y</td>
+</tr></tbody>
+  </table>
+</section>
+
+<section class='typo-section' id='T2_Culture'>
+  <h3>T2 文化型 (Culture-Driven)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>COST</td>
+<td>Costco</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Sinegal employee-first culture</td>
+<td class='right'>+22.28%</td>
+<td class='right'>+23.08%</td>
+<td class='right'>0.663</td>
+<td class='right neg'>-53.39%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>ETSY</td>
+<td>Etsy</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>B Corp + craft culture</td>
+<td class='right'>-17.48%</td>
+<td class='right'>+21.72%</td>
+<td class='right'>0.364</td>
+<td class='right neg'>-86.26%</td>
+<td class='right small'>11.1y</td>
+</tr><tr>
+<td class='ticker'>MAR</td>
+<td>Marriott</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Spirit to Serve culture</td>
+<td class='right'>+22.46%</td>
+<td class='right'>+20.35%</td>
+<td class='right'>0.451</td>
+<td class='right neg'>-75.59%</td>
+<td class='right small'>28.2y</td>
+</tr><tr>
+<td class='ticker'>WMT</td>
+<td>Walmart</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Sam Walton 10 rules + 3-meter rule</td>
+<td class='right'>+21.75%</td>
+<td class='right'>+19.56%</td>
+<td class='right'>0.536</td>
+<td class='right neg'>-37.50%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>RTX</td>
+<td>RTX (Raytheon)</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Engineering excellence culture</td>
+<td class='right'>+17.34%</td>
+<td class='right'>+13.37%</td>
+<td class='right'>0.538</td>
+<td class='right neg'>-52.67%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>HD</td>
+<td>Home Depot</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Inverted pyramid / customer culture</td>
+<td class='right'>+2.42%</td>
+<td class='right'>+11.67%</td>
+<td class='right'>0.494</td>
+<td class='right neg'>-70.42%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>MCD</td>
+<td>McDonald's</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Hamburger University Culture</td>
+<td class='right'>+6.03%</td>
+<td class='right'>+11.24%</td>
+<td class='right'>0.505</td>
+<td class='right neg'>-73.63%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>LMT</td>
+<td>Lockheed Martin</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Skunkworks culture</td>
+<td class='right'>+9.43%</td>
+<td class='right'>+11.09%</td>
+<td class='right'>0.519</td>
+<td class='right neg'>-70.23%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>EA</td>
+<td>Electronic Arts</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Crunch culture critique</td>
+<td class='right'>+7.61%</td>
+<td class='right'>+10.57%</td>
+<td class='right'>0.435</td>
+<td class='right neg'>-84.24%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>JNJ</td>
+<td>Johnson & Johnson</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Our Credo (Tylenol Crisis 1982)</td>
+<td class='right'>+9.54%</td>
+<td class='right'>+10.40%</td>
+<td class='right'>0.544</td>
+<td class='right neg'>-35.88%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>KO</td>
+<td>Coca-Cola</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Goizueta culture transformation</td>
+<td class='right'>+11.29%</td>
+<td class='right'>+9.57%</td>
+<td class='right'>0.381</td>
+<td class='right neg'>-54.96%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>PG</td>
+<td>Procter & Gamble</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>PVPs (Purpose Values Principles)</td>
+<td class='right'>+4.41%</td>
+<td class='right'>+9.05%</td>
+<td class='right'>0.440</td>
+<td class='right neg'>-54.23%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>SBUX</td>
+<td>Starbucks</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Schultz Third Place Culture</td>
+<td class='right'>+0.21%</td>
+<td class='right'>+8.65%</td>
+<td class='right'>0.559</td>
+<td class='right neg'>-81.91%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>PEP</td>
+<td>PepsiCo</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Performance with Purpose (Nooyi)</td>
+<td class='right'>+3.32%</td>
+<td class='right'>+6.97%</td>
+<td class='right'>0.419</td>
+<td class='right neg'>-40.41%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>UL</td>
+<td>Unilever</td>
+<td class='small'>UK / NYSE</td>
+<td class='small phil'>Sustainable Living Plan culture</td>
+<td class='right'>+0.62%</td>
+<td class='right'>+4.61%</td>
+<td class='right'>0.369</td>
+<td class='right neg'>-53.54%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>ZG</td>
+<td>Zillow</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Move Fast culture</td>
+<td class='right'>-20.79%</td>
+<td class='right'>+2.23%</td>
+<td class='right'>0.370</td>
+<td class='right neg'>-86.74%</td>
+<td class='right small'>14.9y</td>
+</tr><tr>
+<td class='ticker'>DIS</td>
+<td>Walt Disney</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Disney Way Culture</td>
+<td class='right'>-9.85%</td>
+<td class='right'>+1.20%</td>
+<td class='right'>0.302</td>
+<td class='right neg'>-67.88%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>NKE</td>
+<td>Nike</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Just Do It + Maxims culture</td>
+<td class='right'>-18.34%</td>
+<td class='right'>-0.69%</td>
+<td class='right'>0.414</td>
+<td class='right neg'>-74.64%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>RBLX</td>
+<td>Roblox</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Creator economy culture</td>
+<td class='right'>-14.08%</td>
+<td class='right'>-4.12%</td>
+<td class='right'>0.198</td>
+<td class='right neg'>-82.79%</td>
+<td class='right small'>5.2y</td>
+</tr><tr>
+<td class='ticker'>ATVI</td>
+<td>Activision Blizzard (acq MSFT)</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Toxic culture 2021 lawsuit</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr></tbody>
+  </table>
+</section>
+
+<section class='typo-section' id='T3_Learning'>
+  <h3>T3 学習型 (Learning Organization)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>NVDA</td>
+<td>NVIDIA</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Huang flat learning organization</td>
+<td class='right'>+68.94%</td>
+<td class='right'>+68.88%</td>
+<td class='right'>0.786</td>
+<td class='right neg'>-89.72%</td>
+<td class='right small'>27.3y</td>
+</tr><tr>
+<td class='ticker'>AMD</td>
+<td>AMD</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Su turnaround + learning</td>
+<td class='right'>+44.59%</td>
+<td class='right'>+59.67%</td>
+<td class='right'>0.457</td>
+<td class='right neg'>-96.59%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>CAT</td>
+<td>Caterpillar</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>CPS Caterpillar Production System</td>
+<td class='right'>+32.76%</td>
+<td class='right'>+31.84%</td>
+<td class='right'>0.572</td>
+<td class='right neg'>-73.43%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>DE</td>
+<td>Deere & Company</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Continuous improvement legacy</td>
+<td class='right'>+9.31%</td>
+<td class='right'>+22.69%</td>
+<td class='right'>0.524</td>
+<td class='right neg'>-73.27%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>DHR</td>
+<td>Danaher</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>DBS Danaher Business System (Lean)</td>
+<td class='right'>-4.77%</td>
+<td class='right'>+15.60%</td>
+<td class='right'>0.601</td>
+<td class='right neg'>-45.81%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>7203.T</td>
+<td>Toyota Motor (Tokyo)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>Toyota Way + TPS</td>
+<td class='right'>+13.82%</td>
+<td class='right'>+13.69%</td>
+<td class='right'>0.319</td>
+<td class='right neg'>-68.74%</td>
+<td class='right small'>27.1y</td>
+</tr><tr>
+<td class='ticker'>NOK</td>
+<td>Nokia</td>
+<td class='small'>FI / NYSE</td>
+<td class='small phil'>Learning failure case (2007-)</td>
+<td class='right'>+28.05%</td>
+<td class='right'>+13.67%</td>
+<td class='right'>0.364</td>
+<td class='right neg'>-96.01%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>RTX_LEARN</td>
+<td>Pratt & Whitney</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>ACE Operating System</td>
+<td class='right'>+17.34%</td>
+<td class='right'>+13.37%</td>
+<td class='right'>0.538</td>
+<td class='right neg'>-52.67%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>EMR</td>
+<td>Emerson Electric</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Operating discipline</td>
+<td class='right'>+10.11%</td>
+<td class='right'>+13.14%</td>
+<td class='right'>0.394</td>
+<td class='right neg'>-56.11%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>INTU</td>
+<td>Intuit</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Smaller bets + design thinking</td>
+<td class='right'>-5.94%</td>
+<td class='right'>+11.91%</td>
+<td class='right'>0.462</td>
+<td class='right neg'>-75.29%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>ITW</td>
+<td>Illinois Tool Works</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>80/20 decentralized learning</td>
+<td class='right'>+4.04%</td>
+<td class='right'>+11.64%</td>
+<td class='right'>0.493</td>
+<td class='right neg'>-54.90%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>BBY</td>
+<td>Best Buy</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Renew Blue learning recovery</td>
+<td class='right'>-7.36%</td>
+<td class='right'>+11.15%</td>
+<td class='right'>0.425</td>
+<td class='right neg'>-78.24%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>LMT_LEARN</td>
+<td>Lockheed Skunkworks</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Kelly Johnson Skunkworks 14 rules</td>
+<td class='right'>+9.43%</td>
+<td class='right'>+11.09%</td>
+<td class='right'>0.519</td>
+<td class='right neg'>-70.23%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>HON</td>
+<td>Honeywell</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Six Sigma + Operating System</td>
+<td class='right'>+3.34%</td>
+<td class='right'>+10.74%</td>
+<td class='right'>0.428</td>
+<td class='right neg'>-70.09%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>TM</td>
+<td>Toyota Motor</td>
+<td class='small'>JP / NYSE</td>
+<td class='small phil'>TPS + Genchi Genbutsu + Kaizen</td>
+<td class='right'>+5.10%</td>
+<td class='right'>+9.29%</td>
+<td class='right'>0.288</td>
+<td class='right neg'>-60.34%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>ADBE</td>
+<td>Adobe</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Kickbox innovation + learning culture</td>
+<td class='right'>-13.72%</td>
+<td class='right'>+9.05%</td>
+<td class='right'>0.468</td>
+<td class='right neg'>-79.89%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>BA_LEARN</td>
+<td>Boeing (Lean adoption)</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Lean adoption mixed results</td>
+<td class='right'>-2.20%</td>
+<td class='right'>+6.64%</td>
+<td class='right'>0.356</td>
+<td class='right neg'>-77.92%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>MMM</td>
+<td>3M</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>15% time + Skunkworks</td>
+<td class='right'>+1.76%</td>
+<td class='right'>+4.29%</td>
+<td class='right'>0.385</td>
+<td class='right neg'>-59.10%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>KODK</td>
+<td>Eastman Kodak</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Digital pivot failure</td>
+<td class='right'>+6.59%</td>
+<td class='right'>-2.19%</td>
+<td class='right'>0.315</td>
+<td class='right neg'>-95.83%</td>
+<td class='right small'>12.7y</td>
+</tr><tr>
+<td class='ticker'>PIXR_via_DIS</td>
+<td>Pixar (subsidiary)</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Braintrust learning culture</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr></tbody>
+  </table>
+</section>
+
+<section class='typo-section' id='T4_Relational'>
+  <h3>T4 関係型 (Relational/Trust-Based)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>SHOP</td>
+<td>Shopify</td>
+<td class='small'>CA / NYSE</td>
+<td class='small phil'>Trust battery + autonomy</td>
+<td class='right'>-2.99%</td>
+<td class='right'>+43.61%</td>
+<td class='right'>0.874</td>
+<td class='right neg'>-84.82%</td>
+<td class='right small'>11.0y</td>
+</tr><tr>
+<td class='ticker'>LLY</td>
+<td>Eli Lilly</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Failure Party culture</td>
+<td class='right'>+41.63%</td>
+<td class='right'>+32.73%</td>
+<td class='right'>0.608</td>
+<td class='right neg'>-68.26%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>GOOGL</td>
+<td>Alphabet (Google)</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Project Aristotle + 20% time + PS</td>
+<td class='right'>+27.11%</td>
+<td class='right'>+26.49%</td>
+<td class='right'>0.829</td>
+<td class='right neg'>-65.29%</td>
+<td class='right small'>21.8y</td>
+</tr><tr>
+<td class='ticker'>NOW</td>
+<td>ServiceNow</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>People-first + PS culture</td>
+<td class='right'>+1.28%</td>
+<td class='right'>+21.86%</td>
+<td class='right'>0.676</td>
+<td class='right neg'>-64.54%</td>
+<td class='right small'>13.9y</td>
+</tr><tr>
+<td class='ticker'>AXP</td>
+<td>American Express</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Service relational culture</td>
+<td class='right'>+15.76%</td>
+<td class='right'>+18.56%</td>
+<td class='right'>0.469</td>
+<td class='right neg'>-83.91%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>MA</td>
+<td>Mastercard</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Decency Quotient (Banga)</td>
+<td class='right'>+7.08%</td>
+<td class='right'>+18.38%</td>
+<td class='right'>0.823</td>
+<td class='right neg'>-62.67%</td>
+<td class='right small'>20.0y</td>
+</tr><tr>
+<td class='ticker'>ABBV</td>
+<td>AbbVie</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Patient-first relational</td>
+<td class='right'>+18.26%</td>
+<td class='right'>+17.89%</td>
+<td class='right'>0.706</td>
+<td class='right neg'>-45.09%</td>
+<td class='right small'>13.4y</td>
+</tr><tr>
+<td class='ticker'>V</td>
+<td>Visa</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Network trust</td>
+<td class='right'>+8.43%</td>
+<td class='right'>+16.00%</td>
+<td class='right'>0.688</td>
+<td class='right neg'>-51.90%</td>
+<td class='right small'>18.2y</td>
+</tr><tr>
+<td class='ticker'>UNH</td>
+<td>UnitedHealth</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Optum team-based care</td>
+<td class='right'>+0.27%</td>
+<td class='right'>+12.94%</td>
+<td class='right'>0.521</td>
+<td class='right neg'>-74.40%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>MRK</td>
+<td>Merck</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Science-first culture</td>
+<td class='right'>+14.20%</td>
+<td class='right'>+11.74%</td>
+<td class='right'>0.391</td>
+<td class='right neg'>-68.62%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>CRM</td>
+<td>Salesforce</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Ohana + Benioff servant leadership</td>
+<td class='right'>-4.42%</td>
+<td class='right'>+7.96%</td>
+<td class='right'>0.558</td>
+<td class='right neg'>-70.50%</td>
+<td class='right small'>21.9y</td>
+</tr><tr>
+<td class='ticker'>DAL</td>
+<td>Delta Air Lines</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Bastian relational + people-first</td>
+<td class='right'>+11.96%</td>
+<td class='right'>+7.92%</td>
+<td class='right'>0.363</td>
+<td class='right neg'>-81.73%</td>
+<td class='right small'>19.1y</td>
+</tr><tr>
+<td class='ticker'>WDAY</td>
+<td>Workday</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Trust-based culture (Duffield-Bhusri)</td>
+<td class='right'>-11.50%</td>
+<td class='right'>+5.06%</td>
+<td class='right'>0.308</td>
+<td class='right neg'>-63.38%</td>
+<td class='right small'>13.6y</td>
+</tr><tr>
+<td class='ticker'>CVS</td>
+<td>CVS Health</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Caring culture</td>
+<td class='right'>+4.69%</td>
+<td class='right'>+2.59%</td>
+<td class='right'>0.400</td>
+<td class='right neg'>-64.07%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>PFE</td>
+<td>Pfizer</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Bourla courage + trust</td>
+<td class='right'>-2.61%</td>
+<td class='right'>+2.22%</td>
+<td class='right'>0.343</td>
+<td class='right neg'>-69.25%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>LUV</td>
+<td>Southwest Airlines</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Kelleher servant + LUV culture</td>
+<td class='right'>-5.25%</td>
+<td class='right'>+1.53%</td>
+<td class='right'>0.351</td>
+<td class='right neg'>-78.23%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>ATVI_REL</td>
+<td>Activision (toxic)</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Silenced voice case</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>FTX_REL</td>
+<td>FTX (failed)</td>
+<td class='small'>BS / delisted</td>
+<td class='small phil'>SBF lack of internal controls / PS</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>THERANOS_REL</td>
+<td>Theranos (failed)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Silence culture / Holmes</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>WBA</td>
+<td>Walgreens Boots</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Pharmacy team trust</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr></tbody>
+  </table>
+</section>
+
+<section class='typo-section' id='T5_Ethical'>
+  <h3>T5 倫理型 (Stakeholder/Conscious)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>RACE</td>
+<td>Ferrari</td>
+<td class='small'>IT / NYSE</td>
+<td class='small phil'>Long-term ethics + brand</td>
+<td class='right'>+10.55%</td>
+<td class='right'>+23.97%</td>
+<td class='right'>0.659</td>
+<td class='right neg'>-43.61%</td>
+<td class='right small'>10.6y</td>
+</tr><tr>
+<td class='ticker'>ETSY_ETH</td>
+<td>Etsy</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>B Corp (2012-2017) + relisted</td>
+<td class='right'>-17.48%</td>
+<td class='right'>+21.72%</td>
+<td class='right'>0.364</td>
+<td class='right neg'>-86.26%</td>
+<td class='right small'>11.1y</td>
+</tr><tr>
+<td class='ticker'>INTC_ETH</td>
+<td>Intel (ESG)</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Climate Transition Plan 2040</td>
+<td class='right'>+18.18%</td>
+<td class='right'>+16.97%</td>
+<td class='right'>0.456</td>
+<td class='right neg'>-82.25%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>CMG</td>
+<td>Chipotle</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Food with Integrity</td>
+<td class='right'>+3.66%</td>
+<td class='right'>+13.88%</td>
+<td class='right'>0.591</td>
+<td class='right neg'>-74.61%</td>
+<td class='right small'>20.3y</td>
+</tr><tr>
+<td class='ticker'>CVX</td>
+<td>Chevron</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>ESG transition (limited)</td>
+<td class='right'>+16.80%</td>
+<td class='right'>+10.57%</td>
+<td class='right'>0.427</td>
+<td class='right neg'>-55.77%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>HSY</td>
+<td>Hershey</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Cocoa for Good</td>
+<td class='right'>+5.22%</td>
+<td class='right'>+10.50%</td>
+<td class='right'>0.483</td>
+<td class='right neg'>-49.15%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>XOM</td>
+<td>ExxonMobil</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>ESG critique target</td>
+<td class='right'>+24.87%</td>
+<td class='right'>+9.75%</td>
+<td class='right'>0.435</td>
+<td class='right neg'>-62.40%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>BP</td>
+<td>BP</td>
+<td class='small'>UK / NYSE</td>
+<td class='small phil'>Deepwater Horizon 2010 / Beyond Petroleum</td>
+<td class='right'>+15.26%</td>
+<td class='right'>+8.58%</td>
+<td class='right'>0.297</td>
+<td class='right neg'>-63.91%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>ELLI</td>
+<td>Lululemon</td>
+<td class='small'>CA / NASDAQ</td>
+<td class='small phil'>Whole Person mission</td>
+<td class='right'>-16.77%</td>
+<td class='right'>+7.31%</td>
+<td class='right'>0.439</td>
+<td class='right neg'>-92.26%</td>
+<td class='right small'>18.8y</td>
+</tr><tr>
+<td class='ticker'>MDLZ</td>
+<td>Mondelez</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Cocoa Life</td>
+<td class='right'>+2.27%</td>
+<td class='right'>+5.78%</td>
+<td class='right'>0.314</td>
+<td class='right neg'>-42.52%</td>
+<td class='right small'>25.0y</td>
+</tr><tr>
+<td class='ticker'>DIS_ETH</td>
+<td>Disney (ESG)</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Workforce inclusion</td>
+<td class='right'>-9.85%</td>
+<td class='right'>+1.20%</td>
+<td class='right'>0.302</td>
+<td class='right neg'>-67.88%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>DNUT</td>
+<td>Krispy Kreme (sustainable sourcing)</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Sustainable cocoa</td>
+<td class='right'>-29.84%</td>
+<td class='right'>-16.24%</td>
+<td class='right'>-0.384</td>
+<td class='right neg'>-87.18%</td>
+<td class='right small'>4.9y</td>
+</tr><tr>
+<td class='ticker'>PATAG_PVT</td>
+<td>Patagonia (private)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Earth Trust 2022 / 1% Planet</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>BEN</td>
+<td>Ben & Jerry's (Unilever sub)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>B Corp / triple bottom line</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>WBA_ETH</td>
+<td>Whole Foods (Amazon sub)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Mackey Conscious Capitalism</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>NSRGY</td>
+<td>Nestlé</td>
+<td class='small'>CH / OTC</td>
+<td class='small phil'>Creating Shared Value (Porter-Kramer)</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>VLVLY</td>
+<td>Volvo Cars</td>
+<td class='small'>SE / OTC</td>
+<td class='small phil'>Climate-neutral 2040 + Embedded</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>BURBY</td>
+<td>Burberry</td>
+<td class='small'>UK / OTC</td>
+<td class='small phil'>Sustainable luxury</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>VW</td>
+<td>Volkswagen</td>
+<td class='small'>DE / OTC</td>
+<td class='small phil'>Dieselgate 2015 reversal</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>BAYRY</td>
+<td>Bayer</td>
+<td class='small'>DE / OTC</td>
+<td class='small phil'>Monsanto acquisition + Roundup</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr></tbody>
+  </table>
+</section>
+
+<section class='typo-section' id='T6_Evolutionary'>
+  <h3>T6 進化型 (Teal/Self-Management)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>HUBS</td>
+<td>HubSpot</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Culture Code (Halligan-Shah)</td>
+<td class='right'>-16.64%</td>
+<td class='right'>+15.69%</td>
+<td class='right'>0.527</td>
+<td class='right neg'>-78.99%</td>
+<td class='right small'>11.6y</td>
+</tr><tr>
+<td class='ticker'>OKTA</td>
+<td>Okta</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Trust + agility</td>
+<td class='right'>-16.64%</td>
+<td class='right'>+14.30%</td>
+<td class='right'>0.497</td>
+<td class='right neg'>-84.57%</td>
+<td class='right small'>9.1y</td>
+</tr><tr>
+<td class='ticker'>SPOT</td>
+<td>Spotify</td>
+<td class='small'>SE / NYSE</td>
+<td class='small phil'>Squad model (Kniberg)</td>
+<td class='right'>+16.37%</td>
+<td class='right'>+13.16%</td>
+<td class='right'>0.505</td>
+<td class='right neg'>-80.51%</td>
+<td class='right small'>8.1y</td>
+</tr><tr>
+<td class='ticker'>ZM</td>
+<td>Zoom</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Delivers Happiness culture (Yuan)</td>
+<td class='right'>-21.08%</td>
+<td class='right'>+4.89%</td>
+<td class='right'>0.345</td>
+<td class='right neg'>-90.27%</td>
+<td class='right small'>7.1y</td>
+</tr><tr>
+<td class='ticker'>DOCU</td>
+<td>DocuSign</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>OneSpirit + autonomy</td>
+<td class='right'>-24.65%</td>
+<td class='right'>+2.00%</td>
+<td class='right'>0.289</td>
+<td class='right neg'>-87.57%</td>
+<td class='right small'>8.1y</td>
+</tr><tr>
+<td class='ticker'>DBX</td>
+<td>Dropbox</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Virtual First</td>
+<td class='right'>-1.33%</td>
+<td class='right'>-0.92%</td>
+<td class='right'>0.102</td>
+<td class='right neg'>-62.64%</td>
+<td class='right small'>8.2y</td>
+</tr><tr>
+<td class='ticker'>ASAN</td>
+<td>Asana</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Conscious Leadership (Moskovitz)</td>
+<td class='right'>-29.51%</td>
+<td class='right'>-13.95%</td>
+<td class='right'>-0.000</td>
+<td class='right neg'>-96.17%</td>
+<td class='right small'>5.7y</td>
+</tr><tr>
+<td class='ticker'>BUUR_PVT</td>
+<td>Buurtzorg (private)</td>
+<td class='small'>NL / private</td>
+<td class='small phil'>Nurse-led self-management</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>MORN_PVT</td>
+<td>Morning Star (private)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>CLOU self-management</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>FAVI_PVT</td>
+<td>FAVI (private)</td>
+<td class='small'>FR / private</td>
+<td class='small phil'>Mini-factory autonomy</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>ZAPP_PVT</td>
+<td>Zappos (Amazon sub)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Holacracy 2015 → 14% exit</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>MEDIUM_PVT</td>
+<td>Medium</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Holacracy retracted 2016</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>VALV_PVT</td>
+<td>Valve Corporation</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Flat hierarchy + cabal system</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>GORE_PVT</td>
+<td>W L Gore (private)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Lattice + sponsor model</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>HAIE</td>
+<td>Haier Group (HKEX)</td>
+<td class='small'>CN / HKEX</td>
+<td class='small phil'>Rendanheyi 人単合一</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>6505.SE_PVT</td>
+<td>Semco (Brazil)</td>
+<td class='small'>BR / private</td>
+<td class='small phil'>Semler Maverick 1993</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>BCO_PVT</td>
+<td>Basecamp</td>
+<td class='small'>US / private</td>
+<td class='small phil'>REWORK / 4-day week</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>AUTM_PVT</td>
+<td>Automattic (Wordpress)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Distributed first culture</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>GITLAB</td>
+<td>GitLab</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>All-remote + handbook-first</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>WORK_PVT</td>
+<td>Slack (Salesforce)</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Asynchronous collab</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr></tbody>
+  </table>
+</section>
+
+<section class='typo-section' id='T7_Indigenous'>
+  <h3>T7 在来型 (Indigenous/Non-Western)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>MELI</td>
+<td>MercadoLibre</td>
+<td class='small'>AR / NASDAQ</td>
+<td class='small phil'>Sistema B Latin America</td>
+<td class='right'>+4.59%</td>
+<td class='right'>+28.86%</td>
+<td class='right'>0.626</td>
+<td class='right neg'>-89.49%</td>
+<td class='right small'>18.8y</td>
+</tr><tr>
+<td class='ticker'>6501.T</td>
+<td>Hitachi (日立)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>和魂 + 三方よし系</td>
+<td class='right'>+36.93%</td>
+<td class='right'>+28.71%</td>
+<td class='right'>0.269</td>
+<td class='right neg'>-84.87%</td>
+<td class='right small'>26.4y</td>
+</tr><tr>
+<td class='ticker'>6361.T</td>
+<td>Ebara (荏原)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>畠山一清 創業精神</td>
+<td class='right'>+42.19%</td>
+<td class='right'>+28.56%</td>
+<td class='right'>0.333</td>
+<td class='right neg'>-89.94%</td>
+<td class='right small'>26.4y</td>
+</tr><tr>
+<td class='ticker'>9983.T</td>
+<td>Fast Retailing (ユニクロ)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>柳井 経営者になるための条件 23</td>
+<td class='right'>+22.34%</td>
+<td class='right'>+24.22%</td>
+<td class='right'>0.461</td>
+<td class='right neg'>-85.39%</td>
+<td class='right small'>26.4y</td>
+</tr><tr>
+<td class='ticker'>0992.HK</td>
+<td>Lenovo</td>
+<td class='small'>CN / HKEX</td>
+<td class='small phil'>Liu Chuanzhi 入模子文化</td>
+<td class='right'>+21.17%</td>
+<td class='right'>+21.09%</td>
+<td class='right'>0.276</td>
+<td class='right neg'>-88.73%</td>
+<td class='right small'>26.2y</td>
+</tr><tr>
+<td class='ticker'>6758.T</td>
+<td>Sony Group</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>井深-盛田 自由闊達なる理想工場</td>
+<td class='right'>+10.18%</td>
+<td class='right'>+19.54%</td>
+<td class='right'>0.146</td>
+<td class='right neg'>-94.63%</td>
+<td class='right small'>26.4y</td>
+</tr><tr>
+<td class='ticker'>6752.T</td>
+<td>Panasonic (松下)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>松下幸之助 水道哲学</td>
+<td class='right'>+26.11%</td>
+<td class='right'>+16.33%</td>
+<td class='right'>0.164</td>
+<td class='right neg'>-86.43%</td>
+<td class='right small'>26.4y</td>
+</tr><tr>
+<td class='ticker'>RY</td>
+<td>Royal Bank of Canada</td>
+<td class='small'>CA / NYSE</td>
+<td class='small phil'>Indigenous reconciliation (Truth & Reconciliation)</td>
+<td class='right'>+16.44%</td>
+<td class='right'>+15.88%</td>
+<td class='right'>0.647</td>
+<td class='right neg'>-63.05%</td>
+<td class='right small'>30.6y</td>
+</tr><tr>
+<td class='ticker'>7203_T7.T</td>
+<td>Toyota Motor (Toyota Way 5)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>豊田 5 大主義 + TPS</td>
+<td class='right'>+13.82%</td>
+<td class='right'>+13.69%</td>
+<td class='right'>0.319</td>
+<td class='right neg'>-68.74%</td>
+<td class='right small'>27.1y</td>
+</tr><tr>
+<td class='ticker'>6971.T</td>
+<td>Kyocera (京セラ)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>稲盛 京セラフィロソフィ + アメーバ経営</td>
+<td class='right'>+17.08%</td>
+<td class='right'>+11.70%</td>
+<td class='right'>0.145</td>
+<td class='right neg'>-80.85%</td>
+<td class='right small'>26.4y</td>
+</tr><tr>
+<td class='ticker'>TCS.NS</td>
+<td>Tata Consultancy</td>
+<td class='small'>IN / NSE</td>
+<td class='small phil'>Tata values</td>
+<td class='right'>-3.79%</td>
+<td class='right'>+8.57%</td>
+<td class='right'>0.483</td>
+<td class='right neg'>-65.13%</td>
+<td class='right small'>23.8y</td>
+</tr><tr>
+<td class='ticker'>7259.T</td>
+<td>Aisin (アイシン)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>Toyota系 改善文化</td>
+<td class='right'>+11.63%</td>
+<td class='right'>+8.00%</td>
+<td class='right'>0.341</td>
+<td class='right neg'>-77.81%</td>
+<td class='right small'>25.4y</td>
+</tr><tr>
+<td class='ticker'>INFY</td>
+<td>Infosys</td>
+<td class='small'>IN / NYSE</td>
+<td class='small phil'>Narayana Murthy compassionate capitalism</td>
+<td class='right'>-6.18%</td>
+<td class='right'>+5.23%</td>
+<td class='right'>0.440</td>
+<td class='right neg'>-90.41%</td>
+<td class='right small'>27.2y</td>
+</tr><tr>
+<td class='ticker'>BABA</td>
+<td>Alibaba</td>
+<td class='small'>CN / NYSE</td>
+<td class='small phil'>Jack Ma 102年企業 + 中華管理思想</td>
+<td class='right'>-8.76%</td>
+<td class='right'>+5.21%</td>
+<td class='right'>0.221</td>
+<td class='right neg'>-80.09%</td>
+<td class='right small'>11.7y</td>
+</tr><tr>
+<td class='ticker'>8113.T</td>
+<td>Unicharm</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>共振の経営</td>
+<td class='right'>-7.18%</td>
+<td class='right'>+3.77%</td>
+<td class='right'>0.290</td>
+<td class='right neg'>-53.97%</td>
+<td class='right small'>25.4y</td>
+</tr><tr>
+<td class='ticker'>WIT</td>
+<td>Wipro</td>
+<td class='small'>IN / NYSE</td>
+<td class='small phil'>Premji ethical capitalism</td>
+<td class='right'>-11.39%</td>
+<td class='right'>-3.23%</td>
+<td class='right'>0.220</td>
+<td class='right neg'>-74.88%</td>
+<td class='right small'>25.6y</td>
+</tr><tr>
+<td class='ticker'>6502.T</td>
+<td>Toshiba (東芝)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>在来 + 不正会計 (反例)</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>TATAMOTORS.NS</td>
+<td>Tata Motors</td>
+<td class='small'>IN / NSE</td>
+<td class='small phil'>Tata Trust Trusteeship 1892</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>BNDSY</td>
+<td>Banco do Brasil</td>
+<td class='small'>BR / OTC</td>
+<td class='small phil'>Cooperative roots</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>HUAWEI_PVT</td>
+<td>Huawei (private)</td>
+<td class='small'>CN / private</td>
+<td class='small phil'>任正非 狼性文化 + 灰度</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr></tbody>
+  </table>
+</section>
+
+<section class='typo-section' id='T8_Critical'>
+  <h3>T8 批判応答型 (Critical-Responsive)</h3>
+  <table class='company-table'>
+    <thead><tr>
+      <th>Ticker</th><th>Name</th><th>地域/市場</th><th>哲学アンカー</th>
+      <th class='right'>CAGR 5y</th><th class='right'>CAGR 10y</th>
+      <th class='right'>Sharpe</th><th class='right'>Max DD</th><th class='right'>Years</th>
+    </tr></thead>
+    <tbody><tr>
+<td class='ticker'>6098.T</td>
+<td>Recruit Holdings</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>Ribbon model + 個の尊重</td>
+<td class='right'>+12.92%</td>
+<td class='right'>+24.10%</td>
+<td class='right'>0.668</td>
+<td class='right neg'>-58.06%</td>
+<td class='right small'>11.6y</td>
+</tr><tr>
+<td class='ticker'>RECRUIT.T</td>
+<td>Recruit Holdings (6098.T)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>電通比較 / 圧倒的当事者意識</td>
+<td class='right'>+12.92%</td>
+<td class='right'>+24.10%</td>
+<td class='right'>0.668</td>
+<td class='right neg'>-58.06%</td>
+<td class='right small'>11.6y</td>
+</tr><tr>
+<td class='ticker'>MAH.NS</td>
+<td>Mahindra & Mahindra</td>
+<td class='small'>IN / NSE</td>
+<td class='small phil'>Rise philosophy 批判応答</td>
+<td class='right'>+31.61%</td>
+<td class='right'>+17.76%</td>
+<td class='right'>0.510</td>
+<td class='right neg'>-93.71%</td>
+<td class='right small'>30.4y</td>
+</tr><tr>
+<td class='ticker'>FOXCONN.SS</td>
+<td>Foxconn (2354.TW)</td>
+<td class='small'>TW / TWSE</td>
+<td class='small phil'>iPhone 自殺事件 2010 → 改善</td>
+<td class='right'>+23.55%</td>
+<td class='right'>+15.87%</td>
+<td class='right'>0.526</td>
+<td class='right neg'>-75.01%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>UBER_CRIT</td>
+<td>Uber (post-2017 cleanup)</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>Khosrowshahi 文化再構築</td>
+<td class='right'>+6.88%</td>
+<td class='right'>+5.46%</td>
+<td class='right'>0.349</td>
+<td class='right neg'>-68.05%</td>
+<td class='right small'>7.0y</td>
+</tr><tr>
+<td class='ticker'>MERR</td>
+<td>Merrell (Wolverine)</td>
+<td class='small'>US / NYSE</td>
+<td class='small phil'>B Corp + 批判応答</td>
+<td class='right'>-11.34%</td>
+<td class='right'>+1.78%</td>
+<td class='right'>0.337</td>
+<td class='right neg'>-82.56%</td>
+<td class='right small'>31.4y</td>
+</tr><tr>
+<td class='ticker'>2354.TW</td>
+<td>Hon Hai (Foxconn)</td>
+<td class='small'>TW / TWSE</td>
+<td class='small phil'>Suicides 2010 + 改善応答</td>
+<td class='right'>+0.71%</td>
+<td class='right'>+1.33%</td>
+<td class='right'>0.285</td>
+<td class='right neg'>-83.04%</td>
+<td class='right small'>26.4y</td>
+</tr><tr>
+<td class='ticker'>ABNB</td>
+<td>Airbnb</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Live Anywhere + 批判応答 (regulators)</td>
+<td class='right'>-1.60%</td>
+<td class='right'>-0.91%</td>
+<td class='right'>0.139</td>
+<td class='right neg'>-61.96%</td>
+<td class='right small'>5.5y</td>
+</tr><tr>
+<td class='ticker'>DENTSU.T_PVT</td>
+<td>Dentsu (4324.T)</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>電通 過労死 2015 → 働き方改革</td>
+<td class='right'>-1.82%</td>
+<td class='right'>-3.41%</td>
+<td class='right'>0.180</td>
+<td class='right neg'>-71.36%</td>
+<td class='right small'>24.5y</td>
+</tr><tr>
+<td class='ticker'>4324.T</td>
+<td>Dentsu Group</td>
+<td class='small'>JP / TSE</td>
+<td class='small phil'>電通鬼十則 → 過労死応答</td>
+<td class='right'>-1.82%</td>
+<td class='right'>-3.41%</td>
+<td class='right'>0.180</td>
+<td class='right neg'>-71.36%</td>
+<td class='right small'>24.5y</td>
+</tr><tr>
+<td class='ticker'>ATL</td>
+<td>Atlassian</td>
+<td class='small'>AU / NASDAQ</td>
+<td class='small phil'>Team Anywhere + anti-burnout</td>
+<td class='right'>-3.83%</td>
+<td class='right'>-6.17%</td>
+<td class='right'>1.400</td>
+<td class='right neg'>-98.64%</td>
+<td class='right small'>9.7y</td>
+</tr><tr>
+<td class='ticker'>MNDY</td>
+<td>Monday.com</td>
+<td class='small'>IL / NASDAQ</td>
+<td class='small phil'>Anti-burnout work model</td>
+<td class='right'>-15.64%</td>
+<td class='right'>-8.15%</td>
+<td class='right'>0.087</td>
+<td class='right neg'>-86.78%</td>
+<td class='right small'>5.0y</td>
+</tr><tr>
+<td class='ticker'>LYFT</td>
+<td>Lyft</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Driver-first 反 Uber 批判応答</td>
+<td class='right'>-24.40%</td>
+<td class='right'>-16.00%</td>
+<td class='right'>-0.051</td>
+<td class='right neg'>-89.79%</td>
+<td class='right small'>7.2y</td>
+</tr><tr>
+<td class='ticker'>BMBL</td>
+<td>Bumble</td>
+<td class='small'>US / NASDAQ</td>
+<td class='small phil'>Wolfe Herd 女性主導 反 toxic 批判応答</td>
+<td class='right'>-41.46%</td>
+<td class='right'>-26.67%</td>
+<td class='right'>-0.535</td>
+<td class='right neg'>-96.58%</td>
+<td class='right small'>5.3y</td>
+</tr><tr>
+<td class='ticker'>BUMBLE_PVT</td>
+<td>Bumble culture</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Anti-harassment culture</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>REIT_PVT</td>
+<td>REI Co-op</td>
+<td class='small'>US / private</td>
+<td class='small phil'>Cooperative model 批判応答</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>PARTAGENA</td>
+<td>Partage (社会企業)</td>
+<td class='small'>FR / private</td>
+<td class='small phil'>Social cooperative</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>YINDIA</td>
+<td>Yindia (B Corp India)</td>
+<td class='small'>IN / private</td>
+<td class='small phil'>BoP critique response</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>GRMN_BUR</td>
+<td>Volkswagen (post-Dieselgate)</td>
+<td class='small'>DE / OTC</td>
+<td class='small phil'>Dieselgate 批判応答</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr><tr>
+<td class='ticker'>PSS_PVT</td>
+<td>Patagonia Worldwide Stewardship</td>
+<td class='small'>US / private</td>
+<td class='small phil'>1% Planet + 批判応答</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right'>—</td>
+<td class='right neg'>—</td>
+<td class='right small'>—</td>
+</tr></tbody>
+  </table>
+</section>
+
+
+    <section id="npo">
+      <h2 style="font-family:var(--font-serif);font-size:20px;border-bottom:2px solid var(--accent-warm);padding-bottom:8px">★ NPO 法人ミラツク中立性原則</h2>
+      <div class="npo-note">
+        <p>本 DB は <strong>「typology 間で財務成果に統計的有意差が観測されなければ、組織モデル間の経済的優劣は文脈依存的である」</strong> を反証可能性条件とする。Popper 基準を満たし、経営学言説の「良い組織は良い業績を生む」というナイーブな主張に対する経験的検証層として機能する。</p>
+        <p>特に Type 7 (在来型) と Type 8 (批判応答型) の財務成果は西洋実証主義の枠組み (CAGR / Sharpe ratio) では充分に捉えきれないため、「測定可能な良さ」と「測定困難な良さ」の二項対立を超える次の分析フレームへの呼びかけでもある。</p>
+        <p>意思決定者 (経営者 / 投資家 / 研究者 / コンサルタント) は本 DB を <strong>「自社の文脈に応じて選択 / 組み合わせる地図」</strong> として活用されたい。単一の最適解は存在しないことを GOE-DB GTA と本 PERF DB は経験的に支持する。</p>
+      </div>
+    </section>
+
+    <div class="footer">
+      <p><strong>GOE-PERF</strong> — 8 typology 企業成績比較 DB / GOE-DB Empirical Verification Layer</p>
+      <p>Data Sources: yfinance (Yahoo Finance) / EDGAR / EDINET / Macro-Economy-DB (risk-free rate)</p>
+      <p>関連: <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/goe.html">goe.html</a> /
+         <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/goe-typology-report.html">8 類型レポート</a> /
+         <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/goe-gta-report.html">GTA</a></p>
+      <p>NPO 法人ミラツク / esse-sense — 学術知の ConceptNet</p>
+    </div>
+  </main>
+</div>
+<script>
+function toggleTheme(){const c=document.documentElement.getAttribute("data-theme")||"light";const n=c==="light"?"dark":"light";document.documentElement.setAttribute("data-theme",n);localStorage.setItem("goe-perf-theme",n);}
+const s=localStorage.getItem("goe-perf-theme");if(s)document.documentElement.setAttribute("data-theme",s);
+</script>
+</body></html>
