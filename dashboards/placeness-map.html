@@ -4,162 +4,341 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>場所性マップ — 神社地点に織り込まれた土地の物語 | PLN-DB</title>
+<meta name="description" content="日本の神社28,801地点を空間アンカーに、土地に織り込まれた物語（いわれ・文化・食・植生・歴史・地理）を可視化する場所性マップ。">
 <link rel="icon" href="https://esse-sense.com/favicon.ico">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital@1&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#FFFFFF; --surface:#F7F7F5; --ink:#121212; --ink2:#555; --ink3:#8A8A8A;
-  --accent:#CC1400; --accent2:#B01200; --border:#D9D9D9; --border2:#EEE;
-  --sacred:#CC1400; --genius:#E08000; --fudo:#9AA0A6;
-  --font:"Noto Sans JP",sans-serif; --serif:"Noto Serif JP",serif; --mono:"Fira Code",monospace;
+  --bg:#FFFFFF;--surface:#F7F6F3;--surface2:#FBFAF8;--ink:#141414;--ink2:#5A5550;--ink3:#9A938C;
+  --accent:#CC1400;--accent2:#A40F00;--accent-mute:rgba(204,20,0,.07);--border:#E2DED8;--border2:#EFECE7;
+  --sacred:#CC1400;--genius:#D97A00;--fudo:#A7ABB0;
+  --font:"Noto Sans JP",sans-serif;--serif:"Noto Serif JP",serif;--mono:"Fira Code",monospace;--ital:"Cormorant Garamond",serif;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 6px 24px rgba(0,0,0,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);color:var(--ink);background:var(--bg);font-feature-settings:"palt";line-height:1.7}
-.topbar{height:52px;border-top:3px solid var(--accent);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 20px;gap:14px;position:sticky;top:0;background:#fff;z-index:1000}
-.topbar .brand{font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:.02em}
-.topbar .brand b{color:var(--accent)}
-.topbar .sub{font-size:11px;color:var(--ink3);letter-spacing:.12em}
-.topbar .spacer{flex:1}
-.topbar a{font-size:11px;color:var(--ink2);text-decoration:none;border:1px solid var(--border);padding:5px 10px;border-radius:2px}
-.topbar a:hover{border-color:var(--accent);color:var(--accent)}
-.statstrip{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--border);background:var(--surface)}
-.stat{padding:10px 18px;border-right:1px solid var(--border2);min-width:120px}
-.stat .n{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--accent);line-height:1}
-.stat .l{font-size:10.5px;color:var(--ink2);letter-spacing:.04em;margin-top:3px}
-.layout{display:flex;height:calc(100vh - 52px - 62px)}
-#map{flex:1;height:100%}
-.side{width:380px;border-left:1px solid var(--border);overflow-y:auto;background:#fff}
-.side h2{font-family:var(--serif);font-size:14px;font-weight:700;padding:12px 16px 8px;border-bottom:1px solid var(--border2);
-  position:sticky;top:0;background:#fff}
-.side h2 .accent{color:var(--accent)}
-.filters{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;flex-wrap:wrap;gap:6px}
-.fbtn{font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:14px;cursor:pointer;background:#fff;color:var(--ink2)}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--ink);background:var(--bg);font-feature-settings:"palt";line-height:1.7;overflow:hidden}
+
+/* ===== TOP BAR ===== */
+.topbar{height:54px;border-top:3px solid var(--accent);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 18px;gap:14px;background:#fff;position:relative;z-index:1200}
+.brand{font-family:var(--serif);font-weight:700;font-size:16.5px;letter-spacing:.01em;white-space:nowrap}
+.brand b{color:var(--accent)}
+.brand .en{font-family:var(--ital);font-style:italic;color:var(--accent);font-size:15px;margin-left:6px}
+.tagline{font-size:10.5px;color:var(--ink3);letter-spacing:.14em;white-space:nowrap}
+.spacer{flex:1}
+.search{position:relative;display:flex;align-items:center}
+.search input{font-family:var(--font);font-size:12.5px;border:1px solid var(--border);border-radius:18px;
+  padding:7px 14px 7px 32px;width:180px;outline:none;transition:.2s;background:var(--surface2)}
+.search input:focus{border-color:var(--accent);width:220px;background:#fff;box-shadow:0 0 0 3px var(--accent-mute)}
+.search svg{position:absolute;left:11px;width:14px;height:14px;stroke:var(--ink3);pointer-events:none}
+.topbar a.ext{font-size:11px;color:var(--ink2);text-decoration:none;border:1px solid var(--border);padding:6px 11px;border-radius:18px;white-space:nowrap;transition:.15s}
+.topbar a.ext:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ===== STAT STRIP ===== */
+.statstrip{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--surface);scrollbar-width:thin}
+.stat{padding:9px 16px;border-right:1px solid var(--border2);min-width:104px;white-space:nowrap;flex-shrink:0}
+.stat .n{font-family:var(--serif);font-weight:700;font-size:21px;color:var(--accent);line-height:1;letter-spacing:.01em}
+.stat .l{font-size:10px;color:var(--ink2);letter-spacing:.05em;margin-top:3px}
+
+/* ===== LAYOUT ===== */
+.layout{display:flex;height:calc(100% - 54px - 47px - 34px)}
+.mapwrap{flex:1;position:relative}
+#map{position:absolute;inset:0}
+.side{width:392px;border-left:1px solid var(--border);overflow-y:auto;background:#fff;scrollbar-width:thin}
+.side-head{font-family:var(--serif);font-size:13.5px;font-weight:700;padding:13px 16px 10px;border-bottom:1px solid var(--border2);
+  position:sticky;top:0;background:#fff;z-index:5;display:flex;align-items:baseline;gap:8px}
+.side-head .accent{color:var(--accent)}
+.side-head .sub{font-weight:400;font-size:10.5px;color:var(--ink3);font-family:var(--mono)}
+
+/* ===== MAP CONTROLS (overlay) ===== */
+.mapctl{position:absolute;z-index:600;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
+.viewtoggle{top:12px;left:12px;display:flex;overflow:hidden;border-radius:8px}
+.viewtoggle button{font-family:var(--font);font-size:12px;font-weight:500;border:none;background:#fff;color:var(--ink2);
+  padding:8px 14px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:5px}
+.viewtoggle button.on{background:var(--accent);color:#fff}
+.viewtoggle button:not(.on):hover{background:var(--accent-mute)}
+.filterbar{top:12px;left:160px;display:flex;gap:5px;padding:6px;flex-wrap:wrap;max-width:calc(100% - 320px)}
+.fbtn{font-size:11px;padding:5px 11px;border:1px solid var(--border);border-radius:14px;cursor:pointer;background:#fff;color:var(--ink2);transition:.15s;white-space:nowrap}
+.fbtn:hover{border-color:var(--accent);color:var(--accent)}
 .fbtn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.legend{padding:8px 16px;font-size:11px;color:var(--ink2);border-bottom:1px solid var(--border2);display:flex;gap:14px;align-items:center}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.prof{padding:12px 16px;border-bottom:1px solid var(--border2);cursor:pointer}
-.prof:hover{background:var(--surface)}
-.prof .nm{font-family:var(--serif);font-weight:600;font-size:13.5px}
-.prof .meta{font-size:11px;color:var(--ink3);margin:2px 0 5px;font-family:var(--mono)}
-.prof .rich{float:right;font-family:var(--mono);font-weight:500;color:var(--accent);font-size:12px}
-.prof .tags{font-size:10.5px;color:var(--ink2);line-height:1.6}
-.prof .tag{display:inline-block;background:var(--surface);border:1px solid var(--border2);border-radius:3px;padding:1px 6px;margin:1px 2px 1px 0}
-.prof .iware{font-size:11px;color:var(--ink2);margin-top:5px;line-height:1.55;font-family:var(--serif)}
-.leaflet-popup-content-wrapper{border-radius:2px;border-top:3px solid var(--accent)}
-.leaflet-popup-content{margin:11px 14px;font-family:var(--font);font-size:12px;line-height:1.6}
-.leaflet-popup-content b{font-family:var(--serif)}
-.footer{height:62px;border-top:1px solid var(--border);padding:8px 20px;font-size:10.5px;color:var(--ink3);background:var(--surface)}
+.legendbox{bottom:24px;left:12px;padding:10px 13px;font-size:11px}
+.legendbox .lt{font-weight:700;font-size:10px;letter-spacing:.08em;color:var(--ink2);margin-bottom:6px;text-transform:uppercase}
+.legendbox .row{display:flex;align-items:center;gap:6px;margin:3px 0;color:var(--ink2)}
+.dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.heatscale{height:9px;width:130px;border-radius:5px;background:linear-gradient(90deg,#3b6ea5,#7fb069,#f2c14e,#e8743b,#CC1400);margin:4px 0}
+.heatscale-l{display:flex;justify-content:space-between;font-size:9.5px;color:var(--ink3);font-family:var(--mono)}
+.basemapsel{bottom:24px;right:12px;padding:4px}
+.basemapsel select{font-family:var(--font);font-size:11px;border:none;outline:none;color:var(--ink2);background:transparent;cursor:pointer;padding:4px 6px}
+
+/* ===== PROFILE CARDS ===== */
+.prof{padding:13px 16px;border-bottom:1px solid var(--border2);cursor:pointer;transition:.12s;position:relative}
+.prof:hover{background:var(--surface2)}
+.prof::before{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);transition:.15s}
+.prof:hover::before{width:3px}
+.prof .rank{position:absolute;right:14px;top:13px;font-family:var(--ital);font-style:italic;font-size:15px;color:var(--accent);font-weight:500}
+.prof .nm{font-family:var(--serif);font-weight:600;font-size:14px;padding-right:54px}
+.prof .meta{font-size:10.5px;color:var(--ink3);margin:3px 0 7px;font-family:var(--mono);line-height:1.5}
+.badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;letter-spacing:.02em}
+.b-iware{background:rgba(204,20,0,.10);color:var(--accent2)}
+.b-food{background:rgba(217,122,0,.13);color:#9a5500}
+.b-cult{background:rgba(59,110,165,.13);color:#2d5580}
+.b-sens{background:rgba(127,176,105,.16);color:#4d7a3a}
+.b-veg{background:rgba(80,140,80,.14);color:#3a6b3a}
+.b-chinju{background:#141414;color:#fff}
+.prof .iware{font-size:11px;color:var(--ink2);line-height:1.6;font-family:var(--serif);
+  max-height:0;overflow:hidden;transition:max-height .25s}
+.prof.open .iware{max-height:160px;margin-top:4px}
+.prof .ricbar{height:3px;background:var(--border2);border-radius:2px;margin-top:7px;overflow:hidden}
+.prof .ricbar i{display:block;height:100%;background:var(--accent)}
+
+/* ===== POPUP ===== */
+.leaflet-popup-content-wrapper{border-radius:3px;border-top:3px solid var(--accent);box-shadow:var(--shadow)}
+.leaflet-popup-content{margin:12px 15px;font-family:var(--font);font-size:12px;line-height:1.65;min-width:200px}
+.leaflet-popup-content .pnm{font-family:var(--serif);font-weight:700;font-size:14px}
+.leaflet-popup-content .pmeta{color:var(--ink3);font-family:var(--mono);font-size:10.5px;margin:2px 0 6px}
+.leaflet-popup-content .pi{font-family:var(--serif);color:var(--ink2);font-size:11.5px;margin-top:6px;border-top:1px solid var(--border2);padding-top:6px}
+.marker-cluster div{background:rgba(204,20,0,.82)!important;color:#fff!important;font-family:var(--mono)!important;font-weight:600!important}
+.marker-cluster{background:rgba(204,20,0,.30)!important}
+
+/* ===== LOADING ===== */
+#loading{position:absolute;inset:0;background:rgba(255,255,255,.94);z-index:1500;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;transition:opacity .4s}
+#loading.hide{opacity:0;pointer-events:none}
+.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading .lt{font-family:var(--serif);font-size:13px;color:var(--ink2)}
+#loading .lc{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+
+/* ===== FOOTER ===== */
+.footer{height:34px;border-top:1px solid var(--border);padding:0 18px;font-size:10px;color:var(--ink3);
+  background:var(--surface);display:flex;align-items:center;overflow:hidden;white-space:nowrap}
 .footer b{color:var(--ink2)}
-@media(max-width:820px){.side{display:none}.layout{height:calc(100vh - 52px - 110px)}}
+
+/* ===== MOBILE ===== */
+.mobtog{display:none}
+@media(max-width:860px){
+  .side{position:fixed;top:54px;bottom:0;right:0;transform:translateX(100%);transition:transform .3s;z-index:1100;width:88%;max-width:392px;box-shadow:var(--shadow)}
+  .side.open{transform:translateX(0)}
+  .layout{height:calc(100% - 54px - 47px - 34px)}
+  .filterbar{left:12px;top:58px;max-width:calc(100% - 24px)}
+  .search input{width:120px}.search input:focus{width:150px}
+  .mobtog{display:flex;position:fixed;bottom:48px;right:14px;z-index:1150;background:var(--accent);color:#fff;border:none;
+    border-radius:24px;padding:11px 16px;font-family:var(--font);font-size:12.5px;font-weight:500;box-shadow:var(--shadow);cursor:pointer;gap:6px;align-items:center}
+}
 </style>
 </head>
 <body>
 <div class="topbar">
-  <span class="brand">PLN-DB <b>場所性マップ</b></span>
-  <span class="sub">PLACENESS · 土地に織り込まれた物語</span>
+  <span class="brand">PLN-DB <b>場所性マップ</b><span class="en">Placeness</span></span>
+  <span class="tagline">土地に織り込まれた物語</span>
   <span class="spacer"></span>
-  <a href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/pln.html">場所性学術知 DB</a>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+    <input id="search" type="search" placeholder="神社名で探す…" autocomplete="off">
+  </div>
+  <a class="ext" href="https://yuyanishimura0312.github.io/miratuku-news-v2/dashboards/pln.html">学術知 DB →</a>
 </div>
+
 <div class="statstrip" id="statstrip"></div>
+
 <div class="layout">
-  <div id="map"></div>
-  <div class="side">
-    <h2><span class="accent">■</span> 場所性が豊かな地点 <span style="font-weight:400;font-size:11px;color:var(--ink3)">Top 60</span></h2>
-    <div class="filters" id="filters">
+  <div class="mapwrap">
+    <div id="map"></div>
+    <div id="loading"><div class="spinner"></div><div class="lt">場所性データを読み込み中</div><div class="lc" id="loadcnt">28,801 地点</div></div>
+    <!-- view toggle -->
+    <div class="mapctl viewtoggle">
+      <button id="vHeat" class="on" onclick="setView('heat')">◈ 濃度</button>
+      <button id="vMark" onclick="setView('mark')">● 地点</button>
+    </div>
+    <!-- filters -->
+    <div class="mapctl filterbar" id="filters">
       <span class="fbtn on" data-f="all">全て</span>
-      <span class="fbtn" data-f="iware">いわれ有</span>
-      <span class="fbtn" data-f="rich">richness≥50</span>
+      <span class="fbtn" data-f="iware">いわれ</span>
+      <span class="fbtn" data-f="rich">豊か (≥50)</span>
       <span class="fbtn" data-f="chinju">鎮守の森</span>
-      <span class="fbtn" data-f="sacred">聖地軸</span>
+      <span class="fbtn" data-f="sacred">聖地</span>
     </div>
-    <div class="legend">
-      <span><span class="dot" style="background:var(--sacred)"></span>sacred</span>
-      <span><span class="dot" style="background:var(--genius)"></span>genius loci</span>
-      <span><span class="dot" style="background:var(--fudo)"></span>fudo</span>
+    <!-- legend -->
+    <div class="mapctl legendbox" id="legend"></div>
+    <!-- basemap -->
+    <div class="mapctl basemapsel">
+      <select id="basemap" onchange="setBasemap(this.value)">
+        <option value="light">地図: 淡色</option>
+        <option value="voyager">地図: 標準</option>
+        <option value="terrain">地図: 地形</option>
+      </select>
     </div>
+  </div>
+  <div class="side" id="side">
+    <div class="side-head"><span class="accent">■</span> 場所性が豊かな地点 <span class="sub" id="profcount">TOP 60</span></div>
     <div id="profiles"></div>
   </div>
 </div>
+
+<button class="mobtog" onclick="document.getElementById('side').classList.toggle('open')">☰ 豊かな地点</button>
 <div class="footer">
-  <b>場所性 = 土地に織り込まれた物語</b>（いわれ・文化・地理に紐づく食・植生・歴史・地理の集合体）。神社 28,801 地点を空間アンカーに、各地点の土地の場所性を捕捉。<br>
-  出典: 国土地理院 標高 / 国土数値情報 (行政区域・河川) / Natural Earth 海岸線 / 環境省 音風景100選 / 農水省 GI・郷土料理 / 文化庁 無形民俗文化財 / Wikidata 巨樹 / Wikipedia 由緒 ｜ © NPO法人ミラツク
+  <span><b>場所性</b> = 土地に織り込まれた物語（いわれ・文化・食・植生・歴史・地理）｜ 出典: 国土地理院 / 国土数値情報 / Natural Earth / 環境省 / 農水省 / 文化庁 / Wikidata / Wikipedia ｜ © NPO法人ミラツク</span>
 </div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
-const AXC={s:'#CC1400',g:'#E08000',f:'#9AA0A6'};
-const map=L.map('map',{center:[37.5,138],zoom:5,minZoom:4,maxZoom:18,preferCanvas:true});
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  {attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+const AXC={s:'#CC1400',g:'#D97A00',f:'#A7ABB0'};
+const AXN={s:'聖地',g:'場所の精神',f:'風土'};
+const map=L.map('map',{center:[37.8,137.5],zoom:5,minZoom:4,maxZoom:18,preferCanvas:true,zoomControl:false});
+L.control.zoom({position:'topright'}).addTo(map);
 
-let allPts=[], cluster=null, curFilter='all';
-function passFilter(p){ // p=[lat,lon,nm,mu,rich,ax,el,iw,dimcnt,ch]
-  if(curFilter==='iware') return p[7]===1;
-  if(curFilter==='rich') return p[4]>=50;
-  if(curFilter==='chinju') return p[9]===1;
-  if(curFilter==='sacred') return p[5]==='s';
+const BASE={
+  light:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  voyager:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  terrain:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
+};
+let baseLayer=L.tileLayer(BASE.light,{subdomains:'abcd',maxZoom:19,attribution:'&copy; OSM &copy; CARTO'}).addTo(map);
+function setBasemap(k){map.removeLayer(baseLayer);
+  baseLayer=L.tileLayer(BASE[k],{subdomains:'abcd',maxZoom:k==='terrain'?17:19,attribution:k==='terrain'?'&copy; OpenTopoMap':'&copy; OSM &copy; CARTO'}).addTo(map);
+  baseLayer.bringToBack();}
+
+let allPts=[], heatLayer=null, cluster=null, view='heat', curFilter='all', built=false;
+
+function passFilter(p){ // [lat,lon,nm,mu,rich,ax,el,iw,dim,ch]
+  if(curFilter==='iware')return p[7]===1;
+  if(curFilter==='rich')return p[4]>=50;
+  if(curFilter==='chinju')return p[9]===1;
+  if(curFilter==='sacred')return p[5]==='s';
   return true;
 }
-function render(){
-  if(cluster) map.removeLayer(cluster);
-  cluster=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:50,disableClusteringAtZoom:12});
-  let n=0;
-  for(const p of allPts){
-    if(!passFilter(p)) continue;
-    const r=Math.max(3,Math.min(9,3+(p[4]/14)));
-    const m=L.circleMarker([p[0],p[1]],{radius:r,color:AXC[p[5]]||'#9AA0A6',weight:1,
-      fillColor:AXC[p[5]]||'#9AA0A6',fillOpacity:.72});
-    m.bindPopup(`<b>${p[2]}</b><br>${p[3]}<br>richness <b>${p[4]}</b> / 軸 ${({s:'聖地',g:'場所の精神',f:'風土'})[p[5]]}<br>`
-      +`標高 ${p[6]}m ${p[7]?'/ いわれ有 ':''}${p[9]?'/ 鎮守の森 ':''}${p[8]?('/ 次元'+p[8]):''}`);
-    cluster.addLayer(m); n++;
-  }
-  map.addLayer(cluster);
-  document.getElementById('cnt')&&(document.getElementById('cnt').textContent=n.toLocaleString());
+function buildHeat(){
+  const data=allPts.filter(passFilter).map(p=>[p[0],p[1],Math.max(.15,(p[4]||0)/100)]);
+  if(heatLayer)map.removeLayer(heatLayer);
+  heatLayer=L.heatLayer(data,{radius:14,blur:20,maxZoom:11,minOpacity:.35,
+    gradient:{0.0:'#3b6ea5',0.3:'#7fb069',0.5:'#f2c14e',0.75:'#e8743b',1.0:'#CC1400'}});
+  if(view==='heat')heatLayer.addTo(map);
 }
-fetch('data/placeness_points.json').then(r=>r.json()).then(d=>{allPts=d;render();});
+function buildMarkers(){
+  if(cluster)map.removeLayer(cluster);
+  cluster=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:48,disableClusteringAtZoom:13,
+    spiderfyOnMaxZoom:false});
+  for(const p of allPts){
+    if(!passFilter(p))continue;
+    const r=Math.max(3,Math.min(10,3.2+(p[4]/13)));
+    const m=L.circleMarker([p[0],p[1]],{radius:r,color:AXC[p[5]],weight:1,fillColor:AXC[p[5]],fillOpacity:.78});
+    m.bindPopup(popupHTML(p));
+    cluster.addLayer(m);
+  }
+  if(view==='mark')map.addLayer(cluster);
+}
+function popupHTML(p){
+  const badges=[];if(p[7])badges.push('いわれ');if(p[9])badges.push('鎮守の森');if(p[8])badges.push('次元'+p[8]);
+  return `<div class="pnm">${p[2]}</div><div class="pmeta">${p[3]} ｜ 標高${p[6]}m</div>`
+    +`richness <b style="color:var(--accent)">${p[4]}</b> ・ ${AXN[p[5]]}`
+    +(badges.length?`<div class="pi">${badges.join(' / ')}</div>`:'');
+}
+function setView(v){
+  view=v;
+  document.getElementById('vHeat').classList.toggle('on',v==='heat');
+  document.getElementById('vMark').classList.toggle('on',v==='mark');
+  if(v==='heat'){if(cluster)map.removeLayer(cluster);buildHeat();}
+  else{if(heatLayer)map.removeLayer(heatLayer);if(!built){buildMarkers();built=true;}else map.addLayer(cluster);}
+  renderLegend();
+}
+function applyFilter(){built=false;buildHeat();if(view==='mark')buildMarkers();}
+function renderLegend(){
+  const el=document.getElementById('legend');
+  if(view==='heat'){
+    el.innerHTML='<div class="lt">場所性の濃度</div><div class="heatscale"></div>'
+      +'<div class="heatscale-l"><span>低</span><span>richness</span><span>高</span></div>';
+  }else{
+    el.innerHTML='<div class="lt">場所性軸</div>'
+      +`<div class="row"><span class="dot" style="background:${AXC.s}"></span>聖地 ${(stat&&stat.axis.sacred)||''}</div>`
+      +`<div class="row"><span class="dot" style="background:${AXC.g}"></span>場所の精神 ${(stat&&stat.axis.genius_loci)||''}</div>`
+      +`<div class="row"><span class="dot" style="background:${AXC.f}"></span>風土 ${(stat&&stat.axis.fudo)||''}</div>`;
+  }
+}
 
-// stats
-fetch('data/placeness_stats.json').then(r=>r.json()).then(s=>{
+// ---- load points ----
+fetch('data/placeness_points.json').then(r=>r.json()).then(d=>{
+  allPts=d;buildHeat();renderLegend();
+  document.getElementById('loading').classList.add('hide');
+}).catch(e=>{document.getElementById('loadcnt').textContent='読込エラー: '+e;});
+
+// ---- stats ----
+let stat=null;
+fetch('data/placeness_stats.json').then(r=>r.json()).then(s=>{stat=s;
   const D=s.dims;
-  const cards=[
-    ['地点',s.total.toLocaleString()],['いわれ',D.iware.toLocaleString()],['食',D.foodway.toLocaleString()],
+  const cards=[['地点',s.total.toLocaleString()],['いわれ',D.iware.toLocaleString()],['食',D.foodway.toLocaleString()],
     ['文化',D.culture.toLocaleString()],['感覚',D.sensory.toLocaleString()],['植生',D.vegetation.toLocaleString()],
     ['鎮守の森',D.chinju.toLocaleString()],['概念タグ',D.concept_link.toLocaleString()],
-    ['平均標高',s.elev.avg+'m'],['平均海岸距離',s.coast_avg+'km'],
-  ];
+    ['平均標高',s.elev.avg+'m'],['平均海岸',s.coast_avg+'km']];
   document.getElementById('statstrip').innerHTML=cards.map(c=>`<div class="stat"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join('');
+  renderLegend();
 });
 
-// profiles
+// ---- profiles ----
 let profs=[];
-fetch('data/placeness_profiles.json').then(r=>r.json()).then(d=>{profs=d;renderProfiles();});
-function renderProfiles(){
-  const ax={sacred:'聖地',genius_loci:'場所の精神',fudo:'風土'};
-  document.getElementById('profiles').innerHTML=profs.map((p,i)=>{
-    const tags=[]; p.foods&&p.foods.slice(0,5).forEach(f=>tags.push(`食:${f}`));
-    p.cults&&p.cults.slice(0,3).forEach(f=>tags.push(`文化:${f}`));
-    p.vegs&&p.vegs.slice(0,2).forEach(f=>tags.push(`植生:${f}`));
-    p.senss&&p.senss.slice(0,1).forEach(f=>tags.push(`音:${(f||'').slice(0,14)}`));
-    return `<div class="prof" data-i="${i}">
-      <span class="rich">${p.rich}</span>
+fetch('data/placeness_profiles.json').then(r=>r.json()).then(d=>{profs=d;renderProfiles(profs);});
+function renderProfiles(list){
+  const host=document.getElementById('profiles');
+  document.getElementById('profcount').textContent='TOP '+list.length;
+  host.innerHTML=list.map((p,i)=>{
+    const b=[];
+    if(p.iware)b.push('<span class="badge b-iware">いわれ</span>');
+    if(p.foods&&p.foods.length)b.push(`<span class="badge b-food">食 ${p.foods.length}</span>`);
+    if(p.cults&&p.cults.length)b.push(`<span class="badge b-cult">文化 ${p.cults.length}</span>`);
+    if(p.senss&&p.senss.length)b.push(`<span class="badge b-sens">音 ${p.senss.length}</span>`);
+    if(p.vegs&&p.vegs.length)b.push(`<span class="badge b-veg">植生 ${p.vegs.length}</span>`);
+    return `<div class="prof" data-i="${profs.indexOf(p)}">
+      <span class="rank">${p.rich}</span>
       <div class="nm">${p.nm}</div>
-      <div class="meta">${p.pref||''} ${p.mu||''} ｜ 標高${p.el?Math.round(p.el):'-'}m ｜ ${p.topo||''} ｜ ${p.kop||''}</div>
-      <div class="tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-      ${p.iware?`<div class="iware">${p.iware.slice(0,120)}…</div>`:''}
+      <div class="meta">${p.pref||''} ${p.mu||''}<br>標高${p.el?Math.round(p.el):'-'}m ・ ${p.topo||'-'} ・ ${p.kop||'-'} ・ ${(p.fudo||'').replace('・和辻','')}</div>
+      <div class="badges">${b.join('')}</div>
+      ${p.iware?`<div class="iware">${p.iware.slice(0,150)}…</div>`:''}
+      <div class="ricbar"><i style="width:${p.rich}%"></i></div>
     </div>`;
   }).join('');
-  document.querySelectorAll('.prof').forEach(el=>el.onclick=()=>{
-    const p=profs[+el.dataset.i]; map.flyTo([p.lat,p.lon],14);
+  host.querySelectorAll('.prof').forEach(el=>{
+    el.onclick=()=>{
+      const p=profs[+el.dataset.i];
+      document.querySelectorAll('.prof.open').forEach(o=>{if(o!==el)o.classList.remove('open')});
+      el.classList.toggle('open');
+      map.flyTo([p.lat,p.lon],14,{duration:.8});
+      const pop=L.popup({offset:[0,-4]}).setLatLng([p.lat,p.lon])
+        .setContent(`<div class="pnm">${p.nm}</div><div class="pmeta">${p.pref||''} ${p.mu||''} ｜ richness ${p.rich}</div>`
+          +(p.foods&&p.foods.length?`<div class="pi"><b>食</b> ${p.foods.slice(0,6).join('、')}</div>`:'')
+          +(p.cults&&p.cults.length?`<div class="pi"><b>文化</b> ${p.cults.slice(0,4).join('、')}</div>`:'')
+          +(p.iware?`<div class="pi">${p.iware.slice(0,110)}…</div>`:''));
+      setTimeout(()=>pop.openOn(map),420);
+      if(window.innerWidth<=860)document.getElementById('side').classList.remove('open');
+    };
   });
 }
-// filter buttons
+
+// ---- search ----
+document.getElementById('search').addEventListener('input',e=>{
+  const q=e.target.value.trim();
+  if(!q){renderProfiles(profs);return;}
+  // プロファイル絞り込み
+  const hit=profs.filter(p=>(p.nm||'').includes(q)||(p.mu||'').includes(q)||(p.pref||'').includes(q));
+  if(hit.length){renderProfiles(hit);}
+  else{
+    // 全28,801から検索 → 最初の一致へ
+    const m=allPts.find(p=>(p[2]||'').includes(q)||(p[3]||'').includes(q));
+    document.getElementById('profiles').innerHTML=m
+      ?`<div class="prof open"><div class="nm">${m[2]}</div><div class="meta">${m[3]} ｜ richness ${m[4]} ｜ 標高${m[6]}m</div><div class="iware" style="max-height:none">地図で位置を表示しました。</div></div>`
+      :'<div class="prof"><div class="meta">該当なし</div></div>';
+    if(m){map.flyTo([m[0],m[1]],14,{duration:.8});
+      setTimeout(()=>L.popup().setLatLng([m[0],m[1]]).setContent(popupHTML(m)).openOn(map),420);}
+  }
+});
+
+// ---- filters ----
 document.querySelectorAll('.fbtn').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); curFilter=b.dataset.f; render();
+  b.classList.add('on');curFilter=b.dataset.f;applyFilter();
 });
 </script>
 </body>
