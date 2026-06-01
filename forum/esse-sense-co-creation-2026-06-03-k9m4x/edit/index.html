@@ -6,7 +6,7 @@
 <meta name="x-apple-disable-message-reformatting">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="color-scheme" content="light">
-<title>【オンライン開催に変更】esse-sense 共創推進フォーラム ― ANSWER+ 体験会</title>
+<title>[編集] 【オンライン開催に変更】esse-sense 共創推進フォーラム ― ANSWER+ 体験会</title>
 <!--[if mso]>
 <style>* { font-family: 'Yu Gothic', sans-serif !important; }</style>
 <![endif]-->
@@ -26,8 +26,31 @@
     .stack td{ display:block !important; width:100% !important; }
   }
 </style>
+<style id="ed-style">
+.ed-bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#160F0C;color:#fff;font:13px/1.5 -apple-system,'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif;padding:9px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 14px rgba(0,0,0,.35);}
+.ed-bar strong{font-size:13px;margin-right:4px;color:#fff;letter-spacing:.04em;}
+.ed-bar button{font:13px/1 -apple-system,sans-serif;border:1px solid #5a4b44;background:#241a16;color:#fff;padding:8px 14px;border-radius:5px;cursor:pointer;}
+.ed-bar button:hover{border-color:#CC1400;}
+.ed-bar button.on{background:#CC1400;border-color:#CC1400;}
+.ed-bar .sp{flex:1;}
+.ed-bar .st{color:#C9BEB7;font-size:12px;}
+body.editing{padding-top:54px;}
+body.ed-on [data-ce]{outline:1px dashed rgba(204,20,0,.45);outline-offset:2px;cursor:text;}
+body.ed-on [data-ce]:hover{background:rgba(204,20,0,.05);}
+body.ed-on [data-ce]:focus{outline:2px solid #CC1400;background:rgba(204,20,0,.06);}
+@media print{.ed-bar{display:none!important;}}
+</style>
 </head>
 <body style="margin:0;padding:0;background:#ECE7E1;">
+<div class="ed-bar" id="ed-bar">
+<strong>esse-sense フォーラム案内 ｜ 編集</strong>
+<button id="ed-toggle">&#9999; 編集する</button>
+<button id="ed-save">&#128190; 保存</button>
+<button id="ed-export">&#11015; メール用HTMLを書き出す</button>
+<button id="ed-reset">&#8634; 破棄</button>
+<span class="sp"></span>
+<span class="st" id="ed-status">「編集する」を押し、本文をクリックして書き換えてください</span>
+</div>
 
 <!-- preheader (隠し) -->
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#ECE7E1;">
@@ -261,5 +284,64 @@
 </table>
 </td></tr>
 </table>
+<script id="ed-script">
+(function(){
+  var KEY='esse_forum_edit_v1';
+  var status=document.getElementById('ed-status');
+  // 本文の末端テキスト要素を編集対象に（ヒーロー=ブランド表現とロゴtdは除外）
+  var list=[];
+  document.querySelectorAll('.wrap p, .wrap h1, .wrap li, .wrap a').forEach(function(el){ list.push(el); });
+  document.querySelectorAll('.wrap td').forEach(function(td){
+    if(!td.querySelector('table') && !td.querySelector('img') && td.textContent.trim().length>0) list.push(td);
+  });
+  // 入れ子の末端だけ残す
+  var marks=list.filter(function(el){ return !list.some(function(o){ return o!==el && el.contains(o); }); });
+  // ヒーロー（ブランド）配下は除外
+  marks=marks.filter(function(el){ return !el.closest('.herobox'); });
+  var idx={};
+  marks.forEach(function(el,i){ el.setAttribute('data-ce', i); idx[i]=el; });
+
+  function save(){
+    var data={};
+    marks.forEach(function(el){ data[el.getAttribute('data-ce')]=el.innerHTML; });
+    localStorage.setItem(KEY, JSON.stringify(data));
+    status.textContent='保存しました '+new Date().toLocaleTimeString('ja-JP');
+  }
+  function restore(){
+    try{
+      var data=JSON.parse(localStorage.getItem(KEY)||'{}'); var n=0;
+      Object.keys(data).forEach(function(k){ if(idx[k]){ idx[k].innerHTML=data[k]; n++; } });
+      if(n>0) status.textContent='前回の編集を復元しました（'+n+'箇所）';
+    }catch(e){}
+  }
+  var editing=false;
+  function setEdit(on){
+    editing=on;
+    document.body.classList.toggle('ed-on', on);
+    document.body.classList.toggle('editing', on);
+    marks.forEach(function(el){ if(on){ el.setAttribute('contenteditable','true'); el.setAttribute('spellcheck','false'); } else { el.removeAttribute('contenteditable'); el.removeAttribute('spellcheck'); } });
+    var t=document.getElementById('ed-toggle'); t.classList.toggle('on', on);
+    t.innerHTML = on ? '&#10003; 編集中' : '&#9999; 編集する';
+    status.textContent = on ? '本文をクリックして書き換えられます。終わったら「保存」を押してください' : '';
+  }
+  document.querySelectorAll('.wrap a').forEach(function(a){ a.addEventListener('click', function(e){ if(editing) e.preventDefault(); }); });
+  document.getElementById('ed-toggle').onclick=function(){ setEdit(!editing); };
+  document.getElementById('ed-save').onclick=save;
+  document.getElementById('ed-reset').onclick=function(){ if(confirm('編集内容を破棄して最初の状態に戻します。よろしいですか？')){ localStorage.removeItem(KEY); location.reload(); } };
+  document.getElementById('ed-export').onclick=function(){
+    if(editing) save();
+    var clone=document.documentElement.cloneNode(true);
+    ['ed-bar','ed-style','ed-script'].forEach(function(id){ var e=clone.querySelector('#'+id); if(e) e.remove(); });
+    clone.querySelectorAll('[data-ce]').forEach(function(e){ e.removeAttribute('data-ce'); e.removeAttribute('contenteditable'); e.removeAttribute('spellcheck'); });
+    var b=clone.querySelector('body'); if(b){ b.classList.remove('ed-on'); b.classList.remove('editing'); if(!b.className) b.removeAttribute('class'); }
+    var out='<!DOCTYPE html>\n'+clone.outerHTML;
+    var blob=new Blob([out],{type:'text/html;charset=utf-8'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='forum-invite-2026-06-03.html';
+    document.body.appendChild(a); a.click(); a.remove();
+    status.textContent='メール用HTMLを書き出しました（ダウンロードフォルダをご確認ください）';
+  };
+  restore();
+})();
+</script>
 </body>
 </html>
