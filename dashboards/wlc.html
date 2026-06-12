@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WLC-DB ダッシュボード — Web 法令コンプライアンス知識DB | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  gap: 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 5px 8px 5px 0;
+  transition: color 0.15s;
+  line-height: 1.5;
+}
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--accent-warm);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+
+.book-header {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.book-db-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.db-tag {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.book-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.book-meta {
+  margin-top: 32px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 60px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  line-height: 1.5;
+  font-weight: 700;
+  margin-bottom: 28px;
+  letter-spacing: 0;
+}
+h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  font-weight: 500;
+  text-indent: 0;
+}
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+th, td {
+  padding: 11px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+th { background: var(--surface); font-weight: 700; }
+
+.callout {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+  padding: 20px 24px;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+.callout-title {
+  font-weight: 700;
+  color: var(--accent-warm);
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+.stat-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  text-align: center;
+  font-family: var(--font);
+  background: var(--card);
+}
+.stat-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface);
+  padding: 2px 6px;
+}
+.bar { display: inline-block; height: 14px; background: var(--accent-warm); margin-right: 8px; vertical-align: middle; }
+.high { color: #2e7d32; font-weight: 700; }
+.low { color: var(--accent-warm); font-weight: 700; }
+
+footer {
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: 24px 0;
+  }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>WLC-DB</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html">← Databases</a>
+<button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+
+<li><a href="#sec-kpi"><span class="toc-num">01</span>総括 KPI</a></li>
+<li><a href="#sec-subfields"><span class="toc-num">02</span>サブフィールド分布</a></li>
+<li><a href="#sec-jurisdictions"><span class="toc-num">03</span>管轄法域分布</a></li>
+<li><a href="#sec-concepts"><span class="toc-num">04</span>代表概念一覧</a></li>
+<li><a href="#sec-relations"><span class="toc-num">05</span>関係タイプ分布</a></li>
+<li><a href="#sec-crossref"><span class="toc-num">06</span>cross_db_refs 接続先</a></li>
+<li><a href="#sec-quality"><span class="toc-num">07</span>品質・方法論</a></li>
+
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags">
+  <span class="db-tag primary">WLC-DB</span>
+  <span class="db-tag">日本法</span>
+  <span class="db-tag">EU規制</span>
+  <span class="db-tag">米国法</span>
+  <span class="db-tag">Wave 1 Bootstrap</span>
+</div>
+<h1 class="book-title">Web 法令コンプライアンス知識 DB</h1>
+<p class="book-subtitle">Web Legal Compliance Knowledge Database — 特定商取引法・GDPR・個人情報保護法・ダークパターン規制・アクセシビリティ法を横断する Web 法務知識体系</p>
+<div class="book-meta">
+  <span>スナップショット: 2026-06-12 13:12 UTC</span>
+  <span>DB パス: wlc.db</span>
+  <span>Wave 1 Bootstrap 完了（再実行可）</span>
+</div>
+</header>
+
+<section class="chapter-section" id="sec-kpi">
+<div class="chapter-number-label">SECTION 01</div>
+<h2 class="chapter-title">総括 KPI</h2>
+<p class="lead">生成時点の実測値。スクリプト再実行で自動更新される。</p>
+
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="stat-num">332</div>
+    <div class="stat-label">総概念数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">97.0%</div>
+    <div class="stat-label">verified 率</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">10</div>
+    <div class="stat-label">サブフィールド数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">450</div>
+    <div class="stat-label">概念間関係数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">1.36</div>
+    <div class="stat-label">関係密度 (rel/concept)</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">50</div>
+    <div class="stat-label">cross_db_refs 件数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">11</div>
+    <div class="stat-label">登録研究者数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">22</div>
+    <div class="stat-label">参照文献数</div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">DB 概要</div>
+  WLC-DB は日本・EU・米国の Web サービスに関わる法令・規制・ガイドラインを構造化した知識 DB。10 サブフィールド × 332 概念を収録。source_url 完備・verified 率 97.0% を達成。regulatory-japan-db・policy-db・wcps-db 等 50 件の横断参照を持つ。
+</div>
+</section>
+
+<section class="chapter-section" id="sec-subfields">
+<div class="chapter-number-label">SECTION 02</div>
+<h2 class="chapter-title">サブフィールド分布</h2>
+<p class="lead">10 サブフィールドの概念数分布。EU規制・日本EC法務・個人情報保護が上位を占める。</p>
+<table>
+<thead><tr><th>ID</th><th>サブフィールド</th><th>英語名</th><th>概念数</th><th>構成比</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>SF03</strong></td>
+  <td>EU規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">EU Digital Regulations</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">50</span></td>
+  <td><span class="bar" style="width:240px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF01</strong></td>
+  <td>日本EC法務</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Japan EC Law</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">42</span></td>
+  <td><span class="bar" style="width:201px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF04</strong></td>
+  <td>米国・他国</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">US & Other Jurisdictions</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">41</span></td>
+  <td><span class="bar" style="width:196px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF02</strong></td>
+  <td>個人情報・プライバシー</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Personal Information & Privacy</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">40</span></td>
+  <td><span class="bar" style="width:192px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF07</strong></td>
+  <td>課金・決済法務</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Payment & Billing Law</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">30</span></td>
+  <td><span class="bar" style="width:144px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF05</strong></td>
+  <td>利用規約・契約</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Terms of Service & Contracts</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">29</span></td>
+  <td><span class="bar" style="width:139px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF10</strong></td>
+  <td>セキュリティ・通信</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Security & Communications</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">29</span></td>
+  <td><span class="bar" style="width:139px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF08</strong></td>
+  <td>コンテンツ・知財</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Content & Intellectual Property</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">27</span></td>
+  <td><span class="bar" style="width:129px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF09</strong></td>
+  <td>ダークパターン規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Dark Pattern Regulation</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">26</span></td>
+  <td><span class="bar" style="width:124px"></span></td>
+</tr>
+<tr>
+  <td><strong>SF06</strong></td>
+  <td>アクセシビリティ法</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Accessibility Law</td>
+  <td style="text-align:right"><span class="stat-num" style="font-size:1rem">18</span></td>
+  <td><span class="bar" style="width:86px"></span></td>
+</tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec-jurisdictions">
+<div class="chapter-number-label">SECTION 03</div>
+<h2 class="chapter-title">管轄法域分布</h2>
+<p class="lead">概念の管轄法域（JP / EU / US / GLOBAL）の内訳。日本法が過半数を占め、EU・米国・グローバルが続く。</p>
+<table>
+<thead><tr><th>法域</th><th>概念数</th><th>分布</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>JP</strong></td>
+  <td style="text-align:right">150</td>
+  <td><span class="bar" style="width:240px"></span></td>
+</tr>
+<tr>
+  <td><strong>EU</strong></td>
+  <td style="text-align:right">74</td>
+  <td><span class="bar" style="width:118px"></span></td>
+</tr>
+<tr>
+  <td><strong>US</strong></td>
+  <td style="text-align:right">41</td>
+  <td><span class="bar" style="width:65px"></span></td>
+</tr>
+<tr>
+  <td><strong>MULTI</strong></td>
+  <td style="text-align:right">29</td>
+  <td><span class="bar" style="width:46px"></span></td>
+</tr>
+<tr>
+  <td><strong>GLOBAL</strong></td>
+  <td style="text-align:right">17</td>
+  <td><span class="bar" style="width:27px"></span></td>
+</tr>
+<tr>
+  <td><strong>CN</strong></td>
+  <td style="text-align:right">3</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr>
+<tr>
+  <td><strong>JP/EU</strong></td>
+  <td style="text-align:right">3</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr>
+<tr>
+  <td><strong>CA</strong></td>
+  <td style="text-align:right">2</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr>
+<tr>
+  <td><strong>EU/JP</strong></td>
+  <td style="text-align:right">2</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr>
+<tr>
+  <td><strong>IN</strong></td>
+  <td style="text-align:right">2</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec-concepts">
+<div class="chapter-number-label">SECTION 04</div>
+<h2 class="chapter-title">代表概念一覧（先頭 30 件）</h2>
+<p class="lead">生成時点の先頭 30 概念。SF01 日本EC法務から始まり、特定商取引法・景品表示法・ステルスマーケティング規制等を収録。</p>
+<table>
+<thead><tr><th>概念名</th><th>英語名</th><th>SF</th><th>法域</th><th>状態</th></tr></thead>
+<tbody>
+<tr>
+  <td>特定商取引法</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Act on Specified Commercial Transactions</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>景品表示法</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Act against Unjustifiable Premiums and Misleading Representations</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>ステルスマーケティング規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Stealth Marketing Regulation</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>電子商取引及び情報財取引等に関する準則</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">EC Transaction Guidelines</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>定期購入規制（特商法2021年改正）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Subscription Regulation 2021</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>返品特約</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Return Policy</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>おとり広告規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Bait Advertising Regulation</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>消費生活用製品安全法</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Consumer Product Safety Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>電子消費者契約法</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Electronic Consumer Contracts Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>不正競争防止法（Webコンテンツ関連）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Unfair Competition Prevention Act - Web Content</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>電子帳簿保存法</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Electronic Books Preservation Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>割賦販売法（EC割賦取引）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Installment Sales Act - EC</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特定デジタルプラットフォームの透明性及び公正性向上法</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Transparency and Fairness of Specified Digital Platforms Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特定商取引法の通信販売表示</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Japan Specified Commercial Transactions Act Online Sales Disclosure</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特定商取引法の最終確認画面</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Japan Final Confirmation Screen Rule for Online Orders</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="low" style="font-size:0.75rem">unverified</span></td>
+</tr>
+<tr>
+  <td>電子消費者契約法の入力ミス救済</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Japan Electronic Consumer Contract Act Input Error Protection</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="low" style="font-size:0.75rem">unverified</span></td>
+</tr>
+<tr>
+  <td>特定電子メール法のオプトイン規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Japan Anti-Spam Act Opt-in Rule</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>不当景品類の総付景品規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Japan Premium Offer Regulation</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特定商取引法の電話勧誘販売規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Telephone Solicitation Sales Regulation under Specified Commercial Transactions Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特商法ガイドライン（通信販売広告の申込み最終確認画面の細目）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Specified Commercial Transactions Act Guideline on Final Confirmation Screen for Mail-Order</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>景品表示法の課徴金制度（違反行為に対する3%課徴金）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Surcharge System under Act against Unjustifiable Premiums and Misleading Representations</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>景品表示法の運用基準（優良誤認・有利誤認の具体的判断基準）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Operational Standards for Misleading Quality and Price Representations under Premiums Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>薬機法の誇大広告規制（第66条・医薬品等のWeb広告）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Exaggerated Advertising Prohibition under Pharmaceuticals and Medical Devices Act Article 66</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>薬機法の未承認医薬品等の広告禁止（第68条）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Prohibition of Advertising Unapproved Drugs under Pharmaceuticals and Medical Devices Act Article 68</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>金融商品取引法の電磁的方法による書面交付・電子説明義務</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Electronic Disclosure Obligations under Financial Instruments and Exchange Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>消費者庁「打消し表示に関する実態調査」と広告表示ガイドライン</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Consumer Affairs Agency Survey and Guideline on Disclaimer Practices in Advertising</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特定商取引法の業務提供誘引販売取引のオンライン規制</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Online Regulation of Work-at-Home Business Opportunity Solicitation under Specified Commercial Transactions Act</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特定デジタルプラットフォームの取引条件等の情報開示（経産省ガイドライン）</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Information Disclosure for Specified Digital Platform Transaction Conditions - METI Guideline</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特商法 最終確認画面の6必須項目</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Specified Commercial Transactions Act Final Confirmation Screen 6 Required Items</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr>
+<tr>
+  <td>特商法 定期購入規制2022年施行の表示義務</td>
+  <td style="color:var(--text-muted);font-size:0.8rem">Japan SCTA 2022 Subscription Disclosure Requirements</td>
+  <td style="font-size:0.8rem">日本EC法務</td>
+  <td style="font-size:0.8rem;text-align:center">JP</td>
+  <td><span class="high" style="font-size:0.75rem">verified</span></td>
+</tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec-relations">
+<div class="chapter-number-label">SECTION 05</div>
+<h2 class="chapter-title">関係タイプ分布</h2>
+<p class="lead">概念間 450 関係の内訳。関係密度 1.36 rel/concept。</p>
+<table>
+<thead><tr><th>関係タイプ</th><th>件数</th><th>分布</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>related_to</code></td>
+  <td style="text-align:right">267</td>
+  <td><span class="bar" style="width:180px"></span></td>
+</tr>
+<tr>
+  <td><code>extends</code></td>
+  <td style="text-align:right">91</td>
+  <td><span class="bar" style="width:61px"></span></td>
+</tr>
+<tr>
+  <td><code>derived_from</code></td>
+  <td style="text-align:right">34</td>
+  <td><span class="bar" style="width:22px"></span></td>
+</tr>
+<tr>
+  <td><code>complements</code></td>
+  <td style="text-align:right">25</td>
+  <td><span class="bar" style="width:16px"></span></td>
+</tr>
+<tr>
+  <td><code>implements</code></td>
+  <td style="text-align:right">18</td>
+  <td><span class="bar" style="width:12px"></span></td>
+</tr>
+<tr>
+  <td><code>specializes</code></td>
+  <td style="text-align:right">8</td>
+  <td><span class="bar" style="width:5px"></span></td>
+</tr>
+<tr>
+  <td><code>competes_with</code></td>
+  <td style="text-align:right">6</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr>
+<tr>
+  <td><code>critiques</code></td>
+  <td style="text-align:right">1</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec-crossref">
+<div class="chapter-number-label">SECTION 06</div>
+<h2 class="chapter-title">cross_db_refs 接続先</h2>
+<p class="lead">WLC-DB と接続する外部 DB の一覧。計 50 件の横断参照が登録済み。</p>
+<table>
+<thead><tr><th>接続先 DB</th><th>参照件数</th><th>分布</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>regulatory-japan-db</strong></td>
+  <td style="text-align:right">11</td>
+  <td><span class="bar" style="width:200px"></span></td>
+</tr>
+<tr>
+  <td><strong>policy-db</strong></td>
+  <td style="text-align:right">7</td>
+  <td><span class="bar" style="width:127px"></span></td>
+</tr>
+<tr>
+  <td><strong>mdd</strong></td>
+  <td style="text-align:right">6</td>
+  <td><span class="bar" style="width:109px"></span></td>
+</tr>
+<tr>
+  <td><strong>wcps-db</strong></td>
+  <td style="text-align:right">6</td>
+  <td><span class="bar" style="width:109px"></span></td>
+</tr>
+<tr>
+  <td><strong>mdd-db</strong></td>
+  <td style="text-align:right">4</td>
+  <td><span class="bar" style="width:72px"></span></td>
+</tr>
+<tr>
+  <td><strong>policy</strong></td>
+  <td style="text-align:right">4</td>
+  <td><span class="bar" style="width:72px"></span></td>
+</tr>
+<tr>
+  <td><strong>regulatory-japan</strong></td>
+  <td style="text-align:right">4</td>
+  <td><span class="bar" style="width:72px"></span></td>
+</tr>
+<tr>
+  <td><strong>wcps</strong></td>
+  <td style="text-align:right">4</td>
+  <td><span class="bar" style="width:72px"></span></td>
+</tr>
+<tr>
+  <td><strong>ss-db</strong></td>
+  <td style="text-align:right">2</td>
+  <td><span class="bar" style="width:36px"></span></td>
+</tr>
+<tr>
+  <td><strong>ckd</strong></td>
+  <td style="text-align:right">1</td>
+  <td><span class="bar" style="width:18px"></span></td>
+</tr>
+<tr>
+  <td><strong>pae</strong></td>
+  <td style="text-align:right">1</td>
+  <td><span class="bar" style="width:18px"></span></td>
+</tr></tbody>
+</table>
+</section>
+
+<section class="chapter-section" id="sec-quality">
+<div class="chapter-number-label">SECTION 07</div>
+<h2 class="chapter-title">品質・方法論ノート</h2>
+<p class="lead">データ収集方針・検証状況・制約事項の記録。</p>
+<table>
+<thead><tr><th>指標</th><th>値</th></tr></thead>
+<tbody>
+<tr><td>source_url 完備率</td><td><span class="high">100%</span></td></tr>
+<tr><td>verified 率</td><td>97.0%</td></tr>
+<tr><td>関係密度</td><td>1.36 rel/concept</td></tr>
+<tr><td>スナップショット日時</td><td>2026-06-12 13:12 UTC</td></tr>
+<tr><td>拡張状況</td><td>Wave 1 Bootstrap 完了（再実行可能スクリプト）</td></tr>
+</tbody>
+</table>
+
+<h3>文献タイプ内訳</h3>
+<table>
+<thead><tr><th>文献タイプ</th><th>件数</th></tr></thead>
+<tbody><tr><td>law</td><td style="text-align:right">7</td></tr><tr><td>guideline</td><td style="text-align:right">5</td></tr><tr><td>academic</td><td style="text-align:right">5</td></tr><tr><td>standard</td><td style="text-align:right">4</td></tr><tr><td>report</td><td style="text-align:right">1</td></tr></tbody>
+</table>
+
+<div class="callout">
+  <div class="callout-title">再実行方法</div>
+  Wave 拡張後は <code>python3 phase5_dashboard/generate_dashboard.py</code> を再実行することで本 HTML が最新 DB 実測値で上書き生成される。数値のハードコードは一切ない。
+</div>
+</section>
+
+<footer>
+ミラツク DB エコシステム — WLC-DB ダッシュボード<br>
+スナップショット: 2026-06-12 13:12 UTC — 生成スクリプト: phase5_dashboard/generate_dashboard.py
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
