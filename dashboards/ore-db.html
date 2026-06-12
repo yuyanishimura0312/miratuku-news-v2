@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORE-DB — Operations & Reliability Engineering Knowledge DB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", Menlo, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212; --card: #1A1A1A; --card-hover: #222222;
+  --accent: #E0E0E0; --accent-warm: #FF4030; --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0; --text-secondary: #AAAAAA; --text-muted: #8A8A8A;
+  --border: #333333; --border-light: #2A2A2A; --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg); color: var(--text);
+  line-height: 1.7;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+
+/* Top Bar */
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  height: 48px; background: var(--bg);
+  border-top: 3px solid #121212;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 16px;
+}
+.top-bar-brand {
+  font-family: var(--font-serif);
+  font-size: 15px; font-weight: 700;
+  color: var(--accent-warm); letter-spacing: 0.04em;
+}
+.top-bar-sub { font-size: 12px; color: var(--text-muted); }
+.top-bar-spacer { flex: 1; }
+.theme-btn {
+  background: none; border: 1px solid var(--border);
+  color: var(--text); cursor: pointer; padding: 4px 10px;
+  font-size: 12px; font-family: var(--font);
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px; margin: 0 auto;
+  gap: 0;
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .toc-sidebar { display: none; }
+}
+
+/* Sidebar */
+.toc-sidebar {
+  position: sticky; top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-right: 1px solid var(--border-light);
+  padding: 24px 0;
+}
+.toc-heading {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text-muted); padding: 0 20px 8px;
+  border-bottom: 1px solid var(--border-light); margin-bottom: 8px;
+}
+.toc-item {
+  display: block; padding: 6px 20px;
+  font-size: 13px; color: var(--text-secondary);
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.toc-item:hover { color: var(--accent-warm); border-left-color: var(--accent-warm); background: var(--accent-muted); }
+
+/* Main */
+main { padding: 40px 48px; max-width: 800px; }
+
+/* Hero */
+.hero-eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--accent-warm);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.hero-eyebrow::before {
+  content: ""; width: 32px; height: 2px; background: var(--accent-warm);
+}
+h1 {
+  font-family: var(--font-serif); font-size: 30px; font-weight: 700;
+  line-height: 1.35; margin-bottom: 8px; color: var(--text);
+}
+.hero-en {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 20px;
+  font-style: italic;
+}
+.hero-lead {
+  font-size: 15px; line-height: 1.85;
+  border-left: 3px solid var(--accent-warm);
+  padding-left: 16px; color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px; margin-bottom: 48px;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 14px;
+  border-top: 3px solid var(--accent-warm);
+}
+.kpi-num {
+  font-family: var(--font-serif); font-size: 28px; font-weight: 700;
+  color: var(--accent-warm); line-height: 1;
+}
+.kpi-label {
+  font-size: 11px; color: var(--text-muted); margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* Section */
+.section { margin-bottom: 56px; scroll-margin-top: 64px; }
+.section-title {
+  font-family: var(--font-serif); font-size: 19px; font-weight: 700;
+  color: var(--text); margin-bottom: 4px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--accent-warm); margin-right: 8px;
+}
+.section-body { font-size: 14px; line-height: 1.8; margin-top: 16px; color: var(--text-secondary); }
+
+/* SF Grid */
+.sf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px; margin-top: 16px;
+}
+.sf-card {
+  background: var(--card); border: 1px solid var(--border);
+  padding: 14px; border-left: 3px solid var(--accent-warm);
+  transition: background 0.15s;
+}
+.sf-card:hover { background: var(--card-hover); }
+.sf-id {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--accent-warm); margin-bottom: 4px;
+}
+.sf-name-ja { font-size: 14px; font-weight: 600; }
+.sf-name-en { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.sf-count {
+  font-size: 12px; font-weight: 600; color: var(--accent-warm);
+  margin-bottom: 6px;
+}
+.sf-sample {
+  list-style: none; font-size: 11px; color: var(--text-muted);
+  line-height: 1.7;
+}
+.sf-sample li::before {
+  content: ""; display: inline-block;
+  width: 4px; height: 4px; background: var(--accent-warm);
+  border-radius: 50%; margin-right: 6px; vertical-align: middle;
+}
+
+/* Relation bars */
+.rel-bars { margin-top: 16px; }
+.rel-bar-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px; font-size: 12px;
+}
+.rel-type {
+  width: 180px; flex-shrink: 0; color: var(--text-secondary);
+  font-family: var(--font-mono); font-size: 11px;
+}
+.rel-bar-bg {
+  flex: 1; height: 8px; background: var(--surface); border-radius: 2px;
+}
+.rel-bar-fill {
+  height: 100%; background: var(--accent-warm); border-radius: 2px;
+}
+.rel-count { width: 30px; text-align: right; color: var(--text-muted); }
+
+/* Top connected */
+.top-connected { margin-top: 16px; }
+.top-row {
+  display: grid; grid-template-columns: 48px 1fr 40px;
+  gap: 8px; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
+}
+.top-sf { font-family: var(--font-mono); font-size: 11px; color: var(--accent-warm); }
+.top-deg { text-align: right; font-weight: 600; color: var(--accent-warm); }
+
+/* Lists */
+.simple-list {
+  list-style: none; margin-top: 12px;
+  font-size: 13px; color: var(--text-secondary);
+  line-height: 1.9;
+}
+.simple-list li::before {
+  content: ""; display: inline-block;
+  width: 4px; height: 4px; background: var(--accent-warm);
+  border-radius: 50%; margin-right: 8px; vertical-align: middle;
+}
+
+/* Footer */
+footer {
+  margin-top: 80px; padding: 24px 48px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted);
+}
+
+@media print {
+  .toc-sidebar, .top-bar { display: none; }
+  main { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span class="top-bar-brand">ORE-DB</span>
+  <span class="top-bar-sub">Operations & Reliability Engineering Knowledge DB</span>
+  <span class="top-bar-spacer"></span>
+  <span class="top-bar-sub">Wave 1 Bootstrap · 2026-06-13</span>
+  <button class="theme-btn" onclick="toggleTheme()">Dark/Light</button>
+</div>
+
+<div class="layout">
+  <aside class="toc-sidebar">
+    <div class="toc-heading">Contents</div>
+    <a class="toc-item" href="#overview">01 概要・KPI</a>
+    <a class="toc-item" href="#subfields">02 サブフィールド</a>
+    <a class="toc-item" href="#relations">03 関係ネットワーク</a>
+    <a class="toc-item" href="#top-connected">04 高接続概念</a>
+    <a class="toc-item" href="#cross-db">05 横断参照</a>
+    <a class="toc-item" href="#researchers">06 研究者</a>
+    <a class="toc-item" href="#quality">07 品質メタデータ</a>
+  </aside>
+
+  <main>
+
+    <div class="hero-eyebrow">ACADEMIC DB · WAVE 1 BOOTSTRAP</div>
+    <h1>Operations & Reliability Engineering Knowledge DB</h1>
+    <p class="hero-en">ORE-DB — SRE / SLO / Chaos Engineering / Observability / Trust & Safety</p>
+    <p class="hero-lead">
+      Site Reliability Engineering（SRE）を起点に、可用性工学・インシデント学・カオス工学・観測可能性・
+      スケーラビリティ・セキュリティ工学・信頼性の組織論・データ信頼性・Trust & Safety の
+      10 サブフィールドにわたる学術概念 122 件を構造化した知識データベース。
+      Wave 1 では Google SRE Book / Chaos Engineering / DORA Accelerate研究等の
+      基盤理論を網羅し、183 の関係リンクで概念ネットワークを構成する。
+    </p>
+
+    <!-- KPI -->
+    <section class="section" id="overview">
+      <h2 class="section-title"><span class="section-num">01</span>概要・KPI</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-num">122</div><div class="kpi-label">概念数</div></div>
+        <div class="kpi-card"><div class="kpi-num">183</div><div class="kpi-label">関係数</div></div>
+        <div class="kpi-card"><div class="kpi-num">10</div><div class="kpi-label">サブフィールド</div></div>
+        <div class="kpi-card"><div class="kpi-num">30</div><div class="kpi-label">横断参照</div></div>
+        <div class="kpi-card"><div class="kpi-num">32</div><div class="kpi-label">研究者</div></div>
+        <div class="kpi-card"><div class="kpi-num">25</div><div class="kpi-label">主要文献</div></div>
+        <div class="kpi-card"><div class="kpi-num">1.5×</div><div class="kpi-label">関係/概念比</div></div>
+        <div class="kpi-card"><div class="kpi-num">0</div><div class="kpi-label">孤立ノード</div></div>
+      </div>
+      <div class="section-body">
+        <p>Wave 1 目標達成状況：概念数 122/120+（達成）、関係数 183/150+（達成）、
+        研究者 32/30+（達成）、文献 25/25+（達成）、横断参照 30/25+（達成）。
+        全 122 概念が少なくとも 1 本以上の関係を持ち、孤立ノードゼロを達成。
+        10 サブフィールドが均等に 10〜14 概念をカバーし、SRE エコシステムの主要理論を網羅する。</p>
+      </div>
+    </section>
+
+    <!-- Subfields -->
+    <section class="section" id="subfields">
+      <h2 class="section-title"><span class="section-num">02</span>サブフィールド構成</h2>
+      <div class="section-body">
+        <p>10 のサブフィールドで SRE・信頼性工学の全体像を構造化。各フィールドに 10〜14 概念を収録。</p>
+      </div>
+      <div class="sf-grid">
+      <div class="sf-card">
+        <div class="sf-id">SF01</div>
+        <div class="sf-name-ja">SRE原理</div>
+        <div class="sf-name-en">SRE Principles</div>
+        <div class="sf-count">14 concepts</div>
+        <ul class="sf-sample"><li>Site Reliability Engineering (SRE)</li><li>Error Budget</li><li>Toil</li><li>Release Engineering</li><li>On-Call Design</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF02</div>
+        <div class="sf-name-ja">SLO・可用性工学</div>
+        <div class="sf-name-en">SLO & Availability Engineering</div>
+        <div class="sf-count">13 concepts</div>
+        <ul class="sf-sample"><li>Service Level Indicator (SLI)</li><li>Service Level Objective (SLO)</li><li>Percentile Latency (p50/p99/p999)</li><li>Availability Nines</li><li>Error Budget Policy</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF03</div>
+        <div class="sf-name-ja">インシデント学</div>
+        <div class="sf-name-en">Incident Science</div>
+        <div class="sf-count">12 concepts</div>
+        <ul class="sf-sample"><li>Incident Command System (ICS)</li><li>Blameless Postmortem</li><li>Mean Time to Repair (MTTR)</li><li>Severity Classification (SEV1-SEV5)</li><li>Five Whys Root Cause Analysis</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF04</div>
+        <div class="sf-name-ja">カオス工学・レジリエンス</div>
+        <div class="sf-name-en">Chaos Engineering & Resilience</div>
+        <div class="sf-count">13 concepts</div>
+        <ul class="sf-sample"><li>Chaos Engineering</li><li>Chaos Monkey</li><li>Safety-I and Safety-II</li><li>High Reliability Organization (HRO)</li><li>Resilience Engineering</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF05</div>
+        <div class="sf-name-ja">観測可能性</div>
+        <div class="sf-name-en">Observability</div>
+        <div class="sf-count">13 concepts</div>
+        <ul class="sf-sample"><li>Three Pillars of Observability</li><li>OpenTelemetry (OTel)</li><li>Distributed Tracing</li><li>Alert Fatigue</li><li>SLO-Based Monitoring</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF06</div>
+        <div class="sf-name-ja">スケーラビリティ・性能工学</div>
+        <div class="sf-name-en">Scalability & Performance Engineering</div>
+        <div class="sf-count">13 concepts</div>
+        <ul class="sf-sample"><li>Little's Law</li><li>CAP Theorem</li><li>Backpressure</li><li>Circuit Breaker Pattern</li><li>Amdahl's Law</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF07</div>
+        <div class="sf-name-ja">セキュリティ工学</div>
+        <div class="sf-name-en">Security Engineering</div>
+        <div class="sf-count">11 concepts</div>
+        <ul class="sf-sample"><li>OWASP Top 10</li><li>STRIDE Threat Modeling</li><li>Zero Trust Architecture</li><li>Secrets Management</li><li>Software Supply Chain Security</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF08</div>
+        <div class="sf-name-ja">信頼性の組織論</div>
+        <div class="sf-name-en">Organizational Reliability</div>
+        <div class="sf-count">12 concepts</div>
+        <ul class="sf-sample"><li>DORA Four Key Metrics</li><li>Westrum Organizational Culture Model</li><li>DevOps</li><li>Accelerate Research</li><li>Team Topologies</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF09</div>
+        <div class="sf-name-ja">データ信頼性・DR</div>
+        <div class="sf-name-en">Data Reliability & Disaster Recovery</div>
+        <div class="sf-count">10 concepts</div>
+        <ul class="sf-sample"><li>Recovery Point Objective & Recovery Time Objective</li><li>Safe Database Migration</li><li>Defense in Depth / Multi-Layer Protection</li><li>Data Reliability Engineering</li><li>3-2-1 Backup Rule</li></ul>
+      </div>
+      <div class="sf-card">
+        <div class="sf-id">SF10</div>
+        <div class="sf-name-ja">Trust & Safety</div>
+        <div class="sf-name-en">Trust & Safety</div>
+        <div class="sf-count">11 concepts</div>
+        <ul class="sf-sample"><li>Content Moderation</li><li>Rate Limiting</li><li>Abuse Detection</li><li>PhotoDNA and Hash Matching</li><li>Content Policy Design</li></ul>
+      </div></div>
+    </section>
+
+    <!-- Relations -->
+    <section class="section" id="relations">
+      <h2 class="section-title"><span class="section-num">03</span>関係ネットワーク</h2>
+      <div class="section-body">
+        <p>合計 183 の関係リンクで概念間の知識構造を表現。
+        derived_from（派生元）と related_to（関連）が各 30 件超で最多。
+        extends（拡張）が 34 件と理論の発展系譜を表す。</p>
+      </div>
+      <div class="rel-bars">
+        <div class="rel-bar-row">
+          <span class="rel-type">derived_from</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:100%"></div>
+          </div>
+          <span class="rel-count">39</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">related_to</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:100%"></div>
+          </div>
+          <span class="rel-count">39</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">extends</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:87%"></div>
+          </div>
+          <span class="rel-count">34</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">complements</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:64%"></div>
+          </div>
+          <span class="rel-count">25</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">applies_to</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:28%"></div>
+          </div>
+          <span class="rel-count">11</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">applies_to_policy</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:21%"></div>
+          </div>
+          <span class="rel-count">8</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">evolved_from</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:18%"></div>
+          </div>
+          <span class="rel-count">7</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">empirically_tests</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:13%"></div>
+          </div>
+          <span class="rel-count">5</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">influenced</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:13%"></div>
+          </div>
+          <span class="rel-count">5</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">synthesizes</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:10%"></div>
+          </div>
+          <span class="rel-count">4</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">critiques</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:8%"></div>
+          </div>
+          <span class="rel-count">3</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">competes_with</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:5%"></div>
+          </div>
+          <span class="rel-count">2</span>
+        </div>
+        <div class="rel-bar-row">
+          <span class="rel-type">extended_by</span>
+          <div class="rel-bar-bg">
+            <div class="rel-bar-fill" style="width:3%"></div>
+          </div>
+          <span class="rel-count">1</span>
+        </div></div>
+    </section>
+
+    <!-- Top Connected -->
+    <section class="section" id="top-connected">
+      <h2 class="section-title"><span class="section-num">04</span>高接続概念（ハブノード）</h2>
+      <div class="section-body">
+        <p>関係リンク数（次数）の多い概念は理論的なハブ。SRE・Chaos Engineering・SLOが最上位。</p>
+      </div>
+      <div class="top-connected">
+        <div class="top-row">
+          <span class="top-sf">SF04</span>
+          <span class="top-name">Chaos Engineering</span>
+          <span class="top-deg">16</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF01</span>
+          <span class="top-name">Site Reliability Engineering (SRE)</span>
+          <span class="top-deg">15</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF03</span>
+          <span class="top-name">Blameless Postmortem</span>
+          <span class="top-deg">12</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF05</span>
+          <span class="top-name">Three Pillars of Observability</span>
+          <span class="top-deg">11</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF02</span>
+          <span class="top-name">Service Level Objective (SLO)</span>
+          <span class="top-deg">10</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF08</span>
+          <span class="top-name">DORA Four Key Metrics</span>
+          <span class="top-deg">10</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF07</span>
+          <span class="top-name">Zero Trust Architecture</span>
+          <span class="top-deg">8</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF06</span>
+          <span class="top-name">Backpressure</span>
+          <span class="top-deg">6</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF07</span>
+          <span class="top-name">STRIDE Threat Modeling</span>
+          <span class="top-deg">6</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF09</span>
+          <span class="top-name">Recovery Point Objective & Recovery Time Objective</span>
+          <span class="top-deg">6</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF09</span>
+          <span class="top-name">Data Reliability Engineering</span>
+          <span class="top-deg">6</span>
+        </div>
+        <div class="top-row">
+          <span class="top-sf">SF10</span>
+          <span class="top-name">Content Moderation</span>
+          <span class="top-deg">6</span>
+        </div></div>
+    </section>
+
+    <!-- Cross-DB -->
+    <section class="section" id="cross-db">
+      <h2 class="section-title"><span class="section-num">05</span>横断参照（cross_db_refs）</h2>
+      <div class="section-body">
+        <p>30 件の横断参照で既存学術 DB エコシステムと接続。
+        イノベーション理論 DB・物理学 DB・社会科学 DB 等と連携し、
+        信頼性工学の学際的文脈を可視化。</p>
+      </div>
+      <ul class="simple-list"><li><strong>goe-db</strong>: 5</li><li><strong>wlc-db</strong>: 5</li><li><strong>aag-db</strong>: 4</li><li><strong>dsci-db</strong>: 4</li><li><strong>lsa-db</strong>: 4</li><li><strong>mdd-db</strong>: 4</li><li><strong>pae-db</strong>: 4</li></ul>
+    </section>
+
+    <!-- Researchers -->
+    <section class="section" id="researchers">
+      <h2 class="section-title"><span class="section-num">06</span>主要研究者</h2>
+      <div class="section-body">
+        <p>32 名の研究者・実践家を収録。Nicole Forsgren（DORA 創設者）・
+        Charity Majors（Observability 推進）・Cindy Sridharan らの
+        多様な背景の実践家・研究者を網羅。非西洋圏として中国 Alibaba/ByteDance の
+        SRE 実践者・NIST セキュリティ研究者も含む。</p>
+      </div>
+      <ul class="simple-list"><li>Ben Treynor Sloss (Google VP Engineering, SF01,SF02)</li><li>Betsy Beyer (Google, Stanford University, SF01,SF08)</li><li>Niall Murphy (Google, SF01,SF02)</li><li>Alex Hidalgo (Google, Nobl9, SF02)</li><li>John Allspaw (Etsy (former CTO), Adaptive Capacity Labs, SF03,SF04,SF08)</li><li>Richard I. Cook (KTH Royal Institute of Technology, University of Chicago, SF03,SF04)</li><li>David D. Woods (Ohio State University, SF03,SF04)</li><li>Laura Maguire (Jeli, PagerDuty, SF03)</li><li>Casey Rosenthal (Netflix, Verica, SF04)</li><li>Nora Jones (Netflix, Jeli, SF04)</li><li>Erik Hollnagel (Southern Denmark University / DTU, SF04)</li><li>Karl Weick (University of Michigan, SF04,SF08)</li><li>Kathleen Sutcliffe (Johns Hopkins University, SF04)</li><li>Charity Majors (Honeycomb, SF05)</li><li>Cindy Sridharan (Google (former), Independent, SF05)</li><li>Ben Sigelman (Google (former), LightStep (founder), SF05)</li><li>Martin L. Abbott (AKF Partners, SF06)</li><li>Neil J. Gunther (Performance Dynamics Company, SF06)</li><li>John D.C. Little (MIT, SF06)</li><li>Eric Brewer (UC Berkeley, SF06)</li></ul>
+    </section>
+
+    <!-- Quality -->
+    <section class="section" id="quality">
+      <h2 class="section-title"><span class="section-num">07</span>品質メタデータ</h2>
+      <div class="section-body">
+        <p><strong>source_url 充足率：100%</strong>（全概念に一次出典 URL を付与）。
+        verification_status は Wave 1 段階で "unverified" — Wave 2 で curl 実確認・
+        verified 昇格を行う予定。
+        definition_ja は全概念 250 字以上の要件を満たし、概念の核心を構造的に説明する。
+        孤立ノード数：0（全概念が最低 1 本の関係リンクを保持）。
+        重複チェック：name_en の完全一致チェック済み、重複なし。</p>
+
+        <p style="margin-top:12px;">Wave 2 目標（拡張計画）：概念数 300+、関係数 600+、
+        IRR Gwet AC1 測定（5 件セット品質基準）、verified 率 80%+、
+        多言語化（英日対応完備）、非西洋率 25%+。</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>ORE-DB Wave 1 Bootstrap · 生成日: 2026-06-13 · NPO 法人ミラツク</p>
+  <p>概念: 122 / 関係: 183 / サブフィールド: 10 / 横断参照: 30</p>
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  localStorage.setItem('ore-theme', html.getAttribute('data-theme'));
+}
+(function() {
+  const saved = localStorage.getItem('ore-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+</body>
+</html>
