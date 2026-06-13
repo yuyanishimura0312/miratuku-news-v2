@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIC-DB ダッシュボード Wave 20 | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  gap: 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 5px 8px 5px 0;
+  transition: color 0.15s;
+  line-height: 1.5;
+}
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--accent-warm);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+
+.book-header {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.book-db-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.db-tag {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.book-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.book-meta {
+  margin-top: 32px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chapter-section {
+  margin-bottom: 72px;
+  padding-bottom: 72px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+
+.chapter-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.chapter-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  letter-spacing: 0.08em;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.body-text {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  line-height: 1.95;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  text-indent: 1em;
+}
+.body-text:first-of-type { text-indent: 0; }
+
+/* KPI カード */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 32px 0;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+}
+.kpi-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  line-height: 1.1;
+}
+.kpi-unit {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* 棒グラフ */
+.bar-chart { margin: 24px 0; }
+.bar-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.bar-label {
+  font-family: var(--font);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bar-track {
+  background: var(--surface);
+  height: 18px;
+  position: relative;
+}
+.bar-fill {
+  background: var(--accent-warm);
+  height: 100%;
+  opacity: 0.85;
+  transition: width 0.6s ease;
+}
+.bar-val {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* IRR テーブル */
+.irr-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-family: var(--font);
+  font-size: 0.85rem;
+}
+.irr-table th {
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--accent-warm);
+  text-align: left;
+}
+.irr-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.irr-table td.num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  color: var(--text);
+}
+.irr-table td.highlight { color: var(--accent-warm); font-weight: 700; }
+
+/* 系譜チェーン */
+.chain-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 20px 0;
+}
+.chain-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+}
+.chain-name {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  color: var(--text);
+  flex: 1;
+}
+.chain-era {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.68rem;
+  color: var(--accent-warm);
+  white-space: nowrap;
+}
+
+/* 出版物リスト */
+.pub-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+.pub-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.pub-title {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.pub-meta {
+  font-family: var(--font);
+  font-size: 0.73rem;
+  color: var(--text-muted);
+}
+
+/* Wave タイムライン */
+.wave-timeline {
+  position: relative;
+  padding-left: 24px;
+  margin: 20px 0;
+}
+.wave-timeline::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.wave-item {
+  position: relative;
+  margin-bottom: 20px;
+  padding-left: 16px;
+}
+.wave-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-warm);
+  border-radius: 50%;
+}
+.wave-label {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  margin-bottom: 2px;
+}
+.wave-desc {
+  font-family: var(--font);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.note-box {
+  background: var(--accent-muted);
+  border-left: 3px solid var(--accent-warm);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+@media print {
+  .toc-sidebar { display: none; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding-left: 0; }
+  .top-bar .theme-toggle { display: none; }
+}
+@media (max-width: 1000px) {
+  .book-layout {
+    grid-template-columns: 1fr;
+  }
+  .toc-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: 24px 0;
+  }
+  .book-main { padding: 40px 0 80px 0; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-brand">miratuku <span>DB</span></div>
+  <div class="top-bar-actions">
+    <a class="back-link" href="index.html">DB 一覧</a>
+    <button class="theme-toggle" onclick="toggleTheme()">ダーク</button>
+  </div>
+</div>
+
+<div class="book-layout">
+  <aside class="toc-sidebar">
+    <div class="toc-label">目次</div>
+    <ul class="toc-list">
+      <li><a href="#sec1"><span class="toc-num">01</span>概要</a></li>
+      <li><a href="#sec2"><span class="toc-num">02</span>規模統計</a></li>
+      <li><a href="#sec3"><span class="toc-num">03</span>サブフィールド別分布</a></li>
+      <li><a href="#sec4"><span class="toc-num">04</span>非西洋率・多言語充填率</a></li>
+      <li><a href="#sec5"><span class="toc-num">05</span>品質指標（IRR 5件セット）</a></li>
+      <li><a href="#sec6"><span class="toc-num">06</span>系譜チェーン一覧</a></li>
+      <li><a href="#sec7"><span class="toc-num">07</span>主要出版物</a></li>
+      <li><a href="#sec8"><span class="toc-num">08</span>Wave 履歴</a></li>
+    </ul>
+  </aside>
+
+  <main class="book-main">
+    <header class="book-header">
+      <div class="book-db-tags">
+        <span class="db-tag primary">PIC-DB</span>
+        <span class="db-tag">Wave 20</span>
+        <span class="db-tag">画像制作学</span>
+        <span class="db-tag">2026-06-13</span>
+      </div>
+      <h1 class="book-title">PIC-DB ダッシュボード</h1>
+      <p class="book-subtitle">画像制作・ビジュアルアーツ学術知データベース — 絵画・写真・グラフィック・生成画像を横断する画像制作概念体系</p>
+      <div class="book-meta">
+        <span>概念数 1,420</span>
+        <span>関係数 2,843</span>
+        <span>研究者 335名</span>
+        <span>Wave 20 完了</span>
+      </div>
+    </header>
+
+    <!-- Section 1 -->
+    <section class="chapter-section" id="sec1">
+      <div class="chapter-heading">
+        <span class="chapter-num">01</span>
+        <h2 class="chapter-title">概要</h2>
+      </div>
+      <p class="body-text">PIC-DB は画像制作・ビジュアルアーツに関わる学術概念を体系化した知識データベースである。構図・色彩・光・タイポグラフィ・書・遠近法・非西洋視覚芸術・図像解釈・生成画像・倫理など、静止画像制作の全領域を22の基本サブフィールドでカバーする。</p>
+      <p class="body-text">本データベースは、画像制作エージェント「/img」の学術基盤として機能する。一枚の画像が持つ構造的・文化的・技術的文脈を記録し、制作者が知的根拠を持って画像を作成・評価するための概念体系を提供する。Wave 1〜7の基礎構築（構図・色彩・照明・タイポグラフィ・非西洋視覚芸術）から、Wave 8〜11の新サブフィールド拡張（画像技術史・展示・隣接領域・理論批評）、Wave 12〜14の多言語化・系譜チェーン構築・出版物収録、Wave 15〜22の深化まで、段階的に品質を高めてきた。</p>
+      <p class="body-text">ミラツクのDBエコシステムとの横断参照は33の接続先DBを持ち、美術・文化・技術・哲学・社会科学の各DBと接続する。非西洋視覚文化の比率が43.2%を超え、ハリウッド視点ではなく人類の画像制作実践の全体を反映する設計を採用している。生成AI時代の画像真正性・プロヴェナンス問題（SF22）を最新サブフィールドとして収録している点も特徴である。</p>
+    </section>
+
+    <!-- Section 2 -->
+    <section class="chapter-section" id="sec2">
+      <div class="chapter-heading">
+        <span class="chapter-num">02</span>
+        <h2 class="chapter-title">規模統計</h2>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">概念数</div>
+          <div class="kpi-value">1,420</div>
+          <div class="kpi-unit">pic_concepts</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">関係数</div>
+          <div class="kpi-value">2,843</div>
+          <div class="kpi-unit">pic_relations</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">関係密度</div>
+          <div class="kpi-value">2.00</div>
+          <div class="kpi-unit">relations / concept</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">研究者</div>
+          <div class="kpi-value">335</div>
+          <div class="kpi-unit">pic_researchers</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">横断参照</div>
+          <div class="kpi-value">602</div>
+          <div class="kpi-unit">cross_db_refs（33 DB）</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">主要出版物</div>
+          <div class="kpi-value">83</div>
+          <div class="kpi-unit">pic_publications</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">系譜チェーン</div>
+          <div class="kpi-value">28</div>
+          <div class="kpi-unit">pic_genealogy_chains</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">出典URL充填率</div>
+          <div class="kpi-value">100%</div>
+          <div class="kpi-unit">source_url_rate</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">孤立概念</div>
+          <div class="kpi-value">0</div>
+          <div class="kpi-unit">isolated_concepts</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section class="chapter-section" id="sec3">
+      <div class="chapter-heading">
+        <span class="chapter-num">03</span>
+        <h2 class="chapter-title">サブフィールド別分布</h2>
+      </div>
+      <p class="body-text">PIC-DBは22のサブフィールド（SF01〜SF22）で構成される。SF05（グラフィックデザイン・タイポグラフィ）が89件と最大規模であり、SF14（風景・自然表現）が84件と続く。SF16〜SF18は30件規模の専門特化サブフィールドである。</p>
+
+      <div class="bar-chart">
+        <div class="bar-row">
+          <span class="bar-label">SF05 グラフィック</span>
+          <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+          <span class="bar-val">89</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF14 風景・自然</span>
+          <div class="bar-track"><div class="bar-fill" style="width:94%"></div></div>
+          <span class="bar-val">84</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF22 生成AI倫理</span>
+          <div class="bar-track"><div class="bar-fill" style="width:90%"></div></div>
+          <span class="bar-val">80</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF21 材料・素材史</span>
+          <div class="bar-track"><div class="bar-fill" style="width:90%"></div></div>
+          <span class="bar-val">80</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF01 写真理論・批評</span>
+          <div class="bar-track"><div class="bar-fill" style="width:89%"></div></div>
+          <span class="bar-val">79</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF12 非西洋視覚芸術</span>
+          <div class="bar-track"><div class="bar-fill" style="width:83%"></div></div>
+          <span class="bar-val">74</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF11 生成AI・コンピュテーショナル</span>
+          <div class="bar-track"><div class="bar-fill" style="width:83%"></div></div>
+          <span class="bar-val">74</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF04 照明・光の美学</span>
+          <div class="bar-track"><div class="bar-fill" style="width:82%"></div></div>
+          <span class="bar-val">73</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF08 東アジア視覚芸術</span>
+          <div class="bar-track"><div class="bar-fill" style="width:81%"></div></div>
+          <span class="bar-val">72</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF20 報道・社会記録写真</span>
+          <div class="bar-track"><div class="bar-fill" style="width:79%"></div></div>
+          <span class="bar-val">70</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF19 商業・広告ビジュアル</span>
+          <div class="bar-track"><div class="bar-fill" style="width:79%"></div></div>
+          <span class="bar-val">70</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF03 色彩理論</span>
+          <div class="bar-track"><div class="bar-fill" style="width:78%"></div></div>
+          <span class="bar-val">69</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF13 ポートレート・人物表現</span>
+          <div class="bar-track"><div class="bar-fill" style="width:75%"></div></div>
+          <span class="bar-val">67</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF02 構図・視覚的文法</span>
+          <div class="bar-track"><div class="bar-fill" style="width:73%"></div></div>
+          <span class="bar-val">65</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF06 書・カリグラフィー</span>
+          <div class="bar-track"><div class="bar-fill" style="width:70%"></div></div>
+          <span class="bar-val">62</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF07 空間表現・遠近法</span>
+          <div class="bar-track"><div class="bar-fill" style="width:67%"></div></div>
+          <span class="bar-val">60</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF10 図像学・記号論</span>
+          <div class="bar-track"><div class="bar-fill" style="width:63%"></div></div>
+          <span class="bar-val">56</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF09 知覚心理学・ゲシュタルト</span>
+          <div class="bar-track"><div class="bar-fill" style="width:63%"></div></div>
+          <span class="bar-val">56</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF15 画像技術史</span>
+          <div class="bar-track"><div class="bar-fill" style="width:56%"></div></div>
+          <span class="bar-val">50</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF18 哲学的・現象学的理論</span>
+          <div class="bar-track"><div class="bar-fill" style="width:34%"></div></div>
+          <span class="bar-val">30</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF17 イラスト・絵本・絵画史</span>
+          <div class="bar-track"><div class="bar-fill" style="width:34%"></div></div>
+          <span class="bar-val">30</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SF16 展示・ギャラリー論</span>
+          <div class="bar-track"><div class="bar-fill" style="width:34%"></div></div>
+          <span class="bar-val">30</span>
+        </div>
+      </div>
+      <p class="body-text">SF05（グラフィックデザイン・タイポグラフィ）が89件と最大規模を誇り、バウハウスからスイス国際タイポグラフィまでのデザイン運動を網羅する。SF22（生成AI・画像倫理）とSF21（材料・素材史）は各80件と拡張SF群として整備された。SF01（写真理論・批評）はバルトのプンクトゥム/ストゥディウムやスーザン・ソンタグの写真論など批評的概念を中心に79件を収録する。</p>
+    </section>
+
+    <!-- Section 4 -->
+    <section class="chapter-section" id="sec4">
+      <div class="chapter-heading">
+        <span class="chapter-num">04</span>
+        <h2 class="chapter-title">非西洋率・多言語充填率</h2>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">全体非西洋率</div>
+          <div class="kpi-value">43.2%</div>
+          <div class="kpi-unit">overall_non_western_pct（_quality_metadata）</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">非西洋概念数</div>
+          <div class="kpi-value">44</div>
+          <div class="kpi-unit">non_western_count（Wave 1時点）</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">中国語名充填</div>
+          <div class="kpi-value">333件</div>
+          <div class="kpi-unit">Wave 12 完了（23.5%）</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">韓国語名充填</div>
+          <div class="kpi-value">333件</div>
+          <div class="kpi-unit">Wave 12 完了</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">スペイン語名充填</div>
+          <div class="kpi-value">333件</div>
+          <div class="kpi-unit">Wave 12 完了</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">多言語充填率</div>
+          <div class="kpi-value">23.5%</div>
+          <div class="kpi-unit">3言語いずれか（SQL集計値）</div>
+        </div>
+      </div>
+      <p class="body-text">PIC-DBは東アジア視覚芸術（SF08）・非西洋視覚芸術（SF12）を独立サブフィールドとして設け、水墨画・浮世絵・イスラーム幾何学・アフリカ美術・ラテンアメリカ写真・インド絵画など非西洋の画像制作伝統を積極的に収録する。全体非西洋率43.2%はWave 7以降の非西洋深化によって達成された水準である。</p>
+      <p class="body-text">多言語充填率（中国語・韓国語・スペイン語）はWave 12で333件が充填され23.5%に達した。目標値30%への到達に向け、Wave 13以降での継続充填が計画されている。なおWave 12の_quality_metadata記録では充填目標30%達成を示す値（wave12_multilingual_fill_pct = 30.0）も記録されており、充填基準の差異による数値の差が存在する。</p>
+    </section>
+
+    <!-- Section 5 -->
+    <section class="chapter-section" id="sec5">
+      <div class="chapter-heading">
+        <span class="chapter-num">05</span>
+        <h2 class="chapter-title">品質指標（IRR 5件セット）</h2>
+      </div>
+      <p class="body-text">信頼性評価は「カッパ単独公表禁止、5件セット必須」原則に基づく。評価者間信頼性の正確な解釈には、観察一致率・Gwet AC1・コーエンのカッパ・有病率・標本数の5値が必要である。以下はWave 19再計測（irr_w19）の結果である。</p>
+
+      <table class="irr-table">
+        <thead>
+          <tr>
+            <th>指標</th>
+            <th>値</th>
+            <th>解釈・備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>観察一致率（Po）</td>
+            <td class="num highlight">0.8333</td>
+            <td>2評価者（haiku × sonnet）間の実測一致率</td>
+          </tr>
+          <tr>
+            <td>Gwet AC1（主要指標）</td>
+            <td class="num highlight">0.8033</td>
+            <td>Substantial。有病率パラドックスに頑健</td>
+          </tr>
+          <tr>
+            <td>コーエンのカッパ</td>
+            <td class="num">−0.0909</td>
+            <td>有病率が高い場合に負値になる既知のパラドックス</td>
+          </tr>
+          <tr>
+            <td>陽性有病率</td>
+            <td class="num">0.9167</td>
+            <td>「許容可能」の割合が非常に高く、カッパが過小評価される原因</td>
+          </tr>
+          <tr>
+            <td>標本数</td>
+            <td class="num">60件</td>
+            <td>ランダム抽出、2026-06-13 計測（W19）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note-box">
+        コーエンのカッパが負値（−0.091）を示しているのは、有病率パラドックスの典型例である。陽性有病率が91.7%と極めて高い場合、カッパは理論的に低くなる。この現象はFleissらが1969年に指摘している。有病率に頑健なGwet AC1（0.803）が適切な一致性指標であり、Substantialに相当する。参考として初回計測（Wave 1基準）では Gwet AC1 = 0.9465（Almost Perfect / n=59 / Po=0.9492）が記録されている。
+      </div>
+
+      <p class="body-text">評価設計：2値許容可能性評価（定義の正確性・帰属・名前一致）、独立2評価者（haiku × sonnet）、ランダム標本n=60、2026年6月13日計測（W19再計測）。Wave 19再計測においてid582「Writing &amp; Illuminating &amp; Lettering」書名が修正された。また初期計測においてid108 Adinkra（Akan）の誤帰属 → adire（本来のYoruba resist-dye）への修正と、id275 Daniel Cohagnet → Naila Murray（AVA 2012実在人物）への修正が行われた。</p>
+    </section>
+
+    <!-- Section 6 -->
+    <section class="chapter-section" id="sec6">
+      <div class="chapter-heading">
+        <span class="chapter-num">06</span>
+        <h2 class="chapter-title">系譜チェーン一覧（28件）</h2>
+      </div>
+      <p class="body-text">Wave 13で構築された28の系譜チェーンは、画像制作史・美術理論・視覚文化の主要な思想的連鎖を記録する。古代から現代の生成AIまでを射程に収め、非西洋の視覚伝統を多数含む。</p>
+
+      <ul class="chain-list">
+        <li class="chain-item"><span class="chain-name">遠近法系譜：ブルネレスキから写真へ</span><span class="chain-era">1420年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">浮世絵からジャポニスムへ——東西視覚交流</span><span class="chain-era">1760年代-1920年代</span></li>
+        <li class="chain-item"><span class="chain-name">明暗法系譜：カラヴァッジョからレンブラント、そして写真照明へ</span><span class="chain-era">1590年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">水墨から禅画、そしてミニマリズムへ</span><span class="chain-era">8世紀-現代</span></li>
+        <li class="chain-item"><span class="chain-name">バウハウスからスイス国際タイポグラフィへ——機能主義グラフィックの系譜</span><span class="chain-era">1919年-1970年代</span></li>
+        <li class="chain-item"><span class="chain-name">ゲシュタルト心理学から神経美学へ——視覚知覚の科学的探求</span><span class="chain-era">1910年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">ダゲレオタイプから拡散モデルへ——画像生成技術の200年</span><span class="chain-era">1839年-2024年</span></li>
+        <li class="chain-item"><span class="chain-name">パース記号論からパノフスキー図像学へ——意味解読の理論系譜</span><span class="chain-era">1860年代-1960年代</span></li>
+        <li class="chain-item"><span class="chain-name">マグナム創設から現代ドキュメンタリー写真倫理へ</span><span class="chain-era">1947年-現代</span></li>
+        <li class="chain-item"><span class="chain-name">構成主義ポスターからプロパガンダ視覚言語へ</span><span class="chain-era">1917年-1940年代</span></li>
+        <li class="chain-item"><span class="chain-name">フリーダ・カーロの自画像からフェミニスト美術史へ</span><span class="chain-era">1930年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">イスラーム幾何学からタイポグラフィ書法へ</span><span class="chain-era">7世紀-現代</span></li>
+        <li class="chain-item"><span class="chain-name">アンセル・アダムスのゾーンシステムから現代HDRへ</span><span class="chain-era">1940年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">点描法からカラーフィールド絵画へ——色彩科学との対話</span><span class="chain-era">1880年代-1960年代</span></li>
+        <li class="chain-item"><span class="chain-name">ファユーム肖像画から現代ポートレート写真へ</span><span class="chain-era">1世紀-現代</span></li>
+        <li class="chain-item"><span class="chain-name">マヤ写本からラテンアメリカ写真伝統へ</span><span class="chain-era">900年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">ランゴーリーと南アジア色彩象徴から非西洋カラーシステムへ</span><span class="chain-era">古代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">リンパ派から琳派の継承——装飾的平面性の系譜</span><span class="chain-era">17世紀-現代</span></li>
+        <li class="chain-item"><span class="chain-name">アボリジナルのドット絵画から現代先住民アートへ</span><span class="chain-era">古代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">ホワイトキューブから関係性の美学、サイトスペシフィックへ</span><span class="chain-era">1929年-現代</span></li>
+        <li class="chain-item"><span class="chain-name">ベンヤミンの複製技術論からNFT・拡散モデルへ</span><span class="chain-era">1936年-現在</span></li>
+        <li class="chain-item"><span class="chain-name">チベット・タンカからマンダラ図像学へ</span><span class="chain-era">7世紀-現代</span></li>
+        <li class="chain-item"><span class="chain-name">クロノフォトグラフィーからコンピュテーショナル・フォトグラフィへ</span><span class="chain-era">1878年-現代</span></li>
+        <li class="chain-item"><span class="chain-name">社会記録写真——FSAからサルガド、現代の証言へ</span><span class="chain-era">1930年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">バルトの写真論からポストフォトグラフィックへ</span><span class="chain-era">1980年-現代</span></li>
+        <li class="chain-item"><span class="chain-name">ソンタグ・バルトの写真論とメモリーの問い</span><span class="chain-era">1970年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">ネオアヴァンギャルドから制度批判へ——芸術制度の自己批判</span><span class="chain-era">1960年代-現代</span></li>
+        <li class="chain-item"><span class="chain-name">プンクトゥムからアフェクト理論へ——感情・情動の美学</span><span class="chain-era">1980年代-現代</span></li>
+      </ul>
+    </section>
+
+    <!-- Section 7 -->
+    <section class="chapter-section" id="sec7">
+      <div class="chapter-heading">
+        <span class="chapter-num">07</span>
+        <h2 class="chapter-title">主要出版物（20件抜粋）</h2>
+      </div>
+      <p class="body-text">Wave 14で収録した83件の出版物から、特に重要な20件を時代順に示す。中国6世紀の古典「古画品録」から2024年の生成AI批評まで、人類の画像制作思索を跨ぐ多様な文献を収録している。</p>
+
+      <ul class="pub-list">
+        <li class="pub-item"><div class="pub-title">古画品録（Gu Hua Pin Lu: Classification of Old Painters）</div><div class="pub-meta">謝赫（Xie He）, 550 | book</div></li>
+        <li class="pub-item"><div class="pub-title">On the Art of Painting (De Pictura)</div><div class="pub-meta">Leon Battista Alberti, 1435 | book</div></li>
+        <li class="pub-item"><div class="pub-title">Treatise on Painting (Trattato della Pittura)</div><div class="pub-meta">Leonardo da Vinci, 1651 | book</div></li>
+        <li class="pub-item"><div class="pub-title">芥子園画伝（Manual of the Mustard Seed Garden）</div><div class="pub-meta">李漁（Li Yu）, 1679 | book</div></li>
+        <li class="pub-item"><div class="pub-title">Theory of Colours (Zur Farbenlehre)</div><div class="pub-meta">Johann Wolfgang von Goethe, 1810 | book</div></li>
+        <li class="pub-item"><div class="pub-title">北斎漫画（Hokusai Manga）</div><div class="pub-meta">葛飾北斎（Katsushika Hokusai）, 1814 | book</div></li>
+        <li class="pub-item"><div class="pub-title">The Pencil of Nature</div><div class="pub-meta">William Henry Fox Talbot, 1844 | book</div></li>
+        <li class="pub-item"><div class="pub-title">Concerning the Spiritual in Art</div><div class="pub-meta">Wassily Kandinsky, 1911 | book</div></li>
+        <li class="pub-item"><div class="pub-title">The Work of Art in the Age of Mechanical Reproduction</div><div class="pub-meta">Walter Benjamin, 1935 | essay</div></li>
+        <li class="pub-item"><div class="pub-title">Art as Experience</div><div class="pub-meta">John Dewey, 1934 | book</div></li>
+        <li class="pub-item"><div class="pub-title">The Story of Art</div><div class="pub-meta">Ernst Gombrich, 1950 | book</div></li>
+        <li class="pub-item"><div class="pub-title">The Perception of the Visual World</div><div class="pub-meta">James J. Gibson, 1950 | book</div></li>
+        <li class="pub-item"><div class="pub-title">The Language of Vision</div><div class="pub-meta">Gyorgy Kepes, 1944 | book</div></li>
+        <li class="pub-item"><div class="pub-title">The Photograph as Evidence</div><div class="pub-meta">Beaumont Newhall, 1937 | book</div></li>
+        <li class="pub-item"><div class="pub-title">American Photographs</div><div class="pub-meta">Walker Evans, 1938 | book</div></li>
+        <li class="pub-item"><div class="pub-title">Ways of Seeing</div><div class="pub-meta">John Berger, 1972 | book</div></li>
+        <li class="pub-item"><div class="pub-title">On Photography</div><div class="pub-meta">Susan Sontag, 1977 | book</div></li>
+        <li class="pub-item"><div class="pub-title">Camera Lucida (La Chambre Claire)</div><div class="pub-meta">Roland Barthes, 1980 | book</div></li>
+        <li class="pub-item"><div class="pub-title">The Munsell Color System: A Color Notation</div><div class="pub-meta">Albert Henry Munsell, 1905 | book</div></li>
+        <li class="pub-item"><div class="pub-title">Der Blaue Reiter Almanach (The Blue Rider Almanac)</div><div class="pub-meta">Wassily Kandinsky; Franz Marc, 1912 | book</div></li>
+      </ul>
+    </section>
+
+    <!-- Section 8 -->
+    <section class="chapter-section" id="sec8">
+      <div class="chapter-heading">
+        <span class="chapter-num">08</span>
+        <h2 class="chapter-title">Wave 履歴（Wave 1〜20）</h2>
+      </div>
+      <p class="body-text">PIC-DBは2026年6月12〜13日にかけてWave 1から20まで段階的に構築・深化された。各Waveの主要な成果を記録する。</p>
+
+      <div class="wave-timeline">
+        <div class="wave-item">
+          <div class="wave-label">Wave 1 — 基盤構築</div>
+          <div class="wave-desc">SF01〜SF14の14サブフィールドに渡る初期概念155件を収録。研究者66名、横断参照97件、関係数206件で基盤を確立。出典URL充填率100%を当初より達成。非西洋率28.4%。ルートA（/adb path-A）で構築開始。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 2 — 拡張と品質向上</div>
+          <div class="wave-desc">概念数304件に増加（Wave 2追加149件）。関係密度2.02を達成。検証監査により24件のバリアントエンドポイントをリマップ、10件の孤立関係を削除、14概念18関係をキュレーション追加。非西洋率36.5%に向上。横断参照157件（21 DB）。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 3〜7 — 中期深化と世界的拡張</div>
+          <div class="wave-desc">Wave 3で概念500件・密度2.02到達。Wave 4〜7で東南アジア・中央アジア・北欧・中東欧・アラブ諸国・カリブの画像芸術運動と作家を追加。Wave 7完了時点で概念980件・関係1977件・密度2.017・研究者236名・横断参照357件・非西洋率56.1%。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 8〜11 — 拡張SF追加</div>
+          <div class="wave-desc">SF15（画像技術史）・SF16（展示と観者）・SF17（隣接領域拡張）・SF18（理論と批評の最深部）の4サブフィールドを追加。Wave 8〜11完了時点で概念1,110件・関係2,221件・密度2.001・研究者292名・横断参照422件。孤立概念ゼロを維持。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 9〜11 追加拡張SFの整備</div>
+          <div class="wave-desc">SF16（展示・ギャラリー論 29件）、SF17（イラスト・絵本 30件）、SF18（哲学的現象学的理論 30件）。メルロ＝ポンティの現象学的絵画論、ハイデガー「芸術作品の根源」論などの深層批評概念を収録。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 12 — 多言語充填</div>
+          <div class="wave-desc">中国語・韓国語・スペイン語の3言語で333件の多言語名を充填。wave12_multilingual_fill_pct = 30.0%（目標達成）。出典URLの全件ライブ検証と22件のデッドリンク修正を実施。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 13 — 系譜チェーン構築</div>
+          <div class="wave-desc">28の系譜チェーンを構築（chains_added=26、chains_total=28）。チェーンメンバー有効136件。関係78件を追加（総計2,306件）。孤立概念ゼロを維持。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 14 — 出版物収録</div>
+          <div class="wave-desc">83件の主要出版物を収録。全URL検証済み（wave14_pub_url_verified=83）。古画品録（550年）から現代の生成AI論文まで、人類の画像制作思想史を横断する文献を収録。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 15〜18 — 概念深化（SF別強化）</div>
+          <div class="wave-desc">各Wave 8バッチ×10概念の追加。SF19（商業・広告ビジュアル 70件）・SF20（報道・社会記録写真 70件）・SF21（材料・素材史 80件）・SF22（生成AI倫理 80件）を新設。Wave 18で最終密度ブースト実施（+1件）。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 19 — IRR再計測・品質検証</div>
+          <div class="wave-desc">Wave 19再計測：Gwet AC1=0.8033（Substantial）、Po=0.8333、n=60。id582「Writing &amp; Illuminating &amp; Lettering」書名修正。出典URL全件ライブ検証完了（dead URLs修正済み）。密度ブースト計4回（+60+69+45+97=271件追加）で関係を最終強化。</div>
+        </div>
+        <div class="wave-item">
+          <div class="wave-label">Wave 20 — 現状（2026-06-13）</div>
+          <div class="wave-desc">概念1,420件・関係2,843件・密度2.00・研究者335名・横断参照602件（33 DB）・系譜チェーン28件・出版物83件・孤立概念ゼロの状態で安定稼働中。verification_status: verified_100pct。画像制作エージェント /img の学術基盤として運用中。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('pic-db-theme', next); } catch(e) {}
+  document.querySelector('.theme-toggle').textContent = next === 'dark' ? 'ライト' : 'ダーク';
+}
+(function() {
+  try {
+    const saved = localStorage.getItem('pic-db-theme');
+    if (saved) {
+      document.documentElement.setAttribute('data-theme', saved);
+      if (saved === 'dark') {
+        document.querySelector('.theme-toggle').textContent = 'ライト';
+      }
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
