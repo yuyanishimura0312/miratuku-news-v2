@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RID — 研究者インテリジェンスDB ダッシュボード</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;--card:#FFFFFF;--card-hover:#F7F7F5;
+  --accent:#121212;--accent-soft:#555;--accent-warm:#CC1400;--accent-warm-soft:#B01200;
+  --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;
+  --border:#D9D9D9;--border-light:#EEE;--highlight:#CC1400;--surface:#F7F7F5;
+  --good:#1F7A33;--warn:#B8860B;--bad:#CC1400;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+  --mono:"Fira Code",monospace;
+}
+[data-theme="dark"]{
+  --bg:#121212;--card:#1A1A1A;--card-hover:#222;
+  --accent:#E0E0E0;--accent-soft:#AAA;--accent-warm:#FF4030;--accent-warm-soft:#FF6050;
+  --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0;--text-secondary:#AAA;--text-muted:#8A8A8A;
+  --border:#333;--border-light:#2A2A2A;--highlight:#FF4030;--surface:#1A1A1A;
+  --good:#5BBE6E;--warn:#D9A93A;--bad:#FF4030;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.025em;font-feature-settings:"palt";-webkit-font-smoothing:antialiased}
+.top-bar{position:sticky;top:0;z-index:100;height:48px;background:var(--bg);border-top:3px solid var(--accent-warm);border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.top-bar .brand{font-weight:700;font-size:14px;letter-spacing:.1em}
+.top-bar .brand span{color:var(--accent-warm)}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:var(--font)}
+.theme-toggle:hover{border-color:var(--accent-warm);color:var(--accent-warm)}
+.layout{display:flex;max-width:1180px;margin:0 auto}
+.toc{position:sticky;top:48px;align-self:flex-start;width:248px;height:calc(100vh - 48px);overflow-y:auto;padding:28px 18px;border-right:1px solid var(--border-light);font-size:13px}
+.toc h4{font-size:10px;letter-spacing:.18em;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase}
+.toc a{display:block;color:var(--text-secondary);text-decoration:none;padding:5px 8px;border-radius:4px;border-left:2px solid transparent}
+.toc a:hover{color:var(--accent-warm);background:var(--accent-muted)}
+.toc a .n{font-family:var(--mono);color:var(--text-muted);margin-right:8px;font-size:11px}
+main{flex:1;max-width:760px;padding:40px 40px 120px;min-width:0}
+.doc-head{margin-bottom:8px}
+.eyebrow{font-size:11px;letter-spacing:.28em;color:var(--accent-warm);text-transform:uppercase;margin-bottom:10px}
+h1{font-family:var(--font-serif);font-size:30px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.subtitle{color:var(--text-secondary);font-size:15px;margin-bottom:6px}
+.meta-line{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:40px;border-bottom:1px solid var(--border-light);padding-bottom:20px}
+section{margin-bottom:60px;scroll-margin-top:64px}
+section h2{font-family:var(--font-serif);font-size:21px;font-weight:600;margin-bottom:6px;padding-bottom:0}
+section h2 .num{font-family:var(--mono);color:var(--accent-warm);font-size:14px;margin-right:12px}
+.lead{color:var(--text-secondary);font-size:14px;margin:10px 0 22px;border-left:2px solid var(--accent-warm);padding-left:14px}
+p.body{margin-bottom:16px;font-size:15px;text-indent:1em}
+p.body:first-of-type{text-indent:0}
+.hl{color:var(--accent-warm);font-weight:500}
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}
+.kpi{border:1px solid var(--border);border-top:2px solid var(--accent-warm);border-radius:6px;padding:16px}
+.kpi .v{font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--accent-warm)}
+.kpi .l{font-size:11px;color:var(--text-muted);letter-spacing:.06em;margin-top:4px}
+.kpi .s{font-size:11px;color:var(--text-secondary);margin-top:6px}
+/* tables */
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border-light)}
+th{font-weight:500;color:var(--text-muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td.num{font-family:var(--mono);text-align:right}
+tr:hover td{background:var(--card-hover)}
+.tag{display:inline-block;font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:3px}
+.t-good{color:var(--good);border:1px solid var(--good)}
+.t-warn{color:var(--warn);border:1px solid var(--warn)}
+.t-bad{color:var(--bad);border:1px solid var(--bad)}
+/* bar */
+.bar{position:relative;background:var(--surface);border-radius:3px;height:18px;overflow:hidden;min-width:90px}
+.bar>span{position:absolute;left:0;top:0;height:100%;background:var(--accent-warm);opacity:.85}
+.bar>em{position:relative;font-style:normal;font-family:var(--mono);font-size:11px;padding-left:6px;line-height:18px;color:var(--text)}
+.callout{background:var(--accent);color:var(--bg);border-radius:6px;padding:18px 20px;margin:22px 0;font-size:13.5px;line-height:1.8}
+.callout strong{color:var(--accent-warm)}
+.note{background:var(--surface);border-left:2px solid var(--accent-warm);padding:12px 16px;font-size:13px;color:var(--text-secondary);margin:18px 0;border-radius:0 4px 4px 0}
+footer{border-top:1px solid var(--border-light);padding:24px 40px;font-size:11px;color:var(--text-muted);max-width:760px}
+@media(max-width:1000px){.toc{display:none}main{padding:28px 20px 80px}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media print{.top-bar,.toc,.theme-toggle{display:none}.layout{display:block}main{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">RID — Researcher Intelligence <span>DB</span></div>
+  <button class="theme-toggle" onclick="tt()">表示切替</button>
+</div>
+<div class="layout">
+<nav class="toc" aria-label="目次">
+  <h4>Sections</h4>
+  <a href="#s0"><span class="n">00</span>概要</a>
+  <a href="#s1"><span class="n">01</span>同定カバレッジ</a>
+  <a href="#s2"><span class="n">02</span>5層 品質スコア</a>
+  <a href="#s3"><span class="n">03</span>15項目の充足</a>
+  <a href="#s4"><span class="n">04</span>接地（D層）詳細</a>
+  <a href="#s5"><span class="n">05</span>検証状態</a>
+  <a href="#s6"><span class="n">06</span>品質指標 IRR</a>
+  <a href="#s7"><span class="n">07</span>残課題と上限</a>
+  <a href="#s8"><span class="n">08</span>構築の経緯</a>
+</nav>
+<main>
+<div class="doc-head">
+  <div class="eyebrow">Researcher Intelligence Database</div>
+  <h1>RID 研究者インテリジェンスDB — 現況ダッシュボード</h1>
+  <div class="subtitle">esse-sense 23.5 万人研究者を「民間が知りたい 15 項目」の検証可能な知識グラフへ</div>
+</div>
+<div class="meta-line">snapshot 2026-06-21 ／ 実DB照会値（rid.db ＋ oa_bulk.db）／ 5層スコア = ddb_precise_diagnosis</div>
+
+<section id="s0">
+  <h2><span class="num">00</span>概要</h2>
+  <p class="body">RID は、KAKEN（科学研究費）由来の <span class="hl">235,521 名</span>の研究者を背骨に、各研究者の「研究の核・所属・系譜・つながり・将来連携」など民間が知りたい 15 項目を、出典・検証状態・確信度つきで構造化する知識グラフである。すべての claim は「生成と検証の分離」「捏造ゼロ」「additive（既存を壊さない）」の原則で積み上げる。下流は ANSWER+ の研究者マッチング、産学連携、研究者フィードバックに供給される。</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">235,521</div><div class="l">登録研究者（rid_identity）</div></div>
+    <div class="kpi"><div class="v">149,947</div><div class="l">同定済み（OpenAlex紐付）</div><div class="s">カバレッジ 63.7%（W50で +18,581）</div></div>
+    <div class="kpi"><div class="v">4,109,958</div><div class="l">claim 総数</div></div>
+    <div class="kpi"><div class="v">235,484</div><div class="l">KAKEN公式名 取得済</div><div class="s">e-Rad 99.98%</div></div>
+    <div class="kpi"><div class="v">2,453,607</div><div class="l">OpenAlex著者プール</div></div>
+    <div class="kpi"><div class="v">121,901</div><div class="l">works接地済 著者</div></div>
+  </div>
+</section>
+
+<section id="s1">
+  <h2><span class="num">01</span>同定カバレッジ</h2>
+  <p class="lead">研究者 rid を OpenAlex 著者へ紐付ける「同定」。読みの一意性を核に、誤確定を構造的に排除している。</p>
+  <p class="body">同定済みは <span class="hl">149,947 名（63.7%）</span>。同定は 5 手法で達成され、主力は KAKEN 公式フリガナで読みを一意化した <span class="hl">kaken_single</span>（誤確定が構造的に起きない高精度層）と、曖昧保留を <span class="hl">共有成果タイトル</span>で解錠した <span class="hl">w50_title（タイトルブリッジ・18,575件）</span>である。w50_title は 2-4 候補だけでなく 5-10/11+ の高衝突 band でも、KAKEN 成果タイトルと一致する候補を一意特定して解錠した。残る未同定は、曖昧保留（queue）と OpenAlex 未収録（no_candidate）に分かれる。</p>
+  <table>
+    <thead><tr><th>手法</th><th>説明</th><th>件数</th></tr></thead>
+    <tbody>
+      <tr><td>kaken_single</td><td>公式フリガナで読み一意（最高精度）</td><td class="num">57,810</td></tr>
+      <tr><td>openalex_legacy</td><td>初期 OpenAlex 照合</td><td class="num">58,235</td></tr>
+      <tr><td><strong>w50_title</strong></td><td>KAKEN成果タイトル↔OpenAlex論文タイトル一致（ground truth・無認証・全band）</td><td class="num"><strong>18,575</strong></td></tr>
+      <tr><td>kaken_affil</td><td>英語所属が一意一致</td><td class="num">12,856</td></tr>
+      <tr><td>kaken_field</td><td>粗分野が一意一致（候補≤4）</td><td class="num">2,510</td></tr>
+      <tr><td><strong>合計（distinct rid）</strong></td><td></td><td class="num"><strong>149,947</strong></td></tr>
+    </tbody>
+  </table>
+  <p class="body">外部識別子は <span class="hl">kaken_id 100%</span>（W36 で全件付与）。一方 ORCID は 0%、name_en は 1,987 件にとどまり、これが言語横断照合の制約になっている（後述 07）。</p>
+</section>
+
+<section id="s2">
+  <h2><span class="num">02</span>5層 品質スコア</h2>
+  <p class="lead">DB の質を A 同定基盤 / B 検証昇格 / C 低品質是正 / D 接地拡大 / E 常設運用 の 5 層で測る（ローカル SQL 完結・0–100）。</p>
+  <table>
+    <thead><tr><th>層</th><th>内容</th><th>スコア</th><th>水準</th></tr></thead>
+    <tbody>
+      <tr><td>E 常設運用</td><td>日次cron・週次診断・デグレード検出</td><td><div class="bar"><span style="width:100%"></span><em>100.0</em></div></td><td><span class="tag t-good">完成</span></td></tr>
+      <tr><td>A 同定基盤</td><td>外部ID・名寄せ背骨</td><td><div class="bar"><span style="width:96.7%"></span><em>96.7</em></div></td><td><span class="tag t-good">良</span></td></tr>
+      <tr><td>C 低品質是正</td><td>汚染是正・flag運用</td><td><div class="bar"><span style="width:96.6%"></span><em>96.6</em></div></td><td><span class="tag t-good">良</span></td></tr>
+      <tr><td>B 検証昇格</td><td>claim の裏取り率</td><td><div class="bar"><span style="width:56.2%"></span><em>56.2</em></div></td><td><span class="tag t-warn">途上</span></td></tr>
+      <tr><td>D 接地拡大</td><td>共著/概念/変遷の実接地</td><td><div class="bar"><span style="width:45.7%"></span><em>45.7</em></div></td><td><span class="tag t-warn">律速</span></td></tr>
+    </tbody>
+  </table>
+  <div class="callout">直近の最大成果は <strong>D 接地拡大 26.7 → 45.7</strong>。未接地だった 5.4 万名（全て確定済みマッチ）を効率モードの works 接地で一括処理し、共著ネットワークを <strong>+44,644</strong> 名分付与した。コストは無料枠約 6,000 コールのみで、プリペイド予算は無消費。</div>
+</section>
+
+<section id="s3">
+  <h2><span class="num">03</span>15項目の充足</h2>
+  <p class="lead">「民間が知りたい 15 項目」の充足状況。基底情報は全員分、深掘り項目は同定の進捗に連動する。</p>
+  <table>
+    <thead><tr><th>項目</th><th>predicate</th><th>充足 rid</th><th>率</th></tr></thead>
+    <tbody>
+      <tr><td>研究の核・要約</td><td>research_core / research_summary</td><td class="num">235,521</td><td class="num">100%</td></tr>
+      <tr><td>分野・キーワード</td><td>field_tag / research_area_tag</td><td class="num">235,520</td><td class="num">100%</td></tr>
+      <tr><td>組みやすさ・連携欲求</td><td>collab_friendliness / collab_appetite</td><td class="num">235,521</td><td class="num">100%</td></tr>
+      <tr><td>実用化段階（工学）</td><td>trl_stage</td><td class="num">235,521</td><td class="num">100%</td></tr>
+      <tr><td>氏名・所属・職階・連絡経路</td><td>affiliation / position / contact_channel</td><td class="num">153,063</td><td class="num">65.0%</td></tr>
+      <tr><td>将来連携領域</td><td>future_collab_field</td><td class="num">149,136</td><td class="num">63.3%</td></tr>
+      <tr><td>つながり（共著網）</td><td>coauthor_network</td><td class="num">107,549</td><td class="num">45.7%</td></tr>
+      <tr><td>橋渡し位置</td><td>bridge_position</td><td class="num">70,905</td><td class="num">30.1%</td></tr>
+      <tr><td>重要概念</td><td>key_concept</td><td class="num">70,803</td><td class="num">30.1%</td></tr>
+      <tr><td>テーマ変遷</td><td>theme_evolution</td><td class="num">70,802</td><td class="num">30.1%</td></tr>
+      <tr><td>h指数（裏取り実値）</td><td>h_index_real</td><td class="num">47,799</td><td class="num">20.3%</td></tr>
+      <tr><td>課題意識の原点（博論）</td><td>dissertation_origin</td><td class="num">17,066</td><td class="num">7.2%</td></tr>
+      <tr><td>公的役職</td><td>public_role</td><td class="num">1,396</td><td class="num">0.6%</td></tr>
+      <tr><td>系譜・受賞</td><td>lineage / supervisor / award</td><td class="num">416</td><td class="num">0.2%</td></tr>
+    </tbody>
+  </table>
+  <p class="body">基底情報（研究の核・分野・組みやすさ・TRL）は全員完了。所属・連絡経路は同定済みの約 65%。共著・概念・テーマは同定と works 接地に連動して 30〜46% に到達。系譜・受賞・特許は出典制約により小さい。</p>
+</section>
+
+<section id="s4">
+  <h2><span class="num">04</span>接地（D層）詳細</h2>
+  <p class="lead">OpenAlex の実 works から共著・概念・テーマを集計する「接地」。D層スコアの実体。</p>
+  <table>
+    <thead><tr><th>接地 predicate</th><th>接地 rid</th><th>対全体</th></tr></thead>
+    <tbody>
+      <tr><td>coauthor_network（共著網）</td><td class="num">107,549</td><td><div class="bar"><span style="width:45.7%"></span><em>45.7%</em></div></td></tr>
+      <tr><td>key_concept（重要概念）</td><td class="num">70,803</td><td><div class="bar"><span style="width:30.1%"></span><em>30.1%</em></div></td></tr>
+      <tr><td>theme_evolution（テーマ変遷）</td><td class="num">70,802</td><td><div class="bar"><span style="width:30.1%"></span><em>30.1%</em></div></td></tr>
+      <tr><td>dissertation_origin（博論）</td><td class="num">17,066</td><td><div class="bar"><span style="width:7.2%"></span><em>7.2%</em></div></td></tr>
+      <tr><td>public_role（公的役職）</td><td class="num">1,396</td><td><div class="bar"><span style="width:0.6%"></span><em>0.6%</em></div></td></tr>
+      <tr><td>lineage / supervisor / award</td><td class="num">416</td><td><div class="bar"><span style="width:0.2%"></span><em>0.2%</em></div></td></tr>
+    </tbody>
+  </table>
+  <div class="note">教訓: works 接地は <strong>batch=50・単一プロセス</strong>で行う。batch=1 × 4 並列は OpenAlex 429（レート制限）で早期停止し、ほとんど接地できなかった。効率モードは約 9 著者/コールで激安。</div>
+</section>
+
+<section id="s5">
+  <h2><span class="num">05</span>検証状態</h2>
+  <p class="lead">各 claim の裏取り状態。cross_confirmed（横断一致）＋ url_live ＋ primary_matched を「検証済み」とする。</p>
+  <table>
+    <thead><tr><th>状態</th><th>件数</th><th>比率</th></tr></thead>
+    <tbody>
+      <tr><td>cross_confirmed（横断一致）</td><td class="num">2,023,018</td><td><div class="bar"><span style="width:49.2%"></span><em>49.2%</em></div></td></tr>
+      <tr><td>source_logged（出典記録のみ）</td><td class="num">1,144,604</td><td><div class="bar"><span style="width:27.9%"></span><em>27.9%</em></div></td></tr>
+      <tr><td>unverified（未検証）</td><td class="num">656,938</td><td><div class="bar"><span style="width:16.0%"></span><em>16.0%</em></div></td></tr>
+      <tr><td>url_live（URL生存）</td><td class="num">283,383</td><td><div class="bar"><span style="width:6.9%"></span><em>6.9%</em></div></td></tr>
+      <tr><td>primary_matched（一次照合）</td><td class="num">2,015</td><td><div class="bar"><span style="width:0.05%"></span><em>0.05%</em></div></td></tr>
+    </tbody>
+  </table>
+  <p class="body">検証済み合計は <span class="hl">約 56.2%</span>（B層スコアと一致）。KAKEN 一次データ由来の主要 claim は W38 で 109 万件を cross_confirmed へ機械昇格した。source_logged は「値は正しいが横断裏取り待ち」の層。</p>
+</section>
+
+<section id="s6">
+  <h2><span class="num">06</span>品質指標 IRR（Gwet AC1）</h2>
+  <p class="lead">評価者間一致度。主指標は有病率パラドックスに頑健な Gwet AC1（&gt;0.80=Excellent）。</p>
+  <table>
+    <thead><tr><th>predicate</th><th>AC1</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td>15項目総合サンプル</td><td class="num">0.8584</td><td><span class="tag t-good">Excellent</span></td></tr>
+      <tr><td>claims_crosspredicate</td><td class="num">0.9287</td><td><span class="tag t-good">Excellent</span></td></tr>
+      <tr><td>contact_channel / public_role / trl_stage</td><td class="num">1.000</td><td><span class="tag t-good">Excellent</span></td></tr>
+      <tr><td>research_area_tag / coauthor / supervisor / dissertation_origin</td><td class="num">負値</td><td><span class="tag t-warn">注記</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">負値の AC1（research_area_tag −1.0 等）は<strong>有病率パラドックス由来であり汚染ではない</strong>。カテゴリ出現率が極端に偏ると κ／AC1 が人為的に過小評価される既知現象で、中身は KAKEN 正データ。是正不要（quality-metrics-standard 準拠）。</div>
+</section>
+
+<section id="s7">
+  <h2><span class="num">07</span>残課題と上限</h2>
+  <p class="lead">安全に取れる伸びは取り切った。残りは構造的上限と、別プロジェクト規模の設計課題に分かれる。</p>
+  <table>
+    <thead><tr><th>残プール</th><th>件数</th><th>性質</th></tr></thead>
+    <tbody>
+      <tr><td>queue_review（曖昧保留）</td><td class="num">44,733</td><td>W50 で全band解錠後の残（63,266→44,733）。残= none（成果がOpenAlex未収録）/ multi（複数候補一致=据置）/ no_nrid_title</td></tr>
+      <tr><td>no_candidate</td><td class="num">約32,000</td><td>OpenAlex JP 未収録＝氏名では取れない上限</td></tr>
+    </tbody>
+  </table>
+  <p class="body">queue 63K の同定には、候補を区別する追加シグナルが要る。だが <span class="hl">rid テーマは日本語・OpenAlex トピックは英語</span>で、両者を繋ぐ細粒度 crosswalk が存在しない。粗い 11 分類が唯一の言語横断ブリッジで、それが効かなかった分が queue である。</p>
+  <p class="body">キーワード転写ヒューリスティック（カタカナ語の子音骨格照合）を実装・検証したが、高精度ゲートで確定率 0.3%、緩いゲートで 7.7%（精度不確実）。本番化には全 queue で約 10 万 OpenAlex コールを要し ROI が成立しないため不採用とした（本番書き込みゼロ）。</p>
+  <div class="callout">queue 63K を安全に解錠する唯一の正攻法は <strong>researchmap-DOI ブリッジ</strong>。researchmap 公開 API から研究者の論文 DOI を取得し、候補の OpenAlex 論文 DOI と突合して「共有 DOI ＝本人」と確定する（言語非依存・高精度）。新規外部 API 統合の別プロジェクト。</div>
+</section>
+
+<section id="s8">
+  <h2><span class="num">08</span>構築の経緯（Wave 36–49）</h2>
+  <p class="lead">「件数でなく質」で仕上げ直す精緻化プロジェクトの主要 Wave。</p>
+  <table>
+    <thead><tr><th>Wave</th><th>層</th><th>内容</th><th>成果</th></tr></thead>
+    <tbody>
+      <tr><td>W36</td><td>A</td><td>jrdb から kaken_id 充填</td><td>外部ID 0%→100%</td></tr>
+      <tr><td>W38</td><td>B</td><td>KAKEN 由来を cross_confirmed 昇格</td><td>裏取り率 15.8%→45%</td></tr>
+      <tr><td>W37/41/42</td><td>C/D</td><td>h_index 実値・博論・公的役職 接地</td><td>+数万件</td></tr>
+      <tr><td>W44/45</td><td>D</td><td>works 接地（効率モード batch=50）</td><td>共著 +44,644 / D 26.7→45.7</td></tr>
+      <tr><td>W46–48</td><td>A</td><td>KAKEN 公式フリガナで保留同定</td><td>matched 24.7%→55.8%</td></tr>
+      <tr><td>W49</td><td>A</td><td>キーワード転写 disambig（検証）</td><td>ROI 不成立で不採用</td></tr>
+      <tr><td>W50</td><td>A</td><td>タイトルブリッジ 全band（2-4＋5-10＋11+ / NRID成果↔OpenAlex論文タイトル一致）</td><td>+18,575 / 55.8%→63.7%</td></tr>
+    </tbody>
+  </table>
+  <p class="body">同定カバレッジは本精緻化で <span class="hl">24.7% → 63.7%</span>（matched 58,119 → 149,947）、D層接地は <span class="hl">26.7% → 45.7%</span> へ前進した。W50 タイトルブリッジは共有成果タイトルという言語非依存の ground truth で曖昧保留を高精度に解錠し、無認証・可逆（tag w50_title）で +18,575 を達成した。高衝突 band（5候補中1つだけ成果タイトルが一致）でこそ威力を発揮し、名前・分野では切れない同定を実現した。常設運用（日次 cron・週次診断・W47 取得）は自走を継続する。</p>
+</section>
+
+</main>
+</div>
+<footer>
+  RID 研究者インテリジェンスDB ／ snapshot 2026-06-19 ／ 全数値は rid.db・oa_bulk.db の実照会値<br>
+  © NPO法人ミラツク ／ esse-sense — Researcher Intelligence Database
+</footer>
+<script>
+function tt(){const h=document.documentElement;const n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('rid-theme',n)}catch(e){}}
+try{const s=localStorage.getItem('rid-theme');if(s)document.documentElement.setAttribute('data-theme',s)}catch(e){}
+</script>
+</body>
+</html>
