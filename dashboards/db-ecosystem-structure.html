@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ミラツク/esse-sense DB エコシステム 構造図</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFFFF;--card:#FFFFFF;--card-hover:#F7F7F5;--accent:#121212;--accent-soft:#555;--accent-warm:#CC1400;--accent-warm-soft:#B01200;--accent-muted:rgba(204,20,0,.06);--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;--surface:#F7F7F5;--font:"Noto Sans JP",sans-serif;--font-serif:"Noto Serif JP",serif;--mono:"Fira Code",monospace}
+[data-theme="dark"]{--bg:#121212;--card:#1A1A1A;--card-hover:#222;--accent:#E0E0E0;--accent-warm:#FF4030;--accent-muted:rgba(255,64,48,.10);--text:#E0E0E0;--text-secondary:#AAA;--text-muted:#8A8A8A;--border:#333;--border-light:#2A2A2A;--surface:#1A1A1A}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.02em;-webkit-font-feature-settings:"palt";font-feature-settings:"palt"}
+.top-bar{position:sticky;top:0;z-index:50;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--bg);border-top:3px solid #121212;border-bottom:1px solid var(--border)}
+[data-theme="dark"] .top-bar{border-top-color:var(--accent-warm)}
+.brand{font-weight:700;font-size:14px}.brand b{color:var(--accent-warm)}
+.tt{cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);padding:4px 12px;border-radius:3px;font-size:12px;font-family:var(--font)}
+.wrap{display:flex;gap:32px;max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+.toc{position:sticky;top:72px;align-self:flex-start;width:230px;flex:0 0 230px;font-size:13px}
+.toc-label{font-size:10px;letter-spacing:.18em;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px}
+.toc a{display:block;color:var(--text-secondary);text-decoration:none;padding:5px 10px;border-left:2px solid var(--border-light)}
+.toc a:hover{color:var(--accent-warm);border-left-color:var(--accent-warm)}
+main{flex:1;min-width:0;max-width:760px}
+h1{font-family:var(--font-serif);font-size:27px;font-weight:700;margin:0 0 6px;line-height:1.4}
+.sub{color:var(--text-muted);font-size:13px;margin-bottom:30px}
+section{margin-bottom:56px;padding-bottom:36px;border-bottom:1px solid var(--border-light)}
+h2{font-family:var(--font-serif);font-size:19px;font-weight:700;margin:0 0 4px}
+h2 .en{display:block;font-size:11px;letter-spacing:.16em;color:var(--accent-warm);font-family:var(--mono);font-weight:500;margin-top:3px}
+p{font-size:14.5px;margin:14px 0;text-indent:1em}p:first-of-type{text-indent:0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+.kpi{border-top:2px solid var(--accent-warm);padding:12px 10px;background:var(--surface)}
+.kpi-n{font-family:var(--font-serif);font-size:26px;font-weight:700;color:var(--accent-warm);line-height:1.1}
+.kpi-l{font-size:11px;color:var(--text-muted);margin-top:4px}
+/* 三層フロー */
+.tiers{margin:24px 0}
+.tier{display:flex;align-items:center;gap:14px;margin:10px 0}
+.tier-badge{flex:0 0 64px;font-family:var(--mono);font-size:11px;color:#fff;background:#121212;padding:5px 8px;text-align:center;letter-spacing:.1em}
+[data-theme="dark"] .tier-badge{background:var(--accent-warm)}
+.tier-body{flex:1;border:1px solid var(--border);background:var(--card);padding:10px 14px;font-size:13.5px}
+.tier-body b{color:var(--accent-warm)}
+.flow-arrow{text-align:center;color:var(--accent-warm);font-size:16px;line-height:1;margin:-2px 0}
+/* 領域カード */
+.dom-card{border:1px solid var(--border);background:var(--card);margin:14px 0;padding:14px 16px}
+.dom-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border-light);padding-bottom:8px;margin-bottom:10px}
+.dom-key{font-family:var(--mono);font-size:12px;color:var(--accent-warm);font-weight:500}
+.dom-label{font-family:var(--font-serif);font-weight:700;font-size:15px}
+.dom-count{margin-left:auto;font-size:11px;color:var(--text-muted);font-family:var(--mono)}
+.subcat{margin:8px 0}
+.subcat-name{font-size:11.5px;color:var(--text-secondary);font-weight:500;margin-bottom:5px}
+.subcat-name::before{content:"";display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--accent-warm);margin-right:7px;vertical-align:middle}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-family:var(--mono);font-size:11px;background:var(--accent-muted);color:var(--accent-warm-soft);border:1px solid var(--accent-line,rgba(204,20,0,.2));padding:2px 7px;border-radius:2px}
+[data-theme="dark"] .chip{color:var(--accent-warm)}
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13px;margin:16px 0}
+th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);padding:6px 8px;font-weight:500}
+td{padding:6px 8px;border-bottom:1px solid var(--border-light)}
+td.num{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+td.bar{width:38%}td.bar span{display:block;height:9px;background:var(--accent-warm);opacity:.85}
+.note{border-left:2px solid var(--accent-warm);background:var(--surface);padding:10px 14px;font-size:13px;margin:18px 0}
+@media(max-width:960px){.wrap{flex-direction:column}.toc{position:static;width:100%;flex:none}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media print{.top-bar,.toc{display:none}.wrap{display:block}}
+</style></head>
+<body>
+<div class="top-bar"><div class="brand">ミラツク / <b>esse-sense</b> DB エコシステム 構造図</div>
+<button class="tt" onclick="tt()">◐ テーマ</button></div>
+<div class="wrap">
+<nav class="toc"><div class="toc-label">Sections</div>
+<a href="#s1">01 概要</a><a href="#s2">02 三層アーキテクチャ</a><a href="#s3">03 6 領域の内訳</a>
+<a href="#s4">04 接続トポロジー</a><a href="#s5">05 規模と世代</a><a href="#s6">06 二軸構造</a></nav>
+<main>
+<h1>DB エコシステムの構造</h1>
+<div class="sub">AR-DB live 取得 / 中央接続層 cross_db_refs_normalized / 2026-06-22 時点のスナップショット</div>
+
+<section id="s1"><h2>01 概要<span class="en">OVERVIEW</span></h2>
+<p>ミラツク / esse-sense の DB エコシステムは、約 210 の実知識 DB が、単一の最上位メタ <b>/dbo</b> を入口に 6 つの領域メタへ振り分けられる三層構造をとる。各 DB は孤立せず、中央接続層 <span class="chip">cross_db_refs_normalized</span> によって 741,811 本の横断参照で結ばれ、140 の DB が source、690 の DB が target として現れる。接続が厚い（18 以上の target を持つ）DB は 64 件で、これらがエコシステムのハブとして機能する。</p>
+<div class="kpis">
+<div class="kpi"><div class="kpi-n">210</div><div class="kpi-l">実知識 DB（複製除外後）</div></div>
+<div class="kpi"><div class="kpi-n">741,811</div><div class="kpi-l">横断参照（中央層）</div></div>
+<div class="kpi"><div class="kpi-n">64</div><div class="kpi-l">高接続ハブ DB（tgt≥18）</div></div>
+<div class="kpi"><div class="kpi-n">6</div><div class="kpi-l">領域メタ（dom-*）</div></div>
+</div>
+<div class="note">本図は知見軸（領域メタ）の正本 <span class="chip">domain_meta_dbs</span> と、計測層 <span class="chip">db_capability_matrix</span>（毎晩 07:15 launchd で冪等刷新）に基づく。数値はライブ値。</div>
+</section>
+
+<section id="s2"><h2>02 三層アーキテクチャ<span class="en">THREE-TIER</span></h2>
+<p>問い 1 つを入口に最適な答えへ到達させるため、エコシステムは指揮の三層を持つ。利用者は 6 領域・約 210 の DB を意識せず /dbo に投げるだけでよい。</p>
+<div class="tiers">
+<div class="tier"><div class="tier-badge">Tier 0</div><div class="tier-body"><b>/dbo</b> — エコシステム最上位メタ。AR-DB を参照し問いを領域へ振り分け、複数領域なら並列起動して横断統合する</div></div>
+<div class="flow-arrow">▼</div>
+<div class="tier"><div class="tier-badge">Tier 1</div><div class="tier-body"><b>6 領域メタ</b> dom-science / dom-society / dom-foresight / dom-enterprise / dom-culture / dom-infra — 各領域内の DB 群を統括</div></div>
+<div class="flow-arrow">▼</div>
+<div class="tier"><div class="tier-badge">Tier 2</div><div class="tier-body"><b>約 210 の個別 DB エージェント</b> phys / chem / ss / ec / tlj / agd / mdd / cq … 各 DB が専属エージェントを持つ</div></div>
+</div>
+</section>
+
+<section id="s3"><h2>03 6 領域の内訳<span class="en">DOMAINS</span></h2>
+<p>知見軸は 6 領域に分かれ、各領域はさらに sub_category で DB を束ねる。以下は domain_meta_dbs 正本の全 189 配置（短名表示）。</p>
+
+        <div class="dom-card" id="dom-dom-science">
+          <div class="dom-head"><span class="dom-key">dom-science</span>
+            <span class="dom-label">自然科学・科学史</span>
+            <span class="dom-count">15 DB / 3 カテゴリ</span></div>
+          <div class="subcat"><div class="subcat-name">科学史</div><div class="chips"><span class="chip">kgh</span><span class="chip">htp</span><span class="chip">tc</span></div></div><div class="subcat"><div class="subcat-name">自然史</div><div class="chips"><span class="chip">ceh</span><span class="chip">lunar-life</span></div></div><div class="subcat"><div class="subcat-name">自然科学</div><div class="chips"><span class="chip">phys</span><span class="chip">chem</span><span class="chip">bot</span><span class="chip">es</span><span class="chip">math</span><span class="chip">perm</span><span class="chip">gmn</span><span class="chip"></span><span class="chip"></span><span class="chip"></span></div></div>
+        </div>
+        <div class="dom-card" id="dom-dom-society">
+          <div class="dom-head"><span class="dom-key">dom-society</span>
+            <span class="dom-label">社会科学・人文・人物</span>
+            <span class="dom-count">44 DB / 4 カテゴリ</span></div>
+          <div class="subcat"><div class="subcat-name">人文学</div><div class="chips"><span class="chip">anthropology</span><span class="chip">philosophy</span><span class="chip">poetics</span><span class="chip">lit</span><span class="chip">myth-narratives</span><span class="chip">myth-narratives</span><span class="chip">traditional-knowledge</span><span class="chip">traditional-knowledge</span><span class="chip">yokai</span><span class="chip">philosophical-questions</span><span class="chip">cq</span><span class="chip">sfs</span><span class="chip">mnd</span><span class="chip">mus</span><span class="chip">ccm</span><span class="chip">mpp</span><span class="chip">udd</span><span class="chip">dsd</span><span class="chip">myth-narratives</span><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">人物</div><div class="chips"><span class="chip">great-figures</span><span class="chip">historical-cases</span><span class="chip">era-talents</span><span class="chip">pst</span><span class="chip">jpms</span><span class="chip">epo</span><span class="chip"></span><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">知識基盤</div><div class="chips"><span class="chip">kas</span><span class="chip">kos</span></div></div><div class="subcat"><div class="subcat-name">社会科学</div><div class="chips"><span class="chip">ss</span><span class="chip">ec</span><span class="chip">sg</span><span class="chip">sg</span><span class="chip">lab</span><span class="chip">mg</span><span class="chip">em</span><span class="chip">tlj-team</span><span class="chip">dsci</span><span class="chip">goe</span><span class="chip">change-meta</span><span class="chip"></span><span class="chip"></span><span class="chip"></span></div></div>
+        </div>
+        <div class="dom-card" id="dom-dom-foresight">
+          <div class="dom-head"><span class="dom-key">dom-foresight</span>
+            <span class="dom-label">未来洞察</span>
+            <span class="dom-count">18 DB / 6 カテゴリ</span></div>
+          <div class="subcat"><div class="subcat-name">シグナル</div><div class="chips"><span class="chip">foresight-kb</span><span class="chip">signal-db</span><span class="chip">pestle-news</span><span class="chip">cla</span><span class="chip">cultural-intelligence</span></div></div><div class="subcat"><div class="subcat-name">予測検証</div><div class="chips"><span class="chip"></span><span class="chip"></span><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">文明指数</div><div class="chips"><span class="chip">cti-v2</span></div></div><div class="subcat"><div class="subcat-name">未来学</div><div class="chips"><span class="chip">megatrend</span><span class="chip">futurology</span><span class="chip">futurology-2</span><span class="chip"></span><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">未来技術</div><div class="chips"><span class="chip">future-tech-trends</span><span class="chip">phai</span><span class="chip">rmp</span></div></div><div class="subcat"><div class="subcat-name">研究プレス</div><div class="chips"><span class="chip">grp</span></div></div>
+        </div>
+        <div class="dom-card" id="dom-dom-enterprise">
+          <div class="dom-head"><span class="dom-key">dom-enterprise</span>
+            <span class="dom-label">産業・事業・市場</span>
+            <span class="dom-count">66 DB / 6 カテゴリ</span></div>
+          <div class="subcat"><div class="subcat-name">企業経済</div><div class="chips"><span class="chip">ir-collector</span><span class="chip">macro-economy</span><span class="chip">investment-signal</span><span class="chip">startup-db</span><span class="chip">era-talents</span><span class="chip">gpt-qol</span><span class="chip">cid</span><span class="chip">jps</span><span class="chip">goe-perf</span><span class="chip">lcs</span><span class="chip">itm</span><span class="chip">cfr</span></div></div><div class="subcat"><div class="subcat-name">市場実装</div><div class="chips"><span class="chip">apr</span><span class="chip">seo</span><span class="chip">aag</span><span class="chip">ckd</span><span class="chip">wcps</span><span class="chip">ide</span><span class="chip">ptt</span><span class="chip">pae</span><span class="chip">ore</span><span class="chip"></span><span class="chip">dpe</span><span class="chip">dfm</span><span class="chip"></span><span class="chip"></span><span class="chip"></span><span class="chip"></span><span class="chip">ad-ops</span></div></div><div class="subcat"><div class="subcat-name">市場設計</div><div class="chips"><span class="chip">mdd</span><span class="chip">lpm</span><span class="chip">fmi</span><span class="chip">ecu</span><span class="chip">qft</span><span class="chip"></span><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">技術加速</div><div class="chips"><span class="chip">tech-acceleration</span><span class="chip">ai-acceleration</span><span class="chip">ai-development</span><span class="chip">cdh</span><span class="chip">wmd</span><span class="chip">business-models</span><span class="chip">mpv</span><span class="chip">integrated-monetization</span><span class="chip">academic-landscape</span><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">政策規制</div><div class="chips"><span class="chip">policy-db</span><span class="chip">regulatory-japan</span><span class="chip">experts-db</span><span class="chip">geopolitical-risk</span><span class="chip">innovation-db</span><span class="chip">wlc</span><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">産学連携</div><div class="chips"><span class="chip">sangaku-rd</span><span class="chip">sangaku-pr</span><span class="chip">sangaku-matcher</span><span class="chip">university-startups</span><span class="chip">university-pr</span><span class="chip">cfg</span><span class="chip">experts-db</span><span class="chip">university-startups</span><span class="chip">rid-builder</span><span class="chip"></span><span class="chip"></span><span class="chip">academic-outcomes</span><span class="chip"></span></div></div>
+        </div>
+        <div class="dom-card" id="dom-dom-culture">
+          <div class="dom-head"><span class="dom-key">dom-culture</span>
+            <span class="dom-label">連載・文化・編集</span>
+            <span class="dom-count">28 DB / 7 カテゴリ</span></div>
+          <div class="subcat"><div class="subcat-name">場所・観光</div><div class="chips"><span class="chip">tourism</span><span class="chip">pln</span></div></div><div class="subcat"><div class="subcat-name">教科書</div><div class="chips"><span class="chip">deep-knowledge</span></div></div><div class="subcat"><div class="subcat-name">文化構造</div><div class="chips"><span class="chip"></span></div></div><div class="subcat"><div class="subcat-name">編集デザイン</div><div class="chips"><span class="chip">edd</span><span class="chip">dsdb</span><span class="chip">epk</span><span class="chip">cine</span><span class="chip">pic</span><span class="chip">dataviz-design</span><span class="chip">design-tokens</span><span class="chip">slides-design</span><span class="chip">mobile-norms</span><span class="chip">a11y-impl</span><span class="chip">dsk</span></div></div><div class="subcat"><div class="subcat-name">補論</div><div class="chips"><span class="chip">manufacturing-orchestra</span><span class="chip">mobility-2030-2100</span><span class="chip">food-futures</span></div></div><div class="subcat"><div class="subcat-name">記事生成</div><div class="chips"><span class="chip">esse-sense-write</span><span class="chip">ng-v4</span><span class="chip">rite-questions</span></div></div><div class="subcat"><div class="subcat-name">連載</div><div class="chips"><span class="chip">kurashi</span><span class="chip">jigyo</span><span class="chip">henka</span><span class="chip">keiei-team</span><span class="chip">itonami</span><span class="chip">futures-series</span><span class="chip">futures2-team</span></div></div>
+        </div>
+        <div class="dom-card" id="dom-dom-infra">
+          <div class="dom-head"><span class="dom-key">dom-infra</span>
+            <span class="dom-label">メタ・基盤・横串</span>
+            <span class="dom-count">18 DB / 5 カテゴリ</span></div>
+          <div class="subcat"><div class="subcat-name">integration_layer</div><div class="chips"><span class="chip">fih</span></div></div><div class="subcat"><div class="subcat-name">エコシステム観察</div><div class="chips"><span class="chip">ar-db</span><span class="chip">gmn-feedback</span><span class="chip">lsa</span></div></div><div class="subcat"><div class="subcat-name">メタ管理</div><div class="chips"><span class="chip">fvcp-meta</span><span class="chip">ryoiki</span><span class="chip">apk</span><span class="chip">qrf</span></div></div><div class="subcat"><div class="subcat-name">学術メタ</div><div class="chips"><span class="chip">dgdb</span><span class="chip">academic-oracle</span><span class="chip">ak-quality</span><span class="chip">academic-db</span><span class="chip">agd</span></div></div><div class="subcat"><div class="subcat-name">横串理論層</div><div class="chips"><span class="chip">gc</span><span class="chip">genshi-cycle</span><span class="chip">si-framework</span><span class="chip">deep-knowledge-foresight</span><span class="chip">circ</span></div></div>
+        </div>
+</section>
+
+<section id="s4"><h2>04 接続トポロジー<span class="en">CONNECTION HUBS</span></h2>
+<p>エコシステムの結合は中央層に集約される。distinct target 数で見たハブ上位は以下。AR-DB 自身（自己観察層）が最大ハブで、cinema-craft / ccm / EPK / 学術知 が学際的に多方面へ接続している。</p>
+<table><thead><tr><th>source DB</th><th>tgt</th><th>distinct target（接続の広さ）</th><th>refs</th></tr></thead>
+<tbody><tr><td>agent-registry-db</td><td class="num">126</td><td class="bar"><span style="width:100%"></span></td><td class="num">2,441</td></tr><tr><td>cinema-craft-db</td><td class="num">117</td><td class="bar"><span style="width:92%"></span></td><td class="num">612</td></tr><tr><td>ccm-db</td><td class="num">61</td><td class="bar"><span style="width:48%"></span></td><td class="num">652</td></tr><tr><td>editorial-practice-knowledge-db</td><td class="num">54</td><td class="bar"><span style="width:42%"></span></td><td class="num">494</td></tr><tr><td>apr-db</td><td class="num">52</td><td class="bar"><span style="width:41%"></span></td><td class="num">16,844</td></tr><tr><td>urban-development-db</td><td class="num">48</td><td class="bar"><span style="width:38%"></span></td><td class="num">1,559</td></tr><tr><td>academic-knowledge-db</td><td class="num">45</td><td class="bar"><span style="width:35%"></span></td><td class="num">3,180</td></tr><tr><td>economic-mechanisms-db</td><td class="num">40</td><td class="bar"><span style="width:31%"></span></td><td class="num">1,058</td></tr><tr><td>web-monetization-db</td><td class="num">39</td><td class="bar"><span style="width:30%"></span></td><td class="num">330</td></tr><tr><td>seo-db</td><td class="num">38</td><td class="bar"><span style="width:30%"></span></td><td class="num">7,071</td></tr><tr><td>picture-craft-db</td><td class="num">33</td><td class="bar"><span style="width:26%"></span></td><td class="num">576</td></tr><tr><td>sfs-db</td><td class="num">33</td><td class="bar"><span style="width:26%"></span></td><td class="num">341</td></tr></tbody></table>
+</section>
+
+<section id="s5"><h2>05 規模と世代<span class="en">SCALE &amp; ERA</span></h2>
+<p>規模上位は実観測・大規模コーパス系（神話機能・研究者・文化インテリジェンス・場所性）。世代（era）は最新方法論 E3 が多数を占める。</p>
+<table><thead><tr><th>規模上位 DB</th><th>行数（相対）</th><th>rows</th></tr></thead><tbody><tr><td>myth-function-db</td><td class="bar"><span style="width:100%"></span></td><td class="num">12,768,209</td></tr><tr><td>researcher-intelligence-db</td><td class="bar"><span style="width:51%"></span></td><td class="num">6,616,713</td></tr><tr><td>cultural-intelligence-db</td><td class="bar"><span style="width:15%"></span></td><td class="num">1,939,417</td></tr><tr><td>placeness-knowledge-db</td><td class="bar"><span style="width:14%"></span></td><td class="num">1,811,297</td></tr><tr><td>future-tech-trends-db</td><td class="bar"><span style="width:8%"></span></td><td class="num">1,052,844</td></tr><tr><td>agent-registry-db</td><td class="bar"><span style="width:6%"></span></td><td class="num">832,243</td></tr><tr><td>japanese-researchers-db</td><td class="bar"><span style="width:6%"></span></td><td class="num">785,576</td></tr><tr><td>global-research-press-db</td><td class="bar"><span style="width:6%"></span></td><td class="num">779,043</td></tr><tr><td>goe-performance-db</td><td class="bar"><span style="width:5%"></span></td><td class="num">750,857</td></tr><tr><td>contemporary-questions-db</td><td class="bar"><span style="width:5%"></span></td><td class="num">658,049</td></tr></tbody></table>
+<table><thead><tr><th>世代（era）</th><th>DB 数</th></tr></thead><tbody><tr><td>E3</td><td class="num">151</td></tr><tr><td>E2</td><td class="num">60</td></tr><tr><td>EXCLUDED</td><td class="num">14</td></tr></tbody></table>
+<div class="note">E3=最新（/adb v1.1 / IRR Gwet AC1 / cross_db_refs 18+ / 非西洋 30%+）, E2=確立期, E1=黎明期, EXCLUDED=ランタイム複製・収集パイプライン等。</div>
+</section>
+
+<section id="s6"><h2>06 二軸構造<span class="en">TWO AXES</span></h2>
+<p>エコシステムは「知見を引き出す軸」と「実装・実行する軸」の直交する二軸を持つ。本図が描くのは前者（dom-* / 領域メタ）。後者は impl-meta（S1 Build / S2 Verify / S3 Deploy / S4 Market / S5 Coordinate の 5 squad）が担い、両軸の上位を meta が統括する。DB は知見軸の資産であり、実装軸のエージェントがそれを READ ONLY で参照して成果物（連載・レポート・アプリ・回答）を生む。</p>
+<div class="note">知見軸（dbo / dom-*）＝「何を知っているか」。実装軸（impl-meta / squads）＝「何を作るか」。両者は対立せず、DB が前者の資産・後者の参照源として機能する。</div>
+</section>
+</main></div>
+<script>
+function tt(){const d=document.documentElement;const x=d.getAttribute('data-theme')==='dark'?'':'dark';if(x)d.setAttribute('data-theme',x);else d.removeAttribute('data-theme');localStorage.setItem('th',x)}
+if(localStorage.getItem('th')==='dark')document.documentElement.setAttribute('data-theme','dark');
+</script>
+</body></html>
