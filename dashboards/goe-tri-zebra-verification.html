@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOE-Tri はゼブラ企業を抽出できるか ── 実行力の検証レポート</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;--paper:#FAF8F4;--surface:#FAF8F4;--card:#FFFFFF;--card-h:#F7F5F0;
+  --warm:#CC1400;--warm-soft:#B01200;--muted:rgba(204,20,0,.05);
+  --ok:#1F7A3D;--ok-bg:rgba(31,122,61,.08);--warn:#B26A00;--warn-bg:rgba(178,106,0,.09);
+  --ink:#141414;--text:#1A1A1A;--text-2:#565249;--text-3:#87837A;--border:#E7E3DB;--border-2:#EEEBE3;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;--mono:"Fira Code",monospace;
+  --side:clamp(18px,5vw,54px);
+}
+[data-theme="dark"]{--bg:#0F0F0F;--paper:#151412;--surface:#1B1A17;--card:#161513;--card-h:#201E1A;--warm:#FF4030;--warm-soft:#FF6152;--muted:rgba(255,64,48,.10);--ok:#4ECB77;--ok-bg:rgba(78,203,119,.12);--warn:#E0A030;--warn-bg:rgba(224,160,48,.12);--ink:#EDEBE6;--text:#E7E4DD;--text-2:#ABA79C;--text-3:#847F74;--border:#312E28;--border-2:#262420;}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.01em;font-feature-settings:"palt";-webkit-font-smoothing:antialiased;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.bar{position:fixed;inset:0 0 auto 0;height:48px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(1.2) blur(10px);border-top:3px solid var(--warm);border-bottom:1px solid var(--border-2);display:flex;align-items:center;justify-content:space-between;padding:0 var(--side);z-index:60}
+.bar b{font-size:.82rem;letter-spacing:.05em;font-weight:900}.bar b span{color:var(--warm)}
+.bar nav a{color:var(--text-3);text-decoration:none;font-size:.72rem;letter-spacing:.06em;margin-left:14px}
+.bar nav a:hover{color:var(--warm)}
+.tg{background:none;border:1px solid var(--border);border-radius:5px;color:var(--text-2);padding:6px 11px;font-size:.68rem;cursor:pointer;font-family:var(--font);margin-left:14px}
+main{max-width:800px;margin:48px auto 0;padding:52px var(--side) 120px}
+.ey{font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;color:var(--warm);font-weight:700;margin-bottom:14px}
+h1{font-weight:900;font-size:clamp(1.7rem,4vw,2.25rem);line-height:1.22;letter-spacing:-.015em;margin-bottom:16px}
+.lead{font-size:1rem;color:var(--text-2);line-height:1.95;margin-bottom:24px}
+.meta{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:34px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+.chip{font-size:.65rem;color:var(--text-2);background:var(--surface);border:1px solid var(--border-2);border-radius:3px;padding:4px 9px;font-family:var(--mono)}
+.verdict{background:var(--warn-bg);border:1px solid var(--warn);border-radius:12px;padding:20px 24px;margin:8px 0 30px}
+.verdict .tag{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);font-weight:700;display:block;margin-bottom:8px}
+.verdict h2{font-size:1.2rem;font-weight:900;margin-bottom:10px;border:none;padding:0}
+.verdict p{font-size:.92rem;line-height:1.9;color:var(--text);margin:0}
+.ch{margin-bottom:56px;padding-top:20px}
+.cn{font-family:var(--mono);font-size:.72rem;color:var(--warm);letter-spacing:.13em;font-weight:500}
+h2{font-weight:900;font-size:1.42rem;line-height:1.3;margin:8px 0 20px;letter-spacing:-.01em;padding-bottom:11px;border-bottom:1px solid var(--border-2)}
+h3{font-weight:700;font-size:1.1rem;margin:32px 0 12px}
+p{margin-bottom:15px;font-size:.94rem;line-height:1.95}
+strong{font-weight:700;color:var(--text)}
+em{font-style:normal;font-weight:700;color:var(--warm)}
+ul,ol{margin:0 0 18px 1.3em}li{margin-bottom:8px;font-size:.92rem;line-height:1.8}
+.call{background:var(--muted);border-left:3px solid var(--warm);border-radius:0 6px 6px 0;padding:15px 20px;margin:22px 0}
+.call p{margin:0;font-size:.9rem}
+.call .l{font-weight:700;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--warm);display:block;margin-bottom:6px}
+.finding{background:var(--surface);border:1px solid var(--border-2);border-radius:9px;padding:14px 18px;margin:18px 0}
+.finding .l{font-weight:700;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);display:block;margin-bottom:6px}
+.finding.gap .l{color:var(--warm)}
+.finding p{margin:0;font-size:.88rem;line-height:1.82;color:var(--text-2)}
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.82rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border-2);vertical-align:top;line-height:1.55}
+th{font-weight:700;font-size:.68rem;letter-spacing:.04em;color:var(--text-2);border-bottom:2px solid var(--border);text-transform:uppercase}
+tr:hover td{background:var(--card-h)}
+.num{font-family:var(--mono);text-align:right;font-size:.86em}
+.cov{font-family:var(--mono);font-weight:700;font-size:.7rem;border-radius:3px;padding:1px 7px}
+.cov.hi{background:var(--ok-bg);color:var(--ok)}.cov.mid{background:var(--warn-bg);color:var(--warn)}.cov.lo{background:var(--muted);color:var(--warm)}
+.foot{margin-top:56px;padding-top:24px;border-top:1px solid var(--border);font-size:.76rem;color:var(--text-3);line-height:1.8}
+.foot a{color:var(--warm);text-decoration:none}.foot .mono{font-family:var(--mono)}
+@media print{.bar,.tg{display:none}main{padding-top:20px}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>検証レポート<span>／GOE-Tri × ゼブラ企業</span></b>
+  <nav>
+    <a href="goe-tri-index.html">まとめ</a>
+    <a href="goe-tri-metrics.html">採点シート</a>
+    <a href="goe-tri-detailed.html">詳細</a>
+    <button class="tg" onclick="tt()">◐</button>
+  </nav>
+</div>
+<main>
+<div class="ey">Verification ・ 実行力の検証</div>
+<h1>GOE-Tri はゼブラ企業を抽出できるか</h1>
+<p class="lead">GOE-Tri(倫理E・受託I・学習L の3面で会社を測るものさし)が、ゼブラ企業のような「利益と社会善を両立させる良い企業」を実際に抽出する実行力を持つかを、批判的に検証する。GOE-DB とその実財務データ層(goe_perf・上場160社)、および関連する学術データベースの知見に接地して評価した。</p>
+<div class="meta">
+  <span class="chip">接地: GOE-DB / goe_perf 160社</span>
+  <span class="chip">AR-DB: gc・sce・ide・ec 連携</span>
+  <span class="chip">NPO 中立性・反証併記</span>
+  <span class="chip">2026-07-07</span>
+</div>
+
+<div class="verdict">
+  <span class="tag">判定 ── 条件つきで実行力あり(そのままでは不十分)</span>
+  <h2>中核は捉える。しかし「利益の半分」と「小規模・非上場」で穴がある。</h2>
+  <p>GOE-Tri は、ゼブラ企業をユニコーンから分ける中核——長期の受託・目的の制度化・取引先や従業員への公正——を、既存のESG指標が測れない受託面(I)で捉える点に、明確な実行力を持つ。しかし、ゼブラの定義のもう半分である<em>実際の収益性</em>を弱くしか測らず、<em>再生的な正の影響</em>を欠き、ゼブラの多くが該当する<em>小規模・非上場企業</em>ではデータが取れない。4つの補強を加えれば、ゼブラ抽出器として実行力を持つ。</p>
+</div>
+
+<!-- 01 -->
+<section class="ch" id="c1">
+<div class="cn">SECTION 01</div>
+<h2>ゼブラ企業とは何か</h2>
+<p>ゼブラ企業は、2017年に Jennifer Brandel・Mara Zepeda・Astrid Scholz・Aniyia Williams らが提唱し、コミュニティ Zebras Unite が広めた企業像である。急成長と独占を志向する「ユニコーン」への対比として立てられた。要点は、白と黒の縞のように<em>利益と社会善を同時に</em>追う「両立(both/and)」の姿勢にある。</p>
+<p>具体的な特徴は次の5点に整理できる。第一に、利益を上げながら社会や環境を良くすること。第二に、爆発的成長(ブリッツスケール)でなく、身の丈に合った持続可能で資本効率の高い成長。第三に、株主の短期利益より長期の存続と、従業員・取引先・地域との相互繁栄(mutualism)を優先すること。第四に、地域やコミュニティに根ざすこと。第五に、目的を所有構造に組み込む受託所有(steward ownership)を選ぶことが多い点である。</p>
+<p>ここで重要なのは、ゼブラが「利益」と「目的」の<em>どちらか</em>でなく<em>両方</em>を要求する点だ。GOE-DB にも「利益と目的の緊張(Purpose-Profit Tension)」という概念が登録されており、この緊張を統合できているかがゼブラ判定の核心になる。なお、GOE-DB には「ゼブラ企業」という概念そのものは登録されておらず、これは学術DBと実務ムーブメントの間の空白を示す(後述の限界)。</p>
+</section>
+
+<!-- 02 -->
+<section class="ch" id="c2">
+<div class="cn">SECTION 02</div>
+<h2>GOE-Tri の3面(前提の確認)</h2>
+<p>GOE-Tri は、GOE-DB の8類型から性格の異なる3つを軸にしたものである。倫理面(E)は「誰に責任を負うか」——ステークホルダー統治・目的の制度化・環境社会インパクト・情報開示。受託面(I)は「どれだけ長く誠実に受け託されているか」——支払いの公正・低離職・長期存続・財務の健全・従業員の健康・現場の主体性。学習面(L)は「学び変わり続けているか」——心理的安全性・エンゲージメント・教育投資・失敗からの学び。出力は総合順位でなく E・I・L の3値プロファイルである。</p>
+</section>
+
+<!-- 03 -->
+<section class="ch" id="c3">
+<div class="cn">SECTION 03</div>
+<h2>照合 ── ゼブラの要件を GOE-Tri はどこまで捉えるか</h2>
+<p>ゼブラの5要件を GOE-Tri の3面に照らすと、カバレッジは要件ごとに大きく異なる。</p>
+<table>
+<thead><tr><th>ゼブラの要件</th><th>対応する面/項目</th><th>カバレッジ</th></tr></thead>
+<tbody>
+<tr><td>目的と社会善の制度化</td><td>E1 目的の定款化・E2 統治・E3-5 環境社会</td><td><span class="cov hi">高</span></td></tr>
+<tr><td>持続可能で身の丈の成長(非ブリッツスケール)</td><td>I2 定着・I3 存続・I4 財務健全</td><td><span class="cov hi">高</span></td></tr>
+<tr><td>相互繁栄(取引先・従業員への公正)</td><td>I1 支払サイト・I5 健康・E2 統治</td><td><span class="cov hi">高</span></td></tr>
+<tr><td>地域・コミュニティへの根ざし</td><td>I1 地域投資(代理指標)</td><td><span class="cov mid">中</span></td></tr>
+<tr><td>受託所有(steward ownership)</td><td>E1 目的信託・受託統治</td><td><span class="cov hi">高</span></td></tr>
+<tr><td>実際の収益性(利益を上げていること)</td><td>I4 財務健全(間接的のみ)</td><td><span class="cov lo">低</span></td></tr>
+<tr><td>再生的・正の影響(net-positive)</td><td>(該当項目なし)</td><td><span class="cov lo">低</span></td></tr>
+<tr><td>事業モデルと目的の一致</td><td>(該当項目なし)</td><td><span class="cov lo">低</span></td></tr>
+</tbody>
+</table>
+<div class="call"><span class="l">照合の要点</span><p>ゼブラを<strong>ユニコーンから分ける</strong>特徴——長期・公正・受託・非ブリッツスケール——は、GOE-Tri の受託面(I)と倫理面(E)が高く捉える。ここは既存のESG指標や成長指標が最も測れない領域であり、GOE-Tri 固有の実行力が発揮される。一方、ゼブラの<strong>もう半分</strong>である「実際に利益を上げていること」「再生的な正の影響」「事業モデルの整合」は、GOE-Tri の穴である。</p></div>
+</section>
+
+<!-- 04 -->
+<section class="ch" id="c4">
+<div class="cn">SECTION 04</div>
+<h2>実データによる検証 ── 8類型の財務成績</h2>
+<p>GOE-DB には、8類型を経験的に検証する実財務データ層 goe_perf がある。上場160社(各類型20社)の株価・財務から算出した5年・10年の年平均成長率(CAGR)とリスク調整後リターン(シャープ比)を見ると、GOE-Tri を構成する3つの面の「利益の実力」に差が出る。</p>
+<table>
+<thead><tr><th>類型(GOE-Tri の面)</th><th class="num">CAGR 5年</th><th class="num">CAGR 10年</th><th class="num">シャープ比</th></tr></thead>
+<tbody>
+<tr><td>倫理型 T5(倫理面 E)</td><td class="num">1.9%</td><td class="num">9.5%</td><td class="num">0.37</td></tr>
+<tr><td>受託型 T7(受託面 I)</td><td class="num">11.6%</td><td class="num">14.8%</td><td class="num">0.34</td></tr>
+<tr><td>学習型 T3(学習面 L)</td><td class="num">11.6%</td><td class="num">17.7%</td><td class="num">0.46</td></tr>
+<tr><td>(参考)成果型 T1</td><td class="num">15.9%</td><td class="num">19.1%</td><td class="num">0.54</td></tr>
+<tr><td>(参考)批判型 T8</td><td class="num">−1.0%</td><td class="num">1.8%</td><td class="num">0.34</td></tr>
+</tbody>
+</table>
+<div class="finding gap"><span class="l">発見1 ── 倫理だけでは利益が伴わない</span><p>倫理面(E=倫理型)の5年成長は1.9%と、3面のなかで際立って低い。目的や環境社会への責任を掲げることは、それ自体では利益を生まない。ゼブラが求める「利益と目的の両立」を、E軸単独では満たせない——実データがこの緊張を裏づける。</p></div>
+<div class="finding"><span class="l">発見2 ── 受託と学習が持続的な利益を支える</span><p>受託面(I)は10年で14.8%と長期に安定し、学習面(L)は10年17.7%・シャープ比0.46と成長と安定を両立する。ゼブラの「持続可能で資本効率の高い成長」に最も近いのは、E単独でなく I と L を伴うプロファイルである。3面を並置して形で読む GOE-Tri の設計は、この点で妥当性を持つ。</p></div>
+<p>ただしこの検証には限界がある。対象は上場160社で、生き残った企業に偏る(サバイバーシップ)。また、これは8類型そのものの検証であり、GOE-Tri の3軸合成スコアを直接検証したものではない。それでも、「倫理の掲げは利益を保証しない/受託と学習が持続利益を支える」という方向は、ゼブラ抽出を考えるうえで示唆的である。</p>
+</section>
+
+<!-- 05 -->
+<section class="ch" id="c5">
+<div class="cn">SECTION 05</div>
+<h2>実行力の評価 ── 強みと4つの欠落</h2>
+<h3>強み(ここは実行力がある)</h3>
+<p>GOE-Tri の最大の強みは、受託面(I)にある。ゼブラをユニコーンから分けるのは、爆発的成長や上場益でなく、長く続き・辞める人が少なく・取引先を買い叩かず・現場が主体的、という受託の質である。これは既存の国際的なESG指標や成長指標がほとんど測れない領域であり、GOE-Tri が代理指標(支払サイト・離職率・存続年数・自己資本比率)で可視化する点に、他にない実行力がある。倫理面(E)の目的の制度化・受託所有の把握も、ゼブラの核を捉える。</p>
+<h3>4つの欠落(このままでは抽出器として不十分)</h3>
+<div class="finding gap"><span class="l">欠落1 ── 収益性の半分が測れない</span><p>ゼブラは「利益 かつ 目的」。だが GOE-Tri は財務健全性(I4)を見るだけで、収益性・資本効率・成長の質を直接測らない。目的は立派だが儲かっていない企業が高得点になりうる(偽陽性)。ゼブラの半分を占める「利益」の評価が弱い。</p></div>
+<div class="finding gap"><span class="l">欠落2 ── 再生的・正の影響がない</span><p>ゼブラは「壊れたものを直す」正の外部性を志向する。GOE-Tri のE軸は排出削減など<strong>害の低減</strong>は測るが、<strong>正味でプラスの貢献</strong>(ドーナツ経済・再生型)を測る項目がない。GOE-DB には該当概念(gc の源泉サイクル・Doughnut)があるのに、指標に配線されていない。</p></div>
+<div class="finding gap"><span class="l">欠落3 ── 小規模・非上場でデータが取れない</span><p>ゼブラの多くはスタートアップや中小・非上場。ところが GOE-Tri のE軸はESG格付や有価証券報告書という上場企業の開示に依存する。最も見分けたい相手(小さなゼブラ)で、最も差がつくデータが手に入らない。実行力が要る場面で計器が効かない。</p></div>
+<div class="finding gap"><span class="l">欠落4 ── 事業モデルと目的の一致を見ない</span><p>ゼブラ性は、収益の上げ方そのものが目的と結びついている点にある(搾取的でない事業構造)。GOE-Tri は統治や実績は見るが、<strong>事業モデルの設計</strong>——稼ぎ方が使命と整合しているか——を評価しない。打ち消し条件で搾取の兆候は拾えるが、積極的な整合は測れない。</p></div>
+<div class="call"><span class="l">偽陽性・偽陰性のリスク</span><p><strong>偽陽性:</strong> 良いESG開示と長い社歴をもつ大企業が、搾取的な事業モデルや上場益志向でも、そこそこ高く出る。<strong>偽陰性:</strong> 本物の小さなゼブラ——ESG格付なし・社歴が浅く I3 を落とし・黒字化前で I4 を落とす——が、典型的なゼブラなのに低く沈む。抽出器としては、この偽陰性が致命的である。</p></div>
+</section>
+
+<!-- 06 -->
+<section class="ch" id="c6">
+<div class="cn">SECTION 06</div>
+<h2>判定と改善提案 ── 実行力を持たせるには</h2>
+<p>結論として、GOE-Tri は<em>ゼブラの中核(受託・目的・公正)を捉える実行力を持つが、そのままではゼブラ抽出器として不十分</em>である。ユニコーンとの識別には効くが、ゼブラの定義の半分(利益の実力・再生性)と、ゼブラが多く存在する領域(小規模・非上場)を取りこぼす。次の4つを補えば、実行力を持つ。</p>
+<ol>
+<li><strong>収益性の軸を足す。</strong> 受託面に「持続的な収益性」項目(営業利益率の継続・資本効率・キャッシュ創出)を加え、「利益 かつ 目的」を明示的に測る。goe_perf の CAGR・シャープ比を接続すれば実装できる。</li>
+<li><strong>再生的な正の影響を測る。</strong> 倫理面に「net-positive 項目」(再生型・ドーナツ経済の内側にあるか・正の外部性)を加える。GOE-DB の gc(源泉サイクル)・Doughnut 概念を指標へ配線する。</li>
+<li><strong>非上場・小規模のデータ経路を用意する。</strong> 上場開示に依存しない代替(社内データ・創業者聞き取り・取引先評価・受託所有の法人格)を各項目に明記し、小さなゼブラでも採点できるようにする。</li>
+<li><strong>事業モデルと目的の整合を見る。</strong> 「稼ぎ方が使命と結びついているか」を一項目化し、搾取的モデルを積極的に減点する。ブリッツスケール志向・早期の上場益狙いをゼブラ固有の打ち消し条件に加える。</li>
+</ol>
+<div class="call"><span class="l">補強後の位置づけ</span><p>この4点を足せば、GOE-Tri は「ユニコーン的な見せかけの良さ」を排し、「利益と目的を両立し、長く公正に、正の影響を出す」ゼブラを、上場・非上場を問わず抽出できるものさしになる。中核の実行力(受託面)は既にあるため、補強は追加であって作り直しではない。</p></div>
+</section>
+
+<!-- 07 -->
+<section class="ch" id="c7">
+<div class="cn">SECTION 07</div>
+<h2>反証条件・データ裏づけ・限界</h2>
+<p>本検証が誤りだと示されるのは、次の場合である。第一に、補強後の GOE-Tri で高得点になる企業群が、独立に定義したゼブラ企業(受託所有・両立・長期存続の実績)と統計的に一致しないとき。第二に、収益性軸を足しても偽陰性(本物の小さなゼブラの取りこぼし)が減らないとき。第三に、goe_perf の類型別成績が、より大きく偏りの少ない標本で再現しないとき。これらは goe_perf の拡張と、実在ゼブラ企業リストとの突合で検証すべき仮説である。</p>
+<p>限界も明示する。goe_perf は上場160社でサバイバーシップの偏りがあり、8類型の検証であって3軸合成の直接検証ではない。GOE-DB には「ゼブラ企業」概念自体が未登録で、本検証はゼブラ・ムーブメントの一次情報と、GOE-DB の隣接概念(受託所有・利益と目的の緊張・ドーナツ経済・共通善経済・Buen Vivir)からの接地に依拠している。したがって本レポートは、GOE-Tri の実行力を確定するものでなく、<em>どこに実行力があり、どこを補えばゼブラを抽出できるか</em>を、実データと学術知に接地して見取り図として示すものである。</p>
+</section>
+
+<div class="foot">
+<p>データ源: GOE-DB(<span class="mono">organization-excellence-db/data/goe.db</span>)/ 実財務層 goe_perf(<span class="mono">goe-performance-db/data/goe_perf.db</span> ・上場160社・8類型)。AR-DB 経由で gc(源泉サイクル)・sce(戦略転換の実財務)・ide(投資DD)・ec(経済学)を参照。ゼブラ企業: Zebras Unite(Brandel・Zepeda・Scholz・Williams 2017)。</p>
+<p>関連: <a href="goe-tri-index.html">まとめ</a> / <a href="goe-tri-metrics.html">採点シート</a> / <a href="goe-tri-detailed.html">詳細版</a>。ガバナンス: NPO法人ミラツク中立性原則(単一最適解の非提示・反証条件の明示・生成と検証の分離)。作成 2026-07-07 / GOE-DB エージェント。</p>
+</div>
+</main>
+<script>
+function tt(){const b=document.body,c=b.getAttribute('data-theme');const n=c==='dark'?'light':'dark';b.setAttribute('data-theme',n);try{localStorage.setItem('goe-theme',n)}catch(e){}}
+(function(){try{const s=localStorage.getItem('goe-theme');if(s)document.body.setAttribute('data-theme',s)}catch(e){}})();
+</script>
+</body>
+</html>
