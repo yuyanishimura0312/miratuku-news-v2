@@ -10,13 +10,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#FFFFFF;--surface:#F7F7F4;--card:#FFFFFF;--card-h:#F2F1ED;
-  --accent:#121212;--warm:#CC1400;--warm-soft:#B01200;--muted:rgba(204,20,0,0.055);
-  --text:#161616;--text-2:#545454;--text-3:#7A7A7A;--border:#E4E1DC;--border-2:#EDEDED;
+  --bg:#FFFFFF;--paper:#FAF8F4;--surface:#FAF8F4;--card:#FFFFFF;--card-h:#F7F5F0;
+  --accent:#141414;--ink:#141414;--warm:#CC1400;--warm-soft:#B01200;--muted:rgba(204,20,0,.05);
+  --text:#1A1A1A;--text-2:#5A574F;--text-3:#8A867C;--border:#E7E3DB;--border-2:#EEEBE3;
   --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
   --serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;--mono:"Fira Code",monospace;
 }
-[data-theme="dark"]{--bg:#111;--surface:#191919;--card:#171717;--card-h:#222;--accent:#E0E0E0;--warm:#FF4030;--warm-soft:#FF6152;--muted:rgba(255,64,48,.10);--text:#E4E4E4;--text-2:#ABABAB;--text-3:#888;--border:#333;--border-2:#262626;}
+[data-theme="dark"]{--bg:#0F0F0F;--paper:#151412;--surface:#1B1A17;--card:#161513;--card-h:#201E1A;--accent:#EDEBE6;--ink:#EDEBE6;--warm:#FF4030;--warm-soft:#FF6152;--muted:rgba(255,64,48,.10);--text:#E7E4DD;--text-2:#ABA79C;--text-3:#847F74;--border:#312E28;--border-2:#262420;}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.9;letter-spacing:.02em;font-feature-settings:"palt";-webkit-font-smoothing:antialiased}
@@ -80,7 +80,12 @@ figcaption{font-size:.74rem;color:var(--text-3);text-align:center;margin-top:10p
 .foot{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);font-size:.76rem;color:var(--text-3);font-family:var(--serif);line-height:1.8}
 .foot a{color:var(--warm);text-decoration:none}
 @media(max-width:1000px){.wrap{flex-direction:column}.toc{position:relative;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border-2);top:0}main{padding:34px 22px 90px;max-width:100%}h1{font-size:1.7rem}}
-@media print{.bar,.toc,.tg{display:none}.wrap{margin:0}main{max-width:100%;padding:0}body{font-size:10.5pt}}
+.progress{position:fixed;top:46px;left:0;height:2px;background:var(--warm);width:0;z-index:55}
+.toc a.active{color:var(--warm);border-left-color:var(--warm);font-weight:700}
+.bar{backdrop-filter:saturate(1.2) blur(10px);background:color-mix(in srgb,var(--bg) 88%,transparent)}
+h3{scroll-margin-top:64px}section{scroll-margin-top:60px}
+@media(prefers-reduced-motion:reduce){.progress{display:none}}
+@media print{.bar,.toc,.tg,.progress{display:none}.wrap{margin:0}main{max-width:100%;padding:0}body{font-size:10.5pt}}
 </style>
 </head>
 <body>
@@ -92,6 +97,7 @@ figcaption{font-size:.74rem;color:var(--text-3);text-align:center;margin-top:10p
     <button class="tg" onclick="tt()">◐</button>
   </nav>
 </div>
+<div class="progress" id="prog"></div>
 <div class="wrap">
 <nav class="toc">
   <h2>目次</h2>
@@ -447,6 +453,20 @@ figcaption{font-size:.74rem;color:var(--text-3);text-align:center;margin-top:10p
 <script>
 function tt(){const b=document.body,c=b.getAttribute('data-theme');const n=c==='dark'?'light':'dark';b.setAttribute('data-theme',n);try{localStorage.setItem('goe-theme',n)}catch(e){}}
 (function(){try{const s=localStorage.getItem('goe-theme');if(s)document.body.setAttribute('data-theme',s)}catch(e){}})();
+(function(){
+  var prog=document.getElementById('prog');
+  var links=Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var targets=links.map(function(a){var id=a.getAttribute('href').slice(1);return document.getElementById(id);});
+  function onScroll(){
+    var h=document.documentElement,st=h.scrollTop||document.body.scrollTop;
+    var max=h.scrollHeight-h.clientHeight;
+    if(prog)prog.style.width=(max>0?(st/max*100):0)+'%';
+    var cur=-1,y=st+120;
+    for(var i=0;i<targets.length;i++){if(targets[i]&&targets[i].offsetTop<=y)cur=i;}
+    links.forEach(function(a,i){a.classList.toggle('active',i===cur);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+})();
 </script>
 </body>
 </html>
