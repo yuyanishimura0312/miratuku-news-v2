@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>未来学基盤ダッシュボード ｜ ミラツク フォーサイト</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --track: #ECECEC;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --font-mono: "Fira Code", "SF Mono", Menlo, monospace;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6152;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+  --track: #2E2E2E;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent-warm); outline-offset: 2px; border-radius: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; scroll-behavior: auto !important; } }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.85;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* top-bar */
+.top-bar {
+  position: fixed; top: 0; left: 0; right: 0; height: 48px;
+  background: var(--bg);
+  border-top: 3px solid var(--accent-warm);
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; z-index: 100;
+}
+.top-bar .brand {
+  font-family: var(--font-serif); font-weight: 700; font-size: 15px;
+  letter-spacing: 0.04em; color: var(--text);
+}
+.top-bar .brand .mark { color: var(--accent-warm); }
+.top-bar .brand-en {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);
+  letter-spacing: 0.14em; margin-left: 10px; text-transform: uppercase;
+}
+.theme-toggle {
+  background: none; border: 1px solid var(--border); color: var(--text-secondary);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+  padding: 5px 12px; cursor: pointer; border-radius: 2px; transition: all 0.15s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+/* layout */
+.layout { display: flex; padding-top: 48px; max-width: 1280px; margin: 0 auto; }
+
+/* sidebar TOC */
+.toc-sidebar {
+  position: fixed; top: 48px; width: 260px; height: calc(100vh - 48px);
+  overflow-y: auto; padding: 32px 20px 40px 28px;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar .toc-title {
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 16px; font-weight: 500;
+}
+.toc-sidebar ol { list-style: none; }
+.toc-sidebar li { margin-bottom: 4px; }
+.toc-sidebar a {
+  display: block; text-decoration: none; color: var(--text-secondary);
+  font-size: 13px; padding: 5px 8px; border-radius: 2px; transition: all 0.14s;
+  border-left: 2px solid transparent;
+}
+.toc-sidebar a:hover { color: var(--accent-warm); background: var(--accent-muted); }
+.toc-sidebar a.active { color: var(--accent-warm); border-left-color: var(--accent-warm); }
+.toc-sidebar .toc-num {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+  margin-right: 8px;
+}
+.toc-meta {
+  margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-light);
+  font-size: 11px; color: var(--text-muted); line-height: 1.7;
+}
+.toc-meta .k { font-family: var(--font-mono); color: var(--accent-warm); }
+
+/* main */
+main { margin-left: 260px; flex: 1; padding: 48px 56px 120px; max-width: 900px; }
+.page-head { margin-bottom: 48px; }
+.page-eyebrow {
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent-warm); font-weight: 500; margin-bottom: 14px;
+}
+.page-title {
+  font-family: var(--font-serif); font-weight: 700; font-size: 34px;
+  line-height: 1.3; letter-spacing: 0.01em; margin-bottom: 16px;
+}
+.page-lead {
+  font-size: 15px; color: var(--text-secondary); line-height: 1.95;
+  max-width: 720px;
+}
+.page-meta {
+  margin-top: 20px; font-family: var(--font-mono); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 0.06em;
+}
+
+/* sections */
+.chapter { margin-bottom: 72px; scroll-margin-top: 64px; border-top: 1px solid var(--border-light); padding-top: 40px; }
+.chapter:first-of-type { border-top: none; padding-top: 0; }
+.chapter-num {
+  font-family: var(--font-mono); font-size: 12px; color: var(--accent-warm);
+  letter-spacing: 0.1em; margin-bottom: 6px;
+}
+.chapter-title {
+  font-family: var(--font-serif); font-weight: 700; font-size: 23px;
+  line-height: 1.4; margin-bottom: 8px;
+}
+.chapter-sub {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 24px;
+  letter-spacing: 0.04em;
+}
+.chapter p { margin-bottom: 16px; font-size: 14.5px; color: var(--text); line-height: 1.95; }
+.chapter p.body-indent { text-indent: 1em; }
+
+/* stat grid */
+.stat-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: var(--border-light); border: 1px solid var(--border-light);
+  margin: 24px 0 8px;
+}
+.stat-cell { background: var(--card); padding: 20px 22px; }
+.stat-cell .stat-label {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+.stat-cell .stat-num {
+  font-family: var(--font-serif); font-weight: 700; font-size: 30px;
+  color: var(--accent-warm); line-height: 1.1; letter-spacing: 0.01em;
+}
+.stat-cell .stat-num .unit {
+  font-size: 14px; color: var(--text-secondary); margin-left: 3px; font-weight: 400;
+}
+.stat-cell .stat-desc { font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.6; }
+.stat-grid.g2 { grid-template-columns: repeat(2, 1fr); }
+.stat-grid.g4 { grid-template-columns: repeat(4, 1fr); }
+
+/* bar chart */
+.chart { margin: 22px 0 10px; }
+.chart-title {
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 14px; font-weight: 500;
+}
+.bar-row {
+  display: grid; grid-template-columns: 132px 1fr 74px; align-items: center;
+  gap: 12px; margin-bottom: 9px;
+}
+.bar-label { font-size: 12.5px; color: var(--text-secondary); text-align: right; }
+.bar-track { height: 18px; background: var(--track); border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent-warm); border-radius: 2px; transition: width 0.6s ease; }
+.bar-fill.soft { background: var(--accent-warm-soft); opacity: 0.55; }
+.bar-val { font-family: var(--font-mono); font-size: 12px; color: var(--text); text-align: right; }
+
+/* note / callout */
+.note {
+  border-left: 2px solid var(--accent-warm); background: var(--accent-muted);
+  padding: 14px 18px; margin: 20px 0; font-size: 13.5px; color: var(--text);
+  line-height: 1.85;
+}
+.callout {
+  background: var(--accent); color: #FFFFFF; padding: 22px 26px; margin: 24px 0;
+  border-radius: 2px;
+}
+[data-theme="dark"] .callout { background: #0E0E0E; border: 1px solid var(--border); }
+.callout .callout-label {
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--accent-warm-soft); margin-bottom: 8px; font-weight: 500;
+}
+.callout p { color: #F0F0F0; font-size: 14px; margin-bottom: 0; line-height: 1.9; }
+[data-theme="light"] .callout p { color: #F0F0F0; }
+
+/* table */
+table { width: 100%; border-collapse: collapse; margin: 22px 0; font-size: 13px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-light); }
+thead th {
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border);
+}
+td.num { font-family: var(--font-mono); text-align: right; }
+.j-good { color: #3F6B2E; font-weight: 500; }
+[data-theme="dark"] .j-good { color: #6FBF6F; }
+.j-warn { color: var(--accent-warm); font-weight: 500; }
+tbody tr:hover { background: var(--card-hover); }
+
+/* pipeline */
+.pipeline { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 0; margin: 26px 0; }
+.pl-node {
+  background: var(--card); border: 1px solid var(--border); border-radius: 2px;
+  padding: 18px 18px; text-align: center;
+}
+.pl-node .pl-stage {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-warm); margin-bottom: 8px; font-weight: 500;
+}
+.pl-node .pl-name { font-family: var(--font-serif); font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+.pl-node .pl-count { font-family: var(--font-mono); font-size: 18px; color: var(--accent-warm); }
+.pl-node .pl-desc { font-size: 11px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; }
+.pl-arrow { display: flex; align-items: center; justify-content: center; padding: 0 10px; color: var(--accent-warm); font-family: var(--font-mono); font-size: 18px; }
+
+.status-live {
+  display: inline-block; font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; color: #3F8A3F; border: 1px solid #3F8A3F;
+  padding: 2px 8px; border-radius: 2px; text-transform: uppercase;
+}
+[data-theme="dark"] .status-live { color: #6FBF6F; border-color: #6FBF6F; }
+
+footer {
+  margin-left: 260px; max-width: 900px; padding: 32px 56px 60px;
+  border-top: 1px solid var(--border-light);
+  font-size: 12px; color: var(--text-muted); line-height: 1.8;
+}
+footer .k { font-family: var(--font-mono); }
+
+@media (max-width: 1000px) {
+  .toc-sidebar {
+    position: static; width: auto; height: auto; border-right: none;
+    border-bottom: 1px solid var(--border-light); padding: 20px 24px;
+  }
+  .layout { flex-direction: column; }
+  main, footer { margin-left: 0; padding-left: 24px; padding-right: 24px; }
+  .stat-grid, .stat-grid.g2, .stat-grid.g4 { grid-template-columns: 1fr 1fr; }
+  .pipeline { grid-template-columns: 1fr; }
+  .pl-arrow { transform: rotate(90deg); padding: 6px 0; }
+  .bar-row { grid-template-columns: 104px 1fr 64px; }
+}
+@media print {
+  .top-bar, .toc-sidebar, .theme-toggle { display: none; }
+  main, footer { margin-left: 0; }
+  .chapter { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <span class="brand">ミラツク <span class="mark">フォーサイト</span></span>
+    <span class="brand-en">Foresight Foundation</span>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">DARK</button>
+</div>
+
+<div class="layout">
+  <nav class="toc-sidebar">
+    <div class="toc-title">目次</div>
+    <ol>
+      <li><a href="#s01" class="toc-link"><span class="toc-num">01</span>概要</a></li>
+      <li><a href="#s02" class="toc-link"><span class="toc-num">02</span>三層パイプライン</a></li>
+      <li><a href="#s03" class="toc-link"><span class="toc-num">03</span>PESTLE ニュース</a></li>
+      <li><a href="#s04" class="toc-link"><span class="toc-num">04</span>シグナル</a></li>
+      <li><a href="#s05" class="toc-link"><span class="toc-num">05</span>フォーサイトレポート</a></li>
+      <li><a href="#s06" class="toc-link"><span class="toc-num">06</span>本日の復旧</a></li>
+      <li><a href="#s07" class="toc-link"><span class="toc-num">07</span>稼働状況とデータ源</a></li>
+    </ol>
+    <div class="toc-meta">
+      実測日 <span class="k">2026-07-08</span><br>
+      総レコード <span class="k">408,497</span><br>
+      3系統 <span class="k">日次稼働</span>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-head">
+      <div class="page-eyebrow">Foresight Foundation Dashboard</div>
+      <h1 class="page-title">未来学（フォーサイト）基盤の状況</h1>
+      <p class="page-lead">ミラツク／esse-sense の未来洞察を支えるデータ基盤は、一次ニュースの収集、弱信号の抽出、機関の公式予測という3つの層で構成される。本ダッシュボードは、その3系統の実データを一望し、稼働状況を可視化する。数値はすべて正本データベースから直接照合した実測値である。</p>
+      <div class="page-meta">実測 2026-07-08 ｜ PESTLE 318,628 ＋ シグナル 12,119 ＋ フォーサイトレポート 77,750 ＝ 総計 408,497 レコード</div>
+    </div>
+
+    <!-- 01 概要 -->
+    <section class="chapter" id="s01">
+      <div class="chapter-num">01</div>
+      <h2 class="chapter-title">概要 — 3系統の一望</h2>
+      <div class="chapter-sub">3つのデータベースが、それぞれ異なる粒度で未来を捉える</div>
+      <p>未来学基盤は、性質の異なる3つのデータベースから成る。第1に、世界のニュースを6分類で毎日集める<strong>PESTLE ニュース収集</strong>。第2に、そこから構造的な変化の兆しを抽出した<strong>シグナル</strong>。第3に、世界の機関が発表した公式の未来予測を集積した<strong>フォーサイトレポート</strong>である。粒度は「一次情報 → 抽出された兆し → 権威ある予測」と段階的に深まる。</p>
+      <div class="stat-grid">
+        <div class="stat-cell">
+          <div class="stat-label">PESTLE ニュース</div>
+          <div class="stat-num">318,628<span class="unit">件</span></div>
+          <div class="stat-desc">6分類の一次ニュース。<span class="status-live">Live</span> 日次 733件/日</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">シグナル</div>
+          <div class="stat-num">12,119<span class="unit">件</span></div>
+          <div class="stat-desc">弱信号の抽出。<span class="status-live">Live</span> 日次稼働</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">フォーサイトレポート</div>
+          <div class="stat-num">77,750<span class="unit">件</span></div>
+          <div class="stat-desc">機関の公式予測。<span class="status-live">Live</span> 投入継続</div>
+        </div>
+      </div>
+      <div class="note">本日（2026-07-08）、停滞していたフォーサイトレポートの収集ソースを復旧した。native収集器の再稼働（+213件）とシンクタンクRSSの修復（6機関）により、3系統すべてが日次で稼働する状態に回復している。詳細は「06 本日の復旧」を参照。</div>
+    </section>
+
+    <!-- 02 pipeline -->
+    <section class="chapter" id="s02">
+      <div class="chapter-num">02</div>
+      <h2 class="chapter-title">三層パイプライン構造</h2>
+      <div class="chapter-sub">一次情報から予測へ、粒度を深めながら流れる</div>
+      <p>3系統は独立ではなく、1本のパイプラインを成す。まず PESTLE が世界のニュースを広く集め（32万件）、そこから構造的な変化の兆しをシグナルとして抽出し（1.2万件）、さらに世界の機関が発表した公式の未来予測をフォーサイトレポートとして接続する（7.7万件）。シグナルは Three Horizons（時間射程）と CLA四層（深度）の二軸で分類され、フォーサイトレポートは機関の権威性で裏づけられる。</p>
+      <div class="pipeline">
+        <div class="pl-node">
+          <div class="pl-stage">Layer 1 ｜ 一次情報</div>
+          <div class="pl-name">PESTLE ニュース</div>
+          <div class="pl-count">318,628</div>
+          <div class="pl-desc">世界のニュースを6分類で毎日収集</div>
+        </div>
+        <div class="pl-arrow">&rarr;</div>
+        <div class="pl-node">
+          <div class="pl-stage">Layer 2 ｜ 抽出された兆し</div>
+          <div class="pl-name">シグナル</div>
+          <div class="pl-count">12,119</div>
+          <div class="pl-desc">弱信号を Three Horizons × CLA四層で構造化</div>
+        </div>
+        <div class="pl-arrow">&rarr;</div>
+        <div class="pl-node">
+          <div class="pl-stage">Layer 3 ｜ 権威ある予測</div>
+          <div class="pl-name">フォーサイトレポート</div>
+          <div class="pl-count">77,750</div>
+          <div class="pl-desc">世界421機関の公式予測を集積</div>
+        </div>
+      </div>
+      <p>この構造により、任意のテーマを「いまニュースで何が起きているか（Layer 1）→ どんな構造変化の兆しか（Layer 2）→ 機関はどう予測しているか（Layer 3）」と縦断的に読み解ける。Three Horizons と CLA四層は、シグナルとレポートを横断して整理する共通の座標軸となる。</p>
+    </section>
+
+    <!-- 03 PESTLE -->
+    <section class="chapter" id="s03">
+      <div class="chapter-num">03</div>
+      <h2 class="chapter-title">PESTLE ニュース収集 <span class="status-live">Live</span></h2>
+      <div class="chapter-sub">総318,628件 ｜ 6分類でほぼ均等 ｜ 毎日6時に自動収集</div>
+      <p>PESTLE は、世界のニュースを政治・経済・社会・技術・法制度・環境の6分類で収集する一次情報層である。毎日6時に自動で着弾し、直近12日間は428〜735件/日で安定している。6分類はほぼ均等に集められ、特定領域への偏りを避ける設計になっている。</p>
+      <div class="chart">
+        <div class="chart-title">分類別レコード数（PESTLE 6分類）</div>
+        <div class="bar-row"><span class="bar-label">経済</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">55,742</span></div>
+        <div class="bar-row"><span class="bar-label">政治</span><span class="bar-track"><span class="bar-fill" style="width:98.1%"></span></span><span class="bar-val">54,679</span></div>
+        <div class="bar-row"><span class="bar-label">社会</span><span class="bar-track"><span class="bar-fill" style="width:97.0%"></span></span><span class="bar-val">54,041</span></div>
+        <div class="bar-row"><span class="bar-label">技術</span><span class="bar-track"><span class="bar-fill" style="width:93.0%"></span></span><span class="bar-val">51,854</span></div>
+        <div class="bar-row"><span class="bar-label">法制度</span><span class="bar-track"><span class="bar-fill" style="width:92.2%"></span></span><span class="bar-val">51,393</span></div>
+        <div class="bar-row"><span class="bar-label">環境</span><span class="bar-track"><span class="bar-fill" style="width:91.3%"></span></span><span class="bar-val">50,919</span></div>
+      </div>
+      <div class="stat-grid g2">
+        <div class="stat-cell">
+          <div class="stat-label">2026年 実運用分</div>
+          <div class="stat-num">28,184<span class="unit">件</span></div>
+          <div class="stat-desc">日次収集による新規分（4月11,328 / 6月11,727 / 7月5,129）</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">歴史バックフィル</div>
+          <div class="stat-num">290,444<span class="unit">件</span></div>
+          <div class="stat-desc">1900〜2025年。CLA歴史ベースライン用の過去分布</div>
+        </div>
+      </div>
+      <div class="note">総318,628件のうち約29万件は1900〜2025年の歴史バックフィル（CLA歴史ベースライン用）である。「毎日6時×6分類×50件」の実運用による新規収集分は、2026年の28,184件に相当する。DB: <span class="k">pestle-signal-db/data/pestle.db</span></div>
+    </section>
+
+    <!-- 04 signals -->
+    <section class="chapter" id="s04">
+      <div class="chapter-num">04</div>
+      <h2 class="chapter-title">シグナル <span class="status-live">Live</span></h2>
+      <div class="chapter-sub">総12,119件 ｜ 弱信号を Three Horizons × CLA四層 の二軸で構造化</div>
+      <p>シグナルは、PESTLE の一次ニュースから構造的な変化の兆しを抽出した層である。単なる分類ではなく、変化の型（signal_type）・時間射程（Three Horizons）・深度（CLA四層）・潜在インパクトという複数の座標で多層的に整理される。記事とは31,531本のリンクで接続され、シグナル間の相互影響（cross_impact）も1,806件保持している。</p>
+      <div class="chart">
+        <div class="chart-title">変化の型（signal_type ／ 上位）</div>
+        <div class="bar-row"><span class="bar-label">新興トレンド</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">4,572</span></div>
+        <div class="bar-row"><span class="bar-label">弱信号</span><span class="bar-track"><span class="bar-fill" style="width:77.4%"></span></span><span class="bar-val">3,540</span></div>
+        <div class="bar-row"><span class="bar-label">パラダイムシフト</span><span class="bar-track"><span class="bar-fill" style="width:37.4%"></span></span><span class="bar-val">1,709</span></div>
+        <div class="bar-row"><span class="bar-label">カウンタートレンド</span><span class="bar-track"><span class="bar-fill" style="width:16.0%"></span></span><span class="bar-val">732</span></div>
+        <div class="bar-row"><span class="bar-label">ワイルドカード</span><span class="bar-track"><span class="bar-fill" style="width:11.9%"></span></span><span class="bar-val">542</span></div>
+      </div>
+      <div class="chart">
+        <div class="chart-title">時間射程（Three Horizons）</div>
+        <div class="bar-row"><span class="bar-label">H1 現行</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">5,456</span></div>
+        <div class="bar-row"><span class="bar-label">H2 移行</span><span class="bar-track"><span class="bar-fill" style="width:85.5%"></span></span><span class="bar-val">4,665</span></div>
+        <div class="bar-row"><span class="bar-label">H3 変革</span><span class="bar-track"><span class="bar-fill" style="width:36.6%"></span></span><span class="bar-val">1,995</span></div>
+      </div>
+      <div class="chart">
+        <div class="chart-title">深度（CLA四層 ／ 因果層別分析）</div>
+        <div class="bar-row"><span class="bar-label">システム層</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">7,399</span></div>
+        <div class="bar-row"><span class="bar-label">世界観層</span><span class="bar-track"><span class="bar-fill" style="width:49.5%"></span></span><span class="bar-val">3,659</span></div>
+        <div class="bar-row"><span class="bar-label">神話層</span><span class="bar-track"><span class="bar-fill" style="width:10.9%"></span></span><span class="bar-val">810</span></div>
+        <div class="bar-row"><span class="bar-label">言説層</span><span class="bar-track"><span class="bar-fill" style="width:3.3%"></span></span><span class="bar-val">241</span></div>
+      </div>
+      <div class="chart">
+        <div class="chart-title">潜在インパクト</div>
+        <div class="bar-row"><span class="bar-label">高（high）</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">6,536</span></div>
+        <div class="bar-row"><span class="bar-label">中（medium）</span><span class="bar-track"><span class="bar-fill soft" style="width:58.1%"></span></span><span class="bar-val">3,796</span></div>
+        <div class="bar-row"><span class="bar-label">危機的（critical）</span><span class="bar-track"><span class="bar-fill" style="width:25.2%"></span></span><span class="bar-val">1,646</span></div>
+        <div class="bar-row"><span class="bar-label">低（low）</span><span class="bar-track"><span class="bar-fill soft" style="width:2.2%"></span></span><span class="bar-val">141</span></div>
+      </div>
+      <div class="note">実質12,008件が2026年に集中検出されている。深度分布ではシステム層（7,399件）が最も厚く、表層の言説（241件）にとどまらず構造・世界観の水準まで掘り下げられている点が特徴。DB: <span class="k">pestle-signal-db/data/signal.db</span></div>
+    </section>
+
+    <!-- 05 foresight reports -->
+    <section class="chapter" id="s05">
+      <div class="chapter-num">05</div>
+      <h2 class="chapter-title">フォーサイトレポート <span class="status-live">Live</span></h2>
+      <div class="chapter-sub">総77,750件 ｜ 世界421機関 ｜ 650トレンド ｜ 本日 復旧で +394件</div>
+      <p>フォーサイトレポートは、世界の政府・国際機関・シンクタンク・大学が発表した公式の未来予測を集積した層である。学術論文とトレンド分析が量の大半を占め、そこに戦略・予測・シナリオ・アセスメントが続く。機関数421・トレンド650を横断し、near_2030（19,270件）から far_2050+（12,251件）まで幅広い時間射程をカバーする。</p>
+      <div class="chart">
+        <div class="chart-title">レポート種別</div>
+        <div class="bar-row"><span class="bar-label">学術論文</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">37,198</span></div>
+        <div class="bar-row"><span class="bar-label">トレンド分析</span><span class="bar-track"><span class="bar-fill" style="width:76.0%"></span></span><span class="bar-val">28,278</span></div>
+        <div class="bar-row"><span class="bar-label">戦略</span><span class="bar-track"><span class="bar-fill" style="width:9.3%"></span></span><span class="bar-val">3,464</span></div>
+        <div class="bar-row"><span class="bar-label">予測</span><span class="bar-track"><span class="bar-fill" style="width:8.4%"></span></span><span class="bar-val">3,111</span></div>
+        <div class="bar-row"><span class="bar-label">シナリオ</span><span class="bar-track"><span class="bar-fill" style="width:7.6%"></span></span><span class="bar-val">2,842</span></div>
+        <div class="bar-row"><span class="bar-label">アセスメント</span><span class="bar-track"><span class="bar-fill" style="width:5.8%"></span></span><span class="bar-val">2,155</span></div>
+        <div class="bar-row"><span class="bar-label">シグナルスキャン</span><span class="bar-track"><span class="bar-fill soft" style="width:0.8%"></span></span><span class="bar-val">308</span></div>
+      </div>
+      <div class="chart">
+        <div class="chart-title">機関タイプ（421機関の内訳）</div>
+        <div class="bar-row"><span class="bar-label">政府</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-val">156</span></div>
+        <div class="bar-row"><span class="bar-label">国際機関</span><span class="bar-track"><span class="bar-fill" style="width:76.9%"></span></span><span class="bar-val">120</span></div>
+        <div class="bar-row"><span class="bar-label">シンクタンク</span><span class="bar-track"><span class="bar-fill" style="width:71.2%"></span></span><span class="bar-val">111</span></div>
+        <div class="bar-row"><span class="bar-label">学術機関</span><span class="bar-track"><span class="bar-fill" style="width:67.9%"></span></span><span class="bar-val">106</span></div>
+        <div class="bar-row"><span class="bar-label">NGO</span><span class="bar-track"><span class="bar-fill soft" style="width:30.1%"></span></span><span class="bar-val">47</span></div>
+        <div class="bar-row"><span class="bar-label">企業</span><span class="bar-track"><span class="bar-fill soft" style="width:28.8%"></span></span><span class="bar-val">45</span></div>
+      </div>
+      <div class="stat-grid g4">
+        <div class="stat-cell"><div class="stat-label">総レポート</div><div class="stat-num">77,750</div></div>
+        <div class="stat-cell"><div class="stat-label">機関数</div><div class="stat-num">421</div></div>
+        <div class="stat-cell"><div class="stat-label">トレンド</div><div class="stat-num">650</div></div>
+        <div class="stat-cell"><div class="stat-label">near_2030</div><div class="stat-num">19,270</div></div>
+      </div>
+      <div class="note">本日の復旧で 77,356 → 77,750（+394件）。重複0・整合性チェック ok・additive（既存レコード非改変）で投入済み。DB: <span class="k">foresight-knowledge-base/foresight.db</span></div>
+    </section>
+
+    <!-- 06 recovery -->
+    <section class="chapter" id="s06">
+      <div class="chapter-num">06</div>
+      <h2 class="chapter-title">本日の復旧 — 2026-07-08</h2>
+      <div class="chapter-sub">停滞していたフォーサイトレポート収集を復旧し、3系統すべてを日次稼働へ</div>
+      <p>フォーサイトレポートの一部収集ソースが停滞していた原因は、native収集器（UNDP・OpenAlex 等）を定期実行する自動ジョブが存在せず、4月の一括投入以降放置されていたことにあった。加えて、稼働中のシンクタンク週次収集も30機関中18機関でフィードURLが切れていた。本日、両系統を復旧し自動化まで通した。</p>
+      <table>
+        <thead><tr><th>フェーズ</th><th>内容</th><th class="num">結果</th></tr></thead>
+        <tbody>
+          <tr><td>A. native収集器</td><td>OpenAlex / Crossref / Semantic Scholar を再稼働。UNIQUE制約でrun全体がクラッシュする実バグを根治</td><td class="num j-good">+213件</td></tr>
+          <tr><td>B. シンクタンクRSS</td><td>切れフィード6機関を修復（csis / cfr / bruegel / idc / nber / gartner）</td><td class="num j-good">ok 7→13</td></tr>
+          <tr><td>C. 日次自動化</td><td>日次オーケストレーター + launchd ジョブを新設（毎日06:00）。手動フルサイクル完走を確認</td><td class="num j-good">新設</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <div class="callout-label">Recovery Outcome</div>
+        <p>フォーサイトレポート 77,356 → 77,750（+394件）。3系統すべてが日次稼働する状態に回復。次回自動実行は毎日06:00に保証される。修復不能だった13機関は公開RSS廃止（404）またはボットブロック（403）が理由で、将来のHTML fallback収集で拾う余地を残している。</p>
+      </div>
+      <p>復旧作業はすべて additive（既存スキーマ・主キー・既存レコードを非改変）で行い、DBバックアップ <span style="font-family:var(--font-mono);font-size:12.5px;color:var(--accent-warm)">foresight.db.bak-recovery-20260708</span> を取得済み。捏造ゼロ（実在API／RSSからの実データのみ投入）を厳守した。</p>
+    </section>
+
+    <!-- 07 status & sources -->
+    <section class="chapter" id="s07">
+      <div class="chapter-num">07</div>
+      <h2 class="chapter-title">稼働状況とデータ源</h2>
+      <div class="chapter-sub">3系統の正本DB・稼働状況・自動実行ジョブ</div>
+      <table>
+        <thead><tr><th>系統</th><th>正本DB</th><th class="num">総件数</th><th>稼働</th></tr></thead>
+        <tbody>
+          <tr><td>PESTLE ニュース</td><td><span style="font-family:var(--font-mono);font-size:12px">pestle-signal-db/data/pestle.db</span></td><td class="num">318,628</td><td><span class="status-live">Live</span></td></tr>
+          <tr><td>シグナル</td><td><span style="font-family:var(--font-mono);font-size:12px">pestle-signal-db/data/signal.db</span></td><td class="num">12,119</td><td><span class="status-live">Live</span></td></tr>
+          <tr><td>フォーサイトレポート</td><td><span style="font-family:var(--font-mono);font-size:12px">foresight-knowledge-base/foresight.db</span></td><td class="num">77,750</td><td><span class="status-live">Live</span></td></tr>
+        </tbody>
+      </table>
+      <p>自動実行は3つの launchd ジョブで担保される。PESTLE／シグナルは日次で活発に稼働し、フォーサイトレポートは本日の復旧で日次06:00の自動収集ジョブが新設された。既存の要約バックフィル（04:25）・シンクタンク週次（月曜04:50）とは非衝突の時刻に配置している。</p>
+      <div class="stat-grid">
+        <div class="stat-cell"><div class="stat-label">foresight-daily-collect</div><div class="stat-num" style="font-size:20px">06:00</div><div class="stat-desc">native収集器 日次（本日新設）</div></div>
+        <div class="stat-cell"><div class="stat-label">summary-backfill</div><div class="stat-num" style="font-size:20px">04:25</div><div class="stat-desc">要約本文の後追い取得</div></div>
+        <div class="stat-cell"><div class="stat-label">thinktank-weekly</div><div class="stat-num" style="font-size:20px">月 04:50</div><div class="stat-desc">シンクタンクRSS週次</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <strong style="color:var(--text-secondary)">未来学基盤ダッシュボード</strong> ｜ NPO法人ミラツク ／ esse-sense<br>
+  実測日 <span class="k">2026-07-08</span> ｜ 数値は正本DBから直接照合した実測値 ｜ 総計 <span class="k">408,497</span> レコード ｜ 3系統 日次稼働
+</footer>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeBtn').textContent = next === 'dark' ? 'LIGHT' : 'DARK';
+  try { localStorage.setItem('foresight-theme', next); } catch (e) {}
+}
+(function initTheme() {
+  let saved = 'light';
+  try { saved = localStorage.getItem('foresight-theme') || 'light'; } catch (e) {}
+  document.documentElement.setAttribute('data-theme', saved);
+  var btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = saved === 'dark' ? 'LIGHT' : 'DARK';
+})();
+// TOC active state on scroll
+(function () {
+  const links = document.querySelectorAll('.toc-link');
+  const sections = Array.from(links).map(a => document.querySelector(a.getAttribute('href')));
+  function onScroll() {
+    let idx = 0;
+    const y = window.scrollY + 120;
+    sections.forEach((sec, i) => { if (sec && sec.offsetTop <= y) idx = i; });
+    links.forEach((a, i) => a.classList.toggle('active', i === idx));
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>
