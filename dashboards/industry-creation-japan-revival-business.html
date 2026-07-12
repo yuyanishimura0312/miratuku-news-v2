@@ -15,6 +15,7 @@
   --accent:#121212; --accent-soft:#555; --accent-warm:#CC1400; --accent-warm-soft:#B01200;
   --accent-muted:rgba(204,20,0,.06); --text:#121212; --text-secondary:#555; --text-muted:#6B6B6B;
   --border:#D9D9D9; --border-light:#EEE;
+  --fig-bar:#3A3A3A; --fig-bar-soft:#767676; --fig-acc:#CC1400;
   --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
   --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
   --font-mono:"Fira Code","SF Mono",Menlo,monospace;
@@ -24,6 +25,7 @@
   --accent:#E0E0E0; --accent-soft:#AAA; --accent-warm:#FF4030; --accent-warm-soft:#FF5A47;
   --accent-muted:rgba(255,64,48,.10); --text:#E0E0E0; --text-secondary:#AAA; --text-muted:#8A8A8A;
   --border:#333; --border-light:#2A2A2A;
+  --fig-bar:#5A5A5A; --fig-bar-soft:#767676; --fig-acc:#CC1400;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -106,10 +108,66 @@ li{margin-bottom:8px}
 .term dd{margin:0;color:var(--text-secondary)}
 .doc-footer{border-top:2px solid var(--accent-warm);margin-top:70px;padding-top:24px;font-size:12px;
   color:var(--text-muted);line-height:1.9}
+/* ── 図解 (インラインSVG) ── */
+.fig{margin:30px 0 34px}
+.fig.lead-fig{margin:26px 0 30px}
+.fig svg{width:100%;height:auto;display:block;
+  font-family:var(--font);color:var(--text)}
+.fig-cap{font-family:var(--font);font-size:12px;line-height:1.65;color:var(--text-muted);
+  margin-top:12px;padding-left:2px;letter-spacing:.02em}
+.fig-cap b{color:var(--accent-warm);font-weight:700;font-family:var(--font-mono);
+  letter-spacing:.04em;margin-right:2px}
+/* SVG内テキストの配色トークン (light/dark 両対応 = currentColor / var 参照) */
+.fig svg .s-ink{fill:var(--text)}
+.fig svg .s-mute{fill:var(--text-muted)}
+.fig svg .s-soft{fill:var(--text-secondary)}
+.fig svg .s-acc{fill:var(--accent-warm)}
+.fig svg .r-acc{fill:var(--accent-warm)}
+/* r-fig-acc = 白文字が載る赤帯専用。--fig-acc は light/dark 両方 #CC1400 固定
+   （白文字 5.73:1 で AA 確保のため。dark の --accent-warm #FF4030 に統一しないこと） */
+.fig svg .r-fig-acc{fill:var(--fig-acc)}
+/* r-ink = バー塗り専用。--fig-bar は light/dark 双方で暗色に固定し、
+   上に載る白文字のコントラストを両モードで担保（--text 参照だと dark で明色化し破綻） */
+.fig svg .r-ink{fill:var(--fig-bar)}
+.fig svg .r-mute{fill:var(--text-muted)}
+.fig svg .r-surf{fill:var(--surface)}
+.fig svg .r-surf2{fill:var(--card-hover)}
+.fig svg .st-acc{stroke:var(--accent-warm)}
+.fig svg .st-ink{stroke:var(--text)}
+.fig svg .st-mute{stroke:var(--border)}
+.fig svg .st-rule{stroke:var(--border-light)}
+.fig svg .lbl{font-size:12px;font-family:var(--font)}
+.fig svg .lbl-sm{font-size:10.5px;font-family:var(--font)}
+.fig svg .lbl-cap{font-size:9.5px;letter-spacing:.14em;font-family:var(--font);
+  text-transform:uppercase;font-weight:700}
+.fig svg .num{font-family:var(--font-mono);font-weight:500}
+.fig svg .num-big{font-family:var(--font-mono);font-weight:500}
+/* 図解で読む要旨 セクション */
+.summary-vis{margin:8px 0 20px}
+.summary-vis .sv-lead{font-family:var(--font);font-size:14.5px;line-height:1.9;text-align:left;
+  margin:0 0 18px}
+.summary-vis .sv-lead:first-of-type{font-size:15px}
+.summary-vis h3{margin:40px 0 6px}
+.summary-vis h3:first-of-type{margin-top:20px}
 @media (max-width:1000px){.wrap{grid-template-columns:1fr}.toc{display:none}main{padding:32px 20px 80px}
-  .term dl{grid-template-columns:1fr}}
+  .term dl{grid-template-columns:1fr}
+  .fig svg .lbl{font-size:13px}.fig svg .lbl-sm{font-size:11.5px}}
+@media (max-width:680px){
+  main{padding:26px 16px 74px}
+  .fig{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .fig svg{min-width:680px}
+  .fig-cap{padding-left:2px}
+  table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  h2,h3,.doc-title{overflow-wrap:break-word}
+}
+@media (max-width:420px){
+  main{padding:22px 12px 68px}
+  .fig svg{min-width:640px}
+}
 @media print{.top-bar,.toc,.theme-toggle{display:none}.wrap{grid-template-columns:1fr;margin-top:0}
-  main{max-width:none}h2{page-break-after:avoid}.exec,.implic,.takeaway,.term{page-break-inside:avoid}}
+  main{max-width:none}h2{page-break-after:avoid}.exec,.implic,.takeaway,.term{page-break-inside:avoid}
+  .fig{page-break-inside:avoid}
+  .fig svg{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
 <body>
@@ -120,7 +178,7 @@ li{margin-bottom:8px}
 <div class="wrap">
   <nav class="toc" aria-label="目次">
     <div class="toc-label">目次 — Contents</div>
-    <a class="toc-h2" href="#h0">エグゼクティブサマリー</a>
+    <a class="toc-h2" href="#hviz">図解で読む要旨</a>
     <a class="toc-h2" href="#h1">序章 日本の逆説 — 投資も人もあるのに成果が出ない</a>
     <a class="toc-h2" href="#h2">第1部 日本の現在地 — 数字で確かめる</a>
     <a class="toc-h3" href="#h3">1-1 経済 — 4年連続の実質賃金マイナス</a>
@@ -173,21 +231,214 @@ li{margin-bottom:8px}
 
 <!-- 産業創造と研究者連携（実務者向け）/ NPO法人ミラツク・esse-sense -->
 
-<section id="exec">
-  <h2 id="h0">エグゼクティブサマリー</h2>
-  <div class="exec">
-    <div class="exec-label">1画面でわかる全体像</div>
-    <p>日本の停滞は「お金が足りない・人が足りない」から来ているとよく言われます。しかし数字はそれを支持しません。研究開発費の対GDP比は2024年度に<strong>3.70%と過去最高</strong>で、主要7か国では韓国に次ぐ水準。日本の大学・研究機関に所属する研究者は<strong>約34万人</strong>おり、本レポートの基盤である研究者データベースは、そのうち<strong>31.1万人</strong>を実名・実績つきで捕捉しています（母集団の約91%）。それでも、世界が注目する論文の順位は13位、世界の時価総額トップ50社に残る日本企業はトヨタ1社、実質賃金は4年連続のマイナスです。</p>
-    <p>投入は十分なのに成果が出ない。この「逆説」を本レポートは1つの原因で説明します。<strong>足りないのはお金でも人でもなく、それらを束ねて1つの新しい産業に編み上げる担い手（仕組み）</strong>です。実際に200の産業を1つずつ診断したところ、200産業中<strong>65産業（32.5%）</strong>で、詰まっているのは技術の不足ではなく「束ねる担い手の不在」でした。中核となる科学そのものが足りない産業は、わずか9産業（4.5%）にすぎません。</p>
-    <p>そして最も重要な発見は、その「欠けた位置」を<strong>実在する研究者の名前で埋められた</strong>ことです。優先15産業のうち13で完全な、2で部分的な研究者チーム（延べ68名・実66名）を、31.1万人の基盤から実際に構成できました。統合の欠如は「埋められない谷」ではなく「まだ束ねられていないだけの空席」でした。</p>
-    <ul>
-      <li><strong>研究者はいる。欠けているのは束ねる仕組み。</strong>詰まりは知の生産でなく、知の統合にある。</li>
-      <li><strong>政策が最も厚い量子・水素で、研究者が最も薄い。</strong>資金配分と人材構造が別々に設計されてきた歪みが、そのまま現れている。</li>
-      <li><strong>編成できなかった産業こそ、日本の構造的な穴の信号。</strong>船舶の自律運航や地質貯留は、31.1万人でも埋まらなかった＝育成・海外連携の優先課題。</li>
-      <li><strong>必要なのは巨額の追加投資でなく、投資の設計に1行を足すこと。</strong>「この産業の欠けた位置を、誰が、どの実名の研究者で埋めるのか」。</li>
-    </ul>
-    <p>本レポートは決定論を主張しません。「束ねれば必ず産業が生まれる」とは言わず、反証条件・撤退条件を明示します。主張するのは、いま日本が着手できる打ち手のなかで、これが<strong>もっとも安価で、具体的で、検証可能</strong>だということです。</p>
+<section id="summary" class="summary-vis">
+  <h2 id="hviz">図解で読む要旨</h2>
+
+  <p class="sv-lead">この章だけで、レポート全体の骨格がつかめます。日本の産業をめぐる通念——「お金が足りない、人が足りない」——を、数字と図で1つずつ確かめ、本当に欠けているものを名指しします。以下の図と、その解説を追えば、後の本文はすべて「この骨格の詳細」として読めます。結論を先に述べれば、日本に足りないのは投資でも研究者でもなく、<strong>それらを束ねて1つの新しい産業に編み上げる担い手</strong>です。そしてその欠けた位置は、実在する研究者の名前で埋められることが、実際の編成で確かめられました。本レポートは、この主張を4つのステップで組み立てます。第1に、投入は足りているのに成果が出ないという「逆説」を数字で確かめる。第2に、その原因を「研究者不足」に求める通説を、ほぼ悉皆の実データで退ける。第3に、200産業を1つずつ診断して、詰まっている本当の場所を特定する。第4に、その詰まりが実在する研究者の名前で解けることを、実際の編成で示す。図を追うだけで、この4ステップの骨格がつかめるように構成しました。</p>
+
+  <h3>まず、逆説を見る — 高い投入、低い成果</h3>
+
+  <p class="sv-lead">日本の停滞は、しばしば「投資不足」「人材不足」で説明されます。しかしデータはそのどちらも支持しません。研究開発費の対GDP比は2024年度に3.70%と過去最高を記録し、主要7か国では韓国に次ぐ2番目、OECD方式の国際比較でも世界5番目級の高さです。投入は、相対的には世界最高水準の一角にあります。ところが、その投入から生まれる成果の側は一貫して沈んでいます。世界が注目する論文（Top10%補正論文）の順位は13位、世界の株式時価総額トップ50社に残る日本企業はトヨタ1社、実質賃金は2025年に前年比マイナス1.3%で4年連続のマイナスです。次の図Aは、この「高い投入・低い成果」のねじれを一目で示します。もし成果が出ない理由が投入不足なら、処方箋は「もっと投資する」で済みます。しかし投入は世界最高水準の一角にあるのですから、その処方は的を外します。投入は満ちているのに成果は3つとも沈む——この対比が示すのは、投入と成果のあいだのどこかで、価値の変換が構造的に失敗しているという事態です。日本は「投入が足りない国」ではなく、<strong>投入されたものを産業という形に変換しそこねている国</strong>なのです。この変換の失敗がどこで起きているのかを突き止めることが、本レポートの中心的な作業になります。</p>
+
+  <div class="fig lead-fig">
+    <svg viewBox="0 0 820 300" role="img" aria-labelledby="figA-t figA-d">
+      <title id="figA-t">FIG-A 日本の逆説 — 高い投入と低い成果の対比</title>
+      <desc id="figA-d">左側に投入指標（研究開発費対GDP比3.70%、主要国で韓国に次ぐ2位級）、右側に成果指標（注目論文13位、世界時価総額トップ50はトヨタ1社、実質賃金4年連続マイナス）を対比した図。</desc>
+      <!-- 中央分割線 -->
+      <line x1="410" y1="34" x2="410" y2="278" class="st-mute" stroke-width="1" stroke-dasharray="3 4"/>
+      <!-- 左: 投入 -->
+      <text x="40" y="26" class="lbl-cap s-acc">INPUT ／ 投入</text>
+      <text x="40" y="66" class="lbl s-soft">研究開発費 対GDP比</text>
+      <text x="40" y="104" class="num-big s-acc" font-size="42">3.70<tspan font-size="20">%</tspan></text>
+      <text x="40" y="128" class="lbl-sm s-mute">2024年度・過去最高／主要7か国で韓国に次ぐ2位</text>
+      <!-- 投入バー (世界5番目級 = 相対的に高い、フルに近い) -->
+      <rect x="40" y="150" width="330" height="18" class="r-surf"/>
+      <rect x="40" y="150" width="290" height="18" class="r-acc"/>
+      <text x="40" y="190" class="lbl-sm s-mute">OECD方式3.44%＝イスラエル・韓国・スウェーデン・米国に次ぐ世界5番目級</text>
+      <text x="40" y="228" class="lbl s-soft">大学・研究機関の研究者</text>
+      <text x="40" y="264" class="num-big s-ink" font-size="30">約34<tspan font-size="16">万人</tspan></text>
+      <!-- 右: 成果 -->
+      <text x="440" y="26" class="lbl-cap s-mute">OUTPUT ／ 成果</text>
+      <!-- 成果1: 注目論文順位 -->
+      <text x="440" y="66" class="lbl s-soft">注目論文（Top10%補正）の世界順位</text>
+      <text x="440" y="104" class="num-big s-acc" font-size="42">13<tspan font-size="20">位</tspan></text>
+      <text x="600" y="104" class="lbl-sm s-mute">（論文総数は世界5位）</text>
+      <!-- 成果2: 世界時価総額トップ50 -->
+      <text x="440" y="146" class="lbl s-soft">世界時価総額トップ50の日本企業</text>
+      <text x="440" y="182" class="num-big s-acc" font-size="34">1<tspan font-size="17">社</tspan></text>
+      <text x="490" y="182" class="lbl-sm s-mute">トヨタ自動車のみ</text>
+      <!-- 成果3: 実質賃金 -->
+      <text x="440" y="222" class="lbl s-soft">実質賃金（2025年・前年比）</text>
+      <text x="440" y="258" class="num-big s-acc" font-size="30">−1.3<tspan font-size="16">%</tspan></text>
+      <text x="540" y="258" class="lbl-sm s-mute">4年連続マイナス</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-A</b> 日本の逆説。投入（研究開発費 対GDP比3.70%＝主要7か国で韓国に次ぐ2位・OECD方式で世界5番目級）は世界最高水準の一角にありながら、成果（注目論文13位／世界時価総額トップ50はトヨタ1社／実質賃金4年連続マイナス・2025年−1.3%）は一貫して沈む。「高い投入・低い成果」のねじれ。</div>
   </div>
+
+  <p class="sv-lead">図Aで見落としてはならないのは、成果側の3指標が「研究の質」「企業の規模」「生活水準」という異なる層に散らばっていることです。注目論文13位は研究の世界の話、トヨタ1社は産業の世界の話、実質賃金マイナスは家計の世界の話。ばらばらの3つの世界で同じ方向の沈み込みが起きているという事実は、原因が特定の分野の弱さでなく、投入を成果へ橋渡しする共通のメカニズムの故障にあることを示唆します。この共通のメカニズムこそ、本レポートが最後に「束ねる担い手」と名指すものです。</p>
+
+  <h3>研究者は枯れていない — ほぼ悉皆で捕捉できている</h3>
+
+  <p class="sv-lead">「成果が出ないのは、研究者の質や量が落ちたからだ」という説明も、データは支持しません。日本の大学・研究機関に所属する研究者は約34万人（企業研究者を除く母集団）です。本レポートの基盤である研究者データベースは、このうち31.1万人を実名・実績つきで捕捉しています。内訳は、科研費に収録された本体23万5,521人と、科研費未収録ながら機関公式情報で実在確認したサブ層7万6,054人の合算で、母集団に対する捕捉率は約91%——ほぼ悉皆に近い実データです。次の図Bは、日本の研究者層が「枯れていない」ことを、この捕捉率で示します。産業創造の原資となる研究者は、量として確かに存在します。ここで捕捉率が高いことには、実務上の意味があります。母集団のごく一部しか名簿化できていないなら、「研究者はいる」という主張は印象論にとどまります。しかし約91%を実名・実績つきで押さえているからこそ、後述する「欠けた位置を実在の名前で埋める」という作業が、抽象論でなく具体的な照合として成り立つのです。この31.1万人という基盤の厚みが、本レポートの実証全体を支える土台になります。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 250" role="img" aria-labelledby="figB-t figB-d">
+      <title id="figB-t">FIG-B 研究者は枯れていない — 母集団34万人のうち31.1万人を捕捉</title>
+      <desc id="figB-d">日本の大学所属研究者の母集団約34万人のうち、31.1万人（本体235,521人＋サブ76,054人）を研究者データベースが捕捉し、捕捉率は約91%であることを示す帯グラフ。</desc>
+      <text x="40" y="30" class="lbl-cap s-mute">母集団 ／ 大学・研究機関の研究者（企業を除く）</text>
+      <text x="700" y="30" class="lbl-sm s-mute" text-anchor="end">約34万人 = 100%</text>
+      <!-- 母集団フレーム -->
+      <rect x="40" y="46" width="660" height="60" class="r-surf"/>
+      <rect x="40" y="46" width="660" height="60" fill="none" class="st-mute" stroke-width="1"/>
+      <!-- 捕捉分 (91% = 600.6px) 本体 -->
+      <rect x="40" y="46" width="454" height="60" class="r-fig-acc"/>
+      <!-- サブ層 (76,054 / 340,000 = 22.4% = 147.5px) 本体の続き -->
+      <rect x="494" y="46" width="147" height="60" class="r-ink" fill-opacity="0.78"/>
+      <!-- 未捕捉 (残り 約9%) -->
+      <text x="512" y="132" class="lbl-sm s-mute" text-anchor="middle">未捕捉 約9%</text>
+      <line x1="641" y1="106" x2="641" y2="122" class="st-mute" stroke-width="1"/>
+      <line x1="700" y1="106" x2="700" y2="122" class="st-mute" stroke-width="1"/>
+      <!-- ラベル -->
+      <text x="267" y="82" class="lbl" fill="#fff" text-anchor="middle" font-weight="700">本体 235,521人</text>
+      <text x="267" y="98" class="lbl-sm" fill="#fff" text-anchor="middle">科研費収録</text>
+      <text x="567" y="82" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">サブ 76,054人</text>
+      <text x="567" y="98" class="lbl-sm" fill="#fff" text-anchor="middle">機関公式で実在確認</text>
+      <!-- 合計 -->
+      <text x="40" y="168" class="lbl s-soft">捕捉合計</text>
+      <text x="40" y="212" class="num-big s-acc" font-size="40">31.1<tspan font-size="20">万人</tspan></text>
+      <text x="250" y="212" class="lbl s-ink">＝ 母集団の <tspan class="s-acc" font-weight="700" font-size="20">約91%</tspan>（ほぼ悉皆）</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-B</b> 研究者は枯れていない。日本の大学所属研究者 約34万人（母集団・企業を除く）のうち、31.1万人（本体235,521＋サブ76,054）を実名・実績つきで捕捉＝約91%。産業創造の原資は量として存在する。</div>
+  </div>
+
+  <p class="sv-lead">この31.1万人は、いま使わなければ世代交代とともに逓減していく期限つきの資産でもあります。博士課程への入学者は2022年度に1万4,382人までピーク比21%減まで落ち込み（2024年度は1万5,744人へ反転）、新たに生まれる人材の流れは細っています。だからこそ、すでに蓄積された31.1万人という厚みを、詰まっている産業の空白へ接続できるかは、抽象的な人材論でなく、期限のある実務課題なのです。図Bが示す「枯れていない」という事実は、裏を返せば「いま束ねなければ枯れていく」という時間の制約でもあります。</p>
+
+  <h3>だが、厚みと薄さは偏っている</h3>
+
+  <p class="sv-lead">研究者は量としては存在します。しかし、応用分野別に見ると、その厚みは著しく偏っています。31.1万人を19の応用分野に分類すると、最も厚いのは医療・長寿の9万1,629人で、先端材料2万602人、脳・ニューロテクノロジー1万3,569人、食料・農業1万1,134人、精密ゲノム1万107人と1万人規模が続きます。ところが、国家戦略上の重点領域ほど層は急速に薄くなり、水素・合成燃料787人、重要鉱物・資源循環749人、量子計算625人、自律・無人システム173人と、数百人規模の薄氷になります。決定的なのは、経済安全保障のKプログラムが重点とする量子と、GXが水素関連だけで3兆円を投じる水素——<strong>政策資金が最も厚く積まれた領域で、研究者供給が最も薄い</strong>という非対称です。次の図Cは、この厚みと薄さの地図を、19分野の実数で描きます。この非対称は偶然ではなく、資金配分と人材構造の設計が別々に行われてきた帰結です。「どこに研究者がいて、どこにいないのか」を解像度高く観測しないまま投資の器だけを大きくしても、器は満たされません。図Cが示す薄い層——量子計算625人、水素・合成燃料787人、自律・無人システム173人——は、まさに次の産業の応用前線であり、機会と人材の薄さが同じ場所に重なっていることが、後の診断でも繰り返し確認されます。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 470" role="img" aria-labelledby="figC-t figC-d">
+      <title id="figC-t">FIG-C 厚みと薄さの地図 — 応用分野別 研究者数（31.1万人版）</title>
+      <desc id="figC-d">19の応用分野別の研究者数を降順の横棒で示す。医療・長寿91,629人が最も厚く、量子計算625人・水素787人・自律無人173人が最も薄い。政策資金が厚い量子・水素で研究者が薄いことを強調色で示す。</desc>
+      <!-- 目盛り基準: max 91,629 を 620px にスケール -->
+      <!-- x0 = 200, scale = 620/91629 -->
+      <text x="200" y="18" class="lbl-cap s-mute">応用分野別 研究者数（人・31.1万人版）</text>
+      <!-- 各行: y起点28, 行高23 -->
+      <!-- 1 医療・長寿 91629 -->
+      <g><text x="192" y="42" class="lbl-sm s-soft" text-anchor="end">医療・長寿</text><rect x="200" y="33" width="620" height="13" class="r-ink" fill-opacity="0.78"/><text x="200" y="43" class="lbl-sm" fill="#fff" dx="8">91,629</text></g>
+      <!-- 2 先端材料 20602 -->
+      <g><text x="192" y="65" class="lbl-sm s-soft" text-anchor="end">先端材料</text><rect x="200" y="56" width="139" height="13" class="r-ink" fill-opacity="0.78"/><text x="345" y="66" class="num s-mute" font-size="9.5">20,602</text></g>
+      <!-- 3 脳・ニューロテック 13569 -->
+      <g><text x="192" y="88" class="lbl-sm s-soft" text-anchor="end">脳・ニューロテック</text><rect x="200" y="79" width="92" height="13" class="r-ink" fill-opacity="0.78"/><text x="298" y="89" class="num s-mute" font-size="9.5">13,569</text></g>
+      <!-- 4 食料・農業 11134 -->
+      <g><text x="192" y="111" class="lbl-sm s-soft" text-anchor="end">食料・農業</text><rect x="200" y="102" width="75" height="13" class="r-ink" fill-opacity="0.78"/><text x="281" y="112" class="num s-mute" font-size="9.5">11,134</text></g>
+      <!-- 5 精密ゲノム 10107 -->
+      <g><text x="192" y="134" class="lbl-sm s-soft" text-anchor="end">精密ゲノム</text><rect x="200" y="125" width="68" height="13" class="r-ink" fill-opacity="0.78"/><text x="274" y="135" class="num s-mute" font-size="9.5">10,107</text></g>
+      <!-- 6 バイオ生産 6285 -->
+      <g><text x="192" y="157" class="lbl-sm s-soft" text-anchor="end">バイオ生産</text><rect x="200" y="148" width="43" height="13" class="r-ink" fill-opacity="0.6"/><text x="249" y="158" class="num s-mute" font-size="9.5">6,285</text></g>
+      <!-- 7 建築・都市環境 5905 -->
+      <g><text x="192" y="180" class="lbl-sm s-soft" text-anchor="end">建築・都市環境</text><rect x="200" y="171" width="40" height="13" class="r-ink" fill-opacity="0.6"/><text x="246" y="181" class="num s-mute" font-size="9.5">5,905</text></g>
+      <!-- 8 エネルギー 5555 -->
+      <g><text x="192" y="203" class="lbl-sm s-soft" text-anchor="end">エネルギー</text><rect x="200" y="194" width="38" height="13" class="r-ink" fill-opacity="0.6"/><text x="244" y="204" class="num s-mute" font-size="9.5">5,555</text></g>
+      <!-- 9 AI基盤 4403 -->
+      <g><text x="192" y="226" class="lbl-sm s-soft" text-anchor="end">AI基盤</text><rect x="200" y="217" width="30" height="13" class="r-ink" fill-opacity="0.6"/><text x="236" y="227" class="num s-mute" font-size="9.5">4,403</text></g>
+      <!-- 10 半導体 3053 -->
+      <g><text x="192" y="249" class="lbl-sm s-soft" text-anchor="end">半導体</text><rect x="200" y="240" width="21" height="13" class="r-ink" fill-opacity="0.6"/><text x="227" y="250" class="num s-mute" font-size="9.5">3,053</text></g>
+      <!-- 11 宇宙 2938 -->
+      <g><text x="192" y="272" class="lbl-sm s-soft" text-anchor="end">宇宙</text><rect x="200" y="263" width="20" height="13" class="r-ink" fill-opacity="0.6"/><text x="226" y="273" class="num s-mute" font-size="9.5">2,938</text></g>
+      <!-- 12 フィジカルAI 2232 -->
+      <g><text x="192" y="295" class="lbl-sm s-soft" text-anchor="end">フィジカルAI</text><rect x="200" y="286" width="15" height="13" class="r-ink" fill-opacity="0.6"/><text x="221" y="296" class="num s-mute" font-size="9.5">2,232</text></g>
+      <!-- 13 サイバーフィジカル・IoT 1683 -->
+      <g><text x="192" y="318" class="lbl-sm s-soft" text-anchor="end">サイバーフィジカル・IoT</text><rect x="200" y="309" width="11" height="13" class="r-ink" fill-opacity="0.6"/><text x="217" y="319" class="num s-mute" font-size="9.5">1,683</text></g>
+      <!-- 14 モビリティ 1554 -->
+      <g><text x="192" y="341" class="lbl-sm s-soft" text-anchor="end">モビリティ</text><rect x="200" y="332" width="11" height="13" class="r-ink" fill-opacity="0.6"/><text x="217" y="342" class="num s-mute" font-size="9.5">1,554</text></g>
+      <!-- 15 核融合 1467 -->
+      <g><text x="192" y="364" class="lbl-sm s-soft" text-anchor="end">核融合</text><rect x="200" y="355" width="10" height="13" class="r-ink" fill-opacity="0.6"/><text x="216" y="365" class="num s-mute" font-size="9.5">1,467</text></g>
+      <!-- 16 水素・合成燃料 787 (強調) -->
+      <g><text x="192" y="387" class="lbl-sm s-acc" text-anchor="end" font-weight="700">水素・合成燃料 ★</text><rect x="200" y="378" width="6" height="13" class="r-acc"/><text x="212" y="388" class="num s-acc" font-size="9.5" font-weight="700">787</text></g>
+      <!-- 17 重要鉱物・資源循環 749 -->
+      <g><text x="192" y="410" class="lbl-sm s-soft" text-anchor="end">重要鉱物・資源循環</text><rect x="200" y="401" width="5" height="13" class="r-ink" fill-opacity="0.6"/><text x="211" y="411" class="num s-mute" font-size="9.5">749</text></g>
+      <!-- 18 量子計算 625 (強調) -->
+      <g><text x="192" y="433" class="lbl-sm s-acc" text-anchor="end" font-weight="700">量子計算 ★</text><rect x="200" y="424" width="4" height="13" class="r-acc"/><text x="210" y="434" class="num s-acc" font-size="9.5" font-weight="700">625</text></g>
+      <!-- 19 自律・無人 173 -->
+      <g><text x="192" y="456" class="lbl-sm s-soft" text-anchor="end">自律・無人</text><rect x="200" y="447" width="2" height="13" class="r-ink" fill-opacity="0.6"/><text x="208" y="457" class="num s-mute" font-size="9.5">173</text></g>
+    </svg>
+    <div class="fig-cap"><b>FIG-C</b> 厚みと薄さの地図（応用分野別・31.1万人版）。医療・長寿9万1,629人を筆頭に基幹分野は厚い一方、<b>★</b> 印の量子計算625人・水素合成燃料787人は最も薄い。政策資金が最も厚い量子・水素で研究者供給が最も薄いという非対称を、強調色で示す。</div>
+  </div>
+
+  <p class="sv-lead">図Cの含意は、単に「薄い分野がある」ことではありません。厚い基幹分野——先端材料2万602人、化学、物理、工学、計算科学——が、次に述べる機会産業（電池材料・水素・SAF・レアアース・量子）が必要とする分野と正確に一致することです。つまり日本は、機会領域が必要とする研究者を分野としてはすでに保有しています。薄いのはフロンティアの応用前線だけであり、それは厚い基盤分野から橋渡しできる。図Cは「不足の地図」であると同時に、「どこからどこへ橋を架ければよいか」の地図でもあるのです。</p>
+
+  <h3>200産業を診断する — 焦点は37%、真のボトルネックは統合</h3>
+
+  <p class="sv-lead">では、この研究者と産業を突き合わせると何が見えるか。私たちは日本の200産業を1つずつ、産業創造の6入力に照らして診断し、ボトルネックの型で4つに分類しました。結果、63%にあたる126産業はすでに6入力が充足した成熟産業で、課題は創造でなく更新・防衛です。産業創造が本当に効くのは残りの37%——両面律速23産業と知見蓄積律速9産業を合わせた32産業が中核機会となります。そして重要なのは、詰まっている中身です。中核科学そのものが足りない産業はわずか9産業（4.5%）にすぎず、統合点が欠けたセクター動き42と両面23を合わせた65産業（32.5%）で、詰まっているのは技術でなく「束ねる担い手の不在」でした。次の図Dは200産業の律速の内訳を、図Eはこの中核発見を示します。この2枚の図は、日本再生をめぐる2つの通念を同時に覆します。1つは「日本中のあらゆる産業で創造を」という掛け声で、実際には63%の産業はすでに成熟し、創造でなく更新・防衛が課題です。もう1つは「日本は基礎研究力が落ちたから新産業が生まれない」という説明で、中核科学そのものの不足はわずか9産業（4.5%）にすぎません。産業創造という営みが本当に効くのは37%に絞られ、そのなかでも詰まりの正体は科学の不足でなく統合の不在にある——この2点が、以下の全診断の出発点になります。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 210" role="img" aria-labelledby="figD-t figD-d">
+      <title id="figD-t">FIG-D 200産業の律速地図</title>
+      <desc id="figD-d">200産業をボトルネックの型で分類した積み上げ帯。成熟126（63%）、セクター動き42（21%）、両面23（11.5%）、知見蓄積9（4.5%）。産業創造の機会は両面23＋知見蓄積9＝32産業。</desc>
+      <text x="40" y="24" class="lbl-cap s-mute">200産業のボトルネックの型（計200 = 100%）</text>
+      <!-- 積み上げ帯: 全幅 740px, x0=40 -->
+      <!-- 成熟126=63% -> 466.2px / セクター42=21% -> 155.4px / 両面23=11.5% -> 85.1px / 知見9=4.5% -> 33.3px -->
+      <rect x="40" y="36" width="466" height="52" class="r-ink" fill-opacity="0.3"/>
+      <rect x="506" y="36" width="155" height="52" class="r-ink" fill-opacity="0.78"/>
+      <rect x="661" y="36" width="86" height="52" class="r-fig-acc"/>
+      <rect x="747" y="36" width="33" height="52" class="r-acc" fill-opacity="0.75"/>
+      <!-- 帯内ラベル -->
+      <text x="273" y="60" class="lbl s-ink" text-anchor="middle" font-weight="700">成熟 126</text>
+      <text x="273" y="76" class="lbl-sm s-mute" text-anchor="middle">63.0%</text>
+      <text x="583" y="60" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">セクター動き 42</text>
+      <text x="583" y="76" class="lbl-sm" fill="#fff" text-anchor="middle">21.0%</text>
+      <text x="704" y="62" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">両面23</text>
+      <!-- 知見9は帯外注記 -->
+      <line x1="763" y1="88" x2="763" y2="104" class="st-acc" stroke-width="1"/>
+      <text x="763" y="118" class="lbl-sm s-acc" text-anchor="middle" font-weight="700">知見蓄積 9</text>
+      <text x="763" y="132" class="lbl-sm s-mute" text-anchor="middle">4.5%</text>
+      <!-- 機会域ブラケット (両面23+知見9=32) -->
+      <path d="M 661 148 L 661 156 L 780 156 L 780 148" fill="none" class="st-acc" stroke-width="1.5"/>
+      <text x="720" y="176" class="lbl s-acc" text-anchor="middle" font-weight="700">産業創造の機会 = 32産業（16%）</text>
+      <text x="720" y="194" class="lbl-sm s-mute" text-anchor="middle">両面23 ＋ 知見蓄積9</text>
+      <!-- 成熟域注記 -->
+      <text x="273" y="118" class="lbl-sm s-mute" text-anchor="middle">更新・防衛が課題（研究者チーム充足済み）</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-D</b> 200産業の律速地図。成熟126（63%）／セクター動き42（21%）／両面23（11.5%）／知見蓄積9（4.5%）＝計200。産業創造が最も効くのは、両面23＋知見蓄積9＝<b>32産業（16%）</b>の機会域。</div>
+  </div>
+
+  <p class="sv-lead">図Dの4区分は、政策の資源配分に直接の含意を持ちます。成熟126産業に「新産業を創れ」と号令をかけても的を外し、機会32産業に「もっと基礎研究を」と資金を積んでも——中核科学の不足はわずか9産業ですから——多くは空回りします。産業を一律に扱わず、成熟には更新・防衛の論理を、機会にはボトルネックの位置に応じた編成の論理を、別々に適用すること。これが200産業の全数診断から導かれる、最初の実践則です。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 220" role="img" aria-labelledby="figE-t figE-d">
+      <title id="figE-t">FIG-E 核心の発見 — 65産業を貫く「束ねる担い手の不在」</title>
+      <desc id="figE-d">統合点が欠落したセクター動き42産業と両面23産業を合わせた65産業（32.5%）で、支配的ボトルネックが「束ねる担い手の不在」であることを示す合成図。中核科学の不足は9産業（4.5%）にすぎない。</desc>
+      <text x="40" y="24" class="lbl-cap s-mute">支配的ボトルネックの内訳</text>
+      <!-- 左: 統合の担い手不在 (65) 大きく -->
+      <rect x="40" y="40" width="470" height="130" class="r-acc" fill-opacity="0.1"/>
+      <rect x="40" y="40" width="470" height="130" fill="none" class="st-acc" stroke-width="1.5"/>
+      <text x="275" y="82" class="num-big s-acc" text-anchor="middle" font-size="52">65<tspan font-size="22">産業</tspan></text>
+      <text x="275" y="108" class="lbl s-acc" text-anchor="middle" font-weight="700">＝ 32.5%</text>
+      <text x="275" y="134" class="lbl s-ink" text-anchor="middle" font-weight="700">「束ねる担い手」の不在</text>
+      <text x="275" y="156" class="lbl-sm s-mute" text-anchor="middle">セクター動き42（統合点欠落）＋ 両面23</text>
+      <!-- 右上: 中核科学の不足 (9) 小さく -->
+      <rect x="540" y="40" width="240" height="60" class="r-surf"/>
+      <rect x="540" y="40" width="240" height="60" fill="none" class="st-mute" stroke-width="1"/>
+      <text x="660" y="68" class="num-big s-ink" text-anchor="middle" font-size="26" fill-opacity="0.7">9<tspan font-size="14">産業</tspan></text>
+      <text x="660" y="88" class="lbl-sm s-mute" text-anchor="middle">中核科学の不足＝4.5%</text>
+      <!-- 対比の一文 -->
+      <text x="540" y="128" class="lbl-sm s-soft">詰まっているのは</text>
+      <text x="540" y="150" class="lbl s-ink" font-weight="700">「知の生産」でなく「知の統合」。</text>
+      <text x="540" y="176" class="lbl-sm s-mute">技術は揃っている。</text>
+      <text x="540" y="194" class="lbl-sm s-mute">束ねる位置が空いている。</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-E</b> 核心の発見。統合点が欠けたセクター動き42＋両面23＝<b>65産業（32.5%）</b>で、支配的ボトルネックは「束ねる担い手」の不在。中核科学そのものの不足はわずか9産業（4.5%）。詰まりは知の生産でなく、知の統合にある。</div>
+  </div>
+
+  <p class="sv-lead">図Eが描く65対9という対比は、日本の産業政策が長らく前提としてきた処方——研究開発投資の増額、拠点の整備、個別技術の支援——の効き目が構造的に限られる理由を説明します。統合の担い手が欠けた産業に要素への投資を追加しても、束ねられない要素が増えるだけで、産業は立ち上がりません。図Aで見た「高投資・低アウトプット」の逆説は、この一点に帰着します。投資は要素に届いている。しかし、要素と要素のあいだ、分野と分野のあいだの穴に立って束ねる位置に、人が配置されていない。次に見るのは、その空いた位置が、実在する研究者の名前で本当に埋まるのかという検証です。</p>
+
+  <h3>結論 — 欠けた位置は、実在する研究者の名前で埋められた</h3>
+
+  <p class="sv-lead">ここまでで骨格は出そろいました。投入は十分、研究者もほぼ悉皆で存在する。それでも成果が出ないのは、揃った要素を束ねて1つの産業に編み上げる担い手が、構造的に空席だからです。では、その空席は本当に埋められるのか。私たちは優先15産業で「欠けた位置」を埋める研究者チームの編成を試み、13産業で完全な、2産業で部分的なチーム（実在研究者 延べ68名・実66名）を、31.1万人の基盤から実際に構成できました。役割の内訳は、専門の核を担うcoreが延べ32名、分野間を橋渡しするbridgeが26名、産業全体を束ねるintegratorが10名。産業との適合の信頼度は74%が高信頼です。量子誤り訂正の核を萩原学・佐藤和信・中村泰信で、核融合の炉型横断を渡邉智彦・田邉哲朗・菱沼良光で。<strong>統合の欠如は「埋められない谷」でなく「まだ束ねられていないだけの空席」でした</strong>。この編成の小ささにこそ、意味があります。31.1万人の母集団から、まず延べ68名を正しい位置に束ねれば、15の優先産業で統合チームの原型が立ち上がる。産業創造の第一歩に必要なのは、数万人の動員でも数兆円の追加投資でもなく、正しく特定された位置への、名指しできる少数の編成なのです。3つの役割——各分野の核を担うcore、分野間の穴に立つbridge、産業全体を1システムとして設計するintegrator——のうち、最も希少なのはintegratorの10名でした。この10名の発見と支援が、仕組み全体の最も細い管であり、最も投資対効果の高い介入点になります。</p>
+
+  <p class="sv-lead">同時に、埋まらなかった空白も正直に記録しました。船舶の自律運航は国内で研究者が1名しか接地せず、CCUSの地質貯留チームは編成できませんでした。これらは、31.1万人でも埋まらなかった＝日本の研究層の構造的な穴を示す信号であり、育成・海外連携の優先課題になります。そして、この編成に必要なのは巨額の追加投資ではありません。日本はすでに大学ファンド10兆円・スタートアップ投資10兆円・GX官民150兆円という名目170兆円規模の政策の器を持ちます。欠けているのは資金でなく、投資の設計に1行を足すこと——「この産業の欠けた位置を、誰が、どの実名の研究者で埋めるのか」——です。本レポートは決定論を主張しません。「束ねれば必ず産業が生まれる」とは言わず、反証条件・撤退条件を明示します。主張するのは、いま日本が着手できる打ち手のなかで、これが<strong>もっとも安価で、具体的で、検証可能</strong>だということです。以下の本文は、この骨格の1つひとつを、200産業の全数診断と延べ68名の実名編成で確かめていきます。</p>
 </section>
 
 <section id="prologue">
@@ -229,7 +480,46 @@ li{margin-bottom:8px}
 
   <p>まず経済の現在地から確認します。日本の実質賃金は2025年に前年比マイナス1.3%で、4年連続のマイナスとなりました。名目賃金は2024年にプラス2.9%と33年ぶりの高い伸びを示し、2025年もプラス2.3%と伸びましたが、2025年の物価上昇率3.7%（持家の帰属家賃を除く総合）がそれを上回り続けています（JILPT ビジネス・レーバー・トレンド2026年4月号、日本経済新聞2026年2月6日）。賃金が物価に4年間追いつけないという事実は、日本経済が生み出す付加価値の総量が、生活水準を押し上げるには不足していることを示します。</p>
 
-  <p>国際比較も同じ方向を指します。スイスの国際経営開発研究所（IMD）の世界競争力ランキングで、日本は<strong>2024年に38位と過去最低</strong>を記録しました。2021年の31位から3年連続の低下です。2025年版では<strong>35位へ回復</strong>しましたが、なお主要国の下位です。特に低いのは「ビジネス効率性」と人材・組織に関わる項目であり、インフラや基礎的な経済規模ではありません（三菱総合研究所によるIMD2024年版解説、ジェトロ）。つまり国際機関の目にも、日本の弱点は資産の不足でなく、<strong>資産を成果に変換する組織的な効率</strong>にあると映っています。</p>
+  <p>国際比較も同じ方向を指します。スイスの国際経営開発研究所（IMD）の世界競争力ランキングで、日本は<strong>2024年に38位と過去最低</strong>を記録しました。2021年の31位から3年連続の低下です。2025年版では<strong>35位へ回復</strong>しましたが、なお主要国の下位です。特に低いのは「ビジネス効率性」と人材・組織に関わる項目であり、インフラや基礎的な経済規模ではありません（三菱総合研究所によるIMD2024年版解説、ジェトロ）。つまり国際機関の目にも、日本の弱点は資産の不足でなく、<strong>資産を成果に変換する組織的な効率</strong>にあると映っています。次の図Jは、この順位の推移を示します。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 240" role="img" aria-labelledby="figJ-t figJ-d">
+      <title id="figJ-t">FIG-J IMD世界競争力ランキング 日本の順位推移（2020-2025）</title>
+      <desc id="figJ-d">日本のIMD世界競争力ランキングの推移。2020年34位、2021年31位、2022年34位、2023年35位、2024年38位（過去最低）、2025年35位。順位が下がるほど下方に描く折れ線。</desc>
+      <!-- プロット領域: x 90..770, y 40..175 (順位30=上, 40=下) -->
+      <!-- yスケール: 順位30->40px, 順位40->175px => y = 40 + (rank-30)*13.5 -->
+      <!-- 縦軸目盛 -->
+      <text x="78" y="44" class="lbl-sm s-mute" text-anchor="end">30位</text>
+      <text x="78" y="112" class="lbl-sm s-mute" text-anchor="end">35位</text>
+      <text x="78" y="179" class="lbl-sm s-mute" text-anchor="end">40位</text>
+      <line x1="88" y1="40" x2="770" y2="40" class="st-rule" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="88" y1="107.5" x2="770" y2="107.5" class="st-rule" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="88" y1="175" x2="770" y2="175" class="st-rule" stroke-width="1" stroke-dasharray="2 4"/>
+      <!-- 折れ線: 2020(34,x136) 2021(31,x263) 2022(34,x390) 2023(35,x517) 2024(38,x644) 2025(35,x770?) -->
+      <!-- x等間隔: 6点, x0=136, dx=126.4 -> 136,262,388,515,641,767 -->
+      <!-- y: 34->94, 31->53.5, 34->94, 35->107.5, 38->148, 35->107.5 -->
+      <polyline points="136,94 262,53.5 388,94 515,107.5 641,148 767,107.5" fill="none" class="st-acc" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- 点 + 順位ラベル -->
+      <g class="r-acc">
+        <circle cx="136" cy="94" r="4"/><circle cx="262" cy="53.5" r="4"/><circle cx="388" cy="94" r="4"/>
+        <circle cx="515" cy="107.5" r="4"/><circle cx="641" cy="148" r="5"/><circle cx="767" cy="107.5" r="4"/>
+      </g>
+      <text x="136" y="82" class="num s-acc" text-anchor="middle" font-size="11">34</text>
+      <text x="262" y="42" class="num s-acc" text-anchor="middle" font-size="11" font-weight="700">31</text>
+      <text x="388" y="82" class="num s-acc" text-anchor="middle" font-size="11">34</text>
+      <text x="515" y="96" class="num s-acc" text-anchor="middle" font-size="11">35</text>
+      <text x="641" y="166" class="num s-acc" text-anchor="middle" font-size="12" font-weight="700">38</text>
+      <text x="641" y="180" class="lbl-sm s-mute" text-anchor="middle" font-size="8.5">過去最低</text>
+      <text x="767" y="96" class="num s-acc" text-anchor="middle" font-size="11">35</text>
+      <!-- x軸ラベル -->
+      <g class="s-mute lbl-sm" text-anchor="middle">
+        <text x="136" y="208">2020</text><text x="262" y="208">2021</text><text x="388" y="208">2022</text>
+        <text x="515" y="208">2023</text><text x="641" y="208">2024</text><text x="767" y="208">2025</text>
+      </g>
+      <text x="90" y="230" class="lbl-sm s-mute">順位（数値が大きいほど下位）</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-J</b> IMD世界競争力ランキング 日本の順位推移。2020年34位 → 2021年31位 → 2022年34位 → 2023年35位 → 2024年<b>38位（過去最低）</b> → 2025年35位。低いのは「ビジネス効率性」＝資産を成果に変える組織的効率。</div>
+  </div>
 
   <p>マクロの規模で見れば、日本の名目GDPは2024年に4.19兆ドルで世界4位を保っています（内閣府 国民経済計算。円安の影響を含む）。しかし世界経済に占めるシェアは3.8%と過去最低水準まで縮小しました。世界4位という順位の残像と、シェア3.8%という実態の落差が、「まだ大国である」という自己認識と「相対的には縮み続けている」現実のずれを生んでいます。株式市場が評価する企業価値で見れば、世界時価総額上位50社に残る日本企業はトヨタ自動車1社です。</p>
 
@@ -259,13 +549,84 @@ li{margin-bottom:8px}
 
   <p>注意したいのは、死の谷の本質が資金の谷ではないことです。大学ファンド・スタートアップ5か年計画・GXと、資金の枠組みは既に積み上がりました。それでも谷が埋まらないのは、TRL4からTRL6への移行が、資金だけでは進まないからです。この区間で必要なのは、研究者の持つ科学的知見と、産業側の持つ量産・規制・市場の知見とを突き合わせ、双方の言語を翻訳しながら実証を設計する<strong>人の営み</strong>です。研究者と産業人が同じテーブルで対話し、共創する構造がなければ、資金は「機関への配分」で止まり、谷を渡る橋にはなりません。現在の政策枠組みを見渡すと、大学への配分、スタートアップへの投資、産業への補助と、資金の通り道は整備された一方で、「研究者と産業を具体的に繋ぐ担い手」を育て配置する仕組みは、ほとんど存在しません。</p>
 
-  <p>ここで第1部が示してきた数字を1列に並べます。研究開発投入は対GDP比3.70%で主要7か国2位。論文生産は世界5位。注目論文は13位。世界時価総額上位50社に入る企業はトヨタ1社。スタートアップ投資は10兆円目標に対して未達。実質賃金は4年連続マイナス。指標の性質が異なるため厳密には比較できませんが、この列は、上流から下流へ進むほど順位が落ちていく<strong>減衰の勾配</strong>を描いています。各段の落差こそが、変換の失敗が起きている場所の地図です。そして最大の落差は、研究成果と産業のあいだ——まさに死の谷の区間——に開いています。</p>
+  <p>ここで第1部が示してきた数字を1列に並べます。研究開発投入は対GDP比3.70%で主要7か国2位。論文生産は世界5位。注目論文は13位。世界時価総額上位50社に入る企業はトヨタ1社。スタートアップ投資は10兆円目標に対して未達。実質賃金は4年連続マイナス。指標の性質が異なるため厳密には比較できませんが、この列は、上流から下流へ進むほど順位が落ちていく<strong>減衰の勾配</strong>を描いています。各段の落差こそが、変換の失敗が起きている場所の地図です。そして最大の落差は、研究成果と産業のあいだ——まさに死の谷の区間——に開いています。次の図Gは、この減衰を段階的に示します。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 250" role="img" aria-labelledby="figG-t figG-d">
+      <title id="figG-t">FIG-G 減衰の勾配 — 上流から下流へ順位が落ちる</title>
+      <desc id="figG-d">投入（研究開発費 主要国2位）から注目論文（13位）、世界的企業（トヨタ1社）、賃金（4年連続マイナス）へと、上流から下流に進むほど成果が落ちていく階段状の図。指標が異種のため厳密比較でない旨を注記。</desc>
+      <!-- 4段の階段 (右下がり) -->
+      <!-- 各段: 幅185, x0=30 -->
+      <!-- 段1 投入 高い -->
+      <rect x="30" y="50" width="170" height="26" class="r-fig-acc"/>
+      <text x="30" y="42" class="lbl-cap s-mute">① 投入</text>
+      <text x="115" y="68" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">研究開発費 主要国2位</text>
+      <text x="115" y="94" class="lbl-sm s-mute" text-anchor="middle">対GDP比3.70%</text>
+      <!-- 段2 注目論文 中 -->
+      <rect x="225" y="92" width="170" height="26" class="r-fig-acc"/>
+      <text x="225" y="84" class="lbl-cap s-mute">② 研究の質</text>
+      <text x="310" y="110" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">注目論文 13位</text>
+      <text x="310" y="136" class="lbl-sm s-mute" text-anchor="middle">（論文総数は5位）</text>
+      <!-- 段3 世界的企業 低 -->
+      <rect x="420" y="134" width="170" height="26" class="r-fig-acc"/>
+      <text x="420" y="126" class="lbl-cap s-mute">③ 世界的企業</text>
+      <text x="505" y="152" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">トヨタ1社</text>
+      <text x="505" y="178" class="lbl-sm s-mute" text-anchor="middle">世界時価総額トップ50</text>
+      <!-- 段4 賃金 最低 -->
+      <rect x="615" y="176" width="170" height="26" class="r-acc" fill-opacity="0.34"/>
+      <text x="615" y="168" class="lbl-cap s-mute">④ 生活水準</text>
+      <text x="700" y="194" class="lbl-sm s-ink" text-anchor="middle" font-weight="700">実質賃金 4年連続減</text>
+      <text x="700" y="220" class="lbl-sm s-mute" text-anchor="middle">2025年 −1.3%</text>
+      <!-- 下向き勾配矢印 -->
+      <path d="M 200 63 L 225 105 M 395 105 L 420 147 M 590 147 L 615 189" fill="none" class="st-mute" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <!-- 最大落差の注記 (②→③) -->
+      <text x="407" y="235" class="lbl-sm s-acc" text-anchor="middle" font-weight="700">最大の落差＝研究成果と産業のあいだ（死の谷）</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-G</b> 減衰の勾配。投入（主要国2位）→ 注目論文（13位）→ 世界的企業（トヨタ1社）→ 賃金（4年連続マイナス）と、上流から下流へ順位が落ちる。最大の落差は研究成果と産業のあいだ＝死の谷に開く。※各指標は性質が異なるため厳密な比較ではなく、変換失敗の場所を示す地図として読む。</div>
+  </div>
 
   <h3 id="h6">1-4 半導体の教訓 — 負けたのは技術でなく束ね方</h3>
 
   <p>「要素は強いのに、束ね方で敗れる」という構造を、日本は既に一度、最も高価な形で経験しています。半導体です。日本の半導体の世界シェアはピーク時に50%を超えていましたが、2001年には25%、現在は10%未満まで低下しました（SEMIジャパン、経済産業省商務情報政策局2024年10月28日）。この敗北はしばしば「技術で負けた」と語られますが、実態は異なります。1990年代以降、世界の半導体産業は設計に特化するファブレス企業と、製造を受託するファウンドリ企業への水平分業に移行しました。この分業構造の頂点に立ったのが台湾のTSMCで、そのファウンドリ市場シェアは2025年時点で69.9%に達します。日本企業は設計から製造までを1社で抱える垂直統合モデルに固執し、産業構造の転換そのものに乗り遅れました。</p>
 
-  <p>この解釈を裏づけるのは、同じ日本が半導体の「要素」では今も世界を握っているという事実です。半導体の製造材料で日本は世界最大のシェア（約48%）を保ち、製造装置でも米国に次ぐ約3割のシェアを持ちます。装置専業の日本企業7社だけで合計4.8兆円規模の売上があります（SEMIジャパン）。つまり日本は、半導体を作るための科学も、装置も、材料も失っていません。失ったのは、それらを最終製品の競争力へと統合する<strong>産業のかたち（業界標準の型）を、環境変化に応じて組み替える能力</strong>です。要素技術の優位と、束ね方の硬直。この組み合わせは半導体固有の物語ではなく、後の章で示すとおり、現在の日本の200産業に横断的に観察される一般構造です。半導体の教訓を「もっと技術開発を」と読むか、「束ね方を設計し直せ」と読むか。本レポートは明確に後者を取ります。</p>
+  <p>この解釈を裏づけるのは、同じ日本が半導体の「要素」では今も世界を握っているという事実です。半導体の製造材料で日本は世界最大のシェア（約48%）を保ち、製造装置でも米国に次ぐ約3割のシェアを持ちます。装置専業の日本企業7社だけで合計4.8兆円規模の売上があります（SEMIジャパン）。つまり日本は、半導体を作るための科学も、装置も、材料も失っていません。失ったのは、それらを最終製品の競争力へと統合する<strong>産業のかたち（業界標準の型）を、環境変化に応じて組み替える能力</strong>です。要素技術の優位と、束ね方の硬直。この組み合わせは半導体固有の物語ではなく、後の章で示すとおり、現在の日本の200産業に横断的に観察される一般構造です。半導体の教訓を「もっと技術開発を」と読むか、「束ね方を設計し直せ」と読むか。本レポートは明確に後者を取ります。次の図Kは、この「シェアは失ったが要素は残った」という二重の事実を示します。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 250" role="img" aria-labelledby="figK-t figK-d">
+      <title id="figK-t">FIG-K 半導体シェアの推移と、残存する要素優位</title>
+      <desc id="figK-d">日本の半導体世界シェアがピーク（1988年50.3%）から2019年に10%未満へ低下した折れ線と、材料48%（世界1位）・製造装置約3割が残存することを示す図。</desc>
+      <!-- 上段: 完成品シェア推移 -->
+      <text x="30" y="24" class="lbl-cap s-mute">完成品シェア（世界）— 束ね方で失った</text>
+      <!-- プロット: x 60..560, y 44..120 (0%->120, 55%->44) => y=120-share*1.38 -->
+      <text x="48" y="48" class="lbl-sm s-mute" text-anchor="end">50%</text>
+      <text x="48" y="117" class="lbl-sm s-mute" text-anchor="end">0%</text>
+      <line x1="60" y1="44" x2="560" y2="44" class="st-rule" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="60" y1="113" x2="560" y2="113" class="st-mute" stroke-width="1"/>
+      <!-- 1988 50.3% (x90, y50.6) -> 2001 25% (x290, y79.5) -> 2019 <10% (x540, y106) -->
+      <polyline points="90,51 290,79 540,106" fill="none" class="st-acc" stroke-width="2.5" stroke-linejoin="round"/>
+      <g class="r-acc"><circle cx="90" cy="51" r="4.5"/><circle cx="290" cy="79" r="4"/><circle cx="540" cy="106" r="4.5"/></g>
+      <text x="90" y="42" class="num s-acc" text-anchor="middle" font-size="12" font-weight="700">50.3%</text>
+      <text x="90" y="130" class="lbl-sm s-mute" text-anchor="middle">1988（ピーク）</text>
+      <text x="290" y="72" class="num s-acc" text-anchor="middle" font-size="11">25%</text>
+      <text x="290" y="130" class="lbl-sm s-mute" text-anchor="middle">2001</text>
+      <text x="540" y="99" class="num s-acc" text-anchor="middle" font-size="11" font-weight="700">10%未満</text>
+      <text x="540" y="130" class="lbl-sm s-mute" text-anchor="middle">2019</text>
+      <!-- 下段: 残存する要素優位 -->
+      <line x1="30" y1="152" x2="790" y2="152" class="st-rule" stroke-width="1"/>
+      <text x="30" y="172" class="lbl-cap s-mute">要素は残った — 世界での強い地位を維持</text>
+      <!-- 材料 48% (世界1位) -->
+      <text x="30" y="200" class="lbl-sm s-soft">製造材料</text>
+      <rect x="140" y="190" width="360" height="16" class="r-surf"/>
+      <rect x="140" y="190" width="266" height="16" class="r-acc" fill-opacity="0.55"/>
+      <text x="414" y="203" class="num s-acc" font-size="11" font-weight="700" dx="6">約48%（世界1位）</text>
+      <!-- 装置 約3割 (米国に次ぐ) -->
+      <text x="30" y="228" class="lbl-sm s-soft">製造装置</text>
+      <rect x="140" y="218" width="360" height="16" class="r-surf"/>
+      <rect x="140" y="218" width="166" height="16" class="r-acc" fill-opacity="0.4"/>
+      <text x="314" y="231" class="num s-mute" font-size="11" dx="6">約3割（米国に次ぐ／装置7社で計4.8兆円）</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-K</b> 半導体シェアの推移と残存する要素優位。完成品シェアはピーク50.3%（1988年）→ 25%（2001年）→ 10%未満（2019年）へ低下。だが製造材料は<b>約48%（世界1位）</b>、製造装置は約3割（米国に次ぐ・装置7社で計4.8兆円）が残存。失ったのは技術でなく束ね方。</div>
+  </div>
 
   <p>この教訓が現在形で問われるのが、GX・AI・バイオといった、これから産業のかたちが決まる領域です。これらは単一分野の深掘りでは前に進みません。グリーン水素は電気化学と触媒科学と需要側の製鉄・化学工学を、AIの産業応用は基盤モデルと個別ドメインの専門知とデータ工学を、バイオ生産は生命科学とスケールアップ工学と規制科学を、それぞれ同時に必要とします。つまり次の産業群は、その成立要件からして<strong>分野横断のチーム編成を前提とする</strong>。垂直統合の内部に閉じた自前主義でも、分野縦割りの学術体制でもこの要件は満たせません。半導体で一度払った授業料を、次は束ね方の設計変更という形で回収できるか——それが問われています。</p>
 
@@ -348,7 +709,71 @@ li{margin-bottom:8px}
 
   <p>その特定を試みたのが、私たちのエコシステムが構築した<strong>産業創造基盤予測モデル（ICFM）</strong>です。ICFMは、産業創造の実事例100件——立ち上がった産業だけでなく、発火に至らなかった・停滞した試みを含む事例集合で、母集団ベースの発火の基準率は0.108——を素材に、上記の学術系譜を観測可能な変数へ翻訳した枠組みです。その最大の特徴は、産業が立ち上がった後の結果情報を使わず、<strong>「発火前」——産業がまだ産業になっていない時点——に観測できる変数だけで基盤の成熟を記述する</strong>という規律にあります。結果を知ってから原因を語る後知恵を、設計段階で排除しています。</p>
 
-  <p>ICFMは産業の生成を6つの段階で捉えます。(1)前提条件の集積、(2)触媒・発火——多くの試みがここで死の谷に沈む、(3)流動・多様な試行、(4)業界標準の型の確立、(5)離陸・自己増殖、(6)淘汰・成熟です。第1部で論じた死の谷は、この枠組みでは段階(2)に位置づけられます。死の谷を「資金の問題」として段階(2)の内部だけで解こうとする政策が繰り返し失敗してきたのに対し、ICFMは、段階(2)の生死が実は段階(1)——発火前にどれだけの前提条件が集積されていたか——でほぼ決まっていることを示唆します。<strong>谷に落ちてから橋を架けるのでなく、谷に至る前に基盤を積む。</strong>この視点の転換が、ICFMの実践的な含意です。</p>
+  <p>ICFMは産業の生成を6つの段階で捉えます。(1)前提条件の集積、(2)触媒・発火——多くの試みがここで死の谷に沈む、(3)流動・多様な試行、(4)業界標準の型の確立、(5)離陸・自己増殖、(6)淘汰・成熟です。第1部で論じた死の谷は、この枠組みでは段階(2)に位置づけられます。死の谷を「資金の問題」として段階(2)の内部だけで解こうとする政策が繰り返し失敗してきたのに対し、ICFMは、段階(2)の生死が実は段階(1)——発火前にどれだけの前提条件が集積されていたか——でほぼ決まっていることを示唆します。<strong>谷に落ちてから橋を架けるのでなく、谷に至る前に基盤を積む。</strong>この視点の転換が、ICFMの実践的な含意です。次の図Fは、この6段階のフローを示します。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 220" role="img" aria-labelledby="figF-t figF-d">
+      <title id="figF-t">FIG-F ICFMの6相フロー — 産業が立ち上がる過程</title>
+      <desc id="figF-d">産業創造の6段階を左から右へのフローで示す。①前提条件の集積、②触媒・発火（多くがここで死の谷に沈む）、③流動・多様な試行、④支配的設計の確立、⑤離陸・自己増殖、⑥淘汰・成熟。②で死の谷に沈む流れを下向き矢印で示す。</desc>
+      <!-- 6ボックス: 幅118, gap 12, x0=20 -->
+      <!-- 各段 y=60, h=54 -->
+      <g>
+        <rect x="20" y="60" width="118" height="54" class="r-surf"/>
+        <rect x="20" y="60" width="118" height="54" fill="none" class="st-mute" stroke-width="1"/>
+        <text x="79" y="80" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">①</text>
+        <text x="79" y="98" class="lbl-sm s-ink" text-anchor="middle" font-weight="700">前提条件</text>
+        <text x="79" y="110" class="lbl-sm s-mute" text-anchor="middle">の集積</text>
+      </g>
+      <g>
+        <rect x="150" y="60" width="118" height="54" class="r-acc" fill-opacity="0.12"/>
+        <rect x="150" y="60" width="118" height="54" fill="none" class="st-acc" stroke-width="1.5"/>
+        <text x="209" y="80" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">②</text>
+        <text x="209" y="98" class="lbl-sm s-acc" text-anchor="middle" font-weight="700">触媒・発火</text>
+        <text x="209" y="110" class="lbl-sm s-acc" text-anchor="middle">★死の谷</text>
+      </g>
+      <g>
+        <rect x="280" y="60" width="118" height="54" class="r-surf"/>
+        <rect x="280" y="60" width="118" height="54" fill="none" class="st-mute" stroke-width="1"/>
+        <text x="339" y="80" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">③</text>
+        <text x="339" y="98" class="lbl-sm s-ink" text-anchor="middle" font-weight="700">流動・</text>
+        <text x="339" y="110" class="lbl-sm s-mute" text-anchor="middle">多様な試行</text>
+      </g>
+      <g>
+        <rect x="410" y="60" width="118" height="54" class="r-surf"/>
+        <rect x="410" y="60" width="118" height="54" fill="none" class="st-mute" stroke-width="1"/>
+        <text x="469" y="80" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">④</text>
+        <text x="469" y="98" class="lbl-sm s-ink" text-anchor="middle" font-weight="700">支配的設計</text>
+        <text x="469" y="110" class="lbl-sm s-mute" text-anchor="middle">の確立</text>
+      </g>
+      <g>
+        <rect x="540" y="60" width="118" height="54" class="r-surf"/>
+        <rect x="540" y="60" width="118" height="54" fill="none" class="st-mute" stroke-width="1"/>
+        <text x="599" y="80" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">⑤</text>
+        <text x="599" y="98" class="lbl-sm s-ink" text-anchor="middle" font-weight="700">離陸・</text>
+        <text x="599" y="110" class="lbl-sm s-mute" text-anchor="middle">自己増殖</text>
+      </g>
+      <g>
+        <rect x="670" y="60" width="118" height="54" class="r-surf"/>
+        <rect x="670" y="60" width="118" height="54" fill="none" class="st-mute" stroke-width="1"/>
+        <text x="729" y="80" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">⑥</text>
+        <text x="729" y="98" class="lbl-sm s-ink" text-anchor="middle" font-weight="700">淘汰・成熟</text>
+      </g>
+      <!-- フロー矢印 -->
+      <g class="st-mute" stroke-width="1.5" fill="none">
+        <path d="M138 87 L150 87"/><path d="M268 87 L280 87"/><path d="M398 87 L410 87"/>
+        <path d="M528 87 L540 87"/><path d="M658 87 L670 87"/>
+      </g>
+      <!-- 死の谷: ②から下向き -->
+      <path d="M209 114 L209 150" class="st-acc" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+      <path d="M204 143 L209 152 L214 143 Z" class="r-acc"/>
+      <text x="209" y="170" class="lbl-sm s-mute" text-anchor="middle">多くの試みがここで沈む</text>
+      <!-- 発火前基盤の注記 -->
+      <path d="M20 42 L138 42" class="st-acc" stroke-width="1.5" fill="none"/>
+      <text x="79" y="36" class="lbl-sm s-acc" text-anchor="middle" font-weight="700">発火前に基盤を積む</text>
+      <text x="405" y="200" class="lbl-sm s-mute" text-anchor="middle">②の生死は、①でどれだけ補完インフラが整っていたかでほぼ決まる（発火前観測）</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-F</b> ICFMの6相フロー。①前提条件の集積 → ②触媒・発火（★多くがここで死の谷に沈む）→ ③流動・多様な試行 → ④支配的設計の確立 → ⑤離陸・自己増殖 → ⑥淘汰・成熟。②の生死は、①で補完インフラが発火前に整っていたかでほぼ決まる。</div>
+  </div>
 
   <p>そのうえで100事例の分析から浮かび上がった最も重要な発見はこれです。産業の生死を発火前に分ける変数として符号が安定したのは、要素技術の水準でも、国家の関与でも、さらには統合の担い手の存在ですらなく、<strong>補完インフラが発火の時点で既に整っていたか（＝産業が立ち上がる前に、周辺インフラが整っているか）</strong>でした。この変数の効果は係数プラス0.707、95%信頼区間はプラス0.30からプラス1.21で、検討した変数のなかで唯一、信頼区間がゼロをまたがず、再標本化に対して符号が100%安定しました。分析した100事例中81件で、補完インフラは発火前に整っていました。対照的に、統合の担い手の発火前存在は係数プラス0.034で符号の安定性は55%にとどまり、国家の事前関与はむしろ係数マイナス0.139でした。<strong>技術が産業になるためには、その技術を受け止める周辺の基盤（規格・供給網・施設・制度・隣接技術）が、発火に先立って存在していなければならない</strong>のです。</p>
 
@@ -512,7 +937,49 @@ li{margin-bottom:8px}
 
 <h3 id="h27">4-3 実証 — 延べ68名のチームを組めた</h3>
 
-<p>理論と母集団が揃っていても、「実際に編成できる」ことを示さなければ、議論は仮説に留まります。そこで本プロジェクトでは、第3部の診断で機会と判定された産業のうち15の優先産業を選び、各産業の「欠けた位置」を埋める研究者チームの編成を試みました。結果、<strong>15産業中13産業で完全な編成が成立し、2産業は部分編成にとどまりました</strong>（自動運航船・船舶DXはcore1名のみ、CCUSは最重要と診断された貯留チームが未編成）。別に試みた3産業（災害復旧・事業継続、プロップテック、カウンターUAS）では編成が成立しませんでした（4-5参照）。編成されたチームは、RIDに実在する研究者<strong>延べ68名</strong>——実人数は66名で、鈴木智也と金井保が2産業を兼担します。この兼担自体が、分野をまたいで立つbridge性の証左でもあります——で構成されます。役割の内訳は、専門の核を担うcoreが延べ32名、分野間を橋渡しするbridgeが延べ26名、産業全体を束ねるintegratorが延べ10名。産業との適合の信頼度は、high 50名・medium 18名で、<strong>74%が高信頼</strong>と判定されました。なお、この編成は候補構成であり、研究者への接触と応諾の確認は90日工程（5-5）の対象です。以下に15産業の編成を示します（研究者名はすべてRID実在、括弧内は担当領域）。</p>
+<p>理論と母集団が揃っていても、「実際に編成できる」ことを示さなければ、議論は仮説に留まります。そこで本プロジェクトでは、第3部の診断で機会と判定された産業のうち15の優先産業を選び、各産業の「欠けた位置」を埋める研究者チームの編成を試みました。結果、<strong>15産業中13産業で完全な編成が成立し、2産業は部分編成にとどまりました</strong>（自動運航船・船舶DXはcore1名のみ、CCUSは最重要と診断された貯留チームが未編成）。別に試みた3産業（災害復旧・事業継続、プロップテック、カウンターUAS）では編成が成立しませんでした（4-5参照）。編成されたチームは、RIDに実在する研究者<strong>延べ68名</strong>——実人数は66名で、鈴木智也と金井保が2産業を兼担します。この兼担自体が、分野をまたいで立つbridge性の証左でもあります——で構成されます。役割の内訳は、専門の核を担うcoreが延べ32名、分野間を橋渡しするbridgeが延べ26名、産業全体を束ねるintegratorが延べ10名。産業との適合の信頼度は、high 50名・medium 18名で、<strong>74%が高信頼</strong>と判定されました。なお、この編成は候補構成であり、研究者への接触と応諾の確認は90日工程（5-5）の対象です。次の図Hは、この編成の全体像を示します。その後、15産業の編成を表で示します（研究者名はすべてRID実在、括弧内は担当領域）。</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 820 250" role="img" aria-labelledby="figH-t figH-d">
+      <title id="figH-t">FIG-H 研究者編成の型 — 15クラスター・延べ68名の3役割</title>
+      <desc id="figH-d">15クラスター・延べ68名（実66名）を、core32・bridge26・integrator10の3役割で構成した編成の内訳。うち13産業が完全編成、2産業が部分編成、3産業が編成不能。</desc>
+      <!-- 上段: 編成の成否 -->
+      <text x="30" y="24" class="lbl-cap s-mute">試みた18産業の編成結果</text>
+      <!-- 15+3 = 18 を帯で: 完全13, 部分2, 不能3 -->
+      <!-- 全幅760, 1産業=42.2px -->
+      <rect x="30" y="34" width="549" height="24" class="r-fig-acc"/>
+      <rect x="579" y="34" width="84" height="24" class="r-fig-acc"/>
+      <rect x="663" y="34" width="127" height="24" class="r-surf2"/>
+      <rect x="663" y="34" width="127" height="24" fill="none" class="st-mute" stroke-width="1"/>
+      <text x="304" y="51" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">完全編成 13産業</text>
+      <text x="621" y="51" class="lbl-sm" fill="#fff" text-anchor="middle" font-weight="700">部分2</text>
+      <text x="726" y="51" class="lbl-sm s-mute" text-anchor="middle">編成不能 3</text>
+      <!-- 下段: 3役割の内訳 (延べ68名) -->
+      <text x="30" y="96" class="lbl-cap s-mute">延べ68名（実66名）の役割内訳</text>
+      <!-- core32 bridge26 integrator10 を横棒で. 全幅760 = 68名, 1名=11.18px -->
+      <!-- core -->
+      <text x="30" y="128" class="lbl s-soft">core（核）</text>
+      <rect x="180" y="116" width="358" height="20" class="r-ink" fill-opacity="0.78"/>
+      <text x="188" y="130" class="lbl-sm" fill="#fff" font-weight="700">32名</text>
+      <text x="548" y="130" class="lbl-sm s-mute">各分野の中核知識・吸収の前提</text>
+      <!-- bridge -->
+      <text x="30" y="158" class="lbl s-soft">bridge（橋渡し）</text>
+      <rect x="180" y="146" width="291" height="20" class="r-ink" fill-opacity="0.78"/>
+      <text x="188" y="160" class="lbl-sm" fill="#fff" font-weight="700">26名</text>
+      <text x="481" y="160" class="lbl-sm s-mute">分野間の穴に立つ仲介者</text>
+      <!-- integrator (希少・強調) -->
+      <text x="30" y="188" class="lbl s-acc" font-weight="700">integrator（統合者）</text>
+      <rect x="180" y="176" width="112" height="20" class="r-fig-acc"/>
+      <text x="188" y="190" class="lbl-sm" fill="#fff" font-weight="700">10名</text>
+      <text x="302" y="190" class="lbl-sm s-acc" font-weight="700">★最も希少 — 産業全体を1システムとして設計</text>
+      <!-- 信頼度 -->
+      <line x1="30" y1="210" x2="790" y2="210" class="st-rule" stroke-width="1"/>
+      <text x="30" y="232" class="lbl-sm s-soft">産業との適合信頼度：</text>
+      <text x="180" y="232" class="lbl-sm s-acc" font-weight="700">高信頼 50名（74%）</text>
+      <text x="360" y="232" class="lbl-sm s-mute">／ 中信頼 18名</text>
+    </svg>
+    <div class="fig-cap"><b>FIG-H</b> 研究者編成の型。試みた18産業のうち完全編成13・部分編成2・編成不能3。編成できたチームは延べ68名（実66名）を、core32（核）・bridge26（橋渡し）・integrator10（統合者・最も希少）の3役割で構成。適合信頼度は74%が高信頼。</div>
+  </div>
 
 <table>
 <thead><tr><th>産業（ボトルネックの型）</th><th>チーム編成（core / bridge / integrator）</th></tr></thead>
@@ -578,7 +1045,34 @@ li{margin-bottom:8px}
 
 <h3 id="h32">5-1 170兆円の政策に欠けている1行</h3>
 
-<p>日本の産業政策は、資金の規模において歴史的な水準にあります。大学ファンドはJSTが運用元本10兆円を持ち、2024年度末の運用資産は11兆1,056億円、累積の当期純利益は4,408億円（2024年度単年度は2,560億円）に達しました。国際卓越研究大学には全体で年3,000億円規模が最長25年にわたり配分されます。スタートアップ育成5か年計画（2022年11月閣議決定）は2027年度までに投資額10兆円規模、ユニコーン100社を掲げます。GXは2023年からの10年間で官民150兆円、うち政府投資20兆円という枠組みを法制化しました（GX推進法2023）。経済安全保障重要技術育成プログラム（K Program）は半導体・量子・AI・バイオ・材料の重要技術に公的資金を投じます。性格の異なる3つの枠組み——運用元本10兆円・投資目標10兆円・官民動員150兆円——を合わせれば<strong>名目170兆円規模</strong>の国家的コミットメントであり、「日本は科学技術に投資していない」という通念は、少なくとも枠組みの水準ではすでに成り立ちません。</p>
+<p>日本の産業政策は、資金の規模において歴史的な水準にあります。大学ファンドはJSTが運用元本10兆円を持ち、2024年度末の運用資産は11兆1,056億円、累積の当期純利益は4,408億円（2024年度単年度は2,560億円）に達しました。国際卓越研究大学には全体で年3,000億円規模が最長25年にわたり配分されます。スタートアップ育成5か年計画（2022年11月閣議決定）は2027年度までに投資額10兆円規模、ユニコーン100社を掲げます。GXは2023年からの10年間で官民150兆円、うち政府投資20兆円という枠組みを法制化しました（GX推進法2023）。経済安全保障重要技術育成プログラム（K Program）は半導体・量子・AI・バイオ・材料の重要技術に公的資金を投じます。性格の異なる3つの枠組み——運用元本10兆円・投資目標10兆円・官民動員150兆円——を合わせれば<strong>名目170兆円規模</strong>の国家的コミットメントであり、「日本は科学技術に投資していない」という通念は、少なくとも枠組みの水準ではすでに成り立ちません。次の図Iは、この3枠の性格の違いと規模を示します。</p>
+
+<div class="fig">
+  <svg viewBox="0 0 820 250" role="img" aria-labelledby="figI-t figI-d">
+    <title id="figI-t">FIG-I 170兆円の政策の器 — 性格の異なる3枠</title>
+    <desc id="figI-d">大学ファンド10兆円（運用元本）、スタートアップ投資10兆円（投資目標）、GX150兆円（官民10年動員）の3つを並置し、合計名目170兆円。性格が異なる3枠であることと、それらを束ねる仕組みが欠けていることを示す。</desc>
+    <text x="30" y="24" class="lbl-cap s-mute">3つの政策の器（名目・性格が異なる）</text>
+    <rect x="30" y="40" width="70" height="120" class="r-ink" fill-opacity="0.42"/>
+    <rect x="30" y="40" width="70" height="120" fill="none" class="st-mute" stroke-width="1"/>
+    <text x="65" y="182" class="lbl-sm s-soft" text-anchor="middle" font-weight="700">大学ファンド</text>
+    <text x="65" y="196" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">10兆円</text>
+    <text x="65" y="210" class="lbl-sm s-mute" text-anchor="middle">運用元本</text>
+    <rect x="116" y="40" width="70" height="120" class="r-ink" fill-opacity="0.42"/>
+    <rect x="116" y="40" width="70" height="120" fill="none" class="st-mute" stroke-width="1"/>
+    <text x="151" y="182" class="lbl-sm s-soft" text-anchor="middle" font-weight="700">SU投資</text>
+    <text x="151" y="196" class="num s-acc" text-anchor="middle" font-size="13" font-weight="700">10兆円</text>
+    <text x="151" y="210" class="lbl-sm s-mute" text-anchor="middle">投資目標</text>
+    <rect x="202" y="40" width="588" height="120" class="r-acc" fill-opacity="0.28"/>
+    <rect x="202" y="40" width="588" height="120" fill="none" class="st-acc" stroke-width="1.5"/>
+    <text x="496" y="96" class="lbl s-soft" text-anchor="middle" font-weight="700">GX（グリーントランスフォーメーション）</text>
+    <text x="496" y="124" class="num-big s-acc" text-anchor="middle" font-size="30">150兆円</text>
+    <text x="496" y="146" class="lbl-sm s-mute" text-anchor="middle">官民10年動員（うち政府20兆円・水素関連3兆円）</text>
+    <line x1="30" y1="226" x2="790" y2="226" class="st-rule" stroke-width="1"/>
+    <text x="30" y="244" class="lbl s-ink" font-weight="700">合計 名目 <tspan class="s-acc" font-size="17">170兆円</tspan></text>
+    <text x="250" y="244" class="lbl-sm s-acc" font-weight="700">← ただし「誰が束ねるか」の1行が、どの枠にも欠けている</text>
+  </svg>
+  <div class="fig-cap"><b>FIG-I</b> 170兆円の政策の器。大学ファンド10兆円（運用元本）＋スタートアップ投資10兆円（投資目標）＋GX150兆円（官民10年動員）＝名目170兆円。性格の異なる3枠が並ぶが、いずれも資金の宛先は「機関」であり、欠落は機関の「あいだ」に空く。束ねる仕組みが欠けている。</div>
+</div>
 
 <p>国際比較でも同じです。研究開発費の対GDP比3.70%は主要7か国では韓国に次ぐ水準であり、企業17.4兆円、大学4.0兆円、公的機関2.3兆円という配分も絶対額として小さくない。それでもアウトプットの質的指標が沈み続けるのだから、「もっと投資を」という処方は、それ単体では30年間外れ続けた処方の増量にしかなりません。トリプルヘリックス論が対比として有効です。それが描いたのは、大学・産業・政府が対等な立場で相互作用し、境界で役割を部分的に交換し合う編成でした。日本の産学官連携は、資金の流れとしては太くなりましたが、構造としては官が配分し、大学が受託し、企業が個別に共同研究を結ぶ階層型に留まっています。<strong>階層型の構造では、資金は境界を越えても、人と問いは境界を越えにくい。170兆円が変えたのは流量であって、配管の形ではない</strong>のです。</p>
 
