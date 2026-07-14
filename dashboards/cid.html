@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Intelligence DB (CID) ダッシュボード | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --card-hover: #F7F7F5;
+  --accent: #121212;
+  --accent-soft: #555555;
+  --accent-warm: #CC1400;
+  --accent-warm-soft: #B01200;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #121212;
+  --text-secondary: #555555;
+  --text-muted: #6B6B6B;
+  --border: #D9D9D9;
+  --border-light: #EEEEEE;
+  --highlight: #CC1400;
+  --surface: #F7F7F5;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --accent: #E0E0E0;
+  --accent-soft: #999999;
+  --accent-warm: #FF4030;
+  --accent-warm-soft: #FF6050;
+  --accent-light: #1A1A1A;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-muted: #8A8A8A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --highlight: #FF4030;
+  --surface: #1A1A1A;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* TOP BAR */
+.top-bar {
+  background: var(--bg);
+  border-top: 3px solid #121212;
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+[data-theme="dark"] .top-bar { border-top-color: #E0E0E0; }
+.top-bar-brand {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+/* LAYOUT */
+.book-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  gap: 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 5px 8px 5px 0;
+  transition: color 0.15s;
+  line-height: 1.5;
+}
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--accent-warm);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+/* MAIN */
+.book-main { padding: 60px 0 100px 48px; max-width: 760px; }
+
+.book-header {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.book-db-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.db-tag {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.book-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.book-meta {
+  margin-top: 32px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* CHAPTER */
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 60px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  line-height: 1.5;
+  font-weight: 700;
+  margin-bottom: 28px;
+  letter-spacing: 0;
+}
+h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  font-weight: 500;
+  text-indent: 0;
+}
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; font-family: var(--font); font-size: 0.92rem; }
+strong { font-weight: 700; color: var(--text); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+th, td {
+  padding: 11px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+th { background: var(--surface); font-weight: 700; }
+tr:hover td { background: var(--card-hover); }
+
+.callout {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+  padding: 20px 24px;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+.callout-title {
+  font-weight: 700;
+  color: var(--accent-warm);
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* STATS */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+.stat-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  text-align: center;
+  font-family: var(--font);
+  background: var(--card);
+}
+.stat-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent-warm);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.bar {
+  display: inline-block;
+  height: 12px;
+  background: var(--accent-warm);
+  margin-right: 6px;
+  vertical-align: middle;
+  opacity: 0.75;
+}
+
+/* BADGES */
+.badge {
+  display: inline-block;
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.badge-listed { border-color: var(--accent-warm); color: var(--accent-warm); }
+.badge-startup { border-color: #555555; color: #555555; }
+[data-theme="dark"] .badge-startup { border-color: #AAAAAA; color: #AAAAAA; }
+
+/* DOSSIER CARDS */
+.dossier-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin: 28px 0;
+}
+.dossier-card {
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  background: var(--card);
+}
+.dossier-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.dossier-card-name {
+  font-family: var(--font);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.dossier-card-needs {
+  font-family: var(--font);
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  text-indent: 0;
+  margin-bottom: 10px;
+}
+.dossier-card-meta {
+  font-family: var(--font);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+footer {
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* MOBILE */
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 16px; }
+  .toc-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: 24px 0;
+  }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* PRINT */
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-brand">MIRATUKU NEWS / <span>Company Intelligence DB</span></div>
+  <div class="top-bar-actions">
+    <a class="back-link" href="../databases.html">← Databases</a>
+    <button class="theme-toggle" onclick="toggleTheme()">DARK / LIGHT</button>
+  </div>
+</div>
+
+<div class="book-layout">
+  <nav class="toc-sidebar" aria-label="目次">
+    <div class="toc-label">CONTENTS</div>
+    <ol class="toc-list">
+      <li><a href="#sec-kpi"><span class="toc-num">01</span>主要指標</a></li>
+<li><a href="#sec-source"><span class="toc-num">02</span>ソースDB別リンク集計</a></li>
+<li><a href="#sec-listing"><span class="toc-num">03</span>ステータス分布</a></li>
+<li><a href="#sec-pref"><span class="toc-num">04</span>都道府県別分布</a></li>
+<li><a href="#sec-registry"><span class="toc-num">05</span>動的索敵対象DB一覧</a></li>
+<li><a href="#sec-dossier"><span class="toc-num">06</span>企業サンプル（推定ニーズ）</a></li>
+<li><a href="#sec-about"><span class="toc-num">07</span>このDBの位置づけ</a></li>
+    </ol>
+  </nav>
+
+  <main class="book-main">
+    <header class="book-header">
+      <div class="book-db-tags">
+        <span class="db-tag primary">CID v1.0</span>
+        <span class="db-tag">SQLite</span>
+        <span class="db-tag">法人番号統合</span>
+        <span class="db-tag">産学連携支援</span>
+      </div>
+      <h1 class="book-title">Company Intelligence DB</h1>
+      <p class="book-subtitle">法人番号を背骨とした企業理解基盤——上場企業・スタートアップ 8,000社の研究開発・推定ニーズ・セグメント情報を統合した産学連携マッチング向けリコンバックエンド</p>
+      <div class="book-meta">
+        <span>生成日: 2026年06月06日</span>
+        <span>企業数: 8,006 社</span>
+        <span>ソースリンク: 23,006 件</span>
+      </div>
+    </header>
+
+    <!-- ===== SECTION 01: KPI ===== -->
+    <section class="chapter-section" id="sec-kpi">
+      <div class="chapter-number-label">SECTION 01</div>
+      <h2 class="chapter-title">主要指標</h2>
+      <p class="lead">CID が現時点で把握している企業数・情報充実度の概要を示す。上場企業と国内スタートアップを一元管理し、4 つのソースDBからの結線情報を集約している。</p>
+      
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="stat-num">8,006</div>
+    <div class="stat-label">総企業数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">4,958</div>
+    <div class="stat-label">上場企業</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">3,048</div>
+    <div class="stat-label">スタートアップ</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">3,814</div>
+    <div class="stat-label">研究開発文書保有社数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">23,006</div>
+    <div class="stat-label">ソースリンク総数</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">3,831</div>
+    <div class="stat-label">推定ニーズ生成済み</div>
+  </div>
+</div>
+
+      <div class="callout">
+        <div class="callout-title">データ品質メモ</div>
+        法人番号（国税庁付番）を主キーとして各ソースDBを結合。IR収集DB・上場企業セグメントDBは照合信頼度 100%、スタートアップDB（JPS）は 62% 程度（企業名部分一致によるファジー照合）。都道府県情報はスタートアップ側で補完率が低く、現時点では全体の約 22% のみ判明している。
+      </div>
+    </section>
+
+    <!-- ===== SECTION 02: SOURCE DB ===== -->
+    <section class="chapter-section" id="sec-source">
+      <div class="chapter-number-label">SECTION 02</div>
+      <h2 class="chapter-title">ソースDB別リンク集計</h2>
+      <p class="lead">CID は 4 つの既存DBとの結線（company_source_link）によって成立している。各DBが持つ情報の種別と件数を以下に示す。</p>
+      
+<table>
+  <thead>
+    <tr>
+      <th>DB名</th>
+      <th style="text-align:right">リンク件数</th>
+      <th style="text-align:right">照合信頼度</th>
+      <th style="text-align:right">R&amp;D文書</th>
+      <th style="text-align:right">推定ニーズ</th>
+      <th style="text-align:right">セグメント</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+  <td><strong>IR収集DB（有報・四半期報）</strong><br><small style="color:var(--text-muted);font-family:var(--font);">ir</small></td>
+  <td style="text-align:right">4,958</td>
+  <td style="text-align:right">100%</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+</tr><tr>
+  <td><strong>上場企業セグメントDB（LCS）</strong><br><small style="color:var(--text-muted);font-family:var(--font);">lcs</small></td>
+  <td style="text-align:right">4,958</td>
+  <td style="text-align:right">100%</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">3,728</td>
+</tr><tr>
+  <td><strong>ir_risk</strong><br><small style="color:var(--text-muted);font-family:var(--font);">ir_risk</small></td>
+  <td style="text-align:right">4,057</td>
+  <td style="text-align:right">100%</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+</tr><tr>
+  <td><strong>産学連携マッチャーDB</strong><br><small style="color:var(--text-muted);font-family:var(--font);">matcher</small></td>
+  <td style="text-align:right">3,831</td>
+  <td style="text-align:right">100%</td>
+  <td style="text-align:right">3,814</td>
+  <td style="text-align:right">3,831</td>
+  <td style="text-align:right">—</td>
+</tr><tr>
+  <td><strong>国内スタートアップDB（JPS）</strong><br><small style="color:var(--text-muted);font-family:var(--font);">jps</small></td>
+  <td style="text-align:right">3,212</td>
+  <td style="text-align:right">62%</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+</tr><tr>
+  <td><strong>itm</strong><br><small style="color:var(--text-muted);font-family:var(--font);">itm</small></td>
+  <td style="text-align:right">1,310</td>
+  <td style="text-align:right">100%</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+</tr><tr>
+  <td><strong>ecu</strong><br><small style="color:var(--text-muted);font-family:var(--font);">ecu</small></td>
+  <td style="text-align:right">393</td>
+  <td style="text-align:right">90%</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+</tr><tr>
+  <td><strong>sgpr</strong><br><small style="color:var(--text-muted);font-family:var(--font);">sgpr</small></td>
+  <td style="text-align:right">287</td>
+  <td style="text-align:right">75%</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+  <td style="text-align:right">—</td>
+</tr>
+  </tbody>
+</table>
+
+      <ul>
+        <li><strong>IR収集DB（ir）</strong>: 有価証券報告書・四半期報告書を EDINETコードで紐付け。研究開発活動欄の原文（rd_text）を保持。</li>
+        <li><strong>上場企業セグメントDB（lcs）</strong>: 2016〜2025年の 10期分セグメント財務時系列。法人番号照合で完全一致。</li>
+        <li><strong>産学連携マッチャーDB（matcher）</strong>: 研究者との近接性スコア付き企業DB。推定技術ニーズ（estimated_needs）を保持。</li>
+        <li><strong>国内スタートアップDB（jps）</strong>: 3,200社超のスタートアップ情報。company_id による照合でカバー率 62%。</li>
+      </ul>
+    </section>
+
+    <!-- ===== SECTION 03: LISTING STATUS ===== -->
+    <section class="chapter-section" id="sec-listing">
+      <div class="chapter-number-label">SECTION 03</div>
+      <h2 class="chapter-title">ステータス別分布</h2>
+      <p class="lead">CID の企業 8,006 社は「上場企業」と「スタートアップ」の 2 区分に分かれる。上場企業は EDINET・有報データとの接続が完全に確保されており、スタートアップはJPS経由で補完されている。</p>
+      
+<table>
+  <thead><tr><th>区分</th><th style="text-align:right">社数</th><th>比率</th><th style="text-align:right">%</th></tr></thead>
+  <tbody><tr>
+  <td>上場企業</td>
+  <td style="text-align:right">4,958</td>
+  <td><span class="bar" style="width:160px"></span></td>
+  <td style="text-align:right">61.9%</td>
+</tr><tr>
+  <td>スタートアップ</td>
+  <td style="text-align:right">3,048</td>
+  <td><span class="bar" style="width:98px"></span></td>
+  <td style="text-align:right">38.1%</td>
+</tr></tbody>
+</table>
+
+    </section>
+
+    <!-- ===== SECTION 04: PREFECTURE ===== -->
+    <section class="chapter-section" id="sec-pref">
+      <div class="chapter-number-label">SECTION 04</div>
+      <h2 class="chapter-title">都道府県別分布（上位）</h2>
+      <p class="lead">都道府県情報が判明している企業のうち、所在都道府県別の社数分布を示す。東京都が突出して多く、次いで茨城県・大阪府・愛知県が続く。なお、スタートアップの多くは都道府県情報が未収録のため、実態分布とは差がある点に注意が必要である。</p>
+      
+<table>
+  <thead><tr><th>都道府県</th><th style="text-align:right">社数</th><th></th></tr></thead>
+  <tbody><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">1. 東京都</td>
+  <td style="text-align:right">682</td>
+  <td><span class="bar" style="width:160px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">2. 茨城県</td>
+  <td style="text-align:right">97</td>
+  <td><span class="bar" style="width:22px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">3. 大阪府</td>
+  <td style="text-align:right">86</td>
+  <td><span class="bar" style="width:20px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">4. 愛知県</td>
+  <td style="text-align:right">72</td>
+  <td><span class="bar" style="width:16px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">5. 京都府</td>
+  <td style="text-align:right">67</td>
+  <td><span class="bar" style="width:15px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">6. 福岡県</td>
+  <td style="text-align:right">49</td>
+  <td><span class="bar" style="width:11px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">7. 神奈川県</td>
+  <td style="text-align:right">47</td>
+  <td><span class="bar" style="width:11px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">8. 埼玉県</td>
+  <td style="text-align:right">34</td>
+  <td><span class="bar" style="width:7px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">9. 新潟県</td>
+  <td style="text-align:right">31</td>
+  <td><span class="bar" style="width:7px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">10. 北海道</td>
+  <td style="text-align:right">31</td>
+  <td><span class="bar" style="width:7px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">11. 石川県</td>
+  <td style="text-align:right">30</td>
+  <td><span class="bar" style="width:7px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">12. 沖縄県</td>
+  <td style="text-align:right">29</td>
+  <td><span class="bar" style="width:6px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">13. 兵庫県</td>
+  <td style="text-align:right">28</td>
+  <td><span class="bar" style="width:6px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">14. 千葉県</td>
+  <td style="text-align:right">26</td>
+  <td><span class="bar" style="width:6px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">15. 宮城県</td>
+  <td style="text-align:right">24</td>
+  <td><span class="bar" style="width:5px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">16. 岐阜県</td>
+  <td style="text-align:right">23</td>
+  <td><span class="bar" style="width:5px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">17. 広島県</td>
+  <td style="text-align:right">19</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">18. 岩手県</td>
+  <td style="text-align:right">19</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">19. 佐賀県</td>
+  <td style="text-align:right">19</td>
+  <td><span class="bar" style="width:4px"></span></td>
+</tr><tr>
+  <td style="font-family:var(--font);font-size:0.82rem">20. 青森県</td>
+  <td style="text-align:right">17</td>
+  <td><span class="bar" style="width:3px"></span></td>
+</tr></tbody>
+</table>
+
+      <div class="callout">
+        <div class="callout-title">補足</div>
+        都道府県情報が NULL の企業が全体の約 78%（6,570 社以上）存在する。これは主にスタートアップ側のデータ欠損によるものであり、フェーズ 2 以降のデータ充実で改善予定。
+      </div>
+    </section>
+
+    <!-- ===== SECTION 05: KEYED DB REGISTRY ===== -->
+    <section class="chapter-section" id="sec-registry">
+      <div class="chapter-number-label">SECTION 05</div>
+      <h2 class="chapter-title">動的索敵対象DB一覧</h2>
+      <p class="lead">company_keyed_db_registry は、CID が法人番号・EDINETコード等の識別子を通じて動的に照合・取り込み可能な外部DBの一覧である。新たなDBが追加されるたびにここへ登録し、産学連携マッチング精度の向上に活用する。</p>
+      
+<table>
+  <thead>
+    <tr>
+      <th>DB識別子</th>
+      <th>テーブル名</th>
+      <th>結合キー</th>
+      <th style="text-align:right">企業数</th>
+      <th>最終同期</th>
+    </tr>
+  </thead>
+  <tbody><tr>
+  <td><strong>lcs</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">company_master</td>
+  <td style="font-family:var(--font);font-size:0.8rem">corporate_number (corporate_number)</td>
+  <td style="text-align:right">4,958</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr><tr>
+  <td><strong>ir</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">documents</td>
+  <td style="font-family:var(--font);font-size:0.8rem">edinet_code (edinet_code)</td>
+  <td style="text-align:right">4,958</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr><tr>
+  <td><strong>ir_risk</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">risk_mentions</td>
+  <td style="font-family:var(--font);font-size:0.8rem">edinet_code (edinet_code)</td>
+  <td style="text-align:right">4,057</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr><tr>
+  <td><strong>matcher</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">companies</td>
+  <td style="font-family:var(--font);font-size:0.8rem">edinet_code (edinet_code)</td>
+  <td style="text-align:right">3,833</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr><tr>
+  <td><strong>jps</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">companies</td>
+  <td style="font-family:var(--font);font-size:0.8rem">company_id (company_id)</td>
+  <td style="text-align:right">3,212</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr><tr>
+  <td><strong>itm</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">itm_companies</td>
+  <td style="font-family:var(--font);font-size:0.8rem">edinet_code (edinet_code)</td>
+  <td style="text-align:right">1,310</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr><tr>
+  <td><strong>sgpr</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">press_releases</td>
+  <td style="font-family:var(--font);font-size:0.8rem">company_name (name_norm)</td>
+  <td style="text-align:right">8</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr><tr>
+  <td><strong>ecu</strong></td>
+  <td style="font-family:var(--font);font-size:0.8rem">ecu_company_demand_profile</td>
+  <td style="font-family:var(--font);font-size:0.8rem">company_jcn (corporate_number)</td>
+  <td style="text-align:right">5</td>
+  <td style="font-family:var(--font);font-size:0.78rem;color:var(--text-muted)">2026-06-06</td>
+</tr></tbody>
+</table>
+
+      <p>現在 8 件の外部DBが登録されている。登録DBはいずれも法人番号またはEDINETコードを主キーとして保持しており、SQLite JOIN による即時結合が可能な構造になっている。</p>
+    </section>
+
+    <!-- ===== SECTION 06: DOSSIER SAMPLE ===== -->
+    <section class="chapter-section" id="sec-dossier">
+      <div class="chapter-number-label">SECTION 06</div>
+      <h2 class="chapter-title">企業サンプル（推定ニーズ冒頭）</h2>
+      <p class="lead">以下は v_company_dossier ビューから抽出した企業サンプルである。推定技術ニーズ（estimated_needs）の冒頭 120 字を掲載する。完全な推定ニーズは matcher DB との結線から生成されており、産学連携マッチングの起点として機能する。</p>
+      <div class="dossier-grid">
+        
+<div class="dossier-card">
+  <div class="dossier-card-header">
+    <span class="badge badge-listed">上場</span>
+    <span class="dossier-card-name">天馬株式会社</span>
+  </div>
+  <p class="dossier-card-needs">同社は樹脂成形事業の低収益性からの脱却と中長期的なサステナビリティ確保を経営課題としており、R&D戦略は車両関連製品の高度化、プラスチック材料の循環型資源化、生産プロセスの自動化・DX化に重点を置いてい</p>
+  <div class="dossier-card-meta">
+    <span>接続DB: ir / ir_risk / lcs / matcher</span>
+  </div>
+</div>
+<div class="dossier-card">
+  <div class="dossier-card-header">
+    <span class="badge badge-listed">上場</span>
+    <span class="dossier-card-name">協栄産業株式会社</span>
+  </div>
+  <p class="dossier-card-needs">同社は「System Technology Group」として、ICT技術と電子デバイス・装置の融合による新価値創造を経営方針に掲げており、R&D方向性は①アナログ&パワー半導体の高度化（特に酸化ガリウムデバイス）</p>
+  <div class="dossier-card-meta">
+    <span>接続DB: ir / ir_risk / itm / lcs / matcher</span>
+  </div>
+</div>
+<div class="dossier-card">
+  <div class="dossier-card-header">
+    <span class="badge badge-listed">上場</span>
+    <span class="dossier-card-name">カネコ種苗株式会社</span>
+  </div>
+  <p class="dossier-card-needs">同社は「ハイテクと国際化」を基本方針として、国内農業の生産性向上と海外展開の両軸でR&Dを推進している。国内ではスマート農業の実装化、特にドローンやAI画像診断技術の開発に注力しており、省力化と環境負荷軽</p>
+  <div class="dossier-card-meta">
+    <span>接続DB: ir / ir_risk / itm / lcs / matcher</span>
+  </div>
+</div>
+<div class="dossier-card">
+  <div class="dossier-card-header">
+    <span class="badge badge-listed">上場</span>
+    <span class="dossier-card-name">株式会社　サカタのタネ</span>
+  </div>
+  <p class="dossier-card-needs">同社は高品質でオリジナル性の高い種苗の継続的創出と、アジアを中心とした新興国市場への展開を重視しており、R&Dは地域栽培環境に適応した品種開発と、生産者の高収益化を実現する種苗機能の強化に向けられてい</p>
+  <div class="dossier-card-meta">
+    <span>接続DB: ir / ir_risk / itm / lcs / matcher</span>
+  </div>
+</div>
+<div class="dossier-card">
+  <div class="dossier-card-header">
+    <span class="badge badge-listed">上場</span>
+    <span class="dossier-card-name">ユキグニファクトリー株式会社</span>
+  </div>
+  <p class="dossier-card-needs">同社は「プレミアムきのこ総合メーカー」としての基盤強化と高収益化を目指しており、既存のまいたけ・エリンギ等の生産技術を本しめじ・マッシュルームなど新規品目へ展開する必要がある。また全社横断的なB</p>
+  <div class="dossier-card-meta">
+    <span>接続DB: ir / lcs / matcher</span>
+  </div>
+</div>
+<div class="dossier-card">
+  <div class="dossier-card-header">
+    <span class="badge badge-listed">上場</span>
+    <span class="dossier-card-name">ホクト株式会社</span>
+  </div>
+  <p class="dossier-card-needs">同社は健康機能成分の研究開発を加速させており、ビタミンD、オルニチン、エルゴチオネイン、葉酸などきのこの栄養素の強調表示に向けた分析・実証技術の強化を重視している。また、新品種開発や生理活性機能に関する研究を</p>
+  <div class="dossier-card-meta">
+    <span>接続DB: ir / ir_risk / itm / lcs / matcher</span>
+  </div>
+</div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 07: ABOUT ===== -->
+    <section class="chapter-section" id="sec-about">
+      <div class="chapter-number-label">SECTION 07</div>
+      <h2 class="chapter-title">このDBの位置づけ</h2>
+      <p class="lead">Company Intelligence DB（CID）は、NPO法人ミラツクが構築する産学連携マッチング基盤の「企業側リコン（Recon）」エンジンである。</p>
+
+      <p>日本には 300 万社以上の法人が存在するが、研究者が産学連携先として民間企業を探す際、「どの企業がどんな技術課題を抱えているか」を体系的に把握できる情報源は極めて乏しい。有価証券報告書には研究開発活動の記述が義務付けられているものの、各社の表記は統一されておらず、数千社にわたる横断読解は現実的でない。CID はこの問題を解決するために設計された。</p>
+
+      <p>CID の中核的な設計思想は、<strong>法人番号（国税庁付番）を背骨</strong>として複数のデータソースを統合することにある。法人番号は国内すべての法人に付与された一意識別子であり、EDINETコード（金融庁）・証券コード・JPS 企業 ID など異なる識別体系を横断する共通鍵として機能する。この設計により、有報から抽出した研究開発テキスト・セグメント財務情報・スタートアップ属性情報・推定技術ニーズのすべてを 1 レコードに集約できる。</p>
+
+      <p>CID が最も重視するのは、<strong>「企業が今まさに必要としている技術・知見の輪郭」を機械的に推定する</strong>ことである。有報の研究開発欄・中期経営計画・事業リスク記述・セグメント別業績トレンドを統合的に読み解き、研究者や技術者が「あなたの研究が役立つかもしれない企業はここだ」と判断できる推定ニーズ（estimated_needs）を生成する。この推定ニーズは産学連携マッチャー DB（matcher）との接続で生成されており、CID 単体では保管のみ、更新はマッチャー側で制御される。</p>
+
+      <p>このように CID は、大学の研究者・技術移転部門が「どの企業にアプローチすべきか」を合理的に判断するための<strong>逆路マッチング（R0 経路）の出発点</strong>である。研究者の専門領域を起点に近接性スコアを計算し、上位企業候補を提示するというフローの「企業側のバックエンド」として常設的に機能する。今後はフェーズ 2 でスタートアップの都道府県・業種情報の充実、フェーズ 3 で特許DB・助成金採択DBとの連携拡張を予定している。</p>
+
+      <div class="callout">
+        <div class="callout-title">データ利用上の注意</div>
+        本DBのデータはすべて公開情報（EDINET・国税庁法人番号・各社IR資料）に由来する。推定ニーズは AI による自動生成を含み、実際の企業ニーズと完全に一致することを保証するものではない。産学連携交渉の際は必ず一次情報（企業担当者への直接確認）で補完すること。
+      </div>
+    </section>
+
+    <footer>
+      <p>Company Intelligence DB (CID) v1.0 — NPO法人ミラツク</p>
+      <p style="margin-top:8px">生成日時: 2026年06月06日 — etl/generate_dashboard.py により cid.db から動的生成</p>
+      <p style="margin-top:8px">データは公開情報に基づく。推定ニーズは自動生成を含み参考情報として扱うこと。</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme');
+  var next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+var saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>

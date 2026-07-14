@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja" data-motion-preset="snappy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>@miratuku/motion — 動きで、意味を運ぶ。</title>
+<meta name="description" content="MID-DB(モーション・インタラクション設計知DB)の実力を体現する動くショーケース。spring物理・スクロール駆動・game-feel・非西洋の時間・reduced-motion配慮を実コードで。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== motion-tokens.json (DTCG) → CSS  (root + dark + presets + reduced-motion) ===== */
+:root{
+  --mt-duration-instant:100ms;--mt-duration-quick:150ms;--mt-duration-standard:300ms;--mt-duration-slow:500ms;
+  --mt-ease-standard:cubic-bezier(.2,0,0,1);--mt-ease-decelerate:cubic-bezier(.05,.7,.1,1);--mt-ease-out:cubic-bezier(0,0,.58,1);
+  --mt-accent:#CC1400;
+  --ink:#0E0E0E;--ink-soft:#3A3A3A;--ink-mute:#6B6B6B;--paper:#FFFFFF;--surface:#FAF8F4;--rule:#E7E4DE;--rule-hair:#EFEDE8;
+  --sans:"Noto Sans JP",-apple-system,sans-serif;--mono:"Fira Code",monospace;
+  --side:clamp(20px,6vw,120px);--measure:64ch;
+}
+[data-theme="dark"]{--mt-accent:#FF4030;--ink:#ECEAE6;--ink-soft:#B8B5AF;--ink-mute:#8A877F;--paper:#0E0E0E;--surface:#161514;--rule:#2A2825;--rule-hair:#211F1D;}
+[data-motion-preset="calm"]{--mt-duration-standard:500ms;--mt-ease-standard:cubic-bezier(.05,.7,.1,1);}
+[data-motion-preset="snappy"]{--mt-duration-standard:150ms;--mt-ease-standard:cubic-bezier(.2,0,0,1);}
+[data-motion-preset="playful"]{--mt-duration-standard:300ms;--mt-ease-standard:cubic-bezier(.34,1.56,.64,1);}
+[data-motion-preset="precise"]{--mt-duration-standard:200ms;--mt-ease-standard:cubic-bezier(.4,0,.2,1);}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weight:400;line-height:1.7;font-feature-settings:"palt";-webkit-font-smoothing:antialiased;transition:background .4s var(--mt-ease-standard),color .4s var(--mt-ease-standard);overflow-x:hidden}
+::selection{background:var(--mt-accent);color:#fff}
+a{color:inherit}
+
+/* scroll progress bar */
+#prog{position:fixed;top:0;left:0;height:3px;width:100%;background:var(--mt-accent);transform:scaleX(0);transform-origin:left;z-index:100}
+
+/* nav */
+nav{position:fixed;top:0;left:0;right:0;height:60px;display:flex;align-items:center;gap:16px;padding:0 var(--side);z-index:90;backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);background:color-mix(in srgb,var(--paper) 75%,transparent);border-bottom:1px solid var(--rule-hair)}
+nav .brand{font-weight:900;letter-spacing:-.02em;font-size:15px}
+nav .brand b{color:var(--mt-accent)}
+nav .sp{flex:1}
+nav .ctrl{display:flex;gap:6px;align-items:center}
+nav select,nav button{font-family:var(--sans);font-size:11px;border:1px solid var(--rule);background:transparent;color:var(--ink);padding:6px 9px;border-radius:3px;cursor:pointer;transition:border-color var(--mt-duration-instant),transform var(--mt-duration-instant)}
+nav button:active{transform:scale(.94)}
+nav button:hover,nav select:hover{border-color:var(--mt-accent)}
+.lbl{font-family:var(--mono);font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.14em}
+
+section{padding:clamp(80px,12vh,160px) var(--side);position:relative;border-bottom:1px solid var(--rule-hair)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--mt-accent);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:28px;height:2px;background:var(--mt-accent)}
+h2{font-size:clamp(26px,4vw,44px);font-weight:900;letter-spacing:-.03em;line-height:1.12;margin-bottom:22px;max-width:18ch}
+h3{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+p.body{color:var(--ink-soft);max-width:var(--measure);font-size:clamp(15px,1.4vw,17px);margin-bottom:16px}
+.mute{color:var(--ink-mute);font-size:13px}
+code{font-family:var(--mono);font-size:.86em;color:var(--mt-accent);background:color-mix(in srgb,var(--mt-accent) 8%,transparent);padding:1px 5px;border-radius:3px}
+
+/* hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-top:60px;position:relative;overflow:hidden}
+#heroCanvas{position:absolute;inset:0;z-index:0;opacity:.5}
+.hero .in{position:relative;z-index:1}
+.hero h1{font-size:clamp(40px,8.5vw,116px);font-weight:900;letter-spacing:-.05em;line-height:.94;margin-bottom:28px}
+.hero h1 .i{color:var(--mt-accent)}
+.hero .sub{font-size:clamp(16px,2vw,22px);color:var(--ink-soft);max-width:34ch;margin-bottom:36px}
+.hero .meta{display:flex;gap:28px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
+.hero .meta b{color:var(--mt-accent);font-size:20px;display:block}
+.scrollcue{position:absolute;bottom:28px;left:var(--side);font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--ink-mute);text-transform:uppercase}
+
+/* reveal — progressive enhancement: JS adds .js-reveal to hide first, so no-JS shows content */
+.js-reveal [data-reveal]{opacity:0;transform:translateY(26px)}
+
+/* cards grid */
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-top:32px}
+.card{border:1px solid var(--rule);border-radius:8px;padding:22px;background:var(--surface);transition:transform var(--mt-duration-standard) var(--mt-ease-standard),border-color var(--mt-duration-standard)}
+.card:hover{border-color:var(--mt-accent)}
+.card .k{font-family:var(--mono);font-size:10px;color:var(--mt-accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+
+/* demo stage */
+.stage{margin-top:36px;border:1px solid var(--rule);border-radius:12px;padding:clamp(24px,5vw,56px);background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;position:relative;overflow:hidden}
+.btn{font-family:var(--sans);font-weight:700;font-size:14px;border:none;background:var(--mt-accent);color:#fff;padding:13px 26px;border-radius:6px;cursor:pointer;transition:transform var(--mt-duration-instant) var(--mt-ease-standard)}
+.btn:active{transform:scale(.95)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.chip{display:inline-block;width:74px;height:74px;border-radius:14px;background:var(--mt-accent);cursor:grab;touch-action:none;box-shadow:0 8px 26px color-mix(in srgb,var(--mt-accent) 30%,transparent)}
+.chip:active{cursor:grabbing}
+
+/* parallax layers */
+.px-wrap{position:relative;height:340px;margin-top:36px;border-radius:12px;overflow:hidden;border:1px solid var(--rule);background:var(--surface)}
+.px{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:900;letter-spacing:-.04em;white-space:nowrap}
+.px.l1{font-size:clamp(60px,16vw,190px);color:var(--rule);z-index:1}
+.px.l2{font-size:clamp(30px,7vw,80px);color:var(--mt-accent);z-index:2}
+.px.l3{font-size:14px;font-family:var(--mono);color:var(--ink-mute);z-index:3;letter-spacing:.2em;text-transform:uppercase}
+
+/* preset showcase */
+.presets{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.presets button{font-family:var(--mono);font-size:11px;padding:7px 13px;border:1px solid var(--rule);background:transparent;color:var(--ink);border-radius:4px;cursor:pointer}
+.presets button.on{background:var(--mt-accent);color:#fff;border-color:var(--mt-accent)}
+.ball{width:26px;height:26px;border-radius:50%;background:var(--mt-accent)}
+.track{width:min(560px,80%);height:2px;background:var(--rule);position:relative;display:flex;align-items:center}
+
+/* rendering row */
+.render-row{display:flex;gap:28px;flex-wrap:wrap;margin-top:34px;align-items:center;justify-content:flex-start}
+.spin{width:46px;height:46px;border-radius:50%;background:conic-gradient(from 0deg,transparent,var(--mt-accent));-webkit-mask:radial-gradient(farthest-side,transparent 60%,#000 61%);mask:radial-gradient(farthest-side,transparent 60%,#000 61%);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(1turn)}}
+.glass{background:color-mix(in srgb,var(--mt-accent) 14%,transparent);backdrop-filter:blur(10px);border:1px solid color-mix(in srgb,var(--mt-accent) 30%,transparent);padding:18px 22px;border-radius:10px;font-weight:700}
+.rlab{font-family:var(--mono);font-size:9px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-top:8px}
+.rcell{display:flex;flex-direction:column;align-items:center}
+
+/* nature */
+.nature-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:34px}
+.ncell{display:flex;flex-direction:column}
+.ncell canvas{width:100%;height:220px;border:1px solid var(--rule);border-radius:10px;background:var(--surface);display:block}
+
+/* ma / jo-ha-kyu */
+.ma-row{display:flex;gap:6px;margin-top:30px;flex-wrap:wrap;align-items:flex-end;height:120px}
+.ma-bar{width:22px;background:var(--mt-accent);border-radius:3px 3px 0 0;opacity:.85}
+
+footer{padding:70px var(--side) 90px;background:var(--surface)}
+footer .fstat{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:24px;margin:34px 0;border-top:1px solid var(--rule);padding-top:34px}
+footer .fstat b{color:var(--mt-accent);font-size:30px;font-weight:900;display:block;font-family:var(--mono);letter-spacing:-.02em}
+footer .fstat span{font-size:12px;color:var(--ink-mute)}
+footer .fine{font-size:11px;color:var(--ink-mute);max-width:60ch}
+:focus-visible{outline:2px solid var(--mt-accent);outline-offset:3px;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="prog" aria-hidden="true"></div>
+
+<nav>
+  <span class="brand">@miratuku<b>/</b>motion</span>
+  <span class="sp"></span>
+  <div class="ctrl">
+    <span class="lbl">preset</span>
+    <select id="presetSel" aria-label="モーションプリセット">
+      <option value="snappy">snappy</option><option value="calm">calm</option>
+      <option value="playful">playful</option><option value="precise">precise</option>
+    </select>
+    <button id="themeBtn" aria-label="ダークモード切替">◐</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="in">
+    <div class="eyebrow" data-reveal>MID-DB · Motion &amp; Interaction Design</div>
+    <h1 data-reveal>動きで、<br>意味を運ぶ<span class="i">.</span></h1>
+    <p class="sub" data-reveal>spring 物理・スクロール駆動・game-feel・非西洋の時間・アクセシビリティ。<br>2,008レコードの設計知を、そのまま動くコードで。</p>
+    <div class="meta" data-reveal>
+      <span><b>77</b>関数</span><span><b>97%</b>full-runnable</span><span><b>1,668</b>知識グラフ</span><span><b>30/30</b>test pass</span>
+    </div>
+  </div>
+  <div class="scrollcue">scroll ↓ すべて実コードで動いています</div>
+</section>
+
+<!-- SPRING -->
+<section>
+  <div class="eyebrow" data-reveal>01 — Spring Physics</div>
+  <h2 data-reveal>時間でなく、力で動かす。</h2>
+  <p class="body" data-reveal>減衰調和振動 <code>F = -kx - cv</code> を RAF で積分。時間固定の bezier と違い、<strong>途中で掴んでも自然に追従し、慣性を引き継ぐ</strong>。下のチップをドラッグして離すと、spring で戻ります。</p>
+  <div class="stage" data-reveal>
+    <div class="chip" id="chip" aria-label="ドラッグできるチップ"></div>
+    <div class="mute">ドラッグ → 離す（rubber-band + spring）／ tap でパルス</div>
+  </div>
+</section>
+
+<!-- SCROLL-DRIVEN -->
+<section>
+  <div class="eyebrow" data-reveal>02 — Scroll-Driven</div>
+  <h2 data-reveal>スクロールが、時間になる。</h2>
+  <p class="body" data-reveal>IntersectionObserver で <code>scrollReveal</code>、rAF スロットルで <code>parallax</code>。奥ほど遅く動き、視差が深度を生む。上部の赤い進捗バーも <code>scrollProgress</code> です。</p>
+  <div class="px-wrap" data-reveal>
+    <div class="px l1" data-px="0.12">DEPTH</div>
+    <div class="px l2" data-px="0.30">PARALLAX</div>
+    <div class="px l3" data-px="0.55">— 3層が異なる速度で流れる</div>
+  </div>
+  <div class="grid">
+    <div class="card" data-reveal><div class="k">stagger</div><h3>順次リビール</h3><p class="mute">項目が時差で立ち上がる。この段落たちも 60ms ずつ遅れて出ています。</p></div>
+    <div class="card" data-reveal><div class="k">object constancy</div><h3>同一性の保持</h3><p class="mute">要素を key で結び、状態間で追跡させる（Heer 2007）。</p></div>
+    <div class="card" data-reveal><div class="k">compositor-only</div><h3>60fps 限定</h3><p class="mute">transform / opacity だけを動かし reflow を避ける。</p></div>
+  </div>
+</section>
+
+<!-- GAME FEEL -->
+<section>
+  <div class="eyebrow" data-reveal>03 — Game Feel / Juice</div>
+  <h2 data-reveal>手応えは、設計できる。</h2>
+  <p class="body" data-reveal>screen shake・hit stop・squash &amp; stretch・particle burst。衝撃の一瞬を<strong>凍らせ、揺らし、弾けさせる</strong>ことで、同じクリックが「効いた」感覚になる。</p>
+  <div class="stage" id="juiceStage" data-reveal>
+    <button class="btn" id="juiceBtn">JUICE IT — 押してみる</button>
+    <div class="mute">クリック → hit stop + screen shake + squash + 粒子 + haptic(対応端末)</div>
+  </div>
+</section>
+
+<!-- PRESETS -->
+<section>
+  <div class="eyebrow" data-reveal>04 — Motion Presets</div>
+  <h2 data-reveal>同じ制約で、版面を出し分ける。</h2>
+  <p class="body" data-reveal>単一アクセント(#CC1400)・ゴシック・reduced-motion 尊重という<strong>同一ブランド制約</strong>を保ったまま、duration と easing の性格だけを束ねて切替える。世界的スタジオの柔軟さの本体。下のボタンで同じ動きの表情が変わります。</p>
+  <div class="stage" data-reveal>
+    <div class="track"><div class="ball" id="presetBall"></div></div>
+    <div class="presets" id="presetRow">
+      <button data-p="snappy" class="on">snappy · 俊敏</button>
+      <button data-p="calm">calm · 静けさ</button>
+      <button data-p="playful">playful · 弾む</button>
+      <button data-p="precise">precise · 機能的</button>
+    </div>
+    <div class="mute">Linear風 ↔ warm-editorial ↔ 遊び ↔ swiss（版面の性格＝preset）</div>
+  </div>
+</section>
+
+<!-- RENDERING -->
+<section>
+  <div class="eyebrow" data-reveal>05 — Rendering</div>
+  <h2 data-reveal>描画の語彙。</h2>
+  <p class="body" data-reveal>CSS conic gradient・backdrop filter・Canvas trail・SVG path draw。DB の rendering 115技法は 97% が完全動作コードです。</p>
+  <div class="render-row" data-reveal>
+    <div class="rcell"><div class="spin"></div><div class="rlab">conic spinner</div></div>
+    <div class="rcell"><div class="glass">frosted glass</div><div class="rlab">backdrop filter</div></div>
+    <div class="rcell"><canvas id="trailCv" width="120" height="70" style="border:1px solid var(--rule);border-radius:8px"></canvas><div class="rlab">canvas trail</div></div>
+    <div class="rcell"><svg width="120" height="70" viewBox="0 0 120 70"><path id="sig" d="M8 55 Q 40 5 60 40 T 112 20" stroke="var(--mt-accent)" fill="none" stroke-width="2.5" stroke-linecap="round"/></svg><div class="rlab">svg path draw</div></div>
+  </div>
+</section>
+
+<!-- MA / JO-HA-KYU -->
+<section>
+  <div class="eyebrow" data-reveal>06 — 非西洋の時間</div>
+  <h2 data-reveal>間（ま）と、序破急。</h2>
+  <p class="body" data-reveal>他社の余白は明晰さ。ここは<strong>余白＝余情</strong>。動きの直後に意味を担う静止（間）を置き、序（緩）→破（加速）→急（結）の非等速で時間を編む。下のバーは等速でなく序破急で立ち上がります。</p>
+  <div class="stage" data-reveal>
+    <div class="ma-row" id="maRow" aria-hidden="true"></div>
+    <button class="btn ghost" id="maBtn">序破急で再生</button>
+  </div>
+</section>
+
+<!-- NATURE -->
+<section id="nature">
+  <div class="eyebrow" data-reveal>07 — 自然界の動き</div>
+  <h2 data-reveal>魚は、群れで一つの生き物になる。</h2>
+  <p class="body" data-reveal>自然の運動は少数の局所ルールから創発する。<strong>Reynolds の boids</strong>（分離・整列・結合）で魚群を、<strong>波動方程式</strong>で水面の波紋を、<strong>curl-noise</strong>（Bridson）で風の流れを——すべて実際に計算しています。中央の水面はクリック（タップ）で石を落とせます。</p>
+  <div class="nature-grid" data-reveal>
+    <div class="ncell"><canvas id="boidsCv"></canvas><div class="rlab">boids — 魚群 / Reynolds 1987</div></div>
+    <div class="ncell"><canvas id="waveCv" style="cursor:pointer"></canvas><div class="rlab">波紋 — クリックで石を落とす / 波動方程式</div></div>
+    <div class="ncell"><canvas id="flowCv"></canvas><div class="rlab">風の流れ — curl-noise / Bridson 2007</div></div>
+  </div>
+  <p class="mute" data-reveal style="margin-top:18px">DB には群体・流体・波紋・渦・反応拡散・カオス・成長・同期など <strong>24 の自然運動アルゴリズム</strong>を、Stam(stable fluids)・Müller(SPH)・Witten-Sander(DLA)・Jones(Physarum)・Kuramoto(蛍の同期) 等の一次ソース付きで収録。</p>
+</section>
+
+<footer>
+  <div class="eyebrow">MID-DB — Motion &amp; Interaction Design Knowledge DB</div>
+  <h2 style="font-size:clamp(22px,3vw,34px)">材料は、そのまま実装になる。</h2>
+  <div class="fstat">
+    <div><b>2,008</b><span>実行層レコード / 16テーブル</span></div>
+    <div><b>488</b><span>概念 / 12 サブフィールド</span></div>
+    <div><b>77</b><span>@miratuku/motion 関数</span></div>
+    <div><b>62</b><span>認知・現象学の理論接地</span></div>
+    <div><b>86</b><span>フロンティア領域(spatial/game-feel他)</span></div>
+    <div><b>24</b><span>自然運動アルゴリズム(魚群/流体/波紋/風)</span></div>
+    <div><b>97%</b><span>rendering full-runnable</span></div>
+  </div>
+  <p class="fine">このページは装飾動画を一切使わず、すべて @miratuku/motion の実コード（spring / scrollReveal / parallax / scrollProgress / screenShake / particleBurst / squash）とデザイントークン（DTCG · dark · preset · reduced-motion）で動いています。<code>prefers-reduced-motion</code> を有効にすると全アニメーションが静止します。<br><br>© 2026 NPO法人ミラツク / esse-sense — MID-DB</p>
+</footer>
+
+<script type="module">
+/* ============================================================
+   @miratuku/motion — 実コードをインライン (spring/scroll/gamefeel)
+   ============================================================ */
+const reduce = () => matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+// --- spring.js (減衰調和振動 / RAF semi-implicit Euler) ---
+function spring(from, to, cfg = {}, onUpdate = () => {}, onDone = () => {}) {
+  const { stiffness = 400, damping = 30, mass = 1 } = cfg;
+  if (reduce()) { onUpdate(to, 0); onDone(); return { stop(){} }; }
+  let x = from, v = cfg.velocity || 0, raf = 0, last = performance.now();
+  const step = (now) => {
+    let dt = Math.min((now - last) / 1000, 1/30); last = now;
+    const a = (-stiffness * (x - to) - damping * v) / mass;
+    v += a * dt; x += v * dt;
+    if (Math.abs(x - to) < 0.001 && Math.abs(v) < 0.01) { x = to; onUpdate(x, 0); onDone(); return; }
+    onUpdate(x, v); raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
+  return { stop(){ cancelAnimationFrame(raf); }, get velocity(){ return v; } };
+}
+
+// --- scroll.js (scrollReveal / parallax / scrollProgress) ---
+function scrollReveal(sel, { y = 26, threshold = 0.18, stagger = 60 } = {}) {
+  const els = [...document.querySelectorAll(sel)];
+  if (reduce()) return;                 // no-JS/reduced: content stays visible
+  document.documentElement.classList.add('js-reveal');   // now hide via CSS
+  const groups = new Map();
+  const revealNow = (t, sec) => {
+    const i = (groups.get(sec) || 0); groups.set(sec, i + 1);
+    t.style.transition = 'opacity .55s var(--mt-ease-out), transform .55s var(--mt-ease-out)';
+    t.style.transitionDelay = (i * stagger) + 'ms';
+    requestAnimationFrame(() => { t.style.opacity = 1; t.style.transform = 'none'; });
+  };
+  // reveal anything already in viewport immediately (robust vs slow IO)
+  const done = new WeakSet();
+  els.forEach(e => { const r = e.getBoundingClientRect(); if (r.top < innerHeight * 0.9) { revealNow(e, e.closest('section') || document.body); done.add(e); } });
+  const io = new IntersectionObserver((ents) => {
+    ents.forEach(en => {
+      if (!en.isIntersecting || done.has(en.target)) return;
+      done.add(en.target);
+      revealNow(en.target, en.target.closest('section') || document.body);
+      io.unobserve(en.target);
+    });
+  }, { threshold });
+  els.forEach(e => { if (!done.has(e)) io.observe(e); });
+}
+function parallax(nodes) {
+  if (reduce()) return;
+  let ticking = false;
+  const upd = () => {
+    nodes.forEach(n => {
+      const f = parseFloat(n.dataset.px);
+      const r = n.getBoundingClientRect();
+      const off = (r.top + r.height/2 - innerHeight/2) * -f;
+      n.style.transform = `translate(-50%,calc(-50% + ${off}px))`;
+    });
+    ticking = false;
+  };
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(upd); } }, { passive: true });
+  upd();
+}
+function scrollProgress(bar) {
+  const on = () => { const m = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${m>0?scrollY/m:0})`; };
+  addEventListener('scroll', on, { passive: true }); on();
+}
+
+// --- gamefeel.js (screenShake / squash / particleBurst / hitStop) ---
+function screenShake(el, { amplitude = 9, duration = 320 } = {}) {
+  if (reduce()) return;
+  const start = performance.now(); let seed = 9871;
+  const rnd = () => { seed = (seed*1664525+1013904223)&0x7fffffff; return seed/0x7fffffff*2-1; };
+  const step = (t) => {
+    const p = (t - start) / duration;
+    if (p >= 1) { el.style.transform = ''; return; }
+    const d = (1-p)*(1-p);
+    el.style.transform = `translate(${rnd()*amplitude*d}px,${rnd()*amplitude*d}px)`;
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function squash(el, amount = 0.2) {
+  if (reduce()) return;
+  el.style.transformOrigin = 'center';
+  spring(0, 1, { stiffness: 300, damping: 10 }, (t) => { const s = amount*(1-t); el.style.transform = `scale(${1+s},${1-s})`; }, () => el.style.transform = '');
+}
+function particleBurst(x, y, { count = 22, color } = {}) {
+  if (reduce()) return;
+  color = color || getComputedStyle(document.documentElement).getPropertyValue('--mt-accent');
+  let seed = (x*131+y*977)|0; const rnd = () => { seed=(seed*1664525+1013904223)&0x7fffffff; return seed/0x7fffffff; };
+  for (let i=0;i<count;i++){
+    const d=document.createElement('span');
+    Object.assign(d.style,{position:'fixed',left:x+'px',top:y+'px',width:'7px',height:'7px',borderRadius:'50%',background:color,pointerEvents:'none',zIndex:9999});
+    document.body.appendChild(d);
+    let vx=(rnd()-.5)*10,vy=-rnd()*9-2,px=0,py=0,life=1;
+    const st=()=>{vy+=.4;px+=vx;py+=vy;life-=.02;d.style.transform=`translate(${px}px,${py}px)`;d.style.opacity=Math.max(0,life);life>0?requestAnimationFrame(st):d.remove();};
+    requestAnimationFrame(st);
+  }
+}
+const hitStop = (ms=90)=>new Promise(r=>setTimeout(r, reduce()?0:ms));
+
+/* ============================================================
+   Wire the page
+   ============================================================ */
+scrollReveal('[data-reveal]');
+parallax([...document.querySelectorAll('[data-px]')]);
+scrollProgress(document.getElementById('prog'));
+
+// theme toggle
+const root = document.documentElement;
+document.getElementById('themeBtn').addEventListener('click', () => {
+  root.dataset.theme = root.dataset.theme === 'dark' ? '' : 'dark';
+});
+// preset select (nav) + preset row (section 04) sync
+const presetSel = document.getElementById('presetSel');
+const presetRow = document.getElementById('presetRow');
+const presetBall = document.getElementById('presetBall');
+function setPreset(p){
+  root.dataset.motionPreset = p;
+  presetSel.value = p;
+  [...presetRow.children].forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  // demo the character: ball travels the track with current preset's duration/easing
+  const track = presetBall.parentElement, w = track.clientWidth - 26;
+  presetBall.style.transition = 'none'; presetBall.style.transform = 'translateX(0)';
+  requestAnimationFrame(() => {
+    const cs = getComputedStyle(root);
+    presetBall.style.transition = `transform ${cs.getPropertyValue('--mt-duration-standard')} ${cs.getPropertyValue('--mt-ease-standard')}`;
+    presetBall.style.transform = `translateX(${w}px)`;
+  });
+}
+presetSel.addEventListener('change', e => setPreset(e.target.value));
+[...presetRow.children].forEach(b => b.addEventListener('click', () => setPreset(b.dataset.p)));
+
+// chip: drag (rubber-band) + spring back + tap pulse
+const chip = document.getElementById('chip');
+let dragging=false, sx=0, sy=0, cx=0, cy=0, moved=false;
+const rubber = v => Math.sign(v)*Math.pow(Math.abs(v),0.85);
+chip.addEventListener('pointerdown', e => { dragging=true; moved=false; sx=e.clientX; sy=e.clientY; chip.setPointerCapture(e.pointerId); });
+chip.addEventListener('pointermove', e => { if(!dragging)return; cx=rubber(e.clientX-sx); cy=rubber(e.clientY-sy); if(Math.hypot(cx,cy)>4)moved=true; chip.style.transform=`translate(${cx}px,${cy}px)`; });
+chip.addEventListener('pointerup', () => {
+  dragging=false;
+  if(!moved){ squash(chip,0.28); if(navigator.vibrate)navigator.vibrate(8); return; }
+  const fx=cx, fy=cy;
+  spring(1,0,{stiffness:260,damping:14},(t)=>{ chip.style.transform=`translate(${fx*t}px,${fy*t}px)`; }, ()=>chip.style.transform='');
+});
+
+// juice button
+const juiceBtn = document.getElementById('juiceBtn');
+const juiceStage = document.getElementById('juiceStage');
+juiceBtn.addEventListener('click', async e => {
+  squash(juiceBtn, 0.22);
+  await hitStop(80);
+  screenShake(juiceStage, { amplitude: 10, duration: 340 });
+  const r = juiceBtn.getBoundingClientRect();
+  particleBurst(r.left + r.width/2, r.top + r.height/2, { count: 26 });
+  if (navigator.vibrate) navigator.vibrate([10,20,10]);
+});
+
+// hero canvas particle field (real rAF loop, subtle, reduced-motion aware)
+const hc = document.getElementById('heroCanvas'), hctx = hc.getContext('2d');
+function sizeHero(){ hc.width = hc.offsetWidth*devicePixelRatio; hc.height = hc.offsetHeight*devicePixelRatio; hctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
+sizeHero(); addEventListener('resize', sizeHero);
+const N = 46, pts = Array.from({length:N}, () => ({ x:Math.random()*hc.offsetWidth, y:Math.random()*hc.offsetHeight, vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4 }));
+function heroLoop(){
+  const w = hc.offsetWidth, h = hc.offsetHeight;
+  hctx.clearRect(0,0,w,h);
+  const acc = getComputedStyle(root).getPropertyValue('--mt-accent').trim();
+  for (const p of pts){ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>w)p.vx*=-1; if(p.y<0||p.y>h)p.vy*=-1; }
+  hctx.strokeStyle = acc; hctx.globalAlpha=.13;
+  for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){ const a=pts[i],b=pts[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy); if(d<130){hctx.globalAlpha=.13*(1-d/130);hctx.beginPath();hctx.moveTo(a.x,a.y);hctx.lineTo(b.x,b.y);hctx.stroke();} }
+  hctx.globalAlpha=.5; hctx.fillStyle=acc;
+  for(const p of pts){ hctx.beginPath(); hctx.arc(p.x,p.y,1.6,0,7); hctx.fill(); }
+  if(!reduce()) requestAnimationFrame(heroLoop);
+}
+if(reduce()){ /* draw one static frame */ heroLoop(); } else requestAnimationFrame(heroLoop);
+
+// rendering: canvas trail
+const tc = document.getElementById('trailCv'), tctx = tc.getContext('2d'); let tx=0;
+function trail(){ tctx.fillStyle='rgba(250,248,244,.14)'; tctx.fillRect(0,0,120,70); tctx.fillStyle=getComputedStyle(root).getPropertyValue('--mt-accent'); tctx.beginPath(); tctx.arc((tx%120),35+Math.sin(tx/14)*18,5,0,7); tctx.fill(); tx+=1.6; if(!reduce())requestAnimationFrame(trail); }
+if(!reduce())requestAnimationFrame(trail);
+
+// rendering: svg path draw loop
+const sig = document.getElementById('sig'), L = sig.getTotalLength();
+sig.style.strokeDasharray = L; sig.style.strokeDashoffset = L;
+function drawSig(){ sig.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:2200,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'}); }
+if(!reduce()){ drawSig(); setInterval(()=>{ sig.style.strokeDashoffset=L; drawSig(); }, 3400); } else sig.style.strokeDashoffset=0;
+
+// ma / jo-ha-kyu bars (non-uniform pacing with a meaningful pause)
+const maRow = document.getElementById('maRow'), maBtn = document.getElementById('maBtn');
+const BARS = 16;
+for(let i=0;i<BARS;i++){ const b=document.createElement('div'); b.className='ma-bar'; b.style.height='6px'; maRow.appendChild(b); }
+function joHaKyu(){
+  const bars=[...maRow.children];
+  bars.forEach(b=>b.style.height='6px');
+  if(reduce()){ bars.forEach(b=>b.style.height=(20+Math.random()*90)+'px'); return; }
+  bars.forEach((b,i)=>{
+    // 序(0-0.35 遅) → 破(0.35-0.75 加速) → 急(0.75-1 決) + 中盤に「間」
+    const t=i/(BARS-1);
+    let delay;
+    if(t<0.35) delay = t*1400;                 // 序: ゆっくり
+    else if(Math.abs(t-0.5)<0.06) delay = 900;  // 間: 静止の溜め
+    else if(t<0.75) delay = 500 + (t-0.35)*600; // 破: 加速
+    else delay = 760 + (t-0.75)*300;            // 急: 一気に決める
+    const h = 24 + Math.sin(t*Math.PI)*96;
+    b.animate([{height:'6px'},{height:h+'px'}],{duration:420,delay,easing:'cubic-bezier(.2,0,0,1)',fill:'forwards'});
+  });
+}
+maBtn.addEventListener('click', joHaKyu);
+new IntersectionObserver((e)=>{ if(e[0].isIntersecting){ joHaKyu(); } },{threshold:.5}).observe(maRow);
+
+// initial preset ball demo on first view
+new IntersectionObserver((e)=>{ if(e[0].isIntersecting){ setPreset(root.dataset.motionPreset||'snappy'); } },{threshold:.4}).observe(presetBall.parentElement);
+
+/* ============================================================
+   nature.js — 自然界の動き (boids / waveRipple / flowField)
+   ============================================================ */
+function fitCanvas(cv){ const r=cv.getBoundingClientRect(); cv.width=r.width*devicePixelRatio; cv.height=r.height*devicePixelRatio; const c=cv.getContext('2d'); c.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); return {w:r.width,h:r.height}; }
+function makeNoise(seed=1337){ const p=new Uint8Array(512),perm=[...Array(256).keys()]; let s=seed; const rnd=()=>{s=(s*1664525+1013904223)&0x7fffffff;return s/0x7fffffff;};
+  for(let i=255;i>0;i--){const j=(rnd()*(i+1))|0;[perm[i],perm[j]]=[perm[j],perm[i]];} for(let i=0;i<512;i++)p[i]=perm[i&255];
+  const fade=t=>t*t*t*(t*(t*6-15)+10),grad=(h,x,y)=>((h&1?-x:x)+(h&2?-y:y));
+  return(x,y)=>{const X=Math.floor(x)&255,Y=Math.floor(y)&255;x-=Math.floor(x);y-=Math.floor(y);const u=fade(x),v=fade(y),a=p[X]+Y,b=p[X+1]+Y,lp=(t,e,f)=>e+t*(f-e);
+    return lp(v,lp(u,grad(p[a],x,y),grad(p[b],x-1,y)),lp(u,grad(p[a+1],x,y-1),grad(p[b+1],x-1,y-1)));};}
+const accent=()=>getComputedStyle(root).getPropertyValue('--mt-accent').trim();
+
+// Boids (Reynolds 1987): separation + alignment + cohesion
+function runBoids(cv){ const D=fitCanvas(cv),ctx=cv.getContext('2d'); const W=()=>D.w,H=()=>D.h;
+  let s=7;const rnd=()=>{s=(s*1664525+1013904223)&0x7fffffff;return s/0x7fffffff;};
+  const N=reduce()?40:80, b=Array.from({length:N},()=>({x:rnd()*W(),y:rnd()*H(),vx:(rnd()-.5)*2,vy:(rnd()-.5)*2}));
+  function step(){ ctx.clearRect(0,0,W(),H());
+    for(const f of b){let sx=0,sy=0,ax=0,ay=0,cx=0,cy=0,na=0,nc=0;
+      for(const o of b){if(o===f)continue;const dx=f.x-o.x,dy=f.y-o.y,d=Math.hypot(dx,dy);
+        if(d<24&&d>0){sx+=dx/d;sy+=dy/d;} if(d<55){ax+=o.vx;ay+=o.vy;na++;} if(d<55){cx+=o.x;cy+=o.y;nc++;}}
+      f.vx+=sx*.06+(na?(ax/na-f.vx)*.04:0)+(nc?(cx/nc-f.x)*.0009:0);
+      f.vy+=sy*.06+(na?(ay/na-f.vy)*.04:0)+(nc?(cy/nc-f.y)*.0009:0);
+      const sp=Math.hypot(f.vx,f.vy);if(sp>2.4){f.vx=f.vx/sp*2.4;f.vy=f.vy/sp*2.4;}
+      f.x+=f.vx;f.y+=f.vy; if(f.x<0)f.x+=W();if(f.x>W())f.x-=W();if(f.y<0)f.y+=H();if(f.y>H())f.y-=H();}
+    ctx.fillStyle=accent();
+    for(const f of b){const a=Math.atan2(f.vy,f.vx);ctx.save();ctx.translate(f.x,f.y);ctx.rotate(a);ctx.beginPath();ctx.moveTo(5,0);ctx.lineTo(-4,3);ctx.lineTo(-4,-3);ctx.closePath();ctx.fill();ctx.restore();}
+    if(!reduce())requestAnimationFrame(step);}
+  reduce()?step():requestAnimationFrame(step);}
+
+// Wave ripple (2D wave equation) — click to drop
+function runWave(cv){ const D=fitCanvas(cv),ctx=cv.getContext('2d'),res=6;
+  const cols=Math.max(2,(D.w/res)|0),rows=Math.max(2,(D.h/res)|0); let cur=new Float32Array(cols*rows),prev=new Float32Array(cols*rows);
+  const I=(x,y)=>y*cols+x;
+  function drop(px,py,f=340){const x=Math.min(cols-2,Math.max(1,(px/res)|0)),y=Math.min(rows-2,Math.max(1,(py/res)|0));prev[I(x,y)]=f;}
+  cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();drop(e.clientX-r.left,e.clientY-r.top);});
+  function step(){ for(let y=1;y<rows-1;y++)for(let x=1;x<cols-1;x++){const v=(prev[I(x-1,y)]+prev[I(x+1,y)]+prev[I(x,y-1)]+prev[I(x,y+1)])/2-cur[I(x,y)];cur[I(x,y)]=v*.985;}
+    [cur,prev]=[prev,cur]; ctx.clearRect(0,0,D.w,D.h); const ac=accent();
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const h=cur[I(x,y)];if(Math.abs(h)<1.5)continue;ctx.globalAlpha=Math.min(1,Math.abs(h)/180);ctx.fillStyle=ac;ctx.fillRect(x*res,y*res,res,res);}
+    ctx.globalAlpha=1; if(!reduce())requestAnimationFrame(step);}
+  // auto-drop a couple as a hint
+  setTimeout(()=>drop(D.w*.5,D.h*.4),400); setTimeout(()=>drop(D.w*.35,D.h*.6),1400);
+  if(!reduce())requestAnimationFrame(step); else { drop(D.w*.5,D.h*.5); step(); }}
+
+// Flow field (curl-noise, Bridson 2007) — wind streamlines
+function runFlow(cv){ const D=fitCanvas(cv),ctx=cv.getContext('2d'),noise=makeNoise(2024),scale=.006;
+  let s=3;const rnd=()=>{s=(s*1664525+1013904223)&0x7fffffff;return s/0x7fffffff;};
+  const N=reduce()?200:560, P=Array.from({length:N},()=>({x:rnd()*D.w,y:rnd()*D.h}));
+  const bg=getComputedStyle(root).getPropertyValue('--surface').trim()||'#FAF8F4'; let t=0;
+  function ang(x,y){const e=1,n1=noise(x*scale,(y+e)*scale),n2=noise(x*scale,(y-e)*scale);return Math.atan2(n1-n2,e)*4+t;}
+  function step(){ ctx.globalAlpha=.07;ctx.fillStyle=bg;ctx.fillRect(0,0,D.w,D.h);ctx.globalAlpha=.55;ctx.fillStyle=accent();t+=.001;
+    for(const p of P){const a=ang(p.x,p.y);p.x+=Math.cos(a)*1.4;p.y+=Math.sin(a)*1.4;
+      if(p.x<0||p.x>D.w||p.y<0||p.y>D.h){p.x=rnd()*D.w;p.y=rnd()*D.h;} ctx.fillRect(p.x,p.y,1.5,1.5);}
+    ctx.globalAlpha=1; if(!reduce())requestAnimationFrame(step);}
+  if(!reduce())requestAnimationFrame(step); else { for(let k=0;k<40;k++)step(); }}
+
+// start nature demos when the section enters view (save CPU)
+let natureStarted=false;
+new IntersectionObserver((es)=>{ if(es[0].isIntersecting && !natureStarted){ natureStarted=true;
+  runBoids(document.getElementById('boidsCv'));
+  runWave(document.getElementById('waveCv'));
+  runFlow(document.getElementById('flowCv'));
+}},{threshold:.25}).observe(document.getElementById('nature'));
+</script>
+</body>
+</html>

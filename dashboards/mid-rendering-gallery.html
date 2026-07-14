@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang=ja><head><meta charset=utf-8><title>MID-DB 実行力: rendering demo gallery</title>
+<style>body{font-family:"Noto Sans JP",sans-serif;background:#fff;color:#121212;margin:0;padding:24px;max-width:1100px;margin:0 auto}
+h1{font-size:22px;border-bottom:3px solid #CC1400;padding-bottom:8px}
+.sub{color:#666;font-size:13px;margin-bottom:20px}
+.card{border:1px solid #eee;border-left:3px solid #CC1400;border-radius:4px;padding:12px 14px;margin-bottom:14px;background:#fafafa}
+.ct{font-weight:700;color:#CC1400;font-size:13px;margin-bottom:6px}.ct em{color:#999;font-style:normal;font-family:monospace;font-size:11px}
+pre{font-family:"Fira Code",monospace;font-size:11px;line-height:1.5;white-space:pre-wrap;color:#333;margin:0;overflow-x:auto}
+/* 実際に動くデモ */
+.live{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0;padding:16px;background:#f7f7f5;border-radius:6px}
+.spin{width:40px;height:40px;border-radius:50%;background:conic-gradient(from 0deg,transparent,#CC1400);-webkit-mask:radial-gradient(farthest-side,transparent 60%,#000 61%);mask:radial-gradient(farthest-side,transparent 60%,#000 61%);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(1turn)}}
+.glass{background:rgba(204,20,0,.15);backdrop-filter:blur(8px);border:1px solid rgba(204,20,0,.3);padding:16px;border-radius:6px}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}</style></head><body>
+<h1>MID-DB 実行力 — rendering demo gallery</h1>
+<p class=sub>実行層 rendering の完全動作コード(112/115 full-runnable)。下は実際に動くライブデモ + 全 css/waapi/canvas/svg のコード。</p>
+<div class=live>
+  <div><div style=font-size:11px;color:#666>Conic spinner(live)</div><div class=spin></div></div>
+  <div class=glass>Backdrop filter glass(live)</div>
+  <canvas id=cv width=120 height=60 style=border:1px solid #ddd></canvas>
+  <svg width=120 height=60><path d="M10 50 Q 60 5 110 50" stroke=#CC1400 fill=none stroke-width=2 stroke-dasharray=140 stroke-dashoffset=140><animate attributeName=stroke-dashoffset from=140 to=0 dur=2s repeatCount=indefinite/></path></svg>
+</div>
+<script>const ctx=document.getElementById('cv').getContext('2d');let x=0;
+(function loop(){ctx.fillStyle='rgba(255,255,255,.15)';ctx.fillRect(0,0,120,60);ctx.fillStyle='#CC1400';ctx.beginPath();ctx.arc(x%120,30,5,0,7);ctx.fill();x+=1.5;requestAnimationFrame(loop)})();</script>
+<h2 style=font-size:15px;border-bottom:1px solid #eee;padding-bottom:6px>全コード(copy-pasteable)</h2>
+<div class=card><div class=ct>RAF Loop <em>canvas</em></div><pre>// Canvas rAF loop with delta time (fps-independent)
+let last=performance.now(),raf;
+function frame(now){const dt=(now-last)/1000;last=now;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  x+=vel*dt; ctx.fillRect(x,y,10,10);
+  raf=requestAnimationFrame(frame);}
+raf=requestAnimationFrame(frame); // cancelAnimationFrame(raf) to stop</pre></div><div class=card><div class=ct>Particle System (canvas) <em>canvas</em></div><pre>// Canvas particle system
+const ps=Array.from({length:200},()=&gt;({x:W/2,y:H/2,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:1}));
+function tick(){ctx.clearRect(0,0,W,H);for(const p of ps){p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.life-=.01;ctx.globalAlpha=Math.max(0,p.life);ctx.fillRect(p.x,p.y,3,3)}requestAnimationFrame(tick)}tick();</pre></div><div class=card><div class=ct>Trail Effect <em>canvas</em></div><pre>// Canvas trail effect (fade previous frame)
+function tick(){ctx.fillStyle=&#x27;rgba(255,255,255,.12)&#x27;;ctx.fillRect(0,0,W,H); // semi-clear = trail
+  ctx.fillStyle=&#x27;#CC1400&#x27;;ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();
+  requestAnimationFrame(tick)}tick();</pre></div><div class=card><div class=ct>OffscreenCanvas Worker <em>canvas</em></div><pre>// OffscreenCanvas in a Worker (main-thread-free rendering)
+// main.js:
+const off=cv.transferControlToOffscreen();
+worker.postMessage({canvas:off},[off]);
+// worker.js:
+onmessage=e=&gt;{const ctx=e.data.canvas.getContext(&#x27;2d&#x27;);
+  (function loop(){/* draw */;requestAnimationFrame(loop)})();};</pre></div><div class=card><div class=ct>globalCompositeOperation <em>canvas</em></div><pre>// Canvas blend modes (glow/multiply)
+ctx.globalCompositeOperation=&#x27;lighter&#x27;; // additive glow
+particles.forEach(p=&gt;{ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill()});
+ctx.globalCompositeOperation=&#x27;source-over&#x27;; // reset</pre></div><div class=card><div class=ct>shadowBlur <em>canvas</em></div><pre>// Canvas soft shadow / glow
+ctx.shadowColor=&#x27;rgba(204,20,0,.6)&#x27;;ctx.shadowBlur=20;
+ctx.shadowOffsetX=0;ctx.shadowOffsetY=4;
+ctx.fillStyle=&#x27;#fff&#x27;;ctx.fillRect(x,y,w,h);
+ctx.shadowBlur=0; // reset (shadowBlur is costly — use sparingly)</pre></div><div class=card><div class=ct>Canvas Gradient &amp; Pattern <em>canvas</em></div><pre>// Canvas gradient + pattern fill
+const g=ctx.createLinearGradient(0,0,0,H);
+g.addColorStop(0,&#x27;#CC1400&#x27;);g.addColorStop(1,&#x27;#fff&#x27;);
+ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+// radial: ctx.createRadialGradient(cx,cy,0,cx,cy,r)</pre></div><div class=card><div class=ct>Path2D + Hit Region <em>canvas</em></div><pre>// Path2D + hit testing (interactive shapes)
+const p=new Path2D();p.arc(cx,cy,40,0,Math.PI*2);ctx.fill(p);
+cv.addEventListener(&#x27;pointermove&#x27;,e=&gt;{
+  const r=cv.getBoundingClientRect();
+  if(ctx.isPointInPath(p,e.clientX-r.left,e.clientY-r.top)) hover();});</pre></div><div class=card><div class=ct>Smooth Fade Translate <em>css</em></div><pre>/* Smooth fade+translate on enter */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .5s cubic-bezier(0,0,.58,1),transform .5s cubic-bezier(0,0,.58,1)}
+.fade-up.in{opacity:1;transform:none}
+// JS: el.classList.add(&#x27;in&#x27;) when in view (IntersectionObserver)</pre></div><div class=card><div class=ct>Clip-Path Reveal <em>css</em></div><pre>/* Clip-path circle reveal */
+.reveal{clip-path:circle(0% at 50% 50%);transition:clip-path .6s cubic-bezier(.2,0,0,1)}
+.reveal.show{clip-path:circle(75% at 50% 50%)}
+/* wipe variant: inset(0 100% 0 0) -&gt; inset(0 0 0 0) */</pre></div><div class=card><div class=ct>Mask Gradient Reveal <em>css</em></div><pre>/* Mask gradient reveal (text/img wipe) */
+.mask-in{--p:0%;-webkit-mask:linear-gradient(90deg,#000 var(--p),transparent 0);mask:linear-gradient(90deg,#000 var(--p),transparent 0);transition:--p .8s ease}
+.mask-in.show{--p:100%}
+@property --p{syntax:&#x27;&lt;percentage&gt;&#x27;;inherits:false;initial-value:0%}</pre></div><div class=card><div class=ct>Backdrop Filter <em>css</em></div><pre>/* Frosted glass backdrop */
+.glass{background:rgba(255,255,255,.6);backdrop-filter:blur(12px) saturate(1.4);-webkit-backdrop-filter:blur(12px) saturate(1.4);border:1px solid rgba(255,255,255,.3)}
+/* dark: rgba(20,20,20,.5) */</pre></div><div class=card><div class=ct>Conic Gradient Spin <em>css</em></div><pre>/* Conic gradient spinner */
+.spin{width:40px;height:40px;border-radius:50%;background:conic-gradient(from 0deg,transparent,#CC1400);-webkit-mask:radial-gradient(farthest-side,transparent 60%,#000 61%);mask:radial-gradient(farthest-side,transparent 60%,#000 61%);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(1turn)}}</pre></div><div class=card><div class=ct>Blur-to-Focus <em>css</em></div><pre>/* Blur-to-focus progressive load (LQIP) */
+.blur-up{filter:blur(20px);transform:scale(1.05);transition:filter .6s ease,transform .6s ease}
+.blur-up.loaded{filter:blur(0);transform:none}
+// img.onload = () =&gt; img.classList.add(&#x27;loaded&#x27;)</pre></div><div class=card><div class=ct>Line Draw (dashoffset) <em>svg</em></div><pre>&lt;!-- SVG line draw (signature/path animation) --&gt;
+&lt;path d=&quot;M10 50 Q 95 10 180 50&quot; stroke=&quot;#CC1400&quot; fill=&quot;none&quot;
+ stroke-dasharray=&quot;200&quot; stroke-dashoffset=&quot;200&quot;&gt;
+ &lt;animate attributeName=&quot;stroke-dashoffset&quot; from=&quot;200&quot; to=&quot;0&quot;
+  dur=&quot;2s&quot; fill=&quot;freeze&quot;/&gt;&lt;/path&gt;
+&lt;!-- CSS: transition:stroke-dashoffset .. ; length via getTotalLength() --&gt;</pre></div><div class=card><div class=ct>SVG Path Morph <em>svg</em></div><pre>// SVG path morph (equal point counts required)
+// use flubber for arbitrary shapes:
+import {interpolate} from &#x27;flubber&#x27;;
+const morph=interpolate(pathA,pathB,{maxSegmentLength:2});
+el.animate([{},{},],{duration:800}); // drive t 0-&gt;1, set d=morph(t)</pre></div><div class=card><div class=ct>feTurbulence Displacement <em>svg</em></div><pre>&lt;!-- SVG turbulence displacement (organic wobble) --&gt;
+&lt;filter id=&quot;wob&quot;&gt;&lt;feTurbulence type=&quot;fractalNoise&quot; baseFrequency=&quot;0.02&quot;
+  numOctaves=&quot;2&quot; result=&quot;n&quot;&gt;&lt;animate attributeName=&quot;baseFrequency&quot;
+  values=&quot;0.02;0.04;0.02&quot; dur=&quot;6s&quot; repeatCount=&quot;indefinite&quot;/&gt;&lt;/feTurbulence&gt;
+ &lt;feDisplacementMap in=&quot;SourceGraphic&quot; in2=&quot;n&quot; scale=&quot;12&quot;/&gt;&lt;/filter&gt;</pre></div><div class=card><div class=ct>SMIL animate (legacy) <em>svg</em></div><pre>&lt;!-- SMIL animate (declarative, no JS) --&gt;
+&lt;circle r=&quot;10&quot; cx=&quot;20&quot; cy=&quot;50&quot; fill=&quot;#CC1400&quot;&gt;
+ &lt;animate attributeName=&quot;cx&quot; from=&quot;20&quot; to=&quot;180&quot; dur=&quot;1.5s&quot;
+  repeatCount=&quot;indefinite&quot; calcMode=&quot;spline&quot;
+  keyTimes=&quot;0;1&quot; keySplines=&quot;0.2 0 0 1&quot;/&gt;&lt;/circle&gt;</pre></div><div class=card><div class=ct>Gooey (feGaussianBlur+feColorMatrix) <em>svg</em></div><pre>&lt;!-- Gooey / metaball filter (sticky blob merge) --&gt;
+&lt;filter id=&quot;goo&quot;&gt;&lt;feGaussianBlur in=&quot;SourceGraphic&quot; stdDeviation=&quot;8&quot; result=&quot;b&quot;/&gt;
+ &lt;feColorMatrix in=&quot;b&quot; mode=&quot;matrix&quot;
+  values=&quot;1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7&quot;/&gt;&lt;/filter&gt;
+&lt;g filter=&quot;url(#goo)&quot;&gt;&lt;!-- overlapping circles merge --&gt;&lt;/g&gt;</pre></div><div class=card><div class=ct>clipPath animate <em>svg</em></div><pre>&lt;!-- Animated clipPath reveal --&gt;
+&lt;clipPath id=&quot;cp&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;0&quot; height=&quot;100&quot;&gt;
+ &lt;animate attributeName=&quot;width&quot; from=&quot;0&quot; to=&quot;200&quot; dur=&quot;1s&quot; fill=&quot;freeze&quot;/&gt;
+&lt;/rect&gt;&lt;/clipPath&gt;
+&lt;image clip-path=&quot;url(#cp)&quot; href=&quot;...&quot; width=&quot;200&quot; height=&quot;100&quot;/&gt;</pre></div><div class=card><div class=ct>SVG Filter Chain <em>svg</em></div><pre>&lt;!-- SVG filter chain (blur-&gt;offset-&gt;merge = drop shadow) --&gt;
+&lt;filter id=&quot;ds&quot;&gt;&lt;feGaussianBlur in=&quot;SourceAlpha&quot; stdDeviation=&quot;3&quot;/&gt;
+ &lt;feOffset dx=&quot;0&quot; dy=&quot;4&quot; result=&quot;o&quot;/&gt;
+ &lt;feMerge&gt;&lt;feMergeNode in=&quot;o&quot;/&gt;&lt;feMergeNode in=&quot;SourceGraphic&quot;/&gt;&lt;/feMerge&gt;
+&lt;/filter&gt;</pre></div><div class=card><div class=ct>Element.animate (WAAPI) <em>waapi</em></div><pre>// WAAPI: element.animate keyframes + options
+const a = el.animate(
+  [{opacity:0,transform:&#x27;translateY(20px)&#x27;},{opacity:1,transform:&#x27;none&#x27;}],
+  {duration:400,easing:&#x27;cubic-bezier(0,0,.58,1)&#x27;,fill:&#x27;forwards&#x27;});
+a.finished.then(()=&gt;{}); // returns Animation (pause/reverse/cancel)</pre></div><div class=card><div class=ct>Composite Additive <em>waapi</em></div><pre>// WAAPI additive composite (stack transforms without overwrite)
+el.animate([{transform:&#x27;translateX(0)&#x27;},{transform:&#x27;translateX(50px)&#x27;}],
+  {duration:300,composite:&#x27;add&#x27;,fill:&#x27;forwards&#x27;});
+// &#x27;add&#x27; layers onto existing transform instead of replacing</pre></div><div class=card><div class=ct>playbackRate Control <em>waapi</em></div><pre>// WAAPI dynamic speed control (slow-mo / scrub)
+const a = el.animate(keyframes,{duration:1000,iterations:Infinity});
+a.playbackRate = 0.3;           // slow motion
+a.updatePlaybackRate(2);        // smooth ramp
+a.currentTime = 500;            // scrub to 50%</pre></div></body></html>
