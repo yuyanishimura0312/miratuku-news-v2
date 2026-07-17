@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海外大学・研究機関データ ダッシュボード — World Research Institution DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555555;
+  --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE;
+  --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --mono:"Fira Code",SFMono-Regular,Menlo,monospace;
+  --bar:#CC1400; --bar-track:#EFEDEA;
+}
+[data-theme="dark"]{
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222222;
+  --accent:#E0E0E0; --accent-soft:#AAAAAA;
+  --accent-warm:#FF4030; --accent-warm-soft:#FF6552; --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A;
+  --border:#333333; --border-light:#2A2A2A;
+  --surface:#1A1A1A;
+  --bar:#FF4030; --bar-track:#262626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.025em;font-feature-settings:"palt";transition:background .3s,color .3s;-webkit-font-smoothing:antialiased}
+/* top bar */
+.top-bar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--bg);border-top:3px solid var(--accent-warm);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.brand{font-weight:900;font-size:14px;letter-spacing:.04em}
+.brand .warm{color:var(--accent-warm)}
+.brand small{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:8px;letter-spacing:.08em}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:2px;padding:5px 12px;font-family:var(--font);font-size:11px;cursor:pointer;letter-spacing:.1em}
+.theme-toggle:hover{border-color:var(--accent-warm);color:var(--accent-warm)}
+/* layout */
+.wrap{display:flex;max-width:1280px;margin:0 auto;padding-top:48px}
+.toc{position:sticky;top:48px;align-self:flex-start;width:240px;flex-shrink:0;padding:40px 16px 40px 24px;height:calc(100vh - 48px);overflow-y:auto}
+.toc h4{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px}
+.toc a{display:block;color:var(--text-secondary);text-decoration:none;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border-light);transition:color .15s}
+.toc a:hover{color:var(--accent-warm)}
+.toc a .n{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-right:8px}
+main{flex:1;min-width:0;padding:40px 40px 120px;max-width:860px}
+/* hero */
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-warm);font-weight:700;margin-bottom:14px}
+h1{font-size:clamp(26px,4vw,40px);font-weight:900;line-height:1.28;letter-spacing:-.01em;margin-bottom:18px}
+.lead{font-size:16px;color:var(--text-secondary);max-width:60ch;margin-bottom:8px}
+.src-note{font-size:12px;color:var(--text-muted);margin-top:16px;font-family:var(--mono)}
+section{margin-top:72px;scroll-margin-top:64px}
+section.first{margin-top:44px}
+h2{font-size:22px;font-weight:900;letter-spacing:-.01em;margin-bottom:6px;padding-bottom:0}
+h2 .num{font-family:var(--mono);font-size:14px;color:var(--accent-warm);margin-right:12px}
+.sec-sub{font-size:13px;color:var(--text-muted);margin-bottom:26px;border-bottom:1px solid var(--border);padding-bottom:18px}
+/* KPI grid */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.kpi{background:var(--surface);border:1px solid var(--border-light);border-radius:3px;padding:20px 18px}
+.kpi .v{font-size:30px;font-weight:900;letter-spacing:-.02em;font-family:var(--mono)}
+.kpi .v .warm{color:var(--accent-warm)}
+.kpi .l{font-size:11px;color:var(--text-muted);margin-top:4px;letter-spacing:.03em}
+/* bars */
+.bars{margin-top:10px}
+.bar-row{display:grid;grid-template-columns:150px 1fr 74px;align-items:center;gap:12px;padding:5px 0}
+.bar-row .lbl{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .lbl .flag{font-family:var(--mono);color:var(--text-muted);font-size:11px;margin-right:6px}
+.bar-track{background:var(--bar-track);border-radius:2px;height:14px;overflow:hidden}
+.bar-fill{background:var(--bar);height:100%;border-radius:2px;transition:width .8s cubic-bezier(.16,1,.3,1)}
+.bar-row .val{font-family:var(--mono);font-size:12px;color:var(--text-secondary);text-align:right}
+/* table */
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border-light)}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border)}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tbody tr:hover{background:var(--card-hover)}
+.rank{font-family:var(--mono);color:var(--accent-warm);font-weight:700;width:28px}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:2px;background:var(--accent-muted);color:var(--accent-warm);font-weight:500;letter-spacing:.03em}
+.cc{font-family:var(--mono);font-size:11px;color:var(--text-muted)}
+/* donut / type */
+.type-grid{display:grid;grid-template-columns:200px 1fr;gap:32px;align-items:center;margin-top:24px}
+.legend{display:flex;flex-direction:column;gap:10px}
+.legend .item{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;font-size:13px}
+.legend .sw{width:14px;height:14px;border-radius:2px}
+.legend .pct{font-family:var(--mono);font-size:12px;color:var(--text-secondary)}
+/* region cards */
+.region-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+.rcard{background:var(--surface);border:1px solid var(--border-light);border-radius:3px;padding:16px 16px}
+.rcard .rn{font-size:13px;font-weight:700;margin-bottom:8px}
+.rcard .rv{font-size:22px;font-weight:900;font-family:var(--mono)}
+.rcard .rp{font-size:11px;color:var(--text-muted)}
+.rcard .rbar{height:4px;background:var(--bar-track);border-radius:2px;margin-top:10px;overflow:hidden}
+.rcard .rbar span{display:block;height:100%;background:var(--bar)}
+/* other db list */
+.dblist{margin-top:22px;display:flex;flex-direction:column;gap:0}
+.dbrow{display:grid;grid-template-columns:1fr auto;gap:16px;padding:16px 0;border-bottom:1px solid var(--border-light)}
+.dbrow .dn{font-weight:700;font-size:14px}
+.dbrow .dn .warm{color:var(--accent-warm)}
+.dbrow .dd{font-size:12.5px;color:var(--text-secondary);margin-top:4px;max-width:56ch}
+.dbrow .dm{font-family:var(--mono);font-size:12px;color:var(--text-muted);text-align:right;white-space:nowrap}
+.note{background:var(--accent-muted);border-left:3px solid var(--accent-warm);padding:14px 18px;font-size:13px;color:var(--text-secondary);margin-top:22px;border-radius:0 3px 3px 0}
+.note b{color:var(--text)}
+footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);line-height:1.9}
+footer .mono{font-family:var(--mono)}
+@media (max-width:1000px){
+  .toc{display:none}
+  main{padding:32px 20px 100px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .region-grid{grid-template-columns:1fr}
+  .type-grid{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:110px 1fr 60px}
+}
+@media print{
+  .top-bar,.toc,.theme-toggle{display:none}
+  main{max-width:100%}
+  body{padding-top:0}
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">世界の研究機関 <span class="warm">データベース</span><small>WORLD RESEARCH INSTITUTION DB</small></div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="tt">DARK</button>
+</div>
+
+<div class="wrap">
+<nav class="toc">
+  <h4>目次</h4>
+  <a href="#overview"><span class="n">01</span>全体像</a>
+  <a href="#country"><span class="n">02</span>国別分布</a>
+  <a href="#region"><span class="n">03</span>地域別</a>
+  <a href="#type"><span class="n">04</span>機関種別</a>
+  <a href="#top"><span class="n">05</span>被引用トップ機関</a>
+  <a href="#field"><span class="n">06</span>研究分野</a>
+  <a href="#era"><span class="n">07</span>設立年代</a>
+  <a href="#others"><span class="n">08</span>関連DB</a>
+</nav>
+
+<main>
+  <div class="eyebrow">RESEARCH DATA INVENTORY / 海外機関データ棚卸し</div>
+  <h1>海外の大学・研究機関データ<br>ダッシュボード</h1>
+  <p class="lead">ミラツク／esse-sense が保有する非日本の大学・研究機関の実データを、国・地域・種別・研究規模の各面から可視化する。主データは <b>World Research Institution DB（WRI）</b>。ROR ID を主キーに、OpenAlex 由来の論文数・被引用数・h指数をエンリッチ済み。</p>
+  <p class="src-note">出典: world_research_institution.db（institution 表, 非JP 抽出）／ 集計実測値 2026-07-17</p>
+
+  <!-- 01 -->
+  <section class="first" id="overview">
+    <h2><span class="num">01</span>全体像</h2>
+    <p class="sec-sub">日本を除く世界の研究機関を、単一の名簿として保持する。企業研究所・病院を含む「研究活動を行う組織」全体を対象とする。</p>
+    <div class="kpis">
+      <div class="kpi"><div class="v"><span class="warm">115,166</span></div><div class="l">海外機関（非日本）</div></div>
+      <div class="kpi"><div class="v">232</div><div class="l">カバー国・地域</div></div>
+      <div class="kpi"><div class="v">78,584</div><div class="l">被引用数エンリッチ済</div></div>
+      <div class="kpi"><div class="v">22,679</div><div class="l">うち「大学」種別</div></div>
+    </div>
+    <div class="note"><b>データの性格</b> — 各機関に ROR ID（研究組織の国際識別子）を付与し、OpenAlex の論文数・被引用数・h指数を紐付け。被引用数の付与率は68%（78,584/115,166）、設立年は84%が判明。研究規模での比較・抽出が可能な名簿である。</div>
+  </section>
+
+  <!-- 02 -->
+  <section id="country">
+    <h2><span class="num">02</span>国別分布</h2>
+    <p class="sec-sub">上位25カ国。米国が全体の28%を占め突出、次いで西欧（英・仏・独）と中国が続く。</p>
+    <div class="bars" id="countryBars"></div>
+  </section>
+
+  <!-- 03 -->
+  <section id="region">
+    <h2><span class="num">03</span>地域別</h2>
+    <p class="sec-sub">大陸圏での分布。欧州と北米で全体の約71%を占める。</p>
+    <div class="region-grid" id="regionGrid"></div>
+  </section>
+
+  <!-- 04 -->
+  <section id="type">
+    <h2><span class="num">04</span>機関種別</h2>
+    <p class="sec-sub">「大学」だけでなく、独立研究所・企業研究所・病院を含む。研究所と企業研究所を合わせると58%に達する。</p>
+    <div class="type-grid">
+      <svg viewBox="0 0 200 200" width="200" height="200" id="donut" role="img" aria-label="機関種別ドーナツ図"></svg>
+      <div class="legend" id="typeLegend"></div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="top">
+    <h2><span class="num">05</span>被引用トップ機関</h2>
+    <p class="sec-sub">累積被引用数（OpenAlex cited_by_count）上位30機関。フランスCNRS・ハーバード・中国科学院が上位を占める。</p>
+    <table>
+      <thead><tr><th class="rank">#</th><th>機関名</th><th>国</th><th>種別</th><th class="num">被引用数</th><th class="num">h指数</th></tr></thead>
+      <tbody id="topTable"></tbody>
+    </table>
+  </section>
+
+  <!-- 06 -->
+  <section id="field">
+    <h2><span class="num">06</span>研究分野</h2>
+    <p class="sec-sub">機関が研究活動を持つ分野（OpenAlex分野、機関ごと重複あり）。医学・工学・社会科学が広く分布。</p>
+    <div class="bars" id="fieldBars"></div>
+  </section>
+
+  <!-- 07 -->
+  <section id="era">
+    <h2><span class="num">07</span>設立年代</h2>
+    <p class="sec-sub">設立年が判明する機関（84%）の年代分布。1950年以降の設立が大半を占め、研究機関の増加は戦後現象であることが読み取れる。</p>
+    <div class="bars" id="eraBars"></div>
+  </section>
+
+  <!-- 08 -->
+  <section id="others">
+    <h2><span class="num">08</span>関連DB（海外機関を扱う他基盤）</h2>
+    <p class="sec-sub">WRI 以外にも海外機関・研究活動を保持するDBがある。用途に応じて使い分ける。</p>
+    <div class="dblist">
+      <div class="dbrow">
+        <div><div class="dn">GRP-DB International <span class="badge">プレスリリース</span></div><div class="dd">海外機関の部局単位プレスリリース素材基盤。ROR ID主キー。研究成果の一次発信（プレス）が必要な場合の主力。</div></div>
+        <div class="dm">67,506 機関<br>229ヶ国 / PR 15,306</div>
+      </div>
+      <div class="dbrow">
+        <div><div class="dn">Academic Landscape DB <span class="badge">学術活動</span></div><div class="dd">機関ではなく学会・ジャーナル・国際会議のランドスケープ。海外の研究活動網の網羅に強い。</div></div>
+        <div class="dm">学会 62,379<br>雑誌 233,779</div>
+      </div>
+      <div class="dbrow">
+        <div><div class="dn">World R&amp;D Budget DB <span class="badge">マクロ統計</span></div><div class="dd">機関単位ではなく、国別R&amp;D予算の時系列。国レベルの投資規模を見るための基盤。</div></div>
+        <div class="dm">188ヶ国<br>時系列 11,460</div>
+      </div>
+      <div class="dbrow">
+        <div><div class="dn">Dubai R&amp;D Strategy DB <span class="badge">戦略キュレーション</span></div><div class="dd">ドバイ・UAEに特化した戦略参照資料。網羅DBではなく esse-sense 海外戦略の小規模リファレンス。</div></div>
+        <div class="dm">機関 10<br>戦略 10</div>
+      </div>
+    </div>
+    <div class="note"><b>空白領域</b> — ①海外研究者の個人プロファイルが薄い（国内31.1万人版に相当する海外研究者名簿は未整備、GRP-intlの12,441名のみ）。②海外の大学発スタートアップは未整備（大学発SU DBは日本専用）。③Dubai以外の国別R&amp;D戦略の機関レベル深掘りは薄い。</div>
+  </section>
+
+  <footer>
+    <div>主データ: <span class="mono">world_research_institution.db</span> — World Research Institution DB（WRI）／ 非日本 115,166機関 / 232ヶ国</div>
+    <div>補助: GRP-DB International・Academic Landscape DB・World R&amp;D Budget DB・Dubai R&amp;D Strategy DB</div>
+    <div>NPO法人ミラツク ／ esse-sense — 集計実測値 2026-07-17 ／ 数値は全て実DB照合値・捏造ゼロ</div>
+  </footer>
+</main>
+</div>
+
+<script>
+// ===== data (実DB集計値) =====
+const TOTAL=115166;
+const countries=[
+ ["US",32683],["GB",7688],["FR",5706],["DE",5537],["CN",5153],["IN",3911],
+ ["CA",3740],["CZ",2851],["PT",2371],["IT",2259],["RU",2142],["ES",2107],
+ ["BR",2005],["KR",1975],["NO",1946],["CH",1818],["NL",1773],["AU",1604],
+ ["SE",1544],["PL",1280],["ID",1093],["BE",998],["MX",909],["AT",813],["FI",813]
+];
+const cname={US:"アメリカ",GB:"イギリス",FR:"フランス",DE:"ドイツ",CN:"中国",IN:"インド",CA:"カナダ",CZ:"チェコ",PT:"ポルトガル",IT:"イタリア",RU:"ロシア",ES:"スペイン",BR:"ブラジル",KR:"韓国",NO:"ノルウェー",CH:"スイス",NL:"オランダ",AU:"オーストラリア",SE:"スウェーデン",PL:"ポーランド",ID:"インドネシア",BE:"ベルギー",MX:"メキシコ",AT:"オーストリア",FI:"フィンランド"};
+const regions=[
+ ["Europe","欧州",44237],["North America","北米",37332],["Other","その他",8690],
+ ["East Asia","東アジア",8093],["South Asia","南アジア",4981],["South America","南米",3412],
+ ["Southeast Asia","東南アジア",2657],["Africa","アフリカ",1990],["Oceania","オセアニア",1908],["Middle East","中東",1848]
+];
+const types=[
+ ["research_institute","独立研究所",36023,"#CC1400"],
+ ["company_lab","企業研究所",30551,"#8A2A20"],
+ ["university","大学",22679,"#E86A5C"],
+ ["hospital","病院",13186,"#B8860B"],
+ ["other","その他",12727,"#9AA0A6"]
+];
+const top=[
+ ["Centre National de la Recherche Scientifique (CNRS)","FR","研究所",172734414,2455],
+ ["Harvard University","US","大学",143100410,2762],
+ ["Chinese Academy of Sciences","CN","研究所",112636014,1640],
+ ["University of Washington","US","大学",94036781,3571],
+ ["Stanford University","US","大学",86753778,2474],
+ ["Johns Hopkins University","US","大学",76275585,2254],
+ ["Inserm","FR","研究所",75858564,1925],
+ ["National Institutes of Health","US","研究所",69026612,2399],
+ ["University of Michigan","US","大学",65996185,2076],
+ ["University College London","GB","大学",65199605,2060],
+ ["Massachusetts Institute of Technology (MIT)","US","大学",64210995,2254],
+ ["University of Oxford","GB","大学",62871367,2063],
+ ["University of Toronto","CA","大学",58216513,1775],
+ ["Cornell University","US","大学",56241077,1847],
+ ["University of California, Berkeley","US","大学",55919134,1864],
+ ["University of Pennsylvania","US","大学",54521755,1741],
+ ["University of Cambridge","GB","大学",53279391,1815],
+ ["CERN (欧州原子核研究機構)","CH","研究所",52611362,1512],
+ ["Yale University","US","大学",51599906,1796],
+ ["University of California, Los Angeles (UCLA)","US","大学",51538855,1633],
+ ["University of California San Diego","US","大学",50314446,1735],
+ ["University of California, San Francisco","US","大学",48942276,1692],
+ ["Massachusetts General Hospital","US","病院",48713584,1955],
+ ["Columbia University","US","大学",47030242,1722],
+ ["Howard Hughes Medical Institute","US","研究所",43746581,1915],
+ ["University of Wisconsin–Madison","US","大学",43033253,1423],
+ ["Institute for Health Metrics and Evaluation","US","研究所",42471725,3712],
+ ["Heidelberg University","DE","大学",42325242,1595],
+ ["Brigham and Women's Hospital","US","病院",41901503,1791],
+ ["Imperial College London","GB","大学",41744189,1545]
+];
+const fields=[
+ ["医学",45641],["工学",36893],["社会科学",33091],["生化学・遺伝・分子生物学",31757],
+ ["環境科学",28834],["計算機科学",26681],["農学・生物学",23270],["医療専門職",21810],
+ ["心理学",18148],["経済・計量経済・金融",17650],["材料科学",16644],["経営・管理・会計",15639],
+ ["地球・惑星科学",15494],["物理・天文学",15210],["人文・芸術",13596],["免疫・微生物学",12141],
+ ["神経科学",11333],["化学",10170],["意思決定科学",9716],["エネルギー",6908]
+];
+const eras=[
+ ["~1499年",179],["1500-1799",899],["1800-1899",6877],
+ ["1900-1949",12596],["1950-1999",46182],["2000年~",29596]
+];
+const fmt=n=>n.toLocaleString('en-US');
+
+// ===== country bars =====
+(function(){
+ const max=countries[0][1];
+ document.getElementById('countryBars').innerHTML=countries.map(([c,v])=>`
+  <div class="bar-row">
+    <div class="lbl"><span class="flag">${c}</span>${cname[c]||c}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:0" data-w="${(v/max*100).toFixed(1)}"></div></div>
+    <div class="val">${fmt(v)}</div>
+  </div>`).join('');
+})();
+
+// ===== region grid =====
+(function(){
+ const max=regions[0][2];
+ document.getElementById('regionGrid').innerHTML=regions.map(([e,ja,v])=>`
+  <div class="rcard">
+    <div class="rn">${ja}</div>
+    <div class="rv">${fmt(v)}</div>
+    <div class="rp">${(v/TOTAL*100).toFixed(1)}% ・ ${e}</div>
+    <div class="rbar"><span style="width:${(v/max*100).toFixed(1)}%"></span></div>
+  </div>`).join('');
+})();
+
+// ===== donut =====
+(function(){
+ const sum=types.reduce((a,t)=>a+t[2],0);
+ let acc=0;const R=70,C=2*Math.PI*R,cx=100,cy=100;
+ const svg=document.getElementById('donut');
+ let parts='';
+ types.forEach(([k,ja,v,col])=>{
+   const frac=v/sum, len=C*frac, off=C*acc;
+   parts+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${col}" stroke-width="30"
+     stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"><title>${ja} ${(frac*100).toFixed(1)}%</title></circle>`;
+   acc+=frac;
+ });
+ svg.innerHTML=parts+`<text x="100" y="95" text-anchor="middle" font-size="15" font-weight="900" fill="var(--text)" font-family="var(--mono)">115,166</text><text x="100" y="112" text-anchor="middle" font-size="9" fill="var(--text-muted)">機関</text>`;
+ document.getElementById('typeLegend').innerHTML=types.map(([k,ja,v,col])=>`
+  <div class="item"><span class="sw" style="background:${col}"></span><span>${ja}</span><span class="pct">${fmt(v)}　${(v/sum*100).toFixed(1)}%</span></div>`).join('');
+})();
+
+// ===== top table =====
+(function(){
+ document.getElementById('topTable').innerHTML=top.map((r,i)=>`
+  <tr><td class="rank">${i+1}</td><td>${r[0]}</td><td class="cc">${r[1]}</td>
+  <td><span class="badge">${r[2]}</span></td><td class="num">${fmt(r[3])}</td><td class="num">${fmt(r[4])}</td></tr>`).join('');
+})();
+
+// ===== field bars =====
+(function(){
+ const max=fields[0][1];
+ document.getElementById('fieldBars').innerHTML=fields.map(([ja,v])=>`
+  <div class="bar-row">
+    <div class="lbl">${ja}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:0" data-w="${(v/max*100).toFixed(1)}"></div></div>
+    <div class="val">${fmt(v)}</div>
+  </div>`).join('');
+})();
+
+// ===== era bars =====
+(function(){
+ const max=Math.max(...eras.map(e=>e[1]));
+ document.getElementById('eraBars').innerHTML=eras.map(([ja,v])=>`
+  <div class="bar-row">
+    <div class="lbl">${ja}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:0" data-w="${(v/max*100).toFixed(1)}"></div></div>
+    <div class="val">${fmt(v)}</div>
+  </div>`).join('');
+})();
+
+// ===== animate bars on view =====
+const io=new IntersectionObserver((es)=>{
+ es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.w+'%');io.unobserve(e.target);}});
+},{threshold:.15});
+document.querySelectorAll('.bars').forEach(b=>io.observe(b));
+
+// ===== theme =====
+function toggleTheme(){
+ const h=document.documentElement,d=h.getAttribute('data-theme')==='dark';
+ h.setAttribute('data-theme',d?'light':'dark');
+ document.getElementById('tt').textContent=d?'DARK':'LIGHT';
+ try{localStorage.setItem('wri-theme',d?'light':'dark')}catch(e){}
+}
+(function(){try{const t=localStorage.getItem('wri-theme');if(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('tt').textContent=t==='dark'?'LIGHT':'DARK';}}catch(e){}})();
+</script>
+</body>
+</html>
