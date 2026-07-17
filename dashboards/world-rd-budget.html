@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界のR&D予算データ — World R&D Budget DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555555;
+  --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE; --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --mono:"Fira Code",SFMono-Regular,Menlo,monospace;
+  --bar:#CC1400; --bar-track:#EFEDEA;
+}
+[data-theme="dark"]{
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222222;
+  --accent:#E0E0E0; --accent-soft:#AAAAAA;
+  --accent-warm:#FF4030; --accent-warm-soft:#FF6552; --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A;
+  --border:#333333; --border-light:#2A2A2A; --surface:#1A1A1A;
+  --bar:#FF4030; --bar-track:#262626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.025em;font-feature-settings:"palt";transition:background .3s,color .3s;-webkit-font-smoothing:antialiased;padding-top:48px}
+.top-bar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--bg);border-top:3px solid var(--accent-warm);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.brand{font-weight:900;font-size:14px;letter-spacing:.04em}
+.brand .warm{color:var(--accent-warm)}
+.brand small{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:8px;letter-spacing:.08em}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:2px;padding:5px 12px;font-family:var(--font);font-size:11px;cursor:pointer;letter-spacing:.1em}
+.theme-toggle:hover{border-color:var(--accent-warm);color:var(--accent-warm)}
+.xnav{display:flex;gap:0;flex-wrap:wrap;max-width:1280px;margin:0 auto;padding:14px 24px 0;border-bottom:1px solid var(--border-light)}
+.xnav a{font-size:12px;color:var(--text-secondary);text-decoration:none;padding:8px 14px;border-bottom:2px solid transparent;white-space:nowrap;letter-spacing:.02em}
+.xnav a:hover{color:var(--accent-warm)}
+.xnav a.active{color:var(--accent-warm);border-bottom-color:var(--accent-warm);font-weight:700}
+.wrap{display:flex;max-width:1280px;margin:0 auto}
+.toc{position:sticky;top:48px;align-self:flex-start;width:240px;flex-shrink:0;padding:40px 16px 40px 24px;height:calc(100vh - 48px);overflow-y:auto}
+.toc h4{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px}
+.toc a{display:block;color:var(--text-secondary);text-decoration:none;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border-light);transition:color .15s}
+.toc a:hover{color:var(--accent-warm)}
+.toc a .n{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-right:8px}
+main{flex:1;min-width:0;padding:36px 40px 120px;max-width:860px}
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-warm);font-weight:700;margin-bottom:14px}
+h1{font-size:clamp(26px,4vw,40px);font-weight:900;line-height:1.28;letter-spacing:-.01em;margin-bottom:18px}
+.lead{font-size:16px;color:var(--text-secondary);max-width:60ch;margin-bottom:8px}
+.src-note{font-size:12px;color:var(--text-muted);margin-top:16px;font-family:var(--mono)}
+section{margin-top:72px;scroll-margin-top:64px}
+section.first{margin-top:44px}
+h2{font-size:22px;font-weight:900;letter-spacing:-.01em;margin-bottom:6px}
+h2 .num{font-family:var(--mono);font-size:14px;color:var(--accent-warm);margin-right:12px}
+.sec-sub{font-size:13px;color:var(--text-muted);margin-bottom:26px;border-bottom:1px solid var(--border);padding-bottom:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.kpi{background:var(--surface);border:1px solid var(--border-light);border-radius:3px;padding:20px 18px}
+.kpi .v{font-size:26px;font-weight:900;letter-spacing:-.02em;font-family:var(--mono)}
+.kpi .v .warm{color:var(--accent-warm)}
+.kpi .l{font-size:11px;color:var(--text-muted);margin-top:4px;letter-spacing:.03em}
+.bars{margin-top:10px}
+.bar-row{display:grid;grid-template-columns:150px 1fr 96px;align-items:center;gap:12px;padding:5px 0}
+.bar-row .lbl{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{background:var(--bar-track);border-radius:2px;height:14px;overflow:hidden}
+.bar-fill{background:var(--bar);height:100%;border-radius:2px;transition:width .8s cubic-bezier(.16,1,.3,1)}
+.bar-row .val{font-family:var(--mono);font-size:12px;color:var(--text-secondary);text-align:right}
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border-light)}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border)}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tbody tr:hover{background:var(--card-hover)}
+.rank{font-family:var(--mono);color:var(--accent-warm);font-weight:700;width:28px}
+.note{background:var(--accent-muted);border-left:3px solid var(--accent-warm);padding:14px 18px;font-size:13px;color:var(--text-secondary);margin-top:22px;border-radius:0 3px 3px 0}
+.note b{color:var(--text)}
+footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);line-height:1.9}
+footer .mono{font-family:var(--mono)}
+@media (max-width:1000px){.toc{display:none}main{padding:28px 20px 100px}.kpis{grid-template-columns:repeat(2,1fr)}.bar-row{grid-template-columns:120px 1fr 80px}}
+@media print{.top-bar,.toc,.theme-toggle,.xnav{display:none}main{max-width:100%}body{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">世界のR&amp;D予算 <span class="warm">データベース</span><small>WORLD R&D BUDGET DB</small></div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="tt">DARK</button>
+</div>
+
+<nav class="xnav">
+  <a href="world-research-institutions.html">世界の研究機関</a>
+  <a href="grp-international.html">研究プレス（国外）</a>
+  <a href="academic-landscape.html">学術活動</a>
+  <a href="world-rd-budget.html" class="active">R&amp;D予算</a>
+  <a href="dubai-rd-strategy.html">ドバイR&amp;D</a>
+</nav>
+
+<div class="wrap">
+<nav class="toc">
+  <h4>目次</h4>
+  <a href="#overview"><span class="n">01</span>全体像</a>
+  <a href="#gdp"><span class="n">02</span>GDP比の高い国</a>
+  <a href="#absolute"><span class="n">03</span>R&D投資額</a>
+  <a href="#note"><span class="n">04</span>データの性格</a>
+</nav>
+
+<main>
+  <div class="eyebrow">WORLD R&D BUDGET / 国レベルの研究開発投資</div>
+  <h1>世界のR&amp;D予算データ</h1>
+  <p class="lead">機関ではなく<b>国を単位</b>としたマクロ統計。各国が研究開発（R&amp;D）にどれだけ投じているかを、GDP比と絶対額の両面から見る。World Bank・IMF・OECD・Eurostat の公開統計に接地。海外機関の背後にある「国の投資規模」を捉える。</p>
+  <p class="src-note">出典: world_rd_budget.db（rd_budget_timeseries / World Bank GERD 等）／ 最新値は2023年基準</p>
+
+  <section class="first" id="overview">
+    <h2><span class="num">01</span>全体像</h2>
+    <p class="sec-sub">188カ国 × 9指標の時系列。GERD（国内総研究開発費）を GDP比・絶対額の両面で保持する。</p>
+    <div class="kpis">
+      <div class="kpi"><div class="v"><span class="warm">188</span></div><div class="l">カバー国</div></div>
+      <div class="kpi"><div class="v">9</div><div class="l">R&D指標</div></div>
+      <div class="kpi"><div class="v">11,460</div><div class="l">時系列データ点</div></div>
+      <div class="kpi"><div class="v">4</div><div class="l">接地する統計源</div></div>
+    </div>
+    <div class="note"><b>指標の中心</b> — GERD（Gross Domestic Expenditure on R&amp;D／国内総研究開発費）。GDP比は「研究にどれだけ本気か」を、絶対額は「どれだけの規模の研究を回せるか」を映す。両者は順位が大きく異なる。</div>
+  </section>
+
+  <section id="gdp">
+    <h2><span class="num">02</span>GDP比の高い国</h2>
+    <p class="sec-sub">研究開発費のGDP比（2023年）上位15。イスラエル・韓国が突出。日本は3.44%で米国とほぼ同水準。</p>
+    <div class="bars" id="gdpBars"></div>
+  </section>
+
+  <section id="absolute">
+    <h2><span class="num">03</span>R&D投資額</h2>
+    <p class="sec-sub">研究開発費の絶対額（2023年・現在USドル）上位12。米国が中国の2倍、日独が続く。GDP比の順位とは大きく異なる。</p>
+    <table>
+      <thead><tr><th class="rank">#</th><th>国</th><th class="num">R&D投資額（億USD）</th><th class="num">GDP比</th></tr></thead>
+      <tbody id="absTable"></tbody>
+    </table>
+  </section>
+
+  <section id="note">
+    <h2><span class="num">04</span>データの性格</h2>
+    <p class="sec-sub">この基盤の使いどころと限界。</p>
+    <div class="note"><b>使いどころ</b> — 海外機関（世界の研究機関DB）や研究プレスを見るとき、その背後にある「国全体の研究投資規模」を添えられる。GDP比が高い＝研究集約的な国、絶対額が大きい＝研究の総量が大きい国、という二つの見方を提供する。<br><br><b>限界</b> — これは国レベルのマクロ統計であり、個別機関の予算ではない。機関単位の資金は World Research Institution DB／GRP と組み合わせて解釈する。</div>
+  </section>
+
+  <footer>
+    <div>主データ: <span class="mono">world_rd_budget.db</span> — World R&amp;D Budget DB（国別研究開発投資）／ 188ヶ国 / 時系列 11,460 / World Bank・IMF・OECD・Eurostat</div>
+    <div>関連: <a href="world-research-institutions.html" style="color:var(--accent-warm)">世界の研究機関</a> ・ <a href="grp-international.html" style="color:var(--accent-warm)">研究プレス</a> ・ <a href="academic-landscape.html" style="color:var(--accent-warm)">学術活動</a> ・ <a href="dubai-rd-strategy.html" style="color:var(--accent-warm)">ドバイR&amp;D</a></div>
+    <div>NPO法人ミラツク ／ esse-sense — 最新値2023年基準 ／ 数値は全て実DB照合値・捏造ゼロ</div>
+  </footer>
+</main>
+</div>
+
+<script>
+const gdpData=[["イスラエル",6.35],["リヒテンシュタイン",6.01],["韓国",4.94],["スウェーデン",3.60],["アメリカ",3.45],["日本",3.44],["ベルギー",3.27],["オーストリア",3.26],["スイス",3.22],["ドイツ",3.15],["フィンランド",3.09],["デンマーク",3.05],["イギリス",2.68],["アイスランド",2.64],["中国",2.58]];
+// absolute in billion USD, gdp%
+const absData=[["アメリカ",940.8,3.45],["中国",470.9,2.58],["日本",145.0,3.44],["ドイツ",143.9,3.15],["イギリス",91.5,2.68],["韓国",91.2,4.94],["フランス",66.6,2.22],["カナダ",40.2,1.71],["イスラエル",32.5,6.35],["イタリア",32.0,1.32],["オーストラリア",29.0,1.68],["スイス",28.8,3.22]];
+const fmt=n=>n.toLocaleString('en-US');
+
+(function(){
+ const max=Math.max(...gdpData.map(d=>d[1]));
+ document.getElementById('gdpBars').innerHTML=gdpData.map(d=>`<div class="bar-row"><div class="lbl">${d[0]}</div><div class="bar-track"><div class="bar-fill" style="width:0" data-w="${(d[1]/max*100).toFixed(1)}"></div></div><div class="val">${d[1].toFixed(2)}%</div></div>`).join('');
+})();
+
+document.getElementById('absTable').innerHTML=absData.map((r,i)=>`<tr><td class="rank">${i+1}</td><td>${r[0]}</td><td class="num">${fmt(r[1])}</td><td class="num">${r[2].toFixed(2)}%</td></tr>`).join('');
+
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.w+'%');io.unobserve(e.target);}});},{threshold:.15});
+document.querySelectorAll('.bars').forEach(b=>io.observe(b));
+
+function toggleTheme(){const h=document.documentElement,d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');document.getElementById('tt').textContent=d?'DARK':'LIGHT';try{localStorage.setItem('wri-theme',d?'light':'dark')}catch(e){}}
+(function(){try{const t=localStorage.getItem('wri-theme');if(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('tt').textContent=t==='dark'?'LIGHT':'DARK';}}catch(e){}})();
+</script>
+</body>
+</html>

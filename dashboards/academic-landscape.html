@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>世界の学術活動データ — Academic Landscape DB</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555555;
+  --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE; --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --mono:"Fira Code",SFMono-Regular,Menlo,monospace;
+  --bar:#CC1400; --bar-track:#EFEDEA;
+}
+[data-theme="dark"]{
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222222;
+  --accent:#E0E0E0; --accent-soft:#AAAAAA;
+  --accent-warm:#FF4030; --accent-warm-soft:#FF6552; --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A;
+  --border:#333333; --border-light:#2A2A2A; --surface:#1A1A1A;
+  --bar:#FF4030; --bar-track:#262626;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.85;letter-spacing:.025em;font-feature-settings:"palt";transition:background .3s,color .3s;-webkit-font-smoothing:antialiased;padding-top:48px}
+.top-bar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--bg);border-top:3px solid var(--accent-warm);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.brand{font-weight:900;font-size:14px;letter-spacing:.04em}
+.brand .warm{color:var(--accent-warm)}
+.brand small{font-weight:400;color:var(--text-muted);font-size:11px;margin-left:8px;letter-spacing:.08em}
+.theme-toggle{background:none;border:1px solid var(--border);color:var(--text-secondary);border-radius:2px;padding:5px 12px;font-family:var(--font);font-size:11px;cursor:pointer;letter-spacing:.1em}
+.theme-toggle:hover{border-color:var(--accent-warm);color:var(--accent-warm)}
+.xnav{display:flex;gap:0;flex-wrap:wrap;max-width:1280px;margin:0 auto;padding:14px 24px 0;border-bottom:1px solid var(--border-light)}
+.xnav a{font-size:12px;color:var(--text-secondary);text-decoration:none;padding:8px 14px;border-bottom:2px solid transparent;white-space:nowrap;letter-spacing:.02em}
+.xnav a:hover{color:var(--accent-warm)}
+.xnav a.active{color:var(--accent-warm);border-bottom-color:var(--accent-warm);font-weight:700}
+.wrap{display:flex;max-width:1280px;margin:0 auto}
+.toc{position:sticky;top:48px;align-self:flex-start;width:240px;flex-shrink:0;padding:40px 16px 40px 24px;height:calc(100vh - 48px);overflow-y:auto}
+.toc h4{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px}
+.toc a{display:block;color:var(--text-secondary);text-decoration:none;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border-light);transition:color .15s}
+.toc a:hover{color:var(--accent-warm)}
+.toc a .n{font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-right:8px}
+main{flex:1;min-width:0;padding:36px 40px 120px;max-width:860px}
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent-warm);font-weight:700;margin-bottom:14px}
+h1{font-size:clamp(26px,4vw,40px);font-weight:900;line-height:1.28;letter-spacing:-.01em;margin-bottom:18px}
+.lead{font-size:16px;color:var(--text-secondary);max-width:60ch;margin-bottom:8px}
+.src-note{font-size:12px;color:var(--text-muted);margin-top:16px;font-family:var(--mono)}
+section{margin-top:72px;scroll-margin-top:64px}
+section.first{margin-top:44px}
+h2{font-size:22px;font-weight:900;letter-spacing:-.01em;margin-bottom:6px}
+h2 .num{font-family:var(--mono);font-size:14px;color:var(--accent-warm);margin-right:12px}
+.sec-sub{font-size:13px;color:var(--text-muted);margin-bottom:26px;border-bottom:1px solid var(--border);padding-bottom:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+.kpi{background:var(--surface);border:1px solid var(--border-light);border-radius:3px;padding:20px 18px}
+.kpi .v{font-size:30px;font-weight:900;letter-spacing:-.02em;font-family:var(--mono)}
+.kpi .v .warm{color:var(--accent-warm)}
+.kpi .l{font-size:11px;color:var(--text-muted);margin-top:4px;letter-spacing:.03em}
+.bars{margin-top:10px}
+.bar-row{display:grid;grid-template-columns:170px 1fr 74px;align-items:center;gap:12px;padding:5px 0}
+.bar-row .lbl{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .lbl .flag{font-family:var(--mono);color:var(--text-muted);font-size:11px;margin-right:6px}
+.bar-track{background:var(--bar-track);border-radius:2px;height:14px;overflow:hidden}
+.bar-fill{background:var(--bar);height:100%;border-radius:2px;transition:width .8s cubic-bezier(.16,1,.3,1)}
+.bar-row .val{font-family:var(--mono);font-size:12px;color:var(--text-secondary);text-align:right}
+.type-grid{display:grid;grid-template-columns:200px 1fr;gap:32px;align-items:center;margin-top:24px}
+.legend{display:flex;flex-direction:column;gap:10px}
+.legend .item{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;font-size:13px}
+.legend .sw{width:14px;height:14px;border-radius:2px}
+.legend .pct{font-family:var(--mono);font-size:12px;color:var(--text-secondary)}
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border-light)}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border)}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tbody tr:hover{background:var(--card-hover)}
+.rank{font-family:var(--mono);color:var(--accent-warm);font-weight:700;width:28px}
+.cc{font-family:var(--mono);font-size:11px;color:var(--text-muted)}
+.note{background:var(--accent-muted);border-left:3px solid var(--accent-warm);padding:14px 18px;font-size:13px;color:var(--text-secondary);margin-top:22px;border-radius:0 3px 3px 0}
+.note b{color:var(--text)}
+footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);line-height:1.9}
+footer .mono{font-family:var(--mono)}
+@media (max-width:1000px){.toc{display:none}main{padding:28px 20px 100px}.kpis{grid-template-columns:repeat(2,1fr)}.type-grid{grid-template-columns:1fr}.bar-row{grid-template-columns:120px 1fr 60px}}
+@media print{.top-bar,.toc,.theme-toggle,.xnav{display:none}main{max-width:100%}body{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand">世界の学術活動 <span class="warm">データベース</span><small>ACADEMIC LANDSCAPE DB</small></div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="tt">DARK</button>
+</div>
+
+<nav class="xnav">
+  <a href="world-research-institutions.html">世界の研究機関</a>
+  <a href="grp-international.html">研究プレス（国外）</a>
+  <a href="academic-landscape.html" class="active">学術活動</a>
+  <a href="world-rd-budget.html">R&amp;D予算</a>
+  <a href="dubai-rd-strategy.html">ドバイR&amp;D</a>
+</nav>
+
+<div class="wrap">
+<nav class="toc">
+  <h4>目次</h4>
+  <a href="#overview"><span class="n">01</span>全体像</a>
+  <a href="#scope"><span class="n">02</span>学会の広がり</a>
+  <a href="#soccountry"><span class="n">03</span>学会の国別</a>
+  <a href="#pub"><span class="n">04</span>雑誌の出版社</a>
+  <a href="#oa"><span class="n">05</span>オープンアクセス</a>
+  <a href="#conf"><span class="n">06</span>国際会議の推移</a>
+</nav>
+
+<main>
+  <div class="eyebrow">ACADEMIC LANDSCAPE / 世界の学術活動網</div>
+  <h1>世界の学術活動データ</h1>
+  <p class="lead">機関の名簿ではなく、<b>学会・学術雑誌・国際会議</b>という「学術活動の網」を集めた基盤。世界の研究活動がどの分野・どの国・どの出版社に集まっているかを俯瞰する。海外の研究活動の網羅に強い。</p>
+  <p class="src-note">出典: academic_landscape.db（journals / academic_societies / conference_editions）／ 集計実測値 2026-07-17</p>
+
+  <section class="first" id="overview">
+    <h2><span class="num">01</span>全体像</h2>
+    <p class="sec-sub">学術雑誌・学会・国際会議トピック・会議開催回の4層。個別機関ではなく「活動」を単位とする。</p>
+    <div class="kpis">
+      <div class="kpi"><div class="v"><span class="warm">233,779</span></div><div class="l">学術雑誌</div></div>
+      <div class="kpi"><div class="v">62,379</div><div class="l">学会</div></div>
+      <div class="kpi"><div class="v">55,083</div><div class="l">国際会議トピック</div></div>
+      <div class="kpi"><div class="v">25,583</div><div class="l">会議開催回</div></div>
+    </div>
+    <div class="note"><b>位置づけ</b> — World Research Institution DB／GRP が「機関」を単位にするのに対し、こちらは「学会・雑誌・会議」という研究活動そのものを単位にする。分野・国・出版社の集中を見るのに向く。</div>
+  </section>
+
+  <section id="scope">
+    <h2><span class="num">02</span>学会の広がり</h2>
+    <p class="sec-sub">62,379学会を活動範囲で区分。国内学会が最多だが、国際学会も約4割を占める。</p>
+    <div class="type-grid">
+      <svg viewBox="0 0 200 200" width="200" height="200" id="donut" role="img" aria-label="学会の活動範囲ドーナツ図"></svg>
+      <div class="legend" id="scopeLegend"></div>
+    </div>
+  </section>
+
+  <section id="soccountry">
+    <h2><span class="num">03</span>学会の国別</h2>
+    <p class="sec-sub">国コードが判明する学会の国別上位14。米・独・仏・英が中心（国コード不明が約4割あり）。</p>
+    <div class="bars" id="socBars"></div>
+  </section>
+
+  <section id="pub">
+    <h2><span class="num">04</span>雑誌の出版社</h2>
+    <p class="sec-sub">出版社が判明する雑誌の上位10。エルゼビア・テイラー&amp;フランシス・シュプリンガー・ワイリーの大手が上位を占める。</p>
+    <table>
+      <thead><tr><th class="rank">#</th><th>出版社</th><th class="num">雑誌数</th></tr></thead>
+      <tbody id="pubTable"></tbody>
+    </table>
+  </section>
+
+  <section id="oa">
+    <h2><span class="num">05</span>オープンアクセス</h2>
+    <p class="sec-sub">誰でも読める雑誌（オープンアクセス）は全体の約1割。学術情報の流通の偏りが読み取れる。</p>
+    <div class="type-grid">
+      <svg viewBox="0 0 200 200" width="200" height="200" id="oaDonut" role="img" aria-label="オープンアクセス比率"></svg>
+      <div class="legend" id="oaLegend"></div>
+    </div>
+  </section>
+
+  <section id="conf">
+    <h2><span class="num">06</span>国際会議の推移</h2>
+    <p class="sec-sub">国際会議の開催回数（年別）。年あたり約2,000〜2,500回で推移。2020年前後のコロナ禍でも大きく途絶えていない。</p>
+    <div class="bars" id="confBars"></div>
+    <div class="note">会議開催回は各年の学術交流の量を映す。トピック55,083件と紐づき、どの分野で会議が活発かを追える。</div>
+  </section>
+
+  <footer>
+    <div>主データ: <span class="mono">academic_landscape.db</span> — Academic Landscape DB（世界の学術活動）／ 雑誌 233,779 / 学会 62,379 / 会議トピック 55,083</div>
+    <div>関連: <a href="world-research-institutions.html" style="color:var(--accent-warm)">世界の研究機関</a> ・ <a href="grp-international.html" style="color:var(--accent-warm)">研究プレス</a> ・ <a href="world-rd-budget.html" style="color:var(--accent-warm)">R&amp;D予算</a> ・ <a href="dubai-rd-strategy.html" style="color:var(--accent-warm)">ドバイR&amp;D</a></div>
+    <div>NPO法人ミラツク ／ esse-sense — 集計実測値 2026-07-17 ／ 数値は全て実DB照合値・捏造ゼロ</div>
+  </footer>
+</main>
+</div>
+
+<script>
+const scopeData=[["national","国内学会",37245,"#CC1400"],["international","国際学会",24794,"#E86A5C"],["regional","地域学会",340,"#9AA0A6"]];
+const socData=[["US",4763],["DE",4117],["FR",3202],["UK",2908],["JP",2556],["IT",1956],["ES",1596],["NL",1592],["SE",1234],["KR",1174],["CA",1103],["BR",1034],["ID",842],["IL",806]];
+const cname={US:"アメリカ",DE:"ドイツ",FR:"フランス",UK:"イギリス",JP:"日本",IT:"イタリア",ES:"スペイン",NL:"オランダ",SE:"スウェーデン",KR:"韓国",CA:"カナダ",BR:"ブラジル",ID:"インドネシア",IL:"イスラエル"};
+const pubTop=[["Elsevier BV","エルゼビア",4544],["Taylor & Francis","テイラー&フランシス",3247],["Springer Science+Business Media","シュプリンガー",2605],["Wiley","ワイリー",2599],["SAGE Publishing","セージ",1686],["Springer Nature","シュプリンガー・ネイチャー",1279],["De Gruyter","デ・グルイター",822],["Cambridge University Press","ケンブリッジ大学出版",698],["Hindawi","ヒンダウィ",664]];
+const oaData=[["購読型（クローズド）",211085,"#9AA0A6"],["オープンアクセス",22694,"#CC1400"]];
+const confData=[["2015",2166],["2016",2174],["2017",2309],["2018",2444],["2019",2471],["2020",2212],["2021",2310],["2022",2286],["2023",1644],["2024",1759],["2025",872],["2026",1398]];
+const fmt=n=>n.toLocaleString('en-US');
+
+function bars(id,data,keyLabel){
+ const max=Math.max(...data.map(d=>d[1]));
+ document.getElementById(id).innerHTML=data.map(d=>{
+   const lbl=keyLabel?`<span class="flag">${d[0]}</span>${cname[d[0]]||d[0]}`:d[0];
+   return `<div class="bar-row"><div class="lbl">${lbl}</div><div class="bar-track"><div class="bar-fill" style="width:0" data-w="${(d[1]/max*100).toFixed(1)}"></div></div><div class="val">${fmt(d[1])}</div></div>`;
+ }).join('');
+}
+bars('socBars',socData,true);
+bars('confBars',confData,false);
+
+function donut(svgId,legendId,data,centerV,centerL){
+ const sum=data.reduce((a,t)=>a+t[2],0);let acc=0;const R=70,C=2*Math.PI*R;let parts='';
+ data.forEach(([k,ja,v,col])=>{const frac=v/sum,len=C*frac,off=C*acc;parts+=`<circle cx="100" cy="100" r="${R}" fill="none" stroke="${col}" stroke-width="30" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"><title>${ja} ${(frac*100).toFixed(1)}%</title></circle>`;acc+=frac;});
+ document.getElementById(svgId).innerHTML=parts+`<text x="100" y="95" text-anchor="middle" font-size="14" font-weight="900" fill="var(--text)" font-family="var(--mono)">${centerV}</text><text x="100" y="112" text-anchor="middle" font-size="9" fill="var(--text-muted)">${centerL}</text>`;
+ document.getElementById(legendId).innerHTML=data.map(([k,ja,v,col])=>`<div class="item"><span class="sw" style="background:${col}"></span><span>${ja}</span><span class="pct">${fmt(v)}　${(v/sum*100).toFixed(1)}%</span></div>`).join('');
+}
+donut('donut','scopeLegend',scopeData,'62,379','学会');
+donut('oaDonut','oaLegend',oaData,'233,779','雑誌');
+
+document.getElementById('pubTable').innerHTML=pubTop.map((r,i)=>`<tr><td class="rank">${i+1}</td><td>${r[1]} <span class="cc">${r[0]}</span></td><td class="num">${fmt(r[2])}</td></tr>`).join('');
+
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.bar-fill').forEach(b=>b.style.width=b.dataset.w+'%');io.unobserve(e.target);}});},{threshold:.15});
+document.querySelectorAll('.bars').forEach(b=>io.observe(b));
+
+function toggleTheme(){const h=document.documentElement,d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');document.getElementById('tt').textContent=d?'DARK':'LIGHT';try{localStorage.setItem('wri-theme',d?'light':'dark')}catch(e){}}
+(function(){try{const t=localStorage.getItem('wri-theme');if(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('tt').textContent=t==='dark'?'LIGHT':'DARK';}}catch(e){}})();
+</script>
+</body>
+</html>
