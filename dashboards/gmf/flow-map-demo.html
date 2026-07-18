@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="ja" data-theme="light"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>世界のお金の流れ — 地理フローマップ（足場）</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@600;700&family=Fira+Code&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script><script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12"></script><script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+:root{--bg:#fff;--warm:#CC1400;--text:#121212;--sec:#555;--mute:#6B6B6B;--border:#D9D9D9;--bl:#EEE;--surface:#F7F7F5;--font:"Noto Sans JP",sans-serif;--serif:"Noto Serif JP",serif;--mono:"Fira Code",monospace}
+[data-theme=dark]{--bg:#121212;--warm:#FF4030;--text:#E0E0E0;--sec:#AAA;--mute:#8A8A8A;--border:#333;--bl:#2A2A2A;--surface:#1A1A1A}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.7}
+.top{position:sticky;top:0;height:48px;background:var(--bg);border-top:3px solid var(--warm);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.brand{font-weight:700;font-size:14px}.brand span{color:var(--warm)}
+.toggle{background:none;border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 12px;cursor:pointer;font-size:12px}
+main{max-width:1080px;margin:0 auto;padding:32px 24px 100px}
+h1{font-family:var(--serif);font-size:25px;margin:0 0 6px}.sub{color:var(--mute);font-size:13.5px;margin-bottom:22px}
+h2{font-family:var(--serif);font-size:18px;margin:36px 0 4px}h2 .n{color:var(--warm);font-family:var(--mono);font-size:13px;margin-right:9px}
+.lead{color:var(--sec);font-size:13px;margin-bottom:14px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0;font-size:12px}
+.legend .lg{display:flex;align-items:center;gap:5px}.legend .sw{width:12px;height:12px;border-radius:2px}
+.note{background:rgba(204,20,0,.06);border-left:2px solid var(--warm);padding:11px 14px;font-size:12px;margin:16px 0;border-radius:0 4px 4px 0}
+.viz{width:100%;background:var(--surface);border:1px solid var(--bl);border-radius:5px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0;font-size:12.5px}
+select,input[type=range]{font-family:inherit;font-size:12.5px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:18px 0}
+.kpi{border:1px solid var(--bl);border-top:2px solid var(--warm);border-radius:4px;padding:12px}
+.kpi-n{font-size:20px;font-weight:700;font-family:var(--serif);color:var(--warm)}.kpi-l{font-size:11px;color:var(--mute)}
+@media print{.top,.controls{display:none}}
+</style></head><body>
+<div class="top"><div class="brand">世界のお金の流れ <span>GLOBAL MONEY FLOW</span></div><button class="toggle" onclick="tt()">◐</button></div>
+<main>
+<h1>世界のお金の流れ — 地理フローマップ（レンダリング足場）</h1>
+<div class="sub">D3-geo による origin → destination 大円弧レンダリングの実証。Wave 0 デモ。</div>
+<div class="note"><strong>これはデモ（足場）です。</strong>描かれた円弧は「経路が描けること」を示すためのもので、
+<strong>金額・実データを一切主張しません</strong>。実際の二国間フロー（貿易・FDI・送金…）は Wave 1 で接続します（捏造ゼロ）。</div>
+<div class="legend"><span class="lg"><span class="sw" style="background:#CC1400"></span>貿易</span><span class="lg"><span class="sw" style="background:#B0308A"></span>直接投資</span><span class="lg"><span class="sw" style="background:#1A6FB0"></span>証券投資</span><span class="lg"><span class="sw" style="background:#2E8B57"></span>銀行与信</span><span class="lg"><span class="sw" style="background:#D98200"></span>送金</span><span class="lg"><span class="sw" style="background:#6A5ACD"></span>ODA</span></div>
+<div class="viz"><svg id="map" viewBox="0 0 960 500" role="img" aria-label="世界フローマップ足場"></svg></div>
+<div class="lead">投影: Natural Earth / 弧: 大円補間。ホバーでフロー種類を表示。</div>
+</main>
+<script>
+function tt(){const h=document.documentElement;const d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('tm',d?'light':'dark');window.dispatchEvent(new Event('themechange'));}
+if(localStorage.getItem('tm')==='dark')document.documentElement.setAttribute('data-theme','dark');
+</script>
+<script>const ARCS=[{"o":[116.4,39.9],"d":[-77.0,38.9],"type":"trade","color":"#CC1400"},{"o":[-77.0,38.9],"d":[116.4,39.9],"type":"trade","color":"#CC1400"},{"o":[13.4,52.5],"d":[-77.0,38.9],"type":"fdi","color":"#B0308A"},{"o":[139.7,35.7],"d":[-77.0,38.9],"type":"portfolio","color":"#1A6FB0"},{"o":[54.4,24.5],"d":[77.2,28.6],"type":"remittance","color":"#D98200"},{"o":[-77.0,38.9],"d":[28.0,-26.2],"type":"oda","color":"#6A5ACD"},{"o":[-0.1,51.5],"d":[103.8,1.35],"type":"banking","color":"#2E8B57"},{"o":[77.2,28.6],"d":[-77.0,38.9],"type":"trade","color":"#CC1400"},{"o":[-47.9,-15.8],"d":[116.4,39.9],"type":"trade","color":"#CC1400"},{"o":[103.8,1.35],"d":[139.7,35.7],"type":"fdi","color":"#B0308A"}];</script>
+<script>
+const svg=d3.select("#map"),W=960,H=500;
+const proj=d3.geoNaturalEarth1().scale(178).translate([W/2,H/2+10]);
+const path=d3.geoPath(proj);
+function ink(){return getComputedStyle(document.documentElement).getPropertyValue('--border')||'#ddd';}
+function draw(world){
+  svg.selectAll("*").remove();
+  const land=topojson.feature(world,world.objects.countries);
+  svg.append("g").selectAll("path").data(land.features).join("path")
+    .attr("d",path).attr("fill","var(--surface)").attr("stroke",ink()).attr("stroke-width",.5);
+  // 大円弧
+  const g=svg.append("g").attr("fill","none").attr("stroke-width",1.6).attr("opacity",.85);
+  g.selectAll("path").data(ARCS).join("path")
+    .attr("d",d=>{const i=d3.geoInterpolate(d.o,d.d);const pts=d3.range(0,1.01,.02).map(i);
+      return d3.line().curve(d3.curveBasis)(pts.map(p=>proj(p)));})
+    .attr("stroke",d=>d.color)
+    .append("title").text(d=>d.type);
+  // ノード点
+  svg.append("g").selectAll("circle").data(ARCS).join("circle")
+    .attr("cx",d=>proj(d.o)[0]).attr("cy",d=>proj(d.o)[1]).attr("r",2.5)
+    .attr("fill",d=>d.color);
+}
+let WORLD=null;
+d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then(w=>{WORLD=w;draw(w);});
+window.addEventListener('themechange',()=>{if(WORLD)draw(WORLD);});
+</script>
+
+</body></html>
