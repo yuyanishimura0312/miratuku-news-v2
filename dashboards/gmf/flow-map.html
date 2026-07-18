@@ -36,6 +36,7 @@ select,input[type=range]{font-family:inherit;font-size:12.5px}
   <span>年:</span><input type="range" id="yr" min="2012" max="2025" value="2021" step="1">
   <strong id="yrlab" style="font-family:var(--mono);font-size:15px">2021</strong>
   <label style="margin-left:14px;cursor:pointer"><input type="checkbox" id="pergdp"> 対GDP比で見る</label>
+  <label style="margin-left:10px;cursor:pointer"><input type="checkbox" id="motion" checked> 流れを見せる</label>
   <span style="margin-left:14px">種類:</span><span id="fts"><button class="ftbtn on" data-ft="trade" style="--c:#CC1400"><span class="sw" style="background:#CC1400"></span>貿易</button><button class="ftbtn on" data-ft="fdi" style="--c:#B0308A"><span class="sw" style="background:#B0308A"></span>直接投資</button><button class="ftbtn on" data-ft="portfolio" style="--c:#1A6FB0"><span class="sw" style="background:#1A6FB0"></span>証券投資</button><button class="ftbtn on" data-ft="banking" style="--c:#2E8B57"><span class="sw" style="background:#2E8B57"></span>銀行与信</button><button class="ftbtn on" data-ft="remittance" style="--c:#D98200"><span class="sw" style="background:#D98200"></span>送金</button><button class="ftbtn on" data-ft="oda" style="--c:#6A5ACD"><span class="sw" style="background:#6A5ACD"></span>ODA</button></span>
 </div>
 <div id="kpis" class="kpis"></div>
@@ -88,12 +89,14 @@ function draw(animate){
   if(!WORLD)return; if(!arcG)setupLayers();
   const arcs=collectArcs(); const t=d3.transition().duration(animate?700:0).ease(d3.easeCubicOut);
   arcG.selectAll("path").data(arcs,d=>d.key).join(
-    en=>en.append("path").attr("d",arcPath).attr("stroke",d=>COLORS[d.code]).attr("fill","none")
+    en=>en.append("path").attr("class","arc").attr("d",arcPath).attr("stroke",d=>COLORS[d.code]).attr("fill","none")
         .attr("stroke-width",0).attr("opacity",0)
-        .call(e=>e.append("title")).call(e=>e.transition(t).attr("stroke-width",d=>0.5+2.6*Math.sqrt(d.v/d.max)).attr("opacity",.6)),
+        .on("mouseover",function(){d3.select(this).raise().attr("opacity",1).attr("stroke-width",d=>1.5+3*Math.sqrt(d.v/d.max));})
+        .on("mouseout",function(){d3.select(this).attr("opacity",.62).attr("stroke-width",d=>0.5+2.6*Math.sqrt(d.v/d.max));})
+        .call(e=>e.append("title")).call(e=>e.transition(t).attr("stroke-width",d=>0.5+2.6*Math.sqrt(d.v/d.max)).attr("opacity",.62)),
     up=>up.call(u=>{u.select("title");return u;})
         .call(u=>u.transition(t).attr("d",arcPath).attr("stroke",d=>COLORS[d.code])
-          .attr("stroke-width",d=>0.5+2.6*Math.sqrt(d.v/d.max)).attr("opacity",.6)),
+          .attr("stroke-width",d=>0.5+2.6*Math.sqrt(d.v/d.max)).attr("opacity",.62)),
     ex=>ex.call(e=>e.transition(t).attr("opacity",0).attr("stroke-width",0).remove())
   ).select("title").text(d=>LABELS[d.code]+': '+(perGDP?(d.v*100).toFixed(1)+'% GDP':fmt(d.raw)));
   dotG.selectAll("circle").data(arcs,d=>d.key).join(
@@ -124,6 +127,8 @@ function playLoop(){
 document.getElementById('play').addEventListener('click',()=>{playing?stop():playLoop();});
 document.getElementById('yr').addEventListener('input',e=>{stop();setYear(+e.target.value);});
 document.getElementById('pergdp').addEventListener('change',e=>{perGDP=e.target.checked;draw(true);kpis();});
+document.getElementById('motion').addEventListener('change',e=>{document.getElementById('map').classList.toggle('flowing',e.target.checked);});
+document.getElementById('map').classList.add('flowing');
 document.querySelectorAll('.ftbtn').forEach(b=>b.addEventListener('click',()=>{
   const c=b.dataset.ft;if(active.has(c)){active.delete(c);b.classList.remove('on');}
   else{active.add(c);b.classList.add('on');}draw(true);kpis();}));
@@ -137,6 +142,10 @@ window.addEventListener('themechange',()=>{setupLayers();draw(false);});
 .ftbtn.on .sw{opacity:1}
 .playbtn{background:var(--warm);color:#fff;border:none;border-radius:4px;padding:5px 14px;cursor:pointer;font-size:12.5px;font-weight:700}
 #yr{vertical-align:middle;width:180px}
+.arc{cursor:pointer}
+#map.flowing .arc{stroke-dasharray:3 7;animation:flowdash 1.5s linear infinite}
+@keyframes flowdash{from{stroke-dashoffset:0}to{stroke-dashoffset:-20}}
+@media(prefers-reduced-motion:reduce){#map.flowing .arc{animation:none;stroke-dasharray:none}}
 </style>
 
 </body></html>

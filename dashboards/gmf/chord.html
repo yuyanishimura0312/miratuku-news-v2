@@ -62,7 +62,12 @@ function draw(){
   // 外弧(国)
   const grp=g.append("g").selectAll("g").data(chord.groups).join("g");
   grp.append("path").attr("d",arc).attr("fill",dd=>color(dd.index,n))
-     .attr("stroke","var(--bg)").append("title").text(dd=>labels[dd.index]);
+     .attr("stroke","var(--bg)").style("cursor","pointer")
+     .on("mouseover",(e,dd)=>{const i=dd.index;
+       g.selectAll("path.rib").transition().duration(150)
+         .attr("fill-opacity",r=>(r.source.index===i||r.target.index===i)?.85:.04);})
+     .on("mouseout",()=>{g.selectAll("path.rib").transition().duration(150).attr("fill-opacity",.62);})
+     .append("title").text(dd=>labels[dd.index]);
   grp.append("text").each(dd=>{dd.ang=(dd.startAngle+dd.endAngle)/2;})
      .attr("dy",".35em")
      .attr("transform",dd=>`rotate(${dd.ang*180/Math.PI-90}) translate(${or_+6}) ${dd.ang>Math.PI?'rotate(180)':''}`)
@@ -70,7 +75,7 @@ function draw(){
      .attr("font-size","11px").attr("fill","var(--text)").text(dd=>labels[dd.index]);
   // リボン(送り手色)
   g.append("g").attr("fill-opacity",.62).selectAll("path").data(chord).join("path")
-    .attr("d",ribbon).attr("fill",dd=>color(dd.source.index,n))
+    .attr("class","rib").attr("d",ribbon).attr("fill",dd=>color(dd.source.index,n))
     .attr("stroke","var(--bg)").attr("stroke-width",.3)
     .append("title").text(dd=>`${labels[dd.source.index]} → ${labels[dd.target.index]}: ${fmt(dd.source.value)}`);
 }
