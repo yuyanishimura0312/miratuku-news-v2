@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DBエコシステム実測 — 2026-08-02</title>
+<meta name="description" content="ミラツク/esse-sense のDBエコシステムをAR-DBから実測した1枚。DB数・レコード数・エージェント数を、数え方の割れとともに示す。">
+<style>
+:root {
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555555;
+  --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,0.06);
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE;
+  --highlight:#CC1400; --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --side:clamp(20px,4vw,48px); --measure:64ch;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+[data-theme="dark"] {
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222222;
+  --accent:#E0E0E0; --accent-soft:#AAAAAA;
+  --accent-warm:#FF4030; --accent-warm-soft:#E03424; --accent-muted:rgba(255,64,48,0.10);
+  --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A;
+  --border:#333333; --border-light:#2A2A2A;
+  --highlight:#FF4030; --surface:#1A1A1A;
+}
+* { box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; }
+body {
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font); font-feature-settings:"palt";
+  line-height:1.9; letter-spacing:.02em; font-size:15px;
+}
+a { color:var(--text); text-decoration:none; border-bottom:1px solid var(--border); }
+a:hover { color:var(--accent-warm); border-color:var(--accent-warm); }
+
+.top-bar {
+  position:fixed; inset:0 0 auto 0; height:48px; z-index:20;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 var(--side); background:var(--bg);
+  border-top:3px solid var(--accent); border-bottom:1px solid var(--border-light);
+}
+.brand { font-weight:900; font-size:13px; letter-spacing:.02em; }
+.brand span { color:var(--accent-warm); }
+.top-meta { font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-muted); }
+.theme-btn {
+  font:inherit; font-size:10.5px; letter-spacing:.18em; text-transform:uppercase;
+  background:none; border:1px solid var(--border); color:var(--text-secondary);
+  padding:5px 12px; cursor:pointer; transition:border-color .2s var(--ease), color .2s var(--ease);
+}
+.theme-btn:hover { color:var(--accent-warm); border-color:var(--accent-warm); }
+.theme-btn:focus-visible, a:focus-visible { outline:2px solid var(--accent-warm); outline-offset:2px; }
+
+.layout { display:flex; gap:48px; padding:48px var(--side) 0; align-items:flex-start; }
+.toc {
+  position:sticky; top:96px; width:230px; flex:0 0 230px;
+  border-top:1px solid var(--accent); padding-top:16px;
+}
+.toc-title { font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; }
+.toc ol { list-style:none; margin:0; padding:0; counter-reset:toc; }
+.toc li { counter-increment:toc; border-bottom:1px solid var(--border-light); }
+.toc a { display:flex; gap:10px; padding:9px 0; border:0; font-size:12.5px; line-height:1.5; color:var(--text-secondary); }
+.toc a::before { content:counter(toc,decimal-leading-zero); font-family:var(--mono); font-size:10.5px; color:var(--accent-warm); font-weight:700; }
+.toc a:hover { color:var(--accent-warm); }
+
+main { flex:1 1 auto; max-width:760px; padding-bottom:96px; }
+.eyebrow { font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--text-muted); }
+h1 { font-size:clamp(26px,4vw,38px); font-weight:900; line-height:1.28; letter-spacing:-.02em; margin:10px 0 14px; }
+.lede { font-size:15.5px; color:var(--text-secondary); max-width:60ch; }
+h2 { font-size:20px; font-weight:900; letter-spacing:-.01em; line-height:1.4; margin:0 0 6px; }
+h3 { font-size:14.5px; font-weight:900; letter-spacing:0; margin:32px 0 8px; }
+p { margin:0 0 16px; max-width:var(--measure); }
+section { margin-top:56px; padding-top:28px; border-top:1px solid var(--border); }
+.sec-no { font-family:var(--mono); font-size:11px; font-weight:700; color:var(--accent-warm); letter-spacing:.1em; }
+strong { font-weight:900; color:var(--accent-warm); }
+
+.kpi { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border-light); margin:28px 0; border:1px solid var(--border-light); }
+.kpi div { background:var(--card); padding:16px 18px; }
+.kpi .k { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-muted); }
+.kpi .v { font-family:var(--mono); font-size:26px; font-weight:700; line-height:1.25; margin-top:6px; letter-spacing:-.02em; }
+.kpi .s { font-size:11.5px; color:var(--text-muted); line-height:1.6; }
+
+figure { margin:28px 0; }
+.figbox { background:#FFFFFF; border:1px solid var(--border-light); padding:8px; }
+.figsvg { display:block; width:100%; height:auto; }
+figcaption { font-size:11.5px; color:var(--text-muted); margin-top:8px; line-height:1.7; }
+
+table { width:100%; border-collapse:collapse; margin:20px 0; font-size:13px; }
+th, td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border-light); }
+th { font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-muted); font-weight:700; border-bottom:1px solid var(--accent); }
+td.num, th.num { text-align:right; font-family:var(--mono); font-size:12.5px; }
+tbody tr:hover { background:var(--card-hover); }
+
+.bars { margin:20px 0; }
+.bar-row { display:grid; grid-template-columns:minmax(120px,1.35fr) 3fr minmax(84px,auto); gap:12px; align-items:center; padding:5px 0; border-bottom:1px solid var(--border-light); }
+.bar-name { font-size:12.5px; color:var(--text-secondary); overflow-wrap:anywhere; }
+.bar-track { background:var(--surface); height:9px; display:block; }
+.bar-fill { background:var(--accent-warm); height:9px; display:block; }
+.bar-val { font-family:var(--mono); font-size:12px; text-align:right; }
+
+.note { border-left:2px solid var(--accent-warm); background:var(--accent-muted); padding:14px 18px; margin:24px 0; font-size:13.5px; }
+.note p { margin:0; }
+.note p + p { margin-top:10px; }
+pre { background:var(--surface); border:1px solid var(--border-light); padding:14px 16px; overflow-x:auto; font-family:var(--mono); font-size:12px; line-height:1.8; letter-spacing:0; }
+code { font-family:var(--mono); font-size:12.5px; }
+footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--accent); font-size:11.5px; color:var(--text-muted); }
+.two { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+
+@media (max-width:1000px) {
+  .layout { display:block; padding-top:40px; }
+  .toc { position:static; width:auto; margin-bottom:36px; }
+  .two { grid-template-columns:1fr; gap:8px; }
+}
+@media print {
+  .top-bar, .toc, .theme-btn { display:none; }
+  .layout { display:block; padding:0; }
+  body { font-size:10.5pt; }
+  section { break-inside:avoid; }
+}
+@media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<header class="top-bar">
+  <div class="brand">ミラツク<span> / </span>esse-sense</div>
+  <div class="top-meta">DB Ecosystem Metrics</div>
+  <button class="theme-btn" id="themeBtn" type="button" aria-label="配色を切り替える">Dark</button>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="目次">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1">計測の概要</a></li>
+    <li><a href="#s2">DB数は数え方で割れる</a></li>
+    <li><a href="#s3">レコード数の78%はGRID</a></li>
+    <li><a href="#s4">エージェントの構成と発火</a></li>
+    <li><a href="#s5">読み方と再現</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="eyebrow">計測日 2026-08-02 / 出典 AR-DB db_live_stats・agents</div>
+<h1>DBエコシステム実測</h1>
+<p class="lede">ミラツク/esse-sense が積み上げてきたデータベース群とエージェント体制の規模を、Agent Registry DB から実測した1枚。要点は「規模は1つの数字で言えない」ことにある。同じ問いに対して、数え方によって2つの正しい答えが返る。</p>
+
+<div class="kpi">
+  <div><div class="k">Databases</div><div class="v">770 / 293</div><div class="s">ファイル数 / プロジェクト数</div></div>
+  <div><div class="k">Records</div><div class="v">415.8M</div><div class="s">GRID を除くと 91.5M</div></div>
+  <div><div class="k">Agents</div><div class="v">426</div><div class="s">発火観測は 27.9%</div></div>
+</div>
+
+<section id="s1">
+<div class="sec-no">01</div>
+<h2>計測の概要</h2>
+<p>本ページの数値はすべて、2026-08-02 に AR-DB の <code>db_live_stats</code> と <code>agents</code> から取得した実測値である。推計・概算・過去記録からの引き写しは含まない。データベース側は 770 ファイル・6,538 テーブル・415,817,940 行・92.4 GB で、integrity 検査は全件 ok を返した。エージェント側は実体 426 体、コマンド 450、ルール 62、スキル 51、組み込み 20 の合計 1,009 である。</p>
+<p>読み進めるうえで前提になるのは、この体系が単一の均質な集合ではないという点である。1 プロジェクトが 100 を超えるファイルに分かれることもあれば、1 ファイルが全体の 3 割近い容量を占めることもある。したがって「いくつあるのか」「どれだけ大きいのか」への答えは、何を 1 件と数えるかに依存する。以下の 2 節は、その依存の中身を具体的に示す。</p>
+</section>
+
+<section id="s2">
+<div class="sec-no">02</div>
+<h2>DB数は数え方で割れる — 770 と 293</h2>
+<p>拡張子 .db の実ファイルを数えると 770、それらを束ねるプロジェクト単位で数えると 293 になる。どちらかが誤っているのではなく、どちらも実測であり、答えるべき問いが違う。容量の見積りやバックアップの設計はファイル単位でしか成立しないし、知識基盤としての広がりを語るならプロジェクト単位でなければ実態から離れる。</p>
+<figure>
+  <div class="figbox"><svg xmlns="http://www.w3.org/2000/svg" class="figsvg" viewBox="0 0 760 288" font-family='Noto Sans JP, "Hiragino Sans", -apple-system, sans-serif' role="img" aria-label="db-count-two-ways">
+<rect x="0" y="0" width="760" height="288" fill="#FFFFFF"/>
+<text x="16.0" y="31.0" font-size="15" font-weight="700" letter-spacing="-0.01em" text-anchor="start" fill="#0E0E0E">DB数は数え方で割れる — 770 と 293</text>
+
+<rect x="16" y="48" width="352" height="36" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<text x="192.0" y="70.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="middle" fill="#0E0E0E">ファイルで数える 770</text>
+
+<rect x="392" y="48" width="352" height="36" fill="#F6E1DE" stroke="#E6E6E6" stroke-width="1"/>
+<text x="568.0" y="70.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="middle" fill="#CC1400">プロジェクトで数える 293</text>
+
+<rect x="16" y="96" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="28.0" cy="110.0" r="2.6" fill="#6B6B6B"/>
+<text x="38.0" y="114.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">拡張子 .db の実ファイル数</text>
+
+<rect x="392" y="96" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="404.0" cy="110.0" r="2.6" fill="#CC1400"/>
+<text x="414.0" y="114.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#0E0E0E">DB を束ねるプロジェクト単位の数</text>
+
+<rect x="16" y="128" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="28.0" cy="142.0" r="2.6" fill="#6B6B6B"/>
+<text x="38.0" y="146.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">分割シャード・中間生成物も1件に数える</text>
+
+<rect x="392" y="128" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="404.0" cy="142.0" r="2.6" fill="#CC1400"/>
+<text x="414.0" y="146.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#0E0E0E">分割・中間生成物は親に畳まれる</text>
+
+<rect x="16" y="168" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="28.0" cy="182.0" r="2.6" fill="#6B6B6B"/>
+<text x="38.0" y="186.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">最大の乖離要因は GRID の 112 ファイル</text>
+
+<rect x="392" y="168" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="404.0" cy="182.0" r="2.6" fill="#CC1400"/>
+<text x="414.0" y="186.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#0E0E0E">GRID は 112 ファイルでも 1 プロジェクト</text>
+
+<rect x="16" y="208" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="28.0" cy="222.0" r="2.6" fill="#6B6B6B"/>
+<text x="38.0" y="226.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">容量見積り・バックアップ設計に使う</text>
+
+<rect x="392" y="208" width="352" height="32" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<circle cx="404.0" cy="222.0" r="2.6" fill="#CC1400"/>
+<text x="414.0" y="226.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#0E0E0E">知識基盤の広がりを語るときに使う</text>
+
+<text x="16.0" y="268.5" font-size="10.5" font-weight="400" letter-spacing="0.02em" text-anchor="start" fill="#6B6B6B">AR-DB db_live_stats 実測 2026-08-02。数値は計測のたびに動く</text>
+
+</svg></div>
+  <figcaption>図1 数え方の違いと、それぞれが答える問い。図解は figc の comparison 型で座標構成し、検証7項目すべて PASS。</figcaption>
+</figure>
+<h3>差はどこから生まれるか</h3>
+<p>770 と 293 の差 477 の大半は、少数の多ファイル・プロジェクトが生んでいる。とりわけ global-researcher-db は単独で 112 ファイルを占め、その中には本体 grid.db を分割した <code>shards/grid_s1</code> から <code>grid_s4</code> までの中間生成物が含まれる。分割の断片を独立したデータベースとして数えるかどうかが、そのまま総数の割れになる。</p>
+<table>
+<thead><tr><th>プロジェクト</th><th class="num">ファイル数</th><th class="num">レコード数</th></tr></thead>
+<tbody>
+<tr><td>global-researcher-db</td><td class=num>112</td><td class=num>324,293,004</td></tr>
+<tr><td>tourism-app</td><td class=num>74</td><td class=num>584,911</td></tr>
+<tr><td>answer-futures</td><td class=num>43</td><td class=num>4,230,925</td></tr>
+<tr><td>jgs-field-source-dbs</td><td class=num>35</td><td class=num>83,988</td></tr>
+<tr><td>rite-quest</td><td class=num>23</td><td class=num>149,612</td></tr>
+<tr><td>esse-sense-app</td><td class=num>20</td><td class=num>140,190</td></tr>
+<tr><td>world-heritage-explorer</td><td class=num>15</td><td class=num>54,042</td></tr>
+<tr><td>japan-growth-strategy-db</td><td class=num>14</td><td class=num>586,165</td></tr>
+</tbody>
+</table>
+<div class="note">
+<p>対外に規模を述べるときは、数字だけでなく数え方を添える。「770」とだけ言えば分割の断片を独立したデータベースとして提示することになり、「293」とだけ言えばファイル運用の実態が見えなくなる。用途に応じて選び、選んだことを明示する。</p>
+</div>
+</section>
+
+<section id="s3">
+<div class="sec-no">03</div>
+<h2>レコード数の78%はGRID 1件</h2>
+<p>全体は 415,817,940 行だが、このうち 324,293,004 行、割合にして 78% は global-researcher-db（海外研究者データ）1 プロジェクトが占める。レコード数の上位 10 ファイルはすべて GRID に属し、最大の grid.db は単体で 121,824,942 行に達する。したがって「4.16 億行」という表現は、実質的には海外研究者データ 1 件の規模を語っていることになる。</p>
+<figure>
+  <div class="figbox"><svg xmlns="http://www.w3.org/2000/svg" class="figsvg" viewBox="0 0 760 240" font-family='Noto Sans JP, "Hiragino Sans", -apple-system, sans-serif' role="img" aria-label="record-scale-grid">
+<rect x="0" y="0" width="760" height="240" fill="#FFFFFF"/>
+<text x="16.0" y="31.0" font-size="15" font-weight="700" letter-spacing="-0.01em" text-anchor="start" fill="#0E0E0E">全体・GRID 除き・GRID のみ — 3 つの規模</text>
+
+<rect x="112" y="48" width="208" height="32" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<rect x="320" y="48" width="208" height="32" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<rect x="528" y="48" width="208" height="32" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<text x="216.0" y="68.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="middle" fill="#0E0E0E">ファイル数</text>
+<text x="424.0" y="68.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="middle" fill="#0E0E0E">レコード数</text>
+<text x="632.0" y="68.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="middle" fill="#0E0E0E">容量</text>
+
+<rect x="16" y="80" width="96" height="40" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<text x="28.0" y="104.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="start" fill="#CC1400">全体</text>
+
+<rect x="112" y="80" width="208" height="40" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<text x="122.0" y="98.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">770</text>
+
+<rect x="320" y="80" width="208" height="40" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<text x="330.0" y="98.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">415,817,940 行</text>
+
+<rect x="528" y="80" width="208" height="40" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<text x="538.0" y="98.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">92.4 GB</text>
+
+<rect x="16" y="120" width="96" height="40" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<text x="28.0" y="144.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="start" fill="#CC1400">GRID を除く</text>
+
+<rect x="112" y="120" width="208" height="40" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<text x="122.0" y="138.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">658</text>
+
+<rect x="320" y="120" width="208" height="40" fill="#F6E1DE" stroke="#E6E6E6" stroke-width="1"/>
+<text x="330.0" y="138.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#CC1400">91,524,936 行</text>
+
+<rect x="528" y="120" width="208" height="40" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<text x="538.0" y="138.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">29.0 GB</text>
+
+<rect x="16" y="160" width="96" height="40" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<text x="28.0" y="184.0" font-size="12.5" font-weight="700" letter-spacing="0" text-anchor="start" fill="#CC1400">GRID のみ</text>
+
+<rect x="112" y="160" width="208" height="40" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<text x="122.0" y="178.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">112</text>
+
+<rect x="320" y="160" width="208" height="40" fill="#FAFAFA" stroke="#E6E6E6" stroke-width="1"/>
+<text x="330.0" y="178.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">324,293,004 行</text>
+
+<rect x="528" y="160" width="208" height="40" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+<text x="538.0" y="178.0" font-size="11.5" font-weight="400" letter-spacing="0" text-anchor="start" fill="#3A3A3A">63.4 GB</text>
+
+<text x="16.0" y="226.5" font-size="10.5" font-weight="400" letter-spacing="0.02em" text-anchor="start" fill="#6B6B6B">全体の 78% は GRID 1 件。対外に規模を述べるなら GRID 除きを併記する</text>
+
+</svg></div>
+  <figcaption>図2 全体・GRID 除き・GRID のみの 3 つの規模。図解は figc の matrix 型で座標構成し、検証7項目すべて PASS。</figcaption>
+</figure>
+<p>GRID を除いた 658 ファイルは 91,524,936 行・29.0 GB である。学術知の広がりや DB 群の厚みを語る文脈では、この 9,152 万行のほうが実態に近い。対外説明では両方を併記し、どちらの数字を根拠にしているかを読み手が判別できる状態にしておく。</p>
+<h3>GRID を除く上位10プロジェクト</h3>
+<div class="bars" role="img" aria-label="GRIDを除くレコード数上位10プロジェクトの比較。researcher-intelligence-db 25,250,202行を最大とする。">
+<div class="bar-row"><span class="bar-name">researcher-intelligence-db</span><span class="bar-track"><span class="bar-fill" style="width:100.0%"></span></span><span class="bar-val">25,250,202</span></div>
+<div class="bar-row"><span class="bar-name">myth-function-db</span><span class="bar-track"><span class="bar-fill" style="width:52.6%"></span></span><span class="bar-val">13,279,259</span></div>
+<div class="bar-row"><span class="bar-name">researcher-theme-bridge-db</span><span class="bar-track"><span class="bar-fill" style="width:33.0%"></span></span><span class="bar-val">8,345,018</span></div>
+<div class="bar-row"><span class="bar-name">answer-futures</span><span class="bar-track"><span class="bar-fill" style="width:16.8%"></span></span><span class="bar-val">4,230,925</span></div>
+<div class="bar-row"><span class="bar-name">prosody-rhythm-db</span><span class="bar-track"><span class="bar-fill" style="width:9.6%"></span></span><span class="bar-val">2,416,872</span></div>
+<div class="bar-row"><span class="bar-name">cultural-intelligence-db</span><span class="bar-track"><span class="bar-fill" style="width:7.9%"></span></span><span class="bar-val">2,000,781</span></div>
+<div class="bar-row"><span class="bar-name">answer-plus-app</span><span class="bar-track"><span class="bar-fill" style="width:7.2%"></span></span><span class="bar-val">1,826,801</span></div>
+<div class="bar-row"><span class="bar-name">placeness-knowledge-db</span><span class="bar-track"><span class="bar-fill" style="width:7.2%"></span></span><span class="bar-val">1,811,297</span></div>
+<div class="bar-row"><span class="bar-name">contemporary-questions-db</span><span class="bar-track"><span class="bar-fill" style="width:7.0%"></span></span><span class="bar-val">1,776,062</span></div>
+<div class="bar-row"><span class="bar-name">researcher-field-mapping</span><span class="bar-track"><span class="bar-fill" style="width:6.6%"></span></span><span class="bar-val">1,665,501</span></div>
+</div>
+<p>上位は研究者・神話・テーマ接続といった、粒度の細かい関係データを持つプロジェクトが占める。上位 3 件で GRID 除きの半分近くに達し、この層でも分布は一様ではない。</p>
+</section>
+
+<section id="s4">
+<div class="sec-no">04</div>
+<h2>エージェントの構成と発火</h2>
+<p>エージェント実体は 426 体で、モデル指定の未設定はない。発火が観測されているのは 119 体、カバレッジは 27.9% である。ただし未観測がそのまま不使用を意味するわけではなく、発火経路によっては観測網の外にある可能性が残る。カバレッジが低いあいだは、未観測を死蔵と即断しない。</p>
+<div class="two">
+<div>
+<h3>モデル別</h3>
+<div class="bars" role="img" aria-label="モデル別内訳。sonnet 221、haiku 113、opus 87、fable 5。">
+<div class="bar-row"><span class="bar-name">sonnet</span><span class="bar-track"><span class="bar-fill" style="width:100.0%"></span></span><span class="bar-val">221</span></div>
+<div class="bar-row"><span class="bar-name">haiku</span><span class="bar-track"><span class="bar-fill" style="width:51.1%"></span></span><span class="bar-val">113</span></div>
+<div class="bar-row"><span class="bar-name">opus</span><span class="bar-track"><span class="bar-fill" style="width:39.4%"></span></span><span class="bar-val">87</span></div>
+<div class="bar-row"><span class="bar-name">fable</span><span class="bar-track"><span class="bar-fill" style="width:2.3%"></span></span><span class="bar-val">5</span></div>
+</div>
+</div>
+<div>
+<h3>階層別</h3>
+<div class="bars" role="img" aria-label="階層別内訳。tier_2_specialist 186、tier_3_utility 116、tier_1_team 110、tier_0_orchestrator 14。">
+<div class="bar-row"><span class="bar-name">tier_2_specialist</span><span class="bar-track"><span class="bar-fill" style="width:100.0%"></span></span><span class="bar-val">186</span></div>
+<div class="bar-row"><span class="bar-name">tier_3_utility</span><span class="bar-track"><span class="bar-fill" style="width:62.4%"></span></span><span class="bar-val">116</span></div>
+<div class="bar-row"><span class="bar-name">tier_1_team</span><span class="bar-track"><span class="bar-fill" style="width:59.1%"></span></span><span class="bar-val">110</span></div>
+<div class="bar-row"><span class="bar-name">tier_0_orchestrator</span><span class="bar-track"><span class="bar-fill" style="width:7.5%"></span></span><span class="bar-val">14</span></div>
+</div>
+</div>
+</div>
+<p>最上位の入口である tier_0 は 14 体あり、稼働が観測されているのは design-meta・dbo・app-meta・firing-pattern-meta・cfmi・strategy-consulting-meta の 6 体である。入口の数と実際に使われている入口の数が一致していないこと自体が、体制を点検する手がかりになる。</p>
+</section>
+
+<section id="s5">
+<div class="sec-no">05</div>
+<h2>読み方と再現</h2>
+<p>本ページの数値は 2026-08-02 時点のスナップショットであり、計測のたびに動く。データベースの追加、シャードの再生成、エージェントの新設や統合はいずれも日常的に起きるため、日付を外して引用すると、いずれ実態と食い違う。参照するときは必ず計測日を添える。</p>
+<h3>再現の手順</h3>
+<p>同じ数値は AR-DB を直接引くことで再現できる。データベース側は <code>db_live_stats</code> の最新スナップショットを、エージェント側は <code>agents</code> の frontmatter 由来のモデル・階層を集計する。</p>
+<pre>sqlite3 -readonly ~/projects/research/agent-registry-db/data/agent_registry.db \
+  "SELECT COUNT(*), SUM(total_rows) FROM db_live_stats;"</pre>
+<p>照会にあたっては、同一プロジェクトに <code>total_rows</code> が 0 の行が混じることがあるため、集計時に最大値を通す。live 統計に未収載のデータベースは観測不能として扱い、推定で埋めない。</p>
+<div class="note">
+<p>この 3 つの数字を対外に出すときの最小限の作法。DB数は「770 ファイル / 293 プロジェクト」と併記する。レコード数は「415.8M（GRID 除きで 91.5M）」と併記する。エージェント数は「426 体、うち発火観測 119 体」と併記する。いずれも片方だけを示すと、実態より大きく、あるいは小さく伝わる。</p>
+</div>
+</section>
+
+<footer>
+計測日 2026-08-02 / 出典 AR-DB（db_live_stats・agents）実測値 / 図解は figc（comparison・matrix）で座標構成、検証7項目 PASS。上位プロジェクトの比較バーは figc 未実装型（data-chart）のため決定論 HTML で描画した。<br>
+NPO法人ミラツク・株式会社エッセンス — 数値は計測のたびに動く。引用時は計測日を添える。
+</footer>
+</main>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement, btn = document.getElementById('themeBtn');
+  var saved = null;
+  try { saved = localStorage.getItem('mt-theme'); } catch (e) {}
+  function apply(t) {
+    root.setAttribute('data-theme', t);
+    btn.textContent = (t === 'dark') ? 'Light' : 'Dark';
+  }
+  apply(saved === 'dark' ? 'dark' : 'light');
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    apply(next);
+    try { localStorage.setItem('mt-theme', next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
