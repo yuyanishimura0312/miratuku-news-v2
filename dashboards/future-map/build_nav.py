@@ -35,11 +35,12 @@ GROUPS = [
         ("domain-map-2026.html", "領域の詳細"),
         ("roadmaps.html", "技術の詳細"),
         ("future-map-ai-human.html", "AIと人の領域"),
+        ("signals-26.html", "シグナル一覧"),
         ("reference-2026.html", "資料編"),
     ]),
     ("18テーマ版", [
         ("map.html", "未来像マップ"),
-        ("index.html", "シグナル一覧"),
+        ("index.html", "シグナル一覧（18テーマ）"),
         ("research.html", "最新研究"),
         ("overlay-map.html", "重ね合わせ"),
     ]),
@@ -121,7 +122,10 @@ def main():
         html = p.read_text(encoding="utf-8")
         html, removed = strip_old(html)
         # 既に入っていれば入れ替える
-        html = re.sub(re.escape(BEGIN) + r".*?" + re.escape(END), "", html, flags=re.S)
+        # ★前後の空白ごと取り除く。残したまま下で "\n" を2つ足すと、
+        #   実行のたびに空行が積み上がり冪等でなくなる（実測: 1回につき2行）。
+        html = re.sub(r"\s*" + re.escape(BEGIN) + r".*?" + re.escape(END) + r"\s*",
+                      "", html, flags=re.S)
         m = re.search(r"<body[^>]*>", html)
         if not m:
             print(f"  {p.name}: ★<body> が見つからないので飛ばします")
