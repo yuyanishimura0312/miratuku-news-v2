@@ -177,7 +177,7 @@ def build_section() -> str:
       <p class="fig-cap">FIG. 02 — 方法の系譜 (横軸 = 年・前頁と共通 / 縦 = 計算する・対話し学習する・受け取った学派)</p>
     </div>
 
-    <div class="legend"><span class="lg-head">線種 = 関係の裏づけ</span><span class="lg-item">{swatch('documented')}<b>文献に記述あり</b><span class="lg-note">{n_doc}本</span></span><span class="lg-item">{swatch('original_curation')}<b>編纂 (機械的裏づけなし)</b><span class="lg-note">{n_cur}本</span></span><span class="lg-item"><b>★人物関係の機械照合は0本</b><span class="lg-note">方法の層に系譜データが無いため</span></span></div>
+    <div class="legend"><span class="lg-head">線種 = 関係の裏づけ</span><span class="lg-item">{swatch('documented')}<b>文献に記述あり</b><span class="lg-note">{n_doc}本</span></span><span class="lg-item">{swatch('original_curation')}<b>編纂 (機械的裏づけなし)</b><span class="lg-note">{n_cur}本</span></span><span class="lg-item"><b>★人物関係の機械照合は0本</b><span class="lg-note">方法の層は人物照合を持たない</span></span></div>
 
     <div class="cols">
       <div>
@@ -186,7 +186,7 @@ def build_section() -> str:
       </div>
       <div class="note">
         <h2 class="sec">この図から言えないこと</h2>
-        <ul class="cannot"><li><strong>この系譜はDBに入っていない。</strong>方法99件は系譜の欄が<strong>全件空</strong>、97件が未検証。図は外部の一次情報から引いた。</li><li>Checkland の批判は <strong>hard systems 全般</strong>に向けられており、システムダイナミクスを名指ししたわけではない。</li><li><strong>Senge と Forrester の師弟関係は未確認</strong>のため線にしていない。Senge・Checkland は当DBに不在。</li><li>参加型未来手法(当DB 1970)へは線を引いていない。出典が無く、Checkland 1981 より前で<strong>年代が逆立ちする</strong>。</li></ul>
+        <ul class="cannot"><li><strong>DBの関係表(30本)には根拠の欄が無い。</strong>年も0/30で、学派側にある「何が裏づけるか」を持たない。この3本は外部の一次情報に接地して<strong>別途登録した</strong>。</li><li>Checkland の批判は <strong>hard systems 全般</strong>に向けられており、システムダイナミクスを名指ししたわけではない。</li><li><strong>Senge と Forrester の師弟関係は未確認</strong>のため線にしていない。Senge・Checkland は当DBに不在。</li><li>参加型未来手法(当DB 1970)へは線を引いていない。出典が無く、Checkland 1981 より前で<strong>年代が逆立ちする</strong>。</li></ul>
       </div>
     </div>
   </div>
