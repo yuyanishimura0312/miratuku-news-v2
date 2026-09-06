@@ -705,8 +705,8 @@
       </div>
       <p class="page-lead">基軸データベースが情報を蓄積し、構造理解が分析フレームを提供し、変化検出がセンサーとして機能し、概念基盤が知識の文脈を与える。4層＋事業化＋補助に分類された統合知識インフラの全体像。各DBには専門エージェント（slash command）が紐づき、Claude Codeから直接対話可能。</p>
       <div class="page-meta">
-        <span><strong>56</strong> データベース</span>
-        <span><strong>45</strong> 専門エージェント</span>
+        <span><strong id="hdrDbCount">-</strong> データベース</span>
+        <span><strong id="hdrAgentCount">-</strong> 専門エージェント</span>
         <span><strong>358</strong> エージェント体系（<a href="dashboards/ar-db.html" style="color:inherit;text-decoration:underline;">AR-DB</a>）</span>
         <span><strong>4層 + 事業化 + 補助</strong> アーキテクチャ</span>
         <span><strong>日次更新</strong></span>
@@ -1334,6 +1334,26 @@
         '<div class="kpi-cell"><div class="kpi-label">LAYERS</div><div class="kpi-value">' + (stats.layers || '-') + '</div></div>' +
         '<div class="kpi-cell"><div class="kpi-label">UPDATE</div><div class="kpi-value" style="font-size:1.05rem">' + (stats.updateFrequency || '-') + '</div></div>';
       el.hidden = false;
+
+      // 見出しの数値は KPI と同じ構造由来の計算に相乗りさせる（同じ量を2か所で定義しない）。
+      // 旧: 静的な「56 / 45」。実測 2026-09-06 で totalDBs=164 と食い違っていた。
+      var hd = document.getElementById('hdrDbCount');
+      if (hd) hd.textContent = totalDBs;
+      var ha = document.getElementById('hdrAgentCount');
+      if (ha) {
+        var all = [];
+        (data.layers || []).concat(data.extraSections || []).forEach(function(l) {
+          all = all.concat(l.databases || []);
+        });
+        all = all.concat(data.supplementary || []);
+        var slugs = {};
+        all.forEach(function(b) {
+          if (b && typeof b.agent === 'string' && b.agent.charAt(0) === '/') {
+            slugs[b.agent.split(' ')[0]] = 1;
+          }
+        });
+        ha.textContent = Object.keys(slugs).length;
+      }
     }
 
     fetch('data/db-registry.json')
