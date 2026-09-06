@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>先住民知の構造 — 実測ダッシュボード</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --card:#FFFFFF; --card-hover:#F7F7F5;
+  --accent:#121212; --accent-soft:#555555;
+  --accent-warm:#CC1400; --accent-warm-soft:#B01200; --accent-muted:rgba(204,20,0,.06);
+  --text:#121212; --text-secondary:#555555; --text-muted:#6B6B6B;
+  --border:#D9D9D9; --border-light:#EEEEEE; --highlight:#CC1400; --surface:#F7F7F5;
+  --font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;
+  --mono:"SF Mono","Fira Code",ui-monospace,monospace;
+}
+[data-theme="dark"]{
+  --bg:#121212; --card:#1A1A1A; --card-hover:#222222;
+  --accent:#E0E0E0; --accent-soft:#AAAAAA;
+  --accent-warm:#FF4030; --accent-warm-soft:#E03020; --accent-muted:rgba(255,64,48,.10);
+  --text:#E0E0E0; --text-secondary:#AAAAAA; --text-muted:#8A8A8A;
+  --border:#333333; --border-light:#2A2A2A; --highlight:#FF4030; --surface:#1A1A1A;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-feature-settings:"palt";letter-spacing:.025em;line-height:1.9}
+.top-bar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--bg);
+  border-top:3px solid var(--accent);border-bottom:1px solid var(--border-light);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.brand{font-weight:700;font-size:13px;letter-spacing:.14em}
+.brand em{font-style:normal;color:var(--accent-warm)}
+.theme-btn{background:none;border:1px solid var(--border);color:var(--text-secondary);
+  font-family:var(--font);font-size:11px;padding:5px 12px;cursor:pointer;letter-spacing:.1em}
+.theme-btn:hover{border-color:var(--accent-warm);color:var(--accent-warm)}
+.wrap{display:flex;padding:48px 24px 0;max-width:1228px;margin:0 auto}
+.toc{position:sticky;top:48px;align-self:flex-start;width:260px;flex:0 0 260px;
+  padding:44px 20px 44px 0;max-height:calc(100vh - 48px);overflow-y:auto}
+.toc h2{font-size:10px;letter-spacing:.22em;color:var(--text-muted);
+  text-transform:uppercase;margin:0 0 18px;font-weight:500}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:0 0 11px}
+.toc a{color:var(--text-secondary);text-decoration:none;font-size:12.5px;line-height:1.5;
+  display:flex;gap:10px;align-items:baseline}
+.toc a:hover{color:var(--accent-warm)}
+.toc .num{font-family:var(--mono);font-size:10px;color:var(--text-muted);flex:0 0 auto}
+main{flex:1;min-width:0;max-width:756px;padding:44px 0 120px}
+h1{font-family:var(--font-serif);font-size:31px;line-height:1.4;margin:0 0 8px;
+  font-weight:700;letter-spacing:-.015em}
+.sub{color:var(--text-secondary);font-size:13.5px;margin:0 0 6px}
+.meta{color:var(--text-muted);font-size:11.5px;font-family:var(--mono);margin:0 0 40px;text-indent:0}
+.chapter{margin-bottom:76px;padding-bottom:44px;border-bottom:1px solid var(--border-light)}
+.chapter:last-child{border-bottom:none}
+h2.ch{font-family:var(--font-serif);font-size:21px;margin:0 0 24px;font-weight:700;letter-spacing:-.015em;
+  display:flex;gap:14px;align-items:baseline}
+h2.ch .n{font-family:var(--mono);font-size:12px;color:var(--accent-warm);flex:0 0 auto}
+h3{font-size:14.5px;margin:34px 0 12px;font-weight:700;letter-spacing:.03em}
+p{margin:0 0 16px;font-family:var(--font-serif);font-size:14.5px;line-height:1.95}
+p.first{text-indent:0}
+p+p{text-indent:1em}
+b{font-weight:700}
+b.hl,.hl{color:var(--accent-warm);font-weight:700}
+.strike{text-decoration:line-through;color:var(--text-muted)}
+code{font-family:var(--mono);font-size:11.5px;background:var(--surface);
+  padding:2px 6px;border:1px solid var(--border-light);white-space:nowrap}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  gap:1px;background:var(--border-light);border:1px solid var(--border-light);margin:26px 0}
+.kpi div{background:var(--card);padding:16px 14px}
+.kpi .v{font-family:var(--mono);font-size:23px;font-weight:700;line-height:1.2}
+.kpi .v.warm{color:var(--accent-warm)}
+.kpi .k{font-size:10.5px;color:var(--text-muted);margin-top:5px;letter-spacing:.05em}
+table{width:100%;border-collapse:collapse;margin:20px 0;font-size:12.5px;
+  font-family:var(--font);line-height:1.7}
+th{text-align:left;font-weight:500;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--text-muted);padding:0 12px 9px 0;
+  border-bottom:1px solid var(--border)}
+td{padding:11px 12px 11px 0;border-bottom:1px solid var(--border-light);vertical-align:top}
+tr:last-child td{border-bottom:none}
+table.axes td:nth-child(1){width:52px;font-family:var(--mono)}
+table.axes td:nth-child(2){width:31%}
+table.gap td:nth-child(1){width:52px;font-family:var(--mono)}
+table.fail td:nth-child(1){width:26%}
+table.pred td:nth-child(1){width:34%}
+.note{border-left:2px solid var(--accent-warm);padding:2px 0 2px 18px;margin:24px 0;
+  background:var(--accent-muted)}
+.note p{margin:10px 0;font-size:13.5px}
+.quiet{border-left:2px solid var(--border);padding:2px 0 2px 18px;margin:24px 0}
+.quiet p{margin:10px 0;font-size:13px;color:var(--text-secondary)}
+ul.plain{margin:16px 0;padding-left:20px;font-size:13.5px;line-height:1.9;
+  font-family:var(--font-serif)}
+ul.plain li{margin-bottom:7px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent-warm);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+/* 5) 375px で4列が各75pxに潰れ1セルが9行に折り返していた。器の中で横スクロールさせる */
+@media (max-width:700px){
+  table.axes{display:block;overflow-x:auto}
+  table.axes>tbody{display:table;width:100%;min-width:600px}
+}
+@media (max-width:1000px){
+  .wrap{flex-direction:column;padding:48px 20px 0}
+  .toc{position:static;width:auto;flex:none;padding:26px 0 8px;max-height:none;
+    border-bottom:1px solid var(--border-light)}
+  .toc ol{columns:2;column-gap:24px}
+  main{padding:30px 0 80px;max-width:none}
+  h1{font-size:25px}
+}
+@media print{
+  @page{margin:16mm}
+  html[data-theme="dark"]{
+    --bg:#FFFFFF;--card:#FFFFFF;--text:#121212;--text-secondary:#555555;
+    --text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEEEEE;--surface:#F7F7F5;
+    --accent:#121212;--accent-warm:#CC1400;--accent-muted:rgba(204,20,0,.06)}
+  .top-bar,.toc,.theme-btn{display:none}
+  .wrap{display:block;padding:0} main{max-width:none;padding:0}
+  .chapter{page-break-inside:avoid;border-bottom:1px solid #ddd}
+  body{line-height:1.7}
+}
+</style></head><body>
+<div class="top-bar">
+  <div class="brand">MIRATUKU <em>/</em> 先住民知の構造</div>
+  <button class="theme-btn" onclick="tt()">DARK / LIGHT</button>
+</div>
+<div class="wrap">
+<nav class="toc"><h2>Contents</h2><ol><li><a href="#s0"><span class="num">01</span><span>この資料の読み方</span></a></li>
+<li><a href="#s1"><span class="num">02</span><span>素材の実態</span></a></li>
+<li><a href="#s2"><span class="num">03</span><span>知の構造 — GTA</span></a></li>
+<li><a href="#s3"><span class="num">04</span><span>社会の構造 — システム分析</span></a></li>
+<li><a href="#s4"><span class="num">05</span><span>接続と欠落</span></a></li>
+<li><a href="#s5"><span class="num">06</span><span>記録した失敗の型</span></a></li>
+<li><a href="#s6"><span class="num">07</span><span>撤回と訂正</span></a></li>
+<li><a href="#s7"><span class="num">08</span><span>測っていないこと</span></a></li></ol></nav>
+<main>
+<h1>先住民知の構造</h1>
+<p class="sub">グラウンデッド・セオリーとシステム分析による実測</p>
+<p class="meta">2026-09-06 ／ traditional-knowledge-db ／ 生成: dashboard/generate.py</p>
+
+<section class="chapter" id="s0">
+<h2 class="ch"><span class="n">01</span>この資料の読み方</h2>
+<p class="first">この資料は、先住民の知について何が分かったかと同時に、<b>何が分からなかったか、どこで測り間違えたか</b>を載せている。数値の多くは一度以上訂正されており、訂正の履歴も残してある。</p>
+<p>用いた方法は二つある。一つは<b>グラウンデッド・セオリー</b>で、UNESCO 無形文化遺産の実践記述から、理論用語を当てずに実践の言葉のまま符号を作り、それを条件と帰結を持つ軸へ束ねた。もう一つは<b>システム分析</b>で、民族誌アトラス由来の 1,291 社会 × 26変数の行列について、変数間の連関を地域統制つきで測った。</p>
+<div class="note"><p><b class="hl">この資料が示すのは、記述の構造であって、知そのものの構造ではない。</b>材料は外部の記録であり、当事者が内側から語った言葉ではない。以下で「構造」と呼ぶものは、その留保のもとで読まれる必要がある。</p></div>
+<div class="kpi">
+  <div><div class="v">847</div><div class="k">実質の実践（代表）</div></div>
+  <div><div class="v">2,320</div><div class="k">オープンコード</div></div>
+  <div><div class="v">160</div><div class="k">軸カテゴリ</div></div>
+  <div><div class="v warm">33</div><div class="k">頑健な変数対 / 325</div></div>
+  <div><div class="v warm">146</div><div class="k">我々のDBに無い概念</div></div>
+</div>
+</section>
+
+<section class="chapter" id="s1">
+<h2 class="ch"><span class="n">02</span>素材の実態</h2>
+<p class="first">「先住民族の知のDB」と呼んできたものは、性質の異なる四つの層の混成である。分析に入る前に、この構成そのものが所見になる。</p>
+<table class=""><thead><tr><th>出所</th><th>件数</th><th>性質</th></tr></thead><tbody><tr><td>D-PLACE</td><td>33,566</td><td>民族誌アトラスの<b>符号化変数</b>。26変数 × 1,291社会。散文を持たない</td></tr><tr><td>UNESCO ICH</td><td>1,742</td><td>無形文化遺産の記載。<b class="hl">FPIC 準拠が明記された唯一の層</b></td></tr><tr><td>LLM 生成</td><td>797</td><td><b class="hl">実データではなく生成物</b>（沖縄1,052件の75.8%）</td></tr><tr><td>自治体・文化庁</td><td>255</td><td>沖縄県・国指定文化財のオープンデータ</td></tr></tbody></table>
+<p>民族誌アトラス由来の記録が全体の 92.3% を占めるが、これは社会の外形（何を食べ、誰と住み、誰が継ぐか）の符号化であって、散文を持たない。無形文化遺産の記載だけが実践の記述を持ち、同時に自由意思による事前の同意が明記された唯一の層でもある。</p>
+<h3>記載層の内訳 — 実践でないものが混ざっていた</h3>
+<table class=""><thead><tr><th>record_kind</th><th>件数</th><th>内容</th></tr></thead><tbody><tr><td><code>practice</code></td><td><b>1,084</b></td><td>実践の記述</td></tr><tr><td><code>site_boilerplate</code></td><td><b>545</b></td><td>題名「Safeguarding our living heritage」の同一の定型ページ。本文は全件同一の127字</td></tr><tr><td><code>site_navigation</code></td><td><b>113</b></td><td>一覧ページ・申請書類のリンク一覧</td></tr></tbody></table>
+<div class="note"><p>収集の過程で、案内ページと申請書類のリンク一覧が実践レコードとして取り込まれていた。<b class="hl">分母を五回訂正した</b>結果、実質の実践は 847 件である。当初は 1,742 件として扱っていた。</p></div>
+<h3>変数ラベルの訂正</h3>
+<p class="first">この分析の直前に、変数ラベルと中身が別物である欠陥が見つかった。値は正しく、ラベルだけが別の変数のものだった。原典と照合して 27,111 件を訂正した。</p>
+<table class=""><thead><tr><th>コード</th><th>誤っていたラベル</th><th>正しいラベル</th><th>件数</th></tr></thead><tbody><tr><td>EA009</td><td><span class="strike">Metal working</span></td><td><b>Marital composition: monogamy and polygamy</b></td><td>1,291</td></tr><tr><td>EA010</td><td><span class="strike">Weaving</span></td><td><b>Marital residence with kin: first years</b></td><td>1,291</td></tr><tr><td>EA011</td><td><span class="strike">Leather working</span></td><td><b>Transfer of residence at marriage: prevailing pattern</b></td><td>1,291</td></tr><tr><td>EA012</td><td><span class="strike">Pottery</span></td><td><b>Marital residence with kin: prevailing pattern</b></td><td>1,291</td></tr><tr><td>EA013</td><td><span class="strike">Boat building</span></td><td><b>Transfer of residence at marriage: alternate</b></td><td>1,291</td></tr><tr><td>EA015</td><td><span class="strike">Settlement patterns</span></td><td><b>Community marriage organization</b></td><td>1,291</td></tr><tr><td>EA017</td><td><span class="strike">Community size</span></td><td><b>Largest patrilineal kin group</b></td><td>1,291</td></tr><tr><td>EA028</td><td><span class="strike">Agriculture type</span></td><td><b>Agriculture: intensity</b></td><td>1,291</td></tr><tr><td>EA029</td><td><span class="strike">Agriculture: intensity</span></td><td><b>Agriculture: major crop type</b></td><td>1,291</td></tr><tr><td>EA033</td><td><span class="strike">House construction: wall material</span></td><td><b>Jurisdictional hierarchy beyond local community</b></td><td>1,291</td></tr><tr><td>EA034</td><td><span class="strike">High god</span></td><td><b>Religion: high gods</b></td><td>1,291</td></tr><tr><td>EA035</td><td><span class="strike">House construction: shape</span></td><td><b>Games</b></td><td>1,291</td></tr><tr><td>EA039</td><td><span class="strike">Domestic animals: cattle</span></td><td><b>Domestic animals: plow cultivation</b></td><td>1,291</td></tr><tr><td>EA040</td><td><span class="strike">Domestic animals: sheep</span></td><td><b>Domestic animals: type</b></td><td>1,291</td></tr><tr><td>EA041</td><td><span class="strike">Domestic animals: goats</span></td><td><b>Domestic animals: milking</b></td><td>1,291</td></tr><tr><td>EA042</td><td><span class="strike">Domestic animals: pigs</span></td><td><b>Subsistence economy: dominant activity</b></td><td>1,291</td></tr><tr><td>EA066</td><td><span class="strike">Kinship: descent type</span></td><td><b>Class differentiation: primary</b></td><td>1,291</td></tr><tr><td>EA069</td><td><span class="strike">Kinship: cousin marriage</span></td><td><b>Caste differentiation: secondary features</b></td><td>1,291</td></tr><tr><td>EA070</td><td><span class="strike">Kinship: community organization</span></td><td><b>Slavery: type</b></td><td>1,291</td></tr><tr><td>EA072</td><td><span class="strike">Political integration: jurisdictional hierarchy</span></td><td><b>Political succession</b></td><td>1,291</td></tr><tr><td>EA112</td><td><span class="strike">Postpartum sex taboos</span></td><td><b>Trance states</b></td><td>1,291</td></tr></tbody></table>
+</section>
+
+<section class="chapter" id="s2">
+<h2 class="ch"><span class="n">03</span>知の構造 — グラウンデッド・セオリー</h2>
+<p class="first">実践の記述 847 件から、理論用語を当てずに符号を作った。得られた 2,320 の符号は、<b class="hl">語の水準では一つも重ならない</b>。同じ語で書かれた符号が一件も無い。</p>
+<p>しかしそれらを条件と帰結で束ねると、160 の軸に収まった。未分類は 173 件である。八つの班が独立に符号化したにもかかわらず、軸の名前の完全一致は零件、語彙の共有は 4% でありながら、<b class="hl">意味の水準では 83.75〜87.5% が対応した</b>。</p>
+<div class="note"><p><b class="hl">固有なのは語であって、構造ではない。</b>そして全ての軸が「条件」を持つ。知は状態の名ではなく、何が揃えば動くかを伴った行為として保存されている。</p></div>
+<h3>軸カテゴリ（上位）</h3>
+<table class="axes"><thead><tr><th>件数</th><th>軸カテゴリ</th><th>条件</th><th>帰結</th></tr></thead><tbody><tr><td><b>30</b></td><td><b>物語や出来事、暮らしや自然の様子を語り、演じる</b></td><td>物語・神話・歴史・経験や、身近な暮らし・自然が語る題材になる。</td><td>登場人物の功績や出来事、仕事の苦労、自然の様子などが歌・語り・芝居・踊りで示され、知識や経験も伝えられる。</td></tr><tr><td><b>27</b></td><td><b>人形・台詞・歌・身振りを組み合わせて物語を演じる</b></td><td>民話・説話・身近な話・歴史や宗教の場面などの題材があり、人形・舞台・声・動きを使う。</td><td>登場人物や場面が見える・聞こえる形で示され、歌・語り・対話を通じて物語が進む。</td></tr><tr><td><b>27</b></td><td><b>楽器を鳴らし、歌・語り・踊り・演技と組み合わせる</b></td><td>楽器と演奏者がおり、独演・楽団・歌い手・踊り手などの組み合わせで演じる。</td><td>打つ・吹く・弾く動作から音が生まれ、歌・台詞・身振りなどと重なったり順に続いたりして演目を構成する。</td></tr><tr><td><b>27</b></td><td><b>材料の形を整え、つなぎ合わせて使えるものを作る</b></td><td>木・石・板・皮・繊維などの材料があり、用途・寸法・地形・気候に合う形や組み方を選ぶ。</td><td>紙・楽器・船・屋根・橋などが形になり、必要な固定・補強・調律を経て使える状態になる。</td></tr><tr><td><b>27</b></td><td><b>声や楽器の音を変え、重ね、歌や動きにつなぐ</b></td><td>使い分ける声・音節・音色や、重ねる声部、合わせる歌・踊り・演技がある。</td><td>旋律や拍子が生まれ、歌が連なり、ほかの歌い手や踊り手の動きが支えられる。</td></tr><tr><td><b>26</b></td><td><b>詩や物語を唱え、声や音で内容を伝える</b></td><td>語る物語・詩・言葉・予言などがあり、韻・旋律・声色・音の違いを使える。</td><td>人物や出来事への賛美、物語、気分、対処法などが音で表され、口笛では音の違いから言葉を聞き分ける。</td></tr><tr><td><b>26</b></td><td><b>聖所に集まり、神や祖先に供えて祈る</b></td><td>神・聖人・祖先・守護霊に呼びかける場があり、飢饉への対処、採集や潜水の安全、豊作などが求められる。</td><td>供物・歌・踊り・祈りによって信仰や願いが表され、保護・豊作・幸運・癒やしを目指す。</td></tr><tr><td><b>25</b></td><td><b>材料を選び、加工して組み立てる</b></td><td>木・皮・粘土などの材料と、製作を担う人、道具や工程がある。</td><td>材料が建物・船・楽器・器などの形になり、維持・修理・再建も行われる。</td></tr><tr><td><b>25</b></td><td><b>祝い・弔い・日々の集まりで披露し、参加する</b></td><td>婚礼・葬儀・成人入り・祭りや、家庭・酒場・市場などで人が集まる機会がある。</td><td>食事・衣服・演奏・踊り・語り・遊びが、その集まりの活動や節目の祝いに組み込まれる。</td></tr><tr><td><b>25</b></td><td><b>拍子や相手の声・動きに合わせて歌い踊る</b></td><td>太鼓や歌の拍子、先唱者の声、向かい合う列や半円など、互いに合わせる手がかりがある。</td><td>声・歩調・身振りがそろったり掛け合わされたりし、速い動きでは互いの帯をつかんで安定を保つ。</td></tr><tr><td><b>24</b></td><td><b>模様・文字・飾りを品物や場に加える</b></td><td>布・卵・金属・紙・建物などの対象に合わせて、色・図柄・文字・配置を選ぶ。</td><td>品物や場が飾られ、意味を持たせた図柄や文字では願い・物語・主張・着る人の情報も表される。</td></tr><tr><td><b>23</b></td><td><b>楽器・歌・体の動きをリズムに合わせる</b></td><td>歌や踊りに伴奏を付けたり、楽器・手足・鈴などで拍子を刻んだりする。</td><td>音と動きが組み合わされ、歌・踊り・歩行にリズムや伴奏が添えられる。</td></tr></tbody></table>
+<h3>統合カテゴリと、立てられなかった中核</h3>
+<table class=""><thead><tr><th>実行</th><th>統合カテゴリ</th><th>軸数</th></tr></thead><tbody><tr><td>tg-ik-selective(80軸)</td><td><b>材料に手を加え、使うもの・食べるもの・飾りを作る</b></td><td>17</td></tr><tr><td>tg-ik-selective(80軸)</td><td><b>声・音・姿・動きを組み合わせ、伝え、演じ、応じ合う</b></td><td>23</td></tr><tr><td>tg-ik-selective(80軸)</td><td><b>時期や節目に合わせ、支度・集まり・儀礼を進める</b></td><td>19</td></tr><tr><td>tg-ik-selective(80軸)</td><td><b>教える人と接し、作業や参加を通して覚える</b></td><td>4</td></tr><tr><td>tg-ik-selective(80軸)</td><td><b>品物・食事・助けを相手に届け、分け合い、売り買いする</b></td><td>4</td></tr><tr><td>tg-ik-selective(80軸)</td><td><b>自然の状態を読み、採取・育成・水や設備の利用を進める</b></td><td>5</td></tr><tr><td>tg-ik-selective(80軸)</td><td><b>相手と技や力を試し、競い、結果を認める</b></td><td>—</td></tr><tr><td>tg-ik-selective-full(160軸)</td><td><b>材料を加工・装飾し、使う物・食べる物に仕上げる</b></td><td>34</td></tr><tr><td>tg-ik-selective-full(160軸)</td><td><b>声・音・動き・装いを組み立て、聞かせ・見せる</b></td><td>41</td></tr><tr><td>tg-ik-selective-full(160軸)</td><td><b>時期・道筋・節目に合わせ、支度と進行を整える</b></td><td>22</td></tr><tr><td>tg-ik-selective-full(160軸)</td><td><b>供え・祈り・清めで、敬意や願いを表す</b></td><td>—</td></tr></tbody></table>
+<div class="quiet"><p>八十軸と百六十軸で二度、独立に選択コーディングを行ったが、<b>いずれも中核カテゴリを立てられなかった</b>。製作・上演・祈り・学習・売買・治療が、共通する何をめぐって生じ互いにどう作用するかが、資料に書かれていないためである。</p>
+<p>「暮らしを支える」といった名前で包むことはできるが、それは<b>記述されていない目的を補うことになる</b>として退けられた。構造は七つから八つの束として在り、その上に統一像はない。</p></div>
+</section>
+
+<section class="chapter" id="s3">
+<h2 class="ch"><span class="n">04</span>社会の構造 — システム分析</h2>
+<p class="first">民族誌アトラス由来の 1,291 社会 × 26変数について、変数対ごとの連関を測った。社会は互いに独立でないため、地域内で測り直して比較している。標本の偏りを補正する処理も入れた。</p>
+<table class=""><thead><tr><th>判定</th><th>変数対</th><th>意味</th></tr></thead><tbody><tr><td>弱い</td><td><b>266</b></td><td>閾値未満</td></tr><tr><td>頑健</td><td><b>33</b></td><td>3地域すべてでバイアス補正後 V≥0.30</td></tr><tr><td>地域内で定義不能: Americas</td><td><b>24</b></td><td></td></tr><tr><td>定義不能(片方が1カテゴリ)</td><td><b>1</b></td><td></td></tr><tr><td>地域内で定義不能: Africa</td><td><b>1</b></td><td></td></tr></tbody></table>
+<h3>婚姻・親族は切り離されている</h3>
+<p class="first">生業・技術、婚姻・親族、階層・政治、象徴・身体の四つに分けて見ると、婚姻・親族は生業からも象徴からも<b class="hl">頑健な結びつきを持たない</b>。判定の閾値を大きく緩めても、この組み合わせだけは変わらなかった。</p>
+<h3>ただし橋は撤回した</h3>
+<div class="note"><p>一度は「生業から階層と象徴へ向かう橋が三本ある」と判定したが、<b class="hl">撤回した</b>。地域内で期待値との比を見ると、南北アメリカとアジア太平洋ではほぼ一に落ちる。搾乳は南北アメリカで 97% が「なし」、犂耕は同 97%・アフリカ 89% が「なし」で、<b>変数が実質的に定数</b>だった。定数と何かの間に連関は検出できない。</p>
+<p>訂正の結果、<b>系を跨ぐ結びつきは実質的に残らない</b>。地域を統制すると、モジュール間の結合はほぼ地理的な共変動で説明される。ただしこれは「無い」ことの証明ではない。変数が定数の地域では、そもそも検出する力がない。</p></div>
+</section>
+
+<section class="chapter" id="s4">
+<h2 class="ch"><span class="n">05</span>接続と欠落</h2>
+<p class="first">実践を現代の社会科学・人文学の概念へ結ぼうとした結果、<b>我々の側の欠落</b>が浮かび上がった。接続先として用意した 25,903 概念のうち、実際に触れたのは 81 概念にすぎない。</p>
+<h3>我々のDB群に無い概念</h3>
+<table class="gap"><thead><tr><th>回数</th><th>我々のDB群に無い概念</th></tr></thead><tbody><tr><td><b>39</b></td><td>暗黙知</td></tr><tr><td><b>30</b></td><td>性別分業</td></tr><tr><td><b>14</b></td><td>共食（commensality）</td></tr><tr><td><b>12</b></td><td>Verbal art as performance</td></tr><tr><td><b>11</b></td><td>共食（Commensality）</td></tr><tr><td><b>10</b></td><td>シンクレティズム</td></tr><tr><td><b>10</b></td><td>共食</td></tr><tr><td><b>9</b></td><td>社会的アイデンティティ</td></tr><tr><td><b>8</b></td><td>相互行為儀礼</td></tr><tr><td><b>8</b></td><td>集合行為</td></tr><tr><td><b>8</b></td><td>操作連鎖（chaîne opératoire）</td></tr><tr><td><b>8</b></td><td>Chaîne opératoire</td></tr><tr><td><b>7</b></td><td>社会化</td></tr><tr><td><b>6</b></td><td>ミュージッキング</td></tr><tr><td><b>6</b></td><td>オーラリティ</td></tr><tr><td><b>6</b></td><td>物質宗教（Material religion）</td></tr><tr><td><b>5</b></td><td>文化的混淆（Cultural hybridity）</td></tr><tr><td><b>5</b></td><td>関係的認識論</td></tr></tbody></table>
+<div class="note"><p>欠けている概念は三つの系統に集中する。<b class="hl">身体化された知、口承性、混淆</b>である。いずれも先住民の実践を語るのに要る語彙であり、我々の学術DB群が<b>書かれた理論に厚く、実演される知・声の知・混ざる知に薄い</b>ことを示す。</p></div>
+<h3>二つの層は交わらない</h3>
+<p class="first">符号を三段階抽象化しても、民族誌アトラスの変数体系とは交わらなかった。作る、演じる、儀礼を進める、覚える、売り買いする、競う — <b class="hl">これらに対応する変数が一つもない</b>。粒度の違いではなく、測っている対象が違う。</p>
+</section>
+
+<section class="chapter" id="s5">
+<h2 class="ch"><span class="n">06</span>記録した失敗の型</h2>
+<p class="first">この分析で踏んだ誤りを、機械が読める形で残した。先住民の知に限らず、データベースを作るたびに繰り返される型である。</p>
+<table class="fail"><thead><tr><th>型</th><th>内容</th></tr></thead><tbody><tr><td><code>polysemy</code></td><td>多義語が分野をまたいで一致する。変数レベルの1語一致140件を支配した</td></tr><tr><td><code>title_lexicon</code></td><td>学術書の書名の語彙が一致する。内容の関連ではなく題名の語の一致</td></tr><tr><td><code>generic_abstraction</code></td><td>抽象度の高い一般語が一致し、無関係な理論へ接続する</td></tr><tr><td><code>label_derived</code></td><td>誤ラベル由来の語が説明文へ混入（bridge 層で観測）</td></tr><tr><td><code>specificity_bias</code></td><td>語彙一致は汎用語を持つ項目だけを拾い、固有名で構成された項目を落とす。最も「先住民族の知」らしいものが網から漏れる</td></tr><tr><td><code>granularity_mismatch</code></td><td>名指しの語彙と接続先の語彙の粒度が違い、原理的に噛み合わない。「未測定」ではなく「対応しないと確認した」＝incommensurable の実例</td></tr><tr><td><code>boilerplate_records</code></td><td>収集時にサイトの定型ページ・一覧ページが実践レコードとして混入し、分母を膨らませる。率の報告が全て狂う</td></tr><tr><td><code>duplicate_collection</code></td><td>同じ対象を2回収集し、1回目の薄いレコードが残る。分母を膨らませ、薄い方を「本文が無い」と誤読させる</td></tr><tr><td><code>unit_mismatch_between_layers</code></td><td>2つの層が別々の単位で対象を記述しており、社会レベルで突き合わせられない。統合には第3の同定層が要る</td></tr><tr><td><code>constant_variable_inflates_association</code></td><td>地域内で変数が実質的に定数（最頻値8割超）でも Cramér&#x27;s V は閾値を超えうる。「3地域すべてで V≥0.30」は頑健性の証明にならない</td></tr><tr><td><code>layers_measure_different_objects</code></td><td>2層が主題の水準で重ならない。片方は社会の外形を、片方は知の営みを記述しており、同じDBに入っているが測っている対象が違う</td></tr><tr><td><code>ceiling_artifact_in_coding</code></td><td>コーディングの指示に上限を書くと、全班が上限に張り付き「飽和した」ように見える。飽和の判定を誤らせる</td></tr><tr><td><code>metric_name_presupposes_conclusion</code></td><td>指標の命名が解釈を先取りする。「収束率」は符号名の重複率にすぎないのに、概念的収束・理論的飽和を意味するかのように読ませる</td></tr><tr><td><code>title_only_classification</code></td><td>KOS ddc-title-only-analysis。題名の一致だけでレコード種別を判定し、本文で裏づけていない。処方は「目次・序文・本文などを確認し、主題分析を裏付ける」</td></tr></tbody></table>
+</section>
+
+<section class="chapter" id="s6">
+<h2 class="ch"><span class="n">07</span>撤回と訂正</h2>
+<p class="first">結論を出す前に予測を書き、判定の基準を凍結してから結果を受け取った。事後に「予想どおり」と言えないようにするためである。</p>
+<table class="pred"><thead><tr><th>予測</th><th>結果</th></tr></thead><tbody><tr><td>160軸版でも中核カテゴリは立てられない</td><td>的中: 「中核カテゴリは、現資料では全カテゴリを結ぶ関係の根拠が足りず、立てられない」と160軸版でも明示された。80軸版と同じ理由（軸どうしの関係を示す記述が資料に無い）</td></tr><tr><td>班をまたぐ対応率は80軸版の87.5%と±10ポイント以内に収まる</td><td>的中: 160軸版が同じ4班を照合し直した結果 67/80 = 83.75%（凍結した基準 77.5〜97.5% に収まる）。80軸版は87.5%で、差は3.75pt。ただし検証者の留保: 全班が20軸の上限に達しているため、対応未確認の軸があっても他班で作られなかった・広い軸に吸収された可能性がある。上限の効果が対応率の判定にも効いてい</td></tr><tr><td>統合カテゴリは8個前後（4〜12）に収まる</td><td>部分的に外れ（80軸版で判定）: 統合カテゴリは7個。指示の上限8に張り付かなかった。予測の範囲(4〜12)には収まったが、根拠にした「上限に張り付く癖」は選択コーディングでは働かなかった。上限の効果は工程によって違う（軸コーディングでは全8班が上限20に張り付いた）</td></tr><tr><td>未統合の軸は160軸の5%未満（8軸未満）</td><td>的中: 未統合は5軸/160 = 3.1%（基準は8軸未満）。80軸版の3/80=3.75%とほぼ同じ</td></tr></tbody></table>
+<div class="quiet"><p>外れた予測が教えたのは、上限を指示に書くと 全班が上限に張り付く現象が、工程によって起きたり起きなかったりすることだった。軸を作る工程では八つの班すべてが上限に張り付き、統合する工程では張り付かなかった。<b>予測を立てなければ得られなかった</b>。</p></div>
+</section>
+
+<section class="chapter" id="s7">
+<h2 class="ch"><span class="n">08</span>測っていないこと</h2>
+<ul class="plain">
+<li>符号が全て異なるのが対象の性質か、問い方の帰結かは<b class="hl">判定できていない</b>。決着には、同じ本文に対して問いだけを変えた比較が要る。</li>
+<li>値コードと値ラベルの対応は<b>未検証</b>である。原典の接続口が値の定義を返さない。取れなかったのであって、正しいと確認できたのではない。</li>
+<li>地域四区分は、社会が独立でないことへの<b>粗い代理</b>にすぎない。言語系統・近接性・記録年代は統制していない。</li>
+<li>欠けている概念のうち、実在するが我々のDBに無いものと、そもそも実在しないものを、<b>照合器は区別できない</b>。</li>
+<li>四つのモジュール分けは<b>分析者が与えたもの</b>で、データから導かれたものではない。実際、象徴として束ねた三変数は互いに無関係だった。</li>
+<li>当事者に成果が戻る道筋を<b class="hl">まだ書けていない</b>。</li>
+</ul>
+</section>
+</main></div>
+<script>
+(function(){var k='tk-ik-theme',s=localStorage.getItem(k);
+if(s)document.documentElement.setAttribute('data-theme',s);})();
+function tt(){var d=document.documentElement,n=d.getAttribute('data-theme')==='dark'?'light':'dark';
+d.setAttribute('data-theme',n);try{localStorage.setItem('tk-ik-theme',n);}catch(e){}}
+</script>
+</body></html>
