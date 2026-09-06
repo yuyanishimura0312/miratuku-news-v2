@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LDI-DB — 大規模開発の負の効果</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFFFF;--card:#FFFFFF;--card-hover:#F7F7F5;--accent:#121212;--accent-soft:#555;
+--accent-warm:#CC1400;--accent-warm-soft:#B01200;--accent-muted:rgba(204,20,0,.06);
+--text:#121212;--text-secondary:#555;--text-muted:#6B6B6B;--border:#D9D9D9;--border-light:#EEE;
+--highlight:#CC1400;--surface:#F7F7F5;
+--font:"Noto Sans JP","Hiragino Sans",-apple-system,sans-serif;
+--font-serif:"Noto Serif JP","Hiragino Mincho ProN",Georgia,serif;}
+[data-theme="dark"]{--bg:#121212;--card:#1A1A1A;--card-hover:#222;--accent:#E0E0E0;
+--accent-warm:#FF4030;--accent-muted:rgba(255,64,48,.10);--text:#E0E0E0;--text-secondary:#AAA;
+--text-muted:#8A8A8A;--border:#333;--border-light:#2A2A2A;--highlight:#FF4030;--surface:#1A1A1A;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+letter-spacing:.025em;font-feature-settings:"palt";line-height:1.9}
+.top-bar{position:sticky;top:0;z-index:20;height:48px;display:flex;align-items:center;
+justify-content:space-between;padding:0 24px;background:var(--bg);
+border-top:3px solid var(--accent);border-bottom:1px solid var(--border-light)}
+.brand{font-weight:700;font-size:14px;letter-spacing:.08em}
+.brand span{color:var(--accent-warm)}
+.tgl{border:1px solid var(--border);background:transparent;color:var(--text);
+padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--font)}
+.wrap{display:flex;gap:40px;max-width:1180px;margin:0 auto;padding:36px 24px 80px}
+.toc{width:240px;flex:none;position:sticky;top:84px;align-self:flex-start;font-size:12px}
+.toc a{display:block;color:var(--text-secondary);text-decoration:none;padding:5px 0;
+border-bottom:1px solid var(--border-light)}
+.toc a:hover{color:var(--accent-warm)}
+.toc .num{color:var(--accent-warm);font-family:"SF Mono",Menlo,monospace;margin-right:8px;font-size:11px}
+main{max-width:760px;flex:1}
+h1{font-family:var(--font-serif);font-size:30px;line-height:1.5;margin:0 0 6px}
+.sub{color:var(--text-muted);font-size:13px;margin-bottom:34px}
+section{margin-bottom:60px;padding-bottom:44px;border-bottom:1px solid var(--border-light)}
+h2{font-size:19px;margin:0 0 16px;padding-left:12px;border-left:4px solid var(--accent-warm)}
+h3{font-size:14px;margin:26px 0 10px;color:var(--text-secondary)}
+p{font-family:var(--font-serif);font-size:15px;margin:0 0 16px;text-indent:1em}
+p:first-of-type{text-indent:0}
+.warn{background:var(--accent-muted);border-left:4px solid var(--accent-warm);
+padding:16px 18px;margin:0 0 18px}
+.warn b{color:var(--accent-warm)}
+.warn p{text-indent:0;margin:0 0 8px;font-size:14px}
+.warn p:last-child{margin:0}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+th{text-align:left;background:var(--surface);padding:9px 10px;border-bottom:2px solid var(--border);
+font-weight:600;font-size:12px}
+td{padding:8px 10px;border-bottom:1px solid var(--border-light)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"SF Mono",Menlo,monospace}
+.hl{color:var(--accent-warm);font-weight:700}
+.mut{color:var(--text-muted);font-size:12px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:8px 0 22px}
+.kpi div{border:1px solid var(--border);padding:14px}
+.kpi .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:11px;color:var(--text-muted);margin-top:3px}
+.bar{height:7px;background:var(--border-light);margin-top:5px}
+.bar i{display:block;height:100%;background:var(--accent-warm)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 60px;color:var(--text-muted);font-size:12px}
+@media(max-width:1000px){.wrap{flex-direction:column;gap:20px}.toc{position:static;width:auto}}
+@media print{.toc,.top-bar{display:none}.wrap{display:block}}
+</style></head><body>
+<div class="top-bar"><div class="brand">LDI<span>-</span>DB</div>
+<button class="tgl" onclick="t()">表示切替</button></div>
+<div class="wrap"><nav class="toc"><a href="#s1"><span class="num">01</span>このDBを引く前に</a><a href="#s2"><span class="num">02</span>判定の信頼度</a><a href="#s3"><span class="num">03</span>層と件数</a><a href="#s4"><span class="num">04</span>事案層の内訳</a><a href="#s5"><span class="num">05</span>サブフィールド</a><a href="#s6"><span class="num">06</span>まだできていないこと</a></nav><main>
+<h1>大規模開発の負の効果</h1>
+<div class="sub">Large-scale Development Impacts DB ・ 生成 2026-08-10
+・ 数値はすべて実行時にDBから引いている</div>
+
+<section id="s1"><h2>01 このDBを引く前に</h2>
+<div class="warn"><p><b>文献の半分以上が主題外である。</b></p>
+<p>3者判定（Claude系 fable → GPT系 codex → Opus auditor が裁定）による実測で
+<span class="hl">56.8%</span>（95%CI 48.7–64.5%・n=148）。
+この率は測るたびに上がってきたが、悪化ではなく、定義が厳密になり判定者が増えるたびに
+正確になった結果である。</p></div>
+<div class="warn"><p><b>件数を規模として名乗れない。</b></p>
+<p>対外に出せるのは <code>v_ldi_work_core</code> の <span class="hl">10,861</span> 件であって、
+<code>ldi_work</code> 全体の 16,869 件ではない。後者には主題外率の高い層が含まれる。</p></div>
+<div class="warn"><p><b>事案は「都市開発の事案」ではない。</b></p>
+<p>8,001 件のうち都市・産業・インフラ・観光は
+<span class="hl">374</span> 件（4.7%）にとどまる。
+大半は農林鉱・再エネの土地取得である。外部診断はこの層を「不適（命名詐称）」と判定した。</p></div>
+<p>このDBは自分の欠陥を測って持っている。汚染率だけでなく、その汚染率がどれだけ信頼できるかまで
+測ってある。是正は5回試して5回とも既存の水準を上回っておらず、その記録も残している。
+使う前に限界を知るための構成になっているのは、件数だけを見せると必ず誤読されるからである。</p>
+</section>
+
+<section id="s2"><h2>02 判定の信頼度</h2>
+<p>主観分類を含むDBなので、5件セット標準で持つ。主指標は Gwet AC1 であり、
+カッパは参考値として併記する（両者の数値を直接比較してはならない）。</p>
+<div class="kpi">
+<div><div class="v">0.7412</div><div class="l">Gwet AC1（主指標）</div></div>
+<div><div class="v">0.8661</div><div class="l">観測一致率</div></div>
+<div><div class="v">0.7238</div><div class="l">Cohen κ（参考）</div></div>
+<div><div class="v">224</div><div class="l">標本数</div></div>
+</div>
+<p>fable（Claude系）と codex（GPT系）という<b>異機種間</b>で測った。同一基盤モデルの検証者は
+系統的バイアスを持つため、異機種・複数審査が対策になる。ただし2系統ともLLMであり、
+完全独立ではないという留保が付く。判定が割れた30件は Opus auditor が確定定義のみで裁定し、
+codex 側20・fable 側10という内訳まで記録してある。</p>
+</section>
+
+<section id="s3"><h2>03 層と件数</h2>
+<table><tr><th>層</th><th class="n">件数</th><th>状態</th></tr><tr><td>文献 core（対外可）</td><td class="n">10,861</td><td class="mut">主題外 56.8%（48.7–64.5%）</td></tr><tr><td>文献 low_confidence</td><td class="n">6,008</td><td class="mut">既定の照会から除外</td></tr><tr><td>人格による判定ラベル</td><td class="n">230</td><td class="mut">3者を通した実測の根拠</td></tr><tr><td>概念</td><td class="n">56</td><td class="mut">必須理論 52/60 消化・15軸すべてに接地</td></tr><tr><td>事案</td><td class="n">8,001</td><td class="mut">★都市開発は少数（下記）</td></tr><tr><td>事案の影響</td><td class="n">8,448</td><td class="mut">申立てと確定を分離</td></tr><tr><td>数値観測</td><td class="n">720</td><td class="mut">外部診断で「適正」</td></tr><tr><td>本文</td><td class="n">10</td><td class="mut">publisher の403で実効歩留まりが低い</td></tr><tr><td>データ源台帳</td><td class="n">59</td><td class="mut">うち一部は「確認できなかった」</td></tr><tr><td>探索の痕跡</td><td class="n">168</td><td class="mut">どこを見て何が出なかったか</td></tr></table></section><section id="s4"><h2>04 事案層の内訳</h2>
+<p>この内訳は原本CSVから解析し直した確定値である。当初は Land Matrix の時系列エンコーディングが
+混入した生値を集計しており、分類不能が18.2%出ていた。派生値を直すのではなく原本へ戻ったことで
+1.5%まで下がった。</p><table><tr><th>種別</th><th class="n">件数</th><th class="n">割合</th><th></th></tr><tr><td>農業・畜産</td><td class="n">3,945</td><td class="n">49.3%</td><td style="width:34%"><div class="bar"><i style="width:49.3%"></i></div></td></tr><tr><td>林業</td><td class="n">1,027</td><td class="n">12.8%</td><td style="width:34%"><div class="bar"><i style="width:12.8%"></i></div></td></tr><tr><td>鉱業・採取</td><td class="n">917</td><td class="n">11.5%</td><td style="width:34%"><div class="bar"><i style="width:11.5%"></i></div></td></tr><tr><td>再エネ用地</td><td class="n">869</td><td class="n">10.9%</td><td style="width:34%"><div class="bar"><i style="width:10.9%"></i></div></td></tr><tr><td>バイオ燃料</td><td class="n">286</td><td class="n">3.6%</td><td style="width:34%"><div class="bar"><i style="width:3.6%"></i></div></td></tr><tr><td>産業用地</td><td class="n">276</td><td class="n">3.4%</td><td style="width:34%"><div class="bar"><i style="width:3.4%"></i></div></td></tr><tr><td>保全・炭素</td><td class="n">198</td><td class="n">2.5%</td><td style="width:34%"><div class="bar"><i style="width:2.5%"></i></div></td></tr><tr><td>公共事業(英GMPP)</td><td class="n">189</td><td class="n">2.4%</td><td style="width:34%"><div class="bar"><i style="width:2.4%"></i></div></td></tr><tr><td>その他</td><td class="n">117</td><td class="n">1.5%</td><td style="width:34%"><div class="bar"><i style="width:1.5%"></i></div></td></tr><tr><td>観光</td><td class="n">98</td><td class="n">1.2%</td><td style="width:34%"><div class="bar"><i style="width:1.2%"></i></div></td></tr><tr><td>土地投機</td><td class="n">44</td><td class="n">0.5%</td><td style="width:34%"><div class="bar"><i style="width:0.5%"></i></div></td></tr><tr><td>不明</td><td class="n">35</td><td class="n">0.4%</td><td style="width:34%"><div class="bar"><i style="width:0.4%"></i></div></td></tr></table></section><section id="s5"><h2>05 サブフィールド</h2>
+<p>15軸は「開発が何を壊すか」で切ってある。文献はどの軸にもあるが、
+<b>事案で裏づけられているのは4軸だけ</b>で、残る11軸は事案を持たない。
+概念は必須理論チェックリストに接地しているが、消化は軸によって差がある。</p>
+<table><tr><th>軸</th><th>名称</th><th class="n">概念</th><th class="n">文献</th>
+<th class="n">事案</th><th class="n">必須理論</th></tr><tr><td class="n">SF01</td><td>立ち退き・非自発的移住</td><td class="n">2</td><td class="n">1,131</td><td class="n">604</td><td class="n">2/4</td></tr><tr><td class="n">SF02</td><td>ジェントリフィケーション・排除</td><td class="n">4</td><td class="n">1,682</td><td class="n"><span class="hl">0</span></td><td class="n">4/4</td></tr><tr><td class="n">SF03</td><td>緑化・気候適応による排除</td><td class="n">3</td><td class="n">503</td><td class="n"><span class="hl">0</span></td><td class="n">3/4</td></tr><tr><td class="n">SF04</td><td>生息地の分断・生物多様性損失</td><td class="n">4</td><td class="n">1,493</td><td class="n"><span class="hl">0</span></td><td class="n">4/4</td></tr><tr><td class="n">SF05</td><td>環境正義・負荷の分配</td><td class="n">4</td><td class="n">1,066</td><td class="n"><span class="hl">0</span></td><td class="n">4/4</td></tr><tr><td class="n">SF06</td><td>収奪・囲い込み・土地政治</td><td class="n">4</td><td class="n">887</td><td class="n">7,812</td><td class="n">4/4</td></tr><tr><td class="n">SF07</td><td>費用超過・便益過大見積り</td><td class="n">7</td><td class="n">1,148</td><td class="n">189</td><td class="n">4/4</td></tr><tr><td class="n">SF08</td><td>意思決定の病理</td><td class="n">7</td><td class="n">1,031</td><td class="n">189</td><td class="n">4/4</td></tr><tr><td class="n">SF09</td><td>影響評価制度とその失敗</td><td class="n">4</td><td class="n">780</td><td class="n"><span class="hl">0</span></td><td class="n">4/4</td></tr><tr><td class="n">SF10</td><td>オフセット・ノーネットロスの実効性</td><td class="n">4</td><td class="n">586</td><td class="n"><span class="hl">0</span></td><td class="n">4/4</td></tr><tr><td class="n">SF11</td><td>健康・社会関係への影響</td><td class="n">3</td><td class="n">1,148</td><td class="n"><span class="hl">0</span></td><td class="n">3/4</td></tr><tr><td class="n">SF12</td><td>文化・遺産・場所の喪失</td><td class="n">3</td><td class="n">943</td><td class="n"><span class="hl">0</span></td><td class="n">3/4</td></tr><tr><td class="n">SF13</td><td>非人間への影響</td><td class="n">3</td><td class="n">341</td><td class="n"><span class="hl">0</span></td><td class="n">4/4</td></tr><tr><td class="n">SF14</td><td>グローバルサウス・植民地性</td><td class="n">2</td><td class="n">622</td><td class="n"><span class="hl">0</span></td><td class="n">3/4</td></tr><tr><td class="n">SF15</td><td>対抗・救済・アカウンタビリティ</td><td class="n">2</td><td class="n">987</td><td class="n"><span class="hl">0</span></td><td class="n">2/4</td></tr></table></section><section id="s6"><h2>06 まだできていないこと</h2><p>未解決のものを隠さず持つ。★印は着手を妨げているもの。</p><table><tr><th>領域</th><th>内容</th></tr><tr><td style="white-space:nowrap"><span class="hl">★</span> 日本語文献</td><td class="mut">J-STAGE APIは抄録も本文リンクも返さず、CiNiiは契約上抄録を提供しない。日本語の本文経路が存在しない…</td></tr><tr><td style="white-space:nowrap"><span class="hl">★</span> 出版社TDM</td><td class="mut">Elsevier/Springer/SAGE いずれも購読機関のIPまたは所属が前提。当方が購読IPを持つか未確認…</td></tr><tr><td style="white-space:nowrap"><span class="hl">★</span> 事案層の数値</td><td class="mut">EJAtlas の影響人口はAPIから取れない。別経路(提供依頼/ブラウザ自動化)が要る…</td></tr><tr><td style="white-space:nowrap"><span class="hl">★</span> 移転世帯数</td><td class="mut">実数は世銀RAP等のPDF本文にしかなく、10,995件規模の掘削工程が要る…</td></tr><tr><td style="white-space:nowrap">本文カバレッジ</td><td class="mut">書籍(Policy Press/Edward Elgar/Bristol UP/NYU Press)が主要議論の場だが、全経路で本文を機械取得できない。論文のみのDBは主要議論を落とす。この欠落は最初から明示する…</td></tr><tr><td style="white-space:nowrap">本文カバレッジ</td><td class="mut">closed論文は原理的に本文を取れない。OA 6,484件が上限…</td></tr><tr><td style="white-space:nowrap">再検証</td><td class="mut">DOAJ/SSOAR/Wiley/Campbell の4つがボット遮断で未確認のまま…</td></tr><tr><td style="white-space:nowrap">日本の従前従後</td><td class="mut">権利者数の従前従後は日本のどの公開データにも存在しない。DB設計上、日本については面積・用途・人口(町丁目)までしか言えないことを明示する…</td></tr><tr><td style="white-space:nowrap">申立と被害の乖離</td><td class="mut">申立件数を被害件数として読まない。申立には機構へのアクセスが要るため系統的に乖離する。AIIB PPM の登録0件と二次情報24件は registered/filed の定義差…</td></tr></table></section></main></div>
+<footer>NPO法人ミラツク ／ esse-sense ・ LDI-DB は自分の欠陥を測って持つDBである。
+数値は生成時点のものであり、必ず <code>etl/verify.py</code> で引き直すこと。</footer>
+<script>
+function t(){const r=document.documentElement;const d=r.getAttribute('data-theme')==='dark';
+r.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('ldi-theme',d?'light':'dark');}
+const s=localStorage.getItem('ldi-theme');if(s)document.documentElement.setAttribute('data-theme',s);
+</script></body></html>
