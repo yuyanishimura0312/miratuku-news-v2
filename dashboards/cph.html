@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国哲学DB ダッシュボード | miratuku-news</title>
+<link rel="icon" href="https://esse-sense.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --card: #FFFFFF;
+  --accent: #1A1A1A;
+  --accent-warm: #CC1400;
+  --accent-muted: rgba(204,20,0,0.06);
+  --text: #1A1A1A;
+  --text-secondary: #3A3A3A;
+  --text-muted: #6B6B6B;
+  --border: #E6E6E6;
+  --border-light: #EEEEEE;
+  --surface: #FAFAFA;
+  --font: "Noto Sans JP", "Hiragino Sans", -apple-system, sans-serif;
+  --font-serif: "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+  /* 以下はDB固有の局所トークン（正本 tokens.css 外）。
+     --border-strong・--bar-muted は AA 3:1 を満たす棒色として保持する局所名で、
+     tokens 外の色は #8C8C8C のみに絞っている。*/
+  --border-strong: #8C8C8C;
+  --bar-muted: #8C8C8C;
+  --dur-fast: .2s;
+  --ease: cubic-bezier(.16,1,.3,1);
+  /* 正本 tokens.css の --side は clamp(28px,6vw,80px) で値が異なる（同名異値）。
+     ここは2カラム格子の器幅（列幅）に合わせて縮めた局所トークンのため --side-db に改名した。*/
+  --side-db: clamp(16px, 4vw, 48px);
+  --measure: 66ch;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card: #1A1A1A;
+  --accent: #E0E0E0;
+  --accent-warm: #FF4030;
+  --accent-muted: rgba(255,64,48,0.10);
+  --text: #E0E0E0;
+  --text-secondary: #C9C9C9;
+  --text-muted: #9A9A9A;
+  --border: #333333;
+  --border-light: #2A2A2A;
+  --surface: #1A1A1A;
+  --bar-muted: #6E6E6E;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  font-family: var(--font-serif);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+  font-feature-settings: "palt";
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+a { color: var(--accent-warm); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.top-bar {
+  background: var(--bg);
+  border-top: 3px solid var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding: 0 var(--side-db);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar-brand {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.top-bar-brand span { color: var(--accent-warm); }
+.top-bar-actions { display: flex; align-items: center; gap: 12px; }
+.back-link {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.back-link:hover { color: var(--accent-warm); text-decoration: none; }
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent-warm); color: var(--accent-warm); }
+
+.book-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--side-db);
+  gap: 0;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 40px 24px 40px 0;
+  border-right: 1px solid var(--border-light);
+}
+.toc-sidebar::-webkit-scrollbar { width: 4px; }
+.toc-sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+.toc-label {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.toc-list li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 5px 8px 5px 0;
+  transition: color 0.15s;
+  line-height: 1.5;
+}
+.toc-list li a:hover { color: var(--accent-warm); text-decoration: none; }
+.toc-num {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.65rem;
+  color: var(--accent-warm);
+  min-width: 22px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.book-main { padding: 60px 0 100px var(--side-db); max-width: 760px; }
+
+.book-header {
+  margin-bottom: 64px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.book-db-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.db-tag {
+  font-family: var(--font);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.db-tag.primary { border-color: var(--accent-warm); color: var(--accent-warm); }
+.book-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  letter-spacing: 0;
+}
+.book-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.book-meta {
+  margin-top: 32px;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.chapter-section {
+  margin-bottom: 80px;
+  padding-bottom: 60px;
+  border-bottom: 1px solid var(--border-light);
+}
+.chapter-section:last-child { border-bottom: none; }
+.chapter-number-label {
+  font-family: var(--font);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.chapter-title {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  line-height: 1.5;
+  font-weight: 700;
+  margin-bottom: 28px;
+  letter-spacing: 0;
+}
+h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 48px 0 20px;
+  color: var(--text);
+}
+h4 {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 32px 0 12px;
+  color: var(--accent-warm);
+}
+p { margin-bottom: 24px; text-indent: 1em; }
+p:first-of-type { text-indent: 0; }
+.lead {
+  font-size: 1.08rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  font-weight: 500;
+  text-indent: 0;
+}
+ul, ol { margin: 16px 0 28px 1.6em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; color: var(--text); }
+em {
+  font-style: normal;
+  background: linear-gradient(transparent 60%, var(--accent-muted) 60%);
+  padding: 0 2px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+th, td {
+  padding: 11px 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+th { background: var(--surface); font-weight: 700; }
+
+.callout {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-warm);
+  padding: 20px 24px;
+  margin: 32px 0;
+  font-family: var(--font);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+.callout-title {
+  font-weight: 700;
+  color: var(--accent-warm);
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+.stat-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  font-family: var(--font);
+  background: var(--card);
+}
+.stat-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+pre {
+  background: var(--surface);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 24px 0;
+  border-left: 3px solid var(--accent-warm);
+}
+pre code { background: none; padding: 0; }
+
+.bar { display: inline-block; height: 14px; background: var(--accent-warm); margin-right: 8px; vertical-align: middle; }
+.high { color: var(--text); font-weight: 700; }
+.low { color: var(--accent-warm); font-weight: 700; }
+
+footer {
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.7;
+}
+@media (max-width: 1000px) {
+  .book-layout { grid-template-columns: 1fr; gap: 24px; padding: 0 var(--side-db); }
+  .toc-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: 24px 0;
+  }
+  .book-main { padding: 24px 0 60px; }
+  .book-title { font-size: 1.6rem; }
+  .chapter-title { font-size: 1.35rem; }
+}
+@media print {
+  .top-bar, .toc-sidebar { display: none; }
+  body { font-size: 11pt; }
+  .book-layout { grid-template-columns: 1fr; }
+  .book-main { padding: 0; }
+}
+
+.legend{font-family:var(--font);font-size:0.75rem;color:var(--text-secondary);margin-bottom:12px;}
+.sw{font-weight:700;margin-right:2px;}
+.sw-max{color:var(--accent-warm);}
+.sw-agreed{color:var(--text);}
+.sw-single{color:var(--border-strong);}
+.book-title, .chapter-title, h3{
+  font-family:var(--font);
+  font-weight:900;
+  letter-spacing:-0.01em;
+}
+.book-subtitle, .stat-label{ font-weight:300; }
+.stat-box, pre, code{ border-radius:0; }
+* { transition-duration:var(--dur-fast); transition-timing-function:var(--ease); }
+.top-bar{ flex-wrap:nowrap; overflow:hidden; }
+.top-bar-brand{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+table{ display:block; overflow-x:auto; }
+td, th{ overflow-wrap:anywhere; }
+.book-main p, .book-main .lead{ max-width:var(--measure); }
+.chapter-section svg[role="img"]{ width:100%; height:auto; display:block; }
+a:focus-visible, .theme-toggle:focus-visible{ outline:2px solid var(--accent-warm); outline-offset:2px; }
+@media (max-width:1000px){
+  .book-layout{ grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:480px){
+  .top-bar{ padding:0 12px; }
+  .top-bar-actions{ gap:8px; }
+}
+@media (prefers-reduced-motion:reduce){
+  html{ scroll-behavior:auto; }
+  *{ transition:none!important; }
+}
+
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div class="top-bar-brand">MIRATUKU NEWS / <span>DATABASES</span></div>
+<div class="top-bar-actions">
+<a class="back-link" href="../databases.html" aria-label="Databases一覧へ戻る">←</a>
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="ダーク/ライト切替">DARK</button>
+</div>
+</div>
+
+<div class="book-layout">
+<nav class="toc-sidebar" aria-label="目次">
+<div class="toc-label">CONTENTS</div>
+<ol class="toc-list">
+<li><a href="#ch1"><span class="toc-num">01</span>概要</a></li>
+<li><a href="#ch2"><span class="toc-num">02</span>分類の3軸</a></li>
+<li><a href="#ch3"><span class="toc-num">03</span>意識状態×あるべき姿</a></li>
+<li><a href="#ch4"><span class="toc-num">04</span>学派×コード</a></li>
+<li><a href="#ch5"><span class="toc-num">05</span>意味関係網</a></li>
+<li><a href="#ch6"><span class="toc-num">06</span>概念接続・他DB</a></li>
+<li><a href="#ch7"><span class="toc-num">07</span>許諾</a></li>
+<li><a href="#ch8"><span class="toc-num">08</span>品質の限界</a></li>
+<li><a href="#ch9"><span class="toc-num">09</span>章句の例</a></li>
+</ol>
+</nav>
+
+<main class="book-main">
+<header class="book-header">
+<div class="book-db-tags"><span class="db-tag primary">CPH-DB</span><span class="db-tag">中国哲学</span></div>
+<h1 class="book-title">中国哲学DB ダッシュボード</h1>
+<p class="book-subtitle">儒家・道家・朱子学・心学ほか諸学派の原典を章句単位に分類し、意味関係・概念接続を付与したデータベースの集計</p>
+<div class="book-meta"><span>作品 56</span><span>章句 42,087</span><span>本文 9,925,471字</span></div>
+</header>
+
+<section class="chapter-section" id="ch1">
+<div class="chapter-number-label">CHAPTER 01</div>
+<h2 class="chapter-title">概要 — 作品・章句・学派</h2>
+<p class="lead">中国哲学DB（cph）は、儒家・道家・朱子学・心学ほか諸学派の原典を章句単位に分割し、3軸の分類語彙と章句間関係・概念接続を付与したデータベースである。</p>
+<div class="stats-row">
+<div class="stat-box"><div class="stat-num">56</div><div class="stat-label">作品数</div></div>
+<div class="stat-box"><div class="stat-num">42,087</div><div class="stat-label">章句数</div></div>
+<div class="stat-box"><div class="stat-num">9,925,471</div><div class="stat-label">本文文字数</div></div>
+<div class="stat-box"><div class="stat-num">23</div><div class="stat-label">学派数</div></div>
+</div>
+<h3>学派別 作品数・章句数</h3>
+<table><thead><tr><th>学派</th><th>作品数</th><th>章句数</th></tr></thead><tbody><tr><td>朱子学</td><td>3</td><td><span class="bar" style="width:120px;background:var(--accent-warm)"></span>10,003</td></tr><tr><td>経学</td><td>6</td><td><span class="bar" style="width:92px;background:var(--text)"></span>7,713</td></tr><tr><td>史学</td><td>2</td><td><span class="bar" style="width:92px;background:var(--text)"></span>7,694</td></tr><tr><td>心学</td><td>3</td><td><span class="bar" style="width:53px;background:var(--text)"></span>4,499</td></tr><tr><td>道家</td><td>7</td><td><span class="bar" style="width:33px;background:var(--text)"></span>2,827</td></tr><tr><td>儒家</td><td>7</td><td><span class="bar" style="width:18px;background:var(--text)"></span>1,571</td></tr><tr><td>学案</td><td>1</td><td><span class="bar" style="width:18px;background:var(--text)"></span>1,562</td></tr><tr><td>考証</td><td>1</td><td><span class="bar" style="width:14px;background:var(--text)"></span>1,227</td></tr><tr><td>明学</td><td>3</td><td><span class="bar" style="width:12px;background:var(--text)"></span>1,019</td></tr><tr><td>帝王学</td><td>3</td><td><span class="bar" style="width:9px;background:var(--text)"></span>794</td></tr><tr><td>明学・処世</td><td>1</td><td><span class="bar" style="width:8px;background:var(--text)"></span>749</td></tr><tr><td>宋学</td><td>2</td><td><span class="bar" style="width:7px;background:var(--text)"></span>628</td></tr><tr><td>法家</td><td>2</td><td><span class="bar" style="width:7px;background:var(--text)"></span>611</td></tr><tr><td>雑家</td><td>2</td><td><span class="bar" style="width:6px;background:var(--text)"></span>521</td></tr><tr><td>墨家</td><td>1</td><td><span class="bar" style="width:2px;background:var(--text)"></span>186</td></tr><tr><td>禅</td><td>3</td><td><span class="bar" style="width:2px;background:var(--text)"></span>122</td></tr><tr><td>善書・自己省察</td><td>1</td><td><span class="bar" style="width:2px;background:var(--text)"></span>119</td></tr><tr><td>兵家</td><td>2</td><td><span class="bar" style="width:2px;background:var(--text)"></span>87</td></tr><tr><td>家訓</td><td>1</td><td><span class="bar" style="width:2px;background:var(--text)"></span>70</td></tr><tr><td>人物論</td><td>1</td><td><span class="bar" style="width:2px;background:var(--text)"></span>32</td></tr><tr><td>名家</td><td>2</td><td><span class="bar" style="width:2px;background:var(--text)"></span>23</td></tr><tr><td>縦横家</td><td>1</td><td><span class="bar" style="width:2px;background:var(--text)"></span>19</td></tr><tr><td>善書</td><td>1</td><td><span class="bar" style="width:2px;background:var(--text)"></span>11</td></tr></tbody></table>
+</section><section class="chapter-section" id="ch2">
+<div class="chapter-number-label">CHAPTER 02</div>
+<h2 class="chapter-title">分類の3軸 — 示唆の型・意識状態・あるべき姿</h2>
+<p class="lead">各章句には軸A（示唆の型）・軸B（意識状態）・軸C（あるべき姿）の3軸を、Opus と astra の2層で付与している。<strong>agreed</strong> は2者が一致したラベル、<strong>single</strong> は片方のみが付けたラベルを指す（語彙定義は docs/taxonomy-v2.md）。</p><h3>軸A 示唆の型（その章句が読み手に何を差し出すか）</h3>
+<div class="legend"><span class="sw sw-max">■</span> 最大値（グラフ内の最上位1件）　<span class="sw sw-agreed">■</span> agreed（2者一致）　<span class="sw sw-single">■</span> single（片方のみ）</div><svg viewBox="0 0 400 230" preserveAspectRatio="xMinYMin meet" role="img" aria-label="軸Aのコード別ラベル数"><text x="122" y="21.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A1 戒め</text>
+<rect x="130" y="6" width="122.6" height="22" fill="var(--accent-warm)"/>
+<rect x="252.6" y="6" width="92.4" height="22" fill="var(--bar-muted)"/>
+<text x="351.0" y="21.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">17,274</text><text x="122" y="49.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A7 事例・逸話</text>
+<rect x="130" y="34" width="141.8" height="22" fill="var(--text)"/>
+<rect x="271.8" y="34" width="58.3" height="22" fill="var(--bar-muted)"/>
+<text x="336.0" y="49.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">16,072</text><text x="122" y="77.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A5 為政・組織</text>
+<rect x="130" y="62" width="95.8" height="22" fill="var(--text)"/>
+<rect x="225.8" y="62" width="64.6" height="22" fill="var(--bar-muted)"/>
+<text x="296.4" y="77.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">12,885</text><text x="122" y="105.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A3 判断の規準</text>
+<rect x="130" y="90" width="54.8" height="22" fill="var(--text)"/>
+<rect x="184.8" y="90" width="83.2" height="22" fill="var(--bar-muted)"/>
+<text x="274.0" y="105.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">11,087</text><text x="122" y="133.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A2 修養の方法</text>
+<rect x="130" y="118" width="81.2" height="22" fill="var(--text)"/>
+<rect x="211.2" y="118" width="34.1" height="22" fill="var(--bar-muted)"/>
+<text x="251.3" y="133.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">9,262</text><text x="122" y="161.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A8 世界観</text>
+<rect x="130" y="146" width="60.4" height="22" fill="var(--text)"/>
+<rect x="190.4" y="146" width="27.8" height="22" fill="var(--bar-muted)"/>
+<text x="224.2" y="161.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">7,084</text><text x="122" y="189.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A4 人の見立て</text>
+<rect x="130" y="174" width="36.7" height="22" fill="var(--text)"/>
+<rect x="166.7" y="174" width="34.5" height="22" fill="var(--bar-muted)"/>
+<text x="207.2" y="189.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">5,721</text><text x="122" y="217.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">A6 変化と時</text>
+<rect x="130" y="202" width="15.6" height="22" fill="var(--text)"/>
+<rect x="145.6" y="202" width="21.3" height="22" fill="var(--bar-muted)"/>
+<text x="172.9" y="217.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,963</text></svg><h3>軸B 意識状態（克服・点検の対象となる心の状態）</h3>
+<div class="legend"><span class="sw sw-max">■</span> 最大値（グラフ内の最上位1件）　<span class="sw sw-agreed">■</span> agreed（2者一致）　<span class="sw sw-single">■</span> single（片方のみ）</div><svg viewBox="0 0 400 342" preserveAspectRatio="xMinYMin meet" role="img" aria-label="軸Bのコード別ラベル数"><text x="122" y="21.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B05 私欲・貪り</text>
+<rect x="130" y="6" width="110.2" height="22" fill="var(--accent-warm)"/>
+<rect x="240.2" y="6" width="104.8" height="22" fill="var(--bar-muted)"/>
+<text x="351.0" y="21.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">6,892</text><text x="122" y="49.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B01 驕り・慢心</text>
+<rect x="130" y="34" width="61.2" height="22" fill="var(--text)"/>
+<rect x="191.2" y="34" width="59.3" height="22" fill="var(--bar-muted)"/>
+<text x="256.5" y="49.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">3,863</text><text x="122" y="77.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B10 執着・固執</text>
+<rect x="130" y="62" width="36.0" height="22" fill="var(--text)"/>
+<rect x="166.0" y="62" width="83.9" height="22" fill="var(--bar-muted)"/>
+<text x="255.9" y="77.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">3,843</text><text x="122" y="105.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B11 自己欺瞞</text>
+<rect x="130" y="90" width="34.8" height="22" fill="var(--text)"/>
+<rect x="164.8" y="90" width="57.4" height="22" fill="var(--bar-muted)"/>
+<text x="228.2" y="105.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,956</text><text x="122" y="133.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B06 怠り</text>
+<rect x="130" y="118" width="30.5" height="22" fill="var(--text)"/>
+<rect x="160.5" y="118" width="51.8" height="22" fill="var(--bar-muted)"/>
+<text x="218.4" y="133.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,640</text><text x="122" y="161.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B08 名声欲・虚栄</text>
+<rect x="130" y="146" width="33.3" height="22" fill="var(--text)"/>
+<rect x="163.3" y="146" width="41.7" height="22" fill="var(--bar-muted)"/>
+<text x="211.1" y="161.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,407</text><text x="122" y="189.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B02 怒り</text>
+<rect x="130" y="174" width="23.0" height="22" fill="var(--text)"/>
+<rect x="153.0" y="174" width="34.2" height="22" fill="var(--bar-muted)"/>
+<text x="193.2" y="189.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">1,833</text><text x="122" y="217.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B09 嫉妬・猜疑</text>
+<rect x="130" y="202" width="25.2" height="22" fill="var(--text)"/>
+<rect x="155.2" y="202" width="31.6" height="22" fill="var(--bar-muted)"/>
+<text x="192.7" y="217.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">1,819</text><text x="122" y="245.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B12 回避・優柔</text>
+<rect x="130" y="230" width="16.0" height="22" fill="var(--text)"/>
+<rect x="146.0" y="230" width="36.4" height="22" fill="var(--bar-muted)"/>
+<text x="188.4" y="245.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">1,679</text><text x="122" y="273.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B07 焦り・急ぎ</text>
+<rect x="130" y="258" width="19.9" height="22" fill="var(--text)"/>
+<rect x="149.9" y="258" width="25.7" height="22" fill="var(--bar-muted)"/>
+<text x="181.6" y="273.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">1,462</text><text x="122" y="301.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B03 恐れ・不安</text>
+<rect x="130" y="286" width="15.5" height="22" fill="var(--text)"/>
+<rect x="145.5" y="286" width="28.4" height="22" fill="var(--bar-muted)"/>
+<text x="179.9" y="301.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">1,407</text><text x="122" y="329.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">B04 迷い・惑い</text>
+<rect x="130" y="314" width="7.9" height="22" fill="var(--text)"/>
+<rect x="137.9" y="314" width="19.2" height="22" fill="var(--bar-muted)"/>
+<text x="163.1" y="329.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">870</text></svg><h3>軸C あるべき姿（章句が示す、向かうべき状態）</h3>
+<div class="legend"><span class="sw sw-max">■</span> 最大値（グラフ内の最上位1件）　<span class="sw sw-agreed">■</span> agreed（2者一致）　<span class="sw sw-single">■</span> single（片方のみ）</div><svg viewBox="0 0 400 482" preserveAspectRatio="xMinYMin meet" role="img" aria-label="軸Cのコード別ラベル数"><text x="122" y="21.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C05 誠・信</text>
+<rect x="130" y="6" width="102.6" height="22" fill="var(--accent-warm)"/>
+<rect x="232.6" y="6" width="112.4" height="22" fill="var(--bar-muted)"/>
+<text x="351.0" y="21.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">4,306</text><text x="122" y="49.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C07 敬・慎独</text>
+<rect x="130" y="34" width="101.7" height="22" fill="var(--text)"/>
+<rect x="231.7" y="34" width="78.6" height="22" fill="var(--bar-muted)"/>
+<text x="316.3" y="49.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">3,611</text><text x="122" y="77.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C02 義</text>
+<rect x="130" y="62" width="87.0" height="22" fill="var(--text)"/>
+<rect x="217.0" y="62" width="89.8" height="22" fill="var(--bar-muted)"/>
+<text x="312.8" y="77.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">3,541</text><text x="122" y="105.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C03 礼</text>
+<rect x="130" y="90" width="89.7" height="22" fill="var(--text)"/>
+<rect x="219.7" y="90" width="80.7" height="22" fill="var(--bar-muted)"/>
+<text x="306.4" y="105.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">3,412</text><text x="122" y="133.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C01 仁</text>
+<rect x="130" y="118" width="92.5" height="22" fill="var(--text)"/>
+<rect x="222.5" y="118" width="75.3" height="22" fill="var(--bar-muted)"/>
+<text x="303.8" y="133.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">3,361</text><text x="122" y="161.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C13 公・無私</text>
+<rect x="130" y="146" width="75.2" height="22" fill="var(--text)"/>
+<rect x="205.2" y="146" width="92.1" height="22" fill="var(--bar-muted)"/>
+<text x="303.4" y="161.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">3,352</text><text x="122" y="189.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C12 勇・剛毅</text>
+<rect x="130" y="174" width="69.4" height="22" fill="var(--text)"/>
+<rect x="199.4" y="174" width="80.3" height="22" fill="var(--bar-muted)"/>
+<text x="285.7" y="189.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,999</text><text x="122" y="217.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C14 静・虚心</text>
+<rect x="130" y="202" width="61.2" height="22" fill="var(--text)"/>
+<rect x="191.2" y="202" width="58.0" height="22" fill="var(--bar-muted)"/>
+<text x="255.2" y="217.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,387</text><text x="122" y="245.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C10 謙・柔弱</text>
+<rect x="130" y="230" width="59.1" height="22" fill="var(--text)"/>
+<rect x="189.1" y="230" width="54.6" height="22" fill="var(--bar-muted)"/>
+<text x="249.7" y="245.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,278</text><text x="122" y="273.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C04 智</text>
+<rect x="130" y="258" width="29.3" height="22" fill="var(--text)"/>
+<rect x="159.3" y="258" width="80.3" height="22" fill="var(--bar-muted)"/>
+<text x="245.5" y="273.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,194</text><text x="122" y="301.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C15 孝・悌</text>
+<rect x="130" y="286" width="58.6" height="22" fill="var(--text)"/>
+<rect x="188.6" y="286" width="48.6" height="22" fill="var(--bar-muted)"/>
+<text x="243.2" y="301.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,147</text><text x="122" y="329.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C17 倹・節度</text>
+<rect x="130" y="314" width="52.0" height="22" fill="var(--text)"/>
+<rect x="182.0" y="314" width="51.5" height="22" fill="var(--bar-muted)"/>
+<text x="239.5" y="329.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,073</text><text x="122" y="357.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C11 寛・恕</text>
+<rect x="130" y="342" width="54.1" height="22" fill="var(--text)"/>
+<rect x="184.1" y="342" width="48.4" height="22" fill="var(--bar-muted)"/>
+<text x="238.5" y="357.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">2,053</text><text x="122" y="385.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C06 中庸・中和</text>
+<rect x="130" y="370" width="39.0" height="22" fill="var(--text)"/>
+<rect x="169.0" y="370" width="42.8" height="22" fill="var(--bar-muted)"/>
+<text x="217.8" y="385.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">1,638</text><text x="122" y="413.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C09 無為・自然</text>
+<rect x="130" y="398" width="36.8" height="22" fill="var(--text)"/>
+<rect x="166.8" y="398" width="29.7" height="22" fill="var(--bar-muted)"/>
+<text x="202.5" y="413.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">1,332</text><text x="122" y="441.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C08 知行合一・致良知</text>
+<rect x="130" y="426" width="11.9" height="22" fill="var(--text)"/>
+<rect x="141.9" y="426" width="29.2" height="22" fill="var(--bar-muted)"/>
+<text x="177.0" y="441.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">822</text><text x="122" y="469.0" text-anchor="end" font-size="12" font-family="Noto Sans JP, sans-serif" fill="var(--text-secondary)">C16 慈</text>
+<rect x="130" y="454" width="8.0" height="22" fill="var(--text)"/>
+<rect x="138.0" y="454" width="21.6" height="22" fill="var(--bar-muted)"/>
+<text x="165.6" y="469.0" font-size="12" font-family="SF Mono, monospace" fill="var(--text-muted)">593</text></svg>
+</section><section class="chapter-section" id="ch3">
+<div class="chapter-number-label">CHAPTER 03</div>
+<h2 class="chapter-title">意識状態 × あるべき姿の共起</h2>
+<p class="lead">同一章句に付いた軸B（意識状態）と軸C（あるべき姿）の共起上位20件。</p>
+<div class="callout">
+<div class="callout-title">注記</div>これは agreed ラベルの<strong>共起</strong>であって「処方」ではない。ある意識状態にどう対処すべきかを示す表として読まないこと。</div>
+<table><thead><tr><th>軸B（意識状態）</th><th>軸C（あるべき姿）</th><th>共起数</th></tr></thead><tbody><tr><td>B05 私欲・貪り</td><td>C13 公・無私</td><td><span class="bar" style="width:90px;background:var(--accent-warm)"></span>494</td></tr><tr><td>B05 私欲・貪り</td><td>C17 倹・節度</td><td><span class="bar" style="width:85px;background:var(--text)"></span>471</td></tr><tr><td>B05 私欲・貪り</td><td>C02 義</td><td><span class="bar" style="width:74px;background:var(--text)"></span>411</td></tr><tr><td>B01 驕り・慢心</td><td>C10 謙・柔弱</td><td><span class="bar" style="width:73px;background:var(--text)"></span>404</td></tr><tr><td>B11 自己欺瞞</td><td>C05 誠・信</td><td><span class="bar" style="width:62px;background:var(--text)"></span>342</td></tr><tr><td>B05 私欲・貪り</td><td>C01 仁</td><td><span class="bar" style="width:57px;background:var(--text)"></span>315</td></tr><tr><td>B05 私欲・貪り</td><td>C07 敬・慎独</td><td><span class="bar" style="width:45px;background:var(--text)"></span>250</td></tr><tr><td>B05 私欲・貪り</td><td>C05 誠・信</td><td><span class="bar" style="width:40px;background:var(--text)"></span>225</td></tr><tr><td>B06 怠り</td><td>C07 敬・慎独</td><td><span class="bar" style="width:37px;background:var(--text)"></span>205</td></tr><tr><td>B10 執着・固執</td><td>C14 静・虚心</td><td><span class="bar" style="width:36px;background:var(--text)"></span>201</td></tr><tr><td>B05 私欲・貪り</td><td>C14 静・虚心</td><td><span class="bar" style="width:36px;background:var(--text)"></span>201</td></tr><tr><td>B05 私欲・貪り</td><td>C03 礼</td><td><span class="bar" style="width:36px;background:var(--text)"></span>200</td></tr><tr><td>B01 驕り・慢心</td><td>C07 敬・慎独</td><td><span class="bar" style="width:30px;background:var(--text)"></span>168</td></tr><tr><td>B12 回避・優柔</td><td>C12 勇・剛毅</td><td><span class="bar" style="width:27px;background:var(--text)"></span>152</td></tr><tr><td>B03 恐れ・不安</td><td>C12 勇・剛毅</td><td><span class="bar" style="width:27px;background:var(--text)"></span>151</td></tr><tr><td>B01 驕り・慢心</td><td>C03 礼</td><td><span class="bar" style="width:25px;background:var(--text)"></span>138</td></tr><tr><td>B05 私欲・貪り</td><td>C12 勇・剛毅</td><td><span class="bar" style="width:24px;background:var(--text)"></span>135</td></tr><tr><td>B08 名声欲・虚栄</td><td>C05 誠・信</td><td><span class="bar" style="width:23px;background:var(--text)"></span>130</td></tr><tr><td>B08 名声欲・虚栄</td><td>C10 謙・柔弱</td><td><span class="bar" style="width:23px;background:var(--text)"></span>129</td></tr><tr><td>B01 驕り・慢心</td><td>C17 倹・節度</td><td><span class="bar" style="width:22px;background:var(--text)"></span>125</td></tr></tbody></table>
+</section><section class="chapter-section" id="ch4">
+<div class="chapter-number-label">CHAPTER 04</div>
+<h2 class="chapter-title">学派 × コード</h2>
+<p class="lead">学派ごとにどのコードが多く現れるか、上位30件（件数順）。</p>
+<table><thead><tr><th>学派</th><th>コード</th><th>件数</th><th>学派内シェア</th></tr></thead><tbody><tr><td>史学</td><td>A7 事例・逸話</td><td>5,817</td><td>90.3%</td></tr><tr><td>朱子学</td><td>A2 修養の方法</td><td>3,129</td><td>39.4%</td></tr><tr><td>史学</td><td>A1 戒め</td><td>2,567</td><td>39.9%</td></tr><tr><td>史学</td><td>A5 為政・組織</td><td>2,209</td><td>34.3%</td></tr><tr><td>朱子学</td><td>A1 戒め</td><td>2,102</td><td>26.5%</td></tr><tr><td>朱子学</td><td>A8 世界観</td><td>1,870</td><td>23.5%</td></tr><tr><td>経学</td><td>A7 事例・逸話</td><td>1,151</td><td>41.7%</td></tr><tr><td>経学</td><td>A5 為政・組織</td><td>1,105</td><td>40.1%</td></tr><tr><td>朱子学</td><td>A3 判断の規準</td><td>1,100</td><td>13.9%</td></tr><tr><td>経学</td><td>A1 戒め</td><td>1,019</td><td>36.9%</td></tr><tr><td>朱子学</td><td>A5 為政・組織</td><td>995</td><td>12.5%</td></tr><tr><td>朱子学</td><td>A7 事例・逸話</td><td>969</td><td>12.2%</td></tr><tr><td>学案</td><td>A2 修養の方法</td><td>967</td><td>65.6%</td></tr><tr><td>史学</td><td>A4 人の見立て</td><td>957</td><td>14.9%</td></tr><tr><td>史学</td><td>A3 判断の規準</td><td>947</td><td>14.7%</td></tr><tr><td>史学</td><td>B05 私欲・貪り</td><td>877</td><td>13.6%</td></tr><tr><td>心学</td><td>A1 戒め</td><td>778</td><td>31.8%</td></tr><tr><td>道家</td><td>A8 世界観</td><td>763</td><td>37.5%</td></tr><tr><td>史学</td><td>B01 驕り・慢心</td><td>752</td><td>11.7%</td></tr><tr><td>学案</td><td>A8 世界観</td><td>747</td><td>50.7%</td></tr><tr><td>心学</td><td>A5 為政・組織</td><td>739</td><td>30.2%</td></tr><tr><td>朱子学</td><td>C07 敬・慎独</td><td>736</td><td>9.3%</td></tr><tr><td>心学</td><td>A2 修養の方法</td><td>735</td><td>30.1%</td></tr><tr><td>朱子学</td><td>B05 私欲・貪り</td><td>714</td><td>9.0%</td></tr><tr><td>朱子学</td><td>A4 人の見立て</td><td>678</td><td>8.5%</td></tr><tr><td>朱子学</td><td>C01 仁</td><td>667</td><td>8.4%</td></tr><tr><td>道家</td><td>A1 戒め</td><td>665</td><td>32.7%</td></tr><tr><td>史学</td><td>C12 勇・剛毅</td><td>597</td><td>9.3%</td></tr><tr><td>心学</td><td>A7 事例・逸話</td><td>581</td><td>23.8%</td></tr><tr><td>朱子学</td><td>C05 誠・信</td><td>578</td><td>7.3%</td></tr></tbody></table>
+</section><section class="chapter-section" id="ch5">
+<div class="chapter-number-label">CHAPTER 05</div>
+<h2 class="chapter-title">章句間の意味関係網</h2>
+<p class="lead">章句間には paraphrase（言い換え）・contrast（対立）・commentary（注釈）・example（事例）の4種の関係が判定されている。</p>
+<div class="stats-row">
+<div class="stat-box"><div class="stat-num">5,223</div><div class="stat-label">判定済み関係（延べ）</div></div>
+<div class="stat-box"><div class="stat-num">2,522</div><div class="stat-label">利用可能な辺（confidence=high）</div></div>
+</div>
+<h3>種別 × 確度 件数</h3>
+<table><thead><tr><th>関係種別</th><th>確度</th><th>件数</th></tr></thead><tbody><tr><td>commentary</td><td>deterministic</td><td>1,579</td></tr><tr><td>contrast</td><td>audit_unsure</td><td>2</td></tr><tr><td>contrast</td><td>audit_wrong</td><td>2</td></tr><tr><td>contrast</td><td>high</td><td>159</td></tr><tr><td>example</td><td>audit_unsure</td><td>6</td></tr><tr><td>example</td><td>audit_wrong</td><td>1</td></tr><tr><td>example</td><td>high</td><td>351</td></tr><tr><td>paraphrase</td><td>audit_unsure</td><td>2</td></tr><tr><td>paraphrase</td><td>high</td><td>2,012</td></tr><tr><td>paraphrase</td><td>string_match</td><td>1,109</td></tr></tbody></table>
+<div class="callout">
+<div class="callout-title">注記</div>利用してよいのは <code>v_passage_relation_usable</code>（confidence='high'）のみ。それ以外の確度に降格された辺は、個別に wrong / unsure と判定され除外されたか、参照に足る精度が確認されていないことを意味する。</div>
+</section><section class="chapter-section" id="ch6">
+<div class="chapter-number-label">CHAPTER 06</div>
+<h2 class="chapter-title">概念接続と他DBとの接続</h2>
+<h3>philosophy-db 概念への接続（時代条件を適用済み）上位20</h3>
+<table><thead><tr><th>概念名</th><th>コード</th><th>接続数</th></tr></thead><tbody><tr><td>信</td><td>C05 誠・信</td><td>2,933</td></tr><tr><td>礼</td><td>C03 礼</td><td>2,623</td></tr><tr><td>仁</td><td>C01 仁</td><td>2,526</td></tr><tr><td>義</td><td>C02 義</td><td>2,259</td></tr><tr><td>孝</td><td>C15 孝・悌</td><td>1,574</td></tr><tr><td>中庸</td><td>C06 中庸・中和</td><td>1,389</td></tr><tr><td>敬</td><td>C07 敬・慎独</td><td>1,256</td></tr><tr><td>智</td><td>C04 智</td><td>1,211</td></tr><tr><td>恕</td><td>C11 寛・恕</td><td>1,139</td></tr><tr><td>老子の無為</td><td>C09 無為・自然</td><td>777</td></tr><tr><td>劉宗周の慎独論</td><td>C07 敬・慎独</td><td>762</td></tr><tr><td>致良知</td><td>C08 知行合一・致良知</td><td>653</td></tr><tr><td>虚</td><td>C14 静・虚心</td><td>383</td></tr></tbody></table>
+<h3>他DBへの接続（cph_xref）</h3>
+<table><thead><tr><th>関係</th><th>状態</th><th>件数</th></tr></thead><tbody><tr><td>about_concept</td><td>candidate</td><td>13</td></tr><tr><td>attributed_author</td><td>candidate</td><td>4</td></tr><tr><td>attributed_author</td><td>confirmed</td><td>10</td></tr><tr><td>name_match_cand</td><td>candidate</td><td>18</td></tr><tr><td>same_author_prop</td><td>candidate</td><td>80</td></tr></tbody></table>
+<div class="callout">
+<div class="callout-title">注記</div>
+<code>candidate</code> は名前一致による候補であって、意味の適合は未検証。同定・同義として配らない。</div>
+</section><section class="chapter-section" id="ch7">
+<div class="chapter-number-label">CHAPTER 07</div>
+<h2 class="chapter-title">許諾 — ライセンスと逐語引用の可否</h2>
+<p class="lead">作品ごとのライセンスと、逐語引用（quotable）の可否。「未判定」は不可ではなく未判定を意味する。</p>
+<table><thead><tr><th>作品名</th><th>ライセンス</th><th>逐語引用</th></tr></thead><tbody><tr><td>了凡四訓-明-袁了凡</td><td>（未判定）</td><td>未判定</td></tr><tr><td>列子--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>史記-漢-司馬遷</td><td>（未判定）</td><td>未判定</td></tr><tr><td>周易(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>孝經(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>孟子(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>尚書(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>春秋左傳(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>毛詩(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>禮記(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>群書治要-唐-魏徵</td><td>（未判定）</td><td>未判定</td></tr><tr><td>莊子--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>論語(正文)--</td><td>（未判定）</td><td>未判定</td></tr><tr><td>六祖大師法寶壇經-元-宗寶</td><td>CC BY-NC-SA 4.0</td><td><span class="low">不可</span></td></tr><tr><td>無門關-宋-宗紹</td><td>CC BY-NC-SA 4.0</td><td><span class="low">不可</span></td></tr><tr><td>鎮州臨濟慧照禪師語錄-唐-慧然</td><td>CC BY-NC-SA 4.0</td><td><span class="low">不可</span></td></tr><tr><td>二程遺書-宋-程顥</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>人物志-魏-劉卲</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>人譜-明-劉宗周</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>公孫龍子-周-公孫龍</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>六韜-周-呂望</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>劉子遺書-明-劉宗周</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>呂氏春秋-秦-呂不韋</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>呻吟語摘-明-呂坤</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>四書章句集註-宋-朱熹</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>墨子-周-墨翟</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>太微仙君功過格--又玄子</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>孔子家語-魏-王肅</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>孫子-周-孫武</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>尹文子-周-尹文</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>帝範-唐-太宗</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>張子全書-宋-張戴</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>抱朴子內篇--葛洪</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>新序-漢-劉向</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>日知錄-清-顧炎武</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>明儒學案-清-黃宗羲</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>朱子語類-宋-黎靖德</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>淮南鴻烈解-漢-劉安</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>王文成全書-明-王守仁</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>管子-周-管仲</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>荀子-周-荀況</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>莊子注-晉-郭象</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>說苑-漢-劉向</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>象山集-宋-陸九淵</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>貞觀政要-唐-吳兢</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>資治通鑑-宋-司馬光</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>近思錄-宋-朱熹</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>道德真經-戦國-老子</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>道德真經註(一)-漢後期-河上公</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>陳白沙集-明-陳獻章</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>韓非子-周-韓非</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>顏氏家訓-隋-顏之推</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>鬼谷子-周-鬼谷子</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>鹽鐵論-漢-桓寬</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>黃帝陰符經--</td><td>CC BY-SA 4.0</td><td><span class="high">可</span></td></tr><tr><td>菜根譚-明-洪應明</td><td>public-domain</td><td><span class="high">可</span></td></tr></tbody></table>
+</section><section class="chapter-section" id="ch8">
+<div class="chapter-number-label">CHAPTER 08</div>
+<h2 class="chapter-title">品質の限界</h2>
+<p>このDBが言えないことを、以下に散文で示す。</p><p>分類は2層（Opus・astra）の和集合である。agreed（2者一致）と single（片方のみ）を区別する。最終再測定（無作為100・盲検）では、和集合の主題外率は3.8%（保留を誤りと数えると12.2%）、agreed に限れば1.6%である。和集合の外の取りこぼしについては、層別60章句（両層が空・片層のみ・両層ともラベルあり、各20件）を候補非提示で Opus 別インスタンスが分類したところ、和集合の外にあるラベルは加重で13.5%（未裁定・参照は盲検分類者）であった。両層とも空だった20件は、盲検でも全て空のままだった。裁定つき（Opus 別インスタンス・保留除外）で見ると、和集合の外の取りこぼしは4.9%（加重）、和集合の主題外は11.6%（保留を誤りと数えると19.4%）で、片層のみの層は主題外9/25とやや弱い。</p><p>意味関係の辺はv2（立場・方向つき・astra判定・2026-10-01）である。利用してよいのはconfidence='high' の辺（v_passage_relation_usable）だけである。Opus による盲検監査（各種20件・全文・保留除外の精度）では、言い換え100%・対立89%・事例93%だった。保留を誤りと数えると90%・80%・65%となり、事例は保留6件を抱えてやや弱い。監査者自身は「甘い側」と申告しており、対立は一点の相違だけを拾った組があり、事例は教えと人物の対応が緩い組を保留にしている。個別にwrong・unsure と判定された辺は audit_wrong・audit_unsure として除外済みである。逐語一致（string_match）は意味関係ではない。注釈（commentary）は決定論で判定しており利用可能である。</p><p>意識状態からあるべき姿への共起（net_code_edge の state_to_ideal）は、agreed ラベルの共起であって「処方」ではない。処方として提示してはならない。</p><p>概念接続（concept_link）は philosophy-db の同名・同学派概念への接続である。時代条件（作品より後に立った概念を除外する）は v_concept_link_usable で適用済みであり、たとえば論語の章句に致良知は結ばれない。それでもなお、同名異義の可能性は残る。他DBへの接続は cph_xref（relation はattributed_author・same_author_prop・about_concept・name_match_cand のいずれか、status はconfirmed・candidate のいずれか）で持つ。candidate は名前一致による候補であって、意味の適合は未検証であるため、同定・同義として配ってはならない。SKOS の exactMatch・closeMatch は使用していない。</p><p>逐語引用は work.quotable=1 の作品に限る（CC BY-SA は帰属表示が必須）。quotable が NULL の作品は未判定であって、不可を意味しない。</p><p>問い照合（B4）はコード一致で全20問に到達しているが、意味適合（2026-10-01・問いごと5章句・Opus盲検）で見ると fit 38%・partial 43%・unfit 19%にとどまる。対応表v1でfit 0件だったQ12・Q19は、対応表v2（Q12: A6∧C06 / A2∧C14、Q19: A3∧A6 / A8∧C17 を追加・2026-10-01決裁）でfit 4/10・2/10まで改善した。コードで引いた章句をそのまま答えとして提示してはならない（partial・unfitが半数以上を占める）。</p><p>章句の鍵（kr_id / juan / seq）は再分割によって変わりうる。外部へ渡すときは本文のハッシュも添えること。</p><p>本文は繁体字（例: 慎獨・禮）で保持されている。簡体字・日本の新字体（慎独・礼）で検索すると0件になる。</p>
+<h3>品質メタデータ（IRR等）</h3>
+<table><thead><tr><th>指標</th><th>対象範囲</th><th>値</th><th>測定日時</th><th>注記</th></tr></thead><tbody><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">cohens_kappa</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_A</span></td><td>0.6901</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">cohens_kappa</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_B</span></td><td>0.5745</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">cohens_kappa</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_C</span></td><td>0.6467</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">cohens_kappa</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_all</span></td><td>0.6779</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">eval_categories</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_all</span></td><td>2</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>present/absent per code</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">eval_design_notes</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_all</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td></td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">gwet_ac1</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_A</span></td><td>0.8008</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">gwet_ac1</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_B</span></td><td>0.944</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">gwet_ac1</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_C</span></td><td>0.9545</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">gwet_ac1</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_all</span></td><td>0.925</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">observed_agreement</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_A</span></td><td>0.8785</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">observed_agreement</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_B</span></td><td>0.9505</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">observed_agreement</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_C</span></td><td>0.9597</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">observed_agreement</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_all</span></td><td>0.9391</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">positive_prevalence</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_A</span></td><td>0.2654</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">positive_prevalence</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_B</span></td><td>0.0618</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">positive_prevalence</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_C</span></td><td>0.0607</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">positive_prevalence</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_all</span></td><td>0.1053</td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">sample_size</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_A</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">239,000</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">sample_size</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_B</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">358,500</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">sample_size</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_C</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">507,875</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr><tr><td><span style="white-space:nowrap;overflow-wrap:normal;">sample_size</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">irr_layers_all</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">1,105,375</span></td><td><span style="white-space:nowrap;overflow-wrap:normal;">2026-09-30T17:06:02+00:00</span></td><td>単位＝両層でラベル付けされた章句における（章句, コード）の有無。評価者＝Opus（claude -p）と astra（gpt-6-astra）、系統の異なるモデルだが両者ともLLMであり事前学習の共有から完全には独立していない。不在が多いためAC1を主指標とする。</td></tr></tbody></table>
+</section><section class="chapter-section" id="ch9">
+<div class="chapter-number-label">CHAPTER 09</div>
+<h2 class="chapter-title">章句の例</h2>
+<p class="lead">quotable=1（逐語引用可）の作品から、agreed ラベルの付いた章句を軸ごとに例示する。鍵（作品ID / 巻 / 節）を添える。</p>
+<h3>軸Aの例（agreed・逐語引用可の作品のみ）</h3><div class="callout" lang="zh-Hant"><div class="callout-title">A7 事例・逸話 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第445節）</div>楊修之軀見殺於曹操，以露己之長也；韋誕之墓見伐於鐘繇，以秘己之美也。故哲士多匿采以韜光，至人常遜美而公善。</div><div class="callout" lang="zh-Hant"><div class="callout-title">A7 事例・逸話 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第475節）</div>帆只揚五分，船便安。水只註五分，器便穩。如韓信以勇略震主被擒，陸機以才名冠世見殺，霍光敗於權勢逼君，石崇死於財賦敵國，皆以十分取敗者也。康節-{云}-：「飲酒莫教成酩酊，看花慎勿至離披。」旨哉言乎！</div><div class="callout" lang="zh-Hant"><div class="callout-title">A7 事例・逸話 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第483節）</div>富貴是無情之物，看得他重，他害你越大；貧賤是耐久之交，處得他好，他益你反深。故貪商羽而戀金谷者，竟被一時之顯戮；樂簞瓢而甘敝缊者，終享千載之令名。(缊：yùn缊，紼也。——《說文》。謂亂麻。纊為繭，缊為袍。——《禮記·玉藻》。註：「行謂今之新綿也，缊謂今行及舊絮也。」)</div><div class="callout" lang="zh-Hant"><div class="callout-title">A1 戒め — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第2節）</div>棲守道德者，寂寞一時；依附權勢者，淒涼萬古。故達人觀物外之物，思身後之身，寧受一時之寂寞，毋取萬古之淒涼。</div><div class="callout" lang="zh-Hant"><div class="callout-title">A1 戒め — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第6節）</div>耳中常聞逆耳之言，心中常有拂心之事，纔是進德修行的砥石。若言言悅耳，事事快心，便把此生埋在鴆毒中矣。</div><div class="callout" lang="zh-Hant"><div class="callout-title">A1 戒め — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第11節）</div>恩裏由來生害，故快意時，須早回頭；敗後或反成功，故拂心處，莫便放手。</div><div class="callout" lang="zh-Hant"><div class="callout-title">A5 為政・組織 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第58節）</div>讀書不見聖賢，為鉛槧傭；居官不愛子民，為衣冠盜；講學不尚躬行，為口頭禪；立業不思種德，為眼前花。</div><div class="callout" lang="zh-Hant"><div class="callout-title">A5 為政・組織 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第138節）</div>功過不容少混，混則人懷惰墮之心；恩仇不可太明，明則人起攜貳之志。</div><div class="callout" lang="zh-Hant"><div class="callout-title">A5 為政・組織 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第142節）</div>鋤奸杜倖，要放他一條去路。若使之一無所容，譬如塞鼠穴者，一切去路都塞盡，則一切好物俱咬破矣。</div><h3>軸Bの例（agreed・逐語引用可の作品のみ）</h3><div class="callout" lang="zh-Hant"><div class="callout-title">B05 私欲・貪り — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第2節）</div>棲守道德者，寂寞一時；依附權勢者，淒涼萬古。故達人觀物外之物，思身後之身，寧受一時之寂寞，毋取萬古之淒涼。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B05 私欲・貪り — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第5節）</div>勢利紛華，不近者為潔，近之而不染者為尤潔；智械機巧，不知者為高，知之而不用者為尤高。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B05 私欲・貪り — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第12節）</div>藜口莧腸者，多冰清玉潔；袞衣玉食者，甘婢膝奴顏。蓋志以澹泊明，而節從肥甘喪也。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B01 驕り・慢心 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第11節）</div>恩裏由來生害，故快意時，須早回頭；敗後或反成功，故拂心處，莫便放手。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B01 驕り・慢心 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第19節）</div>蓋世功勞，當不得一個矜字；彌天罪過，當不得一個悔字。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B01 驕り・慢心 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第26節）</div>矜高倨傲，無非客氣，降伏得客氣下，而後正氣伸；情欲意識，盡屬妄心，消殺得妄心盡，而後真心現。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B10 執着・固執 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第15節）</div>作人無甚高遠事業，擺脫得俗情，便入名流；為學無甚增益工夫，減除得物累，便超聖境。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B10 執着・固執 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第21節）</div>事事留個有餘不盡的意思，便造物不能忌我，鬼神不能損我。若業必求滿，功必求盈者，不生內變，必召外憂。</div><div class="callout" lang="zh-Hant"><div class="callout-title">B10 執着・固執 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第34節）</div>放得功名富貴之心下，便可脫凡；放得道德仁義之心下，纔可入聖。</div><h3>軸Cの例（agreed・逐語引用可の作品のみ）</h3><div class="callout" lang="zh-Hant"><div class="callout-title">C05 誠・信 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第4節）</div>君子之心事，天青日白，不可使人不知。君子之才華，玉韞珠藏，不可使人易知。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C05 誠・信 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第16節）</div>交友須帶三分俠氣，做人要存一點素心。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C05 誠・信 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第22節）</div>家庭有個真佛，日用有種真道。人能誠心和氣，愉色婉言，使父母兄弟間，形骸兩釋，意氣交流，勝於調息觀心萬倍矣。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C07 敬・慎独 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第50節）</div>肝受病，則目不能視；腎受病，則耳不能聽；病受於人所不見，必發於人所共見。故君子欲無得罪於昭昭，先無得罪於冥冥。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C07 敬・慎独 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第81節）</div>耳目聞見為外賊，情欲意識為內賊。只是主人翁惺惺不昧，獨坐中堂，賊便化為家人矣。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C07 敬・慎独 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第87節）</div>閒中不放過，忙處有受用；靜中不落空，動處有受用；暗中不欺隱，明處有受用。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C01 仁 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第13節）</div>面前的田地要放得寬，使人無不平之歎；身後的惠澤要流得長，使人有不匱之思。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C01 仁 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第43節）</div>彼富我仁，彼爵我義，君子固不為君相所牢籠；人定勝天，志壹動氣，君子亦不受造物之陶鑄。</div><div class="callout" lang="zh-Hant"><div class="callout-title">C01 仁 — 菜根譚-明-洪應明（EXT-caigentan / 巻001 / 第58節）</div>讀書不見聖賢，為鉛槧傭；居官不愛子民，為衣冠盜；講學不尚躬行，為口頭禪；立業不思種德，為眼前花。</div>
+</section>
+<script>
+(function(){
+  function syncPressed(){
+    var btn = document.querySelector('.theme-toggle');
+    if(!btn) return;
+    var pressed = document.documentElement.getAttribute('data-theme') === 'dark';
+    btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.querySelector('.theme-toggle');
+    if (btn) { btn.addEventListener('click', function(){ setTimeout(syncPressed, 0); }); }
+    syncPressed();
+  });
+})();
+</script>
+
+
+<footer>
+中国哲学DB（cph.db）ダッシュボード。数値は生成時の DB 実測値。© ミラツク / esse-sense
+</footer>
+</main>
+</div>
+
+<script>
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+const saved = localStorage.getItem('theme');
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>
