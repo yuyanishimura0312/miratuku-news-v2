@@ -67,7 +67,7 @@ button,input,select{font-family:var(--f);font-size:.8rem;color:var(--text)}
 .grp-l{color:var(--text-m);font-size:.7rem;letter-spacing:.06em}
 /* 3D */
 .g3-wrap{position:relative;border:1px solid var(--border);background:var(--bg)}
-#graph3d{width:100%;height:calc(100vh - 250px);min-height:560px;overflow:hidden}
+#graph3d{width:100%;height:70vh;min-height:500px;overflow:hidden}
 .g3-legend{display:flex;gap:6px 22px;flex-wrap:wrap;background:var(--bg);border:1px solid var(--border);border-top:0;padding:8px 12px;font-family:var(--f);font-size:.68rem;color:var(--text-s);line-height:1.9;pointer-events:none}
 .g3-legend i{display:inline-block;vertical-align:middle;margin-right:6px}
 .lg-dot{border-radius:50%;background:var(--node)}
@@ -171,7 +171,7 @@ table.tt{width:100%;border-collapse:collapse;font-family:var(--f);font-size:.78r
 <div class="hero">
 <div class="db-tags"><span class="db-tag primary">TA</span><span class="db-tag">GF</span><span class="db-tag">SG</span></div>
 <h1>技術の系統樹<small>進化論的技術史 — 700万年の進化パターン</small></h1>
-<p class="sub">1,195件の技術と354件の系譜関係を、時間と領域の座標に置いて読む。88本の独立した系統、74件の分岐、79件の合流を、地図・表・樹の3つの形で引ける。</p>
+<p class="sub">1,195件の技術と354件の系譜関係を、3Dネットワーク・全技術の表・系統ごとの樹で引く。88本の独立した系統、74件の分岐、79件の合流を同定している。</p>
 <div class="metrics">
 <span class="metric"><strong>451</strong>整備済みの技術</span>
 <span class="metric"><strong>341</strong>系譜で繋がる技術</span>
@@ -195,23 +195,13 @@ table.tt{width:100%;border-collapse:collapse;font-family:var(--f);font-size:.78r
   <input type="search" id="mq" list="mq-list" placeholder="技術名で探す" aria-label="技術名で探す"><datalist id="mq-list"></datalist>
   <details class="dd" id="dom-dd"><summary id="dom-sum">領域</summary><div class="dd-body" id="dom-body"></div></details>
   <span class="grp" id="rel-grp" role="group" aria-label="関係の種類"></span>
-  <select id="range" aria-label="表示する時代の範囲">
-   <option value="all">全期間</option><option value="a">前500年まで</option><option value="b">前500年〜1760年</option><option value="c">1760年〜1950年</option><option value="d">1950年以降</option>
-  </select>
-  <label><input type="checkbox" class="t-linked">系譜のあるものだけ</label>
-  <label><input type="checkbox" class="t-bulk">年表由来（未精査）も表示</label>
-  <button class="btn" id="reset-view" type="button">正面に戻す</button>
+  <button class="btn" id="reset-view" type="button">全体を表示</button>
  </div>
  <div class="g3-wrap">
-  <div id="graph3d" role="img" aria-label="技術の系統を時間と領域の座標に置いた3D図。同じ内容は「一覧」タブの表で読めます。"></div>
-  <div class="g3-legend" aria-hidden="true">
-   <div><i class="lg-dot" style="width:6px;height:6px"></i><i class="lg-dot" style="width:12px;height:12px"></i>点の大きさ＝子孫の数</div>
-   <div><i class="lg-line"></i>可能にする　<i class="lg-line" style="border-color:var(--text-m);border-top-width:1px"></i>改良する</div>
-   <div><i class="lg-line" style="border-color:var(--node-faint);border-top-width:1px"></i>組み合わさる（矢印なし）　<i class="lg-line" style="border-color:var(--aw)"></i>置き換える</div>
-   <div><i class="lg-dot" style="width:7px;height:7px;background:var(--node-faint)"></i>淡い点＝系譜の記録がない技術</div>
-  </div>
+  <div id="graph3d" role="img" aria-label="系譜で繋がる技術の3Dネットワーク図。同じ内容は「一覧」タブの表で読めます。"></div>
+  <div class="g3-legend" id="dom-legend" aria-hidden="true"></div>
  </div>
- <p class="cap">横軸は時間、縦軸は領域。時間軸は区切りごとに縮尺が異なり、前1万年より前は対数で詰めている。手前に浮いている点が系譜で繋がった技術で、同じ系統は同じ奥行きに並ぶ。ドラッグで回転、スクロールで拡大、右ドラッグで移動。点を選ぶと祖先と子孫を赤で示す。同じ内容は<a href="#" id="to-list">一覧の表</a>でも読める。</p>
+ <p class="cap">系譜関係で繋がる技術を力学配置で描く。色は領域、矢印は系譜関係の方向（線の色: 可能にする＝緑、改良する＝青、組み合わさる＝紫、置き換える＝赤）。マウスドラッグで回転、スクロールで拡大、右ドラッグで移動。点を選ぶと詳細を表示し、祖先と子孫を強調する。同じ内容は<a href="#" id="to-list">一覧の表</a>でも読める。</p>
 </section>
 
 <section class="panel" id="p-list" role="tabpanel" aria-labelledby="tab-list">
@@ -470,27 +460,18 @@ const walk = (id, map, key) => { const seen = new Set(), st = [id];
   while (st.length) { const u = st.pop(); (map.get(u) || []).forEach(l => { const v = l[key]; if (!seen.has(v)) { seen.add(v); st.push(v); } }); }
   seen.delete(id); return seen; };
 
-/* ---------- 3D map ---------- */
-let G = null, deco = null, C = {}, g3ready = false;
-const DIST = {fov: 10};
+/* ---------- 3D map (force-directed, as in the original page) ---------- */
+const DC = {"energy": "#e65100", "communication": "#1565c0", "digital": "#7b1fa2", "transportation": "#2e7d32", "agriculture": "#558b2f", "military": "#424242", "metallurgy": "#795548", "chemical": "#00838f", "textile": "#ad1457", "construction": "#4e342e", "manufacturing": "#37474f", "optical": "#f9a825", "ai": "#d50000", "medicine": "#1b5e20", "information": "#283593", "stone_tool": "#6d4c41", "finance": "#1a237e", "space": "#0d47a1", "nuclear": "#b71c1c", "other": "#757575"};
+let G = null, C = {}, g3ready = false;
 function colors() {
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
-  C = {bg: g('--bg'), text: g('--text'), muted: g('--text-m'), border: g('--border'), borderL: g('--border-l'),
-       surface: g('--surface'), acc: g('--aw'), anc: g('--anc'), node: g('--node'), faint: g('--node-faint')};
+  C = {bg: g('--bg'), text: g('--text'), muted: g('--text-m'), border: g('--border'), borderL: g('--border-l'), acc: g('--aw'), anc: g('--anc')};
 }
-function radius(r) {
-  if (!r.c) return 3.4;
-  if (r.i + r.o === 0) return 4.5;
-  return 5 + 11 * Math.sqrt(r.k / MAXK);
-}
+const domColor = d => DC[d] || DC.other;
 function nodeColor(n) {
   const r = n.row;
-  if (S.sel != null) {
-    if (r.id === S.sel || S.desc.has(r.id)) return C.acc;
-    if (S.anc.has(r.id)) return C.anc;
-    return C.border;
-  }
-  return r.i + r.o > 0 ? C.node : C.faint;
+  if (S.sel != null) { if (r.id === S.sel || S.desc.has(r.id)) return C.acc; if (S.anc.has(r.id)) return C.anc; return C.border; }
+  return domColor(r.d);
 }
 function onPath(l) {
   const a = l.source.id != null ? l.source.id : l.source, b = l.target.id != null ? l.target.id : l.target;
@@ -499,91 +480,46 @@ function onPath(l) {
   if (S.anc.has(a) && (b === S.sel || S.anc.has(b))) return 2;
   return -1;
 }
+const REL_COLOR = {enables: 'rgba(46,125,50,0.55)', improves: 'rgba(21,101,192,0.55)', combines_with: 'rgba(123,31,162,0.55)', replaces: 'rgba(213,0,0,0.6)'};
 function linkColor(l) {
   const p = onPath(l);
   if (p === 1) return C.acc; if (p === 2) return C.anc; if (p === -1) return C.borderL;
-  return l.r === 'replaces' ? C.acc : l.r === 'enables' ? C.node : l.r === 'improves' ? C.muted : C.faint;
+  return REL_COLOR[l.r] || 'rgba(150,150,150,0.5)';
 }
-function textSprite(text, o) {
-  const fs = 44, pad = 10, cv = document.createElement('canvas'), cx = cv.getContext('2d');
-  const font = (o.weight || 500) + ' ' + fs + 'px "Noto Sans JP", sans-serif';
-  cx.font = font; const w = Math.ceil(cx.measureText(text).width) + pad * 2, h = fs + pad * 2;
-  cv.width = w; cv.height = h; cx.font = font; cx.textBaseline = 'middle';
-  if (o.plate) { cx.globalAlpha = .86; cx.fillStyle = C.bg; cx.fillRect(0, 0, w, h); cx.globalAlpha = 1; }
-  cx.fillStyle = o.color; cx.fillText(text, pad, h / 2 + 2);
+function textSprite(text, color, size) {
+  const fs = 28, cv = document.createElement('canvas'), cx = cv.getContext('2d');
+  cx.font = fs + 'px "Noto Sans JP", sans-serif';
+  const w = Math.ceil(cx.measureText(text).width) + 16, hh = fs + 12;
+  cv.width = w; cv.height = hh; cx.font = fs + 'px "Noto Sans JP", sans-serif'; cx.fillStyle = color; cx.fillText(text, 8, fs + 2);
   const tx = new THREE.CanvasTexture(cv); tx.minFilter = THREE.LinearFilter; tx.generateMipmaps = false;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tx, depthTest: false, depthWrite: false, transparent: true}));
-  sp.scale.set(o.h * w / h, o.h, 1); sp.renderOrder = o.order || 5;
-  if (o.center) sp.center.set(o.center[0], o.center[1]);
-  return sp;
-}
-function labelled(id) {
-  if (S.sel != null) {
-    if (id === S.sel) return true;
-    return (OUT.get(S.sel) || []).some(l => l.t === id) || (INN.get(S.sel) || []).some(l => l.s === id);
-  }
-  return TOP.has(id);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tx, depthTest: false, transparent: true}));
+  sp.scale.set(w / size, hh / size, 1); return sp;
 }
 function nodeObject(n) {
-  if (!labelled(n.id)) return false;
-  const r = n.row, sel = r.id === S.sel;
-  // neighbours of the selected node hang below the point so they do not collide with its label
-  const below = S.sel != null && !sel;
-  const sp = textSprite(r.n, {color: sel ? C.acc : C.text, h: sel ? 44 : 30, plate: true, weight: sel ? 700 : 500, center: [0.5, below ? 1 : 0], order: sel ? 9 : 6});
-  sp.position.set(0, (radius(r) * (sel ? 1.35 : 1) + 5) * (below ? -1 : 1), 0);
-  return sp;
+  const r = n.row, sel = r.id === S.sel, grp = new THREE.Group();
+  const col = nodeColor(n);
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(sel ? 4.5 : 3), new THREE.MeshLambertMaterial({color: col})));
+  const dim = S.sel != null && !(sel || S.desc.has(r.id) || S.anc.has(r.id));
+  const label = textSprite(r.n, dim ? C.border : (S.sel != null ? col : domColor(r.d)), sel ? 4.5 : 6);
+  label.position.set(0, 5, 0); grp.add(label);
+  return grp;
 }
 function graphData() {
-  const nodes = D.rows.filter(r => visible(r) && S.doms.has(r.d)).map(r => ({id: r.id, row: r, x: r.x, y: r.yy, z: r.z, fx: r.x, fy: r.yy, fz: r.z}));
+  const nodes = D.rows.filter(r => r.i + r.o > 0 && S.doms.has(r.d)).map(r => ({id: r.id, row: r}));
   const ok = new Set(nodes.map(n => n.id));
   const links = D.links.filter(l => S.rels.has(l.r) && ok.has(l.s) && ok.has(l.t)).map(l => ({source: l.s, target: l.t, r: l.r, w: l.w}));
   return {nodes, links};
 }
-function buildDeco() {
-  const scene = G.scene();
-  if (deco) { scene.remove(deco); deco.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
-  deco = new THREE.Group();
-  const W = D.axis_w, LH = D.lane_h, n = D.lanes.length, y0 = -LH / 2, y1 = (n - .5) * LH;
-  const seg = (pts, col) => { const g = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    deco.add(new THREE.LineSegments(g, new THREE.LineBasicMaterial({color: col}))); };
-  for (let i = 1; i < n; i += 2) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(W, LH), new THREE.MeshBasicMaterial({color: C.surface, depthWrite: false}));
-    m.position.set(W / 2, i * LH, -4); m.renderOrder = -2; deco.add(m);
-  }
-  const hp = []; for (let i = 0; i <= n; i++) { const y = (i - .5) * LH; hp.push(0, y, -2, W, y, -2); } seg(hp, C.border);
-  const major = [], minor = [];
-  D.ticks.forEach(t => { (t.major ? major : minor).push(t.x, y0 - 12, -2, t.x, y1, -2);
-    if (t.major || t.label) { const sp = textSprite(fyShort(t.y), {color: C.muted, h: 32, center: [0.5, 1], order: 3}); sp.position.set(t.x, y0 - 18, 0); deco.add(sp); } });
-  seg(major, C.border); seg(minor, C.borderL);
-  D.lanes.forEach((d, i) => { const sp = textSprite(dom(d), {color: S.doms.has(d) ? C.text : C.border, h: 36, center: [1, 0.5], order: 3});
-    sp.position.set(-22, i * LH, 0); deco.add(sp); });
-  scene.add(deco);
-}
-function extent() { const LH = D.lane_h, n = D.lanes.length; return {x0: -270, x1: D.axis_w + 50, y0: -LH / 2 - 70, y1: (n - .5) * LH + 30}; }
-function frame(x0, x1, ms) {
-  const e = extent(), el = $('#graph3d'), asp = el.clientWidth / Math.max(el.clientHeight, 1), t = Math.tan(DIST.fov * Math.PI / 360);
-  const full = x0 == null; if (full) { x0 = e.x0; x1 = e.x1; }
-  const hw = (x1 - x0) / 2, hh = (e.y1 - e.y0) / 2;
-  const d = full ? Math.max(hw / (t * asp), hh / t) * 1.03 : Math.max(hw / (t * asp), hh / t * .45);
-  const cx = (x0 + x1) / 2, cy = (e.y0 + e.y1) / 2;
-  G.cameraPosition({x: cx, y: cy, z: d}, {x: cx, y: cy, z: 0}, RM ? 0 : ms);
-}
 function focusNode(id) {
-  const r = R.get(id); if (!G || !r) return;
-  const ids = [r.id].concat(Array.from(S.anc), Array.from(S.desc)).map(i => R.get(i)).filter(Boolean);
-  const xs = ids.map(q => q.x), ys = ids.map(q => q.yy);
-  const x0 = Math.min.apply(null, xs) - 120, x1 = Math.max.apply(null, xs) + 120, y0 = Math.min.apply(null, ys) - 80, y1 = Math.max.apply(null, ys) + 80;
-  const el = $('#graph3d'), asp = el.clientWidth / Math.max(el.clientHeight, 1), t = Math.tan(DIST.fov * Math.PI / 360);
-  const d = Math.max((x1 - x0) / 2 / (t * asp), (y1 - y0) / 2 / t, 1400) * 1.05;
-  G.cameraPosition({x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: d}, {x: (x0 + x1) / 2, y: (y0 + y1) / 2, z: 0}, RM ? 0 : 500);
+  if (!G) return; const n = G.graphData().nodes.find(n => n.id === id); if (!n || n.x == null) return;
+  const dist = 180, k = dist / Math.hypot(n.x, n.y, n.z || 1);
+  G.cameraPosition({x: n.x * (1 + k), y: n.y * (1 + k), z: (n.z || 0) * (1 + k)}, n, RM ? 0 : 600);
 }
 function restyle(full) {
   if (!G) return;
-  if (full) G.graphData(graphData());
-  G.nodeColor(nodeColor).nodeVal(n => Math.pow(radius(n.row) * (n.row.id === S.sel ? 1.35 : 1), 3))
-   .linkColor(linkColor).linkWidth(l => onPath(l) > 0 ? 2.2 : (l.w >= .8 ? 1.3 : .6))
-   .linkDirectionalArrowLength(l => l.r === 'combines_with' ? 0 : (onPath(l) > 0 ? 13 : 9))
-   .nodeThreeObject(nodeObject);
+  if (full) { const cur = new Map(G.graphData().nodes.map(n => [n.id, n])); const d = graphData();
+    d.nodes.forEach(n => { const o = cur.get(n.id); if (o) { n.x = o.x; n.y = o.y; n.z = o.z; } }); G.graphData(d); }
+  G.linkColor(linkColor).linkWidth(l => onPath(l) > 0 ? 1.8 : 1).linkDirectionalArrowLength(l => onPath(l) > 0 ? 6 : 4).nodeThreeObject(nodeObject);
 }
 function init3D() {
   if (G || !window.ForceGraph3D || !window.THREE) return;
@@ -592,32 +528,25 @@ function init3D() {
     colors();
     G = ForceGraph3D({controlType: 'orbit'})(el)
       .width(el.clientWidth).height(el.clientHeight).backgroundColor(C.bg).showNavInfo(false)
-      .nodeRelSize(1).nodeOpacity(1).nodeResolution(14).linkOpacity(.9).linkResolution(5)
-      .linkDirectionalArrowRelPos(1).linkDirectionalArrowResolution(8)
-      .nodeThreeObjectExtend(true).enableNodeDrag(false)
+      .linkDirectionalArrowRelPos(1).linkOpacity(1).enableNodeDrag(false)
       .nodeLabel(n => '<b>' + esc(n.row.n) + '</b><br><small>' + fy(n.row.y) + '・' + esc(dom(n.row.d)) + (n.row.k ? '・子孫 ' + n.row.k : '') + '</small>')
-      .onNodeClick(n => select(n.id)).onBackgroundClick(() => select(null))
-      .onNodeHover(n => { el.style.cursor = n ? 'pointer' : ''; })
-      .warmupTicks(0).cooldownTicks(2);
-    ['charge', 'center'].forEach(f => G.d3Force(f, null)); G.d3Force('link').strength(0);
-    const cam = G.camera(); cam.fov = DIST.fov; cam.near = 10; cam.far = 80000; cam.updateProjectionMatrix();
-    // The library's default lights are tuned for a newer three.js and wash colours out here;
-    // one white ambient light renders every ink at exactly its token value.
+      .onNodeClick(n => select(n.id, {focus: true})).onBackgroundClick(() => select(null))
+      .onNodeHover(n => { el.style.cursor = n ? 'pointer' : ''; });
     if (typeof G.lights === 'function') G.lights([new THREE.AmbientLight(0xffffff, 1)]);
-    else G.scene().traverse(o => { if (!o.isLight) return; if (o.isAmbientLight) { o.color.set(0xffffff); o.intensity = 1; } else o.intensity = 0; });
-    const ctl = G.controls(); ctl.enableDamping = false; ctl.rotateSpeed = .6; ctl.zoomSpeed = 1.1;
-    buildDeco(); restyle(true); frame(null, null, 0); g3ready = true;
-    if (S.sel != null) focusNode(S.sel);
+    const ctl = G.controls(); ctl.enableRotate = true; ctl.enableZoom = true; ctl.enablePan = true; ctl.rotateSpeed = 1; ctl.zoomSpeed = 1.2; ctl.autoRotate = false;
+    restyle(true); g3ready = true;
+    if (S.sel != null) setTimeout(() => focusNode(S.sel), 1500);
   } catch (err) {
-    console.error('3D map error:', err); G = null;
+    console.error('3D graph error:', err); G = null;
     el.innerHTML = '<p style="padding:40px;font-family:var(--f);font-size:.85rem;color:var(--text-m)">この環境では3D表示を初期化できませんでした（' + esc(err.message) + '）。同じ内容は「一覧」タブの表で読めます。</p>';
   }
 }
 function fontsThen(fn) {
   let done = false; const go = () => { if (!done) { done = true; fn(); } };
   setTimeout(go, 2500);
-  try { Promise.all([document.fonts.load('500 44px "Noto Sans JP"', '技術の系統'), document.fonts.load('700 44px "Noto Sans JP"', '技術の系統')]).then(go, go); } catch (e) { go(); }
+  try { document.fonts.load('28px "Noto Sans JP"', '技術の系統').then(go, go); } catch (e) { go(); }
 }
+$('#dom-legend').innerHTML = D.lanes.slice().reverse().map(d => '<div><i class="lg-dot" style="width:10px;height:10px;background:' + domColor(d) + '"></i>' + esc(dom(d)) + '</div>').join('');
 
 /* ---------- selection + detail ---------- */
 function select(id, opt) {
@@ -627,8 +556,8 @@ function select(id, opt) {
   S.desc = S.sel != null ? walk(S.sel, OUT, 't') : new Set();
   let full = false;
   if (S.sel != null) { const r = R.get(S.sel);
-    if ((!r.c && !S.bulk) || (S.linked && r.i + r.o === 0)) { if (!r.c) setToggle('bulk', true, true); if (S.linked && r.i + r.o === 0) setToggle('linked', false, true); full = true; }
-    if (!S.doms.has(r.d)) { S.doms.add(r.d); domUI(); if (G) buildDeco(); full = true; } }
+    if ((!r.c && !S.bulk) || (S.linked && r.i + r.o === 0)) { if (!r.c) setToggle('bulk', true, true); if (S.linked && r.i + r.o === 0) setToggle('linked', false, true); }
+    if (!S.doms.has(r.d)) { S.doms.add(r.d); domUI(); full = true; } }
   try { history.replaceState(null, '', S.sel != null ? '#t=' + S.sel : location.pathname + location.search); } catch (e) {}
   renderDetail(); restyle(full); markTable(); markTrees();
   if (S.sel != null && opt.focus && S.tab === 'map') focusNode(S.sel);
@@ -673,8 +602,8 @@ function renderDetail() {
   h += '<p style="font-size:.72rem;color:var(--text-m);margin-top:8px">出典: ' + (r.u ? '<a href="' + esc(r.u) + '" target="_blank" rel="noopener">' + esc(hostLabel(r.u)) + 'を開く</a>' : 'URLの記録なし') + (r.src ? '<br>' + esc(r.src) : '') + '</p>';
   if (ins.length) h += '<h3>先行する技術（' + ins.length + '）</h3>' + ins.slice().sort((a, b) => R.get(a.s).y - R.get(b.s).y).map(l => relLine(l, l.s)).join('');
   if (outs.length) h += '<h3>後継の技術（' + outs.length + '）</h3>' + outs.slice().sort((a, b) => R.get(a.t).y - R.get(b.t).y).map(l => relLine(l, l.t)).join('');
-  if (!ins.length && !outs.length) h += '<p class="note">この技術には系譜関係の記録がない。</p>';
-  h += '<div class="acts">' + (S.tab !== 'map' ? '<button class="btn pri" type="button" data-act="map">3Dマップで見る</button>' : '<button class="btn" type="button" data-act="table">表で見る</button>') +
+  if (!ins.length && !outs.length) h += '<p class="note">この技術には系譜関係の記録がない。3Dマップには系譜で繋がる技術だけを描くため、この技術は出てこない。</p>';
+  h += '<div class="acts">' + (S.tab !== 'map' && (ins.length || outs.length) ? '<button class="btn pri" type="button" data-act="map">3Dマップで見る</button>' : '<button class="btn" type="button" data-act="table">表で見る</button>') +
     '<button class="btn" type="button" data-act="clear">選択を解除</button></div>';
   el.innerHTML = h; el.classList.add('open'); el.scrollTop = 0;
 }
@@ -685,7 +614,7 @@ $('#detail').addEventListener('click', e => {
   else if (lin) { e.preventDefault(); show('list'); showSub('lin'); openLineage(+lin.dataset.lin); }
   else if (act) { const a = act.dataset.act;
     if (a === 'clear') select(null);
-    else if (a === 'map') { show('map'); setTimeout(() => focusNode(S.sel), 80); }
+    else if (a === 'map') { show('map'); setTimeout(() => focusNode(S.sel), G ? 80 : 2600); }
     else if (a === 'table') { show('list'); showSub('table'); setTimeout(() => { const tr = $('#tt tr.sel'); if (tr) tr.scrollIntoView({block: 'center'}); }, 60); } }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.sel != null && !e.target.matches('input,select')) select(null); });
@@ -693,14 +622,13 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.sel != n
 /* ---------- toolbar ---------- */
 function setToggle(key, val, silent) {
   S[key] = val; $$('.t-' + key).forEach(c => { c.checked = val; });
-  if (!silent) { fillSearch(); restyle(true); renderTable(); }
-  else { fillSearch(); renderTable(); }
+  fillSearch(); renderTable();
 }
 ['bulk', 'linked'].forEach(k => $$('.t-' + k).forEach(c => c.addEventListener('change', () => setToggle(k, c.checked))));
-function fillSearch() { $('#mq-list').innerHTML = D.rows.filter(visible).map(r => '<option value="' + esc(r.n) + '">' + fy(r.y) + '</option>').join(''); }
+function fillSearch() { $('#mq-list').innerHTML = D.rows.filter(r => r.i + r.o > 0).map(r => '<option value="' + esc(r.n) + '">' + fy(r.y) + '</option>').join(''); }
 $('#mq').addEventListener('change', e => {
   const v = e.target.value.trim().toLowerCase(); if (!v) return;
-  const pool = D.rows.filter(visible);
+  const pool = D.rows.filter(r => r.i + r.o > 0);
   const hit = pool.find(r => r.n.toLowerCase() === v || r.e.toLowerCase() === v) || pool.find(r => r.n.toLowerCase().indexOf(v) >= 0 || r.e.toLowerCase().indexOf(v) >= 0);
   if (hit) select(hit.id, {focus: true});
 });
@@ -710,18 +638,14 @@ function domUI() {
     D.lanes.slice().reverse().map(d => '<label><input type="checkbox" value="' + esc(d) + '"' + (S.doms.has(d) ? ' checked' : '') + '>' + esc(dom(d)) + '</label>').join('');
 }
 $('#dom-body').addEventListener('click', e => { const b = e.target.closest('[data-all]'); if (!b) return;
-  S.doms = new Set(b.dataset.all === '1' ? D.lanes : []); domUI(); if (G) buildDeco(); restyle(true); });
+  S.doms = new Set(b.dataset.all === '1' ? D.lanes : []); domUI(); restyle(true); });
 $('#dom-body').addEventListener('change', e => { if (e.target.type !== 'checkbox') return;
   e.target.checked ? S.doms.add(e.target.value) : S.doms.delete(e.target.value);
-  $('#dom-sum').textContent = '領域（' + S.doms.size + ' / ' + D.lanes.length + '）'; if (G) buildDeco(); restyle(true); });
+  $('#dom-sum').textContent = '領域（' + S.doms.size + ' / ' + D.lanes.length + '）'; restyle(true); });
 document.addEventListener('click', e => { const dd = $('#dom-dd'); if (dd.open && !dd.contains(e.target)) dd.open = false; });
 $('#rel-grp').innerHTML = '<span class="grp-l">関係</span>' + Object.keys(D.rels).map(k => '<label><input type="checkbox" value="' + k + '" checked>' + esc(D.rels[k]) + '</label>').join('');
 $('#rel-grp').addEventListener('change', e => { e.target.checked ? S.rels.add(e.target.value) : S.rels.delete(e.target.value); restyle(true); });
-const xAt = y => { const t = D.ticks.find(t => t.y === y); return t ? t.x : 0; };
-$('#range').addEventListener('change', e => { if (!G) return; const v = e.target.value, W = D.axis_w;
-  if (v === 'all') frame(null, null, 500); else if (v === 'a') frame(-270, xAt(-500) + 30, 500);
-  else if (v === 'b') frame(xAt(-500) - 30, xAt(1760) + 30, 500); else if (v === 'c') frame(xAt(1760) - 30, xAt(1950) + 30, 500); else frame(xAt(1950) - 30, W + 40, 500); });
-$('#reset-view').addEventListener('click', () => { if (G) { $('#range').value = 'all'; frame(null, null, 500); } });
+$('#reset-view').addEventListener('click', () => { if (G) { select(null); G.zoomToFit(RM ? 0 : 600, 40); } });
 $('#to-list').addEventListener('click', e => { e.preventDefault(); show('list'); showSub('table'); });
 
 /* ---------- table ---------- */
@@ -825,7 +749,7 @@ tabKeys('.snav', show, 'tab'); tabKeys('.seg', showSub, 'sub');
 function applyTheme(t, save) {
   document.documentElement.setAttribute('data-theme', t); $('#themeToggle').textContent = t === 'dark' ? 'LIGHT' : 'DARK';
   if (save) { try { localStorage.setItem('tp-theme', t); } catch (e) {} }
-  if (G) { colors(); G.backgroundColor(C.bg); buildDeco(); restyle(false); }
+  if (G) { colors(); G.backgroundColor(C.bg); restyle(false); }
 }
 $('#themeToggle').addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true));
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (G && S.tab === 'map') { const el = $('#graph3d'); G.width(el.clientWidth).height(el.clientHeight); } }, 150); });
